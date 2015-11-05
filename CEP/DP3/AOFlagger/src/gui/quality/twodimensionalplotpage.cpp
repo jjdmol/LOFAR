@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include <limits>
+#include <sstream>
 
 #include <boost/bind.hpp>
 
@@ -31,12 +32,10 @@
 #include <AOFlagger/gui/plot/plotpropertieswindow.h>
 
 TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
-	_expander("Side bar"),
 	_statisticFrame("Statistics"),
 	_countButton("Count"),
 	_meanButton("Mean"),
 	_stdDevButton("StdDev"),
-	_varianceButton("Variance"),
 	_dCountButton("DCount"),
 	_dMeanButton("DMean"),
 	_dStdDevButton("DStdDev"),
@@ -68,8 +67,7 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	initPhaseButtons();
 	initPlotButtons();
 	
-	_expander.add(_sideBox);
-	pack_start(_expander, Gtk::PACK_SHRINK);
+	pack_start(_sideBox, Gtk::PACK_SHRINK);
 	
 	_plotWidget.SetPlot(_plot);
 	pack_start(_plotWidget, Gtk::PACK_EXPAND_WIDGET);
@@ -82,8 +80,6 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 TwoDimensionalPlotPage::~TwoDimensionalPlotPage()
 {
 	delete _dataWindow;
-	if(_plotPropertiesWindow != 0)
-		delete _plotPropertiesWindow;
 }
 
 unsigned TwoDimensionalPlotPage::selectedKindCount() const
@@ -92,7 +88,6 @@ unsigned TwoDimensionalPlotPage::selectedKindCount() const
 	if(_countButton.get_active()) ++count;
 	if(_meanButton.get_active()) ++count;
 	if(_stdDevButton.get_active()) ++count;
-	if(_varianceButton.get_active()) ++count;
 	if(_dCountButton.get_active()) ++count;
 	if(_dMeanButton.get_active()) ++count;
 	if(_dStdDevButton.get_active()) ++count;
@@ -113,8 +108,6 @@ void TwoDimensionalPlotPage::updatePlot()
 			plotStatistic(QualityTablesFormatter::MeanStatistic);
 		if(_stdDevButton.get_active())
 			plotStatistic(QualityTablesFormatter::StandardDeviationStatistic);
-		if(_varianceButton.get_active())
-			plotStatistic(QualityTablesFormatter::VarianceStatistic);
 		if(_dCountButton.get_active())
 			plotStatistic(QualityTablesFormatter::DCountStatistic);
 		if(_dMeanButton.get_active())
@@ -243,9 +236,6 @@ void TwoDimensionalPlotPage::initStatisticKindButtons()
 	_stdDevButton.set_active(true);
 	_statisticBox.pack_start(_stdDevButton, Gtk::PACK_SHRINK);
 	
-	_varianceButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::updatePlot));
-	_statisticBox.pack_start(_varianceButton, Gtk::PACK_SHRINK);
-	
 	_dCountButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::updatePlot));
 	_statisticBox.pack_start(_dCountButton, Gtk::PACK_SHRINK);
 	
@@ -347,8 +337,27 @@ void TwoDimensionalPlotPage::onPlotPropertiesClicked()
 
 void TwoDimensionalPlotPage::updateDataWindow()
 {
-	if(_dataWindow->is_visible())
-		_dataWindow->SetData(_plot);
+	std::stringstream _dataStream;
+	 _dataStream << std::setprecision(14);
+	if(_plot.PointSetCount() != 0)
+	{
+		const Plot2DPointSet &pointSet = _plot.GetPointSet(0);
+		const size_t valueCount = pointSet.Size();
+		for(size_t i=0; i<valueCount; ++i)
+		{
+			const double
+				x = pointSet.GetX(i),
+				y = pointSet.GetY(i);
+			if(pointSet.HasTickLabels())
+			{
+				std::string label = pointSet.TickLabels()[i];
+				_dataStream << i << '\t' << label << '\t' << y << '\n';
+			}
+			else
+				_dataStream << i << '\t' << x << '\t' << y << '\n';
+		}
+	}
+	_dataWindow->SetData(_dataStream.str());
 }
 
 void TwoDimensionalPlotPage::onDataExportClicked()
@@ -368,7 +377,6 @@ std::string TwoDimensionalPlotPage::getYDesc() const
 		if(_countButton.get_active()) kind = QualityTablesFormatter::CountStatistic;
 		if(_meanButton.get_active()) kind = QualityTablesFormatter::MeanStatistic;
 		if(_stdDevButton.get_active()) kind = QualityTablesFormatter::StandardDeviationStatistic;
-		if(_varianceButton.get_active()) kind = QualityTablesFormatter::VarianceStatistic;
 		if(_dCountButton.get_active()) kind = QualityTablesFormatter::DCountStatistic;
 		if(_dMeanButton.get_active()) kind = QualityTablesFormatter::DMeanStatistic;
 		if(_dStdDevButton.get_active()) kind = QualityTablesFormatter::DStandardDeviationStatistic;

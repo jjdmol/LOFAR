@@ -7,8 +7,7 @@ class logger():
     the suplied input
     """
     def __init__(self):
-        self._log = ["logger_started"]
-        self.name = "muck_logger"
+        self._log = []
 
     def info(self, input_string):
         self._log.append(("info", input_string))
@@ -27,4 +26,3 @@ class logger():
         return that last error
         """
         return self._log[-1]
-

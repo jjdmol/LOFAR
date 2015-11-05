@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,16 +26,14 @@
 //# Common Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h>
-#include <Common/ParameterSet.h>
 
-//# MessageBus Includes
-#include <MessageBus/FromBus.h>
+//# ACC Includes
+#include <Common/ParameterSet.h>
 
 //# GCF Includes
 #include <GCF/TM/GCF_Control.h>
-#include <GCF/PVSS/PVSSservice.h>
-#include <GCF/PVSS/PVSSresponse.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
 
 //# local includes
@@ -43,7 +41,7 @@
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <CEPApplMgr.h>
 
 // forward declaration
 
@@ -56,67 +54,94 @@ using	GCF::TM::GCFITCPort;
 using	GCF::TM::GCFPort;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
-using	GCF::PVSS::PVSSservice;
-using	GCF::PVSS::PVSSresponse;
 using	GCF::RTDB::RTDBPropertySet;
 using	APLCommon::ParentControl;
-using boost::posix_time::ptime;
 
-class OnlineControl : public GCFTask
+
+class OnlineControl : public GCFTask,
+                      public CEPApplMgrInterface
 {
 public:
 	explicit OnlineControl(const string& cntlrName);
 	~OnlineControl();
 
-	// Connect to our own propertyset.
-   	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
-	// Connect to BGPAppl propset and start remaining tasks.
-   	GCFEvent::TResult propset_state (GCFEvent& e, GCFPortInterface& p);
+	// During the initial state all connections with the other programs are made.
+   	GCFEvent::TResult initial_state (GCFEvent& e, 
+									 GCFPortInterface& p);
 	// Normal control mode. 
-   	GCFEvent::TResult active_state    (GCFEvent& e, GCFPortInterface& p);
-	GCFEvent::TResult finishing_state (GCFEvent& event, GCFPortInterface& port);
-	GCFEvent::TResult completing_state(GCFEvent& event, GCFPortInterface& port);
+   	GCFEvent::TResult active_state  (GCFEvent& e, 
+									 GCFPortInterface& p);
+	// Finishing mode. 
+	GCFEvent::TResult finishing_state(GCFEvent& event, 
+									  GCFPortInterface& port);
 	
 	// Interrupthandler for switching to finisingstate when exiting the program
 	static void signalHandler (int	signum);
-	void	    finish(int	result);
+	void	    finish();
 
+protected: // implemenation of abstract CEPApplMgrInterface methods
+    string  appSupplyInfo		(const string& procName, const string& keyList);
+    void    appSupplyInfoAnswer (const string& procName, const string& answer);
+	// A result of one of the applications was received, update the administration
+	// off the controller and send the result to the parentcontroller if appropriate.
+	void	appSetStateResult	 (const string&			procName, 
+								  CTState::CTstateNr   	newState, 
+								  uint16				result);
+
+  
 private:
 	// avoid defaultconstruction and copying
 	OnlineControl();
 	OnlineControl(const OnlineControl&);
    	OnlineControl& operator=(const OnlineControl&);
 
-	uint32	_startApplications();
-	void	_stopApplications();
+	void	_doBoot();
+	void	_doQuit();
 	void   	_finishController	 (uint16_t 				result);
-   	void	_handleDisconnect	 (GCFPortInterface& 	port);
+   	void	_connectedHandler	 (GCFPortInterface& 	port);
+   	void	_disconnectedHandler (GCFPortInterface& 	port);
 	void	_setState	  		 (CTState::CTstateNr	newState);
 	void	_databaseEventHandler(GCFEvent&				event);
-	void	_clearCobaltDatapoints();
+
+	// Send a command to all (or the first) applications.
+	void	startNewState (CTState::CTstateNr		newState,
+						   const string&			options);
+
+	// typedefs for the internal adminsitration of all the Applications we control
+	typedef boost::shared_ptr<CEPApplMgr> CEPApplMgrPtr;
+    typedef	map<string, CEPApplMgrPtr>  			CAMmap;
+	typedef map<string, CEPApplMgrPtr>::iterator	CAMiter;
+
+	// Internal bookkeeping-finctions for the dependancy-order of the applications. 
+	void	setApplOrder	(vector<string>&	anApplOrder);
+	CAMiter	firstApplication(CTState::CTstateNr		aState);
+	CAMiter	nextApplication();
+	bool	hasNextApplication();
+	void	noApplication();
 
 	// ----- datamembers -----
-	string						itsMyName;
-	int							itsObsID;
    	RTDBPropertySet*           	itsPropertySet;
 	bool					  	itsPropertySetInitialized;
-	PVSSservice*				itsPVSSService;
-	PVSSresponse*				itsPVSSResponse;
 
 	// pointer to parent control task
 	ParentControl*			itsParentControl;
 	GCFITCPort*				itsParentPort;
 
 	GCFTimerPort*			itsTimerPort;
-	GCFTimerPort*			itsForcedQuitTimer;
 
-	GCFTCPPort*				itsLogControlPort;
+	CAMmap					itsCEPapplications;
+    ParameterSet  itsResultParams;
 
 	CTState::CTstateNr		itsState;
 
-	FromBus*				itsMsgQueue;
-	GCFTimerPort*			itsQueueTimer;
-	int						itsFeedbackResult;
+	bool					itsUseApplOrder;	// Applications depend?
+	vector<string>			itsApplOrder;		// startOrder of the applications.
+	string					itsCurrentAppl;		// current application we are handling.
+	CTState::CTstateNr		itsApplState;		// state currently handled by apps.
+	string					itsOptions;			// Current active option
+
+	uint16					itsOverallResult;
+	int16					itsNrOfAcks2Recv;
 
 	// ParameterSet variables
 	string					itsTreePrefix;
@@ -125,9 +150,6 @@ private:
 	ptime					itsStopTime;
 	uint16					itsStopTimerID;
 	uint16					itsFinishTimerID;
-	bool					itsInFinishState;
-	bool					itsFeedbackAvailable;
-	double					itsForceTimeout;
 };
 
   };//CEPCU

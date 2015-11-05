@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -130,7 +130,9 @@ void MainCU_Processes_UpdateMainControllers() {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","ObservationControlPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
     // also connect to CCU Ctrls
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","PythonControlPanel",
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_StorageApplPanel",
+          DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_BGPApplPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
   }
 }
@@ -204,7 +206,7 @@ void MainCU_Processes_UpdateProcessesList() {
     } else {
       // if choosen observation gather all involved processes on chosen station and CEP
       // get the real name from the selected Observation
-      obsDP=MainDBName+claimManager_nameToRealName("LOFAR_ObsSW_"+selectedObservation); 
+      obsDP="MCU001:"+claimManager_nameToRealName("LOFAR_ObsSW_"+selectedObservation); 
       //select all Ctrl under LOFAR_PermSW_'selectedObservation'
       dpQuery("SELECT '_original.._value' FROM '"+obsDP+"_*.status.state' ", tab);
       LOG_TRACE("MainCU_Processes:updateProcessesList|MainCu controllers Found: "+ tab);
@@ -240,16 +242,15 @@ void MainCU_Processes_UpdateProcessesList() {
         }
       }
       //same for CCU
-      // strip system and add CEPDBName
-      string CEPObsDP=CEPDBName+dpSubStr(obsDP,DPSUB_DP);
+      // strip system and add CCU001
+      string CEPObsDP="CCU001:"+dpSubStr(obsDP,DPSUB_DP);
     
       if (dpExists(CEPObsDP) ){
     
         // add CCU to selected Observation
-        string aS = navFunct_bareDBName(CEPDBName);
-        dynAppend(list,obsDP+","+aS+","+CEPObsDP);
-        dpQuery("SELECT '_original.._value' FROM '"+CEPObsDP+"_*.status.state' REMOTE '"+CEPDBName+"'", tab);
-        LOG_TRACE("MainCU_Processes:updateProcessesList|"+CEPDBName+" controllers Found: "+ tab);
+        dynAppend(list,obsDP+",CCU001,"+CEPObsDP);
+        dpQuery("SELECT '_original.._value' FROM '"+CEPObsDP+"_*.status.state' REMOTE 'CCU001:'", tab);
+        LOG_TRACE("MainCU_Processes:updateProcessesList|CCU001 controllers Found: "+ tab);
     
         dyn_string aDS=navFunct_getDynString(tab, 2,1);
         dynSortAsc(aDS);

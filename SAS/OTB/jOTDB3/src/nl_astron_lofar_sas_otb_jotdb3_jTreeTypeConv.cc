@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -47,8 +47,6 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeTypeConv_initTre
   try {
     OTDBconnection* aConn=getConnection(name);
     TreeTypeConv* aTTConv = new TreeTypeConv(aConn);
-
-    theirC_ObjectMap.erase(name+"_TreeTypeConv");
     theirC_ObjectMap[name+"_TreeTypeConv"]=(void*)aTTConv;
   } catch (exception &ex) {
     cout << "Exception during new TreeTypeConv::top" << ex.what() << endl; 
@@ -68,7 +66,7 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeTypeConv_get__
   const char* chars = env->GetStringUTFChars (aConv, 0);
   const string str (chars);
   
-  short ret(0);
+  short ret;
   try {
     ret= ((TreeTypeConv*)getCObjectPtr(env,jTreeTypeConv,"_TreeTypeConv"))->get (str);
   
@@ -90,7 +88,7 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeTypeConv_get__
  * Signature: (S)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeTypeConv_get__S(JNIEnv *env, jobject jTreeTypeConv, jshort aConv) {
-  jstring jstr(0);
+  jstring jstr;
   try {
     jstr= env->NewStringUTF (((TreeTypeConv*)getCObjectPtr(env,jTreeTypeConv,"_TreeTypeConv"))->get(aConv).c_str());
   } catch (exception &ex) {
@@ -182,7 +180,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeTypeConv_top(JNI
  * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeTypeConv_next(JNIEnv *env, jobject jTreeTypeConv) {
-  jboolean aBool(0);
+  jboolean aBool;
   try {
     aBool=((TreeTypeConv*)getCObjectPtr(env,jTreeTypeConv,"_TreeTypeConv"))->next();
   } catch (exception &ex) {

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -82,12 +82,12 @@ void RawBlockWrite::sendrequest()
 
 	m_hdr = writeEvent.hdr; // remember header to match with ack
 
-	string	hDump;	// DEBUG
-	hexdump(hDump, (void*)&m_hdr.m_fields, MEPHeader::SIZE); // DEBUG
-	LOG_INFO_STR("RAWBLOCKWRITE 1: "  << hDump);
-	hDump.clear();
-	hexdump(hDump, writeEvent.payload.getBuffer(), writeEvent.payload.getDataLen());
-	LOG_INFO_STR("RAWBLOCKWRITE 2: " << hDump);
+//	string	hDump;	// DEBUG
+//	hexdump(hDump, (void*)&m_hdr.m_fields, MEPHeader::SIZE); // DEBUG
+//	LOG_INFO (hDump);
+//	hDump.clear();
+//	hexdump(hDump, writeEvent.payload.getBuffer(), writeEvent.payload.getDataLen());
+//	LOG_INFO (hDump);
 
 	// finally send the message
 	getBoardPort().send(writeEvent);
@@ -116,9 +116,9 @@ GCFEvent::TResult RawBlockWrite::handleack(GCFEvent& event, GCFPortInterface& /*
 	//		 We can't even check it because the user made up the address and therefor the response-type.
 	EPAWriteackEvent ack(event);
 
-	string	hDump;		/// DEBUG
-	hexdump(hDump, (void*)&(ack.hdr.m_fields), MEPHeader::SIZE);
-	LOG_INFO_STR("RAWBLOCKWRITE REPLY: "  << hDump);
+//	string	hDump;		/// DEBUG
+//	hexdump(hDump, (void*)&(ack.hdr.m_fields), MEPHeader::SIZE);
+//	LOG_INFO (hDump);
 
 	// check result
 	if (!ack.hdr.isValidAck(m_hdr)) {

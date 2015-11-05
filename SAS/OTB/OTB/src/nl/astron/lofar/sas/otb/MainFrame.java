@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -137,6 +137,8 @@ public final class MainFrame extends javax.swing.JFrame {
         
 
         
+        
+        
             showPanel(MainPanel.getFriendlyNameStatic());
         } catch(NoServerConnectionException ex ) {
             String aS="No Server Connection "+ex;
@@ -147,6 +149,7 @@ public final class MainFrame extends javax.swing.JFrame {
         } catch (NotLoggedInException ex ) {
             String aS="Not logged in "+ex;
             logger.error(aS);
+            LofarUtils.showErrorPanel(this.getOwner(),aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             exit();
             throw ex;
         }

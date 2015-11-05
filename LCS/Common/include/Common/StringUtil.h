@@ -30,7 +30,6 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
-#include <Common/lofar_algorithm.h>
 #include <Common/Exception.h>
 
 namespace LOFAR
@@ -57,22 +56,6 @@ namespace LOFAR
     //   res[4] = ""
     // \endverbatim
     vector<string> split(const string& str, char c);
-
-    // Tokenize the string \c str using any character in \c delim as a separation character.
-    // The result does not contain empty strings; consecutive delimiter occurrences count as a single delimiter.
-    // Any delimiter occurrences at the beginning or end of \c str are ignored.
-    // 
-    // For example:
-    // \code
-    //    vector<string> tokens = StringUtil::tokenize( " aa\t bb  ", " \t" )
-    // \endcode
-    //
-    // would yield the following vector of strings:
-    // \verbatim
-    //    tokens[0] = "aa"
-    //    tokens[1] = "bb"
-    // \endverbatim
-    vector<string> tokenize(const string& str, const string& delims);
 
 
     // Functor to compare two strings. Strings can be compared case sensitive
@@ -143,9 +126,6 @@ uint lskipws (const string& value, uint st, uint end);
 // value.substr(st, end-st) extracts the significant value.
 // It returns st if all whitespace.
 uint rskipws (const string& value, uint st, uint end);
-
-// Skip the leading and trailing whitespace and square brackets.
-string stripBrackets(const string& orgStr);
 
 // Skip past a quoted string.
 // The quote character is the first character (at position st).

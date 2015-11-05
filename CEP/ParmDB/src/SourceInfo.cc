@@ -25,27 +25,18 @@
 // @author Ger van Diepen (diepen AT astron nl)
 
 //# Includes
-#include <lofar_config.h>
-
 #include <ParmDB/SourceInfo.h>
-#include <Blob/BlobIStream.h>
-#include <Blob/BlobOStream.h>
-#include <Blob/BlobArray.h>
-
 #include <casa/Arrays/Array.h>
-
 
 namespace LOFAR {
 namespace BBS {
 
   SourceInfo::SourceInfo (const string& name, Type type,
-                          const string& refType,
                           uint spectralIndexNTerms,
                           double spectralIndexRefFreqHz,
                           bool useRotationMeasure)
     : itsName           (name),
       itsType           (type),
-      itsRefType        (refType),
       itsSpInxNTerms    (spectralIndexNTerms),
       itsSpInxRefFreq   (spectralIndexRefFreqHz),
       itsUseRotMeas     (useRotationMeasure),
@@ -65,7 +56,6 @@ namespace BBS {
     if (this != &that) {
       itsName           = that.itsName;
       itsType           = that.itsType;
-      itsRefType        = that.itsRefType;
       itsSpInxNTerms    = that.itsSpInxNTerms;
       itsSpInxRefFreq   = that.itsSpInxRefFreq;
       itsUseRotMeas     = that.itsUseRotMeas;
@@ -73,10 +63,10 @@ namespace BBS {
       itsShapeletScaleQ = that.itsShapeletScaleQ;
       itsShapeletScaleU = that.itsShapeletScaleU;
       itsShapeletScaleV = that.itsShapeletScaleV;
-      itsShapeletCoeffI.assign (that.itsShapeletCoeffI);
-      itsShapeletCoeffQ.assign (that.itsShapeletCoeffQ);
-      itsShapeletCoeffU.assign (that.itsShapeletCoeffU);
-      itsShapeletCoeffV.assign (that.itsShapeletCoeffV);
+      itsShapeletCoeffI.assign (itsShapeletCoeffI);
+      itsShapeletCoeffQ.assign (itsShapeletCoeffQ);
+      itsShapeletCoeffU.assign (itsShapeletCoeffU);
+      itsShapeletCoeffV.assign (itsShapeletCoeffV);
     }
     return *this;
   }
@@ -99,45 +89,6 @@ namespace BBS {
     itsShapeletScaleQ = scaleQ;
     itsShapeletScaleU = scaleU;
     itsShapeletScaleV = scaleV;
-  }
-
-  void SourceInfo::write (BlobOStream& bos) const
-  {
-    int16 version = 1;
-    bos << version << itsName << int16(itsType) << itsRefType
-        << itsSpInxNTerms << itsSpInxRefFreq << itsUseRotMeas;
-    if (itsType == SHAPELET) {
-      bos << itsShapeletScaleI << itsShapeletScaleQ
-          << itsShapeletScaleU << itsShapeletScaleV
-          << itsShapeletCoeffI << itsShapeletCoeffQ
-          << itsShapeletCoeffU << itsShapeletCoeffV;
-    }
-  }
-
-  // If ever version info is needed, 
-  void SourceInfo::read (BlobIStream& bis)
-  {
-    int16 version, type;
-    bis >> version >> itsName >> type >> itsRefType
-        >> itsSpInxNTerms >> itsSpInxRefFreq >> itsUseRotMeas;
-    ASSERT (version == 1);
-    // Convert to enum.
-    itsType = Type(type);
-    if (itsType == SHAPELET) {
-      bis >> itsShapeletScaleI >> itsShapeletScaleQ
-          >> itsShapeletScaleU >> itsShapeletScaleV
-          >> itsShapeletCoeffI >> itsShapeletCoeffQ
-          >> itsShapeletCoeffU >> itsShapeletCoeffV;
-    } else {
-      itsShapeletScaleI = 0;
-      itsShapeletScaleQ = 0;
-      itsShapeletScaleU = 0;
-      itsShapeletScaleV = 0;
-      itsShapeletCoeffI.resize();
-      itsShapeletCoeffQ.resize();
-      itsShapeletCoeffU.resize();
-      itsShapeletCoeffV.resize();
-    }
   }
 
 } // namespace BBS

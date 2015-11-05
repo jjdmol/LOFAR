@@ -32,7 +32,6 @@
 #include <BBSKernel/Expr/FlagIf.h>
 #include <BBSKernel/Expr/LinearToCircularRL.h>
 #include <BBSKernel/Expr/MatrixInverse.h>
-#include <BBSKernel/Expr/MatrixInverseMMSE.h>
 #include <BBSKernel/Expr/MatrixSum.h>
 #include <BBSKernel/Expr/MergeFlags.h>
 #include <BBSKernel/Expr/Request.h>
@@ -61,7 +60,7 @@ namespace BBS
 
 MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
     const BufferMap &buffers, const ModelConfig &config,
-    const Instrument::ConstPtr &instrument, const BaselineSeq &baselines,
+    const Instrument::Ptr &instrument, const BaselineSeq &baselines,
     double refFreq, const casa::MDirection &refPhase,
     const casa::MDirection &refDelay, const casa::MDirection &refTile,
     bool circular)
@@ -75,8 +74,7 @@ MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
 
 MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
     const BufferMap &buffers, const ModelConfig &config,
-    const VisBuffer::Ptr &buffer, const BaselineMask &mask, bool inverse,
-    bool useMMSE, double sigmaMMSE)
+    const VisBuffer::Ptr &buffer, const BaselineMask &mask, bool inverse)
     :   itsBaselines(filter(buffer->baselines(), mask)),
         itsCachePolicy(new DefaultCachePolicy())
 {
@@ -87,7 +85,7 @@ MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
 
     if(inverse)
     {
-        makeInverseExpr(sourceDB, buffers, config, buffer, useMMSE, sigmaMMSE);
+        makeInverseExpr(sourceDB, buffers, config, buffer);
     }
     else
     {
@@ -106,7 +104,7 @@ void MeasurementExprLOFAR::solvablesChanged()
 
 void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
     const BufferMap &buffers, const ModelConfig &config,
-    const Instrument::ConstPtr &instrument, double refFreq,
+    const Instrument::Ptr &instrument, double refFreq,
     const casa::MDirection &refPhase, const casa::MDirection &refDelay,
     const casa::MDirection &refTile, bool circular)
 {
@@ -130,6 +128,9 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
         THROW(BBSKernelException, "No patches found matching selection.");
     }
 
+    // Create a linear to circular-RL transformation Jones matrix.
+    Expr<JonesMatrix>::Ptr H(new LinearToCircularRL());
+
     // Beam reference position on the sky.
     Expr<Vector<2> >::Ptr exprRefDelay = makeDirectionExpr(refDelay);
     Expr<Vector<3> >::Ptr exprRefDelayITRF =
@@ -148,16 +149,27 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             instrument->station(i)->position(), refPhase);
     }
 
+    HamakerBeamCoeff coeffLBA, coeffHBA;
+    if(config.useBeam())
+    {
+        // Read LBA beam model coefficients.
+        casa::Path path;
+        path = config.getBeamConfig().getElementPath();
+        path.append("element_beam_HAMAKER_LBA.coeff");
+        coeffLBA.init(path);
+
+        // Read HBA beam model coefficients.
+        path = config.getBeamConfig().getElementPath();
+        path.append("element_beam_HAMAKER_HBA.coeff");
+        coeffHBA.init(path);
+    }
+
     IonosphereExpr::Ptr exprIonosphere;
     if(config.useIonosphere())
     {
         exprIonosphere = IonosphereExpr::create(config.getIonosphereConfig(),
             itsScope);
     }
-
-    // -------------------------------------------------------------------------
-    // Direction dependent effects (DDE).
-    // -------------------------------------------------------------------------
 
     vector<MatrixSum::Ptr> coherenceExpr(itsBaselines.size());
     for(size_t i = 0; i < patches.size(); ++i)
@@ -188,7 +200,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             {
                 exprDDE[j] = compose(exprDDE[j],
                     makeDirectionalGainExpr(itsScope, instrument->station(j),
-                    patch, config.getDirectionalGainConfig()));
+                    patch, config.usePhasors()));
             }
 
             // Elevation cut.
@@ -201,9 +213,9 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             if(config.useBeam())
             {
                 exprDDE[j] = compose(exprDDE[j],
-                    makeBeamExpr(instrument->station(j), refFreq,
+                    makeBeamExpr(itsScope, instrument->station(j), refFreq,
                     exprPatchPositionITRF, exprRefDelayITRF, exprRefTileITRF,
-                    config.getBeamConfig()));
+                    config.getBeamConfig(), coeffLBA, coeffHBA));
             }
 
             // Directional TEC.
@@ -222,29 +234,18 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
                     patch));
             }
 
-            // Polarization rotation.
-            if(config.useRotation())
-            {
-                exprDDE[j] = compose(exprDDE[j],
-                    makeRotationExpr(itsScope, instrument->station(j),
-                    patch));
-            }
-
-            // Scalar phase.
-            if(config.useScalarPhase())
-            {
-                exprDDE[j] = compose(exprDDE[j],
-                    makeScalarPhaseExpr(itsScope, instrument->station(j),
-                    patch));
-            }
-
             // Ionosphere.
             if(config.useIonosphere())
             {
+                // Create an AZ, EL expression for the centroid direction of the
+                // patch.
+                Expr<Vector<2> >::Ptr exprAzEl =
+                    makeAzElExpr(instrument->station(j)->position(),
+                    exprPatch->position());
+
                 exprDDE[j] = compose(exprDDE[j],
-                    makeIonosphereExpr(instrument->station(j),
-                    instrument->position(), exprPatchPositionITRF,
-                    exprIonosphere));
+                    makeIonosphereExpr(itsScope, instrument->station(j),
+                    instrument->position(), exprAzEl, exprIonosphere));
             }
         }
 
@@ -256,6 +257,12 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             Expr<JonesMatrix>::Ptr patchCoherenceExpr =
                 exprPatch->coherence(baseline, exprUVW[baseline.first],
                 exprUVW[baseline.second]);
+
+            // Convert to circular-RL if required.
+            if(circular)
+            {
+                patchCoherenceExpr = apply(H, patchCoherenceExpr, H);
+            }
 
             // Apply direction dependent effects.
             patchCoherenceExpr = apply(exprDDE[baseline.first],
@@ -271,32 +278,15 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
         }
     }
 
-    // -------------------------------------------------------------------------
     // Direction independent effects (DIE).
-    // -------------------------------------------------------------------------
-
-    // Create a linear to circular-RL transformation Jones matrix.
-    Expr<JonesMatrix>::Ptr H(new LinearToCircularRL());
-
-    const bool isLOFAR = (instrument->name() == "LOFAR");
-
     vector<Expr<JonesMatrix>::Ptr> exprDIE(instrument->nStations());
     for(size_t i = 0; i < instrument->nStations(); ++i)
     {
-        // Convert from linear to circular-RL polarization. For the LOFAR array,
-        // which has linearly polarized antennae, this conversion is done at the
-        // end of the chain.
-        if(circular && isLOFAR)
-        {
-            exprDIE[i] = compose(exprDIE[i], H);
-        }
-
         // Create a clock delay expression per station.
         if(config.useClock())
         {
             exprDIE[i] = compose(exprDIE[i],
-                makeClockExpr(itsScope, instrument->station(i),
-                    config.getClockConfig()));
+                makeClockExpr(itsScope, instrument->station(i)));
         }
 
         // Bandpass.
@@ -311,43 +301,14 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
         {
             exprDIE[i] = compose(exprDIE[i],
                 makeGainExpr(itsScope, instrument->station(i),
-                config.getGainConfig()));
+                config.usePhasors()));
         }
 
-        // Create a direction independent TEC expression per station. Note that
-        // TEC is a scalar effect, so it commutes.
+        // Create a direction independent TEC expression per station.
         if(config.useTEC())
         {
             exprDIE[i] = compose(exprDIE[i],
                 makeTECExpr(itsScope, instrument->station(i)));
-        }
-
-        // Direction independent polarization rotation.
-        if(config.useCommonRotation())
-        {
-            exprDIE[i] = compose(exprDIE[i],
-                makeCommonRotationExpr(itsScope, instrument->station(i)));
-        }
-
-        // Direction independent scalar phase.
-        if(config.useCommonScalarPhase())
-        {
-            exprDIE[i] = compose(exprDIE[i],
-                makeCommonScalarPhaseExpr(itsScope, instrument->station(i)));
-        }
-
-        // Convert from linear to circular-RL polarization. It is assumed that
-        // for telescopes other than LOFAR, the polarization of the data is the
-        // same as the polarization of the antennae.
-        //
-        // The conversion from linear to circular would usually be part of the
-        // beam model. The conversion applied here is a hack for telescopes
-        // with circularly polarized antennae for which the beam model is not
-        // implemented. i.e. there is no telescope specific class derived from
-        // MeasurmentExpr.
-        if(circular && !isLOFAR)
-        {
-            exprDIE[i] = compose(exprDIE[i], H);
         }
     }
 
@@ -375,48 +336,29 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
 
 void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
     const BufferMap &buffers, const ModelConfig &config,
-    const VisBuffer::Ptr &buffer, bool useMMSE, double sigmaMMSE)
+    const VisBuffer::Ptr &buffer)
 {
     NSTimer timer;
     timer.start();
 
     LOG_DEBUG_STR("Building expression tree...");
 
-    Instrument::ConstPtr instrument = buffer->instrument();
+    Instrument::Ptr instrument = buffer->instrument();
 
     // Allocate space for the station response expressions.
     vector<Expr<JonesMatrix>::Ptr> stationExpr(instrument->nStations());
 
-    // -------------------------------------------------------------------------
     // Direction independent effects (DIE).
-    // -------------------------------------------------------------------------
-
-    // Create a linear to circular-RL transformation Jones matrix.
-    Expr<JonesMatrix>::Ptr H(new LinearToCircularRL());
-
     const bool haveDIE = config.useClock() || config.useBandpass()
-        || config.useGain() || config.useTEC() || config.useCommonRotation()
-        || config.useCommonScalarPhase();
-
-    const bool circular = buffer->isCircular();
-    const bool isLOFAR = (instrument->name() == "LOFAR");
+        || config.useGain() || config.useTEC();
 
     for(size_t i = 0; i < instrument->nStations(); ++i)
     {
-        // Convert from linear to circular-RL polarization. For the LOFAR array,
-        // which has linearly polarized antennae, this conversion is done at the
-        // end of the chain.
-        if(circular && isLOFAR)
-        {
-            stationExpr[i] = compose(stationExpr[i], H);
-        }
-
         // Create a clock delay expression per station.
         if(config.useClock())
         {
             stationExpr[i] = compose(stationExpr[i],
-                makeClockExpr(itsScope, instrument->station(i),
-                  config.getClockConfig()));
+                makeClockExpr(itsScope, instrument->station(i)));
         }
 
         // Bandpass.
@@ -431,54 +373,21 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
         {
             stationExpr[i] = compose(stationExpr[i],
                 makeGainExpr(itsScope, instrument->station(i),
-                config.getGainConfig()));
+                config.usePhasors()));
         }
 
-        // Create a direction independent TEC expression per station. Note that
-        // TEC is a scalar effect, so it commutes.
+        // Create a direction independent TEC expression per station.
         if(config.useTEC())
         {
             stationExpr[i] = compose(stationExpr[i],
                 makeTECExpr(itsScope, instrument->station(i)));
         }
-
-        // Direction independent polarization rotation.
-        if(config.useCommonRotation())
-        {
-            stationExpr[i] = compose(stationExpr[i],
-                makeCommonRotationExpr(itsScope, instrument->station(i)));
-        }
-
-        // Direction independent scalar phase.
-        if(config.useCommonScalarPhase())
-        {
-            stationExpr[i] = compose(stationExpr[i],
-                makeCommonScalarPhaseExpr(itsScope, instrument->station(i)));
-        }
-
-        // Convert from linear to circular-RL polarization. It is assumed that
-        // for telescopes other than LOFAR, the polarization of the data is the
-        // same as the polarization of the antennae.
-        //
-        // The conversion from linear to circular would usually be part of the
-        // beam model. The conversion applied here is a hack for telescopes
-        // with circularly polarized antennae for which the beam model is not
-        // implemented. i.e. there is no telescope specific class derived from
-        // MeasurmentExpr.
-        if(circular && !isLOFAR)
-        {
-            stationExpr[i] = compose(stationExpr[i], H);
-        }
     }
 
-    // -------------------------------------------------------------------------
     // Direction dependent effects (DDE).
-    // -------------------------------------------------------------------------
-
     const bool haveDDE = config.useDirectionalGain()
         || config.useBeam() || config.useDirectionalTEC()
-        || config.useFaradayRotation() || config.useRotation()
-        || config.useScalarPhase() || config.useIonosphere();
+        || config.useFaradayRotation() || config.useIonosphere();
 
     if(haveDDE)
     {
@@ -502,6 +411,21 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
         Expr<Vector<3> >::Ptr exprRefTileITRF =
             makeITRFExpr(instrument->position(), exprRefTile);
 
+        HamakerBeamCoeff coeffLBA, coeffHBA;
+        if(config.useBeam())
+        {
+            // Read LBA beam model coefficients.
+            casa::Path path;
+            path = config.getBeamConfig().getElementPath();
+            path.append("element_beam_HAMAKER_LBA.coeff");
+            coeffLBA.init(path);
+
+            // Read HBA beam model coefficients.
+            path = config.getBeamConfig().getElementPath();
+            path.append("element_beam_HAMAKER_HBA.coeff");
+            coeffHBA.init(path);
+        }
+
         // Functor for the creation of the ionosphere sub-expression.
         IonosphereExpr::Ptr exprIonosphere;
         if(config.useIonosphere())
@@ -516,13 +440,11 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 " observation.");
 
             if(config.useDirectionalGain() || config.useDirectionalTEC()
-                || config.useFaradayRotation() || config.useRotation()
-                || config.useScalarPhase())
+                || config.useFaradayRotation())
             {
                 THROW(BBSKernelException, "Cannot correct for DirectionalGain,"
-                    " DirectionalTEC, FaradayRotation, Rotation, and / or"
-                    " ScalarPhase when correcting for the (unnamed) phase"
-                    " reference direction.");
+                    " DirectionalTEC, and/or FaradayRotation when correcting"
+                    " for the (unnamed) phase reference direction.");
             }
 
             // Phase reference position on the sky.
@@ -537,19 +459,24 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 if(config.useBeam())
                 {
                     stationExpr[i] = compose(stationExpr[i],
-                        makeBeamExpr(instrument->station(i),
+                        makeBeamExpr(itsScope, instrument->station(i),
                         buffer->getReferenceFreq(), exprRefPhaseITRF,
                         exprRefDelayITRF, exprRefTileITRF,
-                        config.getBeamConfig()));
+                        config.getBeamConfig(), coeffLBA, coeffHBA));
                 }
 
                 // Ionosphere.
                 if(config.useIonosphere())
                 {
+                    // Create an AZ, EL expression for the phase reference
+                    // direction.
+                    Expr<Vector<2> >::Ptr exprAzEl =
+                        makeAzElExpr(instrument->station(i)->position(),
+                        exprRefPhase);
+
                     stationExpr[i] = compose(stationExpr[i],
-                        makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprRefPhaseITRF,
-                        exprIonosphere));
+                        makeIonosphereExpr(itsScope, instrument->station(i),
+                        instrument->position(), exprAzEl, exprIonosphere));
                 }
             }
         }
@@ -573,17 +500,17 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 {
                     stationExpr[i] = compose(stationExpr[i],
                         makeDirectionalGainExpr(itsScope,
-                        instrument->station(i), patch,
-                        config.getDirectionalGainConfig()));
+                        instrument->station(i), patch, config.usePhasors()));
                 }
+
                 // Beam.
                 if(config.useBeam())
                 {
                     stationExpr[i] = compose(stationExpr[i],
-                        makeBeamExpr(instrument->station(i),
+                        makeBeamExpr(itsScope, instrument->station(i),
                         buffer->getReferenceFreq(), exprPatchPositionITRF,
                         exprRefDelayITRF, exprRefTileITRF,
-                        config.getBeamConfig()));
+                        config.getBeamConfig(), coeffLBA, coeffHBA));
                 }
 
                 // Directional TEC.
@@ -602,29 +529,18 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                         instrument->station(i), patch));
                 }
 
-                // Polarization rotation.
-                if(config.useRotation())
-                {
-                    stationExpr[i] = compose(stationExpr[i],
-                        makeRotationExpr(itsScope, instrument->station(i),
-                        patch));
-                }
-
-                // Scalar phase.
-                if(config.useScalarPhase())
-                {
-                    stationExpr[i] = compose(stationExpr[i],
-                        makeScalarPhaseExpr(itsScope, instrument->station(i),
-                        patch));
-                }
-
                 // Ionosphere.
                 if(config.useIonosphere())
                 {
+                    // Create an AZ, EL expression for the centroid direction of
+                    // the patch.
+                    Expr<Vector<2> >::Ptr exprAzEl =
+                        makeAzElExpr(instrument->station(i)->position(),
+                        exprPatch->position());
+
                     stationExpr[i] = compose(stationExpr[i],
-                        makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprPatchPositionITRF,
-                        exprIonosphere));
+                        makeIonosphereExpr(itsScope, instrument->station(i),
+                        instrument->position(), exprAzEl, exprIonosphere));
                 }
             }
         }
@@ -650,17 +566,8 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                     exprThreshold));
             }
 
-            if(useMMSE && sigmaMMSE > 0.0)
-            {
-                stationExpr[i] =
-                    Expr<JonesMatrix>::Ptr(new MatrixInverseMMSE(stationExpr[i],
-                    sigmaMMSE));
-            }
-            else
-            {
-                stationExpr[i] =
-                    Expr<JonesMatrix>::Ptr(new MatrixInverse(stationExpr[i]));
-            }
+            stationExpr[i] =
+                Expr<JonesMatrix>::Ptr(new MatrixInverse(stationExpr[i]));
         }
     }
 
@@ -804,7 +711,6 @@ void MeasurementExprLOFAR::setEvalGrid(const Grid &grid)
     // TODO: Set cache size in number of Matrix instances... ?
 }
 
-// i is baseline index, index in baselineseq
 const JonesMatrix MeasurementExprLOFAR::evaluate(unsigned int i)
 {
     JonesMatrix result;
@@ -859,10 +765,8 @@ void MeasurementExprLOFAR::setCorrelations(bool circular)
 
     if(circular)
     {
-        LOG_DEBUG_STR("Visibilities will be simulated using circular-RL"
-            " correlations. Instrument tables are interpreted as linear"
-            " so when applying them the visibilities will be converted to"
-            " linear and back.");
+        LOG_DEBUG_STR("Visibilities will be simulated using circular (RL)"
+            " correlations.");
         itsCorrelations.append(Correlation::RR);
         itsCorrelations.append(Correlation::RL);
         itsCorrelations.append(Correlation::LR);

@@ -36,6 +36,7 @@
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprValue.h>
+#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/Scope.h>
 #include <ParmDB/SourceDB.h>
 #include <measures/Measures/MDirection.h>
@@ -58,11 +59,11 @@ public:
         const ModelConfig &config, const Instrument::ConstPtr &instrument,
         double refFreq, const casa::MDirection &refPhase,
         const casa::MDirection &refDelay, const casa::MDirection &refTile,
-        bool inverse = false, bool useMMSE = false, double sigmaMMSE = 0.0);
+        bool inverse = false);
 
     StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
         const ModelConfig &config, const VisBuffer::Ptr &buffer,
-        bool inverse = false, bool useMMSE = false, double sigmaMMSE = 0.0);
+        bool inverse = false);
 
     // \name ExprSet interface implementation
     // These methods form an implementation of the ExprSet interface.
@@ -86,14 +87,12 @@ private:
     void initialize(SourceDB &sourceDB,
         const BufferMap &buffers,
         const ModelConfig &config,
-        const Instrument::ConstPtr &instrument,
+        const Instrument::Ptr &instrument,
         double refFreq,
         const casa::MDirection &refPhase,
         const casa::MDirection &refDelay,
         const casa::MDirection &refTile,
-        bool inverse,
-        bool useMMSE,
-        double sigmaMMSE);
+        bool inverse);
 
     PatchExprBase::Ptr makePatchExpr(const string &name,
         const casa::MDirection &refPhase,

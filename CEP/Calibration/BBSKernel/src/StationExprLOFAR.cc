@@ -25,13 +25,20 @@
 #include <BBSKernel/StationExprLOFAR.h>
 #include <BBSKernel/Exceptions.h>
 #include <BBSKernel/MeasurementExprLOFARUtil.h>
+#include <BBSKernel/Expr/AntennaFieldAzEl.h>
+#include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/CachePolicy.h>
+#include <BBSKernel/Expr/Delay.h>
+#include <BBSKernel/Expr/EquatorialCentroid.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
+#include <BBSKernel/Expr/FaradayRotation.h>
+#include <BBSKernel/Expr/ITRFDirection.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/MatrixInverse.h>
-#include <BBSKernel/Expr/MatrixInverseMMSE.h>
 #include <BBSKernel/Expr/MatrixMul2.h>
 #include <BBSKernel/Expr/ScalarMatrixMul.h>
+#include <BBSKernel/Expr/StationBeamFormer.h>
+#include <BBSKernel/Expr/TileArrayFactor.h>
 
 namespace LOFAR
 {
@@ -42,27 +49,25 @@ StationExprLOFAR::StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
     const ModelConfig &config, const Instrument::ConstPtr &instrument,
     double refFreq, const casa::MDirection &refPhase,
     const casa::MDirection &refDelay, const casa::MDirection &refTile,
-    bool inverse, bool useMMSE, double sigmaMMSE)
+    bool inverse)
 {
     initialize(sourceDB, buffers, config, instrument, refFreq, refPhase,
-        refDelay, refTile, inverse, useMMSE, sigmaMMSE);
+        refDelay, refTile, inverse);
 }
 
 StationExprLOFAR::StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
-    const ModelConfig &config, const VisBuffer::Ptr &buffer, bool inverse,
-    bool useMMSE, double sigmaMMSE)
+    const ModelConfig &config, const VisBuffer::Ptr &buffer, bool inverse)
 {
     initialize(sourceDB, buffers, config, buffer->instrument(),
         buffer->getReferenceFreq(), buffer->getPhaseReference(),
-        buffer->getDelayReference(), buffer->getTileReference(), inverse,
-        useMMSE, sigmaMMSE);
+        buffer->getDelayReference(), buffer->getTileReference(), inverse);
 }
 
 void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
-    const ModelConfig &config, const Instrument::ConstPtr &instrument,
+    const ModelConfig &config, const Instrument::Ptr &instrument,
     double refFreq, const casa::MDirection &refPhase,
     const casa::MDirection &refDelay, const casa::MDirection &refTile,
-    bool inverse, bool useMMSE, double sigmaMMSE)
+    bool inverse)
 {
     // Allocate space for the station response expressions.
     itsExpr.resize(instrument->nStations());
@@ -74,8 +79,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         if(config.useClock())
         {
             itsExpr[i] = compose(itsExpr[i],
-                makeClockExpr(itsScope, instrument->station(i),
-                    config.getClockConfig()));
+                makeClockExpr(itsScope, instrument->station(i)));
         }
 
         // Bandpass.
@@ -90,7 +94,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         {
             itsExpr[i] = compose(itsExpr[i],
                 makeGainExpr(itsScope, instrument->station(i),
-                config.getGainConfig()));
+                config.usePhasors()));
         }
 
         // Create a direction independent TEC expression per station.
@@ -99,26 +103,11 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
             itsExpr[i] = compose(itsExpr[i],
                 makeTECExpr(itsScope, instrument->station(i)));
         }
-
-        // Direction independent polarization rotation.
-        if(config.useCommonRotation())
-        {
-            itsExpr[i] = compose(itsExpr[i],
-                makeCommonRotationExpr(itsScope, instrument->station(i)));
-        }
-
-        // Direction independent scalar phase.
-        if(config.useCommonScalarPhase())
-        {
-            itsExpr[i] = compose(itsExpr[i],
-                makeCommonScalarPhaseExpr(itsScope, instrument->station(i)));
-        }
     }
 
     // Direction dependent effects (DDE).
     if(config.useDirectionalGain() || config.useBeam()
         || config.useDirectionalTEC() || config.useFaradayRotation()
-        || config.useRotation() || config.useScalarPhase()
         || config.useIonosphere())
     {
         // Position of interest on the sky (given as patch name).
@@ -139,6 +128,21 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         Expr<Vector<3> >::Ptr exprRefTileITRF =
             makeITRFExpr(instrument->position(), exprRefTile);
 
+        HamakerBeamCoeff coeffLBA, coeffHBA;
+        if(config.useBeam())
+        {
+            // Read LBA beam model coefficients.
+            casa::Path path;
+            path = config.getBeamConfig().getElementPath();
+            path.append("element_beam_HAMAKER_LBA.coeff");
+            coeffLBA.init(path);
+
+            // Read HBA beam model coefficients.
+            path = config.getBeamConfig().getElementPath();
+            path.append("element_beam_HAMAKER_HBA.coeff");
+            coeffHBA.init(path);
+        }
+
         // Functor for the creation of the ionosphere sub-expression.
         IonosphereExpr::Ptr exprIonosphere;
         if(config.useIonosphere())
@@ -153,13 +157,11 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 " observation.");
 
             if(config.useDirectionalGain() || config.useDirectionalTEC()
-                || config.useFaradayRotation() || config.useRotation()
-                || config.useScalarPhase())
+                || config.useFaradayRotation())
             {
                 THROW(BBSKernelException, "Cannot correct for DirectionalGain,"
-                    " DirectionalTEC, FaradayRotation, Rotation, and / or"
-                    " ScalarPhase when correcting for the (unnamed) phase"
-                    " reference direction.");
+                    " DirectionalTEC, and/or FaradayRotation when correcting"
+                    " for the (unnamed) phase reference direction.");
             }
 
             // Phase reference position on the sky.
@@ -173,18 +175,24 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 if(config.useBeam())
                 {
                     itsExpr[i] = compose(itsExpr[i],
-                        makeBeamExpr(instrument->station(i), refFreq,
-                        exprRefPhaseITRF, exprRefDelayITRF, exprRefTileITRF,
-                        config.getBeamConfig()));
+                        makeBeamExpr(itsScope, instrument->station(i),
+                        refFreq, exprRefPhaseITRF, exprRefDelayITRF,
+                        exprRefTileITRF, config.getBeamConfig(), coeffLBA,
+                        coeffHBA));
                 }
 
                 // Ionosphere.
                 if(config.useIonosphere())
                 {
+                    // Create an AZ, EL expression for the phase reference
+                    // direction.
+                    Expr<Vector<2> >::Ptr exprAzEl =
+                        makeAzElExpr(instrument->station(i)->position(),
+                        exprRefPhase);
+
                     itsExpr[i] = compose(itsExpr[i],
-                        makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprRefPhaseITRF,
-                        exprIonosphere));
+                        makeIonosphereExpr(itsScope, instrument->station(i),
+                        instrument->position(), exprAzEl, exprIonosphere));
                 }
             }
         }
@@ -208,17 +216,17 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 {
                     itsExpr[i] = compose(itsExpr[i],
                         makeDirectionalGainExpr(itsScope,
-                        instrument->station(i), patch,
-                        config.getDirectionalGainConfig()));
+                        instrument->station(i), patch, config.usePhasors()));
                 }
 
                 // Beam.
                 if(config.useBeam())
                 {
                     itsExpr[i] = compose(itsExpr[i],
-                        makeBeamExpr(instrument->station(i), refFreq,
+                        makeBeamExpr(itsScope, instrument->station(i), refFreq,
                         exprPatchPositionITRF, exprRefDelayITRF,
-                        exprRefTileITRF, config.getBeamConfig()));
+                        exprRefTileITRF, config.getBeamConfig(), coeffLBA,
+                        coeffHBA));
                 }
 
                 // Directional TEC.
@@ -237,29 +245,18 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                         instrument->station(i), patch));
                 }
 
-                // Polarization rotation.
-                if(config.useRotation())
-                {
-                    itsExpr[i] = compose(itsExpr[i],
-                        makeRotationExpr(itsScope, instrument->station(i),
-                        patch));
-                }
-
-                // Scalar phase.
-                if(config.useScalarPhase())
-                {
-                    itsExpr[i] = compose(itsExpr[i],
-                        makeScalarPhaseExpr(itsScope, instrument->station(i),
-                        patch));
-                }
-
                 // Ionosphere.
                 if(config.useIonosphere())
                 {
+                    // Create an AZ, EL expression for the centroid direction of
+                    // the patch.
+                    Expr<Vector<2> >::Ptr exprAzEl =
+                        makeAzElExpr(instrument->station(i)->position(),
+                        exprPatch->position());
+
                     itsExpr[i] = compose(itsExpr[i],
-                        makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprPatchPositionITRF,
-                        exprIonosphere));
+                        makeIonosphereExpr(itsScope, instrument->station(i),
+                        instrument->position(), exprAzEl, exprIonosphere));
                 }
             }
         }
@@ -276,17 +273,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
 
         if(inverse)
         {
-            if(useMMSE && sigmaMMSE > 0.0)
-            {
-                itsExpr[i] =
-                    Expr<JonesMatrix>::Ptr(new MatrixInverseMMSE(itsExpr[i],
-                    sigmaMMSE));
-            }
-            else
-            {
-                itsExpr[i] =
-                    Expr<JonesMatrix>::Ptr(new MatrixInverse(itsExpr[i]));
-            }
+            itsExpr[i] = Expr<JonesMatrix>::Ptr(new MatrixInverse(itsExpr[i]));
         }
     }
 

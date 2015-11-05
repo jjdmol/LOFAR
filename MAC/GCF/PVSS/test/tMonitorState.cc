@@ -3,7 +3,7 @@
 //
 //  Copyright (C) 2008
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ GCFEvent::TResult tMonitorState::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 	case F_INIT:  {
 		LOG_DEBUG("Creating a Service Class");
 		itsService = new PVSSservice(itsResponse);
-		PVSSresult		  result(SA_NO_ERROR);
+		PVSSresult		  result;
 
 		try {
 			LOG_DEBUG("Taking subscribtion: FROM 'state' WHERE _DP='LOFAR_PIC_*'");

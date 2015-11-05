@@ -67,7 +67,7 @@ const std::string QualityTablesFormatter::ColumnNameValue     = "VALUE";
 
 enum QualityTablesFormatter::StatisticKind QualityTablesFormatter::NameToKind(const std::string &kindName)
 {
-	for(unsigned i=0;i<37;++i)
+	for(unsigned i=0;i<20;++i)
 	{
 		if(kindName == _kindToNameTable[i])
 			return (QualityTablesFormatter::StatisticKind) i;
@@ -118,12 +118,6 @@ bool QualityTablesFormatter::hasOneEntry(enum QualityTable table, unsigned kindI
 	return false;
 }
 
-/**
- * Will add an empty table to the measurement set named "QUALITY_KIND_NAME" and
- * initialize its default column.
- * This table can hold a list of quality statistic types that are referred to in
- * the statistic value tables.
- */
 void QualityTablesFormatter::createKindNameTable()
 {
 	casa::TableDesc tableDesc("QUALITY_KIND_NAME_TYPE", QUALITY_TABLES_VERSION_STR, casa::TableDesc::Scratch);
@@ -137,11 +131,6 @@ void QualityTablesFormatter::createKindNameTable()
 	_measurementSet->rwKeywordSet().defineTable(TableToName(KindNameTable), newTable);
 }
 
-/**
- * Add the time column to the table descriptor. Used by create..Table() methods.
- * It holds "Measure"s of time, which is what casacore defines as a value including
- * a unit and a reference frame.
- */
 void QualityTablesFormatter::addTimeColumn(casa::TableDesc &tableDesc)
 {
 	casa::ScalarColumnDesc<double> timeDesc(ColumnNameTime, "Central time of statistic");
@@ -153,11 +142,6 @@ void QualityTablesFormatter::addTimeColumn(casa::TableDesc &tableDesc)
 	mepochCol.write(tableDesc);
 }
 
-/**
- * Add the frequency column to the table descriptor. Used by create..Table() methods.
- * It holds "Quantum"s of frequency, which is what casacore defines as a value including
- * a unit (Hertz).
- */
 void QualityTablesFormatter::addFrequencyColumn(casa::TableDesc &tableDesc)
 {
 	casa::ScalarColumnDesc<double> freqDesc(ColumnNameFrequency, "Central frequency of statistic bin");
@@ -169,26 +153,15 @@ void QualityTablesFormatter::addFrequencyColumn(casa::TableDesc &tableDesc)
 	quantDesc.write(tableDesc);
 }
 
-/**
- * Add value column to the table descriptor. Used by create..Table() methods.
- * It consist of an array of statistics, each element holds a polarization.
- */
-void QualityTablesFormatter::addValueColumn(casa::TableDesc &tableDesc, unsigned polarizationCount)
+void QualityTablesFormatter::addValueColumn(casa::TableDesc &tableDesc)
 {
 	casa::IPosition shape(1);
-	shape[0] = polarizationCount;
+	shape[0] = 4;
 	casa::ArrayColumnDesc<casa::Complex> valDesc(ColumnNameValue, "Value of statistic", shape, casa::ColumnDesc::Direct);
 	tableDesc.addColumn(valDesc);
 }
 
-/**
- * Will add an empty table to the measurement set named "QUALITY_TIME_STATISTIC" and
- * initialize its default column.
- * This table can hold several statistic kinds per time step. 
- * @param polarizationCount specifies the nr polarizations. This is required for the
- * shape of the value column.
- */
-void QualityTablesFormatter::createTimeStatisticTable(unsigned polarizationCount)
+void QualityTablesFormatter::createTimeStatisticTable()
 {
 	casa::TableDesc tableDesc("QUALITY_TIME_STATISTIC_TYPE", QUALITY_TABLES_VERSION_STR, casa::TableDesc::Scratch);
 	tableDesc.comment() = "Statistics over time";
@@ -196,7 +169,7 @@ void QualityTablesFormatter::createTimeStatisticTable(unsigned polarizationCount
 	addTimeColumn(tableDesc);
 	addFrequencyColumn(tableDesc);
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameKind, "Index of the statistic kind"));
-	addValueColumn(tableDesc, polarizationCount);
+	addValueColumn(tableDesc);
 
 	casa::SetupNewTable newTableSetup(TableToFilename(TimeStatisticTable), tableDesc, casa::Table::New);
 	casa::Table newTable(newTableSetup);
@@ -204,21 +177,14 @@ void QualityTablesFormatter::createTimeStatisticTable(unsigned polarizationCount
 	_measurementSet->rwKeywordSet().defineTable(TableToName(TimeStatisticTable), newTable);
 }
 
-/**
- * Will add an empty table to the measurement set named "QUALITY_FREQUENCY_STATISTIC" and
- * initialize its default column.
- * This table can hold several statistic kinds per time step. 
- * @param polarizationCount specifies the nr polarizations. This is required for the
- * shape of the value column.
- */
-void QualityTablesFormatter::createFrequencyStatisticTable(unsigned polarizationCount)
+void QualityTablesFormatter::createFrequencyStatisticTable()
 {
 	casa::TableDesc tableDesc("QUALITY_FREQUENCY_STATISTIC_TYPE", QUALITY_TABLES_VERSION_STR, casa::TableDesc::Scratch);
 	tableDesc.comment() = "Statistics over frequency";
 	
 	addFrequencyColumn(tableDesc);
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameKind, "Index of the statistic kind"));
-	addValueColumn(tableDesc, polarizationCount);
+	addValueColumn(tableDesc);
 
 	casa::SetupNewTable newTableSetup(TableToFilename(FrequencyStatisticTable), tableDesc, casa::Table::New);
 	casa::Table newTable(newTableSetup);
@@ -226,14 +192,7 @@ void QualityTablesFormatter::createFrequencyStatisticTable(unsigned polarization
 	_measurementSet->rwKeywordSet().defineTable(TableToName(FrequencyStatisticTable), newTable);
 }
 
-/**
- * Will add an empty table to the measurement set named "QUALITY_BASELINE_STATISTIC" and
- * initialize its default column.
- * This table can hold several statistic kinds per time step. 
- * @param polarizationCount specifies the nr polarizations. This is required for the
- * shape of the value column.
- */
-void QualityTablesFormatter::createBaselineStatisticTable(unsigned polarizationCount)
+void QualityTablesFormatter::createBaselineStatisticTable()
 {
 	casa::TableDesc tableDesc("QUALITY_BASELINE_STATISTIC_TYPE", QUALITY_TABLES_VERSION_STR, casa::TableDesc::Scratch);
 	tableDesc.comment() = "Statistics per baseline";
@@ -242,7 +201,7 @@ void QualityTablesFormatter::createBaselineStatisticTable(unsigned polarizationC
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameAntenna2, "Index of second antenna"));
 	addFrequencyColumn(tableDesc);
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameKind, "Index of the statistic kind"));
-	addValueColumn(tableDesc, polarizationCount);
+	addValueColumn(tableDesc);
 
 	casa::SetupNewTable newTableSetup(TableToFilename(BaselineStatisticTable), tableDesc, casa::Table::New);
 	casa::Table newTable(newTableSetup);
@@ -250,7 +209,7 @@ void QualityTablesFormatter::createBaselineStatisticTable(unsigned polarizationC
 	_measurementSet->rwKeywordSet().defineTable(TableToName(BaselineStatisticTable), newTable);
 }
 
-void QualityTablesFormatter::createBaselineTimeStatisticTable(unsigned polarizationCount)
+void QualityTablesFormatter::createBaselineTimeStatisticTable()
 {
 	casa::TableDesc tableDesc("QUALITY_BASELINE_TIME_STATISTIC_TYPE", QUALITY_TABLES_VERSION_STR, casa::TableDesc::Scratch);
 	tableDesc.comment() = "Statistics per baseline";
@@ -260,7 +219,7 @@ void QualityTablesFormatter::createBaselineTimeStatisticTable(unsigned polarizat
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameAntenna2, "Index of second antenna"));
 	addFrequencyColumn(tableDesc);
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameKind, "Index of the statistic kind"));
-	addValueColumn(tableDesc, polarizationCount);
+	addValueColumn(tableDesc);
 
 	casa::SetupNewTable newTableSetup(TableToFilename(BaselineTimeStatisticTable), tableDesc, casa::Table::New);
 	casa::Table newTable(newTableSetup);

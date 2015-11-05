@@ -2,7 +2,7 @@
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //# This program is free software; you can redistribute it and/or modify
 //# it under the terms of the GNU General Public License as published by
@@ -280,7 +280,7 @@ namespace LOFAR
 	      _M_w[__wshift] = _M_w[0] << __offset;
 	    }
 
-	  std::fill(_M_w + 0, _M_w + __wshift, static_cast<_WordT>(0));
+	  fill(_M_w + 0, _M_w + __wshift, static_cast<_WordT>(0));
 	}
     }
 
@@ -306,7 +306,7 @@ namespace LOFAR
 	      _M_w[__limit] = _M_w[_Nw-1] >> __offset;
 	    }
 
-	  std::fill(_M_w + __limit + 1, _M_w + _Nw, static_cast<_WordT>(0));
+	  fill(_M_w + __limit + 1, _M_w + _Nw, static_cast<_WordT>(0));
 	}
     }
 

@@ -76,8 +76,6 @@
 #include <BBSKernel/Apply.h>
 #include <BBSKernel/Estimate.h>
 
-#include <casa/OS/Path.h>
-
 namespace LOFAR
 {
   namespace BBS
@@ -512,9 +510,6 @@ namespace LOFAR
       evaluator.dumpStats(oss);
       LOG_DEBUG(oss.str());
 
-      // Flag NaN's introduced in the output (if any).
-      chunk->flagsNaN();
-
       // Write output if required.
       if(!command.outputColumn().empty())
       {
@@ -575,14 +570,14 @@ namespace LOFAR
       evaluator.dumpStats(oss);
       LOG_DEBUG(oss.str());
 
-      // Flag NaN's introduced in the output (if any).
-      chunk->flagsNaN();
-
       // Write output if required.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(chunk, itsChunkSelection, command.outputColumn(),
-          command.writeCovariance(), command.writeFlags(), 1);
+        chunk->flagsNaN();
+      
+        itsMeasurement->write(chunk, itsChunkSelection,
+          command.outputColumn(), command.writeCovariance(),
+          command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -638,14 +633,14 @@ namespace LOFAR
       evaluator.dumpStats(oss);
       LOG_DEBUG(oss.str());
 
-      // Flag NaN's introduced in the output (if any).
-      chunk->flagsNaN();
-
       // Write output if required.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(chunk, itsChunkSelection, command.outputColumn(),
-          command.writeCovariance(), command.writeFlags(), 1);
+        chunk->flagsNaN();
+              
+        itsMeasurement->write(chunk, itsChunkSelection,
+          command.outputColumn(), command.writeCovariance(),
+          command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -681,8 +676,7 @@ namespace LOFAR
         try
         {
           StationExprLOFAR::Ptr expr(new StationExprLOFAR(*itsSourceDB,
-            itsBuffers, command.modelConfig(), chunk, true, command.useMMSE(),
-            command.sigmaMMSE()));
+            itsBuffers, command.modelConfig(), chunk, true));
           apply(expr, chunk, blMask);
         }
         catch(Exception &ex)
@@ -698,8 +692,7 @@ namespace LOFAR
         try
         {
           model.reset(new MeasurementExprLOFAR(*itsSourceDB, itsBuffers,
-            command.modelConfig(), chunk, blMask, true, command.useMMSE(),
-            command.sigmaMMSE()));
+            command.modelConfig(), chunk, blMask, true));
         }
         catch(Exception &ex)
         {
@@ -725,14 +718,14 @@ namespace LOFAR
         LOG_DEBUG(oss.str());
       }
 
-      // Flag NaN's introduced in the output (if any).
-      chunk->flagsNaN();
-
       // Write output if required.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(chunk, itsChunkSelection, command.outputColumn(),
-          command.writeCovariance(), command.writeFlags(), 1);
+        chunk->flagsNaN();
+
+        itsMeasurement->write(chunk, itsChunkSelection,
+          command.outputColumn(), command.writeCovariance(),
+          command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");

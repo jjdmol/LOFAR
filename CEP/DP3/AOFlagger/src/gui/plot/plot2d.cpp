@@ -179,8 +179,8 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 	double
 		xLeft = _system.XRangeMin(pointSet),
 		xRight = _system.XRangeMax(pointSet),
-		yMin = _logarithmicYAxis ? MinPositiveY() : MinY(),
-		yMax = _logarithmicYAxis ? MaxPositiveY() : MaxY();
+		yMin = MinY(),
+		yMax = MaxY();
 	if(!std::isfinite(xLeft) || !std::isfinite(xRight))
 	{
 		xLeft = -1;
@@ -238,7 +238,7 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 				y2Val = (log10(pointSet.GetY(i+1)) - minYLog10) / (maxYLog10 - minYLog10);
 		} else {
 			y1Val = (pointSet.GetY(i) - yMin) / (yMax - yMin);
-			y2Val = (pointSet.GetY(i+1) - yMin) / (yMax - yMin);
+			y2Val = (pointSet.GetY(i) - yMin) / (yMax - yMin);
 		}
 		if(y1Val < 0.0) y1Val = 0.0;
 		if(y1Val > 1.0) y1Val = 1.0;

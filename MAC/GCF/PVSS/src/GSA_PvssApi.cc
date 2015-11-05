@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -21,13 +21,14 @@
 //#
 //#  $Id$
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include <unistd.h>
+#include <GCF/TM/GCF_Task.h>
 #include <CharString.hxx>
 #include <StartDpInitSysMsg.hxx>
 #include <GCF/PVSS/PVSSresult.h>
 #include "GSA_PvssApi.h"
-#include <Common/LofarLogger.h>		// MUST be after GSA file because of namespace clash
-#include <GCF/TM/GCF_Task.h>
 
 namespace LOFAR {
  namespace GCF {

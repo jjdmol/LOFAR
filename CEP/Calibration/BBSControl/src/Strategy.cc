@@ -25,7 +25,6 @@
 #include <BBSControl/Strategy.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/MultiStep.h>
-#include <BBSControl/SolveStep.h>
 #include <BBSControl/Step.h>
 #include <BBSControl/StreamUtil.h>
 #include <BBSControl/Types.h>
@@ -50,23 +49,26 @@ namespace LOFAR
 
       // Create a subset of \a aParSet, containing only the relevant keys for
       // the Strategy.
-      //ParameterSet ps(parset.makeSubset("Strategy."));
+      ParameterSet ps(parset.makeSubset("Strategy."));
 
       // Get the name of the input column
-      itsInputColumn = parset.getString("Strategy.InputColumn", "DATA");
+      itsInputColumn = ps.getString("InputColumn", "DATA");
 
       // Read data selection.
-      itsBaselines = parset.getString("Strategy.Baselines", "*&");
-      itsCorrelations = parset.getStringVector("Strategy.Correlations", vector<string>());
+      itsBaselines = ps.getString("Baselines", "*&");
+      itsCorrelations = ps.getStringVector("Correlations", vector<string>());
 
       // Get the time range.
-      itsTimeRange = parset.getStringVector("Strategy.TimeRange", vector<string>());
+      itsTimeRange = ps.getStringVector("TimeRange", vector<string>());
 
       // Get the chunk size.
-      itsChunkSize = parset.getUint32("Strategy.ChunkSize");
+      itsChunkSize = ps.getUint32("ChunkSize");
+
+      // Use a (global) solver?
+      itsUseSolver = ps.getBool("UseSolver", false);
 
       // This strategy consists of the following steps.
-      vector<string> steps(parset.getStringVector("Strategy.Steps"));
+      vector<string> steps(ps.getStringVector("Steps"));
 
       if(steps.empty()) {
         THROW(BBSControlException, "Strategy contains no steps");
@@ -75,29 +77,6 @@ namespace LOFAR
       // Try to create a step for each name in \a steps.
       for(size_t i = 0; i < steps.size(); ++i) {
         itsSteps.push_back(Step::create(steps[i], parset, 0));
-      }
-
-      itsUseSolver = findGlobalSolveStep();
-
-      int checkparset = 0;
-      try {
-        checkparset = parset.getInt ("checkparset", 0);
-      } catch (...) {
-        LOG_WARN_STR ("Parameter checkparset should be an integer value");
-        checkparset = parset.getBool ("checkparset") ? 1:0;
-      }
-
-      if (checkparset>=0) {
-        vector<string> unused = parset.unusedKeys();
-        if (! unused.empty()) {
-           LOG_WARN_STR (endl << 
-             "*** WARNING: the following parset keywords were not used ***"
-             << endl
-             << "             maybe they are misspelled"
-             << endl
-             << "    " << unused << endl);
-           ASSERTSTR (checkparset==0, "Unused parset keywords found");   
-        }
       }
     }
 
@@ -124,23 +103,6 @@ namespace LOFAR
       for(size_t i = 0; i < itsSteps.size(); ++i) {
     	  os << endl << indent << *itsSteps[i];
       }
-    }
-
-    bool Strategy::findGlobalSolveStep() const
-    {
-      StrategyIterator it(*this);
-      while(!it.atEnd()) {
-        shared_ptr<const SolveStep> step =
-          dynamic_pointer_cast<const SolveStep>(*it);
-
-        if(step && step->globalSolution()) {
-          return true;
-        }
-
-        ++it;
-      }
-
-      return false;
     }
 
     //##--------   G l o b a l   m e t h o d s   --------##//

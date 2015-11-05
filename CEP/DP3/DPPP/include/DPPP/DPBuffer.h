@@ -67,6 +67,11 @@ namespace LOFAR {
     //       correlations are there is because the MS expects them.</td>
     //  </tr>
     //  <tr>
+    //   <td>AMPLITUDE</td>
+    //   <td>The amplitudes of the visibility data. It is used by the
+    //       MedFlagger to avoid having to recalculate amplitudes.</td>
+    //  </tr>
+    //  <tr>
     //   <td>WEIGHT</td>
     //   <td>The data weights as [ncorr,nchan,nbaseline].
     //       Similarly to FLAG the ncorr axis is redundant because the
@@ -88,33 +93,13 @@ namespace LOFAR {
     //   </td>
     //  </tr>
     // </table>
-    // The FLAG data member should always be filled in, so the first DPStep
-    // (MSReader) will do that. The DATA data member is filled in if any
-    // DPStep needs DATA. Other data members are filled on demand.
+    // The DATA and FLAG data members should always filled in, so each DPStep
+    // should do that. Other data members do not need to be filled.
     // The DPInput::fetch functions should be used to get data for those
-    // members. They take care that the input buffer's data are used if
-    // available, otherwise they get it from the DPInput object.
+    // members. They take care that the buffer's data is used if available,
+    // otherwise they get it from the DPInput object.
     // In that way as little memory as needed is used. Note that e.g. the
-    // AOFlagger can use a lot of memory if a large time window is used.
-    //
-    // Until early 2015 NDPPP used the strategy of shallow data copies.
-    // I.e., a step increased the data reference counter and did not make
-    // an actual copy. Only when data were changed, a new data array was made.
-    // Thus MSReader allocated a new array when it read the data.
-    // However, it appeared this strategy lead to memory fragmentation and
-    // to sudden jumps in memory usage on Linux systems.
-    // <br>Therefore the strategy was changed to having each step preallocate
-    // its buffers and making deep copies when moving data from one step to
-    // the next one. It appeared that it not only improved memory usage,
-    // but also improved performance, possible due to far less mallocs.
-    //
-    // The buffer/step guidelines are as follows:
-    // 1. If a step keeps a buffer for later processing (e.g. AORFlagger),
-    //    it must make a copy of the buffer because the input data arrays
-    //    might have changed before that step processes the data.
-    // 2. A shallow copy of a data member can be used if a step processes
-    //    the data immediately (e.g. Averager).
-    // The DPInput::fetch functions come in those 2 flavours.
+    // MedFlagger can use a lot of memory if a large time window is used.
 
     class DPBuffer
     {
@@ -128,11 +113,8 @@ namespace LOFAR {
       // Assignment uses reference copies.
       DPBuffer& operator= (const DPBuffer&);
 
-      // Make a deep copy of all arrays in that to this.
-      void copy (const DPBuffer& that);
-
-      // Reference only the arrays that are filled in that.
-      void referenceFilled (const DPBuffer& that);
+      // Remove all arrays from the buffer.
+      void clear();
 
       // Set or get the visibility data per corr,chan,baseline.
       void setData (const casa::Cube<casa::Complex>& data)
@@ -149,6 +131,16 @@ namespace LOFAR {
         { return itsFlags; }
       casa::Cube<bool>& getFlags()
         { return itsFlags; }
+
+      // Set or get the amplitudes of the visibility data.
+      // This is used by the MedFlagger to avoid calculating amplitudes
+      // over and over again.
+      void setAmplitudes (const casa::Cube<float>& ampl)
+        { itsAmpl.reference (ampl); }
+      const casa::Cube<float>& getAmplitudes() const
+        { return itsAmpl; }
+      casa::Cube<float>& getAmplitudes()
+        { return itsAmpl; }
 
       // Set or get the weights per corr,chan,baseline.
       void setWeights (const casa::Cube<float>& weights)
@@ -172,12 +164,6 @@ namespace LOFAR {
       double getTime() const
         { return itsTime; }
 
-      // Get or set the exposure.
-      void setExposure (double exposure)
-        { itsExposure = exposure; }
-      double getExposure() const
-        { return itsExposure; }
-
       // Get or set the row numbers used by the DPInput class.
       // It can be empty (e.g. when MSReader inserted a dummy time slot).
       void setRowNrs (const casa::Vector<uint>& rownrs)
@@ -200,9 +186,9 @@ namespace LOFAR {
 
     private:
       double                    itsTime;
-      double                    itsExposure;
       casa::Vector<uint>        itsRowNrs;
       casa::Cube<casa::Complex> itsData;        //# ncorr,nchan,nbasel
+      casa::Cube<float>         itsAmpl;        //# amplitude of data
       casa::Cube<bool>          itsFlags;       //# ncorr,nchan,nbasel
       casa::Matrix<double>      itsUVW;         //# 3,nbasel
       casa::Cube<float>         itsWeights;     //# ncorr,nchan,nbasel

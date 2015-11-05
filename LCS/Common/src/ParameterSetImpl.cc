@@ -39,6 +39,7 @@ namespace LOFAR {
 //
 ParameterSetImpl::ParameterSetImpl(KeyCompare::Mode	mode)
 	: KVMap(mode),
+	  itsCount (1),
 	  itsMode(mode)
 {}
 
@@ -48,6 +49,7 @@ ParameterSetImpl::ParameterSetImpl(KeyCompare::Mode	mode)
 ParameterSetImpl::ParameterSetImpl(const string&	theFilename,
 				   KeyCompare::Mode	mode)
 	: KVMap(mode), 
+	  itsCount (1),
 	  itsMode(mode)
 {
 	readFile(theFilename, "", false);
@@ -77,16 +79,14 @@ std::ostream&	operator<< (std::ostream& os, const ParameterSetImpl &thePS)
 // The baseKey is cut off from the Keynames in the created subset, the 
 // optional prefix is put before the keynames.
 //
-shared_ptr<ParameterSetImpl>
+ParameterSetImpl* 
 ParameterSetImpl::makeSubset(const string& baseKey, 
                              const string& prefix) const
 {
-  // Thread-safety.
-  ScopedLock locker(itsMutex);
   // Convert \a baseKey to lowercase, if we need to do case insensitve compare.
-  string   base = (itsMode == KeyCompare::NOCASE) ? toLower(baseKey) : baseKey;
-  shared_ptr<ParameterSetImpl> subSet (new ParameterSetImpl(itsMode));
-  iterator pos  = subSet->begin();
+  string            base   = (itsMode == KeyCompare::NOCASE) ? toLower(baseKey) : baseKey;
+  ParameterSetImpl* subSet = new ParameterSetImpl(itsMode);
+  iterator          pos    = subSet->begin();
 
   LOG_TRACE_CALC_STR("makeSubSet(" << baseKey << "," << prefix << ")");
 
@@ -104,7 +104,6 @@ ParameterSetImpl::makeSubset(const string& baseKey,
     // cut off baseString and copy to subset
     pos = subSet->insert(pos, make_pair(prefix + it->first.substr(base.size()),
                                         it->second));
-    itsAskedParms.insert (it->first);
   }
   
   return (subSet);
@@ -117,8 +116,6 @@ ParameterSetImpl::makeSubset(const string& baseKey,
 //
 void ParameterSetImpl::subtractSubset(const string& fullPrefix) 
 {
-        // Thread-safety.
-        ScopedLock locker(itsMutex);
 	LOG_TRACE_CALC_STR("subtractSubSet(" << fullPrefix << ")");
 
 	// Convert \a baseKey to lowercase, if we need to do case insensitve compare.
@@ -175,13 +172,11 @@ void ParameterSetImpl::adoptBuffer(const string&	theBuffer,
 void ParameterSetImpl::adoptCollection(const ParameterSetImpl& theCollection,
 				       const string&	thePrefix)
 {
-  // Thread-safety.
-  ScopedLock locker(itsMutex);
   // Cannot adopt itself.
   if (&theCollection != this) {
     for (const_iterator iter = theCollection.begin();
          iter != theCollection.end(); ++iter) {
-      replaceUnlocked(thePrefix+iter->first, iter->second);
+      replace(thePrefix+iter->first, iter->second);
     }
   } else if (! thePrefix.empty()) {
     // However, adopt itself if a prefix is given.
@@ -189,21 +184,7 @@ void ParameterSetImpl::adoptCollection(const ParameterSetImpl& theCollection,
     KVMap tmp(theCollection);
     for (const_iterator iter = tmp.begin();
          iter != tmp.end(); ++iter) {
-      replaceUnlocked(thePrefix+iter->first, iter->second);
-    }
-  }
-}
-
-void ParameterSetImpl::adoptArgv (int nr, char const * const argv[])
-{
-  // Thread-safety.
-  ScopedLock locker(itsMutex);
-  for (int i=0; i<nr; ++i) {
-    string arg(argv[i]);
-    // Only add arguments containing an =-sign.
-    string::size_type eqs = arg.find('=');
-    if (eqs != string::npos) {
-      replaceUnlocked(arg.substr(0, eqs), ParameterValue(arg.substr(eqs+1)));
+      replace(thePrefix+iter->first, iter->second);
     }
   }
 }
@@ -255,8 +236,6 @@ void ParameterSetImpl::readStream (istream& inputStream,
                                    const string& prefix,
                                    bool	merge)
 {
-  // Thread-safety.
-  ScopedLock locker(itsMutex);
   // Define key and value.
   string value;
   string key;
@@ -265,36 +244,45 @@ void ParameterSetImpl::readStream (istream& inputStream,
   getline (inputStream, line);
   while (inputStream) {
     // Skip leading and trailing whitespace.
-    uint st = lskipws (line, 0, line.size());
+    uint st  = lskipws (line, 0, line.size());
     if (line[st] != '#') {                         // skip if only comment
       uint end = rskipws (line, st, line.size());
       if (st < end) {                              // skip empty line
-        uint nonbl = st;               // Position of last non-blank character
-        uint stval = st;               // Start of value
-        while (st<end) {
-          if (line[st] == '"'  ||  line[st] == '\'') {
-            st = skipQuoted (line, st);
-            nonbl = st-1;                       // last char of quoted string
-          } else if (line[st] == '#') {
-            end = rskipws(line, stval, st);     // A comment ends the line
-          } else {
-            if (line[st] == '=') {
+        bool squote = false;            // In a single quoted string?
+        bool dquote = false;            // In a double quoted string?
+        bool quote  = false;            // In a quoted string?
+        uint nonbl  = st;               // Position of last non-blank character
+        uint stval  = st;               // Start of value
+        for (uint i=st; i<end; ++i) {
+          if (!dquote) {
+            if (line[i] == '\'') {
+              squote = !squote;
+              quote  = squote;
+            }
+          }
+          if (!squote) {
+            if (line[i] == '"') {
+              dquote = !dquote;
+              quote  = dquote;
+            }
+          }
+          if (!quote) {
+            if (line[i] == '#') {
+              end = rskipws(line, st, i);         // A comment ends the line
+            } else if (line[i] == '=') {
               if (! key.empty()) {
-                // Add previous key/value to map.
-                addMerge (key, value, merge);
+                addMerge (key, value, merge);   // Add previous key/value to map
                 value.erase();
               }
-              // Use ParameterValue to get the key without possible quotes.
-              ParameterValue pvkey(line.substr(stval, nonbl-stval+1), false);
-              key = pvkey.getString();
-              ASSERTSTR (!key.empty(), "Empty key given in line " << line);
-              key = prefix + key;
-              stval = st+1;
-            } else if (line[st] != ' '  &&  line[st] != '\t') {
-              nonbl = st;                        // Position of last non-blank
+              key = prefix + line.substr (st, nonbl-st+1);   // New key
+              stval = i+1;
+            } else if (line[i] != ' '  &&  line[i] != '\t') {
+              nonbl = i;                        // Position of last non-blank
             }
-            st++;
           }
+        }
+        if (quote) {
+          THROW (APSException, "Unbalanced quotes in " + line);
         }
         // Skip possible whitespace before the value.
         // A trailing backslash is processed for backward compatibility.
@@ -307,11 +295,22 @@ void ParameterSetImpl::readStream (istream& inputStream,
           if (value.empty()) {
             value = line.substr(stval, end-stval);
           } else {
-            // Add a blank if the continuation line is not quoted.
-            if (line[stval] != '"'  &&  line[stval] != '\'') {
-              value += ' ';
+            // If both quoted, remove last and first quote.
+            // This is just like C where continuated strings have to be
+            // enclosed in quotes on all lines.
+            // Give an error if one is quoted and the other not.
+            if ((line[stval] == '"'          || line[stval] == '\'')  !=
+                (value[value.size()-1] =='"' || value[value.size()-1] =='\'')) {
+              THROW (APSException, "All value lines need to be quoted around "
+                     "continuation line " + line);
             }
-            value += line.substr(stval, end-stval);
+            if (line[stval] == '"'  ||  line[stval] == '\'') {
+              value = value.substr (0, value.size()-1) +
+                line.substr(stval+1, end-stval-1);
+            } else {
+              value += ' ';
+              value += line.substr(stval, end-stval);
+            }
           }
         }
       }
@@ -330,11 +329,11 @@ void ParameterSetImpl::addMerge (const string& key,
                                  const string& value,
                                  bool merge)
 {
-  // remove any existing value and insert this value
+  // remove any existed value and insert this value
   if ((erase(key) > 0)  &&  !merge) {
     LOG_WARN ("Key " + key + " is defined twice; ignoring first value");
   }
-  addUnlocked (key, ParameterValue(value));
+  add (key, ParameterValue(value));
 }
 
 //------------------------- single pair functions ----------------------------
@@ -344,18 +343,12 @@ void ParameterSetImpl::addMerge (const string& key,
 ParameterSetImpl::const_iterator
 ParameterSetImpl::findKV(const string& aKey, bool doThrow) const
 {
-        // Thread-safety.
-        ScopedLock locker(itsMutex);
 	LOG_TRACE_CALC_STR("find(" << aKey << ")");
 
 	const_iterator	iter = find(aKey);
 
-	if (iter == end()) {
-          if (doThrow) {
+	if (iter == end() && doThrow) {
 		THROW (APSException, formatString("Key %s unknown", aKey.c_str()));
-          }
-        } else {
-          itsAskedParms.insert (aKey);          \
 	}
 
 	return (iter);
@@ -365,13 +358,6 @@ ParameterSetImpl::findKV(const string& aKey, bool doThrow) const
 // add (key, value)
 //
 void ParameterSetImpl::add(const string& aKey, const ParameterValue& aValue)
-{
-  ScopedLock locker(itsMutex);
-  addUnlocked (aKey, aValue);
-}
-
-void ParameterSetImpl::addUnlocked(const string& aKey,
-                                   const ParameterValue& aValue)
 {
   if (!insert(make_pair(aKey, aValue)).second) {
     THROW (APSException, "add: Key " + aKey + " double defined?"); 
@@ -383,13 +369,6 @@ void ParameterSetImpl::addUnlocked(const string& aKey,
 //
 void ParameterSetImpl::replace(const string& aKey, const ParameterValue& aValue)
 {
-  ScopedLock locker(itsMutex);
-  replaceUnlocked (aKey, aValue);
-}
-
-void ParameterSetImpl::replaceUnlocked(const string& aKey,
-                                       const ParameterValue& aValue)
-{
   (*this)[aKey] = aValue;
 }
 
@@ -398,7 +377,6 @@ void ParameterSetImpl::replaceUnlocked(const string& aKey,
 //
 void ParameterSetImpl::remove(const string& aKey)
 {
-  ScopedLock locker(itsMutex);
   // remove any existed value
   erase(aKey);
 }
@@ -514,7 +492,6 @@ void ParameterSetImpl::writeBuffer(string&	aBuffer) const
 //
 void ParameterSetImpl::writeStream(ostream&	os) const
 {
-        ScopedLock locker(itsMutex);
 	// Write all the pairs to the file
 	const_iterator		curPair = begin();
 	while (curPair != end()) {
@@ -694,18 +671,6 @@ string	ParameterSetImpl::fullModuleName(const string&	shortKey) const
 	}
 
 	return ("");
-}
-
-vector<string> ParameterSetImpl::unusedKeys() const
-{
-  ScopedLock locker(itsMutex);
-  vector<string> vec;
-  for (const_iterator iter = begin(); iter != end(); ++iter) {
-    if (itsAskedParms.find (iter->first) == itsAskedParms.end()) {
-      vec.push_back (iter->first);
-    }
-  }
-  return vec;
 }
 
 } // namespace LOFAR

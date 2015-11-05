@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,7 +32,8 @@ import java.awt.Rectangle;
 import java.io.File;
 import java.util.Iterator;
 import java.util.Map;
-import nl.astron.lofar.lofarutils.LofarUtils;
+import java.util.Timer;
+import java.util.TimerTask;
 import nl.astron.lofar.sas.otb.exceptions.NoServerConnectionException;
 import nl.astron.lofar.sas.otb.exceptions.NotLoggedInException;
 import org.apache.log4j.Logger;
@@ -57,14 +58,29 @@ public class Main {
             @Override
       public void run() {
         System.out.println("Shutting down OTB");
-        // uninstall tab selector
-        LofarUtils.TextSelector.uninstall();
         if (itsMainFrame != null)  itsMainFrame.exit();
       }
     });
 
   }
     
+//static {
+// 
+//    int delay = 1000 * 60; // delay for 1 minute
+//    int repeat = delay * 2; // repeat every 2 minutes
+// 
+//    Timer gcTimer = new Timer();
+//    gcTimer.scheduleAtFixedRate(new TimerTask() {
+// 
+//    @Override
+//    public void run() {
+////        System.out.println("Running Gargabe-Collector");
+//        System.gc();
+//    }
+//   
+//    }, delay, repeat);
+//  
+// }
 
 
     /**
@@ -72,9 +88,8 @@ public class Main {
      */
     public static void main(String[] argv) {
         try {
-            String logConfigName = "OTB.log_prop";
-            String logConfig = "";
-            String server    = "sasdb";
+            String logConfig = "OTB.log_prop";
+            String server    = "sas001";
             String port      = "10199";
             String database  = "LOFAR_2";
             String user      = "observer";
@@ -124,26 +139,20 @@ public class Main {
             }
             if (errs) {
                 System.err.println("Usage: OTB.jar [-s server] [-p port] [-d database] [-u username] [-l logFile] [-h]");
-            }   
-            
-            LofarUtils.TextSelector.install();
+            }         
 
-            if (logConfig.isEmpty()) logConfig = logConfigName;
             File f = new File(logConfig);
             if (f.exists()) {
                 PropertyConfigurator.configure(logConfig);
             } else {
-                logConfig = File.separator+"opt"+File.separator+"sas"+File.separator+"otb"+File.separator+"etc"+File.separator+logConfigName;
+                logConfig = File.separator+"opt"+File.separator+"sas"+File.separator+logConfig;
                 f = new File(logConfig);
                 if (f.exists()) {
                     PropertyConfigurator.configure(logConfig);
                 } else {
                     logger.error("OTB.log_prop not found.");
-                    }
+                }
             }
-            // install tab focus
-            LofarUtils.TextSelector.install();
-
             logger.info("OTB started");
 
             try {

@@ -3,7 +3,7 @@
 //
 //  Copyright (C) 2008
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -84,8 +84,7 @@ GCFEvent::TResult tPVSSinfo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 			cout << "getSystemName(Id) : " << PVSSinfo::getSystemName(PVSSinfo::getLocalSystemId()) << endl;
 			cout << "getSystemId(Name) : " << (int)PVSSinfo::getSysId(PVSSinfo::getLocalSystemName()) << endl;
 			cout << "getProjectName    : " << PVSSinfo::getProjectName() << endl;
-			cout << "getOwnManNum      : " << (int)PVSSinfo::getOwnManNum() << endl;
-			cout << "getMainDBName     : " << PVSSinfo::getMainDBName() << endl << endl;
+			cout << "getOwnManNum      : " << (int)PVSSinfo::getOwnManNum() << endl << endl;
 			TEST_PROP_NAME("MCU001:LOFAR_XYZ.abc");
 			TEST_PROP_NAME("LOFAR_XYZ.abc");
 			TEST_PROP_NAME("LOFAR_XYZ.__abc");

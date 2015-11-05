@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@
 #include <Common/StringUtil.h>
 
 #include "TrigInfoCmd.h"
-#include <Common/NsTimestamp.h>
 
 
 using namespace LOFAR;
@@ -36,7 +35,7 @@ using	namespace TBB;
 
 //--Constructors for a TrigInfoCmd object.----------------------------------------
 TrigInfoCmd::TrigInfoCmd():
-	itsRcu(0), itsTime(0), itsSampleNr(0), itsTriggerSum(0),
+	itsRcu(0), itsSequenceNr(0), itsTime(0), itsSampleNr(0), itsTriggerSum(0),
 	itsTriggerSamples(0), itsPeakValue(0), itsPowerBefore(0), itsPowerAfter(0), itsMissed(0)
 {
 	TS = TbbSettings::instance();
@@ -92,6 +91,7 @@ void TrigInfoCmd::saveTpAckEvent(GCFEvent& event)
 		
 		if (tp_ack.status == 0) {
 			TS->convertCh2Rcu(getChannelNr(),&itsRcu);
+			itsSequenceNr     = tp_ack.trigger.sequence_nr;
 			itsTime           = tp_ack.trigger.time;
 			itsSampleNr       = tp_ack.trigger.sample_nr;
 			itsTriggerSum     = tp_ack.trigger.sum;
@@ -111,10 +111,12 @@ void TrigInfoCmd::saveTpAckEvent(GCFEvent& event)
 void TrigInfoCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBTrigInfoAckEvent tbb_ack;
-	NsTimestamp nsTimestamp(itsTime, (uint32)((double)itsSampleNr * TS->getSampleTime()));
+	
 	tbb_ack.status_mask     = getStatus(0);
 	tbb_ack.rcu             = itsRcu;
-	tbb_ack.nstimestamp     = nsTimestamp;
+	tbb_ack.sequence_nr     = itsSequenceNr;
+	tbb_ack.time            = itsTime;
+	tbb_ack.sample_nr       = itsSampleNr;
 	tbb_ack.trigger_sum     = itsTriggerSum;
 	tbb_ack.trigger_samples = itsTriggerSamples;
 	tbb_ack.peak_value      = itsPeakValue;

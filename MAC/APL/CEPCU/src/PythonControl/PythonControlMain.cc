@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -22,17 +22,11 @@
 //#
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Common/Exception.h>
-#include <MessageBus/MessageBus.h>
 
 #include "PythonControl.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::CEPCU;
-using namespace LOFAR;
-
-// Use a terminate handler that can produce a backtrace.
-LOFAR::Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {
@@ -43,27 +37,15 @@ int main(int argc, char* argv[])
 		return(-1);
 	}
 
-	try {
-		GCFScheduler::instance()->init(argc, argv, argv[1]);
+	GCFScheduler::instance()->init(argc, argv, "PythonControl");
 
-    MessageBus::init();
+	ParentControl*	pc = ParentControl::instance();
+	pc->start();	// make initial transition
 
-		ParentControl*	pc = ParentControl::instance();
-		pc->start();	// make initial transition
+	PythonControl	pyc(argv[1]);
+	pyc.start(); 	// make initial transition
 
-		PythonControl	pyc(argv[1]);
-		pyc.start(); 	// make initial transition
-
-		GCFScheduler::instance()->setDelayedQuit(true);
-		GCFScheduler::instance()->run();	// until stop was called.
-
-		pc->quit();		// let tasks quit nicely.
-		pyc.quit();
-		GCFScheduler::instance()->run(0.3); // let tasks die.
-	} catch( LOFAR::Exception &ex ) {
-		LOG_FATAL_STR("Caught exception: " << ex);
-		return 1;
-	}
+	GCFScheduler::instance()->run();
 
 	return (0);
 }

@@ -17,14 +17,11 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#include <lofar_config.h>
 #include <AOFlagger/util/stopwatch.h>
 
 #include <AOFlagger/strategy/algorithms/svdmitigater.h>
 
-#ifdef HAVE_GTKMM
- #include <AOFlagger/gui/plot/plot2d.h>
-#endif
+#include <AOFlagger/gui/plot/plot2d.h>
 
 extern "C" {
   int zgesvd_(char *jobu, char *jobvt, integer *m, integer *n, 
@@ -166,9 +163,6 @@ void SVDMitigater::Compose()
 		std::cout << watch.ToString() << std::endl;
 }
 
-
-#ifdef HAVE_GTKMM
-
 void SVDMitigater::CreateSingularValueGraph(const TimeFrequencyData &data, Plot2D &plot)
 {
 	size_t polarisationCount = data.PolarisationCount();
@@ -191,7 +185,3 @@ void SVDMitigater::CreateSingularValueGraph(const TimeFrequencyData &data, Plot2
 	}
 }
 
-#else
-void SVDMitigater::CreateSingularValueGraph(const TimeFrequencyData &, Plot2D &)
-{}
-#endif

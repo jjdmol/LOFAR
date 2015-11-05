@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -23,9 +23,8 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Common/Exception.h>
 #include <Common/ParameterSet.h>
-#include <Common/LofarBitModeInfo.h>
+#include <Common/lofar_bitset.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_list.h>
 #include <ApplCommon/AntennaSets.h>
@@ -50,7 +49,6 @@
 #define	BEAMLET_RING_OFFSET		1000
 
 using namespace blitz;
-using namespace std;
 namespace LOFAR {
   using namespace RTC;
   using namespace CAL_Protocol;
@@ -65,8 +63,7 @@ beamctl::beamctl(const string&	name) :
 	GCFTask((State)&beamctl::checkUserInput, name), 
 	itsCalServer	(0),
 	itsBeamServer	(0),
-	itsRCUmode		(-1),
-	itsCalInfo		(false)
+	itsRCUmode		(-1)
 {
 	registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
 	registerProtocol(IBS_PROTOCOL, IBS_PROTOCOL_STRINGS);
@@ -129,12 +126,7 @@ GCFEvent::TResult beamctl::con2beamserver(GCFEvent& event, GCFPortInterface& por
 
 	case F_CONNECTED: {
 //		TRAN(beamctl::validate_pointings);
-		if (itsCalInfo) {
-			TRAN(beamctl::askCalInfo);
-		}
-		else {
-			TRAN(beamctl::con2calserver);
-		}
+		TRAN(beamctl::con2calserver);
 	}
 	break;
 
@@ -220,9 +212,10 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& event, GCFPortInterface& po
 	switch (event.signal) {
 	case F_ENTRY: {
 		CALStartEvent start;
+		AntennaSets*	AS(globalAntennaSets());
 		start.name   = BEAMCTL_BEAM + formatString("_%d", getpid());
-		start.parent = globalAntennaSets()->antennaField(itsAntSet);
-		start.subset = getRCUMask() & globalAntennaSets()->RCUallocation(itsAntSet);
+		start.parent = AS->antennaField(itsAntSet);
+		start.subset = getRCUMask();
 		start.rcumode().resize(1);
 		start.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)itsRCUmode);
 
@@ -276,7 +269,7 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& event, GCFPortInterface& port)
 		IBSBeamallocEvent 	alloc;
 		alloc.beamName	   = BEAMCTL_BEAM + formatString("_%d", getpid());
 		alloc.antennaSet   = itsAntSet;
-		alloc.rcumask	   = getRCUMask() & globalAntennaSets()->RCUallocation(itsAntSet);
+		alloc.rcumask	   = getRCUMask();
 		// assume beamletnumbers are right so the ring can be extracted from those numbers.
 		// when the user did this wrong the BeamServer will complain.
 		alloc.ringNr	   = itsBeamlets.front() >= BEAMLET_RING_OFFSET;
@@ -399,43 +392,6 @@ GCFEvent::TResult beamctl::sendPointings(GCFEvent& event, GCFPortInterface& port
 }
 
 
-//
-// askCalInfo(event, port)
-//
-GCFEvent::TResult beamctl::askCalInfo(GCFEvent& event, GCFPortInterface& port)
-{
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-
-	switch (event.signal) {
-	case F_ENTRY: {
-		IBSGetcalinfoEvent 	request;
-		itsBeamServer->send(request);
-	}
-	break;
-
-	case IBS_GETCALINFOACK: {
-		IBSGetcalinfoackEvent ack(event);
-		cout << "--- Calibration info ---" << endl;
-		cout << ack.info << endl;
-		TRAN(beamctl::final);
-	}
-	break;
-
-	case F_DISCONNECTED: {
-		port.close();
-		cerr << "Error: unexpected disconnect" << endl;
-		TRAN(beamctl::final);
-	}
-	break;
-
-	default:
-		status = GCFEvent::NOT_HANDLED;
-	break;
-	}
-
-	return status;
-}
-
 
 
 GCFEvent::TResult beamctl::final(GCFEvent& event, GCFPortInterface& /*port*/)
@@ -520,7 +476,6 @@ void beamctl::usage() const
 	cout <<
 		"Usage: beamctl <rcuspec> <dataspec> <digpointing> [<digpointing> ...] FOR LBA ANTENNAS\n"
 		"       beamctl <rcuspec> <anapointing> [<anapointing> ...] [<dataspec> <digpointing> [<digpointing> ...]] FOR HBA ANTENNAS\n"
-		"       beamctl --calinfo\n"
 		"where:\n"
 		"  <rcuspec>      = --antennaset [--rcus] --rcumode \n"
 		"  <dataspec>     = --subbands --beamlets \n"
@@ -639,10 +594,6 @@ void beamctl::printList(list<int>&		theList) const
 
 bool beamctl::checkOptions()
 {
-	if (itsCalInfo) {
-		return (true);
-	}
-
 	// antennaSet OR rcus must be specified.
 	if (itsAntSet.empty() && itsRCUs.empty()) {
 		cerr << "Error: antennaSet or rcu selection is required." << endl;
@@ -694,8 +645,6 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 		{ "anadir", 	 required_argument, 0, 'A' },
 		{ "subbands",  	 required_argument, 0, 's' },
 		{ "beamlets",  	 required_argument, 0, 'b' },
-		{ "remotehost",  required_argument, 0, 'J' },
-		{ "calinfo",  	 no_argument,       0, 'c' },
 		{ "help",      	 no_argument,       0, 'h' },
 		{ 0, 0, 0, 0 },
 	};
@@ -707,11 +656,11 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 	optind = 0; // reset option parsing
 	while (true) {
 		int option_index = 0;
-		int c = getopt_long(myArgc, myArgv, "a:r:m:A:D:s:b:ch", long_options, &option_index);
+		int c = getopt_long(myArgc, myArgv, "a:r:m:A:D:s:b:h", long_options, &option_index);
 		if (c == -1) {
 			break;
 		}
-		if ((c != 'h') && (c != 'c')) {		// only 'h' and 'c' does not need an argument
+		if (c != 'h') {		// only 'h' does not need an argument
 			// note: --xxx  results in !optarg when it is the last option
 			if (!optarg)
 				continue;
@@ -768,27 +717,16 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 		break;
 
 		case 's': {
-			itsSubbands = strtolist(optarg, MAX_SUBBANDS);
+			itsSubbands = strtolist(optarg, LOFAR::MAX_SUBBANDS);
 			cout << "subbands : "; printList(itsSubbands);
 		}
 		break;
 
 		case 'b': {
-			// assume lowest bitmode, if this is not the case the BeamServer will complain...
-			itsBeamlets = strtolist(optarg, BEAMLET_RING_OFFSET + maxBeamlets(MIN_BITS_PER_SAMPLE));
+			itsBeamlets = strtolist(optarg, BEAMLET_RING_OFFSET + LOFAR::MAX_BEAMLETS);
 			cout << "beamlets : "; printList(itsBeamlets);
 		}
 		break;
-
-		case 'J': 
-			cout << "remotehost : " << optarg << endl;
-			itsCalServer->setHostName (optarg);
-			itsBeamServer->setHostName(optarg);
-		break;
-
-		case 'c':
-			itsCalInfo = true;
-			break;
 
 		case 'h':
 		default:
@@ -810,19 +748,12 @@ using namespace LOFAR;
 using namespace BS;
 using namespace GCF::TM;
 
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
-
 //
 // main
 //
 int main(int argc, char** argv)
 {
 	GCFScheduler::instance()->init(argc, argv, "beamctl");
-
-	ASSERTSTR(BEAMLET_RING_OFFSET > maxBeamlets(MIN_BITS_PER_SAMPLE), 
-				formatString("(%d>%d) beamctl is not suitable for handling %d bit mode. Revise program.", 
-				BEAMLET_RING_OFFSET, maxBeamlets(MIN_BITS_PER_SAMPLE), MIN_BITS_PER_SAMPLE));
 
 	try {
 		beamctl beamctlTask("beamctl");

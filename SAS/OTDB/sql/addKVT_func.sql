@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -39,13 +39,9 @@
 --
 CREATE OR REPLACE FUNCTION addKVT (INT, VARCHAR(150), VARCHAR(150), VARCHAR(20))
   RETURNS BOOLEAN AS '
-    --  $Id$
 	DECLARE
 		vParRefID	PICparamref.paramID%TYPE;
-		vTreeType	OTDBtree.treetype%TYPE;
 		vTime		timestamp := NULL;
-		vLastValue	TEXT;
-		TThierarchy	CONSTANT INT2 := 30;
 
 	BEGIN
 	  -- convert timestamp
@@ -66,34 +62,14 @@ CREATE OR REPLACE FUNCTION addKVT (INT, VARCHAR(150), VARCHAR(150), VARCHAR(20))
 
 	  IF FOUND THEN
 		-- its a PIC parameter
-		IF $3::integer <= 10 THEN	
-		  -- plain ON/OFF only register if last one was a serious problem
-		  vLastValue := 100;
-		  SELECT value
-		  INTO	 vLastValue
-		  FROM   PICkvt
-		  WHERE  paramID = vParRefID
-		  ORDER BY time DESC
-		  LIMIT 1;
-	      IF vLastValue::integer <= 10 THEN
-		  	RETURN FALSE;
-		  END IF;
-	    END IF;
 	    INSERT INTO PICkvt(paramID, value, time)
 		VALUES (vParRefID, $3, vTime);
 		RETURN TRUE;
 	  END IF;
 
 	  -- it is probably a VIC parameter, just store on name.
-	  SELECT	treetype
-	  INTO		vTreeType
-	  FROM		otdbtree
-	  WHERE treeid=$1;
-	  IF vTreeType = TThierarchy THEN
-		  INSERT INTO VICkvt (treeid, paramName, value, time)
-		  VALUES ($1, $2, $3, vTime);
-	  -- ELSE its a PIC kvt without an entry in the PIC
-	  END IF;
+	  INSERT INTO VICkvt (treeid, paramName, value, time)
+	  VALUES ($1, $2, $3, vTime);
 
 	  RETURN TRUE;
 	END;

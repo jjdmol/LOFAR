@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -33,39 +33,36 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 
-size_t SubbandSelection::getSize() const
+unsigned int SubbandSelection::getSize()
 {
-  cout << itsCrosslets.dimensions() << "; " << itsCrosslets.size() << endl;
-  cout << itsBeamlets.dimensions() << "; " << itsBeamlets.size() << endl;
-  
-  return MSH_size(itsCrosslets)
-       + MSH_size(itsBeamlets)
-       + sizeof(uint16);
+  return MSH_ARRAY_SIZE(m_subbands, uint16) + sizeof(uint16);
 }
 
-size_t SubbandSelection::pack(char* buffer) const
+unsigned int SubbandSelection::pack(void* buffer)
 {
-  size_t offset = 0;
+  unsigned int offset = 0;
 
-  offset = MSH_pack(buffer, offset, itsCrosslets);
-  offset = MSH_pack(buffer, offset, itsBeamlets);
-  memcpy(buffer + offset, &m_type, sizeof(uint16));
+  MSH_PACK_ARRAY(buffer, offset, m_subbands,   uint16);
+  memcpy((char*)buffer + offset, &m_type, sizeof(uint16));
   offset += sizeof(uint16);
   
   return offset;
 }
 
-size_t SubbandSelection::unpack(const char *buffer)
+unsigned int SubbandSelection::unpack(void *buffer)
 {
-  size_t offset = 0;
+  unsigned int offset = 0;
 
-  offset = MSH_unpack(buffer, offset, itsCrosslets);
-  offset = MSH_unpack(buffer, offset, itsBeamlets);
-  memcpy(&m_type, buffer + offset, sizeof(uint16));
+  MSH_UNPACK_ARRAY(buffer, offset, m_subbands,   uint16, 2);
+  memcpy(&m_type, (char*)buffer + offset, sizeof(uint16));
   offset += sizeof(uint16);
 
   return offset;
 }
 
+Array<uint16,2>& SubbandSelection::operator()()
+{
+  return m_subbands;
+}
 
 

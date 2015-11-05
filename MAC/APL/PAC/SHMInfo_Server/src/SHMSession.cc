@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@ using namespace blitz;
 
 
 namespace LOFAR {
-	using namespace SHM_Protocol;
 	using namespace GCF::TM;
 	using namespace RTC;
 	using namespace APL::RTDBCommon;
@@ -370,8 +369,6 @@ GCFEvent::TResult SHMSession::getPICStructure_state(GCFEvent& e, GCFPortInterfac
 
 void SHMSession::subscribe(GCFEvent& e)
 {
-  (void)e;
-
 #if 0
   SHMPvssDpSubscriptionRequestEvent in(e);
   LOGMSGHDR(in);
@@ -963,7 +960,8 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       //MAXMOD the constant SubbandSelection::XLET is defined in LOFAR/MAC/APL/PIC/RSP_Protocol/include/APL/RSP_Protocol/SubbandSelection.h
       //LOG_DEBUG(formatString("MAXMOD SubbandSelection::XLET is %d",SubbandSelection::XLET));
       setsubbands.subbands.setType(SubbandSelection::XLET);
-      setsubbands.subbands.crosslets().resize(1,1);
+
+      setsubbands.subbands().resize(1,1);
       list<int> subbandlist;
       for (int rcu = 0; rcu < _nrOfRCUs / N_POL; rcu++){
 	//for (int rcu = 0; rcu < _nrOfRCUs ; rcu++){
@@ -971,12 +969,12 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 	LOG_DEBUG(formatString("MAXMOD rcu = %d", rcu));
       }
       LOG_DEBUG(formatString("MAXMOD subbands - type  %d ",setsubbands.subbands.getType()));
-      LOG_DEBUG(formatString("MAXMOD subbands - first dim %d ",setsubbands.subbands.crosslets().extent(firstDim)));
-      LOG_DEBUG(formatString("MAXMOD subbands - second dim %d ",setsubbands.subbands.crosslets().extent(secondDim)));
+      LOG_DEBUG(formatString("MAXMOD subbands - first dim %d ",setsubbands.subbands().extent(firstDim)));
+      LOG_DEBUG(formatString("MAXMOD subbands - second dim %d ",setsubbands.subbands().extent(secondDim)));
       LOG_DEBUG_STR("itsRCU:" << string(setsubbands.rcumask.to_string<char,char_traits<char>,allocator<char> >()));
 
       std::list<int>::iterator it = subbandlist.begin();
-      setsubbands.subbands.crosslets() = (*it);
+      setsubbands.subbands() = (*it);
       
       if (!_rspDriverPort.send(setsubbands)) {
 	SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (lost connection to rsp driver)");
@@ -1283,8 +1281,6 @@ void SHMSession::valueChanged(SHMPvssDpSubscriptionValueChangedAsyncEvent& e)
 
 void SHMSession::mayDelete(const string& propName)
 {
-  (void)propName;
-
 #if 0
   TSubscriptions::iterator iter = _subscriptions.find(propName);
   ASSERTSTR(iter != _subscriptions.end(), "Subscription should still exist here!");

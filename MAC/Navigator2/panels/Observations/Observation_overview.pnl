@@ -1,7 +1,7 @@
-V 11
+V 10
 1
 LANG:1 0 
-PANEL,-1 -1 1200 823 N "_3DFace" 0
+PANEL,-1 -1 995 561 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -11,7 +11,10 @@ PANEL,-1 -1 1200 823 N "_3DFace" 0
   database = dpSubStr(baseDP,DPSUB_SYS);
   
   string name=g_currentDatapoint;
+  obsName = claimManager_realNameToName(name);
   
+  strreplace(obsName,\"LOFAR_ObsSW_\",\"\");
+  setValue(\"observationName\",\"text\",\"Observation: \"+obsName);
   
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".antennaArray\")) {
@@ -29,21 +32,18 @@ PANEL,-1 -1 1200 823 N "_3DFace" 0
                                    baseDP + \".inputNodeList\",
                                    baseDP + \".BGLNodeList\",
                                    baseDP + \".storageNodeList\",
-                                   baseDP + \".processType\",
-                                   baseDP + \".processSubtype\",
-                                   baseDP + \".strategy\",
                                    baseDP + \".Beams.directionType\",
                                    baseDP + \".Beams.angle1\",
                                    baseDP + \".Beams.angle2\",
                                    baseDP + \".Beams.subbandList\",
+                                   baseDP + \".Beams.beamletList\",
                                    baseDP + \".runState\",
-                                   baseDP + \".claim.name\",
                                    baseDP + \".stationList:_online.._invalid\") == -1) {
       LOG_ERROR(\"Observation_overview.pnl:main|Couldn't connect to : \"+baseDP);
     } 
     if (!navFunct_dpReachable(baseDP)) {
-      updateObservationControl(\"\",0,\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",makeDynString(),\"\",makeDynFloat(),
-                    \"\",makeDynFloat(),\"\",makeDynString(),\"\",true);
+      updateObservationControl(\"\",0,\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",makeDynString(),\"\",makeDynFloat(),
+                    \"\",makeDynFloat(),\"\",makeDynString(),\"\",makeDynString(),\"\",true);
     }
   } else {
     LOG_ERROR(\"ObservationControl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
@@ -61,18 +61,9 @@ PANEL,-1 -1 1200 823 N "_3DFace" 0
     setValue(\"inputNodeListText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"BGLNodeListText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"runStateText\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"processTypeText\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"processSubTypeText\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"strategy\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"storageNodeListText\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }
-
-  // pass baseDP to selfstate Object to work with
-  setValue(\"selfState.light\",\"toolTipText\",baseDP); 
-
-  // connect for selfUpdates
-  showSelfState(baseDP);
-
+  
   reload();
 }
 
@@ -90,34 +81,17 @@ updateObservationControl(string dp1, int claimPeriod,
               string dp12,string inputNodeList,
               string dp13,string BGLNodeList,
               string dp14,string storageNodeList,
-              string dp15,string processType,
-              string dp16,string processSubtype,
-              string dp17,string strategy,
-              string dp18,dyn_string directionType,
-              string dp19,dyn_float angle1,
-              string dp20,dyn_float angle2,
-              string dp21,dyn_string subbandList,
-              string dp22,string runState,
-              string dp23,string claimName,
-              string dp24, bool invalid)
+              string dp15,dyn_string directionType,
+              string dp16,dyn_float angle1,
+              string dp17,dyn_float angle2,
+              string dp18,dyn_string subbandList,
+              string dp19,dyn_string beamletList, 
+              string dp20,string runState,
+              string dp20, bool invalid)
 {
   LOG_TRACE(\"Observation_overview.pnl:updateObservationControl|entered\");
   beamTable.deleteAllLines();
   string SymbolCol=\"_Window\";
-  
-  obsName=claimName;
-
-  strreplace(obsName,\"LOFAR_ObsSW_\",\"\");
-  setValue(\"observationName\",\"text\",\"Observation: \"+obsName);
-
-  if (strtolower(runState) == \"running\") {
-    Abort_Observation.enabled(true);
-    Finish_Observation.enabled(true);
-  } else {
-    Abort_Observation.enabled(false);
-    Finish_Observation.enabled(false);
-  }
-
   if (!invalid) {
     beamTable.enabled(true);
     setValue(\"claimPeriodText\", \"text\", claimPeriod);
@@ -134,14 +108,11 @@ updateObservationControl(string dp1, int claimPeriod,
     setValue(\"inputNodeListText\", \"text\", inputNodeList);
     setValue(\"BGLNodeListText\", \"text\", BGLNodeList);
     setValue(\"storageNodeListText\", \"text\", storageNodeList);
-    setValue(\"processTypeText\", \"text\", processType);
-    setValue(\"processSubtypeText\", \"text\", processSubtype);
-    setValue(\"strategyText\", \"text\", strategy);
     setValue(\"runStateText\", \"text\", runState);
    
     for (int i=1; i<= dynlen(directionType); i++) {
       beamTable.appendLine(\"Direction\",directionType[i],\"Angle1\",angle1[i],\"Angle2\",angle2[i],
-                           \"subbands\",subbandList[i]);
+                           \"subbands\",subbandList[i],\"beamlets\",beamletList[i]);
     }
     
   } else {
@@ -152,6 +123,13 @@ updateObservationControl(string dp1, int claimPeriod,
     beamTable.enabled(false);
   }
   
+  if (strtolower(runState) == \"running\") {
+    Abort_Observation.visible(true);
+    Abort_Observation.enabled(true);
+  } else {
+    Abort_Observation.visible(false);
+    Abort_Observation.enabled(false);
+  }
   
   setValue(\"claimPeriodText\", \"backCol\", SymbolCol);
   setValue(\"preparePeriodText\", \"backCol\", SymbolCol);
@@ -167,9 +145,6 @@ updateObservationControl(string dp1, int claimPeriod,
   setValue(\"inputNodeListText\", \"backCol\", SymbolCol);
   setValue(\"BGLNodeListText\", \"backCol\", SymbolCol);
   setValue(\"storageNodeListText\", \"backCol\", SymbolCol);
-  setValue(\"processTypeText\", \"backCol\", SymbolCol);
-  setValue(\"processSubtypeText\", \"backCol\", SymbolCol);
-  setValue(\"strategyText\", \"backCol\", SymbolCol);
   setValue(\"runStateText\", \"backCol\", SymbolCol);
   
 }
@@ -241,11 +216,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 39 64 101 77
+E E 0 1 1 2 1 E U  1 E 39 64 101 78
 0 2 2 "0s" 0 0 0 192 0 0  39 64 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 11 Start Time:
 2 1
 "PRIMITIVE_TEXT9"
@@ -260,16 +236,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 19 132 103 145
+E E 0 1 1 2 1 E U  1 E 19 132 103 146
 0 2 2 "0s" 0 0 0 192 0 0  19 132 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 14 Antenna Array:
 14 2
 "antennaArrayText"
 ""
-1 114.449594438007 72 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 102 72 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 5 0 0 0 0 0
 E E E
@@ -279,13 +256,14 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  117 128 352 149
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 117 128 984 149
 2 "0s" 0 0 0 0 0 -1  E E E
 25 3
 "beamTable"
 ""
-1 10 280 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 6 277 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -295,33 +273,40 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
-0  8 278 988 467
-EE 1 0 1 4 8 "Direction" 8 1 0 "s" 1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 4 275 984 464
+EE 1 0 1 5 8 "Direction" 5 1 0 "s" 1
 LANG:1 9 Direction
 E
 1
 LANG:1 0 
 
-100 "Angle1" 8 1 0 "s" 1
+65 "Angle1" 4 1 0 "s" 1
 LANG:1 6 Angle1
 E
 1
 LANG:1 0 
 
-100 "Angle2" 8 1 0 "s" 1
+60 "Angle2" 4 1 0 "s" 1
 LANG:1 6 Angle2
 E
 1
 LANG:1 0 
 
-100 "subbands" 60 1 0 "s" 1
+60 "subbands" 35 1 0 "s" 1
 LANG:1 8 subbands
 E
 1
 LANG:1 0 
 
-672 
+395 "beamlets" 35 1 0 "s" 1
+LANG:1 8 beamlets
+E
+1
+LANG:1 0 
+
+395 
 18 18 "" 1 1
 LANG:1 2 #8
 "" 1 1
@@ -340,8 +325,9 @@ LANG:1 2 #2
 LANG:1 2 #1
 10 8
 1
-LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
-0 0 0 2 1 7
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+0 0 2 1 7
 1 0
 2 4
 "PRIMITIVE_TEXT10"
@@ -356,11 +342,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 4 262 45 275
+E E 0 1 1 2 1 E U  1 E 4 262 45 276
 0 2 2 "0s" 0 0 0 192 0 0  4 262 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 6 Beams:
 14 5
 "startTimeText"
@@ -375,13 +362,14 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  117 62 351 83
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 117 62 351 83
 2 "0s" 0 0 0 0 0 -1  E E E
 2 6
 "PRIMITIVE_TEXT11"
 ""
-1 396 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 395 64 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 13 0 0 0 0 0
 E E E
@@ -391,16 +379,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 396 42 457 55
-0 2 2 "0s" 0 0 0 192 0 0  396 42 1
+E E 0 1 1 2 1 E U  1 E 395 66 456 80
+0 2 2 "0s" 0 0 0 192 0 0  395 66 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 10 Stop Time:
 14 7
 "stopTimeText"
 ""
-1 470 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 469 64 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 15 0 0 0 0 0
 E E E
@@ -410,8 +399,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  468 38 702 59
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 467 62 701 83
 2 "0s" 0 0 0 0 0 -1  E E E
 2 8
 "PRIMITIVE_TEXT12"
@@ -426,11 +416,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 28 88 102 101
+E E 0 1 1 2 1 E U  1 E 28 88 102 102
 0 2 2 "0s" 0 0 0 192 0 0  28 88 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 13 Claim Period:
 14 9
 "claimPeriodText"
@@ -445,13 +436,14 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  117 84 351 105
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 117 84 351 105
 2 "0s" 0 0 0 0 0 -1  E E E
 2 10
 "PRIMITIVE_TEXT13"
 ""
-1 370 62 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 369 86 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 21 0 0 0 0 0
 E E E
@@ -461,16 +453,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 370 64 458 77
-0 2 2 "0s" 0 0 0 192 0 0  370 64 1
+E E 0 1 1 2 1 E U  1 E 369 88 457 102
+0 2 2 "0s" 0 0 0 192 0 0  369 88 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 15 Prepare Period:
 14 11
 "preparePeriodText"
 ""
-1 470 62 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 469 86 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 23 0 0 0 0 0
 E E E
@@ -480,8 +473,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  468 60 702 81
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 467 84 701 105
 2 "0s" 0 0 0 0 0 -1  E E E
 2 12
 "PRIMITIVE_TEXT14"
@@ -496,11 +490,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 41 110 102 123
+E E 0 1 1 2 1 E U  1 E 41 110 102 124
 0 2 2 "0s" 0 0 0 192 0 0  41 110 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 11 BandFilter:
 14 13
 "bandFilterText"
@@ -515,13 +510,14 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  117 106 351 127
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 117 106 351 127
 2 "0s" 0 0 0 0 0 -1  E E E
 2 14
 "PRIMITIVE_TEXT15"
 ""
-1 711 64 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 751 108 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 29 0 0 0 0 0
 E E E
@@ -531,16 +527,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 711 66 786 79
-0 2 2 "0s" 0 0 0 192 0 0  711 66 1
+E E 0 1 1 2 1 E U  1 E 751 110 826 124
+0 2 2 "0s" 0 0 0 192 0 0  751 110 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 12 NyquistZone:
 14 15
 "nyquistzoneText"
 ""
-1 798.7391304347826 64 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 836.7391304347826 110 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 31 0 0 0 0 0
 E E E
@@ -550,13 +547,14 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  797 60 831 81
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 835 106 869 127
 2 "0s" 0 0 0 0 0 -1  E E E
 2 16
 "PRIMITIVE_TEXT16"
 ""
-1 -36807.87717661354 -3528 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -131.7036011080334 -192 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 33 0 0 0 0 0
 E E E
@@ -566,16 +564,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1.263157894736842 0 1 -587.3684210526316 -286 1 E 752 372 829 385
+E E 0 1 1 2 1 E 1.263157894736842 0 1 -588.3684210526316 -262 1 E 752 372 829 386
 0 2 2 "0s" 0 0 0 192 0 0  752 372 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 12 SampleClock:
 14 17
 "sampleClockText"
 ""
-1 469.9999999999999 82 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 468.9999999999999 106 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 35 0 0 0 0 0
 E E E
@@ -585,8 +584,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  468 82 702 103
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 467 106 701 127
 2 "0s" 0 0 0 0 0 -1  E E E
 2 18
 "PRIMITIVE_TEXT17"
@@ -601,11 +601,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 35 154 103 167
+E E 0 1 1 2 1 E U  1 E 35 154 103 168
 0 2 2 "0s" 0 0 0 192 0 0  35 154 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 13 Station List:
 14 19
 "stationListText"
@@ -620,8 +621,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  117 150 984 171
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 117 150 984 171
 2 "0s" 0 0 0 0 0 -1  E E E
 2 20
 "PRIMITIVE_TEXT18"
@@ -636,11 +638,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 24 176 103 189
+E E 0 1 1 2 1 E U  1 E 24 176 103 190
 0 2 2 "0s" 0 0 0 192 0 0  24 176 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 14 Receiver List:
 14 21
 "receiverListText"
@@ -655,8 +658,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  117 172 984 193
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 117 172 984 193
 2 "0s" 0 0 0 0 0 -1  E E E
 2 22
 "PRIMITIVE_TEXT19"
@@ -671,11 +675,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 21 198 106 211
+E E 0 1 1 2 1 E U  1 E 21 198 106 212
 0 2 2 "0s" 0 0 0 192 0 0  21 198 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 15 Inputnode List:
 14 23
 "inputNodeListText"
@@ -690,8 +695,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  117 194 984 215
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 117 194 984 215
 2 "0s" 0 0 0 0 0 -1  E E E
 2 24
 "PRIMITIVE_TEXT20"
@@ -706,11 +712,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 23 220 105 233
+E E 0 1 1 2 1 E U  1 E 23 220 105 234
 0 2 2 "0s" 0 0 0 192 0 0  23 220 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 13 BGLNode List:
 14 25
 "BGLNodeListText"
@@ -725,8 +732,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  117 216 984 237
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 117 216 984 237
 2 "0s" 0 0 0 0 0 -1  E E E
 2 26
 "PRIMITIVE_TEXT21"
@@ -741,11 +749,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 4 242 106 255
+E E 0 1 1 2 1 E U  1 E 4 242 106 256
 0 2 2 "0s" 0 0 0 192 0 0  4 242 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 17 StorageNode List:
 14 27
 "storageNodeListText"
@@ -760,8 +769,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  117 238 984 259
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 117 238 984 259
 2 "0s" 0 0 0 0 0 -1  E E E
 2 28
 "PRIMITIVE_TEXT22"
@@ -776,11 +786,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 2 42 100 55
+E E 0 1 1 2 1 E U  1 E 2 42 100 56
 0 2 2 "0s" 0 0 0 192 0 0  2 42 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 15 MeasurementSet:
 14 29
 "measurementSetText"
@@ -795,8 +806,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  117 40 351 61
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 117 40 351 61
 2 "0s" 0 0 0 0 0 -1  E E E
 2 30
 "observationName"
@@ -811,27 +823,29 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 300 10 401 30
+E E 0 1 1 2 1 E U  1 E 300 10 401 31
 0 2 2 "0s" 0 0 0 192 0 0  300 10 1
 1
-LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 12 Observation:
 13 31
 "Abort_Observation"
 ""
-1 10 710 E E E 0 E 1 E N "_ButtonText" E N "_Button" E E
+1 6 490 E E E 0 E 0 E N "_ButtonText" E N "_Button" E E
  E E
 61 0 0 0 0 0
 E E E
 0
 1
-LANG:1 36 Set the Observation state to Aborted
+LANG:1 0 
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  8 708 132 734
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 4 488 128 514
 
 T 
 1
@@ -863,7 +877,7 @@ dyn_errClass err;
 2 32
 "PRIMITIVE_TEXT23"
 ""
-1 711 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 710 64 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 63 0 0 0 0 0
 E E E
@@ -873,16 +887,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 711 42 763 55
-0 2 2 "0s" 0 0 0 192 0 0  711 42 1
+E E 0 1 1 2 1 E U  1 E 710 66 762 80
+0 2 2 "0s" 0 0 0 192 0 0  710 66 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 9 runState:
 14 33
 "runStateText"
 ""
-1 799 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 786 64 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 65 0 0 0 0 0
 E E E
@@ -892,159 +907,10 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  797 38 981 59
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 784 62 982 83
 2 "0s" 0 0 0 0 0 -1  E E E
-2 34
-"PRIMITIVE_TEXT24"
-""
-1 712 106 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-66 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 712 108 763 121
-0 2 2 "0s" 0 0 0 192 0 0  712 108 1
-1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
-LANG:1 9 Strategy:
-14 35
-"strategyText"
-""
-1 798.4173913043478 108 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-67 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-0
-1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  798 104 984 125
-2 "0s" 0 0 0 0 0 -1  E E E
-2 36
-"PRIMITIVE_TEXT25"
-""
-1 -36807.87717661354 -3352 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-68 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1.263157894736842 0 1 -587.3684210526316 -264 1 E 752 372 828 385
-0 2 2 "0s" 0 0 0 192 0 0  752 372 1
-1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
-LANG:1 12 processType:
-14 37
-"processTypeText"
-""
-1 469.9999999999999 104 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-69 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-0
-1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  468 104 702 125
-2 "0s" 0 0 0 0 0 -1  E E E
-2 40
-"PRIMITIVE_TEXT27"
-""
-1 -36807.87717661354 -3160 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-72 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1.263157894736842 0 1 -587.3684210526316 -240 1 E 752 372 846 385
-0 2 2 "0s" 0 0 0 192 0 0  752 372 1
-1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
-LANG:1 15 processSubtype:
-14 41
-"processSubtypeText"
-""
-1 489.9999999999999 128 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-73 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-0
-1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  488 128 702 149
-2 "0s" 0 0 0 0 0 -1  E E E
-13 42
-"Finish_Observation"
-""
-1 150 710 E E E 0 E 1 E N "_ButtonText" E N "_Button" E E
- E E
-74 0 0 0 0 0
-E E E
-0
-1
-LANG:1 38 Set the Observation state to Finbished
-
-0
-1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  148 708 272 734
-
-T 
-1
-LANG:1 6 Finish
-"// SimpleCtrlScriptStart {invalid}
-main()
-{
-  EP_setDP();
-}
-
-EP_setDP()
-{
-dyn_errClass err;
-
-  dpSetWait(baseDP+\"_ObservationControl.command:_original.._value\", \"FINISH\");
-  err = getLastError();
-  if (dynlen(err) > 0)
-    errorDialog(err);
-}
-
-// SimpleCtrlScript {EP_setDP}
-// DP1 {baseDP+\".abort\"}
-// Config1 {:_original.._value}
-// Type1 {string}
-// Value1 {ABORT}
-// SimpleCtrlScriptEnd {EP_setDP}
-" 0
- E E E
-1 43 0 "" 1
-0
 0
 LAYER, 1 
 1
@@ -1073,8 +939,5 @@ LANG:1 0
 LAYER, 7 
 1
 LANG:1 0 
-0
-3 0 "selfState" -1
-"objects\\lofar_self_state.pnl" 7 8 T 75 U 
 0
 0

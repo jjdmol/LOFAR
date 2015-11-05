@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -22,17 +22,12 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Common/Exception.h>
 
 #include <GCF/TM/GCF_Control.h>
 #include "SHMInfoServer.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::AMI;
-using namespace LOFAR;
-
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char *argv[])
 {
@@ -46,8 +41,8 @@ int main(int argc, char *argv[])
 	try {
 	  GCFScheduler::instance()->run();
 	}
-	catch (Exception& x) {
-	  LOG_FATAL_STR("Unexpected exception: " << x);
+	catch (std::exception& x) {
+	  LOG_INFO_STR("Unexpected exception: " << x.what());
 	  return 1;
 	}
 	return (0);

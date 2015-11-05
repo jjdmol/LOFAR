@@ -58,16 +58,13 @@ ImageWidget::ImageWidget() :
 	_cairoFilter(Cairo::FILTER_BEST),
 	_manualXAxisDescription(false),
 	_manualYAxisDescription(false),
-	_manualZAxisDescription(false),
-	_mouseIsIn(false)
+	_manualZAxisDescription(false)
 {
 	_highlightConfig = new ThresholdConfig();
 	_highlightConfig->InitializeLengthsSingleSample();
 
-	add_events(Gdk::POINTER_MOTION_MASK | Gdk::BUTTON_RELEASE_MASK |
-		   Gdk::BUTTON_PRESS_MASK | Gdk::LEAVE_NOTIFY_MASK);
+	add_events(Gdk::POINTER_MOTION_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::BUTTON_PRESS_MASK);
 	signal_motion_notify_event().connect(sigc::mem_fun(*this, &ImageWidget::onMotion));
-	signal_leave_notify_event().connect(sigc::mem_fun(*this, &ImageWidget::onLeave));
 	signal_button_release_event().connect(sigc::mem_fun(*this, &ImageWidget::onButtonReleased));
 	signal_expose_event().connect(sigc::mem_fun(*this, &ImageWidget::onExposeEvent) );
 }
@@ -599,32 +596,6 @@ Mask2DCPtr ImageWidget::GetActiveMask() const
 	}
 }
 
-TimeFrequencyMetaDataCPtr ImageWidget::GetMetaData()
-{
-	TimeFrequencyMetaDataCPtr metaData = _metaData;
-
-	if(_startVertical != 0 && metaData != 0)
-	{
-		size_t startChannel = round(StartVertical() * _image->Height());
-		TimeFrequencyMetaData *newData = new TimeFrequencyMetaData(*metaData);
-		metaData = TimeFrequencyMetaDataCPtr(newData);
-		BandInfo band = newData->Band();
-		band.channels.erase(band.channels.begin(), band.channels.begin()+startChannel );
-		newData->SetBand(band);
-	}
-	if(_startHorizontal != 0 && metaData != 0)
-	{
-		size_t startTime = round(StartHorizontal() * _image->Width());
-		TimeFrequencyMetaData *newData = new TimeFrequencyMetaData(*metaData);
-		metaData = TimeFrequencyMetaDataCPtr(newData);
-		std::vector<double> obsTimes = newData->ObservationTimes();
-		obsTimes.erase(obsTimes.begin(), obsTimes.begin()+startTime );
-		newData->SetObservationTimes(obsTimes);
-	}
-	
-	return metaData;
-}
-
 bool ImageWidget::toUnits(double mouseX, double mouseY, int &posX, int &posY)
 {
 	const unsigned int
@@ -649,23 +620,7 @@ bool ImageWidget::onMotion(GdkEventMotion *event)
 	{
 		int posX, posY;
 		if(toUnits(event->x, event->y, posX, posY))
-		{
-			_mouseIsIn = true;
 			_onMouseMoved(posX, posY);
-		} else if(_mouseIsIn) {
-			_onMouseLeft();
-			_mouseIsIn = false;
-		}
-	}
-	return true;
-}
-
-bool ImageWidget::onLeave(GdkEventCrossing *event)
-{
-	if(_mouseIsIn)
-	{
-		_onMouseLeft();
-		_mouseIsIn = false;
 	}
 	return true;
 }

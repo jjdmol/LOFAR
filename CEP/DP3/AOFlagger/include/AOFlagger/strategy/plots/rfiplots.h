@@ -33,14 +33,12 @@
 class RFIPlots{
 	public:
 		static void MakeDistPlot(class Plot2DPointSet &pointSet, Image2DCPtr image, Mask2DCPtr mask);
-		template <bool Weight>
-		static void MakeMeanSpectrumPlot(class Plot2DPointSet &pointSet, const TimeFrequencyData &data, const Mask2DCPtr &mask, const TimeFrequencyMetaDataCPtr &metaData);
 		static void MakePowerSpectrumPlot(class Plot2DPointSet &pointSet, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData);
 		static void MakeRMSSpectrumPlot(class Plot2DPointSet &plot, Image2DCPtr image, Mask2DCPtr mask);
 		static void MakeSNRSpectrumPlot(class Plot2DPointSet &plot, Image2DCPtr image, Image2DCPtr model, Mask2DCPtr mask);
 		static void MakePowerTimePlot(class Plot2DPointSet &plot, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData);
-		static void MakeComplexPlanePlot(class Plot2DPointSet &plot, const class TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, bool realVersusImaginary, bool imaginary);
-		static void MakeFittedComplexPlot(class Plot2DPointSet &plot, const TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, num_t sampleFringeFrequency, bool realVersusImaginary, bool imaginary);
+		static void MakeComplexPlanePlot(class Plot &plot, const class TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, bool realVersusImaginary, bool imaginary);
+		static void MakeFittedComplexPlot(class Plot &plot, const TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, num_t sampleFringeFrequency, bool realVersusImaginary, bool imaginary);
 		static void MakeScatterPlot(class MultiPlot &plot, size_t plotIndex, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData);
 		static void MakeScatterPlot(class MultiPlot &plot, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, unsigned startIndex = 0);
 		static void MakeScatterPlot(class MultiPlot &plot, size_t plotIndex, SampleRowCPtr row);

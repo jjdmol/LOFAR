@@ -74,9 +74,6 @@ using namespace std;
 using namespace casa;
 using namespace LOFAR;
 
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
-
 /*
 function declarations now in include/BBSTools/addUV2MS.h
 */
@@ -92,7 +89,7 @@ int main(int argc, char *argv[])
   unsigned int nwplanes=0;        // got to see  how to export this feature to the outside
 
   // Init logger
-  string progName = LOFAR::basename(argv[0]);
+  string progName = basename(argv[0]);
   INIT_LOGGER(progName);
     
   if(argc < 3)        // if not enough parameters given, display usage information

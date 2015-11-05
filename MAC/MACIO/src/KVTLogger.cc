@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2010
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -96,9 +96,9 @@ bool KVTLogger::log(const vector<string> keys, const vector<string> values, cons
 	KVTSendMsgPoolEvent		logEvent;
 	logEvent.seqnr     = --itsSeqnr;	// use negative seqnrs to avoid ack messages
 	logEvent.nrElements= nrElements;
-	logEvent.keys      = keys;
-	logEvent.values    = values;
-	logEvent.times     = times;
+	logEvent.keys()    = keys;
+	logEvent.values()  = values;
+	logEvent.times()   = times;
 	itsKVTport->send(&logEvent);
 	return (true);
 }

@@ -33,9 +33,9 @@
 
 namespace LOFAR {
 
-  class ParameterSet;
-
   namespace DPPP {
+    class ParSet;
+
     // @ingroup NDPPP
 
     // This class is a DPStep class calculating the weighted average of
@@ -55,7 +55,7 @@ namespace LOFAR {
     public:
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
-      Averager (DPInput*, const ParameterSet&, const string& prefix);
+      Averager (DPInput*, const ParSet&, const string& prefix);
 
       // Construct the object using the given parameters.
       Averager (DPInput*, const string& stepname,
@@ -72,7 +72,7 @@ namespace LOFAR {
       virtual void finish();
 
       // Update the general info.
-      virtual void updateInfo (const DPInfo&);
+      virtual void updateInfo (DPInfo&);
 
       // Show the step parameters.
       virtual void show (std::ostream&) const;
@@ -81,8 +81,8 @@ namespace LOFAR {
       virtual void showTimings (std::ostream&, double duration) const;
 
     private:
-      // Average into itsBufOut.
-      void average();
+      // Average and return the result.
+      DPBuffer average() const;
 
       // Copy the fullRes flags in the input buffer to the correct
       // time index in the output buffer.
@@ -95,19 +95,15 @@ namespace LOFAR {
       DPInput*        itsInput;
       string          itsName;
       DPBuffer        itsBuf;
-      DPBuffer        itsBufTmp;
-      DPBuffer        itsBufOut;
       casa::Cube<int> itsNPoints;
       casa::Cube<casa::Complex> itsAvgAll;
       casa::Cube<float>         itsWeightAll;
-      casa::Cube<bool>          itsFullResFlags;
       uint            itsNChanAvg;
       uint            itsNTimeAvg;
       uint            itsMinNPoint;
       float           itsMinPerc;
       uint            itsNTimes;
       double          itsTimeInterval;
-      bool            itsNoAvg;           //# No averaging (i.e. both 1)?
       NSTimer         itsTimer;
     };
 

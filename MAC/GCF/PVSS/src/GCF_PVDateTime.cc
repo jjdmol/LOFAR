@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@
 #include <Common/DataConvert.h>
 #include <Common/StringUtil.h>
 #include <cstdio>
-#include <cstring>
 
 namespace LOFAR {
   namespace GCF {
@@ -87,15 +86,6 @@ TGCFResult GCFPVDateTime::setValue(double	newVal)
 	itsSeconds = (time_t)newVal;
 	itsMilli   = (uint16) ((1.0 * itsSeconds - newVal) * 1000.0);
 	return (GCF_NO_ERROR);
-}
-
-//
-// setValue(time_t)
-//
-void GCFPVDateTime::setValue(time_t	newVal, uint16	milliSec)
-{
-	itsSeconds = newVal;
-	itsMilli   = milliSec % 1000;
 }
 
 

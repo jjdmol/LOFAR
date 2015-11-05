@@ -22,15 +22,15 @@
 
 #include <libgen.h>
 
+#include <AOFlagger/strategy/actions/baselineselectionaction.h>
 #include <AOFlagger/strategy/actions/foreachmsaction.h>
 #include <AOFlagger/strategy/actions/strategyaction.h>
-
-#include <AOFlagger/strategy/algorithms/baselineselector.h>
-#include <AOFlagger/strategy/algorithms/polarizationstatistics.h>
 
 #include <AOFlagger/strategy/plots/antennaflagcountplot.h>
 #include <AOFlagger/strategy/plots/frequencyflagcountplot.h>
 #include <AOFlagger/strategy/plots/timeflagcountplot.h>
+
+#include <AOFlagger/strategy/algorithms/polarizationstatistics.h>
 
 #include <AOFlagger/strategy/control/artifactset.h>
 #include <AOFlagger/strategy/control/strategyreader.h>
@@ -111,11 +111,7 @@ int main(int argc, char **argv)
 		"  -j overrides the number of threads specified in the strategy\n"
 		"  -strategy specifies a possible customized strategy\n"
 		"  -indirect-read will reorder the measurement set before starting, which is normally faster\n"
-		"  -memory-read will read the entire measurement set in memory. This is the fastest, but requires large memory.\n"
-		"  -direct-read will perform the slowest IO but will always work.\n"
-		"  -auto-read-mode will select either memory or direct mode based on available memory (default).\n"
-		"  -log will use the LOFAR logger to output logging messages\n"
-		"  -nolog will not use the LOFAR logger to output logging messages (default)\n"
+		"  -nolog will not use the LOFAR logger to output logging messages\n"
 		"  -skip-flagged will skip an ms if it has already been processed by RFI console according\n"
 		"   to its HISTORY table.\n"
 		"  -uvw reads uvw values (some strategies require them)\n"
@@ -130,9 +126,9 @@ int main(int argc, char **argv)
 #ifdef HAS_LOFARSTMAN
 	register_lofarstman();
 #endif // HAS_LOFARSTMAN
-	
+
 	Parameter<size_t> threadCount;
-	Parameter<BaselineIOMode> readMode;
+	Parameter<bool> indirectRead;
 	Parameter<bool> readUVW;
 	Parameter<std::string> strategyFile;
 	Parameter<bool> useLogger;
@@ -154,24 +150,9 @@ int main(int argc, char **argv)
 			logVerbose = true;
 			++parameterIndex;
 		}
-		else if(flag=="direct-read")
-		{
-			readMode = DirectReadMode;
-			++parameterIndex;
-		}
 		else if(flag=="indirect-read")
 		{
-			readMode = IndirectReadMode;
-			++parameterIndex;
-		}
-		else if(flag=="memory-read")
-		{
-			readMode = MemoryReadMode;
-			++parameterIndex;
-		}
-		else if(flag=="auto-read-mode")
-		{
-			readMode = AutoReadMode;
+			indirectRead = true;
 			++parameterIndex;
 		}
 		else if(flag=="strategy")
@@ -252,8 +233,8 @@ int main(int argc, char **argv)
 			rfiStrategy::Strategy::SetThreadCount(*subStrategy, threadCount);
 			
 		rfiStrategy::ForEachMSAction *fomAction = new rfiStrategy::ForEachMSAction();
-		if(readMode.IsSet())
-			fomAction->SetIOMode(readMode);
+		if(indirectRead.IsSet())
+			fomAction->SetIndirectReader(indirectRead);
 		if(readUVW.IsSet())
 			fomAction->SetReadUVW(readUVW);
 		if(dataColumn.IsSet())
@@ -282,7 +263,7 @@ int main(int argc, char **argv)
 		artifacts.SetFrequencyFlagCountPlot(new FrequencyFlagCountPlot());
 		artifacts.SetTimeFlagCountPlot(new TimeFlagCountPlot());
 		artifacts.SetPolarizationStatistics(new PolarizationStatistics());
-		artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelector());
+		artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelectionInfo());
 		
 		ConsoleProgressHandler progress;
 

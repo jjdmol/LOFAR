@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@
 
 #include <GCF/PVSS/GCF_PVBlob.h>
 #include <Common/DataConvert.h>
-#include <cstring>
 
 namespace LOFAR {
  namespace GCF {
@@ -35,19 +34,16 @@ namespace LOFAR {
 // GCFPVBlob(valbuf, length, clone)
 //
 GCFPVBlob::GCFPVBlob(unsigned char* val, uint16 length, bool clone) 
-  : GCFPValue(LPT_BLOB), _value(0), _length(length), _isDataHolder(clone)
+  : GCFPValue(LPT_BLOB), _value(val), _length(length), _isDataHolder(clone)
 {
 	if (clone) {
-		itsBuffer.resize(length);
-		memcpy(itsBuffer.data(), val, length);
-	}
-	else {
-		_value = val;
+		_value = new unsigned char[length];
+		memcpy(_value, val, length);
 	}
 }
 
 //
-// unpackConcrete(buffer)
+// unpackContrete(buffer)
 //
 unsigned int GCFPVBlob::unpackConcrete(const char* valBuf)
 {
@@ -60,13 +56,17 @@ unsigned int GCFPVBlob::unpackConcrete(const char* valBuf)
 		LOFAR::dataConvert(LOFAR::dataFormat(), &_length, 1);
 	}
 
-	// create new blob buffer space (now it becames a data holder)
+	// if it is the data holder the blob buffer space must be freed first
+	if (_isDataHolder) {
+		delete [] _value;
+	}
 	_isDataHolder = true;
-	_value = 0;
-	itsBuffer.resize(_length);
 
-	// copy the data
-	memcpy(itsBuffer.data(), (unsigned char*) valBuf + unpackedBytes, _length);   
+	// create new blob buffer space (now it becames a data holder)
+	_value = new unsigned char[_length];
+
+	// copies the data
+	memcpy(_value, (unsigned char*) valBuf + unpackedBytes, _length);   
 	unpackedBytes += _length;
 
 	return (unpackedBytes);
@@ -80,58 +80,29 @@ unsigned int GCFPVBlob::packConcrete(char* valBuf) const
 	unsigned int packedBytes(0);
 
 	memcpy(valBuf, (void *) &_length, sizeof(_length)); // packs the length field
-	if (_isDataHolder) {
-		memcpy(valBuf + sizeof(_length), (void *) itsBuffer.data(), _length); // packs the blob data
-	}
-	else {
-		memcpy(valBuf + sizeof(_length), (void *) _value, _length); // packs the blob data
-	}
+	memcpy(valBuf + sizeof(_length), (void *) _value, _length); // packs the blob data
 	packedBytes += sizeof(_length) + _length;
 
 	return packedBytes;
 }
 
 //
-// addValue(buffer, length)
-//
-TGCFResult GCFPVBlob::addValue(unsigned char* val2Add, uint16 lenNewVal)
-{ 
-	if (!val2Add || !lenNewVal) {
-		return (GCF_NO_ERROR);
-	}
-
-	itsBuffer.resize(_length+lenNewVal);
-	if (!_isDataHolder) {		// no dataHolder yet? copy not cloned data first
-		memcpy(itsBuffer.data(), (void *) _value, _length); // packs the blob data
-		_isDataHolder = true;
-		_value = 0;
-	}
-	memcpy(itsBuffer.data()+_length, val2Add, lenNewVal);   
-	_length += lenNewVal; 
-
-	return (GCF_NO_ERROR);
-}
- 
-//
 // setValue(buffer, length, clone)
 //
 TGCFResult GCFPVBlob::setValue(unsigned char* value, uint16 length, bool clone)
 { 
-	if (!value || !length) {
-		return (GCF_NO_ERROR);
-	}
-
-	_isDataHolder = clone;
 	_length = length; 
 	if (_isDataHolder) {
-		itsBuffer.resize(length);
-		memcpy(itsBuffer.data(), value, length);
-		_value = 0;
+		delete [] _value;
+	}
+	if (clone && value && length) {
+		_value = new unsigned char[_length];
+		memcpy(_value, value, _length);   
 	}
 	else {
-		_value = value;
-		itsBuffer.clear();
+		_value = value; 
 	}
+	_isDataHolder = (clone && value && length);
 
 	return (GCF_NO_ERROR);
 }
@@ -141,7 +112,16 @@ TGCFResult GCFPVBlob::setValue(unsigned char* value, uint16 length, bool clone)
 //
 TGCFResult GCFPVBlob::setValue(const string& value)
 {
-	return (setValue((unsigned char*)(value.data()), value.length(), true));
+	_length = value.length();
+	if (_isDataHolder) {
+		delete [] _value;
+	}
+	_value = new unsigned char[_length];
+	memcpy(_value, value.c_str(), _length);   
+
+	_isDataHolder = true;
+
+	return (GCF_NO_ERROR);
 }
 
 //
@@ -149,9 +129,7 @@ TGCFResult GCFPVBlob::setValue(const string& value)
 //
 string GCFPVBlob::getValueAsString(const string& format) const
 {
-	(void)format;
-
-	return ("<<blobcontent>>");
+	return ("Not implemented yet!");
 }
 
 //
@@ -172,11 +150,13 @@ TGCFResult GCFPVBlob::copy(const GCFPValue& newVal)
 		return (GCF_DIFFERENT_TYPES);
 	}
 
-	_isDataHolder = true;
+	if (_isDataHolder) {
+		delete [] _value;
+	}
 	_length = ((const GCFPVBlob *)&newVal)->getLen();
-	itsBuffer.resize(_length);
-	memcpy(itsBuffer.data(), ((const GCFPVBlob *)&newVal)->getValue(), _length);
-	_value = 0;
+	_value = new unsigned char[_length];
+	memcpy(_value, ((const GCFPVBlob *)&newVal)->getValue(), _length);   
+	_isDataHolder = true;
 
 	return (GCF_NO_ERROR);
 }
@@ -196,7 +176,7 @@ bool GCFPVBlob::operator==(const GCFPValue&	that) const
 		return (false);
 	}
 
-	return (memcmp(getValue(), ((GCFPVBlob*)&that)->getValue(), _length) == 0);
+	return (memcmp(_value, ((GCFPVBlob*)&that)->getValue(), _length) == 0);
 }
 
   } // namespace Common

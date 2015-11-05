@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,7 +25,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <jOTDB3/nl_astron_lofar_sas_otb_jotdb3_jCommon.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/ptime.hpp>
+#include <boost/date_time/posix_time/time_formatters.hpp>
 #include <string>
 #include <iostream>
 #include <map>
@@ -46,8 +47,6 @@ string getOwnerExt(JNIEnv *env, jobject anObject) {
   jboolean isCopy;
   const char* n = env->GetStringUTFChars (str, &isCopy);
   const string name (n);
-  // free
-  env->ReleaseStringUTFChars (str, n);
   return name;
 }
 
@@ -135,7 +134,6 @@ jobject convertOTDBtree(JNIEnv *env, OTDBtree aTree) {
   jfieldID fid_jOTDBtree_classification = env->GetFieldID (class_jOTDBtree, "classification", "S");
   jfieldID fid_jOTDBtree_creator = env->GetFieldID (class_jOTDBtree, "creator", "Ljava/lang/String;");
   jfieldID fid_jOTDBtree_creationDate = env->GetFieldID (class_jOTDBtree, "creationDate", "Ljava/lang/String;");
-  jfieldID fid_jOTDBtree_modificationDate = env->GetFieldID (class_jOTDBtree, "modificationDate", "Ljava/lang/String;");
   jfieldID fid_jOTDBtree_type = env->GetFieldID (class_jOTDBtree, "type", "S");
   jfieldID fid_jOTDBtree_state = env->GetFieldID (class_jOTDBtree, "state", "S");
   jfieldID fid_jOTDBtree_originalTree = env->GetFieldID (class_jOTDBtree, "originalTree", "I");
@@ -152,7 +150,6 @@ jobject convertOTDBtree(JNIEnv *env, OTDBtree aTree) {
   env->SetShortField (jTree, fid_jOTDBtree_classification, aTree.classification);
   env->SetObjectField (jTree, fid_jOTDBtree_creator, env->NewStringUTF (aTree.creator.c_str ()));
   env->SetObjectField (jTree, fid_jOTDBtree_creationDate, env->NewStringUTF (to_iso_extended_string(aTree.creationDate).c_str ()));
-  env->SetObjectField (jTree, fid_jOTDBtree_modificationDate, env->NewStringUTF (to_iso_extended_string(aTree.modificationDate).c_str ()));
   env->SetShortField (jTree, fid_jOTDBtree_type, aTree.type);
   env->SetShortField (jTree, fid_jOTDBtree_state, aTree.state);
   env->SetIntField (jTree, fid_jOTDBtree_originalTree, aTree.originalTree);

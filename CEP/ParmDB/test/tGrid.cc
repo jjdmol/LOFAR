@@ -85,7 +85,7 @@ void testOneSet()
   domains.push_back (Box(Point(1,2), Point(3,5)));
   Grid grid(domains, false);
   ASSERT (grid.size() == 1);
-  grid.getCell(0);
+  Box box = grid.getCell(0);
   ASSERT (grid.getCell(0) == Box(Point(1,2), Point(3,5)));
   ASSERT (grid.getAxis(0)->classType() == "RegularAxis");
   ASSERT (grid.getAxis(1)->classType() == "RegularAxis");

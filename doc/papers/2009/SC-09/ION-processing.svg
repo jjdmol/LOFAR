@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="411.36206"
+   height="192.33601"
+   id="svg5348"
+   sodipodi:version="0.32"
+   inkscape:version="0.46"
+   version="1.0"
+   sodipodi:docname="ION-processing.svg"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape">
+  <defs
+     id="defs5350">
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Lend"
+       style="overflow:visible">
+      <path
+         id="path3967"
+         d="M 0,0 L 5,-5 L -12.5,0 L 5,5 L 0,0 z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
+    </marker>
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       id="perspective5356" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     gridtolerance="10000"
+     guidetolerance="10"
+     objecttolerance="10"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="3.6439919"
+     inkscape:cx="199.7145"
+     inkscape:cy="96.167999"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1600"
+     inkscape:window-height="1125"
+     inkscape:window-x="0"
+     inkscape:window-y="25" />
+  <metadata
+     id="metadata5353">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-254.56577,-372.79999)">
+    <rect
+       id="rect6"
+       style="fill:#deffde;stroke:#00b000;stroke-width:1.4424907;stroke-linecap:butt;stroke-linejoin:miter"
+       rx="7.8651147"
+       height="166.67154"
+       width="207.86374"
+       y="373.52124"
+       x="348.30768" />
+    <rect
+       id="rect2664"
+       style="fill:#ffffde;stroke:#a14000;stroke-width:1.38773596;stroke-linecap:butt;stroke-linejoin:miter"
+       rx="7.6611519"
+       height="52.788445"
+       width="180.5843"
+       y="456.91129"
+       x="359.88977" />
+    <rect
+       id="rect2660"
+       style="fill:#ffffde;stroke:#a14000;stroke-width:1.38315988;stroke-linecap:butt;stroke-linejoin:miter"
+       rx="7.6100497"
+       height="52.793018"
+       width="179.37975"
+       y="386.80411"
+       x="361.07761" />
+    <rect
+       id="rect10"
+       style="fill:#ffd5d5;stroke:#a14000;stroke-width:0.70788145;stroke-linecap:butt;stroke-linejoin:miter"
+       rx="4.9551702"
+       height="21.236444"
+       width="116.80044"
+       y="409.03305"
+       x="395.94699" />
+    <rect
+       id="rect12"
+       style="fill:#ffd5d5;stroke:#a14000;stroke-width:0.48620349;stroke-linecap:butt;stroke-linejoin:miter"
+       rx="2.3134694"
+       height="21.458122"
+       width="54.531788"
+       y="479.14679"
+       x="469.39771" />
+    <text
+       style="font-size:9.06088257000000041px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.00117980000000000in;font-family:Helvetica"
+       id="text64"
+       font-size="192"
+       font-weight="bold"
+       font-style="normal"
+       y="423.19067"
+       x="452.57748"
+       xml:space="preserve">circular buffer</text>
+    <text
+       style="font-size:9.06088257000000041px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.00117980000000000in;font-family:Helvetica"
+       id="text66"
+       font-size="192"
+       font-weight="bold"
+       font-style="normal"
+       y="486.86639"
+       x="495.98953"
+       xml:space="preserve">integrate</text>
+    <text
+       style="font-size:13.21526337px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#00b000;stroke:#00b000;stroke-width:0.00172074in;font-family:Helvetica"
+       id="text80"
+       font-size="192"
+       font-weight="bold"
+       font-style="normal"
+       y="561.04114"
+       x="452.15353"
+       xml:space="preserve">Blue Gene/P I/O node</text>
+    <text
+       style="font-size:9.06088257px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.0011798in;font-family:Helvetica"
+       id="text2662"
+       font-size="192"
+       font-weight="bold"
+       font-style="normal"
+       y="401.05676"
+       x="452.9649"
+       xml:space="preserve">input section</text>
+    <text
+       style="font-size:9.06088257px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.0011798in;font-family:Helvetica"
+       id="text2670"
+       font-size="192"
+       font-weight="bold"
+       font-style="normal"
+       y="470.50388"
+       x="453.51147"
+       xml:space="preserve">output section</text>
+    <rect
+       id="rect2672"
+       style="fill:#ffd5d5;stroke:#a14000;stroke-width:0.55858302;stroke-linecap:butt;stroke-linejoin:miter"
+       rx="3.0638707"
+       height="21.385742"
+       width="72.219818"
+       y="479.39807"
+       x="375.8515" />
+    <text
+       style="font-size:9.06088257000000041px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#2b0000;stroke:#000000;stroke-width:0.00117980000000000in;font-family:Helvetica"
+       id="text2674"
+       font-size="192"
+       font-weight="bold"
+       font-style="normal"
+       y="492.61212"
+       x="412.48349"
+       xml:space="preserve">output queue</text>
+    <path
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0.94447482;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow1Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 652.79693,489.42223 L 525.35346,489.42223"
+       id="path2676"
+       sodipodi:nodetypes="cc" />
+    <text
+       xml:space="preserve"
+       style="font-size:20.27597237px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#800080;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black;-inkscape-font-specification:Arial Black"
+       x="603.28943"
+       y="472.15149"
+       id="text5270"><tspan
+         sodipodi:role="line"
+         id="tspan5272"
+         x="603.28943"
+         y="472.15149"
+         style="font-size:11.15178394px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;text-anchor:middle;fill:#800080;font-family:Arial;-inkscape-font-specification:Arial Italic">FCNP over</tspan><tspan
+         sodipodi:role="line"
+         x="603.28943"
+         y="486.09122"
+         id="tspan5274"
+         style="font-size:11.15178394px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;text-anchor:middle;fill:#800080;font-family:Arial;-inkscape-font-specification:Arial Italic">collective network</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:20.27597237px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#800080;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black;-inkscape-font-specification:Arial Black"
+       x="612.84796"
+       y="499.983"
+       id="text5280"><tspan
+         sodipodi:role="line"
+         x="612.84796"
+         y="499.983"
+         id="tspan5284"
+         style="font-size:11.15178394px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;fill:#000000;font-family:Arial;-inkscape-font-specification:Arial Bold">correlated data</tspan><tspan
+         sodipodi:role="line"
+         x="612.84796"
+         y="513.92273"
+         style="font-size:11.15178394px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;fill:#000000;font-family:Arial;-inkscape-font-specification:Arial Bold"
+         id="tspan5288">from compute cores</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:20.27597237px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#800080;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black;-inkscape-font-specification:Arial Black"
+       x="299.3526"
+       y="506.36792"
+       id="text5290"><tspan
+         sodipodi:role="line"
+         x="299.3526"
+         y="506.36792"
+         id="tspan5292"
+         style="font-size:11.15178394px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;fill:#000000;font-family:Arial;-inkscape-font-specification:Arial Bold">correlated data</tspan><tspan
+         sodipodi:role="line"
+         x="299.3526"
+         y="520.30768"
+         style="font-size:11.15178394px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;fill:#000000;font-family:Arial;-inkscape-font-specification:Arial Bold"
+         id="tspan5296">to storage nodes</tspan></text>
+    <path
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0.94447482;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow1Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 375.98699,490.68874 L 266.1737,490.68874"
+       id="path5298"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0.94447482;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow1Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 469.95551,489.57037 L 448.3676,489.57037"
+       id="path5300"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0.94447482;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow1Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 264.78995,419.79856 L 394.75204,419.79856"
+       id="path5302"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0.94447482;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow1Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 513.15059,420.58044 L 650.7429,420.58044"
+       id="path5304"
+       sodipodi:nodetypes="cc" />
+    <text
+       xml:space="preserve"
+       style="font-size:20.27597237px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#800080;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black;-inkscape-font-specification:Arial Black"
+       x="305.23874"
+       y="430.61066"
+       id="text5306"><tspan
+         sodipodi:role="line"
+         x="305.23874"
+         y="430.61066"
+         id="tspan5308"
+         style="font-size:11.15178394px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;fill:#000000;font-family:Arial;-inkscape-font-specification:Arial Bold">sample data</tspan><tspan
+         sodipodi:role="line"
+         x="305.23874"
+         y="444.55038"
+         style="font-size:11.15178394px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;fill:#000000;font-family:Arial;-inkscape-font-specification:Arial Bold"
+         id="tspan5312">from stations</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:20.27597237px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#800080;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black;-inkscape-font-specification:Arial Black"
+       x="603.53412"
+       y="399.68384"
+       id="text5314"><tspan
+         sodipodi:role="line"
+         id="tspan5316"
+         x="603.53412"
+         y="399.68384"
+         style="font-size:11.15178394px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;text-anchor:middle;fill:#800080;font-family:Arial;-inkscape-font-specification:Arial Italic">FCNP over</tspan><tspan
+         sodipodi:role="line"
+         x="603.53412"
+         y="413.62357"
+         id="tspan5318"
+         style="font-size:11.15178394px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;text-anchor:middle;fill:#800080;font-family:Arial;-inkscape-font-specification:Arial Italic">collective network</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:20.27597237px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#800080;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black;-inkscape-font-specification:Arial Black"
+       x="607.06097"
+       y="435.05664"
+       id="text5320"><tspan
+         sodipodi:role="line"
+         x="607.06097"
+         y="435.05664"
+         style="font-size:11.15178394px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;fill:#000000;font-family:Arial;-inkscape-font-specification:Arial Bold"
+         id="tspan5326">sample data</tspan><tspan
+         sodipodi:role="line"
+         x="607.06097"
+         y="448.99637"
+         style="font-size:11.15178394px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;fill:#000000;font-family:Arial;-inkscape-font-specification:Arial Bold"
+         id="tspan5330">to compute cores</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:20.27597237px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#0000aa;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black;-inkscape-font-specification:Arial Black"
+       x="305.38751"
+       y="401.09906"
+       id="text5332"><tspan
+         sodipodi:role="line"
+         id="tspan5334"
+         x="305.38751"
+         y="401.09906"
+         style="font-size:11.15178394px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;text-anchor:middle;fill:#0000aa;font-family:Arial;-inkscape-font-specification:Arial Italic">UDP over</tspan><tspan
+         sodipodi:role="line"
+         x="305.38751"
+         y="415.03879"
+         id="tspan5336"
+         style="font-size:11.15178394px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;text-anchor:middle;fill:#0000aa;font-family:Arial;-inkscape-font-specification:Arial Italic">10 Gb Ethernet</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:20.27597237px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#0000aa;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black;-inkscape-font-specification:Arial Black"
+       x="305.53165"
+       y="468.61856"
+       id="text5338"><tspan
+         sodipodi:role="line"
+         id="tspan5340"
+         x="305.53165"
+         y="468.61856"
+         style="font-size:11.15178394px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;text-anchor:middle;fill:#0000aa;font-family:Arial;-inkscape-font-specification:Arial Italic">TCP over</tspan><tspan
+         sodipodi:role="line"
+         x="305.53165"
+         y="482.55829"
+         id="tspan5342"
+         style="font-size:11.15178394px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;text-anchor:middle;fill:#0000aa;font-family:Arial;-inkscape-font-specification:Arial Italic">10 Gb Ethernet</tspan></text>
+    <text
+       style="font-size:8.44390011px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.00109946in;font-family:Helvetica"
+       id="text5484"
+       font-size="192"
+       font-weight="bold"
+       font-style="normal"
+       y="497.96109"
+       x="495.646"
+       xml:space="preserve">(optional)</text>
+    <text
+       style="font-size:13.8561039px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00180418in;font-family:Helvetica"
+       id="text5508"
+       font-size="192"
+       font-weight="bold"
+       font-style="normal"
+       y="530.69556"
+       x="452.04193"
+       xml:space="preserve">IONProc</text>
+  </g>
+</svg>

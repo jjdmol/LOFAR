@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tStringUtil
+./runctest.sh tStringUtil 2>&1 > tStringUtil.log

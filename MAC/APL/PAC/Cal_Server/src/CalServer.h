@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@
 #include <Common/lofar_string.h>
 #include <APL/CAL_Protocol/ACC.h>
 #include <APL/CAL_Protocol/SubArray.h>
-#include <APL/RSP_Protocol/RCUSettings.h>
 #include "Source.h"
 #include "DipoleModel.h"
 #include "SubArrays.h"
@@ -43,7 +42,6 @@ namespace LOFAR {
   using GCF::TM::GCFTCPPort;
   using GCF::TM::GCFPortInterface;
   using GCF::TM::GCFTimerPort;
-  
   namespace CAL {
 
 // forward declarations
@@ -61,8 +59,11 @@ public:
 	// GTMTopologyService classes.
 	// @param accs Reference to the global ACC's. These ACC's are shared between
 	// the calibration algorithm and the ACMProxy class.
-	CalServer(const string& name, ACCs& accs);
+	CalServer(const string& name, ACCs& accs, int argc, char** argv);
 	virtual ~CalServer();
+
+	// Adopt the commandline switches
+	void parseOptions(int argc, char** argv);
 
 	// The undertaker method deletes dead clients on the m_dead_clients list.
 	void undertaker();
@@ -71,7 +72,7 @@ public:
 	void remove_client(GCFPortInterface* port);
 
 	// increment RCU usagecounters and enable newly used RCUs
-	void _enableRCUs(SubArray*	subarray, RSP_Protocol::RCUSettings rcu_settings, int delay);
+	void _enableRCUs(SubArray*	subarray, int delay);
 
 	// decrement RCU usagecounters and disable unused RCUs
 	void _disableRCUs(SubArray*	subarray);
@@ -80,11 +81,6 @@ public:
 	// States
 	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &port);
 	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &port);
-
-	// Functions for neat shutdown
-	static void 	  sigintHandler(int signum);
-	void 			  finish();
-	GCFEvent::TResult finishing_state(GCFEvent&	event, GCFPortInterface& port);
 		
 	/*@}*/
 
@@ -99,11 +95,6 @@ public:
     
 	// Write ACC to file if configured to do so.
 	void write_acc();
-
-	// Helper functions
-	bool _dataOnRing	  (uint	ringNr)	const;
-	void _updateDataStream(uint	delay);
-	void _powerdownRCUs   (SubArray::RCUmask_t	rcus2switchOff);
 
 private:
 	// ----- DATA MEMBERS -----
@@ -124,18 +115,13 @@ private:
 	double m_sampling_frequency;
 
 	// remember number of RSP boards and number of rcus
-	uint 	m_n_rspboards;
-	uint 	m_n_rcus;
-	bool	itsHasSecondRing;			// station has splitter to create two rings
-	bool	itsSecondRingActive;		// second ring is activated.
-	bool	itsFirstRingOn;
-	bool	itsSecondRingOn;
+	int m_n_rspboards;
+	int m_n_rcus;
+
+	// Which instance of the services we should use.
+	int32 m_instancenr;
 
 	vector<int>		itsRCUcounts;		// in how many observations an RCU participates
-
-	uint			itsPowerOffDelay;	// # of seconds to wait before the power of the HBA's is switched off.
-	vector<time_t>	itsPowerOffTime;	// Timestamp the HBA tile may be switched of.
-
 
 	// Ports
 	GCFTCPPort*		itsListener;  // connect point for clients

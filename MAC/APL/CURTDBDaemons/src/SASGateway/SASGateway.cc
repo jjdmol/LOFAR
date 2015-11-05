@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -36,11 +36,8 @@
 #include <OTDB/TreeValue.h>
 #include "SASGateway.h"
 #include <CURTDBDaemons/Package__Version.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace LOFAR {
-  using namespace KVT_Protocol;
-  using namespace DP_Protocol;
   using namespace MACIO;
   using namespace OTDB;
   namespace GCF {
@@ -48,8 +45,6 @@ namespace LOFAR {
     using namespace PVSS;
     using namespace RTDB;
     namespace RTDBDaemons {
-
-using namespace boost::posix_time;
 
 //
 // SASGateway()
@@ -184,9 +179,6 @@ GCFEvent::TResult SASGateway::connect2PVSS(GCFEvent& event, GCFPortInterface& po
 	break;
 
 	case DP_QUERY_SUBSCRIBED: {
-		itsTimerPort->cancelAllTimers();
-
-		// only failures are reported, successful subscriptions result in a DP_QUERY_CHANGED
 		DPQuerySubscribedEvent	answer(event);
 		if (answer.result != PVSS::SA_NO_ERROR) {
 			LOG_ERROR_STR ("Taking subscription on PVSS-states failed (" << answer.result  <<
@@ -194,16 +186,17 @@ GCFEvent::TResult SASGateway::connect2PVSS(GCFEvent& event, GCFPortInterface& po
 			itsTimerPort->setTimer(10.0);
 			break;
 		}
+		itsQueryID = answer.QryID;
+		LOG_INFO_STR("Subscription on state fields from PVSS successful(" << itsQueryID  <<
+					 "), going to operational mode");
+		itsTimerPort->cancelAllTimers();
+		TRAN(SASGateway::operational);
 	}
 	break;
 
 	case DP_QUERY_CHANGED:
-		itsTimerPort->cancelAllTimers();
-
+		// don't expect this event here right now, but you never know.
 		_handleQueryEvent(event);
-		LOG_INFO_STR("Subscription on state fields from PVSS successful(" << itsQueryID  <<
-					 "), going to operational mode");
-		TRAN(SASGateway::operational);
 		break;
 
 	default:
@@ -229,6 +222,7 @@ GCFEvent::TResult SASGateway::operational(GCFEvent&			event,
 		break;
 
 	case DP_QUERY_CHANGED:
+		// don't expect this event here right now, but you never know.
 		_handleQueryEvent(event);
 		break;
 
@@ -236,7 +230,6 @@ GCFEvent::TResult SASGateway::operational(GCFEvent&			event,
 
 
 	default:
-		LOG_DEBUG_STR("operational DEFAULT:" << eventName(event) << "@" << port.getName());
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}
@@ -251,10 +244,6 @@ GCFEvent::TResult SASGateway::operational(GCFEvent&			event,
 void SASGateway::_handleQueryEvent(GCFEvent&	event)
 {
 	DPQueryChangedEvent		DPevent(event);
-
-	if (!itsQueryID) {
-		itsQueryID = DPevent.QryID;
-	}
 	
 	if (DPevent.result != PVSS::SA_NO_ERROR) {
 		LOG_ERROR_STR("PVSS reported error " << DPevent.result << " for query " << itsQueryID);
@@ -265,22 +254,16 @@ void SASGateway::_handleQueryEvent(GCFEvent&	event)
 	GCFPVDynArr*	DPnames  = (GCFPVDynArr*)(DPevent.DPnames._pValue);
 	GCFPVDynArr*	DPvalues = (GCFPVDynArr*)(DPevent.DPvalues._pValue);
 	GCFPVDynArr*	DPtimes  = (GCFPVDynArr*)(DPevent.DPtimes._pValue);
-	try {
-		TreeValue	tv(itsSASservice, itsPICtreeID);
-		for (int	idx = 0; idx < nrDPs; ++idx) {
-			// show operator what we are doing
-			string	nameStr(PVSS2SASname(DPnames->getValue() [idx]->getValueAsString()));
-			string	valStr (DPvalues->getValue()[idx]->getValueAsString());
-			string	timeStr(DPtimes->getValue() [idx]->getValueAsString());
-			LOG_INFO_STR(nameStr << " = " << valStr << " @ " << timeStr);
+	TreeValue		tv(itsSASservice, itsPICtreeID);
+	for (int	idx = 0; idx < nrDPs; ++idx) {
+		// show operator what we are doing
+		string	nameStr(PVSS2SASname(DPnames->getValue() [idx]->getValueAsString()));
+		string	valStr (DPvalues->getValue()[idx]->getValueAsString());
+		string	timeStr(DPtimes->getValue() [idx]->getValueAsString());
+		LOG_INFO_STR(nameStr << " = " << valStr << " @ " << timeStr);
 
-			tv.addKVT(nameStr, valStr, time_from_string(timeStr));
-		} // for
-	}
-	catch (Exception& ex) {
-		LOG_ERROR_STR("Caught exception while updating SAS:" << ex.what() << "\nError= " << itsSASservice->errorMsg());
-		itsSASservice->disconnect();
-	}
+		tv.addKVT(nameStr, valStr, time_from_string(timeStr));
+	} // for
 }
 
 

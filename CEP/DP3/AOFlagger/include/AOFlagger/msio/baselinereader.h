@@ -69,13 +69,7 @@ class BaselineReader {
 
 		MeasurementSet &Set() { return _measurementSet; }
 
-		const std::map<double,size_t> &AllObservationTimes() const { return _observationTimes; }
-		
-		std::vector<double> ObservationTimes(size_t startIndex, size_t endIndex) const {
-			std::vector<double> times;
-			times.insert(times.begin(), _observationTimesVector.begin()+startIndex, _observationTimesVector.begin()+endIndex);
-			return times;
-		}
+		const std::map<double,size_t> &ObservationTimes() const { return _observationTimes; }
 
 		void AddReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow);
 		void AddReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow, size_t startIndex, size_t endIndex)
@@ -112,7 +106,7 @@ class BaselineReader {
 		virtual void PerformFlagWriteRequests() = 0;
 		virtual void PerformDataWriteTask(std::vector<Image2DCPtr> _realImages, std::vector<Image2DCPtr> _imaginaryImages, int antenna1, int antenna2, int spectralWindow) = 0;
 		
-		class TimeFrequencyData GetNextResult(std::vector<class UVW> &uvw);
+		virtual class TimeFrequencyData GetNextResult(std::vector<class UVW> &uvw);
 		void PartInfo(size_t maxTimeScans, size_t &timeScanCount, size_t &partCount);
 
 		virtual size_t GetMinRecommendedBufferSize(size_t threadCount) { return threadCount; }
@@ -204,6 +198,10 @@ class BaselineReader {
 			_readRequests.push_back(request);
 		}
 
+		void readTimeData(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<casa::Complex> data, const casa::Array<casa::Complex> *model);
+		void readTimeFlags(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<bool> flag);
+		void readWeights(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<float> weight);
+
 		MeasurementSet _measurementSet;
 		class casa::Table *_table;
 		
@@ -212,7 +210,6 @@ class BaselineReader {
 		bool _readData, _readFlags;
 		
 		std::map<double,size_t> _observationTimes;
-		std::vector<double> _observationTimesVector;
 		size_t _polarizationCount;
 		size_t _frequencyCount;
 };

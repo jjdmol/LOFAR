@@ -215,8 +215,7 @@ namespace LOFAR
         bool ok = false;
         while(!ok) {
           if(itsCalSession->waitForResult()) {
-            CalSession::CommandStatus status =
-              itsCalSession->getCommandStatus(initId);
+            CommandStatus status = itsCalSession->getCommandStatus(initId);
 
             if(status.failed > 0) {
               LOG_ERROR_STR("" << status.failed << " worker(s) failed at"
@@ -292,8 +291,7 @@ namespace LOFAR
             LOG_TRACE_FLOW("State::NEXT_CHUNK_WAIT");
 
             if(itsCalSession->waitForResult()) {
-              CalSession::CommandStatus status =
-                itsCalSession->getCommandStatus(itsWaitId);
+              CommandStatus status = itsCalSession->getCommandStatus(itsWaitId);
 
               if(status.finished > status.failed) {
                 setState(RUN);
@@ -349,8 +347,7 @@ namespace LOFAR
             LOG_TRACE_FLOW("State::FINALIZE_WAIT");
 
             if(itsCalSession->waitForResult()) {
-              CalSession::CommandStatus status =
-                itsCalSession->getCommandStatus(itsWaitId);
+              CommandStatus status = itsCalSession->getCommandStatus(itsWaitId);
 
               if(status.finished == itsCalSession->getWorkerCount()) {
                 if(status.failed == 0) {

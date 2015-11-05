@@ -83,77 +83,17 @@ void RFIPlots::MakeDistPlot(Plot2DPointSet &pointSet, Image2DCPtr image, Mask2DC
 		pointSet.PushDataPoint(binsOutput[i], valuesOutput[i]);
 }
 
-template <bool Weight>
-void RFIPlots::MakeMeanSpectrumPlot(Plot2DPointSet &pointSet, const TimeFrequencyData &data, const Mask2DCPtr &mask, const TimeFrequencyMetaDataCPtr &metaData)
-{
-	bool hasBandInfo = metaData != 0 && metaData->HasBand();
-	if(hasBandInfo)
-	{
-		pointSet.SetXDesc("Frequency (MHz)");
-		std::stringstream yDesc;
-		yDesc << metaData->DataDescription() << " (" << metaData->DataUnits() << ')';
-		pointSet.SetYDesc(yDesc.str());
-	} else {
-		pointSet.SetXDesc("Index");
-		pointSet.SetYDesc("Mean (undefined units)");
-	}
-	
-	TimeFrequencyData displayData = data;
-	if(displayData.PhaseRepresentation() == TimeFrequencyData::ComplexRepresentation)
-	{
-		TimeFrequencyData *newData = data.CreateTFData(TimeFrequencyData::AmplitudePart);
-		displayData = *newData;
-		delete newData;
-	}
-
-	long double min = 1e100, max = -1e100;
-	const size_t height = data.ImageHeight(), width = data.ImageWidth();
-
-	for(size_t y=0;y<height;++y) {
-		long double sum = 0.0L;
-		size_t count = 0;
-		for(size_t i=0;i<displayData.ImageCount();++i)
-		{
-			Image2DCPtr image = displayData.GetImage(i);
-			for(size_t x=0;x<width;++x) {
-				if(!mask->Value(x, y) && std::isnormal(image->Value(x, y))) {
-					sum += image->Value(x, y);
-					++count;
-				}
-			}
-		}
-		if(count > 0)
-		{
-			long double v;
-			if(Weight)
-				v = sum;
-			else
-				v = sum/count;
-			if(v < min) min = v;
-			if(v > max) max = v;
-			if(hasBandInfo)
-				pointSet.PushDataPoint(metaData->Band().channels[y].frequencyHz/1000000.0, v);
-			else
-				pointSet.PushDataPoint(y, v);
-		}
-	}
-	pointSet.SetYRange(min * 0.9, max / 0.9);
-}
-template void RFIPlots::MakeMeanSpectrumPlot<true>(class Plot2DPointSet &pointSet, const TimeFrequencyData &data, const Mask2DCPtr &mask, const TimeFrequencyMetaDataCPtr &metaData);
-template void RFIPlots::MakeMeanSpectrumPlot<false>(class Plot2DPointSet &pointSet, const TimeFrequencyData &data, const Mask2DCPtr &mask, const TimeFrequencyMetaDataCPtr &metaData);
-
 void RFIPlots::MakePowerSpectrumPlot(Plot2DPointSet &pointSet, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData)
 {
-	bool hasBandInfo = metaData != 0 && metaData->HasBand();
-	if(hasBandInfo)
+	if(metaData == 0)
 	{
+		pointSet.SetXDesc("Index");
+		pointSet.SetYDesc("Power (undefined units)");
+	} else {
 		pointSet.SetXDesc("Frequency (MHz)");
 		std::stringstream yDesc;
 		yDesc << metaData->DataDescription() << " (" << metaData->DataUnits() << ')';
 		pointSet.SetYDesc(yDesc.str());
-	} else {
-		pointSet.SetXDesc("Index");
-		pointSet.SetYDesc("Power (undefined units)");
 	}
 
 	long double min = 1e100, max = 0.0;
@@ -172,10 +112,10 @@ void RFIPlots::MakePowerSpectrumPlot(Plot2DPointSet &pointSet, Image2DCPtr image
 			long double v = sum/count;
 			if(v < min) min = v;
 			if(v > max) max = v;
-			if(hasBandInfo)
-				pointSet.PushDataPoint(metaData->Band().channels[y].frequencyHz/1000000.0, v);
-			else
+			if(metaData == 0)
 				pointSet.PushDataPoint(y, v);
+			else
+				pointSet.PushDataPoint(metaData->Band().channels[y].frequencyHz/1000000.0, v);
 		}
 	}
 	pointSet.SetYRange(min * 0.9, max / 0.9);
@@ -218,17 +158,17 @@ void RFIPlots::MakePowerTimePlot(Plot2DPointSet &pointSet, Image2DCPtr image, Ma
 	}
 }
 
-void RFIPlots::MakeComplexPlanePlot(Plot2DPointSet &pointSet, const TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, bool realVersusImaginary, bool drawImaginary)
+void RFIPlots::MakeComplexPlanePlot(class Plot &plot, const TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, bool realVersusImaginary, bool drawImaginary)
 {
 
 	if(realVersusImaginary)
 	{
-		pointSet.SetXDesc("real");
-		pointSet.SetYDesc("imaginary");
+		plot.SetXAxisText("real");
+		plot.SetYAxisText("imaginary");
 	} else {
-		//pointSet.SetXRange(xStart, xStart+length-1);
-		pointSet.SetXDesc("time");
-		pointSet.SetYDesc("real/imaginary visibility");
+		plot.SetXRange(xStart, xStart+length-1);
+		plot.SetXAxisText("time");
+		plot.SetYAxisText("real/imaginary visibility");
 	}
 
 	Image2DCPtr real = data.GetRealPart();
@@ -246,24 +186,24 @@ void RFIPlots::MakeComplexPlanePlot(Plot2DPointSet &pointSet, const TimeFrequenc
 			}
 		}
 		if(realVersusImaginary)
-			pointSet.PushDataPoint(r, i);
+			plot.PushDataPoint(r, i);
 		else if(drawImaginary)
-			pointSet.PushDataPoint(x, i);
+			plot.PushDataPoint(x, i);
 		else
-			pointSet.PushDataPoint(x, r);
+			plot.PushDataPoint(x, r);
 	}
 }
 
-void RFIPlots::MakeFittedComplexPlot(Plot2DPointSet &pointSet, const TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, num_t frequency, bool realVersusImaginary, bool drawImaginary)
+void RFIPlots::MakeFittedComplexPlot(class Plot &plot, const TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, num_t frequency, bool realVersusImaginary, bool drawImaginary)
 {
 	if(realVersusImaginary)
 	{
-		pointSet.SetXDesc("real");
-		pointSet.SetYDesc("imaginary");
+		plot.SetXAxisText("real");
+		plot.SetYAxisText("imaginary");
 	} else {
-		//plot.SetXRange(xStart, xStart+length-1);
-		pointSet.SetXDesc("time");
-		pointSet.SetYDesc("real/imaginary visibility");
+		plot.SetXRange(xStart, xStart+length-1);
+		plot.SetXAxisText("time");
+		plot.SetYAxisText("real/imaginary visibility");
 	}
 	Image2DCPtr real = data.GetRealPart();
 	Image2DCPtr imaginary = data.GetImaginaryPart();
@@ -317,14 +257,14 @@ void RFIPlots::MakeFittedComplexPlot(Plot2DPointSet &pointSet, const TimeFrequen
 	for(size_t x=xStart;x<xStart + length;++x)
 	{
 		if(realVersusImaginary)
-			pointSet.PushDataPoint(
+			plot.PushDataPoint(
 				cosn(frequency*twopi*(long double) x + realPhase) * realAmplitude + realMean,
 				cosn(frequency*twopi*(long double) x + imagPhase) * imagAmplitude + imagMean);
 		else if(drawImaginary)
-			pointSet.PushDataPoint(x,
+			plot.PushDataPoint(x,
 				cosn(frequency*twopi*(long double) x + imagPhase) * imagAmplitude + imagMean);
 		else
-			pointSet.PushDataPoint(x,
+			plot.PushDataPoint(x,
 				cosn(frequency*twopi*(long double) x + realPhase) * realAmplitude + realMean);
 	}
 

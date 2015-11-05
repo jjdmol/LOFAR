@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,8 @@
 package nl.astron.lofar.sas.otbcomponents;
 
 import java.rmi.RemoteException;
-import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Vector;
 import javax.swing.JOptionPane;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb3.jDefaultTemplate;
@@ -41,18 +42,18 @@ import nl.astron.lofar.sas.otb.util.OtdbRmi;
 public class CreateDefaultTemplateDialog extends javax.swing.JDialog {
     
     /** Creates new form LoginDialog */
-    public CreateDefaultTemplateDialog(boolean modal, ArrayList<jDefaultTemplate> aList, jOTDBtree aTree, MainFrame aMainFrame) {
+    public CreateDefaultTemplateDialog(boolean modal, Vector<jDefaultTemplate> aList, jOTDBtree aTree, MainFrame aMainFrame) {
         super(aMainFrame, modal);
         initComponents();
         getRootPane().setDefaultButton(jButtonOK);
-        itsDFList=(ArrayList)aList.clone();
+        itsDFList=(Vector)aList.clone();
         itsTree = aTree;
         init();
         ok = true;
     }
 
-    public void setNew(ArrayList<jDefaultTemplate> aList, jOTDBtree aTree) {
-        itsDFList=(ArrayList)aList.clone();
+    public void setNew(Vector<jDefaultTemplate> aList, jOTDBtree aTree) {
+        itsDFList=(Vector)aList.clone();
         itsTree = aTree;
         init();
     }
@@ -116,21 +117,21 @@ public class CreateDefaultTemplateDialog extends javax.swing.JDialog {
             }
         });
         getContentPane().add(jButtonOK, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 350, -1, -1));
-        getContentPane().add(nameInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 200, 300, -1));
+        getContentPane().add(nameInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 200, 300, -1));
 
         jLabel2.setText("ProcessType:");
         getContentPane().add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 230, -1, -1));
-        getContentPane().add(processTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 230, 300, -1));
+        getContentPane().add(processTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 230, 300, -1));
 
         jLabel3.setText("ProcessSubtype:");
         getContentPane().add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 260, -1, -1));
-        getContentPane().add(processSubtypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 260, 300, -1));
+        getContentPane().add(processSubtypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 260, 300, -1));
 
         jLabel4.setText("Strategy:");
         getContentPane().add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 290, -1, -1));
-        getContentPane().add(strategyInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 290, 300, -1));
+        getContentPane().add(strategyInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 290, 300, -1));
 
-        jLabel5.setFont(new java.awt.Font("Tahoma", 1, 14));
+        jLabel5.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel5.setText("Create new Default Template");
         getContentPane().add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 10, 220, -1));
 
@@ -173,9 +174,14 @@ public class CreateDefaultTemplateDialog extends javax.swing.JDialog {
             JOptionPane.showMessageDialog(this, "Empty ProcessType Field", "Empty Name error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        for (jDefaultTemplate it: itsDFList) {
-            if (it.name.equals(nameInput.getText())) {
-                JOptionPane.showMessageDialog(this, "Duplicate ProcessTypename", "Duplicate Name error", JOptionPane.ERROR_MESSAGE);
+        if (this.processSubtypeInput.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Empty ProcessSubtype Field", "Empty Name error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        Iterator<jDefaultTemplate> it = itsDFList.iterator();
+        while (it.hasNext()) {
+            if (it.next().name.equals(nameInput.getText())) {
+                JOptionPane.showMessageDialog(this, "Empty ProcessType Field", "Empty Name error", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
         }
@@ -225,7 +231,7 @@ public class CreateDefaultTemplateDialog extends javax.swing.JDialog {
      * Holds value of property ok.
      */
     private boolean ok;
-    ArrayList<jDefaultTemplate> itsDFList;
+    Vector<jDefaultTemplate> itsDFList;
     jOTDBtree itsTree;
 
     /**
