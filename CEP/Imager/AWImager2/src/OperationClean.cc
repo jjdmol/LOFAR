@@ -60,11 +60,6 @@ void OperationClean::init()
 {
   Operation::init();
 
-  if (!itsMS.tableDesc().isColumn("CORRECTED_DATA"))
-  {
-    throw(AipsError("CORRECTED_DATA column not found."));
-  }
-
   Vector<Float> userVector(itsParset.getFloatVector("clean.uservector",std::vector<float>(0)));
   
   Int nscales = itsParset.getInt("clean.nscales", 0);

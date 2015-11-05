@@ -484,7 +484,6 @@ void test2(int ntime, int nbl, int nchan, int ncorr)
   parset.add ("stations",
               "{ns1:[rs01.s01, rs02.s01], ns2:[cs01.s02, cs01.s01]}");
   parset.add ("autocorr", "false");
-  parset.add ("average", "false");
   DPStep::ShPtr step2(new StationAdder(in, parset, ""));
   DPStep::ShPtr step3(new TestOutput2(ntime, nbl, nchan, ncorr));
   step1->setNextStep (step2);
@@ -501,7 +500,6 @@ void test3 (const string& stations)
   ParameterSet parset;
   parset.add ("stations", stations);
   parset.add ("autocorr", "true");
-  parset.add ("average", "false");
   DPStep::ShPtr step2(new StationAdder(in, parset, ""));
   DPStep::ShPtr step3(new ThrowStep());
   step1->setNextStep (step2);

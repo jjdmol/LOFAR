@@ -29,7 +29,6 @@
 #include <DPPP/MultiMSReader.h>
 #include <DPPP/MSWriter.h>
 #include <DPPP/MSUpdater.h>
-#include <DPPP/ApplyBeam.h>
 #include <DPPP/Averager.h>
 #include <DPPP/MedFlagger.h>
 #include <DPPP/AORFlagger.h>
@@ -41,7 +40,6 @@
 #include <DPPP/StationAdder.h>
 #include <DPPP/ScaleData.h>
 #include <DPPP/ApplyCal.h>
-#include <DPPP/Predict.h>
 #include <DPPP/GainCal.h>
 #include <DPPP/Filter.h>
 #include <DPPP/Counter.h>
@@ -120,8 +118,6 @@ namespace LOFAR {
         checkparset = parset.getBool ("checkparset") ? 1:0;
       }
 
-      bool showcounts = parset.getBool ("showcounts", true);
-
       // Create the steps and fill their DPInfo objects.
       DPStep::ShPtr firstStep = makeSteps (parset);
       // Show the steps.
@@ -175,20 +171,15 @@ namespace LOFAR {
       DPLOG_INFO_STR ("Finishing processing ...");
       firstStep->finish();
       // Give all steps the option to add something to the MS written.
-      // It starts with the last step to get the name of the output MS,
-      // but each step must first call its previous step before
-      // it adds something itself.
       lastStep->addToMS("");
 
       // Show the counts where needed.
-      if (showcounts) {
       step = firstStep;
-        while (step) {
-          ostringstream os;
-          step->showCounts (os);
-          DPLOG_INFO (os.str(), true);
-          step = step->getNextStep();
-        }
+      while (step) {
+        ostringstream os;
+        step->showCounts (os);
+        DPLOG_INFO (os.str(), true);
+        step = step->getNextStep();
       }
       // Show the overall timer.
       nstimer.stop();
@@ -308,10 +299,6 @@ namespace LOFAR {
           step = DPStep::ShPtr(new Filter (reader, parset, prefix));
         } else if (type == "applycal"  ||  type == "correct") {
           step = DPStep::ShPtr(new ApplyCal (reader, parset, prefix));
-        } else if (type == "predict") {
-          step = DPStep::ShPtr(new Predict (reader, parset, prefix));
-        } else if (type == "applybeam") {
-          step = DPStep::ShPtr(new ApplyBeam (reader, parset, prefix));
         } else if (type == "gaincal"  ||  type == "calibrate") {
           step = DPStep::ShPtr(new GainCal (reader, parset, prefix));
         } else if (type == "out" || type=="output") {

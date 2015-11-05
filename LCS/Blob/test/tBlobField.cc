@@ -64,9 +64,7 @@ namespace LOFAR {
 #include <Blob/BlobField.tcc>
 
 // Instantiate the template.
-namespace LOFAR {
-  template class BlobField<XX>;
-}
+template class BlobField<XX>;
 
 
 // Function to create and fill a blob.

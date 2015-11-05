@@ -47,17 +47,10 @@ namespace DPPP
                                       const vector<string> &patchNames,
                                       uint nModel);
 
-  // Create a source list (with patch name) from a patchlist
-  // Needed for efficient multithreading
-  std::vector<std::pair<ModelComponent::ConstPtr,Patch::ConstPtr> >
-  makeSourceList (const std::vector<Patch::ConstPtr>& patchList);
-
   // From a given PatchList, create a new one with one patch per component
-  vector<Patch::ConstPtr> makeOnePatchPerComponent(
-      const vector<Patch::ConstPtr>&);
+  vector<Patch::ConstPtr> makeOnePatchPerComponent(vector<Patch::ConstPtr>);
 
-  vector<string>  makePatchList(BBS::SourceDB &sourceDB,
-                                vector<string> patterns);
+  vector<string>  makePatchList(BBS::SourceDB &sourceDB, vector<string> patterns);
 
 // @}
 
