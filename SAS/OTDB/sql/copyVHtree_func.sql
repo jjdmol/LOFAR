@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -38,7 +38,6 @@
 --
 CREATE OR REPLACE FUNCTION copyVHparams(INT4, INT4, INT4)
   RETURNS VOID AS '
-    --  $Id$
 	DECLARE
 		vParam	RECORD;
 
@@ -74,7 +73,6 @@ CREATE OR REPLACE FUNCTION copyVHparams(INT4, INT4, INT4)
 --
 CREATE OR REPLACE FUNCTION copyVHleafNode(INT4, INT4, INT4)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 		vRow		RECORD;
 		vNewNodeID	VIChierarchy.nodeID%TYPE;
@@ -116,7 +114,6 @@ CREATE OR REPLACE FUNCTION copyVHleafNode(INT4, INT4, INT4)
 --
 CREATE OR REPLACE FUNCTION copyVHsubTree(INT4, INT4, INT4)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 	  vNewNodeID	VIChierarchy.nodeID%TYPE;
 	  vDummy		VIChierarchy.nodeID%TYPE;

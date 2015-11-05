@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
-#include <Common/Exception.h>
 
 #include <MACIO/MACServiceInfo.h>
 
@@ -57,11 +56,7 @@ using namespace std;
 using namespace LOFAR;
 using namespace GCF::TM;
 using namespace CR_Protocol;
-using namespace TBB_Protocol;
 using namespace TrigCtl;
-
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
 
 static const double DELAY = 60.0;
 
@@ -345,7 +340,7 @@ TRIGCtl::TRIGCtl(string name, int argc, char** argv): GCFTask((State)&TRIGCtl::i
     itsCommand(0),itsArgc(argc),itsArgv(argv)
 {
     registerProtocol (CR_PROTOCOL, CR_PROTOCOL_STRINGS);
-    itsRTDBPort     = new GCF::RTDB::GCFRTDBPort(*this, "RTDB_CR_TriggerPort", PSN_CR_TRIGGERPORT);
+    itsRTDBPort     = new GCF::RTDB::GCFRTDBPort(*this, "RTDBControlPort", PSN_CR_TRIGGERPORT);
     ASSERTSTR(itsRTDBPort, "Can't allocate RTDBPort");
     
     itsTimerPort = new GCFTimerPort(*this, "timerPort");
@@ -559,7 +554,7 @@ Command* TRIGCtl::parse_options(int argc, char** argv)
                         exit(EXIT_FAILURE);
                     }
                 }
-                cmd->setStopTime(NsTimestamp(stopTime));
+                cmd->setStopTime(RTC::NsTimestamp(stopTime));
             } break;
 
             case 'c': {   // --read
@@ -579,9 +574,9 @@ Command* TRIGCtl::parse_options(int argc, char** argv)
                         exit(EXIT_FAILURE);
                     }
                 }
-                cmd->setTime(NsTimestamp(time));
-                cmd->setTimeBefore(NsTimestamp(timeBefore));
-                cmd->setTimeAfter(NsTimestamp(timeAfter));
+                cmd->setTime(RTC::NsTimestamp(time));
+                cmd->setTimeBefore(RTC::NsTimestamp(timeBefore));
+                cmd->setTimeAfter(RTC::NsTimestamp(timeAfter));
             } break;
 
             case 'd': {   // --record

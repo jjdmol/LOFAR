@@ -20,8 +20,6 @@ CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
 #  message(STATUS " This probably means your gcc is old ( < 4.2).")
 #endif(COMPILER_SUPPORTS_MARCH_NATIVE)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
-
 include(CheckIncludeFileCXX)
 
 FIND_PATH(BOOST_ASIO_H_FOUND "boost/asio.hpp")
@@ -43,13 +41,13 @@ if(GSL_FOUND)
   link_libraries(${GSL_LIBRARIES})
 endif(GSL_FOUND)
 
-if(SIGCXX_FOUND)
-  include_directories(${SIGCXX_INCLUDE_DIRS})
-endif(SIGCXX_FOUND)
-
 lofar_add_bin_program(rfihistory rfihistory.cpp)
 
+lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp util/rng.cpp msio/timestepaccessor.cpp util/aologger.cpp)
+
 lofar_add_bin_program(aorefscript aorefscript.cpp)
+
+lofar_add_bin_program(aosynchronisation aosynchronisation.cpp)
 
 set(GUI_PLOT_FILES
   gui/plot/colorscale.cpp
@@ -92,7 +90,6 @@ set(MSIO_FILES
   msio/indirectbaselinereader.cpp
   msio/mask2d.cpp
   msio/measurementset.cpp
-  msio/memorybaselinereader.cpp
   msio/pngfile.cpp
   msio/rspreader.cpp
   msio/samplerow.cpp
@@ -105,9 +102,8 @@ set(MSIO_FILES
   msio/timestepaccessor.cpp)
   
 set(QUALITY_FILES
-  quality/histogramcollection.cpp
   quality/histogramtablesformatter.cpp
-  quality/rayleighfitter.cpp
+	quality/rayleighfitter.cpp
   quality/qualitytablesformatter.cpp)
 
 set(REMOTEAO_FILES
@@ -120,7 +116,6 @@ set(STRATEGY_ACTION_FILES
   strategy/actions/foreachmsaction.cpp
   strategy/actions/frequencyselectionaction.cpp
   strategy/actions/fringestopaction.cpp
-	strategy/actions/highpassfilteraction.cpp
   strategy/actions/imageraction.cpp
   strategy/actions/normalizevarianceaction.cpp
   strategy/actions/plotaction.cpp
@@ -129,17 +124,14 @@ set(STRATEGY_ACTION_FILES
   strategy/actions/statisticalflagaction.cpp
   strategy/actions/strategyaction.cpp
   strategy/actions/svdaction.cpp
-  strategy/actions/timeconvolutionaction.cpp
   strategy/actions/timeselectionaction.cpp
   strategy/actions/writeflagsaction.cpp)
 
 set(STRATEGY_ALGORITHMS_FILES
   strategy/algorithms/baselineselector.cpp
-	strategy/algorithms/baselinetimeplaneimager.cpp
   strategy/algorithms/eigenvalue.cpp
   strategy/algorithms/fringestoppingfitter.cpp
   strategy/algorithms/fringetestcreater.cpp
-	strategy/algorithms/highpassfilter.cpp
   strategy/algorithms/localfitmethod.cpp
   strategy/algorithms/methoditerator.cpp
   strategy/algorithms/mitigationtester.cpp
@@ -163,6 +155,9 @@ set(STRATEGY_PLOTS_FILES
   strategy/plots/rfiplots.cpp
   strategy/plots/timeflagcountplot.cpp
   util/multiplot.cpp)
+set(QUALITY_FILES 
+  ${QUALITY_FILES} 
+  quality/histogramcollection.cpp)
 else()
  set(STRATEGY_PLOTS_FILES)
 endif(GTKMM_FOUND)
@@ -242,11 +237,9 @@ if(GTKMM_FOUND)
 		gui/imagewidget.cpp
 		gui/imagepropertieswindow.cpp
 		)
-		target_link_libraries(aoqplot ${GTKMM_LIBRARIES})
 		lofar_add_bin_program(badstations badstations.cpp ${REMOTE_FILES})
+		target_link_libraries(aoqplot ${GTKMM_LIBRARIES})
 		target_link_libraries(badstations ${GTKMM_LIBRARIES})
-		lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp ${REMOTE_FILES})
-		target_link_libraries(aofrequencyfilter ${GTKMM_LIBRARIES})
 	endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
 else()
   message(WARNING " The graphical user interface library GTKMM was not found; rfigui and aoqplot will not be compiled.")

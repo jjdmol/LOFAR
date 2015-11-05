@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -42,11 +42,6 @@ namespace LOFAR {
 #define	MAC_CODELOGGING_PORT			23999
 #define	MAC_SERVICEBROKER_PORT			24000
 
-// QUICK FIX #3633
-#define MAC_PYTHON_FEEDBACK_QF			25000
-// Quick Fix #4022
-#define MAC_ONLINE_FEEDBACK_QF			21000
-
 // CEPlogprocessor needs fixed ports
 #define CEP_LOGPROC_LOGGING				23900
 #define CEP_LOGPROC_CONTROL				23901
@@ -64,7 +59,6 @@ namespace LOFAR {
 #define	MAC_SVCMASK_CEPLOGPROC			"BGPlogger%s:v1.0"
 #define	MAC_SVCMASK_CEPLOGCONTROL		"CEPlogControl%s:v1.0"
 #define MAC_SVCMASK_KVTLOGGER			"KVTLogger%s:v1.0"
-#define MAC_SVCMASK_PVSSGATEWAY			"PVSSGateway%s:v1.0"
 
 // Define names for all controllers
 #define	MAC_SVCMASK_SCHEDULERCTRL		"MACScheduler%s:v1.0"

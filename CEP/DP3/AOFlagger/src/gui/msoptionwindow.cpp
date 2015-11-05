@@ -21,7 +21,6 @@
 #include <iostream>
 
 #include <gtkmm/messagedialog.h>
-#include <gtkmm/stock.h>
 
 #include <AOFlagger/gui/msoptionwindow.h>
 
@@ -35,7 +34,7 @@ MSOptionWindow::MSOptionWindow(MSWindow &msWindow, const std::string &filename) 
 	Gtk::Window(),
 	_msWindow(msWindow),
 	_filename(filename),
-	_openButton(Gtk::Stock::OPEN),
+	_openButton("Open"),
 	_dataKindFrame("Columns to read"),
 	_polarisationFrame("Polarisation to read"),
 	_partitioningFrame("Partitioning"),
@@ -49,9 +48,7 @@ MSOptionWindow::MSOptionWindow(MSWindow &msWindow, const std::string &filename) 
 	_max10000ScansButton("Split when >10.000 scans"),
 	_max25000ScansButton("Split when >25.000 scans"),
 	_max100000ScansButton("Split when >100.000 scans"),
-	_directReadButton("Direct IO"),
-	_indirectReadButton("Indirect IO"),
-	_memoryReadButton("Memory-mode IO"),
+	_indirectReadButton("Indirect read"),
 	_readUVWButton("Read UVW")
 {
 	set_title("Options for opening a measurement set");
@@ -62,14 +59,7 @@ MSOptionWindow::MSOptionWindow(MSWindow &msWindow, const std::string &filename) 
 	_openButton.signal_clicked().connect(sigc::mem_fun(*this, &MSOptionWindow::onOpen));
 	_bottomButtonBox.pack_start(_openButton);
 
-	_leftVBox.pack_start(_directReadButton);
 	_leftVBox.pack_start(_indirectReadButton);
-	_leftVBox.pack_start(_memoryReadButton);
-	Gtk::RadioButton::Group group;
-	_directReadButton.set_group(group);
-	_indirectReadButton.set_group(group);
-	_memoryReadButton.set_group(group);
-	_directReadButton.set_active(true);
 
 	_leftVBox.pack_start(_readUVWButton);
 	_readUVWButton.set_active(true);
@@ -155,11 +145,9 @@ void MSOptionWindow::onOpen()
 	std::cout << "Opening " << _filename << std::endl;
 	try
 	{
-		BaselineIOMode ioMode = DirectReadMode;
-		if(_indirectReadButton.get_active()) ioMode = IndirectReadMode;
-		else if(_memoryReadButton.get_active()) ioMode = MemoryReadMode;
+		bool indirectRead = _indirectReadButton.get_active();
 		bool readUVW = _readUVWButton.get_active();
-		rfiStrategy::ImageSet *imageSet = rfiStrategy::ImageSet::Create(_filename, ioMode);
+		rfiStrategy::ImageSet *imageSet = rfiStrategy::ImageSet::Create(_filename, indirectRead);
 		if(dynamic_cast<rfiStrategy::MSImageSet*>(imageSet) != 0)
 		{
 			rfiStrategy::MSImageSet *msImageSet = static_cast<rfiStrategy::MSImageSet*>(imageSet);

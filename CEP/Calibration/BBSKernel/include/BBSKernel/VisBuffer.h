@@ -135,7 +135,6 @@ private:
     VisDimensions           itsDims;
 };
 
-// Mapping from name to visbuffer, used to have visbuffers as source models
 typedef map<string, VisBuffer::Ptr> BufferMap;
 
 // @}

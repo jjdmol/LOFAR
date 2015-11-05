@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -43,20 +43,20 @@ ostream& CRstopVector::print (ostream& os) const
 
 
 // --- marshalling methods --- 
-size_t CRstopVector::getSize()
+unsigned int CRstopVector::getSize()
 {
-	size_t offset(sizeof(uint32));
-	uint32 nrElems(requests.size());
+	uint	offset(sizeof(uint32));
+	uint32	nrElems(requests.size());
 	for (size_t i = 0; i < nrElems; i++) {
 		offset +=  requests[i].getSize();
 	}
 	return (offset);
 }
 
-size_t CRstopVector::pack  (void* buffer)
+unsigned int CRstopVector::pack  (void* buffer)
 {
-	size_t offset(sizeof(uint32));
-	uint32 nrElems(requests.size());
+	unsigned int	offset(sizeof(uint32));
+	uint32			nrElems(requests.size());
 	memcpy(buffer, &nrElems, sizeof(uint32));
 	for (size_t i = 0; i < nrElems; i++) {
 		offset +=  requests[i].pack((char*)(buffer)+offset);
@@ -64,10 +64,10 @@ size_t CRstopVector::pack  (void* buffer)
 	return (offset);
 }
 
-size_t CRstopVector::unpack(void *buffer)
+unsigned int CRstopVector::unpack(void *buffer)
 {
-	size_t offset(sizeof(uint32));
-	uint32 nrElems;
+	unsigned int	offset(sizeof(uint32));
+	uint32			nrElems;
 	memcpy(&nrElems, buffer, sizeof(uint32));
 	requests.resize(nrElems);
 	for (size_t i = 0; i < nrElems; i++) {

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -43,9 +43,9 @@ public:
 
 	//@{
 	// --- marshalling methods --- 
-	size_t getSize();
-	size_t pack  (char* buffer) const;
-	size_t unpack(const char *buffer);
+	unsigned int getSize();
+	unsigned int pack  (void* buffer);
+	unsigned int unpack(void *buffer);
 	//@}
 
 	// --- datamembers ---

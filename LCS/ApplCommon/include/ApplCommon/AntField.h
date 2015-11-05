@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2010
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -33,11 +33,11 @@
 #include <Common/lofar_map.h>
 #include <Common/LofarLogger.h>
 
-//# Avoid 'using namespace' in headerfiles
+// Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
 
-  // \addtogroup ApplCommon
+  // \addtogroup package
   // @{
 
   //# --- Forward Declarations ---
@@ -83,13 +83,6 @@ namespace LOFAR {
     // [3, 3]
     const AFArray& rotationMatrix(const string& fieldName) const
       { return (itsRotationMatrix[name2Index(fieldName)]); }
-
-
-    static const int LBA_IDX    = 0;
-    static const int HBA_IDX    = 1;
-    static const int HBA0_IDX   = 2;
-    static const int HBA1_IDX   = 3;
-    static const int MAX_FIELDS = 4;
 
     AFArray& AntPos(int fieldIndex)
       { return (itsAntPos[fieldIndex]); }

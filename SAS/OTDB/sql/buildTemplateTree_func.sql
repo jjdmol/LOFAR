@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@
 --
 CREATE OR REPLACE FUNCTION instanciateVTparams(INT4, INT4, INT4)
   RETURNS VOID AS $$
-    --  $Id$
 	DECLARE
 		vParam		RECORD;
 		dfltValue	VARCHAR(200);
@@ -53,7 +52,7 @@ CREATE OR REPLACE FUNCTION instanciateVTparams(INT4, INT4, INT4)
 		AND		name NOT like '#%'
 	  LOOP
 		IF vParam.par_type >= 300 THEN	-- popup parameter? leave limits fiels empty.
-		  dfltValue := substring(vParam.limits from '[a-zA-Z0-9+-/_.,<>]+;([a-zA-Z0-9+-/_.,<>]+)');
+		  dfltValue := substring(vParam.limits from '[a-zA-Z0-9_.,<>]+;([a-zA-Z0-9_.,<>]+)');
 		  IF dfltValue IS NULL THEN
 			dfltValue := '';
 		  END IF;
@@ -88,7 +87,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4)
   RETURNS INT4 AS $$
-    --  $Id$
 	DECLARE
 		vNode		RECORD;
 		vNewNodeID	VICtemplate.nodeID%TYPE;
@@ -145,7 +143,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION instanciateVTsubTree(INT4, INT4, INT4)
   RETURNS INT4 AS $$
-    --  $Id$
 	DECLARE
 	  vNode				RECORD;
 	  vNodeID			VICnodeDef.nodeID%TYPE;
@@ -199,7 +196,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION instanciateVTtree(INT4, INT4, INT2)
   RETURNS INT4 AS $$
-    --  $Id$
 	DECLARE
 		vFunction   CONSTANT	INT2 := 1;
 		TTtemplate  CONSTANT	INT2 := 20;

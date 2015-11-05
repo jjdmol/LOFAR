@@ -24,7 +24,6 @@
 #include <lofar_config.h>
 
 #include <Common/Exception.h>
-#include <Common/Thread/Mutex.h>
 #include <cstdlib>    // for abort()
 #include <iostream>
 
@@ -41,18 +40,11 @@ namespace LOFAR
 
   void Exception::terminate()
   {
-    // terminate() may be called recursively, so we need a mutex that can
-    // be locked recursively.
-    static Mutex mutex(Mutex::RECURSIVE);
-
-    // Make sure that one thread has exclusive access.
-    ScopedLock lock(mutex);
-
     // We need to safe-guard against recursive calls. E.g., we were called
     // twice, because a rethrow was attempted without an active exception.
     static bool terminating = false;
     if (terminating) {
-#if defined(__GNUG__) && !defined(_LIBCPP_VERSION)
+#ifdef __GNUG__
       __gnu_cxx::__verbose_terminate_handler();
 #else
       // fputs() is the only safe way to print to stderr when low on memory
@@ -89,7 +81,7 @@ namespace LOFAR
           cerr << Backtrace() << endl;
         } catch (...) {}
 #endif
-#if defined(__GNUG__) && !defined(_LIBCPP_VERSION)
+#ifdef __GNUG__
         __gnu_cxx::__verbose_terminate_handler();
 #else
         // Rethrow once more to separate std::exception from other exceptions.

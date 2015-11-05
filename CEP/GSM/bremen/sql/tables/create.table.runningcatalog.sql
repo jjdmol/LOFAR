@@ -28,7 +28,6 @@ CREATE TABLE runningcatalog
   ,stokes CHAR(1) NULL  -- not null for group members ONLY
   ,datapoints INT NOT NULL
   ,decl_zone INT NULL
-  ,healpix_zone int not null
 
   ,wm_ra double NOT NULL
   ,wm_ra_err double NOT NULL
@@ -40,8 +39,8 @@ CREATE TABLE runningcatalog
   ,avg_wdecl double NULL
   ,avg_weight_decl double NULL
 
-  ,source_kind smallint not null default 0 -- 0-Point; 1-Gaussian, 2-Group head, 3-Dummy, 4-ToBe Updated;
-  ,parent_runcat_id int null --reference to the non-banded extended source
+  ,source_kind smallint not null default 0 -- 0-Point; 1-Gaussian, 2-Group head, 3-Dummy;
+  ,parent_source int null --reference to the non-banded extended source
 
   ,wm_g_minor double NULL
   ,wm_g_minor_err double NULL
@@ -66,7 +65,6 @@ CREATE TABLE runningcatalog
   ,x double NOT NULL
   ,y double NOT NULL
   ,z double NOT NULL
-  ,last_spectra_update_date timestamp null --last update of spectral indices
   ,spectral_power integer null
   ,spectral_index_0 double  null
   ,spectral_index_1 double  null

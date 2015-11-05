@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tMSLofarTable
+./runctest.sh tMSLofarTable 2>&1 > tMSLofarTable.log

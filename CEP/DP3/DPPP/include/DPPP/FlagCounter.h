@@ -33,11 +33,11 @@
 #include <casa/Arrays/Vector.h>
 
 namespace LOFAR {
-  class ParameterSet;
-
   namespace DPPP {
+
     //# Forward Declarations.
-    class DPInfo;
+    class DPInput;
+    class ParSet;
 
     // @ingroup NDPPP
 
@@ -52,17 +52,19 @@ namespace LOFAR {
     class FlagCounter
     {
     public:
-      // The default constructor creates an empty object. It does not save.
+      // The default constructor creates an emty object. It does not save.
       FlagCounter();
 
-      // This constructor creates an empty object.
+      // The constructor creates an empty object.
       // It reads info from the parset to see if percentages have to be saved.
-      FlagCounter (const string& msName, const ParameterSet&,
-                   const string& prefix);
+      FlagCounter (DPInput*, const ParSet&, const string& prefix);
 
-      // Size all counters and initialize them to zero using the sizes
-      // from the DPInfo object.
-      void init (const DPInfo& info);
+      // Size all counters and initialize them to zero.
+      void init (uint nbaselines, uint nchan, uint ncorr);
+
+      // Size all counters to that's sizes and initialize them to zero.
+      // and all counters initialized to zero.
+      void init (const FlagCounter& that);
 
       // Increment the count per baseline.
       void incrBaseline (uint bl)
@@ -108,7 +110,7 @@ namespace LOFAR {
                         const casa::Vector<int64>& count) const;
 
       //# Data members.
-      const DPInfo* itsInfo;
+      DPInput*      itsInput;
       string        itsSaveName;
       double        itsWarnPerc;
       bool          itsShowFF;

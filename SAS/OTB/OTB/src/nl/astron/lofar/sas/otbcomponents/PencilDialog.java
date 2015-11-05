@@ -2,7 +2,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -228,21 +228,15 @@ public class PencilDialog extends javax.swing.JDialog {
             }
             try {
                 if (!inputAngle1.getText().isEmpty()) {
-                    switch (ch) {
-                        case "dmsdms":
-                            tmpch = "dms";
-                            break;
-                        case "hmsdms":
-                            tmpch = "hms";
-                            break;
+                    if (ch.equals("dmsdms")) {
+                        tmpch = "dms";
+                    } else if (ch.equals("hmsdms")) {
+                        tmpch = "hms";
                     }
-                    switch (itsCoordType) {
-                        case "hmsdms":
-                            tmpcoord="hms";
-                            break;
-                        case "dmsdms":
-                            tmpcoord="dms";
-                            break;
+                    if (itsCoordType.equals("hmsdms")) {
+                        tmpcoord="hms";
+                    } else if (itsCoordType.equals("dmsdms")) {
+                        tmpcoord="dms";
                     }
                     inputAngle1.setText(LofarUtils.changeCoordinate(tmpcoord, tmpch, inputAngle1.getText()));
                 }

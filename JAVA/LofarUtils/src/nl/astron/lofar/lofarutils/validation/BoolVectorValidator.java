@@ -21,7 +21,6 @@ public class BoolVectorValidator extends AbstractValidator {
         super(parent, c, "");
     }
 
-    @Override
     protected boolean validationCriteria(JComponent c) {
         String input = ((JTextField)c).getText();
 

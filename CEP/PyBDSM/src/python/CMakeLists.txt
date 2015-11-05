@@ -13,7 +13,6 @@ python_install(
   interface.py
   islands.py
   make_residimage.py
-  multi_proc.py
   mylogger.py
   opts.py
   output.py

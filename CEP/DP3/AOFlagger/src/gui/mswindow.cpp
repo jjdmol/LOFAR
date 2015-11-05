@@ -24,7 +24,6 @@
 #include <gtkmm/filechooserdialog.h>
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/inputdialog.h>
-#include <gtkmm/toolbar.h>
 
 #include <AOFlagger/msio/baselinematrixloader.h>
 #include <AOFlagger/msio/measurementset.h>
@@ -40,6 +39,7 @@
 
 #include <AOFlagger/strategy/imagesets/msimageset.h>
 #include <AOFlagger/strategy/imagesets/noisestatimageset.h>
+#include <AOFlagger/strategy/imagesets/bandcombinedset.h>
 #include <AOFlagger/strategy/imagesets/spatialmsimageset.h>
 #include <AOFlagger/strategy/imagesets/spatialtimeimageset.h>
 
@@ -117,7 +117,6 @@ MSWindow::MSWindow() : _imagePlaneWindow(0), _histogramWindow(0), _optionWindow(
 
 MSWindow::~MSWindow()
 {
-	boost::mutex::scoped_lock lock(_ioMutex);
 	while(!_actionGroup->get_actions().empty())
 		_actionGroup->remove(*_actionGroup->get_actions().begin());
 	
@@ -138,9 +137,6 @@ MSWindow::~MSWindow()
 		delete _imagePropertiesWindow;
 	if(_antennaMapWindow != 0)
 		delete _antennaMapWindow;
-	
-	// The rfistrategy needs the lock to clean up
-	lock.unlock();
 	
 	delete _statistics;
 	delete _strategy;
@@ -185,10 +181,8 @@ void MSWindow::onActionDirectoryOpenForSpatial()
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		boost::mutex::scoped_lock lock(_ioMutex);
 		rfiStrategy::SpatialMSImageSet *imageSet = new rfiStrategy::SpatialMSImageSet(dialog.get_filename());
 		imageSet->Initialize();
-		lock.unlock();
 		SetImageSet(imageSet);
 	}
 }
@@ -207,10 +201,35 @@ void MSWindow::onActionDirectoryOpenForST()
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		boost::mutex::scoped_lock lock(_ioMutex);
 		rfiStrategy::SpatialTimeImageSet *imageSet = new rfiStrategy::SpatialTimeImageSet(dialog.get_filename());
 		imageSet->Initialize();
-		lock.unlock();
+		SetImageSet(imageSet);
+	}
+}
+
+void MSWindow::onOpenBandCombined()
+{
+	std::vector<std::string> names;
+	int result;
+	do
+	{
+		Gtk::FileChooserDialog dialog("Select a measurement set",
+						Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+		dialog.set_transient_for(*this);
+	
+		//Add response buttons the the dialog:
+		dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+		dialog.add_button("Open", Gtk::RESPONSE_OK);
+	
+		result = dialog.run();
+		if(result == Gtk::RESPONSE_OK)
+			names.push_back(dialog.get_filename());
+	}
+  while(result == Gtk::RESPONSE_OK);
+	if(names.size() > 0)
+	{
+		rfiStrategy::BandCombinedSet *imageSet = new rfiStrategy::BandCombinedSet(names);
+		imageSet->Initialize();
 		SetImageSet(imageSet);
 	}
 }
@@ -239,29 +258,27 @@ void MSWindow::OpenPath(const std::string &path)
 	if(rfiStrategy::ImageSet::IsRCPRawFile(path))
 	{
 		_optionWindow = new RawOptionWindow(*this, path);
-		_optionWindow->present();
+		_optionWindow->show();
 	}
 	else if(rfiStrategy::ImageSet::IsMSFile(path))
 	{
 		_optionWindow = new MSOptionWindow(*this, path);
-		_optionWindow->present();
+		_optionWindow->show();
 	}
 	else if(rfiStrategy::ImageSet::IsTimeFrequencyStatFile(path))
 	{
 		_optionWindow = new TFStatOptionWindow(*this, path);
-		_optionWindow->present();
+		_optionWindow->show();
 	}
 	else if(rfiStrategy::ImageSet::IsNoiseStatFile(path))
 	{
 		_optionWindow = new NoiseStatOptionWindow(*this, path);
-		_optionWindow->present();
+		_optionWindow->show();
 	}
 	else
 	{
-		boost::mutex::scoped_lock lock(_ioMutex);
-		rfiStrategy::ImageSet *imageSet = rfiStrategy::ImageSet::Create(path, DirectReadMode);
+		rfiStrategy::ImageSet *imageSet = rfiStrategy::ImageSet::Create(path);
 		imageSet->Initialize();
-		lock.unlock();
 		SetImageSet(imageSet);
 	}
 }
@@ -277,12 +294,9 @@ void MSWindow::loadCurrentTFData()
 {
 	if(_imageSet != 0) {
 		try {
-			boost::mutex::scoped_lock lock(_ioMutex);
 			_imageSet->AddReadRequest(*_imageSetIndex);
 			_imageSet->PerformReadRequests();
 			rfiStrategy::BaselineData *baseline = _imageSet->GetNextRequested();
-			lock.unlock();
-			
 			_timeFrequencyWidget.SetNewData(baseline->Data(), baseline->MetaData());
 			delete baseline;
 			if(_spatialMetaData != 0)
@@ -295,12 +309,6 @@ void MSWindow::loadCurrentTFData()
 				_spatialMetaData = new SpatialMatrixMetaData(static_cast<rfiStrategy::SpatialMSImageSet*>(_imageSet)->SpatialMetaData(*_imageSetIndex));
 			}
 			_timeFrequencyWidget.Update();
-			// We store these seperate, as they might access the measurement set. This is
-			// not only faster (the names are used in the onMouse.. events) but also less dangerous,
-			// since the set can be simultaneously accessed by another thread. (thus the io mutex should
-			// be locked before calling below statements).
-			_imageSetName = _imageSet->Name();
-			_imageSetIndexDescription = _imageSetIndex->Description();
 			setSetNameInStatusBar();
 		} catch(std::exception &e)
 		{
@@ -313,17 +321,15 @@ void MSWindow::loadCurrentTFData()
 void MSWindow::setSetNameInStatusBar()
 {
   if(HasImageSet()) {
-		_statusbar.pop();
-		_statusbar.push(_imageSetName + ": " + _imageSetIndexDescription);
+	_statusbar.pop();
+	_statusbar.push(std::string() + _imageSet->Name() + ": " + _imageSetIndex->Description());
   }
 }
 		
 void MSWindow::onLoadPrevious()
 {
 	if(_imageSet != 0) {
-		boost::mutex::scoped_lock lock(_ioMutex);
 		_imageSetIndex->Previous();
-		lock.unlock();
 		loadCurrentTFData();
 	}
 }
@@ -331,9 +337,7 @@ void MSWindow::onLoadPrevious()
 void MSWindow::onLoadNext()
 {
 	if(_imageSet != 0) {
-		boost::mutex::scoped_lock lock(_ioMutex);
 		_imageSetIndex->Next();
-		lock.unlock();
 		loadCurrentTFData();
 	}
 }
@@ -341,9 +345,7 @@ void MSWindow::onLoadNext()
 void MSWindow::onLoadLargeStepPrevious()
 {
 	if(_imageSet != 0) {
-		boost::mutex::scoped_lock lock(_ioMutex);
 		_imageSetIndex->LargeStepPrevious();
-		lock.unlock();
 		loadCurrentTFData();
 	}
 }
@@ -351,9 +353,7 @@ void MSWindow::onLoadLargeStepPrevious()
 void MSWindow::onLoadLargeStepNext()
 {
 	if(_imageSet != 0) {
-		boost::mutex::scoped_lock lock(_ioMutex);
 		_imageSetIndex->LargeStepNext();
-		lock.unlock();
 		loadCurrentTFData();
 	}
 }
@@ -496,7 +496,6 @@ void MSWindow::SetImageSetIndex(rfiStrategy::ImageSetIndex *newImageSetIndex)
 	{
 		delete _imageSetIndex;
 		_imageSetIndex = newImageSetIndex;
-		_imageSetIndexDescription = _imageSetIndex->Description();
 		loadCurrentTFData();
 	} else {
 		delete newImageSetIndex;
@@ -540,6 +539,8 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onActionDirectoryOpenForSpatial) );
 	_actionGroup->add( Gtk::Action::create("OpenDirectoryST", Gtk::Stock::OPEN, "Open _directory as spatial/time"),
   sigc::mem_fun(*this, &MSWindow::onActionDirectoryOpenForST) );
+	_actionGroup->add( Gtk::Action::create("OpenBandCombined", Gtk::Stock::OPEN, "Open/combine bands"),
+  sigc::mem_fun(*this, &MSWindow::onOpenBandCombined) );
 	_actionGroup->add( Gtk::Action::create("OpenTestSet", "Open _testset") );
 
 	Gtk::RadioButtonGroup testSetGroup;
@@ -628,10 +629,6 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onPlotLogLogDistPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotComplexPlane", "Plot _complex plane"),
   sigc::mem_fun(*this, &MSWindow::onPlotComplexPlanePressed) );
-	_actionGroup->add( Gtk::Action::create("PlotMeanSpectrum", "Plot _mean spectrum"),
-  sigc::mem_fun(*this, &MSWindow::onPlotMeanSpectrumPressed) );
-	_actionGroup->add( Gtk::Action::create("PlotSumSpectrum", "Plot s_um spectrum"),
-  sigc::mem_fun(*this, &MSWindow::onPlotSumSpectrumPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotPowerSpectrum", "Plot _power spectrum"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerSpectrumPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotPowerSpectrumComparison", "Power _spectrum"),
@@ -815,6 +812,7 @@ void MSWindow::createToolbar()
     "      <menuitem action='OpenDirectory'/>"
     "      <menuitem action='OpenDirectorySpatial'/>"
     "      <menuitem action='OpenDirectoryST'/>"
+    "      <menuitem action='OpenBandCombined'/>"
     "      <menu action='OpenTestSet'>"
 		"        <menuitem action='GaussianTestSets'/>"
 		"        <menuitem action='RayleighTestSets'/>"
@@ -874,8 +872,6 @@ void MSWindow::createToolbar()
     "      <menuitem action='PlotDist'/>"
     "      <menuitem action='PlotLogLogDist'/>"
     "      <menuitem action='PlotComplexPlane'/>"
-    "      <menuitem action='PlotMeanSpectrum'/>"
-    "      <menuitem action='PlotSumSpectrum'/>"
     "      <menuitem action='PlotPowerSpectrum'/>"
     "      <menuitem action='PlotRMSSpectrum'/>"
     "      <menuitem action='PlotSNRSpectrum'/>"
@@ -978,7 +974,6 @@ void MSWindow::createToolbar()
 	Gtk::Widget* pMenubar = uiManager->get_widget("/MenuBar");
 	_mainVBox.pack_start(*pMenubar, Gtk::PACK_SHRINK);
 	Gtk::Widget* pToolbar = uiManager->get_widget("/ToolBar");
-	static_cast<Gtk::Toolbar *>(pToolbar)->set_toolbar_style(Gtk::TOOLBAR_BOTH);
 	_mainVBox.pack_start(*pToolbar, Gtk::PACK_SHRINK);
 	pMenubar->show();
 }
@@ -1222,30 +1217,6 @@ void MSWindow::onPlotComplexPlanePressed()
 			delete _plotComplexPlaneWindow;
 		_plotComplexPlaneWindow = new ComplexPlanePlotWindow(*this, _plotManager);
 		_plotComplexPlaneWindow->show();
-	}
-}
-
-template<bool Weight>
-void MSWindow::plotMeanSpectrumPressed()
-{
-	if(_timeFrequencyWidget.HasImage())
-	{
-		Plot2D &plot = _plotManager.NewPlot2D("Mean spectrum");
-
-		TimeFrequencyData data = _timeFrequencyWidget.GetActiveData();
-		Mask2DCPtr mask =
-			Mask2D::CreateSetMaskPtr<false>(data.ImageWidth(), data.ImageHeight());
-		Plot2DPointSet &beforeSet = plot.StartLine("Without flagging");
-		RFIPlots::MakeMeanSpectrumPlot<Weight>(beforeSet, data, mask, _timeFrequencyWidget.GetMetaData());
-
-		mask = Mask2D::CreateCopy(data.GetSingleMask());
-		if(!mask->AllFalse())
-		{
-			Plot2DPointSet &afterSet = plot.StartLine("Flagged");
-			RFIPlots::MakeMeanSpectrumPlot<Weight>(afterSet, data, mask, _timeFrequencyWidget.GetMetaData());
-		}
-		
-		_plotManager.Update();
 	}
 }
 

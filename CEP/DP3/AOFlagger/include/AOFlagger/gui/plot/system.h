@@ -68,10 +68,6 @@ class System {
 			else
 				return yMin;
 		}
-		double YRangePositiveMin(class Plot2DPointSet &pointSet) const
-		{
-			return _dimensions.find(pointSet.YUnits())->second->YRangePositiveMin();
-		}
 		double YRangeMax(class Plot2DPointSet &pointSet) const
 		{
 			const double yMax = _dimensions.find(pointSet.YUnits())->second->YRangeMax();
@@ -79,10 +75,6 @@ class System {
 				return 0.0;
 			else
 				return yMax;
-		}
-		double YRangePositiveMax(class Plot2DPointSet &pointSet) const
-		{
-			return _dimensions.find(pointSet.YUnits())->second->YRangePositiveMax();
 		}
 		void Clear()
 		{

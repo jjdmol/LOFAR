@@ -29,7 +29,7 @@
 
 #  Copyright (C) 2008-2010
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -64,6 +64,12 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
       "CMake found a cache file in your source tree. Please remove it "
       "manually and re-run CMake outside your source tree.")
   endif(EXISTS "${CMAKE_SOURCE_DIR}/CMakeCache.txt")
+
+  # Bail out if the top-level source directory name is not LOFAR
+  if(NOT CMAKE_SOURCE_DIR MATCHES "/LOFAR$")
+    message(FATAL_ERROR 
+      "${CMAKE_SOURCE_DIR} is not inside the LOFAR source code tree!")
+  endif(NOT CMAKE_SOURCE_DIR MATCHES "/LOFAR$")
 
   # Root directory of the LOFAR source code tree
   set(LOFAR_ROOT ${CMAKE_SOURCE_DIR} CACHE INTERNAL "LOFAR root directory")
@@ -152,23 +158,17 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
     endforeach(_var ${LOFAR_BUILD_VARIANTS})
   endforeach(_cmp ${_compilers})
 
-  # Set the CMAKE_EXE_LINKER_FLAGS, CMAKE_EXE_LINKER_FLAGS_<BUILD_TYPE>,
-  # CMAKE_SHARED_LINKER_FLAGS and CMAKE_SHARED_LINKER_FLAGS_<BUILD_TYPE>
+  # Set the CMAKE_EXE_LINKER_FLAGS and CMAKE_EXE_LINKER_FLAGS_<BUILD_TYPE>
   # variables. These variables are used by CMake to supply the correct link
   # flags depending on the build variant (e.g. debug or opt). These are all
   # cache variables whose values must be forced to the values specified in our
   # variants file.
   set(CMAKE_EXE_LINKER_FLAGS ${${LOFAR_COMPILER_SUITE}_EXE_LINKER_FLAGS}
-    CACHE STRING "Flags used by the linker for all build types to create executables." FORCE)
-  set(CMAKE_SHARED_LINKER_FLAGS ${${LOFAR_COMPILER_SUITE}_SHARED_LINKER_FLAGS}
-    CACHE STRING "Flags used by the linker for all build types to create shared libraries." FORCE)
+    CACHE STRING "Flags used by the linker for all build types." FORCE)
   foreach(_var ${LOFAR_BUILD_VARIANTS})
     set(CMAKE_EXE_LINKER_FLAGS_${_var} 
       ${${LOFAR_COMPILER_SUITE}_EXE_LINKER_FLAGS_${_var}} CACHE STRING
-      "Flags used by the linker for ${_var} builds to create executables." FORCE)
-    set(CMAKE_SHARED_LINKER_FLAGS_${_var} 
-      ${${LOFAR_COMPILER_SUITE}_SHARED_LINKER_FLAGS_${_var}} CACHE STRING
-      "Flags used by the linker for ${_var} builds to create shared libraries." FORCE)
+      "Flags used by the linker for ${_var} builds." FORCE)
   endforeach(_var ${LOFAR_BUILD_VARIANTS})
 
   # Set compiler definitions (e.g., -D options). There are global options that
@@ -209,18 +209,14 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
     set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS FALSE)
   endif(LOFAR_LIBDIR STREQUAL lib64)
 
-  # Create a directory structure in the build directory similar to that in the
-  # install directory. Binaries should be put in bin or sbin, libraries in lib
-  # or lib64 (dependent on architecture), configuration files in etc or share,
-  # and run-time files in var. The include directory will contain symbolic links
-  # to all (sub)projects of the current build. This is needed, because we use
+  # Create include directory that will hold symbolic links to all
+  # (sub)projects of the current build. This is needed, because we use
   # #include's that all contain the names of the different subprojects
   # (e.g. Common, Blob).
-  foreach(_dir bin etc include ${LOFAR_LIBDIR} sbin share var)
+  if(NOT EXISTS ${CMAKE_BINARY_DIR}/include)
     execute_process(COMMAND ${CMAKE_COMMAND} -E 
-      make_directory ${CMAKE_BINARY_DIR}/${_dir})
-  endforeach(_dir bin sbin include ${LOFAR_LIBDIR})
-  
+      make_directory ${CMAKE_BINARY_DIR}/include)
+  endif(NOT EXISTS ${CMAKE_BINARY_DIR}/include)
 
   ## --------------------------------------------------------------------------
   ## Several "Auto-tools variables" needed for backward compatibility

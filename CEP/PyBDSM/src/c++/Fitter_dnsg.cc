@@ -137,10 +137,6 @@ bool dnsg_fit(MGFunction &fcn, bool final, int verbose)
 static void dnsg_f(int &n, int &p, int &l, double *alf, int &nf, double *phi,
 		   void *uiparm, void *urparm, void *ufparm)
 {
-  (void)nf;
-  (void)uiparm;
-  (void)urparm;
-
   MGFunction *fcn = (MGFunction *)ufparm;
 
   assert(n == fcn->data_size());
@@ -154,10 +150,6 @@ static void dnsg_f(int &n, int &p, int &l, double *alf, int &nf, double *phi,
 static void dnsg_df(int &n, int &p, int &l, double *alf, int &nf, double *der,
 		    void *uiparm, void *urparm, void *ufparm)
 {
-  (void)nf;
-  (void)uiparm;
-  (void)urparm;
-
   MGFunction *fcn = (MGFunction *)ufparm;
 
   assert(n == fcn->data_size());

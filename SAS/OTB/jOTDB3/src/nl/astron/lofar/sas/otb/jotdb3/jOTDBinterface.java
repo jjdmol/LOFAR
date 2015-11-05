@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -72,10 +72,6 @@ public interface jOTDBinterface extends Remote
    public Vector<jOTDBtree> getTreesInPeriod (short treeType, String beginDate, String endDate) throws RemoteException;
    public Vector<jOTDBtree> getTreesInPeriod (short treeType, String beginDate) throws RemoteException;
    public Vector<jOTDBtree> getTreesInPeriod (short treeType) throws RemoteException;
-
-       // To get a list of all OTDB trees modified after given timestamp
-    public Vector<jOTDBtree> getModifiedTrees(String after, short treeType) throws RemoteException;
-    public Vector<jOTDBtree> getModifiedTrees(String after) throws RemoteException;
 
    // Get a new unique groupID
    public int newGroupID() throws RemoteException;

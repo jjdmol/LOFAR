@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,8 +26,6 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
-#include <Common/Exception.h>
-#include <Common/ParameterSet.h>
 
 #include <MACIO/MACServiceInfo.h>
 
@@ -56,9 +54,6 @@ using namespace LOFAR;
 using namespace GCF::TM;
 using namespace TBB_Protocol;
 using namespace TbbCtl;
-
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
 
 static const double DELAY = 60.0;
 
@@ -841,7 +836,7 @@ GCFEvent::TResult ReadCmd::ack(GCFEvent& e)
 
 //---- READALL -------------------------------------------------------------------
 ReadAllCmd::ReadAllCmd(GCFPortInterface& port) : Command(port),
-    itsStage(0), itsRcu(0), itsBoard(0), itsPages(0), itsTime(0), itsTimeBefore(0), itsTimeAfter(0)
+    itsStage(0), itsRcu(0), itsPages(0), itsTime(0), itsTimeBefore(0), itsTimeAfter(0)
 {
     cout << endl;
     cout << "== TBB ==============  transfer all data to CEP for all selected rcu ====" << endl;
@@ -867,7 +862,7 @@ void ReadAllCmd::send()
         case 1: {
             TBBReadrEvent event;
 
-            event.board = itsBoard;
+            event.board = rcu2board(itsRcu);
             event.mp = rcu2mp(itsRcu);
             event.pid = rcu2writer(itsRcu);
             event.regid = 4; // Last stored time instance
@@ -879,7 +874,7 @@ void ReadAllCmd::send()
       case 2: {
             TBBReadrEvent event;
 
-            event.board = itsBoard;
+            event.board = rcu2board(itsRcu);
             event.mp = rcu2mp(itsRcu);
             event.pid = rcu2writer(itsRcu);
             event.regid = 6; // Last stored sample frequency
@@ -901,7 +896,7 @@ void ReadAllCmd::send()
 
         case 4: {
             TBBCepStatusEvent event;
-            event.boardmask = (1 << itsBoard);
+            event.boardmask = (1 << rcu2board(getRcu()));
             itsPort.send(event);
             itsPort.setTimer(DELAY);
         } break;
@@ -921,12 +916,10 @@ void ReadAllCmd::send()
 //-----------------------------------------------------------------------------
 GCFEvent::TResult ReadAllCmd::ack(GCFEvent& e)
 {
-    static uint32 secondsTime;
-    static uint32 sampleNr;
-    static uint32 savedSamples;
-    static uint32 sampleFreq;
-    static int board;
-   
+   static uint32 secondsTime;
+   static uint32 sampleNr;
+   static uint32 savedSamples;
+   static uint32 sampleFreq;
    
     if (e.signal == TBB_STOP_ACK) {
         TBBStopAckEvent ack(e);
@@ -939,7 +932,6 @@ GCFEvent::TResult ReadAllCmd::ack(GCFEvent& e)
                 break;
             }
         }
-        itsBoard = rcu2board(itsRcu);
         itsStage = 1;
     }
     
@@ -948,8 +940,8 @@ GCFEvent::TResult ReadAllCmd::ack(GCFEvent& e)
             TBBReadrAckEvent ack(e);
             secondsTime = ack.data[0];
             sampleNr = ack.data[1];
-            //cout << formatString("board %d, rcu %-3d, last recorded time %lu seconds and sample number %lu",
-            //                            itsBoard, itsRcu, secondsTime, sampleNr) << endl;
+            cout << formatString("rcu %-3d, last recorded time %lu seconds and sample number %lu",
+                                        itsRcu, secondsTime, sampleNr) << endl;
             
             itsStage = 2;
         }
@@ -959,15 +951,15 @@ GCFEvent::TResult ReadAllCmd::ack(GCFEvent& e)
             sampleFreq = ack.data[1];
             
             // make timestamp
-            double sampletime = 1. / ((double)sampleFreq * 1E6);
-            NsTimestamp lastTime(secondsTime + ((double)sampleNr * sampletime));
+            double sampletime = 1. / (sampleFreq * 1E6);
+            RTC::NsTimestamp lastTime(secondsTime + (sampleNr * sampletime));
             itsTime = lastTime;
             itsTimeAfter.set(0.0);
-            NsTimestamp timeBefore((double)itsPages * (double)savedSamples * sampletime);
+            RTC::NsTimestamp timeBefore(itsPages * savedSamples * sampletime);
             itsTimeBefore = timeBefore;
             
-            cout << formatString("board %d, rcu %-3d, last recorded time=%lu seconds, sample number=%lu and sample-freq=%dMHz",
-                                        itsBoard, itsRcu, secondsTime, sampleNr,sampleFreq) << endl;
+            cout << formatString("rcu %-3d, last recorded time=%lu seconds, sample number=%lu and sample-freq=%dMHz",
+                                        itsRcu, secondsTime, sampleNr,sampleFreq) << endl;
             cout << formatString("         time       = %lu seconds, %lu nseconds", 
                                  itsTime.sec(), itsTime.nsec()) << endl;
             cout << formatString("         timebefore = %lu seconds, %lu nseconds",
@@ -986,23 +978,21 @@ GCFEvent::TResult ReadAllCmd::ack(GCFEvent& e)
             itsCmdTimer->setTimer(1.0);
         }
         else {
-            cout << endl << formatString(" %2d  %s",itsRcu, getDriverErrorStr(ack.status_mask).c_str()) << endl;
+            cout << endl << formatString(" %2d  %s",getRcu(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
             setCmdDone(true);
         }
     }
 
     else if (e.signal == TBB_CEP_STATUS_ACK) {
         TBBCepStatusAckEvent ack(e);
-        
-        if (ack.status_mask[itsBoard] == TBB_SUCCESS) {
-            if (ack.pages_left[itsBoard] != 0) {
+        if (ack.status_mask[rcu2board(getRcu())] == TBB_SUCCESS) {
+            if (ack.pages_left[rcu2board(getRcu())] != 0) {
                 cout << "*" << flush;
-                itsCmdTimer->setTimer(2.0);
+                itsCmdTimer->setTimer(1.0);
             }
             else {
                 setCmdSendNext(true);
                 cout << "]" << endl;
-                sleep(1);
                 // look for next Rcu
                 itsRcu++;
                 itsStage = 1;
@@ -1010,14 +1000,14 @@ GCFEvent::TResult ReadAllCmd::ack(GCFEvent& e)
                     itsRcu++;
                     if (itsRcu >= getMaxSelections()) {
                         itsStage = 5;
+                        //setCmdDone(true); // delete this line if new image with cep_status cmd is active
                         break;
                     }
                 }
-                itsBoard = rcu2board(itsRcu);
             }
         }
         else {
-            cout << formatString(" %2d  %s",itsRcu, getDriverErrorStr(ack.status_mask[itsBoard]).c_str()) << endl;
+            cout << formatString(" %2d  %s",getRcu(), getDriverErrorStr(ack.status_mask[rcu2board(getRcu())]).c_str()) << endl;
             setCmdDone(true);
         }
     }
@@ -2613,24 +2603,24 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
             FILE* file;
             file = fopen(filename,"w");
             if (file) {
-                fprintf(file,  "Station ID      : %d\n",itsStationId);
-                fprintf(file,  "RSP ID          : %d\n",itsRspId);
-                fprintf(file,  "RCU ID          : %d\n",itsRcuId);
-                fprintf(file,  "Sample freq     : %d MHz\n",itsSampleFreq);
+                fprintf(file,  "Station ID      : %d",itsStationId);
+                fprintf(file,  "RSP ID          : %d",itsRspId);
+                fprintf(file,  "RCU ID          : %d",itsRcuId);
+                fprintf(file,  "Sample freq     : %d MHz",itsSampleFreq);
                 if (itsTime < 0) {
-                    fprintf(file,"Time            : invalid\n");
+                    fprintf(file,"Time            : invalid");
                 } else {
-                    fprintf(file,"Time of 1e sample/slice  : %s (%u)\n",timestring,(uint32)itsTime);
+                    fprintf(file,"Time of 1e sample/slice  : %s (%u)",timestring,(uint32)itsTime);
                 }
                 if (itsFreqBands > 0) {
-                    fprintf(file,"Slice number of 1e slice : %d\n",itsSliceNr);
-                    fprintf(file,"Band number of 1e sample : %d\n",itsBandNr);
-                    fprintf(file,"Number of bands          : %d\n",itsFreqBands);
-                    fprintf(file,"Data file format         : binary complex(int16 Re, int16 Im)\n");
+                    fprintf(file,"Slice number of 1e slice : %d",itsSliceNr);
+                    fprintf(file,"Band number of 1e sample : %d",itsBandNr);
+                    fprintf(file,"Number of bands          : %d",itsFreqBands);
+                    fprintf(file,"Data file format         : binary complex(int16 Re, int16 Im)");
                 } else {
-                    fprintf(file,"Sample number of 1e sample : %u\n",itsSampleNr);
-                    fprintf(file,"Total number of samples    : %u\n",itsTotalSamples);
-                    fprintf(file,"Data file format           : binary  int16\n");
+                    fprintf(file,"Sample number of 1e sample : %u",itsSampleNr);
+                    fprintf(file,"Total number of samples    : %u",itsTotalSamples);
+                    fprintf(file,"Data file format           : binary  int16");
                     fprintf(file," ");
                 }
                 fclose(file);
@@ -3106,7 +3096,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
                 if (optarg) {
                     int rcu = 0;
                     int numitems = sscanf(optarg, "%d",&rcu);
-                    if (numitems == 0 || numitems == EOF || rcu < 0 || rcu >= itsMaxChannels) {
+                    if (numitems == 0 || numitems == EOF || rcu < 0 || rcu >= MAX_N_RCUS) {
                         cout << "Error: invalid number of arguments. Should be of the format " << endl;
                         cout << "       '--trigclr=rcu' " << endl;
                         exit(EXIT_FAILURE);
@@ -3203,7 +3193,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
                     if (numitems < 1 || numitems == EOF) {
                         cout << "Error: invalid number of arguments. Should be of the format " << endl;
                         cout << "       '--triginfo=rcu' " << endl;
-                        cout << "       rcu=0.." << (itsMaxChannels - 1) << endl;
+                        cout << "       rcu=0.." << (MAX_N_RCUS - 1) << endl;
                         exit(EXIT_FAILURE);
                     }
                     select.clear();
@@ -3254,10 +3244,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
                     */
                     int numitems = sscanf(optarg, "%d,%lf,%lf,%lf",
                         &rcu, &centerTime, &timeBefore, &timeAfter);
-                    if (numitems < 4 || numitems == EOF || rcu < 0 || rcu > itsMaxChannels) {
+                    if (numitems < 4 || numitems == EOF || rcu < 0 || rcu >= MAX_N_RCUS) {
                         cout << "Error: invalid number of arguments. Should be of the format " << endl;
                         cout << "       '--read=rcu,centertime,timebefore,timeafter' " << endl;
-                        cout << "       rcu=0.." << (itsMaxChannels - 1) << " and time in double "<< endl;
+                        cout << "       rcu=0.." << (MAX_N_RCUS - 1) << ",  time in double "<< endl;
                         exit(EXIT_FAILURE);
                     }
                     readcmd->setTime(centerTime);
@@ -3481,10 +3471,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
                     int numitems = sscanf(optarg, "%d,%u,%u", &rcu,&startpage,&pages);
 
-                    if (numitems < 3 || numitems == EOF || rcu < 0 || rcu >= itsMaxChannels) {
+                    if (numitems < 3 || numitems == EOF || rcu < 0 || rcu >= MAX_N_RCUS) {
                         cout << "Error: invalid readpage value's. Should be of the format " << endl;
                         cout << "       '--readpage=rcu, startpage, pages'" << endl;
-                        cout << "       rcu=0.." << (itsMaxChannels - 1) << endl;
+                        cout << "       rcu=0.." << (MAX_N_RCUS - 1) << endl;
                         exit(EXIT_FAILURE);
                     }
                     readddrcmd->setStartPage(startpage);

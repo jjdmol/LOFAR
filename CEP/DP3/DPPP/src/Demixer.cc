@@ -30,11 +30,12 @@
 #include <DPPP/DPInfo.h>
 #include <DPPP/EstimateMixed.h>
 #include <DPPP/PhaseShift.h>
+#include <DPPP/ParSet.h>
 #include <DPPP/Simulate.h>
 #include <DPPP/SourceDBUtil.h>
 #include <DPPP/SubtractMixed.h>
-#include <DPPP/MSReader.h>
-#include <DPPP/Simulator.h>
+
+#include <DPPP/PointSource.h>
 
 #include <ParmDB/Axis.h>
 #include <ParmDB/SourceDB.h>
@@ -43,7 +44,6 @@
 #include <ParmDB/ParmCache.h>
 #include <ParmDB/Parm.h>
 
-#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/OpenMP.h>
 #include <Common/StreamUtil.h>
@@ -58,6 +58,8 @@
 #include <casa/Arrays/MatrixMath.h>
 #include <scimath/Mathematics/MatrixMathLA.h>
 
+#include <boost/multi_array.hpp>
+
 using namespace casa;
 
 namespace LOFAR {
@@ -65,59 +67,45 @@ namespace LOFAR {
 
     using LOFAR::operator<<;
 
-    namespace
-    {
-      string toString (double value);
-    } //# end unnamed namespace
+//    namespace {
+//      void pack(const vector<size_t> &directions, size_t nBl, size_t nCh,
+//        size_t nCr, const_cursor<dcomplex> in, cursor<dcomplex> out);
+//      void pack(const vector<size_t> &directions, size_t nStation,
+//        const_cursor<double> in, double *out);
+//      void unpack(const vector<size_t> &directions, size_t nStation,
+//        const double *in, cursor<double> out);
+//      Patch::Ptr makePatch(const string &name);
+//    } //# end unnamed namespace
 
     Demixer::Demixer (DPInput* input,
-                      const ParameterSet& parset,
-                      const string& prefix)
-      : itsInput          (input),
-        itsName           (prefix),
-        itsSkyName        (parset.getString(prefix+"skymodel", "sky")),
-        itsInstrumentName (parset.getString(prefix+"instrumentmodel",
-                                            "instrument")),
-        itsDefaultGain    (parset.getDouble(prefix+"defaultgain",1.0)),
-        itsMaxIter        (parset.getInt(prefix+"maxiter",50)),
-        itsSelBL          (parset, prefix, false, "cross"),
-        itsFilter         (input, itsSelBL),
-        itsAvgResultSubtr (0),
-        itsIgnoreTarget   (parset.getBool  (prefix+"ignoretarget", false)),
-        itsTargetSource   (parset.getString(prefix+"targetsource", string())),
-        itsSubtrSources   (parset.getStringVector (prefix+"subtractsources")),
-        itsModelSources   (parset.getStringVector (prefix+"modelsources",
-                                                   vector<string>())),
-        itsExtraSources   (parset.getStringVector (prefix+"othersources",
-                                                   vector<string>())),
-//        itsCutOffs        (parset.getDoubleVector (prefix+"elevationcutoffs",
-//                                                   vector<double>())),
-//        itsJointSolve     (parset.getBool  (prefix+"jointsolve", true)),
-        itsPropagateSolutions(parset.getBool (prefix+"propagatesolutions",
-                                              false)),
-        itsNDir           (0),
-        itsNModel         (0),
-        itsNStation       (0),
-        itsNBl            (0),
-        itsNCorr          (0),
-        itsNChanIn        (0),
-        itsNTimeIn        (0),
-        itsNTimeDemix     (0),
-        itsNChanAvgSubtr  (parset.getUint  (prefix+"freqstep", 1)),
-        itsNTimeAvgSubtr  (parset.getUint  (prefix+"timestep", 1)),
-        itsNChanOutSubtr  (0),
-        itsNTimeOutSubtr  (0),
-        itsNTimeChunk     (parset.getUint  (prefix+"ntimechunk", 0)),
-        itsNTimeChunkSubtr(0),
-        itsNChanAvg       (parset.getUint  (prefix+"demixfreqstep",
-                                            itsNChanAvgSubtr)),
-        itsNTimeAvg       (parset.getUint  (prefix+"demixtimestep",
-                                            itsNTimeAvgSubtr)),
-        itsNChanOut       (0),
-        itsNTimeOut       (0),
-        itsTimeIntervalAvg(0),
-        itsTimeIndex      (0),
-        itsNConverged     (0)
+                      const ParSet& parset, const string& prefix)
+      : itsInput         (input),
+        itsName          (prefix),
+        itsSkyName       (parset.getString(prefix+"skymodel", "sky")),
+        itsInstrumentName(parset.getString(prefix+"instrumentmodel",
+                                           "instrument")),
+        itsTargetSource  (parset.getString(prefix+"targetsource", string())),
+        itsSubtrSources  (parset.getStringVector (prefix+"subtractsources")),
+        itsModelSources  (parset.getStringVector (prefix+"modelsources",
+                                                  vector<string>())),
+        itsExtraSources  (parset.getStringVector (prefix+"othersources",
+                                                  vector<string>())),
+//        itsCutOffs       (parset.getUintVector (prefix+"elevationcutoffs",
+//                                                  vector<uint>())),
+///        itsJointSolve    (parset.getBool  (prefix+"jointsolve", true)),
+        itsNTimeIn       (0),
+        itsNChanAvgSubtr (parset.getUint  (prefix+"freqstep", 1)),
+        itsNTimeAvgSubtr (parset.getUint  (prefix+"timestep", 1)),
+        itsNTimeOutSubtr (0),
+        itsNChanAvg      (parset.getUint  (prefix+"demixfreqstep",
+                                           itsNChanAvgSubtr)),
+        itsNTimeAvg      (parset.getUint  (prefix+"demixtimestep",
+                                           itsNTimeAvgSubtr)),
+        itsNTimeChunk    (parset.getUint  (prefix+"ntimechunk", 0)),
+        itsNTimeOut      (0),
+        itsNConverged    (0),
+        itsTimeCount     (0),
+        itsNStation      (input->antennaNames().size())
     {
       // Get and set solver options.
 //      itsSolveOpt.maxIter =
@@ -135,22 +123,16 @@ namespace LOFAR {
 //      itsSolveOpt.useSVD  =
 //        parset.getBool  (prefix+"Solve.Options.UseSVD", true);
 
-      // Note:
-      // Directions of unknown sources can be given in the PhaseShift step like
-      //       demixstepname.sourcename.phasecenter
+      // Maybe optionally a parset parameter directions to give the
+      // directions of unknown sources.
+      // Or make sources a vector of vectors like [name, ra, dec] where
+      // ra and dec are optional.
 
-      ASSERTSTR (!(itsSkyName.empty() || itsInstrumentName.empty()),
-                 "An empty name is given for the sky and/or instrument model");
-      ASSERTSTR (!itsIgnoreTarget || itsTargetSource.empty(),
-                 "Target source name cannot be given if ignoretarget=true");
-      // Add a null step as last step in the filter.
-      DPStep::ShPtr nullStep(new NullStep());
-      itsFilter.setNextStep (nullStep);
       // Default nr of time chunks is maximum number of threads.
       if (itsNTimeChunk == 0) {
         itsNTimeChunk = OpenMP::maxThreads();
       }
-      // Check that time windows fit integrally.
+      // Check that time windows fit nicely.
       ASSERTSTR ((itsNTimeChunk * itsNTimeAvg) % itsNTimeAvgSubtr == 0,
                  "time window should fit final averaging integrally");
       itsNTimeChunkSubtr = (itsNTimeChunk * itsNTimeAvg) / itsNTimeAvgSubtr;
@@ -166,47 +148,45 @@ namespace LOFAR {
                             itsExtraSources.begin(), itsExtraSources.end());
       itsAllSources.push_back (itsTargetSource);
 
-      // Get the source info of all patches from the SourceDB table.
-      BBS::SourceDB sourceDB(BBS::ParmDBMeta("", itsSkyName), false);
-      vector<string> patchNames(itsAllSources);
+      // Get the patch names and positions from the SourceDB table.
+      BBS::SourceDB sourceDB(BBS::ParmDBMeta("casa", itsSkyName));
+      for(uint i = 0; i < itsNModel; ++i) {
+        itsPatchList.push_back(makePatch(sourceDB, itsAllSources[i]));
+      }
+
+//      // Get the patch names and positions from the SourceDB table.
+//      for(uint i = 0; i < itsNModel; ++i) {
+//        itsPatchList.push_back(makePatch(itsAllSources[i]));
+//      }
+
       // If the target source is given, add it to the model.
       // Because the target source has to be the last direction, it means
       // that (for the time being) no extra sources can be given.
       if (! itsTargetSource.empty()) {
-        patchNames[itsNModel++] = itsTargetSource;
-        // The target has to be the last demix direction.
-        // If it has a source model, there cannot be any extra source
-        // because the sources to be predicted have to be a consecutive vector.
+        itsNModel++;
         ASSERTSTR (itsExtraSources.empty(), "Currently no extrasources can "
                    "be given if the targetsource is given");
+        itsPatchList.push_back(makePatch(sourceDB, itsTargetSource));
+//        itsPatchList.push_back(makePatch(itsTargetSource));
       }
-      itsPatchList = makePatches (sourceDB, patchNames, itsNModel);
       ASSERT(itsPatchList.size() == itsNModel);
 
       // Size buffers.
       itsFactors.resize      (itsNTimeChunk);
       itsFactorsSubtr.resize (itsNTimeChunkSubtr);
-      itsPhaseShifts.reserve (itsNDir-1);   // not needed for target direction
-      itsFirstSteps.reserve  (itsNDir);
+      itsPhaseShifts.reserve (itsNDir-1);
+      itsFirstSteps.reserve  (itsNDir+1);   // one extra for itsAvgSubtr
       itsAvgResults.reserve  (itsNDir);
 
-      // Create the solve and subtract steps for the sources to be removed.
-      // Solving consists of the following steps:
-      // - select the requested baselines (longer baselines may need no demix)
-      // - phaseshift selected data to each demix source
-      // - average selected data in each direction, also original phasecenter.
-      // - determine and average demix factors for all directions
-      // - predict and solve in each direction. It is possible to predict
-      //   more directions than to solve (for strong sources in field).
-      // Subtract consists of the following steps:
-      // - average all data (possibly different averaging than used in solve)
-      // - determine and average demix factors (using select output in solve)
-      // - select the requested baselines
-      // - subtract sources for selected data
-      // - merge subtract result into averaged data. This is not needed if
-      //   no selection is done.
-      // Note that multiple time chunks are handled jointly, so a
-      // MultiResultStep is used to catch the results of all time chunks.
+      // Create the steps for the sources to be removed.
+      // Demixing consists of the following steps:
+      // - phaseshift data to each demix source
+      // - average data in each direction, also for original phasecenter.
+      // - determine demix factors for all directions
+      // - use BBS to predict and solve in each direction. It is possible to
+      //   predict more directions than to solve (for strong sources in field).
+      // - use BBS to subtract the solved sources using the demix factors.
+      //   The averaging used here can be smaller than used when solving.
       for (uint i=0; i<itsNDir-1; ++i) {
         // First make the phaseshift and average steps for each demix source.
         // The resultstep gets the result.
@@ -241,61 +221,72 @@ namespace LOFAR {
       itsAvgResults.push_back (targetAvgRes);
 
       // Create the data average step for the subtract.
-      // The entire average result is needed for the next NDPPP step.
-      // Only the selected baselines need to be subtracted, so add a
-      // filter step as the last one.
-      itsAvgStepSubtr = DPStep::ShPtr(new Averager(input, prefix,
-                                                   itsNChanAvgSubtr,
-                                                   itsNTimeAvgSubtr));
-      itsAvgResultFull  = new MultiResultStep(itsNTimeChunkSubtr);
-      itsFilterSubtr    = new Filter(input, itsSelBL);
+      DPStep::ShPtr targetAvgSubtr(new Averager(input, prefix,
+                                                itsNChanAvgSubtr,
+                                                itsNTimeAvgSubtr));
       itsAvgResultSubtr = new MultiResultStep(itsNTimeChunkSubtr);
-      itsAvgStepSubtr->setNextStep (DPStep::ShPtr(itsAvgResultFull));
-      itsAvgResultFull->setNextStep (DPStep::ShPtr(itsFilterSubtr));
-      itsFilterSubtr->setNextStep (DPStep::ShPtr(itsAvgResultSubtr));
+      targetAvgSubtr->setNextStep (DPStep::ShPtr(itsAvgResultSubtr));
+      itsFirstSteps.push_back (targetAvgSubtr);
+
+      for(size_t i = 0; i < input->getAnt1().size(); ++i) {
+        itsBaselines.push_back(Baseline(input->getAnt1()[i],
+          input->getAnt2()[i]));
+      }
 
 //      while(itsCutOffs.size() < itsNModel) {
-//        itsCutOffs.push_back(0.0);
+//        itsCutOffs.push_back(0);
 //      }
 //      itsCutOffs.resize(itsNModel);
+
+//      itsFrames.reserve(OpenMP::maxThreads());
+//      itsConverters.reserve(OpenMP::maxThreads());
+//      for(size_t i = 0; i < OpenMP::maxThreads(); ++i) {
+//        MeasFrame frame;
+//        frame.set(input->arrayPos());
+//        frame.set(MEpoch());
+//        itsFrames.push_back(frame);
+
+//        // Using AZEL because AZELGEO produces weird results.
+//        itsConverters.push_back(MDirection::Convert(MDirection::Ref(MDirection::J2000),
+//          MDirection::Ref(MDirection::AZEL, itsFrames.back())));
+//      }
     }
 
-    void Demixer::updateInfo (const DPInfo& infoIn)
+    void Demixer::initUnknowns()
     {
-      info() = infoIn;
+      itsUnknowns.resize(IPosition(4, 8, itsNStation, itsNModel,
+        itsNTimeDemix));
+      itsUnknowns = 0.0;
 
+//      itsErrors.resize(IPosition(4, 8, itsNStation, itsNModel,
+//        itsNTimeDemix));
+//      itsErrors = 0.0;
+
+      itsLastKnowns.resize(IPosition(3, 8, itsNStation, itsNModel));
+      for(uint dr = 0; dr < itsNModel; ++dr) {
+        for(uint st = 0; st < itsNStation; ++st) {
+          itsLastKnowns(IPosition(3, 0, st, dr)) = 1.0;
+          itsLastKnowns(IPosition(3, 1, st, dr)) = 0.0;
+          itsLastKnowns(IPosition(3, 2, st, dr)) = 0.0;
+          itsLastKnowns(IPosition(3, 3, st, dr)) = 0.0;
+          itsLastKnowns(IPosition(3, 4, st, dr)) = 0.0;
+          itsLastKnowns(IPosition(3, 5, st, dr)) = 0.0;
+          itsLastKnowns(IPosition(3, 6, st, dr)) = 1.0;
+          itsLastKnowns(IPosition(3, 7, st, dr)) = 0.0;
+        }
+      }
+    }
+
+    Demixer::~Demixer()
+    {
+    }
+
+    void Demixer::updateInfo (DPInfo& info)
+    {
       // Get size info.
-      itsNChanIn = infoIn.nchan();
-      itsNCorr   = infoIn.ncorr();
-      ASSERTSTR (itsNCorr==4, "Demixing requires data with 4 polarizations");
-
-      // Handle possible data selection.
-      itsFilter.setInfo (infoIn);
-      const DPInfo& infoSel = itsFilter.getInfo();
-      // NB. The number of baselines and stations refer to the number of
-      // selected baselines and the number of unique stations that participate
-      // in the selected baselines.
-      itsNBl = infoSel.nbaselines();
-      itsNStation = infoSel.antennaUsed().size();
-
-      // Re-number the station IDs in the selected baselines, removing gaps in
-      // the numbering due to unused stations.
-      const vector<int> &antennaMap = infoSel.antennaMap();
-      for (uint i=0; i<itsNBl; ++i) {
-        itsBaselines.push_back(Baseline(antennaMap[infoSel.getAnt1()[i]],
-          antennaMap[infoSel.getAnt2()[i]]));
-      }
-
-      // Prepare conversion from relative to absolute UVW
-      casa::Vector<casa::Int> newAnt1(itsNBl);
-      casa::Vector<casa::Int> newAnt2(itsNBl);
-      for (uint i=0; i<itsNBl; ++i) {
-        newAnt1[i]=antennaMap[infoSel.getAnt1()[i]];
-        newAnt2[i]=antennaMap[infoSel.getAnt2()[i]];
-      }
-      itsUVWSplitIndex = nsetupSplitUVW (itsNStation,newAnt1,newAnt2);
-
-      // Allocate buffers used to compute the smearing factors.
+      itsNChanIn = info.nchan();
+      itsNBl     = info.nbaselines();
+      itsNCorr   = info.ncorr();
       itsFactorBuf.resize (IPosition(4, itsNCorr, itsNChanIn, itsNBl,
                                      itsNDir*(itsNDir-1)/2));
       itsFactorBufSubtr.resize (IPosition(4, itsNCorr, itsNChanIn, itsNBl,
@@ -303,105 +294,67 @@ namespace LOFAR {
 
       // Adapt averaging to available nr of channels and times.
       // Use a copy of the DPInfo, otherwise it is updated multiple times.
-      DPInfo infoDemix(infoSel);
-      itsNTimeAvg = std::min (itsNTimeAvg, infoSel.ntime());
-      itsNChanAvg = infoDemix.update (itsNChanAvg, itsNTimeAvg);
-      itsNChanOut = infoDemix.nchan();
-      itsTimeIntervalAvg = infoDemix.timeInterval();
-      itsNTimeDemix      = infoDemix.ntime();
+      DPInfo infocp(info);
+      itsNTimeAvg = std::min (itsNTimeAvg, infocp.ntime());
+      itsNChanAvg = infocp.update (itsNChanAvg, itsNTimeAvg);
+      itsNTimeDemix = infocp.ntime();
 
       // Let the internal steps update their data.
       for (uint i=0; i<itsFirstSteps.size(); ++i) {
-        itsFirstSteps[i]->setInfo (infoSel);
+        infocp = info;
+        DPStep::ShPtr step = itsFirstSteps[i];
+        while (step) {
+          step->updateInfo (infocp);
+          step = step->getNextStep();
+        }
+        if (i == 0) {
+          // Keep the averaged time interval.
+          itsNChanOut = infocp.nchan();
+          itsTimeIntervalAvg = infocp.timeInterval();
+        }
       }
-      itsAvgStepSubtr->setInfo (infoIn);
+
       // Update the info of this object.
-      info().setNeedVisData();
-      info().setWriteData();
-      info().setWriteFlags();
-      itsNTimeAvgSubtr = std::min (itsNTimeAvgSubtr, infoSel.ntime());
-      itsNChanAvgSubtr = info().update (itsNChanAvgSubtr, itsNTimeAvgSubtr);
-      itsNChanOutSubtr = info().nchan();
-      ASSERTSTR (itsNChanAvg % itsNChanAvgSubtr == 0,
-        "Demix averaging " << itsNChanAvg
-        << " must be multiple of output averaging "
+      info.setNeedVisData();
+      info.setNeedWrite();
+      itsNTimeAvgSubtr = std::min (itsNTimeAvgSubtr, info.ntime());
+      itsNChanAvgSubtr = info.update (itsNChanAvgSubtr, itsNTimeAvgSubtr);
+      itsNChanOutSubtr = info.nchan();
+      ASSERTSTR (itsNChanAvg % itsNChanAvgSubtr == 0, "Demix averaging "
+        << itsNChanAvg << " must be multiple of output averaging "
         << itsNChanAvgSubtr);
-      ASSERTSTR (itsNTimeAvg % itsNTimeAvgSubtr == 0,
-        "Demix averaging " << itsNTimeAvg
-        << " must be multiple of output averaging "
+      ASSERTSTR (itsNTimeAvg % itsNTimeAvgSubtr == 0, "Demix averaging "
+        << itsNTimeAvg << " must be multiple of output averaging "
         << itsNTimeAvgSubtr);
+
       // Store channel frequencies for the demix and subtract resolutions.
-      itsFreqDemix = infoDemix.chanFreqs();
-      itsFreqSubtr = getInfo().chanFreqs();
+      itsFreqDemix = itsInput->chanFreqs (itsNChanAvg);
+      itsFreqSubtr = itsInput->chanFreqs (itsNChanAvgSubtr);
 
       // Store phase center position in J2000.
-      MDirection dirJ2000(MDirection::Convert(infoIn.phaseCenter(),
-                                              MDirection::J2000)());
+      MDirection dirJ2000(MDirection::Convert(info.phaseCenter(), MDirection::J2000)());
       Quantum<Vector<Double> > angles = dirJ2000.getAngle();
-      itsPhaseRef = Position(angles.getBaseValue()[0],
-                             angles.getBaseValue()[1]);
+      itsPhaseRef = Position(angles.getBaseValue()(0),
+        angles.getBaseValue()(1));
 
-      // Intialize the unknowns.
-      itsUnknowns.resize(itsNTimeDemix * itsNModel * itsNStation * 8);
-      itsPrevSolution.resize(itsNModel * itsNStation * 8);
-      vector<double>::iterator it = itsPrevSolution.begin();
-      vector<double>::iterator it_end = itsPrevSolution.end();
-      while(it != it_end)
-      {
-        *it++ = itsDefaultGain;
-        *it++ = 0.0;
-        *it++ = 0.0;
-        *it++ = 0.0;
-        *it++ = 0.0;
-        *it++ = 0.0;
-        *it++ = itsDefaultGain;
-        *it++ = 0.0;
-      }
-      // Initialize the flag counters.
-      itsFlagCounter.init (getInfo());
+      initUnknowns();
     }
 
     void Demixer::show (std::ostream& os) const
     {
       os << "Demixer " << itsName << std::endl;
-      os << "  skymodel:           " << itsSkyName << std::endl;
-      os << "  instrumentmodel:    " << itsInstrumentName << std::endl;
-      os << "  default gain:       " << itsDefaultGain << std::endl;
-      os << "  max iterations:     " << itsMaxIter << std::endl;
-      itsSelBL.show (os);
-      if (itsSelBL.hasSelection()) {
-        os << "    demixing " << itsFilter.getInfo().nbaselines()
-           << " out of " << getInfo().nbaselines() << " baselines   ("
-           << itsFilter.getInfo().antennaUsed().size()
-           << " out of " << getInfo().antennaUsed().size()
-           << " stations)" << std::endl;
-      }
-      os << "  targetsource:       " << itsTargetSource << std::endl;
-      os << "  subtractsources:    " << itsSubtrSources << std::endl;
-      uint inx=0;
-      for (uint i=0; i<itsSubtrSources.size(); ++i ) {
-        os << "                        "
-           << itsPhaseShifts[inx++]->getPhaseCenter() << std::endl;
-      }
-      os << "  modelsources:       " << itsModelSources << std::endl;
-      for (uint i=0; i<itsModelSources.size(); ++i ) {
-        os << "                        "
-           << itsPhaseShifts[inx++]->getPhaseCenter() << std::endl;
-      }
-      os << "  extrasources:       " << itsExtraSources << std::endl;
-      for (uint i=0; i<itsExtraSources.size(); ++i ) {
-        os << "                        "
-           << itsPhaseShifts[inx++]->getPhaseCenter() << std::endl;
-      }
-//      os << "  elevationcutoffs: " << itsCutOffs << std::endl;
+      os << "  skymodel:       " << itsSkyName << std::endl;
+      os << "  instrumentmodel:" << itsInstrumentName << std::endl;
+      os << "  targetsource:   " << itsTargetSource << std::endl;
+      os << "  subtractsources:" << itsSubtrSources << std::endl;
+      os << "  modelsources:   " << itsModelSources << std::endl;
+      os << "  extrasources:   " << itsExtraSources << std::endl;
 //      os << "  jointsolve:     " << itsJointSolve << std::endl;
-      os << "  propagatesolutions: " << std::boolalpha << itsPropagateSolutions
-                                     << std::noboolalpha << std::endl;
-      os << "  freqstep:           " << itsNChanAvgSubtr << std::endl;
-      os << "  timestep:           " << itsNTimeAvgSubtr << std::endl;
-      os << "  demixfreqstep:      " << itsNChanAvg << std::endl;
-      os << "  demixtimestep:      " << itsNTimeAvg << std::endl;
-      os << "  ntimechunk:         " << itsNTimeChunk << std::endl;
+      os << "  freqstep:       " << itsNChanAvgSubtr << std::endl;
+      os << "  timestep:       " << itsNTimeAvgSubtr << std::endl;
+      os << "  demixfreqstep:  " << itsNChanAvg << std::endl;
+      os << "  demixtimestep:  " << itsNTimeAvg << std::endl;
+      os << "  ntimechunk:     " << itsNTimeChunk << std::endl;
 //      os << "  Solve.Options.MaxIter:       " << itsSolveOpt.maxIter << endl;
 //      os << "  Solve.Options.EpsValue:      " << itsSolveOpt.epsValue << endl;
 //      os << "  Solve.Options.EpsDerivative: " << itsSolveOpt.epsDerivative << endl;
@@ -436,39 +389,39 @@ namespace LOFAR {
       os << "          ";
       FlagCounter::showPerc1 (os, itsTimerSolve.getElapsed(), self);
       os << " of it spent in estimating gains and computing residuals" << endl;
-      os << "          ";
-      FlagCounter::showPerc1 (os, itsTimerDump.getElapsed(), self);
-      os << " of it spent in writing gain solutions to disk" << endl;
     }
 
     bool Demixer::process (const DPBuffer& buf)
     {
       itsTimer.start();
+
       // Update the count.
       itsNTimeIn++;
       // Make sure all required data arrays are filled in.
-      ///      itsBufTmp.referenceFilled (buf);
-      itsBufTmp.copy (buf);
-      itsInput->fetchUVW (buf, itsBufTmp, itsTimer);
-      itsInput->fetchWeights (buf, itsBufTmp, itsTimer);
-      itsInput->fetchFullResFlags (buf, itsBufTmp, itsTimer);
+      DPBuffer newBuf(buf);
+      RefRows refRows(newBuf.getRowNrs());
+      if (newBuf.getUVW().empty()) {
+        newBuf.setUVW(itsInput->fetchUVW(newBuf, refRows, itsTimer));
+      }
+      if (newBuf.getWeights().empty()) {
+        newBuf.setWeights(itsInput->fetchWeights(newBuf, refRows, itsTimer));
+      }
+      if (newBuf.getFullResFlags().empty()) {
+        newBuf.setFullResFlags(itsInput->fetchFullResFlags(newBuf, refRows,
+                                                           itsTimer));
+      }
 
-      // Do the filter step first.
-      itsFilter.process (itsBufTmp);
-      const DPBuffer& selBuf = itsFilter.getBuffer();
-      // Do the next steps (phaseshift and average) on the filter output.
+      // Do the initial steps (phaseshift and average).
       itsTimerPhaseShift.start();
       for (int i=0; i<int(itsFirstSteps.size()); ++i) {
-        itsFirstSteps[i]->process(selBuf);
+        itsFirstSteps[i]->process(newBuf);
       }
-      // Do the average and filter step for the output for all data.
-      itsAvgStepSubtr->process (itsBufTmp);
       itsTimerPhaseShift.stop();
 
-      // For each itsNTimeAvg times, calculate the phase rotation per direction
-      // for the selected data.
+      // For each itsNTimeAvg times, calculate the
+      // phase rotation per direction.
       itsTimerDemix.start();
-      addFactors (selBuf, itsFactorBuf);
+      addFactors (newBuf, itsFactorBuf);
       if (itsNTimeIn % itsNTimeAvg == 0) {
         makeFactors (itsFactorBuf, itsFactors[itsNTimeOut],
                      itsAvgResults[0]->get()[itsNTimeOut].getWeights(),
@@ -476,45 +429,46 @@ namespace LOFAR {
                      itsNChanAvg);
         // Deproject sources without a model.
         deproject (itsFactors[itsNTimeOut], itsAvgResults, itsNTimeOut);
-        itsFactorBuf = Complex();       // Clear summation buffer
+        itsFactorBuf = Complex();   // clear summation buffer
         itsNTimeOut++;
       }
-      // Subtract is done with different averaging parameters, so calculate the
-      // factors for it (again for selected data only).
-      addFactors (selBuf, itsFactorBufSubtr);
+      // Subtract is done with different averaging parameters, so
+      // calculate the factors for it.
+      addFactors (newBuf, itsFactorBufSubtr);
       if (itsNTimeIn % itsNTimeAvgSubtr == 0) {
         makeFactors (itsFactorBufSubtr, itsFactorsSubtr[itsNTimeOutSubtr],
                      itsAvgResultSubtr->get()[itsNTimeOutSubtr].getWeights(),
                      itsNChanOutSubtr,
                      itsNChanAvgSubtr);
-        itsFactorBufSubtr = Complex();  // Clear summation buffer
+        itsFactorBufSubtr = Complex();   // clear summation buffer
         itsNTimeOutSubtr++;
       }
       itsTimerDemix.stop();
 
-      // Estimate gains and subtract source contributions when sufficient time
-      // slots have been collected.
+      // Do BBS solve, etc. when sufficient time slots have been collected.
       if (itsNTimeOut == itsNTimeChunk) {
-        handleDemix();
+        demix();
+        itsNTimeIn       = 0;
+        itsNTimeOut      = 0;
+        itsNTimeOutSubtr = 0;
+        itsTimeCount += itsNTimeChunk;
       }
+
       itsTimer.stop();
       return true;
     }
 
     void Demixer::finish()
     {
-      cerr << "  " << itsNTimeIn << " time slots to finish in Demixer ..."
-           << endl;
-      itsTimer.start();
-
       // Process remaining entries.
       if (itsNTimeIn > 0) {
+        itsTimer.start();
+
         // Finish the initial steps (phaseshift and average).
         itsTimerPhaseShift.start();
         for (int i=0; i<int(itsFirstSteps.size()); ++i) {
           itsFirstSteps[i]->finish();
         }
-        itsAvgStepSubtr->finish();
         itsTimerPhaseShift.stop();
         // Only average if there is some unaveraged data.
         itsTimerDemix.start();
@@ -538,80 +492,16 @@ namespace LOFAR {
         // Resize lists of mixing factors to the number of valid entries.
         itsFactors.resize(itsNTimeOut);
         itsFactorsSubtr.resize(itsNTimeOutSubtr);
-
         // Demix the source directions.
-        handleDemix();
+        demix();
+        itsTimer.stop();
       }
 
       // Write solutions to disk in ParmDB format.
-      itsTimerDump.start();
       dumpSolutions();
-      itsTimerDump.stop();
-
-      itsTimer.stop();
 
       // Let the next steps finish.
       getNextStep()->finish();
-    }
-
-    void Demixer::handleDemix()
-    {
-      if(itsNModel > 0) {
-        itsTimerSolve.start();
-        demix();
-        itsTimerSolve.stop();
-        // If selection was done, merge the subtract results back into the
-        // buffer.
-      }
-      // If needed, merge in the deselected baselines.
-      if (itsSelBL.hasSelection()) {
-        mergeSubtractResult();
-      }
-
-      // Clear the input buffers.
-      for (size_t i=0; i<itsAvgResults.size(); ++i) {
-        itsAvgResults[i]->clear();
-      }
-      // Let the next step process the data.
-      for (uint i=0; i<itsNTimeOutSubtr; ++i) {
-        itsTimer.stop();
-        DPBuffer* bufptr;
-        if (itsSelBL.hasSelection()) {
-          bufptr = &(itsAvgResultFull->get()[i]);
-        } else {
-          bufptr = &(itsAvgResultSubtr->get()[i]);
-        }
-        MSReader::flagInfNaN (bufptr->getData(), bufptr->getFlags(),
-                              itsFlagCounter);
-        getNextStep()->process (*bufptr);
-        itsTimer.start();
-      }
-
-      // Clear the output buffer.
-      itsAvgResultFull->clear();
-      itsAvgResultSubtr->clear();
-
-      // Reset counters.
-      itsNTimeIn       = 0;
-      itsNTimeOut      = 0;
-      itsNTimeOutSubtr = 0;
-      itsTimeIndex += itsNTimeChunk;
-    }
-
-    void Demixer::mergeSubtractResult()
-    {
-      // Merge the selected baselines from the subtract buffer into the
-      // full buffer. Do it for all timestamps.
-      for (uint i=0; i<itsNTimeOutSubtr; ++i) {
-        const Array<Complex>& arr = itsAvgResultSubtr->get()[i].getData();
-        size_t nr = arr.shape()[0] * arr.shape()[1];
-        const Complex* in = arr.data();
-        Complex* out = itsAvgResultFull->get()[i].getData().data();
-        for (size_t j=0; j<itsFilter.getIndicesBL().size(); ++j) {
-          size_t inx = itsFilter.getIndicesBL()[j];
-          memcpy (out+inx*nr, in+j*nr, nr*sizeof(Complex));
-        }
-      }
     }
 
     void Demixer::addFactors (const DPBuffer& newBuf,
@@ -738,26 +628,21 @@ namespace LOFAR {
           dirnr++;
         }
       }
-      ///cout<<"makefactors "<<weightSums<<bufOut;
     }
 
     void Demixer::deproject (Array<DComplex>& factors,
                              vector<MultiResultStep*> avgResults,
                              uint resultIndex)
     {
-      // Sources without a model have to be deprojected.
-      // Optionally no deprojection of target direction.
-      uint nrDeproject = itsNDir - itsNModel;
-      if (itsIgnoreTarget) {
-        nrDeproject--;
-      }
-      // Nothing to do if only target direction or nothing to deproject.
-      if (itsNDir <= 1  ||  nrDeproject == 0) return;
+      // Nothing to do if only target direction or if all sources are modeled.
+      if (itsNDir <= 1 || itsNDir == itsNModel) return;
       // Get pointers to the data for the various directions.
       vector<Complex*> resultPtr(itsNDir);
       for (uint j=0; j<itsNDir; ++j) {
         resultPtr[j] = avgResults[j]->get()[resultIndex].getData().data();
       }
+      // Sources without a model have to be deprojected.
+      uint nrDeproject = itsNDir - itsNModel;
       // The projection matrix is given by
       //     P = I - A * inv(A.T.conj * A) * A.T.conj
       // where A is the last column of the demixing matrix M.
@@ -828,259 +713,372 @@ namespace LOFAR {
       factors.reference (newFactors);
     }
 
-    namespace {
-      struct ThreadPrivateStorage
-      {
-        vector<double>                unknowns;
-        casa::Matrix<double>          uvw;
-        vector<casa::Cube<dcomplex> > model;
-        casa::Cube<dcomplex>          model_subtr;
-        size_t                        count_converged;
-      };
-
-      void initThreadPrivateStorage(ThreadPrivateStorage &storage,
-        size_t nDirection, size_t nStation, size_t nBaseline, size_t nChannel,
-        size_t nChannelSubtr)
-      {
-        storage.unknowns.resize(nDirection * nStation * 8);
-        storage.uvw.resize(3, nStation);
-        storage.model.resize(nDirection);
-        for (uint dir=0;dir<nDirection; ++dir) {
-          storage.model[dir].resize(4, nChannel, nBaseline);
-        }
-        storage.model_subtr.resize(4, nChannelSubtr, nBaseline);
-        storage.count_converged = 0;
-      }
-    } //# end unnamed namespace
-
     void Demixer::demix()
     {
-      const size_t nThread = OpenMP::maxThreads();
-      const size_t nTime = itsAvgResults[0]->size();
-      const size_t nTimeSubtr = itsAvgResultSubtr->size();
-      const size_t multiplier = itsNTimeAvg / itsNTimeAvgSubtr;
-      const size_t nDr = itsNModel;
-      const size_t nDrSubtr = itsSubtrSources.size();
-      const size_t nSt = itsNStation;
-      const size_t nBl = itsBaselines.size();
-      const size_t nCh = itsFreqDemix.size();
-      const size_t nChSubtr = itsFreqSubtr.size();
-      const size_t nCr = 4;
+      // Only solve and subtract if multiple directions.
+      if (itsNDir > 1) {
+        // Collect buffers for each direction.
+        vector<vector<DPBuffer> > streams;
+        for (size_t i=0; i<itsAvgResults.size(); ++i) {
+          // Only the phased shifted and averaged data for directions which have
+          // an associated model should be used to estimate the directional
+          // response.
+          if(i < itsNModel) {
+            streams.push_back (itsAvgResults[i]->get());
+          }
+          // Clear the buffers.
+          itsAvgResults[i]->clear();
+        }
 
-      vector<ThreadPrivateStorage> threadStorage(nThread);
-      for(vector<ThreadPrivateStorage>::iterator it = threadStorage.begin(),
-        end = threadStorage.end(); it != end; ++it)
-      {
-        initThreadPrivateStorage(*it, nDr, nSt, nBl, nCh, nChSubtr);
+        itsTimerSolve.start();
 
-        // Copy the previous solution to the thread private vectors of unknowns.
-        // When solution propagation is disabled, itsPrevSolution is never
-        // updated. It then contains 1.0+0.0i for the diagonal terms and
-        // 0.0+0.0i for the off-diagonal terms. Thus, when solution propagation
-        // is disabled this statement effectively re-initializes the thread
-        // private vectors of unknowns.
-        copy(itsPrevSolution.begin(), itsPrevSolution.end(),
-          it->unknowns.begin());
-      }
+        const size_t nTime = streams[0].size();
+        const size_t nThread = OpenMP::maxThreads();
+        const size_t nDr = itsNModel;
+        const size_t nSt = itsNStation;
+        const size_t nBl = itsBaselines.size();
+        const size_t nCh = itsFreqDemix.size();
+        const size_t nCr = 4;
+        const size_t timeFactor = itsNTimeAvg / itsNTimeAvgSubtr;
+        vector<DPBuffer> &target = itsAvgResultSubtr->get();
 
-      const_cursor<Baseline> cr_baseline(&(itsBaselines[0]));
+//        // Thread-private index per direction of the last known "good" solution.
+//        boost::multi_array<int, 2> last(boost::extents[nDr][nThread]);
+//        fill(&(last[0][0]), &(last[0][0]) + nDr * nThread, -1);
+
+        // Thread-private buffer for the unknowns.
+        boost::multi_array<double, 2> unknowns(boost::extents[nThread]
+            [nDr * nSt * 8]);
+//        boost::multi_array<double, 2> errors(boost::extents[nThread]
+//            [nDr * nSt * 8]);
+
+        // Copy solutions from global solution array to thread private solution
+        // array (solution propagation between chunks).
+        for(size_t i = 0; i < nThread; ++i)
+        {
+            copy(&(itsLastKnowns(IPosition(3, 0, 0, 0))),
+                &(itsLastKnowns(IPosition(3, 0, 0, 0))) + nDr * nSt * 8,
+                &(unknowns[i][0]));
+        }
+
+        // Thread-private buffer for station UVW coordinates.
+        boost::multi_array<double, 3> uvw(boost::extents[nThread][nSt][3]);
+
+        // Thread-private buffer for the simulated visibilities for all
+        // directions at the demix resolution.
+        boost::multi_array<dcomplex, 5> buffer(boost::extents[nThread][nDr][nBl]
+            [nCh][nCr]);
+
+        // Thread-private buffer for the simulated visibilities for a single
+        // direction at the residual resolution.
+        const size_t nChRes = itsFreqSubtr.size();
+        boost::multi_array<dcomplex, 4> residual(boost::extents[nThread][nBl]
+            [nChRes][nCr]);
+
+        // Thread-private convergence counter.
+        vector<size_t> converged(nThread, 0);
 
 #pragma omp parallel for
-      for(size_t ts = 0; ts < nTime; ++ts)
-      {
-        const size_t thread = OpenMP::threadNum();
-        ThreadPrivateStorage &storage = threadStorage[thread];
-
-        // If solution propagation is disabled, re-initialize the thread-private
-        // vector of unknowns.
-        if(!itsPropagateSolutions)
+        for(size_t i = 0; i < nTime; ++i)
         {
-          copy(itsPrevSolution.begin(), itsPrevSolution.end(),
-            storage.unknowns.begin());
-        }
+            const size_t thread = OpenMP::threadNum();
 
-        // Simulate.
-        //
-        // Model visibilities for each direction of interest will be computed
-        // and stored.
-        size_t stride_model[3] = {1, nCr, nCr * nCh};
-        fill(storage.model.begin(), storage.model.end(), 0.);
-        for(size_t dr = 0; dr < nDr; ++dr)
-        {
-          nsplitUVW(itsUVWSplitIndex, itsBaselines, itsAvgResults[dr]->get()[ts].getUVW(), storage.uvw);
-          ///cout<<"uvw"<<dr<<'='<<storage.uvw<<endl;
+            // Compute elevations and determine which sources are visible.
+            // TODO: Investigate segfault in MeasRef...
+//            vector<size_t> drUp;
+//            Quantum<Double> qEpoch(streams[0][i].getTime(), "s");
+//            MEpoch mEpoch(qEpoch, MEpoch::UTC);
+//            itsFrames[thread].set(mEpoch);
 
-          Simulator simulator(itsPatchList[dr]->position(), nSt, nBl, nCh,
-                              itsBaselines, itsFreqDemix, storage.uvw,
-                              storage.model[dr]);
-          for(size_t i = 0; i < itsPatchList[dr]->nComponents(); ++i)
-          {
-            simulator.simulate(itsPatchList[dr]->component(i));
-          }
+//            for(size_t dr = 0; dr < nDr; ++dr)
+//            {
+//                MVDirection drJ2000(itsPatchList[dr]->position()[0],
+//                    itsPatchList[dr]->position()[1]);
+//                MVDirection mvAzel(itsConverters[thread](drJ2000).getValue());
+//                Vector<Double> azel = mvAzel.getAngle("deg").getValue();
 
-        }
-        ///cout<<"modelvis="<<storage.model<<endl;
+//                if(azel(1) >= itsCutOffs[dr])
+//                {
+//                    drUp.push_back(dr);
+//                    last[dr][thread] = i;
+//                }
+//            }
 
-        // Estimate Jones matrices.
-        //
-        // A Jones matrix will be estimated for each pair of station and
-        // direction.
-        //
-        // A single (overdetermined) non-linear set of equations for all
-        // stations and directions is solved iteratively. The influence of
-        // each direction on each other direction is given by the mixing
-        // matrix.
-        const_cursor<bool> cr_flag =
-          casa_const_cursor(itsAvgResults[0]->get()[ts].getFlags());
-        const_cursor<float> cr_weight =
-          casa_const_cursor(itsAvgResults[0]->get()[ts].getWeights());
-        const_cursor<dcomplex> cr_mix = casa_const_cursor(itsFactors[ts]);
-        ///cout << "demixfactor "<<ts<<" = "<<itsFactors[ts]<<endl;
+//            const size_t nDrUp = drUp.size();
+//            if(nDrUp == 0)
+//            {
+//                continue;
+//            }
 
-        vector<const_cursor<fcomplex> > cr_data(nDr);
-        vector<const_cursor<dcomplex> > cr_model(nDr);
-        for(size_t dr = 0; dr < nDr; ++dr)
-        {
-          cr_data[dr] =
-            casa_const_cursor(itsAvgResults[dr]->get()[ts].getData());
-          cr_model[dr] =
-            const_cursor<dcomplex>(storage.model[dr].data(), 3,
-            stride_model);
-        }
+            // Simulate.
+            size_t strides[3] = {1, nCr, nCh * nCr};
+            size_t strides_split[2] = {1, 3};
 
-        bool converged = estimate(nDr, nSt, nBl, nCh, cr_baseline, cr_data,
-          cr_model, cr_flag, cr_weight, cr_mix, &(storage.unknowns[0]),
-          itsMaxIter);
-        if(converged)
-        {
-          ++storage.count_converged;
-        }
+            const_cursor<Baseline> cr_baseline(&(itsBaselines[0]));
+            const_cursor<double> cr_freq(&(itsFreqDemix[0]));
+            const_cursor<double> cr_freqRes(&(itsFreqSubtr[0]));
 
-        // Compute the residual.
-        //
-        // All the so-called "subtract sources" are subtracted from the
-        // observed data. The previously estimated Jones matrices, as well as
-        // the appropriate mixing weight are applied before subtraction.
-        //
-        // Note that the resolution of the residual can differ from the
-        // resolution at which the Jones matrices were estimated.
-        for(size_t ts_subtr = multiplier * ts, ts_subtr_end = min(ts_subtr
-          + multiplier, nTimeSubtr); ts_subtr != ts_subtr_end; ++ts_subtr)
-        {
-          for(size_t dr = 0; dr < nDrSubtr; ++dr)
-          {
-            // Re-use simulation used for estimating Jones matrices if possible.
-            cursor<dcomplex> cr_model_subtr(storage.model[dr].data(),
-              3, stride_model);
-
-            // Re-simulate if required.
-            if(multiplier != 1 || nCh != nChSubtr)
+            cursor<double> cr_split(&(uvw[thread][0][0]), 2, strides_split);
+//            for(size_t dr = 0; dr < nDrUp; ++dr)
+            for(size_t dr = 0; dr < nDr; ++dr)
             {
-              nsplitUVW(itsUVWSplitIndex, itsBaselines, itsAvgResultSubtr->get()[ts_subtr].getUVW(), storage.uvw);
+                fill(&(buffer[thread][dr][0][0][0]),
+                    &(buffer[thread][dr][0][0][0]) + nBl * nCh * nCr,
+                    dcomplex(0.0, 0.0));
 
-              // Rotate the UVW coordinates for the target direction to the
-              // direction of source to subtract. This is required because at
-              // the resolution of the residual the UVW coordinates for
-              // directions other than the target are unavailable (unless the
-              // resolution of the residual is equal to the resolution at which
-              // the Jones matrices were estimated, of course).
-              rotateUVW(itsPhaseRef, itsPatchList[dr]->position(), nSt,
-                        storage.uvw.data());
+//                const_cursor<double> cr_uvw =
+//                    casa_const_cursor(streams[drUp[dr]][i].getUVW());
+                const_cursor<double> cr_uvw =
+                    casa_const_cursor(streams[dr][i].getUVW());
+                splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_split);
 
-              // Zero the visibility buffer.
-              storage.model_subtr=dcomplex();
-
-              // Simulate visibilities at the resolution of the residual.
-              size_t stride_model_subtr[3] = {1, nCr, nCr * nChSubtr};
-              cr_model_subtr = cursor<dcomplex>(storage.model_subtr.data(), 3,
-                stride_model_subtr);
-
-              Simulator simulator(itsPatchList[dr]->position(), nSt, nBl,
-                                  nChSubtr, itsBaselines, itsFreqSubtr,
-                                  storage.uvw, storage.model_subtr);
-              for(size_t i = 0; i < itsPatchList[dr]->nComponents(); ++i)
-              {
-                simulator.simulate(itsPatchList[dr]->component(i));
-              }
+                cursor<dcomplex> cr_model(&(buffer[thread][dr][0][0][0]), 3,
+                    strides);
+//                simulate(itsPatchList[drUp[dr]]->position(),
+//                    itsPatchList[drUp[dr]], nSt, nBl, nCh, cr_baseline, cr_freq,
+//                    cr_split, cr_model);
+                simulate(itsPatchList[dr]->position(), itsPatchList[dr], nSt,
+                    nBl, nCh, cr_baseline, cr_freq, cr_split, cr_model);
             }
 
-            // Apply Jones matrices.
-            size_t stride_unknowns[2] = {1, 8};
-            const_cursor<double> cr_unknowns(&(storage.unknowns[dr * nSt * 8]),
-              2, stride_unknowns);
+            // Estimate.
+//            vector<const_cursor<fcomplex> > cr_data(nDrUp);
+//            vector<const_cursor<dcomplex> > cr_model(nDrUp);
+            vector<const_cursor<fcomplex> > cr_data(nDr);
+            vector<const_cursor<dcomplex> > cr_model(nDr);
+//            for(size_t dr = 0; dr < nDrUp; ++dr)
+            for(size_t dr = 0; dr < nDr; ++dr)
+            {
+//                cr_data[dr] = casa_const_cursor(streams[drUp[dr]][i].getData());
+                cr_data[dr] = casa_const_cursor(streams[dr][i].getData());
+                cr_model[dr] =
+                    const_cursor<dcomplex>(&(buffer[thread][dr][0][0][0]), 3,
+                    strides);
+            }
 
-            apply(nBl, nChSubtr, cr_baseline, cr_unknowns, cr_model_subtr);
+            const_cursor<bool> cr_flag =
+                casa_const_cursor(streams[0][i].getFlags());
+            const_cursor<float> cr_weight =
+                casa_const_cursor(streams[0][i].getWeights());
 
-            // Subtract the source contribution from the data.
-            cursor<fcomplex> cr_residual =
-              casa_cursor(itsAvgResultSubtr->get()[ts_subtr].getData());
+            bool status = false;
+//            if(nDrUp != nDr)
+//            {
+//                vector<double> unknowns_packed(nDrUp * nSt * 8);
+//                vector<double> errors_packed(nDrUp * nSt * 8);
+//                vector<dcomplex> mix_packed(nDrUp * nDrUp * nCr * nCh * nBl);
 
-            // Construct a cursor to iterate over a slice of the mixing matrix
-            // at the resolution of the residual. The "to" and "from" direction
-            // are fixed. Since the full mixing matrix is 5-D, the slice is
-            // therefore 3-D. Each individual value in the slice quantifies the
-            // influence of the source to subtract on the target direction for
-            // a particular correlation, channel, and baseline.
-            //
-            // The target direction is the direction with the highest index by
-            // convention, i.e. index itsNDir - 1. The directions to subtract
-            // have the lowest indices by convention, i.e. indices
-            // [0, nDrSubtr).
-            const IPosition &stride_mix_subtr =
-              itsFactorsSubtr[ts_subtr].steps();
-            size_t stride_mix_subtr_slice[3] = {
-              static_cast<size_t>(stride_mix_subtr[2]),
-              static_cast<size_t>(stride_mix_subtr[3]),
-              static_cast<size_t>(stride_mix_subtr[4])
-            };
-            ASSERT(stride_mix_subtr_slice[0] == itsNDir * itsNDir
-              && stride_mix_subtr_slice[1] == itsNDir * itsNDir * nCr
-              && stride_mix_subtr_slice[2] == itsNDir * itsNDir * nCr * nChSubtr);
+//                // pack unknowns, mixing factors
+//                size_t strides_mix[5] = {1, nDrUp, nDrUp * nDrUp, nCr * nDrUp
+//                  * nDrUp, nCh * nCr * nDrUp * nDrUp};
+//                pack(drUp, nBl, nCh, nCr, casa_const_cursor(itsFactors[i]),
+//                  cursor<dcomplex>(&(mix_packed[0]), 5, strides_mix));
 
-            IPosition offset(5, itsNDir - 1, dr, 0, 0, 0);
-            const_cursor<dcomplex> cr_mix_subtr =
-              const_cursor<dcomplex>(&(itsFactorsSubtr[ts_subtr](offset)), 3,
-              stride_mix_subtr_slice);
+//                size_t strides_unknowns[3] = {1, 8, nSt * 8};
+//                pack(drUp, nSt, const_cursor<double>(&(unknowns[thread][0]), 3,
+//                  strides_unknowns), &(unknowns_packed[0]));
 
-            // Subtract the source.
-            subtract(nBl, nChSubtr, cr_baseline, cr_residual, cr_model_subtr,
-              cr_mix_subtr);
-          }
+//                const_cursor<dcomplex> cr_mix(&(mix_packed[0]), 5, strides_mix);
+
+//                // estimate
+//                status = estimate(nDrUp, nSt, nBl, nCh, cr_baseline, cr_data,
+//                    cr_model, cr_flag, cr_weight, cr_mix, &(unknowns_packed[0]),
+//                    &(errors_packed[0]));
+
+//                // unpack unknowns, errors
+//                unpack(drUp, nSt, &(unknowns_packed[0]),
+//                  cursor<double>(&(unknowns[thread][0]), 3, strides_unknowns));
+//                unpack(drUp, nSt, &(errors_packed[0]),
+//                  cursor<double>(&(errors[thread][0]), 3, strides_unknowns));
+//            }
+//            else
+            {
+                const_cursor<dcomplex> cr_mix =
+                    casa_const_cursor(itsFactors[i]);
+//                status = estimate(nDr, nSt, nBl, nCh, cr_baseline, cr_data,
+//                    cr_model, cr_flag, cr_weight, cr_mix,
+//                    &(unknowns[thread][0]), &(errors[thread][0]));
+                status = estimate(nDr, nSt, nBl, nCh, cr_baseline, cr_data,
+                    cr_model, cr_flag, cr_weight, cr_mix,
+                    &(unknowns[thread][0]), 0);
+            }
+
+            if(status)
+            {
+                ++converged[thread];
+            }
+
+            const size_t nTimeResidual = min(timeFactor, target.size() - i
+                * timeFactor);
+
+            const size_t nDrRes = itsSubtrSources.size();
+
+            size_t strides_model[3] = {1, nCr, nChRes * nCr};
+            cursor<dcomplex> cr_model_res(&(residual[thread][0][0][0]), 3,
+                strides_model);
+
+            for(size_t j = 0; j < nTimeResidual; ++j)
+            {
+//                for(size_t dr = 0; dr < nDrUp; ++dr)
+                for(size_t dr = 0; dr < nDr; ++dr)
+                {
+//                    const size_t drIdx = drUp[dr];
+//                    if(drIdx >= nDrRes)
+                    if(dr >= nDrRes)
+                    {
+                        break;
+                    }
+
+                    // Re-simulate for residual if required.
+                    if(timeFactor != 1 || nCh != nChRes)
+                    {
+                        fill(&(residual[thread][0][0][0]),
+                            &(residual[thread][0][0][0]) + nBl * nChRes * nCr,
+                            dcomplex());
+
+                        const_cursor<double> cr_uvw = casa_const_cursor(target[i
+                            * timeFactor + j].getUVW());
+                        splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_split);
+
+//                        rotateUVW(itsPhaseRef, itsPatchList[drIdx]->position(),
+//                            nSt, cr_split);
+                        rotateUVW(itsPhaseRef, itsPatchList[dr]->position(),
+                            nSt, cr_split);
+
+//                        simulate(itsPatchList[drIdx]->position(),
+//                            itsPatchList[drIdx], nSt, nBl, nChRes, cr_baseline,
+//                            cr_freqRes, cr_split, cr_model_res);
+                        simulate(itsPatchList[dr]->position(), itsPatchList[dr],
+                            nSt, nBl, nChRes, cr_baseline, cr_freqRes, cr_split,
+                            cr_model_res);
+                    }
+                    else
+                    {
+                        copy(&(buffer[thread][dr][0][0][0]),
+                            &(buffer[thread][dr][0][0][0]) + nBl * nChRes * nCr,
+                            &(residual[thread][0][0][0]));
+                    }
+
+                    // Apply solutions.
+                    size_t strides_coeff[2] = {1, 8};
+//                    const_cursor<double> cr_coeff(&(unknowns[thread][drIdx * nSt
+//                        * 8]), 2, strides_coeff);
+                    const_cursor<double> cr_coeff(&(unknowns[thread][dr * nSt
+                        * 8]), 2, strides_coeff);
+                    apply(nBl, nChRes, cr_baseline, cr_coeff, cr_model_res);
+
+                    // Subtract.
+                    cursor<fcomplex> cr_residual =
+                        casa_cursor(target[i * timeFactor + j].getData());
+
+                    const IPosition tmp_strides_mix_res =
+                        itsFactorsSubtr[i * timeFactor + j].steps();
+
+                    // The target direction is always last, and therefore it has
+                    // index itsNDir - 1. The directions to subtract are always
+                    // first, and therefore have indices [0, nDrRes).
+//                    const_cursor<dcomplex> cr_mix(&(itsFactorsSubtr[i
+//                        * timeFactor + j](IPosition(5, itsNDir - 1, drIdx, 0, 0,
+//                        0))), 3, tmp_strides_mix_res.storage() + 2);
+                    const_cursor<dcomplex> cr_mix(&(itsFactorsSubtr[i
+                        * timeFactor + j](IPosition(5, itsNDir - 1, dr, 0, 0,
+                        0))), 3, tmp_strides_mix_res.storage() + 2);
+                    subtract(nBl, nChRes, cr_baseline, cr_residual,
+                        cr_model_res, cr_mix);
+                }
+            }
+
+            // Copy solutions to global solution array.
+//            for(size_t dr = 0; dr < nDrUp; ++dr)
+            for(size_t dr = 0; dr < nDr; ++dr)
+            {
+//                size_t idx = drUp[dr];
+//                copy(&(unknowns[thread][idx * nSt * 8]), &(unknowns[thread][idx
+//                    * nSt * 8]) + nSt * 8, &(itsUnknowns(IPosition(4, 0, 0, idx,
+//                    itsTimeCount + i))));
+//                copy(&(errors[thread][idx * nSt * 8]), &(errors[thread][idx
+//                    * nSt * 8]) + nSt * 8, &(itsErrors(IPosition(4, 0, 0, idx,
+//                    itsTimeCount + i))));
+                copy(&(unknowns[thread][dr * nSt * 8]), &(unknowns[thread][dr
+                    * nSt * 8]) + nSt * 8, &(itsUnknowns(IPosition(4, 0, 0, dr,
+                    itsTimeCount + i))));
+            }
         }
 
-        // Copy solutions to global solution array.
-        copy(storage.unknowns.begin(), storage.unknowns.end(),
-          &(itsUnknowns[(itsTimeIndex + ts) * nDr * nSt * 8]));
+        // Store last known solutions.
+        for(size_t dr = 0; dr < nDr; ++dr)
+        {
+//            int idx = last[dr][0];
+//            for(size_t i = 1; i < nThread; ++i)
+//            {
+//                idx = max(idx, last[dr][i]);
+//            }
+            int idx = (nTime > 0 ? (nTime - 1) : -1);
+
+            if(idx >= 0)
+            {
+                copy(&(itsUnknowns(IPosition(4, 0, 0, dr, itsTimeCount + idx))),
+                    &(itsUnknowns(IPosition(4, 0, 0, dr, itsTimeCount + idx)))
+                    + nSt * 8, &(itsLastKnowns(IPosition(3, 0, 0, dr))));
+            }
+        }
+
+        // Update convergence count.
+        for(size_t i = 0; i < nThread; ++i)
+        {
+            itsNConverged += converged[i];
+        }
+
+        itsTimerSolve.stop();
       }
 
-      // Store last known solutions.
-      if(itsPropagateSolutions && nTime > 0)
-      {
-        copy(&(itsUnknowns[(itsTimeIndex + nTime - 1) * nDr * nSt * 8]),
-          &(itsUnknowns[(itsTimeIndex + nTime) * nDr * nSt * 8]),
-          itsPrevSolution.begin());
+      // Let the next step process the data.
+      itsTimer.stop();
+      for (uint i=0; i<itsNTimeOutSubtr; ++i) {
+        getNextStep()->process (itsAvgResultSubtr->get()[i]);
+        itsAvgResultSubtr->get()[i].clear();
       }
+      // Clear the vector in the MultiStep.
+      itsAvgResultSubtr->clear();
+      itsTimer.start();
+    }
 
-      // Update convergence count.
-      for(size_t i = 0; i < nThread; ++i)
-      {
-        itsNConverged += threadStorage[i].count_converged;
+    string Demixer::toString (double value) const
+    {
+      ostringstream os;
+      os << setprecision(16) << value;
+      return os.str();
+    }
+
+    double Demixer::getAngle (const String& value) const
+    {
+      double angle;
+      Quantity q;
+      ASSERTSTR (Quantity::read (q, value),
+                 "Demixer: " + value + " is not a proper angle");
+      if (q.getUnit().empty()) {
+        angle = q.getValue() / 180. * C::pi;
+      } else {
+        ASSERTSTR (q.getFullUnit().getValue() == UnitVal::ANGLE,
+                   "Demixer: " + value + " is not a proper angle");
+        angle = q.getValue("rad");
       }
+      return angle;
     }
 
     void Demixer::dumpSolutions()
     {
       // Construct solution grid.
-      const Vector<double>& freq      = getInfo().chanFreqs();
-      const Vector<double>& freqWidth = getInfo().chanWidths();
+      Vector<double> freq = itsInput->chanFreqs(itsInput->nchan());
+      Vector<double> freqWidth = itsInput->chanWidths(itsInput->nchan());
       BBS::Axis::ShPtr freqAxis(new BBS::RegularAxis(freq[0] - freqWidth[0]
         * 0.5, freqWidth[0], 1));
-      BBS::Axis::ShPtr timeAxis(new BBS::RegularAxis(getInfo().startTime()
-        - getInfo().timeInterval() * 0.5, itsTimeIntervalAvg, itsNTimeDemix));
+      BBS::Axis::ShPtr timeAxis(new BBS::RegularAxis(itsInput->startTime()
+        - itsInput->timeInterval() * 0.5, itsTimeIntervalAvg, itsNTimeDemix));
       BBS::Grid solGrid(freqAxis, timeAxis);
 
-      // Create and initialize ParmDB.
-      BBS::ParmDB parmDB(BBS::ParmDBMeta("casa", itsInstrumentName), true);
+      // Initialize ParmDB.
+      BBS::ParmDB parmDB(BBS::ParmDBMeta("casa", itsInstrumentName));
       BBS::ParmSet parmSet;
       BBS::ParmCache parmCache(parmSet, solGrid.getBoundingBox());
 
@@ -1090,40 +1088,42 @@ namespace LOFAR {
       resolution[1] = itsTimeIntervalAvg;
       parmDB.setDefaultSteps(resolution);
 
-      // Map station indices in the solution array to the corresponding antenna
-      // names. This is required because solutions are only produced for
-      // stations that participate in one or more baselines. Due to the baseline
-      // selection or missing baselines, solutions may be available for less
-      // than the total number of station available in the observation.
-      const DPInfo &info = itsFilter.getInfo();
-      const vector<int> &antennaUsed = info.antennaUsed();
-      const Vector<String> &antennaNames = info.antennaNames();
+      // Convert station names from casa::String to std::string.
+      ASSERT(itsInput->antennaNames().size() == itsNStation);
+      vector<string> stations(itsNStation);
+      copy(itsInput->antennaNames().begin(), itsInput->antennaNames().end(),
+          stations.begin());
 
       vector<BBS::Parm> parms;
       for(size_t dr = 0; dr < itsNModel; ++dr) {
         for(size_t st = 0; st < itsNStation; ++st) {
-          string name(antennaNames[antennaUsed[st]]);
-          string suffix(name + ":" + itsAllSources[dr]);
+          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
+            "DirectionalGain:0:0:Real:" + stations[st] + ":"
+            + itsAllSources[dr])));
+          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
+            "DirectionalGain:0:0:Imag:" + stations[st] + ":"
+            + itsAllSources[dr])));
 
           parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:0:0:Real:" + suffix)));
+            "DirectionalGain:0:1:Real:" + stations[st] + ":"
+            + itsAllSources[dr])));
           parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:0:0:Imag:" + suffix)));
+            "DirectionalGain:0:1:Imag:" + stations[st] + ":"
+            + itsAllSources[dr])));
 
           parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:0:1:Real:" + suffix)));
+            "DirectionalGain:1:0:Real:" + stations[st] + ":"
+            + itsAllSources[dr])));
           parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:0:1:Imag:" + suffix)));
+            "DirectionalGain:1:0:Imag:" + stations[st] + ":"
+            + itsAllSources[dr])));
 
           parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:1:0:Real:" + suffix)));
+            "DirectionalGain:1:1:Real:" + stations[st] + ":"
+            + itsAllSources[dr])));
           parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:1:0:Imag:" + suffix)));
-
-          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:1:1:Real:" + suffix)));
-          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
-            "DirectionalGain:1:1:Imag:" + suffix)));
+            "DirectionalGain:1:1:Imag:" + stations[st] + ":"
+            + itsAllSources[dr])));
         }
       }
 
@@ -1137,8 +1137,10 @@ namespace LOFAR {
 
       // Write solutions.
       for(size_t ts = 0; ts < itsNTimeDemix; ++ts) {
-        double *unknowns = &(itsUnknowns[ts * itsNModel * itsNStation * 8]);
+        double *unknowns = &(itsUnknowns(IPosition(4, 0, 0, 0, ts)));
+//        double *errors = &(itsErrors(IPosition(4, 0, 0, 0, ts)));
         for(size_t i = 0; i < parms.size(); ++i) {
+//          parms[i].setCoeff(BBS::Location(0, ts), unknowns + i, 1, errors + i);
           parms[i].setCoeff(BBS::Location(0, ts), unknowns + i, 1);
         }
       }
@@ -1147,15 +1149,138 @@ namespace LOFAR {
       parmCache.flush();
     }
 
-    namespace
-    {
-      string toString (double value)
-      {
-        ostringstream os;
-        os << setprecision(16) << value;
-        return os.str();
-      }
-    } //# end unnamed namespace
+//    namespace {
+//      void pack(const vector<size_t> &directions, size_t nBl, size_t nCh,
+//        size_t nCr, const_cursor<dcomplex> in, cursor<dcomplex> out)
+//      {
+//          const size_t nDr = directions.size();
+//          for(size_t bl = 0; bl < nBl; ++bl)
+//          {
+//            for(size_t ch = 0; ch < nCh; ++ch)
+//            {
+//              for(size_t cr = 0; cr < nCr; ++cr)
+//              {
+//                for(vector<size_t>::const_iterator dr0 = directions.begin(),
+//                  end_dr0 = directions.end(); dr0 != end_dr0; ++dr0)
+//                {
+//                  in.forward(1, *dr0);
+//                  for(vector<size_t>::const_iterator dr1 = directions.begin(),
+//                    end_dr1 = directions.end(); dr1 != end_dr1; ++dr1)
+//                  {
+//                    *out = in[*dr1];
+//                    ++out;
+//                  }
+//                  in.backward(1, *dr0);
+
+//                  out -= nDr;
+//                  out.forward(1);
+//                }
+
+//                in.forward(2);
+//                out.backward(1, nDr);
+//                out.forward(2);
+//              }
+//              in.backward(2, nCr);
+//              in.forward(3);
+//              out.backward(2, nCr);
+//              out.forward(3);
+//            }
+//            in.backward(3, nCh);
+//            in.forward(4);
+//            out.backward(3, nCh);
+//            out.forward(4);
+//          }
+//      }
+
+//      void pack(const vector<size_t> &directions, size_t nStation,
+//        const_cursor<double> in, double *out)
+//      {
+//        for(vector<size_t>::const_iterator dr = directions.begin(),
+//          end_dr = directions.end(); dr != end_dr; ++dr)
+//        {
+//          in.forward(2, *dr);
+//          for(size_t st = 0; st < nStation; ++st)
+//          {
+//            for(size_t i = 0; i < 8; ++i)
+//            {
+//              *out++ = *in;
+//              ++in;
+//            }
+//            in -= 8;
+//            in.forward(1);
+//          }
+//          in.backward(1, nStation);
+//          in.backward(2, *dr);
+//        }
+//      }
+
+//      void unpack(const vector<size_t> &directions, size_t nStation,
+//        const double *in, cursor<double> out)
+//      {
+//        for(vector<size_t>::const_iterator dr = directions.begin(),
+//          end_dr = directions.end(); dr != end_dr; ++dr)
+//        {
+//          out.forward(2, *dr);
+//          for(size_t st = 0; st < nStation; ++st)
+//          {
+//            for(size_t i = 0; i < 8; ++i)
+//            {
+//              *out = *in++;
+//              ++out;
+//            }
+//            out -= 8;
+//            out.forward(1);
+//          }
+//          out.backward(1, nStation);
+//          out.backward(2, *dr);
+//        }
+//      }
+
+//      Patch::Ptr makePatch(const string &name)
+//      {
+//        string fname = name + ".mdl";
+//        ifstream inf(fname.c_str());
+
+//        size_t nComponents = 0;
+//        inf >> nComponents;
+//        ASSERT(inf);
+
+//        vector<ModelComponent::Ptr> components;
+//        components.reserve(nComponents);
+//        for(size_t i = 0; i < nComponents; ++i)
+//        {
+//          Position position;
+//          inf >> position[0] >> position[1];
+
+//          Stokes stokes;
+//          inf >> stokes.I >> stokes.Q >> stokes.U >> stokes.V;
+
+//          PointSource::Ptr component(new PointSource(position, stokes));
+
+//          double freq = 0.0;
+//          inf >> freq;
+
+//          size_t nSI = 0;
+//          inf >> nSI;
+
+//          vector<double> si(nSI, 0.0);
+//          if(nSI > 0)
+//          {
+//            for(size_t j = 0; j < nSI; ++j)
+//            {
+//              inf >> si[j];
+//            }
+//            component->setSpectralIndex(freq, si.begin(), si.end());
+//          }
+
+//          ASSERT(inf);
+//          components.push_back(component);
+//        }
+
+//        return Patch::Ptr(new Patch(name, components.begin(),
+//            components.end()));
+//      }
+//    } //# end unnamed namespace
 
   } //# end namespace DPPP
 } //# end namespace LOFAR

@@ -1,0 +1,6 @@
+ioNodeList				intArr
+locusNodeList			stringArr
+adderList		stringArr
+writerList				stringArr
+dataProductList			stringArr
+dataProductTypeList		stringArr

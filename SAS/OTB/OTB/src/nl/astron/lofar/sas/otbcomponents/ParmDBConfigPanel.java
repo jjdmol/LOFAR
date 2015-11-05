@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,7 +24,8 @@ package nl.astron.lofar.sas.otbcomponents;
 
 import java.awt.Component;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Vector;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -87,12 +88,13 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
         jOTDBparam aParam=null;
         try {
             //we need to get all the childs from this node.
-            ArrayList<jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1));
-            
+            Vector childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
             
             // get all the params per child
-            for (jOTDBnode aNode:childs) {
+            Enumeration e = childs.elements();
+            while( e.hasMoreElements()  ) {
                 aParam=null;
+                jOTDBnode aNode = (jOTDBnode)e.nextElement();
                 
                 // We need to keep all the nodes needed by this panel
                 // if the node is a leaf we need to get the pointed to value via Param.
@@ -198,6 +200,7 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
     }
     /* Set's the different fields in the GUI */
     private void setField(jOTDBnode parent,jOTDBparam aParam, jOTDBnode aNode) {
+        // OLAP_HW settings
         if (aParam==null) {
             return;
         }
@@ -206,34 +209,30 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
         String parentName = LofarUtils.keyName(parent.name);
         
         if(parentName.equals("ParmDB")){
-            switch (aKeyName) {
-                case "Instrument":
-                    this.ParmDBInstrumentText.setToolTipText(aParam.description);
-                    this.ParmDBInstrument=aNode;
-                    if (isRef && aParam != null) {
-                        ParmDBInstrumentText.setText(aNode.limits + " : " + aParam.limits);
-                    } else {
-                        ParmDBInstrumentText.setText(aNode.limits);
-                    }
-                    break;
-                case "LocalSky":
-                    this.ParmDBLocalSkyText.setToolTipText(aParam.description);
-                    this.ParmDBLocalSky=aNode;
-                    if (isRef && aParam != null) {
-                        ParmDBLocalSkyText.setText(aNode.limits + " : " + aParam.limits);
-                    } else {
-                        ParmDBLocalSkyText.setText(aNode.limits);
-                    }
-                    break;
-                case "History":
-                    this.ParmDBHistoryText.setToolTipText(aParam.description);
-                    this.ParmDBHistory=aNode;
-                    if (isRef && aParam != null) {
-                        ParmDBHistoryText.setText(aNode.limits + " : " + aParam.limits);
-                    } else {
-                        ParmDBHistoryText.setText(aNode.limits);
-                    }
-                    break;
+            if (aKeyName.equals("Instrument")) {
+                this.ParmDBInstrumentText.setToolTipText(aParam.description);
+                this.ParmDBInstrument=aNode;
+                if (isRef && aParam != null) {
+                    ParmDBInstrumentText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    ParmDBInstrumentText.setText(aNode.limits);
+                }
+            }else if (aKeyName.equals("LocalSky")) {
+                this.ParmDBLocalSkyText.setToolTipText(aParam.description);
+                this.ParmDBLocalSky=aNode;
+                if (isRef && aParam != null) {
+                    ParmDBLocalSkyText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    ParmDBLocalSkyText.setText(aNode.limits);
+                }
+            }else if (aKeyName.equals("History")) {
+                this.ParmDBHistoryText.setToolTipText(aParam.description);
+                this.ParmDBHistory=aNode;
+                if (isRef && aParam != null) {
+                    ParmDBHistoryText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    ParmDBHistoryText.setText(aNode.limits);
+                }
             }
         }
     }
@@ -350,19 +349,16 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
     }// </editor-fold>//GEN-END:initComponents
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        switch (evt.getActionCommand()) {
-            case "Apply":
-                saveInput();
-                break;
-            case "Restore":
-                this.restoreBBSGlobalSettingsPanel();
-                break;
+        if (evt.getActionCommand().equals("Apply")) {
+            saveInput();
+        } else if(evt.getActionCommand().equals("Restore")) {
+            this.restoreBBSGlobalSettingsPanel();
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
                 
     private jOTDBnode itsNode = null;
     private MainFrame  itsMainFrame;
-    private ArrayList<jOTDBparam> itsParamList;
+    private Vector<jOTDBparam> itsParamList;
     
     private jOTDBnode ParmDBInstrument;
     private jOTDBnode ParmDBLocalSky;

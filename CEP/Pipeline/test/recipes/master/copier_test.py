@@ -10,7 +10,6 @@ import tempfile
 from logger import logger
 
 from lofarpipe.support.utilities import create_directory                        #@UnresolvedImport
-from lofarpipe.support.data_map import DataMap
 from lofarpipe.recipes.master.copier import copier                              #@UnresolvedImport
 
 
@@ -33,35 +32,106 @@ class copierTest(unittest.TestCase):
 
     def setUp(self):
         self.imager_create_dbs = copierWrapper()
-        self.test_path = temp_path = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
+        self.test_path = temp_path = tempfile.mkdtemp()
 
     def tearDown(self):
-        shutil.rmtree(self.test_path)
+        #shutil.rmtree(self.test_path)
         pass
 
-    def test_validate_mapfiles_norename(self):
+    def test_validate_source_target_mapfile(self):
+        source_map = [("node1", "path1"), ("node2", "path2"), ("node2", "path3")]
+        target_map = [("node3", "path1"), ("node4", "path2"), ("node4", "path3")]
+
         sut = copierWrapper()
-        sut.source_map = DataMap(
-            [("node1", "path1"), ("node2", "path2"), ("node2", "path3")]
-        )
-        sut.target_map = DataMap(
-            [("node3", "path1"), ("node4", "path2"), ("node4", "path3")]
-        )
-        self.assertTrue(sut._validate_mapfiles())
-        self.assertTrue(sut._validate_mapfiles(allow_rename=True))
-        
-    def test_validate_mapfiles_rename(self):
+        self.assertTrue(sut._validate_source_target_mapfile(source_map, target_map))
+
+    def test_create_target_node_keyed_dict(self):
+        source_map = [("node1", "/path1/path1"), ("node2", "/path2/path2"), ("node2", "/path3/path3/")]
+        target_map = [("node3", "/path1/path1"), ("node4", "/path2/path2"), ("node4", "/path3/path3")]
+
+
         sut = copierWrapper()
-        sut.source_map = DataMap(
-            [("node1", "path1"), ("node2", "path2"), ("node2", "path3")]
-        )
-        sut.target_map = DataMap(
-            [("node3", "path4"), ("node4", "path5"), ("node4", "path6")]
-        )
-        self.assertFalse(sut._validate_mapfiles())
-        self.assertTrue(sut._validate_mapfiles(allow_rename=True))
-        
-    
+        output = sut._create_target_node_keyed_dict(source_map, target_map)
+        expected_output = {'node3': [(('node1', "/path1/path1"), ('node3', '/path1'))],
+                           'node4': [
+                                     (('node2', "/path2/path2"), ('node4', '/path2')),
+                                     (('node2', "/path3/path3/"), ('node4', '/path3'))
+                                    ]
+                           }
+        self.assertTrue(output == expected_output, "incorrect output"
+                        " expected, received:\n {0}, \n {1}".format(
+                                            expected_output, output))
+
+
+    def test_construct_node_specific_mapfiles(self):
+        temp_path = self.test_path
+
+        source_target_dict = {
+                           'node1': [
+                                     [('node2', 'path2'), ('node1', 'path2')],
+                                     [('node2', 'path3'), ('node1', 'path3')]
+                                    ]
+                           }
+        mapfile1 = os.path.join(temp_path, "copier_source_node1.map")
+        mapfile2 = os.path.join(temp_path, "copier_target_node1.map")
+        sut = copierWrapper()
+        mapfile_dict = sut._construct_node_specific_mapfiles(source_target_dict,
+                                               temp_path)
+
+        expected_output = {'node1':(mapfile1, mapfile2)}
+
+        self.assertTrue(repr(expected_output) == repr(mapfile_dict),
+                        "Output of function incorrect. dict with mapfile pairs"
+                        "expected received-expected: {0} - {1}".format(
+                                repr(mapfile_dict), repr(expected_output)))
+
+        # validation
+        #files exist
+        self.assertTrue(os.path.exists(mapfile1),
+                        "mapfile for first node not created properly")
+        # content 
+        fp = open(mapfile1)
+        content = fp.read()
+        fp.close()
+        expected_content = "[('node2', 'path2'), ('node2', 'path3')]"
+        self.assertTrue(content == expected_content, "source mapfile content incorrect")
+        #now for the target mapfile
+        self.assertTrue(os.path.exists(mapfile2),
+                        "mapfile for second node not created properly")
+
+        fp = open(mapfile2)
+        content = fp.read()
+        fp.close()
+        expected_content = "[('node1', 'path2'), ('node1', 'path3')]"
+        self.assertTrue(content == expected_content, "target mapfile content incorrect")
+
+        # check if the writing of the log is performed
+        log_message = "Wrote mapfile with node specific target"\
+                              " paths: {0}"
+        self.assertTrue(sut.logger._log[-2][1] == log_message.format(mapfile2),
+                        "incorrect logging for first write action of"
+                        " mapfile: {0}".format(sut.logger._log[-2]))
+        log_message = "Wrote mapfile with node specific source"\
+                              " paths: {0}"
+        self.assertTrue(sut.logger._log[-1][1] == log_message.format(mapfile1),
+                        "incorrect logging for second write action of "
+                        "mapfile: {0}".format(sut.logger._log[-1]))
+
+
+
+    def test_copier_create_correct_mapfile(self):
+        sut = copierWrapper()
+
+        instr = [('node1', '/path1/1'), ('node1', '/path1/2')]
+        data = [('node2', '/path2/3'), ('node2', '/path2/4')]
+
+
+        expected_result = [('node2', '/path2/1'), ('node2', '/path2/2')]
+        target_map = sut._create_target_map_for_instruments(instr, data)
+
+        self.assertTrue(expected_result == target_map, target_map)
+
+
 from logger import logger
 from lofarpipe.recipes.master.copier import MasterNodeInterface                              #@UnresolvedImport
 from lofarpipe.support.remotecommand import ComputeJob
@@ -80,33 +150,18 @@ class MasterNodeInterfaceWrapper(MasterNodeInterface):
         self._function_calls = []
 
         class Error():
-            def __init__(self):
-                self._return_value = 0
+            self._return_value = True
             def isSet(self):
                 return self._return_value
 
         self.error = Error()
-        
-        class Job():
-            def __init__(self):
-                self.results = {'returncode': 0}
-            
-        self._jobs = [Job(), Job()]
 
     def _schedule_jobs(self, *args):
         self._function_calls.append(('_schedule_jobs', args))
-        if self._command == "failure":
-            self.error._return_value = -1
-            for job in self._jobs:
-                job.results['returncode'] = 1
-        elif self._command == "error":
-            self.error._return_value = 1
-            self._jobs[0].results['returncode'] = 1
+        if self._command == "fail":
+            self.error._return_value = True
         elif self._command == "succes":
-            self.error._return_value = 0
-
-    def on_failure(self, *args):
-        self._function_calls.append(('on_failure', args))
+            self.error._return_value = False
 
     def on_error(self, *args):
         self._function_calls.append(('on_error', args))
@@ -120,19 +175,19 @@ class MasterNodeInterfaceTest(unittest.TestCase):
         super(MasterNodeInterfaceTest, self).__init__(arg)
 
     def setUp(self):
-        self.test_path = temp_path = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
+        self.test_path = temp_path = tempfile.mkdtemp()
 
     def tearDown(self):
-        shutil.rmtree(self.test_path)
+        #shutil.rmtree(self.test_path)
         pass
 
     def test__init__raise_exception(self):
         """
-        Test if MasterNodeInterface constructor raises a TypeError 
+        Test if MasterNodeInterface constructor raises a notimplemented error
         if called without an string (ideally containing the command to run
         on the node
         """
-        self.assertRaises(TypeError, MasterNodeInterface)
+        self.assertRaises(NotImplementedError, MasterNodeInterface)
 
 
     def test__init__raise_called_with_command(self):
@@ -146,25 +201,20 @@ class MasterNodeInterfaceTest(unittest.TestCase):
             "The constructor did create a list data member called _list")
 
 
-    def test_on_failure_return_value(self):
+    def test_on_error_raise_exception(self):
         command = "a string"
         sut = MasterNodeInterface(command)
-        # on_failure by default returns 1, check return value.
-        self.assertEqual(-1, sut.on_failure())
-
-
-    def test_on_error_return_value(self):
-        command = "a string"
-        sut = MasterNodeInterface(command)
-        # on_error by default returns 0, check return value.
-        self.assertEqual(1, sut.on_error())
+        # on error on the superclass cannot be called: throws an error for it 
+        # needs an implementation in the inheriting class
+        self.assertRaises(NotImplementedError, sut.on_error)
 
 
     def test_on_succes_raise_exception(self):
         command = "a string"
         sut = MasterNodeInterface(command)
-        # on_error by default returns 0, check return value.
-        self.assertEqual(0, sut.on_succes())
+        # on error on the superclass cannot be called: throws an error for it 
+        # needs an implementation in the inheriting class
+        self.assertRaises(NotImplementedError, sut.on_succes)
 
 
     def test_append_job(self):
@@ -180,12 +230,12 @@ class MasterNodeInterfaceTest(unittest.TestCase):
                  "append_job did not add an object with the type ComputeJob to"
                  " the job list")
 
-    def test_run_jobs_fail(self):
-        command = "failure"
+    def test_run_jobs_error(self):
+        command = "fail"
         sut = MasterNodeInterfaceWrapper(command)
-        # command failure will result in all calls to the run_jobs to 'fail'
-        # error.isSet will return True (used internaly) resulting in a call to
-        # on_fail
+        # command fail will result in any calls to the run_jobs to 'fail'
+        # error.isSet will return true (used internaly) resulting in a call to
+        # on_error
         sut.run_jobs()
 
         self.assertTrue(len(sut._function_calls) == 2,
@@ -194,35 +244,16 @@ class MasterNodeInterfaceTest(unittest.TestCase):
         self.assertTrue(sut._function_calls[0][0] == '_schedule_jobs' ,
              "the name of the first called function in a fail state should be _schedule_jobs")
 
-        self.assertTrue(sut._function_calls[1][0] == 'on_failure' ,
-             "the name of the second called function in a fail state should be on_error")
-
-
-    def test_run_jobs_error(self):
-        command = "error"
-        sut = MasterNodeInterfaceWrapper(command)
-        # command error will result in any calls to the run_jobs to 'fail'
-        # error.isSet will return True (used internaly) resulting in a call to
-        # on_error
-        sut.run_jobs()
-
-        self.assertTrue(len(sut._function_calls) == 2,
-             "run_jobs in a error state should return in two function calls")
-
-        self.assertTrue(sut._function_calls[0][0] == '_schedule_jobs' ,
-             "the name of the first called function in an error state should be _schedule_jobs")
-
         self.assertTrue(sut._function_calls[1][0] == 'on_error' ,
-             sut._function_calls#"the name of the second called function in an error state should be on_error"
-             )
+             "the name of the second called function in a fail state should be on_error")
 
 
     def test_run_jobs_succes(self):
         command = "succes"
         sut = MasterNodeInterfaceWrapper(command)
-        # command success will result in all calls to the run_jobs to 'succeed'
-        # error.isSet will return False (used internaly) resulting in a call to
-        # on_success
+        # command fail will result in any calls to the run_jobs to 'fail'
+        # error.isSet will return true (used internaly) resulting in a call to
+        # on_error
         sut.run_jobs()
 
         self.assertTrue(len(sut._function_calls) == 2,

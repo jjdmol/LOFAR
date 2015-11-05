@@ -1,6 +1,6 @@
-//# SocketStream.h: 
+///# SocketStream.h: 
 //#
-//# Copyright (C) 2008, 2015
+//# Copyright (C) 2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -23,20 +23,22 @@
 #ifndef LOFAR_LCS_STREAM_SOCKET_STREAM_H
 #define LOFAR_LCS_STREAM_SOCKET_STREAM_H
 
-#include <ctime>
-#include <sys/uio.h> // struct iovec
-#include <string>
-#include <vector>
-
-#include <Common/LofarTypes.h>
 #include <Common/Exception.h>
+#include <Common/LofarTypes.h>
+#include <Common/SystemCallException.h>
 #include <Stream/FileDescriptorBasedStream.h>
+
+#include <time.h>
+#include <string>
 
 namespace LOFAR {
 
 class SocketStream : public FileDescriptorBasedStream
 {
   public:
+    EXCEPTION_CLASS(TimeOutException, LOFAR::Exception);
+    SYSTEMCALLEXCEPTION_CLASS(BindException, LOFAR::SystemCallException);
+
     enum Protocol {
       TCP, UDP
     };
@@ -45,43 +47,31 @@ class SocketStream : public FileDescriptorBasedStream
       Client, Server
     };
 
-    SocketStream(const std::string &hostname, uint16 _port, Protocol, Mode,
-                 time_t deadline = 0, bool doAccept = true, const std::string &bind_local_iface = "");
+  	    SocketStream(const std::string &hostname, uint16 _port, Protocol, Mode, time_t timeout = 0, const std::string &nfskey = "", bool doAccept = true);
     virtual ~SocketStream();
 
     FileDescriptorBasedStream *detach();
 
-    void    reaccept(time_t deadline = 0); // only for TCP server socket
+    void    reaccept(time_t timeout = 0); // only for TCP server socket
     void    setReadBufferSize(size_t size);
 
     const Protocol protocol;
     const Mode mode;
 
-    /*
-     * Receive message(s). Note: only for UDP server socket!
-     *   @bufBase is large enough to store all to be received messages
-     *   @maxMsgSize indicates the max size of _each_ (i.e. 1) message
-     *   @recvdMsgSizes is passed in with a size indicating the max number of
-     *     messages to receive. Actually received sizes will be written therein.
-     * Returns the number of messages received if ok, or throws on syscall error
-     */
-    unsigned recvmmsg( void *bufBase, unsigned maxMsgSize,
-                       std::vector<unsigned> &recvdMsgSizes ) const;
-
-    // Allow individual recv()/send() calls to last for 'timeout' seconds before returning EWOULDBLOCK
-    void setTimeout(double timeout);
-
-    int getPort() const { return port; }
-
   private:
     const std::string hostname;
     uint16 port;
+    const std::string nfskey;
     int listen_sk;
 
     void accept(time_t timeout);
-};
 
-EXCEPTION_CLASS(TimeOutException, LOFAR::Exception);
+    static void syncNFS();
+
+    static std::string readkey(const std::string &nfskey, time_t &timeout);
+    static void writekey(const std::string &nfskey, uint16 port);
+    static void deletekey(const std::string &nfskey);
+};
 
 } // namespace LOFAR
 

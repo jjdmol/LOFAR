@@ -22,13 +22,12 @@
 //# $Id:
 
 #include <lofar_config.h>
-#include <BBSControl/CommandHandlerEstimator.h>
+#include <Common/SystemUtil.h>
+#include <BBSControl/Package__Version.h>
 #include <BBSControl/CalSession.h>
+#include <BBSControl/CommandHandlerEstimator.h>
 #include <BBSControl/OptionParser.h>
 #include <BBSControl/Util.h>
-#include <BBSControl/Package__Version.h>
-#include <Common/SystemUtil.h>
-#include <Common/Exception.h>
 
 using namespace LOFAR;
 using namespace LOFAR::BBS;
@@ -116,6 +115,11 @@ int main(int argc, char *argv[])
     LOG_FATAL_STR(progName << " terminated due to an exception: " << ex);
     return 1;
   }
+  catch(...)
+  {
+    LOG_FATAL_STR(progName << " terminated due to an unknown exception.");
+    return 1;
+  }
 
   LOG_INFO_STR(progName << " terminated successfully.");
   return 0;
@@ -188,7 +192,7 @@ int run(const ParameterSet &options, const OptionParser::ArgumentList&)
       session.postResult(command.first, result);
 
       // If an error occurred, log a descriptive message and exit.
-      if(!result)
+      if(result.is(CommandResult::ERROR))
       {
         LOG_ERROR_STR("Error executing " << command.second->type()
           << " command: " << result.message());

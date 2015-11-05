@@ -37,8 +37,7 @@ PointSource::PointSource(const Position &position)
         itsRefFreq(0.0),
         itsPolarizedFraction(0.0),
         itsPolarizationAngle(0.0),
-        itsRotationMeasure(0.0),
-        itsHasRotationMeasure(false)
+        itsRotationMeasure(0.0)
 {
 }
 
@@ -48,8 +47,7 @@ PointSource::PointSource(const Position &position, const Stokes &stokes)
         itsRefFreq(0.0),
         itsPolarizedFraction(0.0),
         itsPolarizationAngle(0.0),
-        itsRotationMeasure(0.0),
-        itsHasRotationMeasure(false)
+        itsRotationMeasure(0.0)
 {
 }
 
@@ -63,12 +61,19 @@ void PointSource::setStokes(const Stokes &stokes)
     itsStokes = stokes;
 }
 
-void PointSource::setRotationMeasure(double fraction, double angle, double rm)
+void PointSource::setPolarizedFraction(double fraction)
 {
     itsPolarizedFraction = fraction;
+}
+
+void PointSource::setPolarizationAngle(double angle)
+{
     itsPolarizationAngle = angle;
+}
+
+void PointSource::setRotationMeasure(double rm)
+{
     itsRotationMeasure = rm;
-    itsHasRotationMeasure = true;
 }
 
 Stokes PointSource::stokes(double freq) const
@@ -96,7 +101,7 @@ Stokes PointSource::stokes(double freq) const
 
         // Compute I * (v / v0) ^ exponent, where I is the value of Stokes
         // I at the reference frequency.
-        stokes.I *= pow(10., base * exponent);
+        stokes.I *= pow10(base * exponent);
     }
 
     if(hasRotationMeasure())
@@ -119,12 +124,12 @@ void PointSource::accept(ModelComponentVisitor &visitor) const
 
 bool PointSource::hasSpectralIndex() const
 {
-    return !itsSpectralIndex.empty();
+    return itsSpectralIndex.size() > 0;
 }
 
 bool PointSource::hasRotationMeasure() const
 {
-    return itsHasRotationMeasure;
+    return itsRotationMeasure > 0.0;
 }
 
 } //# namespace DPPP

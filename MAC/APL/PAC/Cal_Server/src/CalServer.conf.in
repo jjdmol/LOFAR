@@ -9,15 +9,9 @@
 CalServer.N_SUBBANDS=512
 
 # Set name for various configuration files
-CalServer.DipoleModelFile   = DipoleModel.conf
-CalServer.SourceCatalogFile = SourceCatalog.conf
-CalServer.AntennaArraysFile = AntennaArrays.conf
-
-# Period the antennas are kept 'on' after they are not claimed anymore.
-# After this period (or when the Calserver is stopped) the antennas are 
-# switched off when they were not claimed again.
-# Default value is 3m
-CalServer.PowerOffDelay	= 3m
+CalServer.DipoleModelFile=DipoleModel.conf
+CalServer.SourceCatalogFile=SourceCatalog.conf
+CalServer.AntennaArraysFile=AntennaArrays.conf
 
 # For testing purposes, read ACC from file
 #
@@ -32,16 +26,12 @@ CalServer.ACCTestFile=ACC.txt
 # possible to not run the calibration algorithm but pretend it has run. 
 # This will result in zero weights being sent to clients.
 # ACMProxy is a subtask that asks the RSPDriver to autocorrelate each second 
-# another subband. The task is not used in normal operation.
-#
-# The default operational values are: DisableCalibration=1, 
-# DisableACMProxy=1, WriteACCToFile=0 (see below).
-#
-# To record station correlation data in files: DisableCalibration=1, 
-# DisableACMProxy=0, WriteACCToFile=1 (see below).
-# 
+# another subband. The task is not used in normal operation; only use 
+# this when really needed!
+# The operational values are DisableCalibration=1 and DisableACMProxy=1
 CalServer.DisableCalibration=1
 CalServer.DisableACMProxy=1
+CalServer.DataDirectory=/localhome/data
 
 # ----- Flags to produce interim data files for debugging -----
 #       In normal operation these values should be set to 0
@@ -49,7 +39,6 @@ CalServer.DisableACMProxy=1
 # Write ACC's to file for debugging. 
 # Note: DisableCalibration should be 0 to produce this file.
 CalServer.WriteACCToFile=0
-CalServer.DataDirectory=/localhome/data
 
 # Write Gains to file for debugging?
 CalServer.WriteGainsToFile=0

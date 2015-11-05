@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2004-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <APL/IBS_Protocol/Pointing.h>
-#include <MACIO/Marshalling.tcc>
+#include <MACIO/Marshalling.h>
 
 using namespace LOFAR;
 using namespace IBS_Protocol;
@@ -92,26 +92,26 @@ ostream& Pointing::print(ostream& os) const
 //
 // getSize()
 //
-size_t Pointing::getSize() const
+unsigned int Pointing::getSize()
 {
-	return (sizeof(double) * 2) + itsTime.getSize() + + sizeof(uint) + MSH_size(itsType);
+	return (sizeof(double) * 2) + itsTime.getSize() + + sizeof(uint) + MSH_STRING_SIZE(itsType);
 }
 
 //
 // pack(buffer)
 //
-size_t Pointing::pack  (char* buffer) const
+unsigned int Pointing::pack  (void* buffer)
 {
-	size_t offset = 0;
+	unsigned int offset = 0;
 
-	memcpy(buffer + offset, &itsAngle2Pi, sizeof(double));
+	memcpy((char*)buffer + offset, &itsAngle2Pi, sizeof(double));
 	offset += sizeof(double);
-	memcpy(buffer + offset, &itsAnglePi, sizeof(double));
+	memcpy((char*)buffer + offset, &itsAnglePi, sizeof(double));
 	offset += sizeof(double);
-	offset += itsTime.pack(buffer + offset);
-	memcpy(buffer + offset, &itsDuration, sizeof(uint));
+	offset += itsTime.pack((char*)buffer + offset);
+	memcpy((char*)buffer + offset, &itsDuration, sizeof(uint));
 	offset += sizeof(uint);
-	offset = MSH_pack(buffer, offset, itsType);
+	MSH_PACK_STRING(buffer, offset, itsType);
 
 	return (offset);
 }
@@ -119,18 +119,18 @@ size_t Pointing::pack  (char* buffer) const
 //
 // unpack(buffer)
 //
-size_t Pointing::unpack(const char *buffer)
+unsigned int Pointing::unpack(void *buffer)
 {
-	size_t offset = 0;
+	unsigned int offset = 0;
 
-	memcpy(&itsAngle2Pi, buffer + offset, sizeof(double));
+	memcpy(&itsAngle2Pi, (char*)buffer + offset, sizeof(double));
 	offset += sizeof(double);
-	memcpy(&itsAnglePi, buffer + offset, sizeof(double));
+	memcpy(&itsAnglePi, (char*)buffer + offset, sizeof(double));
 	offset += sizeof(double);
-	offset += itsTime.unpack(buffer + offset);
-	memcpy(&itsDuration, buffer + offset, sizeof(uint));
+	offset += itsTime.unpack((char*)buffer + offset);
+	memcpy(&itsDuration, (char*)buffer + offset, sizeof(uint));
 	offset += sizeof(uint);
-	offset = MSH_unpack(buffer , offset, itsType);
+	MSH_UNPACK_STRING(buffer , offset, itsType);
 
 	return (offset);
 }

@@ -53,6 +53,10 @@
 #  ifndef LOFAR_COMMON_OBJECT_FACTORY_H
 #    define LOFAR_COMMON_OBJECT_FACTORY_H
 
+#    ifndef HAVE_BOOST
+#      error The Boost.Preprocessor metaprogramming tools are required
+#    endif
+
 #    include <Common/lofar_map.h>
 #    include <Common/lofar_vector.h>
 #    include <boost/preprocessor/repetition.hpp>
@@ -111,7 +115,7 @@ namespace LOFAR
   // defaults to 8.
   //
   template<typename Base BOOST_PP_ENUM_TRAILING_PARAMS(n, typename A), typename TypeId>
-  class ObjectFactory<Base* (BOOST_PP_ENUM_PARAMS(n, A)), TypeId>
+  class ObjectFactory<Base (BOOST_PP_ENUM_PARAMS(n, A)), TypeId>
   {
   private:
     // Typedef for the function that creates an instance of a class that

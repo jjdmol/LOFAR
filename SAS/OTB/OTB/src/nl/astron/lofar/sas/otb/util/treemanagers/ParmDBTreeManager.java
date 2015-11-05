@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,8 +23,8 @@
 package nl.astron.lofar.sas.otb.util.treemanagers;
 
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Vector;
 import javax.swing.event.TreeModelEvent;
 import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.util.UserAccount;
@@ -96,16 +96,18 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
             // once for the root node and never thereafter.
             if(userNode.isRootNode()){
                 logger.trace("ParmDBtreeNode calling getNames("+userNode.getNodeID().substring(userNode.getParmDBIdentifier().length())+"*)");
-                ArrayList<String> children = SharedVars.getJParmFacade().getNames("*");
+                Vector children = SharedVars.getJParmFacade().getNames("*");
                 logger.trace("ParmDBtreeNode gets "+children.size()+" names");
 
-                if(children.isEmpty())
+                if(children.size() == 0)
                 {
                     userNode.setLeaf(true);
                 }
                 else
                 {
-                    for (String pathString:children) {
+                    Enumeration e = children.elements();
+                    while( e.hasMoreElements() ) {
+                        String pathString = (String) e.nextElement();
                         logger.trace("definePath: " + pathString);
                         definePath(aNode, pathString.split(PARMDB_TREENODE_SEPARATOR_CHAR), 0);
                     }

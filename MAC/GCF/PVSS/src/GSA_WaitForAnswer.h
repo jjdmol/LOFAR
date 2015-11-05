@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -55,14 +55,12 @@ class PVSSservice;
 
 class GSAWaitForAnswer : public HotLinkWaitForAnswer
 {
-    using HotLinkWaitForAnswer::hotLinkCallBack;
-
 public:
     GSAWaitForAnswer (PVSSservice& service) :
 		HotLinkWaitForAnswer(), _service(service) {}
     virtual ~GSAWaitForAnswer () {};
     
-    virtual void hotLinkCallBack (DpMsgAnswer& answer)
+    void hotLinkCallBack (DpMsgAnswer& answer)
 		{ _service.handleHotLink(answer, *this);   }
 
     const string&	getDpName () const 
@@ -71,8 +69,8 @@ public:
 		{ _dpName = dpName; }
 
 protected:
-    // Answer on connect
-    virtual void hotLinkCallBack (DpHLGroup& group)
+    // Answer on conenct
+    void hotLinkCallBack (DpHLGroup& group)
 		{ _service.handleHotLink(group, *this); }
 
 private:

@@ -38,6 +38,8 @@ namespace LOFAR
 namespace DPPP
 {
 
+class ModelComponentVisitor;
+
 // \addtogroup NDPPP
 // @{
 
@@ -58,7 +60,11 @@ public:
     template <typename T>
     void setSpectralIndex(double refFreq, T first, T last);
 
-    void setRotationMeasure(double fraction, double angle, double rm);
+    void setPolarizedFraction(double fraction);
+
+    void setPolarizationAngle(double angle);
+
+    void setRotationMeasure(double rm);
 
     Stokes stokes(double freq) const;
 
@@ -75,7 +81,6 @@ private:
     double          itsPolarizedFraction;
     double          itsPolarizationAngle;
     double          itsRotationMeasure;
-    bool            itsHasRotationMeasure;
 };
 
 // @}

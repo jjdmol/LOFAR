@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tParmDBCasa
+./runctest.sh tParmDBCasa > tParmDBCasa.log 2>&1

@@ -25,7 +25,7 @@
 #include <DPPP/PhaseShift.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -43,16 +43,14 @@ namespace LOFAR {
   namespace DPPP {
 
     PhaseShift::PhaseShift (DPInput* input,
-                            const ParameterSet& parset,
-                            const string& prefix)
+                            const ParSet& parset, const string& prefix)
       : itsInput   (input),
         itsName    (prefix),
         itsCenter  (parset.getStringVector(prefix+"phasecenter"))
     {}
 
     PhaseShift::PhaseShift (DPInput* input,
-                            const ParameterSet& parset,
-                            const string& prefix,
+                            const ParSet& parset, const string& prefix,
                             const vector<string>& defVal)
       : itsInput   (input),
         itsName    (prefix),
@@ -62,14 +60,12 @@ namespace LOFAR {
     PhaseShift::~PhaseShift()
     {}
 
-    void PhaseShift::updateInfo (const DPInfo& infoIn)
+    void PhaseShift::updateInfo (DPInfo& info)
     {
-      info() = infoIn;
-      info().setNeedVisData();
-      info().setWriteData();
-      info().setMetaChanged();
+      info.setNeedVisData();
+      info.setNeedWrite();
       // Default phase center is the original one.
-      MDirection newDir(itsInput->getInfo().phaseCenter());
+      MDirection newDir(itsInput->phaseCenter());
       ////      bool original = true;
       bool original = false;
       if (! itsCenter.empty()) {
@@ -78,8 +74,8 @@ namespace LOFAR {
       }
       double newRa  = newDir.getValue().get()[0];
       double newDec = newDir.getValue().get()[1];
-      double oldRa  = infoIn.phaseCenter().getValue().get()[0];
-      double oldDec = infoIn.phaseCenter().getValue().get()[1];
+      double oldRa  = info.phaseCenter().getValue().get()[0];
+      double oldDec = info.phaseCenter().getValue().get()[1];
       Matrix<double> oldUVW(3,3);
       Matrix<double> newUVW(3,3);
       fillTransMatrix (oldUVW, oldRa, oldDec);
@@ -94,14 +90,14 @@ namespace LOFAR {
       itsXYZ[2] = tt(0,2);
       ///      cout << itsXYZ[0]<<' '<<itsXYZ[1]<<' '<<itsXYZ[2]<<" ps"<<endl;
 
-      info().setPhaseCenter (newDir, original);
+      info.setPhaseCenter (newDir, original);
       // Calculate 2*pi*freq/C to get correct phase term (in wavelengths).
-      const Vector<double>& freq = infoIn.chanFreqs();
+      const Vector<double>& freq = itsInput->chanFreqs(info.nchanAvg());
       itsFreqC.reserve (freq.size());
       for (uint i=0; i<freq.size(); ++i) {
         itsFreqC.push_back (2. * C::pi * freq[i] / C::c);
       }
-      itsPhasors.resize (infoIn.nchan(), infoIn.nbaselines());
+      itsPhasors.resize (info.nchan(), info.nbaselines());
     }
 
     void PhaseShift::show (std::ostream& os) const
@@ -120,12 +116,18 @@ namespace LOFAR {
     bool PhaseShift::process (const DPBuffer& buf)
     {
       itsTimer.start();
-      ///itsBuf.referenceFilled (buf);
-      itsBuf.copy (buf);
-      itsInput->fetchUVW (buf, itsBuf, itsTimer);
-      int ncorr  = itsBuf.getData().shape()[0];
-      int nchan  = itsBuf.getData().shape()[1];
-      int nbl    = itsBuf.getData().shape()[2];
+      DPBuffer newBuf(buf);
+      RefRows rowNrs(newBuf.getRowNrs());
+      if (newBuf.getUVW().empty()) {
+        newBuf.getUVW().reference (itsInput->fetchUVW (newBuf, rowNrs,
+                                                       itsTimer));
+      }
+      // Make sure no other object references the DATA and UVW arrays.
+      newBuf.getData().unique();
+      newBuf.getUVW().unique();
+      int ncorr  = newBuf.getData().shape()[0];
+      int nchan  = newBuf.getData().shape()[1];
+      int nbl    = newBuf.getData().shape()[2];
       DBGASSERT (itsPhasors.nrow() == uint(nchan)  &&
                  itsPhasors.ncolumn() == uint(nbl));
       const double* mat1 = itsMat1.data();
@@ -134,8 +136,9 @@ namespace LOFAR {
       //# to process.
 #pragma omp parallel for
       for (int i=0; i<nbl; ++i) {
-        Complex*  __restrict__ data    = itsBuf.getData().data() + i*nchan*ncorr;
-        double*   __restrict__ uvw     = itsBuf.getUVW().data() + i*3;
+        Complex*  __restrict__ data    = newBuf.getData().data()
+                                         + i*nchan*ncorr;
+        double*   __restrict__ uvw     = newBuf.getUVW().data() + i*3;
         DComplex* __restrict__ phasors = itsPhasors.data() + i*nchan;
         double u = uvw[0]*mat1[0] + uvw[1]*mat1[3] + uvw[2]*mat1[6];
         double v = uvw[0]*mat1[1] + uvw[1]*mat1[4] + uvw[2]*mat1[7];
@@ -143,9 +146,8 @@ namespace LOFAR {
         double phase = itsXYZ[0]*uvw[0] + itsXYZ[1]*uvw[1] + itsXYZ[2]*uvw[2];
         for (int j=0; j<nchan; ++j) {
           // Shift the phase of the data of this baseline.
-          // Converting the phase term to wavelengths (and applying 2*pi)
-          //      u_wvl = u_m / wvl = u_m * freq / c
-                // has been done once in the beginning (in updateInfo).
+          // Convert the phase term to wavelengths (and apply 2*pi).
+          // u_wvl = u_m / wvl = u_m * freq / c
           double phasewvl = phase * itsFreqC[j];
           DComplex phasor(cos(phasewvl), sin(phasewvl));
           *phasors++ = phasor;
@@ -160,7 +162,7 @@ namespace LOFAR {
         uvw += 3;
       }  //# end omp parallel for
       itsTimer.stop();
-      getNextStep()->process (itsBuf);
+      getNextStep()->process (newBuf);
       return true;
     }
 

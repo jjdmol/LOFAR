@@ -25,8 +25,9 @@
 #include <DPPP/PreFlagger.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
+#include <DPPP/ParSet.h>
 #include <DPPP/DPLogger.h>
-#include <Common/ParameterSet.h>
+#include <MS/BaselineSelect.h>
 #include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 
@@ -51,14 +52,13 @@ namespace LOFAR {
   namespace DPPP {
 
     PreFlagger::PreFlagger (DPInput* input,
-                            const ParameterSet& parset,
-                            const string& prefix)
+                            const ParSet& parset, const string& prefix)
       : itsName        (prefix),
         itsInput       (input),
         itsMode        (SetFlag),
         itsPSet        (input, parset, prefix),
         itsCount       (0),
-        itsFlagCounter (input->msName(), parset, prefix+"count.")
+        itsFlagCounter (input, parset, prefix+"count.")
     {
       string mode = toLower(parset.getString(prefix+"mode", "set"));
       if (mode == "clear") {
@@ -114,32 +114,31 @@ namespace LOFAR {
       os << " PreFlagger " << itsName << endl;
     }
 
-    void PreFlagger::updateInfo (const DPInfo& infoIn)
+    void PreFlagger::updateInfo (DPInfo& info)
     {
-      info() = infoIn;
-      info().setNeedVisData();
-      info().setWriteFlags();
-      itsPSet.updateInfo (getInfo());
+      info.setNeedWrite();
+      info.setNeedVisData();
+      itsPSet.updateInfo (info);
       // Initialize the flag counters.
-      itsFlagCounter.init (getInfo());
+      itsFlagCounter.init (info.nbaselines(), info.nchan(), info.ncorr());
     }
 
     bool PreFlagger::process (const DPBuffer& buf)
     {
       itsTimer.start();
-      // Because no buffers are kept, we can reference the filled arrays
-      // in the input buffer instead of copying them.
-      itsBuffer.referenceFilled (buf);
+      DPBuffer out(buf);
+      // The flags will be changed, so make sure we have a unique array.
+      out.getFlags().unique();
       // Do the PSet steps and combine the result with the current flags.
       // Only count if the flag changes.
-      Cube<bool>* flags = itsPSet.process (buf, itsBuffer, itsCount,
-                                           Block<bool>(), itsTimer);
+      Cube<bool>* flags = itsPSet.process (out, itsCount, Block<bool>(),
+                                           itsTimer);
       const IPosition& shape = flags->shape();
       uint nrcorr = shape[0];
       uint nrchan = shape[1];
       uint nrbl   = shape[2];
       const bool* inPtr = flags->data();
-      bool* outPtr = itsBuffer.getFlags().data();
+      bool* outPtr = out.getFlags().data();
       switch (itsMode) {
       case SetFlag:
         setFlags (inPtr, outPtr, nrcorr, nrchan, nrbl, true);
@@ -156,7 +155,7 @@ namespace LOFAR {
       }
       itsTimer.stop();
       // Let the next step do its processing.
-      getNextStep()->process (itsBuffer);
+      getNextStep()->process (out);
       itsCount++;
       return true;
     }
@@ -186,7 +185,7 @@ namespace LOFAR {
                                  bool mode, const DPBuffer& buf)
     {
       const Complex* dataPtr = buf.getData().data();
-      Cube<float> weights = itsInput->fetchWeights (buf, itsBuffer,
+      Cube<float> weights = itsInput->fetchWeights (buf, buf.getRowNrs(),
                                                     itsTimer);
       const float* weightPtr = weights.data();
       for (uint i=0; i<nrbl; ++i) {
@@ -226,8 +225,7 @@ namespace LOFAR {
 
 
     PreFlagger::PSet::PSet (DPInput* input,
-                            const ParameterSet& parset,
-                            const string& prefix)
+                            const ParSet& parset, const string& prefix)
       : itsInput (input),
         itsName  (prefix),
         itsFlagOnUV    (false),
@@ -236,8 +234,7 @@ namespace LOFAR {
         itsFlagOnPhase (false),
         itsFlagOnReal  (false),
         itsFlagOnImag  (false),
-        itsFlagOnAzEl  (false),
-        itsSelBL       (parset, prefix, true)
+        itsFlagOnAzEl  (false)
     {
       // Read all possible parameters.
       itsStrTime  = parset.getStringVector (prefix+"timeofday",
@@ -254,6 +251,10 @@ namespace LOFAR {
                                             vector<string>());
       itsStrElev  = parset.getStringVector (prefix+"elevation",
                                             vector<string>());
+      itsCorrType = parset.getString       (prefix+"corrtype", "");
+      itsStrBL    = parset.getString       (prefix+"baseline", string());
+      itsMinBL    = parset.getDouble       (prefix+"blmin", -1);
+      itsMaxBL    = parset.getDouble       (prefix+"blmax", -1);
       itsMinUV    = parset.getDouble       (prefix+"uvmmin", -1);
       itsMaxUV    = parset.getDouble       (prefix+"uvmmax", -1);
       itsStrFreq  = parset.getStringVector (prefix+"freqrange",
@@ -284,23 +285,8 @@ namespace LOFAR {
         (ParameterValue (parset.getString  (prefix+"imagmax", string())), 1e30,
          itsFlagOnImag);
       itsStrExpr = parset.getString   (prefix+"expr", string());
-      // Parse the possible pset expression and convert to RPN form.
-      if (! itsStrExpr.empty()) {
-        vector<string> names = exprToRpn (itsStrExpr);
-        // Create PSet objects for all operands.
-        itsPSets.reserve (names.size());
-        for (uint i=0; i<names.size(); ++i) {
-          itsPSets.push_back
-            (PSet::ShPtr(new PSet(itsInput, parset, prefix+names[i]+'.')));
-        }
-      }
-    }
-
-    void PreFlagger::PSet::updateInfo (const DPInfo& info)
-    {
-      itsInfo = &info;
       // Fill the matrix with the baselines to flag.
-      fillBLMatrix();
+      fillBLMatrix (itsInput->antennaNames());
       // Handle the possible date/time parameters.
       itsTimes  = fillTimes (itsStrTime,  true,  true);
       itsLST    = fillTimes (itsStrLST,   true,  true);
@@ -327,11 +313,25 @@ namespace LOFAR {
         itsMaxUV = 1e30;
       }
       ASSERTSTR (itsMinUV<itsMaxUV, "PreFlagger uvmmin should be < uvmmax");
+      // Parse the possible pset expression and convert to RPN form.
+      if (! itsStrExpr.empty()) {
+        vector<string> names = exprToRpn (itsStrExpr);
+        // Create PSet objects for all operands.
+        itsPSets.reserve (names.size());
+        for (uint i=0; i<names.size(); ++i) {
+          itsPSets.push_back
+            (PSet::ShPtr(new PSet(itsInput, parset, prefix+names[i]+'.')));
+        }
+      }
       // Determine if only flagging on time info is done.
       itsFlagOnTimeOnly = ( !(itsFlagOnUV || itsFlagOnBL || itsFlagOnAzEl ||
                               itsFlagOnAmpl || itsFlagOnPhase ||
                               itsFlagOnReal || itsFlagOnImag) &&
                             itsPSets.empty());
+    }
+
+    void PreFlagger::PSet::updateInfo (DPInfo& info)
+    {
       // Size the object's buffers (used in process) correctly.
       uint nrcorr = info.ncorr();
       uint nrchan = info.nchan();
@@ -399,7 +399,8 @@ namespace LOFAR {
       // Now determine which channels to use from given frequency ranges.
       // AND it with the channel selection given above.
       if (! itsStrFreq.empty()) {
-        selChan = selChan && handleFreqRanges (itsInfo->chanFreqs());
+        selChan = selChan &&
+          handleFreqRanges (itsInput->chanFreqs (info.nchanAvg()));
       }
       // Turn the channels into a mask.
       itsChannels.clear();
@@ -439,7 +440,10 @@ namespace LOFAR {
         os << "   timeslot:      " << itsTimeSlot << std::endl;
       }
       if (itsFlagOnBL) {
-        itsSelBL.show (os);
+        os << "   baseline:      " << itsStrBL << std::endl;
+        os << "   corrtype:      " << itsCorrType << std::endl;
+        os << "   blmin:         " << itsMinBL << std::endl;
+        os << "   blmax:         " << itsMaxBL << std::endl;
       }
       if (itsFlagOnUV) {
         if (itsMinUV >= 0) {
@@ -480,8 +484,7 @@ namespace LOFAR {
       }
     }
 
-    Cube<bool>* PreFlagger::PSet::process (const DPBuffer& in,
-                                           DPBuffer& out,
+    Cube<bool>* PreFlagger::PSet::process (DPBuffer& out,
                                            uint timeSlot,
                                            const Block<bool>& matchBL,
                                            NSTimer& timer)
@@ -504,7 +507,7 @@ namespace LOFAR {
       // Take over the baseline info from the parent. Default is all.
       if (matchBL.empty()) {
         itsMatchBL = true;
-      } else {
+      } else{
         itsMatchBL = matchBL;
       }
       // The PSet tree is a combination of ORs and ANDs.
@@ -522,8 +525,8 @@ namespace LOFAR {
         return &itsFlags;
       }
       // Flag on UV distance if necessary.
-      if (itsFlagOnUV  &&  !flagUV (itsInput->fetchUVW (in, out,
-                                                        timer))) {
+      if (itsFlagOnUV  &&  !flagUV (itsInput->fetchUVW(out, out.getRowNrs(),
+                                                       timer))) {
         return &itsFlags;
       }
       // Flag on AzEl is necessary.
@@ -544,7 +547,10 @@ namespace LOFAR {
       }
       // Flag on amplitude, phase or real/imaginary if necessary.
       if (itsFlagOnAmpl) {
-        flagAmpl (amplitude(out.getData()));
+        if (out.getAmplitudes().empty()) {
+          out.setAmplitudes (amplitude(out.getData()));
+        }
+        flagAmpl (out.getAmplitudes());
       }
       if (itsFlagOnReal) {
         flagReal (out.getData());
@@ -565,8 +571,8 @@ namespace LOFAR {
         for (vector<int>::const_iterator oper = itsRpn.begin();
              oper != itsRpn.end(); ++oper) {
           if (*oper >= 0) {
-            results.push (itsPSets[*oper]->process (in, out, timeSlot,
-                                                    itsMatchBL, timer));
+            results.push (itsPSets[*oper]->process (out, timeSlot, itsMatchBL,
+                                                    timer));
           } else if (*oper == OpNot) {
             Cube<bool>* left = results.top();
             // No ||= operator exists, so use the transform function.
@@ -603,7 +609,7 @@ namespace LOFAR {
         return false;
       }
       if (!itsRTimes.empty()  &&
-          !matchRange (time-itsInfo->startTime(), itsRTimes)) {
+          !matchRange (time-itsInput->startTime(), itsRTimes)) {
         return false;
       }
       if (!itsTimes.empty()) {
@@ -622,7 +628,7 @@ namespace LOFAR {
       if (!itsLST.empty()) {
         // Convert time from UTC to Local Apparent Sidereal Time.
         MeasFrame frame;
-        frame.set (itsInfo->arrayPos());
+        frame.set (itsInput->arrayPos());
         Quantity qtime(time, "s");
         MEpoch lst = MEpoch::Convert (MEpoch(MVEpoch(qtime), MEpoch::UTC),
                                       MEpoch::Ref(MEpoch::LAST, frame))();
@@ -672,8 +678,8 @@ namespace LOFAR {
     {
       bool match = false;
       uint nrbl = itsMatchBL.size();
-      const Int* ant1Ptr = itsInfo->getAnt1().data();
-      const Int* ant2Ptr = itsInfo->getAnt2().data();
+      const Int* ant1Ptr = itsInput->getAnt1().data();
+      const Int* ant2Ptr = itsInput->getAnt2().data();
       for (uint i=0; i<nrbl; ++i) {
         if (itsMatchBL[i]) {
           if (! itsFlagBL(ant1Ptr[i], ant2Ptr[i])) {
@@ -691,16 +697,16 @@ namespace LOFAR {
     {
       bool match = false;
       uint nrbl = itsMatchBL.size();
-      const Int* ant1Ptr = itsInfo->getAnt1().data();
-      const Int* ant2Ptr = itsInfo->getAnt2().data();
+      const Int* ant1Ptr = itsInput->getAnt1().data();
+      const Int* ant2Ptr = itsInput->getAnt2().data();
       // Calculate AzEl for each flagged antenna for this time slot.
       MeasFrame frame;
       Quantity qtime(time, "s");
       MEpoch epoch(MVEpoch(qtime), MEpoch::UTC);
       frame.set (epoch);
-      MDirection::Convert converter (itsInfo->phaseCenter(),
+      MDirection::Convert converter (itsInput->phaseCenter(),
                                      MDirection::Ref(MDirection::AZEL, frame));
-      uint nrant = itsInfo->antennaNames().size();
+      uint nrant = itsInput->antennaNames().size();
       Block<bool> done(nrant, false);
       for (uint i=0; i<nrbl; ++i) {
         if (itsMatchBL[i]) {
@@ -710,13 +716,13 @@ namespace LOFAR {
           int a1 = ant1Ptr[i];
           int a2 = ant2Ptr[i];
           if (!done[a1]) {
-            frame.set (itsInfo->antennaPos()[a1]);
+            frame.set (itsInput->antennaPos()[a1]);
             testAzEl (converter, i, a1, ant1Ptr, ant2Ptr);
             done[a1]= true;
           }
           // If needed, check if ant2 matches AzEl criterium.
           if (itsMatchBL[i]  &&  !done[a2]) {
-            frame.set (itsInfo->antennaPos()[a2]);
+            frame.set (itsInput->antennaPos()[a2]);
             testAzEl (converter, i, a2, ant1Ptr, ant2Ptr);
             done[a2] = true;
           }
@@ -964,12 +970,7 @@ namespace LOFAR {
           }
           hadName = true;
           itsRpn.push_back (names.size());
-          String setName (origExpr.substr(st, i-st));
-          // Check the name is valid (no special characters).
-          ASSERTSTR (setName.matches (RXidentifier),
-                     "Invalid set name " << setName
-                     << " used in set expression " << origExpr);
-          names.push_back (setName);
+          names.push_back (origExpr.substr(st, i-st));
         }
         if (oper < OpParen) {
           // Check if an operator was preceeded correctly.
@@ -1089,29 +1090,144 @@ namespace LOFAR {
           // Defined as a vector, take the values given.
           vector<string> valstr = value.getStringVector();
           uint sz = std::min(valstr.size(), result.size());
-          if (sz > 0) {
-            // It contains a value, so set that flagging is done.
-            doFlag = true;
-            for (uint i=0; i<sz; ++i) {
-              if (! valstr[i].empty()) {
-                result[i] = strToFloat(valstr[i]);
-              }
-            }
+	  if (sz > 0) {
+	    // It contains a value, so set that flagging is done.
+	    doFlag = true;
+	    for (uint i=0; i<sz; ++i) {
+	      if (! valstr[i].empty()) {
+		result[i] = strToFloat(valstr[i]);
+	      }
+	    }
           }
         } else {
           // A single value means use it for all correlations.
-          doFlag = true;
+	  doFlag = true;
           std::fill (result.begin(), result.end(), value.getFloat());
         }
       }
       return result;
     }
 
-    void PreFlagger::PSet::fillBLMatrix()
+    void PreFlagger::PSet::fillBLMatrix (const Vector<String>& antNames)
     {
-      itsFlagOnBL = itsSelBL.hasSelection();
-      if (itsFlagOnBL) {
-        itsFlagBL.reference (itsSelBL.apply (*itsInfo));
+      // Initialize the matrix.
+      itsFlagBL.resize (antNames.size(), antNames.size());
+      itsFlagBL = true;
+      Matrix<bool> tmpflags(itsFlagBL.shape());
+      // Loop through all values in the baseline string.
+      if (! itsStrBL.empty()  &&  itsStrBL != "[]") {
+        itsFlagOnBL = true;
+        tmpflags    = false;
+        ParameterValue pvBL(itsStrBL);
+        if (pvBL.isVector()) {
+          // Specified as a vector of antenna name patterns.
+          handleBLVector (pvBL, antNames, tmpflags);
+        } else {
+          // Specified in casacore's MSSelection format.
+          String msName = itsInput->msName();
+          ASSERT (! msName.empty());
+          tmpflags = BaselineSelect::convert (msName, itsStrBL);
+        }
+        itsFlagBL = itsFlagBL && tmpflags;
+      }
+      // Process corrtype if given.
+      string corrType = toLower(itsCorrType);
+      if (corrType == "auto") {
+        itsFlagOnBL = true;
+        tmpflags = false;
+        tmpflags.diagonal() = true;
+        itsFlagBL = itsFlagBL && tmpflags;
+      } else if (corrType == "cross") {
+        itsFlagOnBL = true;
+        itsFlagBL.diagonal() = false;   // no autocorr
+      } else {
+        ASSERTSTR (corrType == "", "PreFlagger corrType " << itsCorrType
+                   << " is invalid; must be auto, cross, or empty string");
+      }
+      // Process min or max baseline length if given.
+      if (itsMinBL > 0  ||  itsMaxBL > 0) {
+        if (itsMaxBL < 0) {
+          itsMaxBL = 1e30;
+        }
+        itsFlagOnBL = true;
+        tmpflags = false;
+        // Get baseline lengths.
+        const vector<double>& blength = itsInput->getBaselineLengths();
+        const Vector<Int>& ant1 = itsInput->getAnt1();
+        const Vector<Int>& ant2 = itsInput->getAnt2();
+        for (uint i=0; i<ant1.size(); ++i) {
+          if (blength[i] < itsMinBL  ||  blength[i] > itsMaxBL) {
+            int a1 = ant1[i];
+            int a2 = ant2[i];
+            tmpflags(a1,a2) = true;
+            tmpflags(a2,a1) = true;
+          }
+        }
+        itsFlagBL = itsFlagBL && tmpflags;
+      }
+    }
+
+    void PreFlagger::PSet::handleBLVector (const ParameterValue& pvBL,
+                                           const Vector<String>& antNames,
+                                           Matrix<bool>& tmpflags)
+    {
+      vector<ParameterValue> pairs = pvBL.getVector();
+      // Each ParameterValue can be a single value (antenna) or a pair of
+      // values (a baseline).
+      // Note that [ant1,ant2] is somewhat ambiguous; it means two antennae,
+      // but one might think it means a baseline [[ant1,ant2]].
+      if (pairs.size() == 2  &&
+          !(pairs[0].isVector()  ||  pairs[1].isVector())) {
+        LOG_WARN_STR ("PreFlagger baseline " << itsStrBL
+                      << " means two antennae, but is somewhat ambigious; "
+                      << "it's more clear to use [[ant1],[ant2]]");
+      }
+      for (uint i=0; i<pairs.size(); ++i) {
+        vector<string> bl = pairs[i].getStringVector();
+        if (bl.size() == 1) {
+          // Turn the given antenna name pattern into a regex.
+          Regex regex(Regex::fromPattern (bl[0]));
+          int nmatch = 0;
+          // Loop through all antenna names and set matrix for matching ones.
+          for (uint i2=0; i2<antNames.size(); ++i2) {
+            if (antNames[i2].matches (regex)) {
+              nmatch++;
+              // Antenna matches, so set all corresponding flags.
+              for (uint j=0; j<antNames.size(); ++j) {
+                tmpflags(i2,j) = true;
+                tmpflags(j,i2) = true;
+              }
+            }
+          }
+          if (nmatch == 0) {
+            DPLOG_WARN_STR ("PreFlagger: no matches for antenna name pattern ["
+                            << bl[0] << "]");
+          }
+        } else {
+          ASSERTSTR (bl.size() == 2, "PreFlagger baseline " << bl <<
+                     " should contain 1 or 2 antenna name patterns");
+          // Turn the given antenna name pattern into a regex.
+          Regex regex1(Regex::fromPattern (bl[0]));
+          Regex regex2(Regex::fromPattern (bl[1]));
+          int nmatch = 0;
+          // Loop through all antenna names and set matrix for matching ones.
+          for (uint i2=0; i2<antNames.size(); ++i2) {
+            if (antNames[i2].matches (regex2)) {
+              // Antenna2 matches, now try Antenna1.
+              for (uint i1=0; i1<antNames.size(); ++i1) {
+                if (antNames[i1].matches (regex1)) {
+                  nmatch++;
+                  tmpflags(i1,i2) = true;
+                  tmpflags(i2,i1) = true;
+                }
+              }
+            }
+          }
+          if (nmatch == 0) {
+            DPLOG_WARN_STR ("PreFlagger: no matches for baseline name pattern ["
+                            << bl[0] << ',' << bl[1] << "]");
+          }
+        }
       }
     }
 

@@ -29,7 +29,6 @@
 
 #include <DPPP/Patch.h>
 #include <Common/lofar_string.h>
-#include <Common/LofarTypes.h>
 
 namespace LOFAR
 {
@@ -43,22 +42,7 @@ namespace DPPP
 
 // \addtogroup NDPPP
 // @{
-  vector<Patch::ConstPtr> makePatches(BBS::SourceDB &sourceDB,
-                                      const vector<string> &patchNames,
-                                      uint nModel);
-
-  // Create a source list (with patch name) from a patchlist
-  // Needed for efficient multithreading
-  std::vector<std::pair<ModelComponent::ConstPtr,Patch::ConstPtr> >
-  makeSourceList (const std::vector<Patch::ConstPtr>& patchList);
-
-  // From a given PatchList, create a new one with one patch per component
-  vector<Patch::ConstPtr> makeOnePatchPerComponent(
-      const vector<Patch::ConstPtr>&);
-
-  vector<string>  makePatchList(BBS::SourceDB &sourceDB,
-                                vector<string> patterns);
-
+Patch::Ptr makePatch(BBS::SourceDB &sourceDB, const string &name);
 // @}
 
 } //# namespace DPPP

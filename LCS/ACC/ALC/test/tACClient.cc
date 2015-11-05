@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/hexdump.h>
-#include "myACClientFunctions.h"
+#include <myACClientFunctions.h>
 
 using namespace LOFAR;
 using namespace LOFAR::ACC::ALC;

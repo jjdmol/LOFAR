@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -33,12 +33,10 @@
 #include "SHMSession.h"
 #include "SHM_Protocol.ph"
 #include "SHMInfoServer.h"
+//MAXMOD add for antenna coords
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 
 namespace LOFAR {
-	using namespace RSP_Protocol;
-	using namespace CAL_Protocol;
-	using namespace SHM_Protocol;
 	using namespace MACIO;
 	using namespace GCF::TM;
 	namespace AMI {
@@ -146,7 +144,6 @@ GCFEvent::TResult SHMInfoServer::accepting(GCFEvent& e, GCFPortInterface& p)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	static unsigned long garbageTimerID = 0;
-	(void)p;  // may be unused, depending on switch().
 //	static unsigned long rereadPolicyTimerID = 0;
 //	static bool hasPVSS = false; 
 

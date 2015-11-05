@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2010
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -44,10 +44,9 @@ void idealStartTime (int now, int t1, int d1, int t2, int d2, int p2, int expAns
 
 }
 
-int main(int, char*	argv[]) 
+int main(int	argc, char*	argv[]) 
 {
-	INIT_LOGGER(argv[0]);
-
+	INIT_LOGGER("tOverlap");
 	//  n    t2 d2        t2`
 	// -o----+--->+-------+------
 	//  w

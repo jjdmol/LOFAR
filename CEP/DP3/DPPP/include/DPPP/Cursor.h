@@ -27,7 +27,6 @@
 // Multi-dimensional iterators.
 
 #include <Common/lofar_algorithm.h>
-#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -60,7 +59,6 @@ public:
         :   itsPointer(pointer),
             itsRank(rank)
     {
-        DBGASSERT (rank <= MAX_RANK);
         copy(strides, strides + itsRank, itsStrides);
         fill(itsStrides + itsRank, itsStrides + MAX_RANK, 0);
     }

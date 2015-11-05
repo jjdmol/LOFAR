@@ -25,7 +25,7 @@
 #include <DPPP/Averager.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 #include <Common/StringUtil.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -84,16 +84,10 @@ private:
 
   virtual void finish() {getNextStep()->finish();}
   virtual void show (std::ostream&) const {}
-  virtual void updateInfo (const DPInfo&)
-  {
-    // Use timeInterval=5
-    info().init (itsNCorr, itsNChan, itsNTime, 100, 5, string(), string());
-    // Define the frequencies.
-    Vector<double> chanFreqs(itsNChan);
-    Vector<double> chanWidth(itsNChan, 100000.);
-    indgen (chanFreqs, 1050000., 100000.);
-    info().set (chanFreqs, chanWidth);
-  }
+  virtual void updateInfo (DPInfo& info)
+    // Use startchan=8 and timeInterval=5
+    { info.init (itsNCorr, 8, itsNChan, itsNBl, itsNTime, 5); }
+
   int itsCount, itsNTime, itsNBl, itsNChan, itsNCorr;
   bool itsFlag;
 };
@@ -157,7 +151,7 @@ private:
       indgen (uvw, 100*(itsCount*itsNAvgTime + 0.5*(itsNAvgTime-1)));
       ASSERT (allNear(buf.getUVW(), uvw, 1e-5));
     }
-    cout <<buf.getFullResFlags()<< fullResFlags;
+    ///cout <<buf.getFullResFlags()<< fullResFlags;
     ASSERT (allEQ(buf.getFullResFlags(), fullResFlags));
     ++itsCount;
     return true;
@@ -165,8 +159,9 @@ private:
 
   virtual void finish() {}
   virtual void show (std::ostream&) const {}
-  virtual void updateInfo (const DPInfo& info)
+  virtual void updateInfo (DPInfo& info)
   {
+    ASSERT (info.startChan()==8);
     ASSERT (int(info.origNChan())==itsNChan);
     ASSERT (int(info.nchan())==1+(itsNChan-1)/itsNAvgChan);
     ASSERT (int(info.ntime())==1+(itsNTime-1)/itsNAvgTime);
@@ -225,29 +220,23 @@ private:
     return true;
   }
 
-  virtual void getUVW (const casa::RefRows&, double, DPBuffer& buf)
+  virtual casa::Matrix<double> getUVW (const casa::RefRows&)
   {
-    buf.getUVW().resize (3, itsNrBl);
-    indgen (buf.getUVW());
+    Matrix<double> uvw(3,itsNrBl);
+    indgen (uvw);
+    return uvw;
   }
-  virtual bool getFullResFlags (const casa::RefRows&, DPBuffer& buf)
+  virtual casa::Cube<bool> getFullResFlags (const casa::RefRows&)
   {
-    buf.getFullResFlags().assign (itsFullResFlags);
-    return true;
+    return itsFullResFlags;
   }
 
   virtual void finish() {getNextStep()->finish();}
   virtual void show (std::ostream&) const {}
-  virtual void updateInfo (const DPInfo&)
-  {
-    // Use timeInterval=5
-    info().init (itsNrCorr, itsNrChan, itsNrTime, 100, 5, string(), string());
-    // Define the frequencies.
-    Vector<double> chanFreqs(itsNrChan);
-    Vector<double> chanWidth(itsNrChan, 100000.);
-    indgen (chanFreqs, 1050000., 100000.);
-    info().set (chanFreqs, chanWidth);
-  }
+  virtual void updateInfo (DPInfo& info)
+    // Use startchan=0 and timeInterval=5
+    { info.init (itsNrCorr, 0, itsNrChan, itsNrBl, itsNrTime, 5); }
+
   int itsCount, itsNrTime, itsNrBl, itsNrChan, itsNrCorr;
   Cube<bool> itsFullResFlags;
 };
@@ -311,8 +300,9 @@ private:
 
   virtual void finish() {}
   virtual void show (std::ostream&) const {}
-  virtual void updateInfo (const DPInfo& info)
+  virtual void updateInfo (DPInfo& info)
   {
+    ASSERT (info.startChan()==0);
     ASSERT (int(info.origNChan())==itsNrChan);
     ASSERT (info.nchan()==1);
     ASSERT (info.ntime()==1);
@@ -425,8 +415,9 @@ private:
 
   virtual void finish() {}
   virtual void show (std::ostream&) const {}
-  virtual void updateInfo (const DPInfo& info)
+  virtual void updateInfo (DPInfo& info)
   {
+    ASSERT (info.startChan()==0);
     ASSERT (int(info.origNChan())==itsNrChan);
     ASSERT (info.nchan()==1);
     ASSERT (info.ntime()==1);
@@ -443,7 +434,12 @@ private:
 void execute (const DPStep::ShPtr& step1)
 {
   // Set DPInfo.
-  step1->setInfo (DPInfo());
+  DPInfo info;
+  DPStep::ShPtr step = step1;
+  while (step) {
+    step->updateInfo (info);
+    step = step->getNextStep();
+  }
   // Execute the steps.
   DPBuffer buf;
   while (step1->process(buf));
@@ -571,7 +567,6 @@ int main()
     test1(10, 3, 30, 1, 3, 3, false);
     test1(11, 3, 30, 2, 3, 3, false);
     test1(10, 3, 32, 4, 1, 32, false);
-    test1(10, 3, 32, 1, 1, 1, false);
     test2(10, 3, 32, 2, true);
     test2(10, 3, 32, 2, false);
     test3(1, 1);

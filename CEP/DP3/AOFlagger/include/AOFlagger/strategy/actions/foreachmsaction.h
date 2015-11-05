@@ -22,8 +22,6 @@
 
 #include <AOFlagger/strategy/control/actionblock.h>
 
-#include <AOFlagger/msio/types.h>
-
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
@@ -31,7 +29,7 @@ namespace rfiStrategy {
 
 	class ForEachMSAction  : public ActionBlock {
 		public:
-			ForEachMSAction() : _readUVW(false), _dataColumnName("DATA"), _subtractModel(false), _skipIfAlreadyProcessed(false), _baselineIOMode(AutoReadMode)
+			ForEachMSAction() : _indirectReader(false), _readUVW(false), _dataColumnName("DATA"), _subtractModel(false), _skipIfAlreadyProcessed(false)
 			{
 			}
 			~ForEachMSAction()
@@ -53,8 +51,8 @@ namespace rfiStrategy {
 			std::vector<std::string> &Filenames() { return _filenames; }
 			const std::vector<std::string> &Filenames() const { return _filenames; }
 
-			BaselineIOMode IOMode() const { return _baselineIOMode; }
-			void SetIOMode(BaselineIOMode ioMode) { _baselineIOMode = ioMode; }
+			bool IndirectReader() const { return _indirectReader; }
+			void SetIndirectReader(bool indirectReader) { _indirectReader = indirectReader; }
 
 			bool ReadUVW() const { return _readUVW; }
 			void SetReadUVW(bool readUVW) { _readUVW = readUVW; }
@@ -72,12 +70,11 @@ namespace rfiStrategy {
 			void SetSkipIfAlreadyProcessed(bool value) { _skipIfAlreadyProcessed = value; }
 		private:
 			std::vector<std::string> _filenames;
-			bool _readUVW;
+			bool _indirectReader, _readUVW;
 			std::string _dataColumnName;
 			bool _subtractModel;
 			std::string _commandLineForHistory;
 			bool _skipIfAlreadyProcessed;
-			BaselineIOMode _baselineIOMode;
 	};
 
 }

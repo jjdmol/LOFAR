@@ -22,4 +22,3 @@ usage should be relatively simple.
 
    quickstart/index.rst
    recipes/index.rst
-   pipeline_designs/index.rst

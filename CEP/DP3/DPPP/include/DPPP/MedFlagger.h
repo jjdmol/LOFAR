@@ -33,9 +33,10 @@
 #include <Common/lofar_vector.h>
 
 namespace LOFAR {
-  class ParameterSet;
 
   namespace DPPP {
+    class ParSet;
+
     // @ingroup NDPPP
 
     // This class is a DPStep class flagging data points based on the median
@@ -77,7 +78,7 @@ namespace LOFAR {
     public:
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
-      MedFlagger (DPInput*, const ParameterSet&, const string& prefix);
+      MedFlagger (DPInput*, const ParSet&, const string& prefix);
 
       virtual ~MedFlagger();
 
@@ -90,7 +91,7 @@ namespace LOFAR {
 
       // Update the general info.
       // It is used to adjust the parms if needed.
-      virtual void updateInfo (const DPInfo&);
+      virtual void updateInfo (DPInfo&);
 
       // Show the step parameters.
       virtual void show (std::ostream&) const;
@@ -141,7 +142,6 @@ namespace LOFAR {
       double           itsMaxBLength;    //# maximum baseline length
       vector<double>   itsBLength;       //# length of each baseline
       vector<DPBuffer> itsBuf;
-      vector<casa::Cube<float> > itsAmpl; //# amplitudes of the data
       FlagCounter      itsFlagCounter;
       NSTimer          itsTimer;
       NSTimer          itsComputeTimer;  //# move/median timer

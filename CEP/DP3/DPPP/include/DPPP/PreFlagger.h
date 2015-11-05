@@ -29,15 +29,15 @@
 
 #include <DPPP/DPInput.h>
 #include <DPPP/DPBuffer.h>
-#include <DPPP/BaselineSelection.h>
 #include <Common/lofar_vector.h>
 #include <measures/Measures/MDirection.h>
 
 namespace LOFAR {
-  class ParameterSet;
   class ParameterValue;
 
   namespace DPPP {
+    class ParSet;
+
     // @ingroup NDPPP
 
     // This class is a DPStep class flagging data points based on data
@@ -74,7 +74,7 @@ namespace LOFAR {
 
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
-      PreFlagger (DPInput*, const ParameterSet&, const string& prefix);
+      PreFlagger (DPInput*, const ParSet&, const string& prefix);
 
       virtual ~PreFlagger();
 
@@ -87,7 +87,7 @@ namespace LOFAR {
 
       // Update the average info.
       // It is used to adjust the parms if needed.
-      virtual void updateInfo (const DPInfo&);
+      virtual void updateInfo (DPInfo&);
 
       // Show the step parameters.
       virtual void show (std::ostream&) const;
@@ -124,16 +124,16 @@ namespace LOFAR {
         {}
 
         // Construct from the parset parameters.
-        PSet (DPInput*, const ParameterSet& parset, const string& prefix);
+        PSet (DPInput*, const ParSet& parset, const string& prefix);
 
         // Set and return the flags.
-        casa::Cube<bool>* process (const DPBuffer&, DPBuffer&, uint timeSlot,
+        casa::Cube<bool>* process (DPBuffer&, uint timeSlot,
                                    const casa::Block<bool>& matchBL,
                                    NSTimer& timer);
 
         // Update the general info.
         // It is used to adjust the parms if needed.
-        void updateInfo (const DPInfo&);
+        void updateInfo (DPInfo&);
 
         // Show the pset parameters.
         void show (std::ostream&, bool showName) const;
@@ -189,7 +189,13 @@ namespace LOFAR {
         double getSeconds (const string& str, bool asTime, bool usepm);
 
         // Fill the baseline matrix; set true for baselines to flag.
-        void fillBLMatrix();
+        void fillBLMatrix (const casa::Vector<casa::String>& antNames);
+
+        // Convert a baseline vector specification to a matrix telling
+        // which baselines are specified.
+        void handleBLVector (const ParameterValue& pvBL,
+                             const casa::Vector<casa::String>& antNames,
+                             casa::Matrix<bool>& flags);
 
         // Fill itsChannels if channel/freq selection is done.
         void fillChannels (const DPInfo&);
@@ -221,7 +227,6 @@ namespace LOFAR {
 
         //# Data members of PreFlagger::PSet.
         DPInput*           itsInput;
-        const DPInfo*      itsInfo;
         string             itsName;
         string             itsStrExpr;
         bool               itsFlagOnTimeOnly; //# true = only flag on time info
@@ -233,9 +238,10 @@ namespace LOFAR {
         bool               itsFlagOnReal; //# true = do real based flagging
         bool               itsFlagOnImag; //# true = do imag based flagging
         bool               itsFlagOnAzEl; //# true = do Az/El based flagging
-        BaselineSelection  itsSelBL;
         double             itsMinUV;    //# minimum UV distance; <0 means ignore
         double             itsMaxUV;    //# maximum UV distance; <0 means ignore
+        double             itsMinBL;    //# minimum baseline ln; <0 means ignore
+        double             itsMaxBL;    //# maximum baseline ln; <0 means ignore
         casa::Matrix<bool> itsFlagBL;   //# true = flag baseline [i,j]
         vector<double>     itsAzimuth;  //# azimuth ranges to be flagged
         vector<double>     itsElevation;//# elevation ranges to be flagged
@@ -261,6 +267,8 @@ namespace LOFAR {
         vector<string>     itsStrRTime; //# relative time ranges to be flagged
         vector<string>     itsStrAzim;  //# azimuth ranges to be flagged
         vector<string>     itsStrElev;  //# elevation ranges to be flagged
+        string             itsCorrType; //# auto, cross, or all
+        string             itsStrBL;    //# the baseline string
         vector<int>         itsRpn;     //# PSet expression in RPN form
         vector<PSet::ShPtr> itsPSets;   //# PSets used in itsRpn
         casa::Matrix<bool>  itsChanFlags; //# flags for channels to be flagged
@@ -282,7 +290,6 @@ namespace LOFAR {
       //# Data members of PreFlagger.
       string      itsName;
       DPInput*    itsInput;
-      DPBuffer    itsBuffer;
       Mode        itsMode;
       NSTimer     itsTimer;
       PSet        itsPSet;
