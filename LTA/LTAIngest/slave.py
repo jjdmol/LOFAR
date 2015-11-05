@@ -132,8 +132,10 @@ class executer(Process):
       self.job['retry'] += 1
       if self.job['retry'] < self.pipelineRetry:
         self.job['Status'] = JobRetry
-    if (self.job['Status'] == JobProduced) or (self.job['Status'] == JobError):
+    if (self.job['Status'] == JobProduced):
         self.talker.put(self.job)
+    elif (self.job['Status'] == JobError):
+      self.logger.warning('Skipping JobError status update to MoM to prevent the hold/running slow flipping bug for %s' % self.job['ExportID'])
     self.manager.slave_done(self.job, self.result, pipeline.FileType)
     with self.jobs.get_lock():
       self.jobs.value -= 1

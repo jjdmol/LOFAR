@@ -67,7 +67,7 @@ class IngestPipeline():
     if 'summary' in self.DataProduct:
       self.FileType    = pulp_type
     self.JobId         = job['JobId']
-    self.ArchiveId         = int(job['ArchiveId'])
+    self.MomId         = int(job['MomId'])
     self.ObsId         = int(job['ObservationId'])
     self.HostLocation  = job['Location'].split(':')[0]
     self.Location      = job['Location'].split(':')[1]
@@ -107,7 +107,7 @@ class IngestPipeline():
   def GetStorageTicket(self):
     try:
       start = time.time()
-      result = self.ltaClient.GetStorageTicket(self.Project, self.FileName, self.FileSize, self.ArchiveId, self.JobId, self.ObsId, True, self.Type)
+      result = self.ltaClient.GetStorageTicket(self.Project, self.FileName, self.FileSize, self.MomId, self.JobId, self.ObsId, True, self.Type)
       self.logger.debug("GetStorageTicket for %s took %ds" % (self.JobId, time.time() - start))
     except xmlrpclib.Fault as err:
       self.logger.error('Received XML-RPC Fault: %s %s' % (err.faultCode, err.faultString))
@@ -115,7 +115,7 @@ class IngestPipeline():
     error = result['error']
     if error:
       self.logger.error(error) ## StorageTicket with mom ID "8948214" and ID source "MoM" already exists
-      if 'StorageTicket with mom ID "%i"' % (self.ArchiveId) in error:
+      if 'StorageTicket with mom ID "%i"' % (self.MomId) in error:
         if 'existing_ticket_id' in result and 'existing_ticket_state' in result:
           self.logger.warning("Got a Tier 1 GetStorageTicket error for an incomplete storage ticket %s with status %s" % (result['existing_ticket_id'],result['existing_ticket_state']))
           if result['existing_ticket_state'] < IngestSuccessful:
@@ -260,10 +260,10 @@ class IngestPipeline():
       result = self.ltaClient.UpdateUriState(self.Project, self.ticket, self.PrimaryUri, state)
       self.logger.debug("UpdateUriState for %s took %ds" % (self.JobId, time.time() - start))
     except xmlrpclib.Fault as err:
-      self.logger.error('Received XML-RPC Fault: %s %s' % (err.faultCode, self._hidePassword(err.faultString)))
+      self.logger.error('Received XML-RPC Fault: %s %s' % (err.faultCode, err.faultString))
       raise
     except Exception as e:
-      self.logger.error('Received unknown exception in SendStatus for %s: %s' % (self.JobId, self._hidePassword(str(e))))
+      self.logger.error('Received unknown exception in SendStatus for %s: %s' % (self.JobId, str(e)))
       raise
     if result['result'] == 'ok':
       self.logger.debug('Status update for %s to %s was successful: %s' % (self.PrimaryUri, state, result))
@@ -310,8 +310,8 @@ class IngestPipeline():
       if len(dataProductIdentifierIDs) != 1:
         self.logger.error("CheckSIPContent for %s could not find single dataProductIdentifier/identifier in SIP dataProduct" % (self.JobId))
         return False
-      if dataProductIdentifierIDs[0].text != str(self.ArchiveId):
-        self.logger.error("CheckSIPContent for %s dataProductIdentifier/identifier %s does not match expected %s" % (self.JobId, dataProductIdentifierIDs[0].text, self.ArchiveId))
+      if dataProductIdentifierIDs[0].text != str(self.MomId):
+        self.logger.error("CheckSIPContent for %s dataProductIdentifier/identifier %s does not match expected %s" % (self.JobId, dataProductIdentifierIDs[0].text, self.MomId))
         return False
       dataProductIdentifierNames = dataProducts[0].xpath('dataProductIdentifier/name')
       if len(dataProductIdentifierNames) != 1:
@@ -337,21 +337,21 @@ class IngestPipeline():
     if self.Type == "MoM":
       try:
         start = time.time()
-        self.logger.debug("GetSIP for %s with mom2DPId %s - StorageTicket %s - FileName %s - Uri %s" % (self.JobId, self.ArchiveId, self.ticket, self.FileName, self.PrimaryUri))
-        sip = self.momClient.getSIP(self.ArchiveId, self.ticket, self.FileName, self.PrimaryUri, self.FileSize, self.MD5Checksum, self.Adler32Checksum)
+        self.logger.debug("GetSIP for %s with mom2DPId %s - StorageTicket %s - FileName %s - Uri %s" % (self.JobId, self.MomId, self.ticket, self.FileName, self.PrimaryUri))
+        sip = self.momClient.getSIP(self.MomId, self.ticket, self.FileName, self.PrimaryUri, self.FileSize, self.MD5Checksum, self.Adler32Checksum)
         self.SIP = sip.replace('<stationType>Europe</stationType>','<stationType>International</stationType>')
         self.logger.debug("GetSIP for %s took %ds" % (self.JobId, time.time() - start))
       except:
         self.logger.exception('Getting SIP from MoM failed')
         raise
-      self.logger.debug('SIP received for %s from MoM with size %d (%s): %s' % (self.JobId, len(self.SIP), humanreadablesize(len(self.SIP)), self.SIP[0:256]))
+      self.logger.debug('SIP received for %s from MoM with size %d (%s): %s' % (self.JobId, len(self.SIP), humanreadablesize(len(self.SIP)), self.SIP[0:1024]))
     else:
-      self.SIP = unspecifiedSIP.makeSIP(self.Project, self.ObsId, self.ArchiveId, self.ticket, self.FileName, self.FileSize, self.MD5Checksum, self.Adler32Checksum, self.Type)
+      self.SIP = unspecifiedSIP.makeSIP(self.Project, self.ObsId, self.MomId, self.ticket, self.FileName, self.FileSize, self.MD5Checksum, self.Adler32Checksum, self.Type)
       self.FileType = unspec_type
     if not self.CheckSIP():
       self.logger.debug('Got a malformed SIP from MoM: %s' % self.SIP[0:50])
       try:
-        self.SIP = unspecifiedSIP.makeSIP(self.Project, self.ObsId, self.ArchiveId, self.ticket, self.FileName, self.FileSize, self.MD5Checksum, self.Adler32Checksum, self.Type)
+        self.SIP = unspecifiedSIP.makeSIP(self.Project, self.ObsId, self.MomId, self.ticket, self.FileName, self.FileSize, self.MD5Checksum, self.Adler32Checksum, self.Type)
         self.FileType = unspec_type
       except Exception as e:
          self.logger.error('GetSIP failed: ' + str(e))
@@ -359,7 +359,6 @@ class IngestPipeline():
       self.logger.debug('Unspecified SIP created for %s: %s' % (self.JobId, self.SIP[0:400]))
       ###raise Exception('Got a malformed SIP from MoM: %s' % self.SIP[0:50])
     if not self.CheckSIPContent():
-      self.logger.error('SIP has invalid content for %s\n%s' % (self.JobId, self.SIP))
       raise PipelineError('Got a SIP with wrong contents from MoM for %s : %s' % (self.JobId, self.SIP), func.__name__)
 
   def SendSIP(self):
@@ -451,8 +450,8 @@ class IngestPipeline():
       try:
         if self.ticket:
           self.RetryRun(self.SendStatus, self.ltaRetry, 'Setting LTA status', IngestFailed)
-      except Exception as e:        
-        os.system('echo "Received unknown exception in SendStatus for %s to %s while handling another error:\n%s\n\nCheck LTA catalog and SRM!\n%s"|mailx -s "Warning: LTA catalog status update failed" ' % (self.JobId, IngestFailed, self._hidePassword(str(e)), self.PrimaryUri) + self.mailCommand)
+      except Exception as e:
+        os.system('echo "Received unknown exception in SendStatus for %s to %s while handling another error:\n%s\n\nCheck LTA catalog and SRM!\n%s"|mailx -s "Warning: LTA catalog status update failed" ' % (self.JobId, IngestFailed, str(e), self.PrimaryUri) + self.mailCommand)
         self.logger.error('Sent Mail: LTA catalog status update failed to ' + self.mailCommand)
         self.logger.exception('SendStatus IngestFailed failed')
       if pe.type == PipelineJobFailedError:
@@ -468,7 +467,7 @@ class IngestPipeline():
         self.logger.debug('Encountered PipelineNoProjectInLTAError for %s' % (self.JobId))
         raise
       elif pe.source == "SendStatus":
-        os.system('echo "Received unknown exception in SendStatus for %s to %s:\n%s\n\nCheck LTA catalog and SRM!\n%s"|mailx -s "Warning: LTA catalog status update failed" ' % (self.JobId, IngestFailed, self._hidePassword(str(e)), self.PrimaryUri) + self.mailCommand)
+        os.system('echo "Received unknown exception in SendStatus for %s to %s:\n%s\n\nCheck LTA catalog and SRM!\n%s"|mailx -s "Warning: LTA catalog status update failed" ' % (self.JobId, IngestFailed, str(e), self.PrimaryUri) + self.mailCommand)
         self.logger.error('Sent Mail: LTA catalog status update failed to ' + self.mailCommand)
         self.logger.error('SendStatus IngestFailed failed')
       else:
@@ -481,17 +480,6 @@ class IngestPipeline():
       if self.ticket:
         self.RetryRun(self.SendStatus, self.ltaRetry, 'Setting LTA status', IngestFailed)
       raise
-    
-  def _hidePassword(self, message):
-    ''' helper function which hides the password in the ltaClient url in the message
-    '''
-    try:
-      url = self.ltaClient._ServerProxy__host
-      password = url.split('@')[0].split(':')[-1] #assume url is http://user:pass@host:port
-      return message.replace(':'+password, ':HIDDENPASSWORD')
-    except Exception as e:
-      return message
-    
 
 #----------------------------------------------------------------- selfstarter -
 if __name__ == '__main__':

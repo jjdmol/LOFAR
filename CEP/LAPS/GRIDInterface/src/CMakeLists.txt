@@ -1,6 +1,9 @@
 # $Id$
 
-lofar_add_bin_scripts(
+
+install(PROGRAMS
   dpu_xml_interface.py
   pcombine.py
-  pipeline_job.py)
+  pipeline_job.py
+
+  DESTINATION bin)
