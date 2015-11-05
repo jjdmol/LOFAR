@@ -47,8 +47,8 @@ size_t SubbandSelection::pack(char* buffer) const
 {
   size_t offset = 0;
 
-  offset = MSH_pack(buffer, offset, itsCrosslets);
-  offset = MSH_pack(buffer, offset, itsBeamlets);
+  MSH_pack(buffer, offset, itsCrosslets);
+  MSH_pack(buffer, offset, itsBeamlets);
   memcpy(buffer + offset, &m_type, sizeof(uint16));
   offset += sizeof(uint16);
   
@@ -59,8 +59,8 @@ size_t SubbandSelection::unpack(const char *buffer)
 {
   size_t offset = 0;
 
-  offset = MSH_unpack(buffer, offset, itsCrosslets);
-  offset = MSH_unpack(buffer, offset, itsBeamlets);
+  MSH_unpack(buffer, offset, itsCrosslets);
+  MSH_unpack(buffer, offset, itsBeamlets);
   memcpy(&m_type, buffer + offset, sizeof(uint16));
   offset += sizeof(uint16);
 

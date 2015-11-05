@@ -11,6 +11,7 @@ from UserDict import DictMixin
 
 from lofarpipe.cuisine.ingredient import WSRTingredient
 from lofarpipe.support.utilities import string_to_list, is_iterable
+from lofar.parameterset import parameterset
 
 #       These are currently only used by lofarrecipe.run_task to provide default
 #              input and output dicts based on copying metadata from the parent.
@@ -193,6 +194,13 @@ class DictField(Field):
     """
     def is_valid(self, value):
         return isinstance(value, dict)
+
+class ParsetField(Field):
+    """
+    A Field which accepts a parameterset object.
+    """
+    def is_valid(self, value):
+        return isinstance(value, parameterset)
 
 class FileList(ListField):
     """

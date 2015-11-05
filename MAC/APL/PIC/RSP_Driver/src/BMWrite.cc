@@ -36,11 +36,8 @@
 
 using namespace blitz;
 using namespace LOFAR;
-namespace LOFAR {
-  using namespace RSP_Protocol;
-  using namespace EPA_Protocol;
-  using namespace RTC;
-  namespace RSP {
+using namespace RSP;
+using namespace RTC;
 
 BMWrite::BMWrite(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, 1)
@@ -115,5 +112,3 @@ GCFEvent::TResult BMWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   
   return GCFEvent::HANDLED;
 }
-  } // namespace RSP
-} // namespace LOFAR

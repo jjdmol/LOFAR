@@ -26,9 +26,10 @@
 #define NSTIMESTAMP_H_
 
 #include <Common/LofarTypes.h>
+#include <time.h>
 #include <sys/time.h>
 #include <string.h>
-#include <iosfwd>
+#include <iostream>
 #include <limits.h>
 #include <cmath>
 

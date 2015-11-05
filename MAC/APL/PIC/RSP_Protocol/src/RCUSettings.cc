@@ -83,11 +83,17 @@ size_t RCUSettings::getSize() const
 size_t RCUSettings::pack  (char* buffer) const
 {
   size_t offset = 0;
-  return MSH_pack(buffer, offset, m_registers);
+  
+  MSH_pack(buffer, offset, m_registers);
+
+  return offset;
 }
 
 size_t RCUSettings::unpack(const char *buffer)
 {
   size_t offset = 0;
-  return MSH_unpack(buffer, offset, m_registers);
+
+  MSH_unpack(buffer, offset, m_registers);
+
+  return offset;
 }

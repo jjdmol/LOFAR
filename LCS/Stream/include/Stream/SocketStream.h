@@ -46,7 +46,7 @@ class SocketStream : public FileDescriptorBasedStream
     };
 
     SocketStream(const std::string &hostname, uint16 _port, Protocol, Mode,
-                 time_t deadline = 0, bool doAccept = true, const std::string &bind_local_iface = "");
+                 time_t deadline = 0, bool doAccept = true);
     virtual ~SocketStream();
 
     FileDescriptorBasedStream *detach();
@@ -66,12 +66,10 @@ class SocketStream : public FileDescriptorBasedStream
      * Returns the number of messages received if ok, or throws on syscall error
      */
     unsigned recvmmsg( void *bufBase, unsigned maxMsgSize,
-                       std::vector<unsigned> &recvdMsgSizes ) const;
+                       std::vector<unsigned> &recvdMsgSizes );
 
     // Allow individual recv()/send() calls to last for 'timeout' seconds before returning EWOULDBLOCK
     void setTimeout(double timeout);
-
-    int getPort() const { return port; }
 
   private:
     const std::string hostname;

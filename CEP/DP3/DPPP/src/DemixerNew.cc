@@ -67,8 +67,7 @@ namespace LOFAR {
       info() = infoIn;
       // Update the info of this object.
       info().setNeedVisData();
-      info().setWriteData();
-      info().setWriteFlags();
+      info().setNeedWrite();
       // Handle possible data selection.
       itsFilter.updateInfo (getInfo());
       // Update itsDemixInfo and info().

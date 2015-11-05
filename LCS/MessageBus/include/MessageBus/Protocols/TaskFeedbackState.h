@@ -23,6 +23,7 @@
 #ifndef LOFAR_MESSAGEBUS_TASK_FEEDBACK_STATUS_H
 #define LOFAR_MESSAGEBUS_TASK_FEEDBACK_STATUS_H
 
+#ifdef HAVE_QPID
 #include <MessageBus/Message.h>
 #include <Common/ParameterSet.h>
 #include <Common/StringUtil.h>
@@ -31,12 +32,9 @@ namespace LOFAR {
 
 namespace Protocols {
 
-class TaskFeedbackState: public MessageContent
+class TaskFeedbackState: public Message
 {
 public:
-  Property type;
-  Property state;
-
   TaskFeedbackState(
     // Name of the service or process producing this message
     const std::string &from,
@@ -54,7 +52,7 @@ public:
     // Payload: a boolean indicating success
     bool success
   ):
-  MessageContent(
+  Message(
     from,
     forUser,
     summary,
@@ -63,8 +61,6 @@ public:
     momID,
     sasID)
   {
-    addPayloadProperties();
-
     setXMLPayload(formatString(
       "<task>\n"
       "  <type>observation</type>\n"
@@ -76,21 +72,30 @@ public:
   // Parse a message
   TaskFeedbackState(const qpid::messaging::Message qpidMsg)
   :
-    MessageContent(qpidMsg)
+    Message(qpidMsg)
   {
-    addPayloadProperties();
   }
 
-  void addPayloadProperties()
+  // Read a message from disk (header + payload)
+  TaskFeedbackState(const std::string &rawContent)
+  :
+    Message(rawContent)
   {
-    type.attach (&itsContent, "message/payload/task/type");
-    state.attach(&itsContent, "message/payload/task/state");
+  }
+
+  ParameterSet feedback() const {
+    ParameterSet result;
+    result.adoptBuffer(payload());
+
+    return result;
   }
 };
 
 } // namespace Protocols
 
 } // namespace LOFAR
+
+#endif
 
 #endif
 

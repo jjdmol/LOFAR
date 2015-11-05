@@ -24,7 +24,7 @@ from lofarpipe.support.loggingdecorators import xml_node, mail_log_on_exception
 from lofar.parameterset import parameterset
 
 
-class longbaseline_pipeline(control):
+class msss_imager_pipeline(control):
     """
     The Automatic MSSS long baselione pipeline is used to generate MSSS 
     measurement sets combining information of multiple subbands and or 
@@ -78,7 +78,7 @@ class longbaseline_pipeline(control):
         Define the individual tasks that comprise the current pipeline.
         This method will be invoked by the base-class's `go()` method.
         """
-        self.logger.info("Starting longbaseline pipeline")
+        self.logger.info("Starting imager pipeline")
 
         # Define scratch directory to be used by the compute nodes.
         self.scratch_directory = os.path.join(
@@ -153,17 +153,15 @@ class longbaseline_pipeline(control):
                                            str(subbandgroups_per_ms))
         
         # Create a parset-file containing the metadata for MAC/SAS at nodes
-        metadata_file = "%s_feedback_Correlated" % (self.parset_file,)
-        self.run_task("get_metadata", output_ms_mapfile,
+        metadata = self.run_task("get_metadata", output_ms_mapfile,
             parset_prefix = (
                 full_parset.getString('prefix') +
                 full_parset.fullModuleName('DataProducts')
             ),
-            product_type = "Correlated",
-            metadata_file = metadata_file)
+            product_type = "Correlated")["metadata"]
 
         self.send_feedback_processing(toplevel_meta_data)
-        self.send_feedback_dataproducts(parameterset(metadata_file))
+        self.send_feedback_dataproducts(metadata)
 
         return 0
 
@@ -371,4 +369,4 @@ class longbaseline_pipeline(control):
 
 
 if __name__ == '__main__':
-    sys.exit(longbaseline_pipeline().main())
+    sys.exit(msss_imager_pipeline().main())

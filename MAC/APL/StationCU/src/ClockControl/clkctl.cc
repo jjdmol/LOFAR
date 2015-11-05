@@ -31,7 +31,6 @@
 #include "clkctl.h"
 
 namespace LOFAR {
-	using namespace Clock_Protocol;
 	using namespace LOFAR::GCF::TM;
 
 ClkCtl::ClkCtl(const string& name) :

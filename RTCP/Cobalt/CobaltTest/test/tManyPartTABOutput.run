@@ -1,8 +1,5 @@
 #!/bin/bash
 
-source MessageFuncs.sh
-create_queue lofar.task.feedback.dataproducts
-
 # remove any output files from prev runs
 rm -rf tManyPartTABOutput-data/
 

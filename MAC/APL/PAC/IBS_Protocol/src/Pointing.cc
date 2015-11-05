@@ -102,7 +102,7 @@ size_t Pointing::getSize() const
 //
 size_t Pointing::pack  (char* buffer) const
 {
-	size_t offset = 0;
+	uint32 offset = 0;
 
 	memcpy(buffer + offset, &itsAngle2Pi, sizeof(double));
 	offset += sizeof(double);
@@ -111,7 +111,7 @@ size_t Pointing::pack  (char* buffer) const
 	offset += itsTime.pack(buffer + offset);
 	memcpy(buffer + offset, &itsDuration, sizeof(uint));
 	offset += sizeof(uint);
-	offset = MSH_pack(buffer, offset, itsType);
+	MSH_pack(buffer, offset, itsType);
 
 	return (offset);
 }
@@ -121,7 +121,7 @@ size_t Pointing::pack  (char* buffer) const
 //
 size_t Pointing::unpack(const char *buffer)
 {
-	size_t offset = 0;
+	uint32 offset = 0;
 
 	memcpy(&itsAngle2Pi, buffer + offset, sizeof(double));
 	offset += sizeof(double);
@@ -130,7 +130,7 @@ size_t Pointing::unpack(const char *buffer)
 	offset += itsTime.unpack(buffer + offset);
 	memcpy(&itsDuration, buffer + offset, sizeof(uint));
 	offset += sizeof(uint);
-	offset = MSH_unpack(buffer , offset, itsType);
+	MSH_unpack(buffer , offset, itsType);
 
 	return (offset);
 }

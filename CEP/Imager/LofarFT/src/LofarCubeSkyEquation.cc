@@ -41,11 +41,7 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
-#if defined(casacore)
-#include <lattices/LEL/LatticeExpr.h>
-#else
 #include <lattices/Lattices/LatticeExpr.h>
-#endif
 
 #include <synthesis/MeasurementComponents/SkyModel.h>
 #include <LofarFT/LofarCubeSkyEquation.h>

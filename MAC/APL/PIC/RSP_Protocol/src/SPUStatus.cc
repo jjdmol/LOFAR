@@ -44,11 +44,17 @@ size_t SPUStatus::getSize() const
 size_t SPUStatus::pack  (char* buffer) const
 {
   size_t offset = 0;
-  return MSH_pack(buffer, offset, itsSPUStatus);
+  
+  MSH_pack(buffer, offset, itsSPUStatus);
+
+  return offset;
 }
 
 size_t SPUStatus::unpack(const char *buffer)
 {
   size_t offset = 0;
-  return MSH_unpack(buffer, offset, itsSPUStatus);
+  
+  MSH_unpack(buffer, offset, itsSPUStatus);
+
+  return offset;
 }

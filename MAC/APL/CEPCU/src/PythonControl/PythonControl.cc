@@ -42,7 +42,6 @@
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/CTState.h>
 #include <OTDB/TreeValue.h>
-#include <MessageBus/Protocols/TaskFeedbackState.h>
 
 #include "PythonControl.h"
 #include "PVSSDatapointDefs.h"
@@ -54,8 +53,6 @@ using namespace boost::posix_time;
 using qpid::messaging::Message;
 
 namespace LOFAR {
-	using namespace DP_Protocol;
-	using namespace Controller_Protocol;
 	using namespace APLCommon;
 	using namespace GCF::TM;
 	using namespace GCF::PVSS;
@@ -531,11 +528,10 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 		if (&port == itsQueueTimer) {
 			Message		msg;
 			if (itsMsgQueue->getMessage(msg, 0.1)) {
-				Protocols::TaskFeedbackState content(msg.qpidMsg());
-				string	obsIDstr = content.sasid.get();
+				string	obsIDstr = msg.getXMLvalue("message.header.ids.sasid");
 				LOG_INFO_STR("Received message from task " << obsIDstr);
 				if (atoi(obsIDstr.c_str()) == itsObsID) {
-					string	result = content.state.get();
+					string	result = msg.getXMLvalue("message.payload.task.state");
 					if (result == "aborted") {
 						itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
 					}
@@ -548,9 +544,6 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 					TRAN(PythonControl::finishing_state);
 					break;
 				} // ID matches?
-				else {
-					itsMsgQueue->reject(msg);
-				}
 			} // getMsg
 			itsQueueTimer->setTimer(QUEUE_POLL_TIMEOUT);
 		}

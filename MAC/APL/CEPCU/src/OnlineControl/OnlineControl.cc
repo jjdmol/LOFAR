@@ -31,7 +31,7 @@
 #include <Common/Exceptions.h>
 #include <Common/SystemUtil.h>
 #include <Common/hexdump.h>
-#include <MessageBus/Protocols/TaskFeedbackState.h>
+#include <MessageBus/Message.h>
 #include <ApplCommon/StationInfo.h>
 #include <ApplCommon/Observation.h>
 #include <ApplCommon/LofarDirs.h>
@@ -59,8 +59,6 @@ using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {
-	using namespace DP_Protocol;
-	using namespace Controller_Protocol;
 	using namespace APLCommon;
 	using namespace OTDB;
 	namespace CEPCU {
@@ -331,11 +329,10 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		if (&port == itsQueueTimer) {
 			Message	msg;
 			if (itsMsgQueue->getMessage(msg, 0.1)) {
-				Protocols::TaskFeedbackState content(msg.qpidMsg());
-				string	obsIDstr = content.sasid.get();
+				string	obsIDstr = msg.getXMLvalue("message.header.ids.sasid");
 				LOG_INFO_STR("Received message from task " << obsIDstr);
 				if (atoi(obsIDstr.c_str()) == itsObsID) {
-					string	result = content.state.get();
+					string	result = msg.getXMLvalue("message.payload.task.state");
 					if (result == "aborted") {
 						itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
 					}
@@ -348,9 +345,6 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 					TRAN(OnlineControl::finishing_state);
 					break;
 				} // my obsid
-				else {
-					itsMsgQueue->reject(msg);
-				}
 			} // getMsg
 			itsQueueTimer->setTimer(QUEUE_POLL_TIMEOUT);
 		}

@@ -29,7 +29,6 @@
 #include "Controller_Protocol.ph"
 
 namespace LOFAR {
-  using namespace Controller_Protocol;
   namespace APLCommon {
 
 typedef struct stateSignal {

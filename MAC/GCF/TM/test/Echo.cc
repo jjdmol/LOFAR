@@ -32,9 +32,8 @@ static	int			gSeqnr;
 static	LOFAR::GCF::TM::GCFTCPPort*	gClientPort;
 
 namespace LOFAR {
-  using namespace Echo_Protocol;
-  namespace GCF {
-    namespace TM {
+ namespace GCF {
+  namespace TM {
 
 Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 {
