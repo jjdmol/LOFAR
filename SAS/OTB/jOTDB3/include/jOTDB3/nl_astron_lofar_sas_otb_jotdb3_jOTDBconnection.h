@@ -193,22 +193,6 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
- * Method:    getModifiedTrees
- * Signature: (Ljava/lang/String;S)Ljava/util/Vector;
- */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getModifiedTrees__Ljava_lang_String_2S
-  (JNIEnv *, jobject, jstring, jshort);
-
-/*
- * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
- * Method:    getModifiedTrees
- * Signature: (Ljava/lang/String;)Ljava/util/Vector;
- */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getModifiedTrees__Ljava_lang_String_2
-  (JNIEnv *, jobject, jstring);
-
-/*
- * Class:     nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection
  * Method:    newGroupID
  * Signature: ()I
  */

@@ -47,14 +47,11 @@ namespace rfiStrategy {
 
 			if(_restoreRevised && !_restoreContaminated)
 			{
-				//TimeFrequencyData *contaminatedData =
-				//	TimeFrequencyData::CreateTFDataFromDiff(oldContaminated, artifacts.RevisedData());
-				//contaminatedData->SetMask(oldContaminated);
-				//artifacts.SetContaminatedData(*contaminatedData);
-				//delete contaminatedData;
-				
-				oldContaminated.Subtract(artifacts.RevisedData());
-				artifacts.SetContaminatedData(oldContaminated);
+				TimeFrequencyData *contaminatedData =
+					TimeFrequencyData::CreateTFDataFromDiff(oldContaminated, artifacts.RevisedData());
+				contaminatedData->SetMask(oldContaminated);
+				artifacts.SetContaminatedData(*contaminatedData);
+				delete contaminatedData;
 			}
 		} else {
 			PerformFrequencyChange(artifacts, listener);

@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,14 +24,10 @@
 
 package nl.astron.lofar.sas.otb;
 
-import java.net.MalformedURLException;
 import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.HashMap;
-
-import nl.astron.lofar.sas.otb.exceptions.ParmDBConfigurationException;
-import nl.astron.lofar.sas.otb.jparmfacade.jParmFacadeInterface;
+import nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.ParmDBConfigurationHelper;
 import nl.astron.lofar.sas.otbcomponents.OTBInputFieldBuilder;
@@ -109,6 +105,7 @@ public class SharedVars {
             itsTreeState=OtdbRmi.getRemoteOTDB().getTreeInfo(aTreeID,false).state;
         } catch (RemoteException ex) {
             logger.debug("Exception during setTreeState(TreeID: "+aTreeID+")" );
+            ex.printStackTrace();
         }
     }
     
@@ -149,7 +146,7 @@ public class SharedVars {
                 
                 itsjParmFacade = (jParmFacadeInterface) Naming.lookup(aRC);
                 
-            } catch (ParmDBConfigurationException | NotBoundException | MalformedURLException | RemoteException e) {
+            } catch (Throwable e) {
                 logger.error("jParmFacade could not be loaded : "+e.getMessage());
             }
         }

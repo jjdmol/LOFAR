@@ -4,38 +4,30 @@
 #                                                             Marcel Loose, 2011
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
-from __future__ import with_statement
+
 import os
 import sys
-import copy
+
 import lofarpipe.support.lofaringredient as ingredient
 
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.data_map import DataMap, validate_data_maps
+from lofarpipe.support.group_data import load_data_map, store_data_map
+from lofarpipe.support.group_data import validate_data_maps
 
 
 class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Recipe to correct outliers in the gain solutions of an parmdb,
-    using the program `parmexportcal`   
+    using the program `parmexportcal` or an minimal implementation of the edit_parmdb
+    program.
     The main purpose of this program is to strip off the time axis information
     from a instrument model (a.k.a ParmDB)
-    -or-
-    a minimal implementation of the edit_parmdb program. Search all gains for
-    outliers and swap these for the median
 
-    1. Validate input
-    2. load mapfiles, validate if a target output location is provided
-    3. Call node side of the recipe
-    4. validate performance, return corrected files
+    **Arguments**
 
-    **Command line arguments**
-
-    1. A mapfile describing the data to be processed.
-    2. A mapfile with target location <mapfiles are validated if present>
-    
+    A mapfile describing the data to be processed.
     """
     inputs = {
         'executable': ingredient.StringField(
@@ -43,6 +35,11 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
             default="",
             help="Full path to the `parmexportcal` executable, not settings this"
             " results in edit_parmdb behaviour"
+        ),
+        'initscript' : ingredient.FileField(
+            '--initscript',
+            help="The full path to an (Bourne) shell script which will "
+                 "intialise the environment (i.e., ``lofarinit.sh``)"
         ),
         'suffix': ingredient.StringField(
             '--suffix',
@@ -62,26 +59,18 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
         'sigma': ingredient.FloatField(
             '--sigma',
             default=1.0,
-            help="Clip at sigma * median: (not used by parmexportcal"
-        ),
-        'export_instrument_model': ingredient.FloatField(
-            '--use-parmexportcal',
-            default=False,
-            help="Select between parmexportcal and edit parmdb"
+            help="Clip at sigma * median: activates 'edit_parmdb' functionality"
         )
     }
 
     outputs = {
-        'mapfile': ingredient.FileField(help="mapfile with corrected parmdbs")
+        'mapfile': ingredient.FileField()
     }
 
 
     def go(self):
-        super(gainoutliercorrection, self).go()
         self.logger.info("Starting gainoutliercorrection run")
-        # ********************************************************************
-        # 1. Validate input
-        # if sigma is none use default behaviour and use executable: test if
+        #if sigma is none use default behaviour and use executable: test if
         # It excists
         executable = self.inputs['executable']
         if executable == "":
@@ -92,68 +81,58 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
                 "path: {0}".format(self.inputs['executable']))
             self.logger.warn("Defaulting to edit_parmdb behaviour")
 
-        # ********************************************************************
-        # 2. load mapfiles, validate if a target output location is provided
+        super(gainoutliercorrection, self).go()
+
+        #                            Load file <-> output node mapping from disk
+        # ----------------------------------------------------------------------
         args = self.inputs['args']
         self.logger.debug("Loading input-data mapfile: %s" % args[0])
-        indata = DataMap.load(args[0])
+        indata = load_data_map(args[0])
         if len(args) > 1:
             self.logger.debug("Loading output-data mapfile: %s" % args[1])
-            outdata = DataMap.load(args[1])
+            outdata = load_data_map(args[1])
             if not validate_data_maps(indata, outdata):
                 self.logger.error(
                     "Validation of input/output data mapfiles failed"
                 )
                 return 1
         else:
-            outdata = copy.deepcopy(indata)
-            for item in outdata:
-                item.file = os.path.join(
+            outdata = [
+                (host,
+                 os.path.join(
                     self.inputs['working_directory'],
                     self.inputs['job_name'],
-                    (os.path.splitext(os.path.basename(item.file))[0] +
-                     self.inputs['suffix'])
-                )
+                    (os.path.splitext(os.path.basename(infile))[0] +
+                     self.inputs['suffix']))
+                 ) for host, infile in indata
+            ]
 
-        # Update the skip fields of the two maps. If 'skip' is True in any of
-        # these maps, then 'skip' must be set to True in all maps.
-        for x, y in zip(indata, outdata):
-            x.skip = y.skip = (x.skip or y.skip)
-
-        # ********************************************************************
-        # 3. Call node side of the recipe
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
-        indata.iterator = outdata.iterator = DataMap.SkipIterator
         jobs = []
-        for inp, outp in zip(indata, outdata):
+        for host, infile, outfile in (x + (y[1],)
+            for x, y in zip(indata, outdata)):
             jobs.append(
                 ComputeJob(
-                    outp.host,
+                    host,
                     command,
                     arguments=[
-                        inp.file,
-                        outp.file,
+                        infile,
+                        outfile,
                         self.inputs['executable'],
-                        self.environment,
-                        self.inputs['sigma'],
-                        self.inputs['export_instrument_model']
+                        self.inputs['initscript'],
+                        self.inputs['sigma']
                      ]
                 )
             )
         self._schedule_jobs(jobs)
-        for job, outp in zip(jobs, outdata):
-            if job.results['returncode'] != 0:
-                outp.skip = True
 
-        # ********************************************************************
-        # 4. validate performance, return corrected files
         if self.error.isSet():
             self.logger.warn("Detected failed gainoutliercorrection job")
             return 1
         else:
             self.logger.debug("Writing instrument map file: %s" %
                               self.inputs['mapfile'])
-            outdata.save(self.inputs['mapfile'])
+            store_data_map(self.inputs['mapfile'], outdata)
             self.outputs['mapfile'] = self.inputs['mapfile']
             return 0
 

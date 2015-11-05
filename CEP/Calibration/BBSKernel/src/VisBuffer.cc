@@ -37,7 +37,10 @@
 #include <measures/Measures/MCPosition.h>
 #include <measures/Measures/MCBaseline.h>
 #include <casa/Quanta/MVuvw.h>
+//#include <casa/complex.h>
 #include <casa/BasicSL/Complex.h>
+//#include <casa/BasicMath/Math.h>
+//#include <casa/BasicSL/Constants.h>
 
 namespace LOFAR
 {
@@ -210,34 +213,33 @@ void VisBuffer::flagsNot()
 
 void VisBuffer::flagsNaN()
 {
-    if(!hasFlags())
+  if(!hasFlags())
+  {
+    return;
+  }
+  
+  // Loop over all samples: nSamples()
+  typedef boost::multi_array<dcomplex, 4>::element* samplesIterator;
+  typedef boost::multi_array<flag_t, 4>::element* flagsIterator;
+  flagsIterator flagsIt=flags.data();
+  
+  for(samplesIterator samplesIt = samples.data(), end = samples.data() + samples.num_elements(); samplesIt != end;)
+  {   
+    // If any of the correlations is a NaN, flag all correlations
+    for(unsigned int i=0; i<nCorrelations(); i++)
     {
-        return;
-    }
-
-    typedef boost::multi_array<dcomplex, 4>::element* sample_iterator;
-    typedef boost::multi_array<flag_t, 4>::element* flag_iterator;
-
-    flag_iterator flag_it = flags.data();
-    for(sample_iterator sample_it = samples.data(), sample_end = samples.data()
-        + samples.num_elements(); sample_it != sample_end;)
-    {
-        // If any of the correlations is NaN, flag all correlations.
-        for(size_t i = 0; i < nCorrelations(); i++)
+      if(casa::isNaN(*(samplesIt+i)))
+      {
+        for(unsigned int j=0; j<nCorrelations(); j++)
         {
-            if(casa::isNaN(sample_it[i]))
-            {
-                for(size_t j = 0; j < nCorrelations(); j++)
-                {
-                    flag_it[j] |= 1;
-                }
-
-                break;
-            }
+          *(flagsIt+j) = *(flagsIt+j) | 1;
         }
-        flag_it += nCorrelations();
-        sample_it += nCorrelations();
-    }
+        break;
+      }
+    }      
+    flagsIt=flagsIt+nCorrelations();
+    samplesIt=samplesIt+nCorrelations();
+  }
 }
 
 } //# namespace BBS

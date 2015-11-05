@@ -9,12 +9,12 @@ import tempfile
 
 import pyrap.tables as tb                                                       #@UnresolvedImport
 from lofarpipe.support.utilities import create_directory                        #@UnresolvedImport
-from lofarpipe.recipes.nodes.imager_prepare import imager_prepare \
-     as imager_prepare_node
+from lofarpipe.recipes.nodes.imager_prepare import imager_prepare         #@UnresolvedImport
 from logger import logger
-from lofarpipe.support.data_map import DataMap
 
-class ImagerPrepareTestWrapper(imager_prepare_node):
+
+
+class ImagerPrepareTestWrapper(imager_prepare):
     """
     Wrapper for the imager_prepare allows overwriting of class members
     """
@@ -24,14 +24,6 @@ class ImagerPrepareTestWrapper(imager_prepare_node):
         LOFARnodeTCP.
         """
         self.logger = logger()
-        self.dppp_call_vars = None
-        self.environment = None
-
-    def _dppp_call(self, working_dir, ndppp, cmd, environment):
-        self.dppp_call_vars = (working_dir, ndppp, cmd, environment)
-
-    def _get_nchan_from_ms(self, file):
-        return 4
 
 
 class ImagerPrepareTest(unittest.TestCase):
@@ -43,11 +35,10 @@ class ImagerPrepareTest(unittest.TestCase):
         super(ImagerPrepareTest, self).__init__(arg)
 
     def setUp(self):
-        self.ImagerPrepareTestWrapper = ImagerPrepareTestWrapper()
-        self.test_path = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
+        self.imager_create_dbs = ImagerPrepareTestWrapper()
+        self.test_path = tempfile.mkdtemp()
 
     def tearDown(self):
-        shutil.rmtree(self.test_path)
         pass
 
     def test__copy_input_files_multi_file(self):
@@ -78,7 +69,7 @@ class ImagerPrepareTest(unittest.TestCase):
             input_map = [("lce072", test_file_path),
                          ("lce072", test_file_path_2),
                          ("lce072", test_file_path_3)]
-            self.ImagerPrepareTestWrapper._copy_input_files(target_dir, input_map)
+            self.imager_create_dbs._copy_input_files(target_dir, input_map)
 
             #Validate that the file has been copied
             fileexists = os.path.exists(test_file_path)
@@ -87,78 +78,11 @@ class ImagerPrepareTest(unittest.TestCase):
             self.assertTrue(fileexists2)
 
             #validate that a log entry has been entered for the missing file
-            last_log_entry = self.ImagerPrepareTestWrapper.logger.last()
+            last_log_entry = self.imager_create_dbs.logger.last()
             target_log_entry = "Failed loading file: {0}".format(test_file_path_3)
             self.assertTrue(last_log_entry[0] == "info")
             self.assertTrue(last_log_entry[1] == target_log_entry,
                             "{0} != {1}".format(last_log_entry[1], target_log_entry))
-
-
-
-    def test_run_dppp(self):
-        """
-        This unittest border a functional test:
-        framework is mucked by using an muckable function
-        """
-        working_dir = ""
-
-        time_slice_dir_path = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
-        slices_per_image = 2
-        input_map = [("lce072", "test_file_path1"),
-                         ("lce072", "test_file_path2"),
-                         ("lce072", "test_file_path3"),
-                         ("lce072", "test_file_path4")]
-
-        input_datamap = DataMap()
-        for entry in input_map:
-            input_datamap.append(entry)
-
-        subbands_per_image = 2
-        collected_ms_dir_name = ""
-        fp = open(os.path.join(self.test_path, "parset"), 'w')
-        fp.write("key=value\n")
-        fp.close()
-        parset = os.path.join(self.test_path, "parset")
-        ndppp = ""
-        init_script = ""
-
-        sut = ImagerPrepareTestWrapper()
-        output = sut._run_dppp(working_dir, time_slice_dir_path, slices_per_image,
-                  input_datamap, subbands_per_image, collected_ms_dir_name, parset,
-                  ndppp)
-
-        # The output should contain two timeslices ms prepended with the time_slice_dir_path
-        expected_output = [os.path.join(time_slice_dir_path, "time_slice_0.dppp.ms"),
-                           os.path.join(time_slice_dir_path, "time_slice_1.dppp.ms")]
-        self.assertTrue(output == expected_output,
-            "_run_dppp did not return timeslice ms: {0} !=  {1}".format(output,
-                                 expected_output))
-
-        # Two parset should be written in the time_slice_dir_path
-        parset_1_content_expected = [('replace', 'uselogger', 'True'),
-                                     ('replace', 'avg1.freqstep', '4'),
-                 ('replace', 'msin', "['test_file_path1', 'test_file_path2']"),
-                 ('replace', 'msout', '{0}'.format(
-                    os.path.join(time_slice_dir_path, "time_slice_0.dppp.ms")))]
-
-        parset_1_output = eval(open(os.path.join(time_slice_dir_path, \
-                "time_slice_0.dppp.ms.ndppp.par")).read())
-        self.assertTrue(parset_1_output == parset_1_content_expected,
-                "\n{0} != \n{1}".format(parset_1_output, parset_1_content_expected))
-
-        # Two parset should be written in the time_slice_dir_path
-        parset_2_content_expected = [('replace', 'uselogger', 'True'),
-                                     ('replace', 'avg1.freqstep', '4'),
-                 ('replace', 'msin', "['test_file_path3', 'test_file_path4']"),
-                 ('replace', 'msout', '{0}'.format(
-                    os.path.join(time_slice_dir_path, "time_slice_1.dppp.ms")))]
-
-        parset_2_output = eval(open(os.path.join(time_slice_dir_path, \
-                "time_slice_1.dppp.ms.ndppp.par")).read())
-        self.assertTrue(parset_2_output == parset_2_content_expected,
-                "\n{0} != \n{1}".format(parset_2_output, parset_2_content_expected))
-        
-        shutil.rmtree(time_slice_dir_path)
 
 
 if __name__ == "__main__":

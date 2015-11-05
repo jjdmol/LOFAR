@@ -16,55 +16,47 @@ import sys
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_time
 from lofarpipe.support.parset import patched_parset
+from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofar.parameterset import parameterset
 
 class dppp(LOFARnodeTCP):
-    """
-    Call ndppp with a parset augmented with locally calculate parameters:
-        
-    1. preparations. set nthreads, Validate input, clean workspace
-    2. Perform house keeping, test if work is already done
-    3. Update the parset with locally calculate information
-    4. Add ms names to the parset, start/end times if availabe, etc.
-    5. Add demixing parameters to the parset
-    6. Run ndppp
-    
-    """
 
-    def run(self, infile, outfile, parmdb, sourcedb,
-            parsetfile, executable, environment, demix_always, demix_if_needed,
-            start_time, end_time, nthreads, clobber):
-        """
-        This function contains all the needed functionality
-        """
-        # Debugging info
-        self.logger.debug("infile          = %s" % infile)
-        self.logger.debug("outfile         = %s" % outfile)
-        self.logger.debug("parmdb          = %s" % parmdb)
-        self.logger.debug("sourcedb        = %s" % sourcedb)
-        self.logger.debug("parsetfile      = %s" % parsetfile)
-        self.logger.debug("executable      = %s" % executable)
-        self.logger.debug("environment     = %s" % environment)
-        self.logger.debug("demix_always    = %s" % demix_always)
-        self.logger.debug("demix_if_needed = %s" % demix_if_needed)
-        self.logger.debug("start_time      = %s" % start_time)
-        self.logger.debug("end_time        = %s" % end_time)
-        self.logger.debug("nthreads        = %s" % nthreads)
-        self.logger.debug("clobber         = %s" % clobber)
+    def run(
+        self, infile, outfile, parmdb, sourcedb,
+        parsetfile, executable, initscript, demix_sources,
+        start_time, end_time, nthreads, clobber
+    ):
+        # Put arguments that we need to pass to some private methods in a dict
+        kwargs = {
+            'infile' : infile,
+            'outfile' : outfile,
+            'parmdb' : parmdb,
+            'sourcedb' : sourcedb,
+            'parsetfile' : parsetfile,
+            'demix_sources' : demix_sources,
+            'start_time' : start_time,
+            'end_time' : end_time
+        }
 
-        self.environment.update(environment)
-
-        # ********************************************************************
-        # 1. preparations. set nthreads, Validate input, clean workspace
-        #           
         if not nthreads:
             nthreads = 1
-        if not outfile:
-            outfile = infile
-        tmpfile = outfile + '.tmp'
+
+        # Debugging info
+        self.logger.debug("infile        = %s" % infile)
+        self.logger.debug("outfile       = %s" % outfile)
+        self.logger.debug("parmdb        = %s" % parmdb)
+        self.logger.debug("sourcedb      = %s" % sourcedb)
+        self.logger.debug("parsetfile    = %s" % parsetfile)
+        self.logger.debug("executable    = %s" % executable)
+        self.logger.debug("initscript    = %s" % initscript)
+        self.logger.debug("demix_sources = %s" % demix_sources)
+        self.logger.debug("start_time    = %s" % start_time)
+        self.logger.debug("end_time      = %s" % end_time)
+        self.logger.debug("nthreads      = %s" % nthreads)
+        self.logger.debug("clobber       = %s" % clobber)
 
         # Time execution of this job
         with log_time(self.logger):
@@ -79,72 +71,25 @@ class dppp(LOFARnodeTCP):
                 self.logger.error("Executable %s not found" % executable)
                 return 1
 
-            # Make sure that we start with a clean slate
-            shutil.rmtree(tmpfile, ignore_errors=True)
             if clobber:
-                if outfile == infile:
-                    self.logger.warn(
-                        "Input and output are identical, not clobbering %s" %
-                        outfile
-                    )
-                else:
-                    self.logger.info("Removing previous output %s" % outfile)
-                    shutil.rmtree(outfile, ignore_errors=True)
+                self.logger.info("Removing previous output %s" % outfile)
+                shutil.rmtree(outfile, ignore_errors=True)
 
-            # *****************************************************************
-            # 2. Perform house keeping, test if work is already done
-            # If input and output files are different, and if output file
-            # already exists, then we're done.
-            if outfile != infile and os.path.exists(outfile):
-                self.logger.info(
-                    "Output file %s already exists. We're done." % outfile
-                )
-                self.outputs['ok'] = True
-                return 0
-
-            # Create a working copy if input and output are identical, to
-            # avoid corrupting the original file if things go awry.
-            if outfile == infile:
-                self.logger.info(
-                    "Creating working copy: %s --> %s" % (infile, tmpfile)
-                )
-                shutil.copytree(infile, tmpfile)
-
-            # Limit number of threads used.
-            self.environment['OMP_NUM_THREADS'] = str(nthreads)
+            # Initialise environment. Limit number of threads used.
+            env = read_initscript(self.logger, initscript)
+            env['OMP_NUM_THREADS'] = str(nthreads)
             self.logger.debug("Using %s threads for NDPPP" % nthreads)
-
-            # *****************************************************************
-            # 3. Update the parset with locally calculate information
-
-            # Put arguments we need to pass to some private methods in a dict
-            kwargs = {
-                'infile' : infile,
-                'tmpfile' : tmpfile,
-                'parmdb' : parmdb,
-                'sourcedb' : sourcedb,
-                'parsetfile' : parsetfile,
-                'demix_always' : demix_always,
-                'demix_if_needed' : demix_if_needed,
-                'start_time' : start_time,
-                'end_time' : end_time
-            }
 
             # Prepare for the actual DPPP run.
             with patched_parset(
-            # *****************************************************************
-            # 4. Add ms names to the parset, start/end times if availabe, etc.
-            # 5. Add demixing parameters to the parset
                 parsetfile, self._prepare_steps(**kwargs) #, unlink=False
             ) as temp_parset_filename:
 
-                self.logger.debug("Created temporary parset file: %s" %
+                self.logger.debug("Created temporary parset file: %s" % 
                     temp_parset_filename
                 )
                 try:
-                    working_dir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
-            # ****************************************************************
-            # 6. Run ndppp
+                    working_dir = tempfile.mkdtemp()
                     cmd = [executable, temp_parset_filename, '1']
 
                     with CatchLog4CPlus(
@@ -153,14 +98,13 @@ class dppp(LOFARnodeTCP):
                         os.path.basename(executable),
                     ) as logger:
                         # Catch NDPPP segfaults (a regular occurance), and retry
-
+                        if outfile != infile:
+                            cleanup_fn = lambda : shutil.rmtree(outfile, ignore_errors=True)
+                        else:
+                            cleanup_fn = lambda : None
                         catch_segfaults(
-                            cmd, working_dir, self.environment, logger,
-                            cleanup=lambda : shutil.rmtree(tmpfile, ignore_errors=True)
+                            cmd, working_dir, env, logger, cleanup=cleanup_fn
                         )
-                        # Replace outfile with the updated working copy
-                        shutil.rmtree(outfile, ignore_errors=True)
-                        os.rename(tmpfile, outfile)
                 except CalledProcessError, err:
                     # CalledProcessError isn't properly propagated by IPython
                     self.logger.error(str(err))
@@ -189,18 +133,18 @@ class dppp(LOFARnodeTCP):
             "Time interval: %s %s" % (kwargs['start_time'], kwargs['end_time'])
         )
         # Create output directory for output MS.
-        create_directory(os.path.dirname(kwargs['tmpfile']))
+        create_directory(os.path.dirname(kwargs['outfile']))
 
         patch_dictionary = {
             'msin': kwargs['infile'],
-            'msout': kwargs['tmpfile'],
+            'msout': kwargs['outfile'],
             'uselogger': 'True'
         }
         if kwargs['start_time']:
             patch_dictionary['msin.starttime'] = kwargs['start_time']
         if kwargs['end_time']:
             patch_dictionary['msin.endtime'] = kwargs['end_time']
-
+            
         # If we need to do a demixing step, we have to do some extra work.
         # We have to read the parsetfile to check this.
         parset = parameterset(kwargs['parsetfile'])
@@ -209,11 +153,11 @@ class dppp(LOFARnodeTCP):
                 patch_dictionary.update(
                     self._prepare_demix_step(step, **kwargs)
                 )
-
+                
         # Return the patch dictionary that must be applied to the parset.
         return patch_dictionary
-
-
+        
+        
     def _prepare_demix_step(self, stepname, **kwargs):
         """
         Prepare for a demixing step. This requires the setting of some
@@ -227,37 +171,34 @@ class dppp(LOFARnodeTCP):
         # Add demix directory to sys.path before importing find_a_team module.
         sys.path.insert(0, os.path.join(os.path.dirname(sys.argv[0]), "demix"))
         from find_a_team import getAteamList
-
+        
         patch_dictionary = {}
         if kwargs['parmdb']:
             patch_dictionary[stepname + '.instrumentmodel'] = kwargs['parmdb']
         if kwargs['sourcedb']:
             patch_dictionary[stepname + '.skymodel'] = kwargs['sourcedb']
-
-        demix_always = set(kwargs['demix_always'])
-        demix_if_needed = set(kwargs['demix_if_needed'])
-
+        
+        # Use heuristics to get a list of A-team sources that may need
+        # to be removed. 
+        ateam_list = getAteamList(
+            kwargs['infile'],
+            outerDistance=2.e4,
+            elLimit=5.,
+            verbose=self.logger.isEnabledFor(logging.DEBUG)
+        )
+        self.logger.debug("getAteamList returned: %s" % ateam_list)
         # If the user specified a list of candidate A-team sources to remove,
-        # then determine the intersection of that list and the list of sources
-        # that need demixing according to the heuristics of getAteamList().
-        if demix_if_needed:
-            ateam_list = getAteamList(
-                kwargs['infile'],
-                outerDistance=2.e4,
-                elLimit=5.,
-                verbose=self.logger.isEnabledFor(logging.DEBUG)
+        # then determine the intersection of both lists.
+        if kwargs['demix_sources']:
+            ateam_list = list(
+                set(kwargs['demix_sources']).intersection(ateam_list)
             )
-            self.logger.debug("getAteamList returned: %s" % ateam_list)
-            demix_if_needed.intersection_update(ateam_list)
-
-        # Determine the complete set of sources to be demixed.
-        demix_sources = list(demix_always.union(demix_if_needed))
         self.logger.info("Removing %d target(s) from %s: %s" % (
-                len(demix_sources), kwargs['infile'], ', '.join(demix_sources)
+                len(ateam_list), kwargs['infile'], ', '.join(ateam_list)
             )
         )
-        patch_dictionary[stepname + '.subtractsources'] = demix_sources
-
+        patch_dictionary[stepname + '.subtractsources'] = ateam_list
+        
         # Return the patch dictionary.
         return patch_dictionary
 

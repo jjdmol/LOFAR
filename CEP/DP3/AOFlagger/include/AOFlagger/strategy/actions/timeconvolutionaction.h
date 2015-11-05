@@ -33,8 +33,6 @@
 
 #include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/ffttools.h>
-#include <AOFlagger/util/progresslistener.h>
-
 #include <boost/concept_check.hpp>
 
 namespace rfiStrategy {
@@ -42,7 +40,7 @@ namespace rfiStrategy {
 	class TimeConvolutionAction : public Action
 	{
 		public:
-			enum Operation { SingleSincOperation, SincOperation, ProjectedSincOperation, ProjectedFTOperation, ExtrapolatedSincOperation, IterativeExtrapolatedSincOperation, FFTSincOperation };
+			enum Operation { SingleSincOperation, SincOperation, ProjectedSincOperation, ProjectedFTOperation, ExtrapolatedSincOperation, IterativeExtrapolatedSincOperation };
 			
 			TimeConvolutionAction() : Action(), _operation(IterativeExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-86.7/180.0)), _etaParameter(0.2), _autoAngle(true), _isSincScaleInSamples(false), _alwaysRemove(false), _useHammingWindow(false), _iterations(1), _channelAveragingSize(4)
 			{
@@ -68,9 +66,6 @@ namespace rfiStrategy {
 						break;
 					case IterativeExtrapolatedSincOperation:
 						return "Iterative projected extrapolated sinc";
-						break;
-					case FFTSincOperation:
-						return "FFT sinc";
 						break;
 					default:
 						return "?";
@@ -110,17 +105,6 @@ namespace rfiStrategy {
 						newRevisedData = TimeFrequencyData(data.Polarisation(), real, imaginary);
 					}
 					break;
-					case FFTSincOperation:
-						TimeFrequencyData data = artifacts.ContaminatedData();
-						TimeFrequencyData *realData = data.CreateTFData(TimeFrequencyData::RealPart);
-						TimeFrequencyData *imagData = data.CreateTFData(TimeFrequencyData::ImaginaryPart);
-						Image2DPtr real = Image2D::CreateCopy(realData->GetSingleImage());
-						Image2DPtr imaginary = Image2D::CreateCopy(imagData->GetSingleImage());
-						delete realData;
-						delete imagData;
-						PerformFFTSincOperation(artifacts, real, imaginary);
-						newRevisedData = TimeFrequencyData(data.Polarisation(), real, imaginary);
-						break;
 				}
 				
 				if(_operation == SingleSincOperation || _operation == SincOperation || _operation == ProjectedSincOperation)
@@ -168,9 +152,8 @@ namespace rfiStrategy {
 			bool UseHammingWindow() const { return _useHammingWindow; }
 			void SetUseHammingWindow(bool useHammingWindow) { _useHammingWindow = useHammingWindow; }
 private:
-			class IterationData
+			struct IterationData
 			{
-                        public:
 				ArtifactSet
 					*artifacts;
 				size_t
@@ -241,8 +224,6 @@ private:
 				
 				return newImage;
 			}
-			
-			void PerformFFTSincOperation(ArtifactSet &artifacts, Image2DPtr real, Image2DPtr imag) const;
 			
 			Image2DPtr PerformSincOperation(ArtifactSet &artifacts) const
 			{

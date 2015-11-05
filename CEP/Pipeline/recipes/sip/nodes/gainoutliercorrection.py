@@ -11,85 +11,58 @@ import shutil
 import sys
 import tempfile
 import numpy
+import errno
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_time
-from lofarpipe.support.utilities import create_directory, delete_directory
+from lofarpipe.support.utilities import read_initscript, create_directory, delete_directory
 from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.lofarexceptions import PipelineRecipeFailed
 
 from lofarpipe.recipes.helpers.WritableParmDB import WritableParmDB, list_stations
 from lofarpipe.recipes.helpers.ComplexArray import ComplexArray, RealImagArray, AmplPhaseArray
 
-class gainoutliercorrection(LOFARnodeTCP):
-    """
-    Perform a gain outlier correction on the provided parmdb.
-    The functionality is based on the edit_parmdb script of John Swinbank.
-    
-    Outliers in the gain are swapped with the median. resulting gains 
-    are written back to the supplied ms:
-    
-    1. Select correction correction method:
-    2. Call parmexportcal for gain correction
-    3. use gainoutliercorrect from Swinbank
-       Step are summarized in the functions of this recipe
+class GainOutlierCorrection(LOFARnodeTCP):
+    def run(self, infile, outfile, executable, initscript, sigma):
 
-    """
-    def run(self, infile, outfile, executable, environment, sigma,
-            use_parmexportcal):
-        self.environment.update(environment)
-        if os.path.exists(infile):
-            self.logger.info("Processing {0}".format(infile))
-        else:
-            self.logger.error(
-                "Instrument model file %s does not exist" % infile
+        # Time execution of this job
+        with log_time(self.logger):
+            if os.path.exists(infile):
+                self.logger.info("Processing %s" % infile)
+            else:
+                self.logger.error(
+                    "Instrument model file %s does not exist" % infile
                 )
-            return 1
-
+                return 1
         # Create output directory (if it doesn't already exist)
         create_directory(os.path.dirname(outfile))
 
-        # Remove the target outfile if there: parexportcall fail otherwise
-        if os.path.exists(outfile):
-            shutil.rmtree(outfile)
-
-        # ********************************************************************
-        # 1. Select correction method
-        if not use_parmexportcal:
-            # ****************************************************************
-            # 3. use gainoutliercorrect from Swinbank
-            self.logger.info(
-                "Using the gainoutlier correction based on editparmdb")
+        if not os.access(executable, os.X_OK) and sigma != None:
+            # If the executable is not accesable and we have a sigma:
+            # use the 'local' functionality (edit parmdb)
             self._filter_stations_parmdb(infile, outfile, sigma)
             return 0
-
-        # else:
+        # else we need an executable
+        # Check if exists and is executable.
         if not os.access(executable, os.X_OK):
-            self.logger.error(
-                "Could not find parmexport call executable at: {0}".format(
-                                    executable))
-            self.logger.error("bailing out!")
+            self.logger.error("Executable %s not found" % executable)
             return 1
 
-        # ********************************************************************
-        # 2. Call parmexportcal for gain correction
-        self.logger.info(
-            "Using the gainoutlier correction based on parmexportcal")
+        # Initialize environment
+        env = read_initscript(self.logger, initscript)
+
         try:
-            temp_dir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
+            temp_dir = tempfile.mkdtemp()
             with CatchLog4CPlus(
                 temp_dir,
                 self.logger.name + '.' + os.path.basename(infile),
                 os.path.basename(executable)
             ) as logger:
-                cmd = [executable, '-in', infile, '-out', outfile]
-                self.logger.debug(
-                    "Parmexportcal call: {0} ".format(" ".join(cmd)))
                 catch_segfaults(
-                    cmd,
+                    [executable, '-in', infile, '-out', outfile],
                     temp_dir,
-                    self.environment,
+                    env,
                     logger
                 )
         except Exception, excp:
@@ -106,8 +79,8 @@ class gainoutliercorrection(LOFARnodeTCP):
         the corrected parmdb written to outfile.
         Outliers in the gain with a distance of median of sigma times std
         are replaced with the mean. The last value of the complex array
-        is skipped (John Swinbank: "I found it [the last value] was bad when 
-        I hacked together some code to do this")
+        is skipped (John Swinbank: "I found it was bad when I hacked"
+        " together some code to do this")
         """
         sigma = float(sigma)
         # Create copy of the input file
@@ -131,6 +104,7 @@ class gainoutliercorrection(LOFARnodeTCP):
         # Create a local WritableParmDB
         parmdb = WritableParmDB(outfile)
 
+
         #get all stations in the parmdb
         stations = list_stations(parmdb)
 
@@ -141,18 +115,18 @@ class gainoutliercorrection(LOFARnodeTCP):
             polarization_data, type_pair = \
                self._read_polarisation_data_and_type_from_db(parmdb, station)
 
-            corrected_data = self._swap_outliers_with_median(polarization_data,
+            corected_data = self._swap_outliers_with_median(polarization_data,
                                                   type_pair, sigma)
             #print polarization_data
             self._write_corrected_data(parmdb, station,
-                                       polarization_data, corrected_data)
+                                       polarization_data, corected_data)
+        return parmdb, corected_data
 
     def _read_polarisation_data_and_type_from_db(self, parmdb, station):
+        all_matching_names = parmdb.getNames("Gain:*:*:*:{0}".format(station))
         """
         Read the polarisation data and type from the db.
         """
-        all_matching_names = parmdb.getNames("Gain:*:*:*:{0}".format(station))
-
         # get the polarisation_data eg: 1:1
         # This is based on the 1 trough 3th entry in the parmdb name entry
         pols = set(":".join(x[1:3]) for x in  (x.split(":") for x in all_matching_names))
@@ -209,7 +183,7 @@ class gainoutliercorrection(LOFARnodeTCP):
                    median,
                    amplitudes
                    )
-            # assign the correct data back to the complex_array
+            # assign the corect data back to the complex_array
             complex_array.amp = numpy.concatenate((corrected, complex_array.amp[-1:]))
             # collect all corrected data
             corrected_polarization_data[pol] = complex_array
@@ -234,18 +208,18 @@ class gainoutliercorrection(LOFARnodeTCP):
         return complex_array
 
     def _write_corrected_data(self, parmdb, station, polarization_data,
-                               corrected_data):
+                               corected_data):
         """
         Use pyparmdb to write (now corrected) data to the parmdb
         """
         for pol, data in polarization_data.iteritems():
-            if not pol in corrected_data:
+            if not pol in corected_data:
                 error_message = "Requested polarisation type is unknown:" \
-                        "{0} \n valid polarisations: {1}".format(pol, corrected_data.keys())
+                        "{0} \n valid polarisations: {1}".format(pol, corected_data.keys())
                 self.logger.error(error_message)
                 raise PipelineRecipeFailed(error_message)
 
-            corrected_data_pol = corrected_data[pol]
+            corrected_data_pol = corected_data[pol]
             #get the "complex" converted data from the complex array
             for component, value in corrected_data_pol.writeable.iteritems():
                 #Collect all the data needed to write an array 
@@ -264,4 +238,4 @@ if __name__ == "__main__":
     #                        and pass the rest to the run() method defined above
     # --------------------------------------------------------------------------
     jobid, jobhost, jobport = sys.argv[1:4]
-    sys.exit(gainoutliercorrection(jobid, jobhost, jobport).run_with_stored_arguments())
+    sys.exit(GainOutlierCorrection(jobid, jobhost, jobport).run_with_stored_arguments())

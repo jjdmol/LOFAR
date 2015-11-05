@@ -4,35 +4,34 @@
 #                                                          Wouter Klijn, 2010
 #                                                      swinbank@transientskp.org
 # ------------------------------------------------------------------------------
+# python imager_awimager.py ~/build/preparation/output.map --job imager_awimager --config ~/build/preparation/pipeline.cfg --initscript /opt/cep/LofIm/daily/lofar/lofarinit.sh --parset ~/build/preparation/parset.par --working-directory "/data/scratch/klijn" --executable /opt/cep/LofIm/daily/lofar/bin/awimager -d
+# the measurement set with input should be located in the working directory
+
+import os
 import sys
-import copy
+import collections
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.data_map import DataMap, validate_data_maps
+from lofarpipe.support.group_data import load_data_map, store_data_map, validate_data_maps
 
 class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
     """
-    Master script for the awimager. Collects arguments from command line and
-    pipeline inputs.
-    
-    1. Load mapfiles and validate these
-    2. Run the awimage node scripts
-    3. Retrieve output. Construct output map file succesfull runs
-    
-    Details regarding the implementation of the imaging step can be found in 
-    the node recipe 
-    **CommandLine Arguments**
-    
-    A mapfile containing (node, datafile) pairs. The measurements set use as
-    input for awimager executable  
+    Run the imager_awimager on the nodes and the data files suplied in the mapfile
+    **Arguments**
+    A mapfile containing node->datafile pairs  
  
     """
     inputs = {
         'executable': ingredient.ExecField(
             '--executable',
             help = "The full path to the  awimager executable"
+        ),
+        'initscript': ingredient.FileField(
+            '--initscript',
+            help = '''The full path to an (Bourne) shell script which will\
+             intialise the environment (ie, ``lofarinit.sh``)'''
         ),
         'parset': ingredient.FileField(
             '-p', '--parset',
@@ -48,8 +47,8 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'mapfile': ingredient.StringField(
             '--mapfile',
-            help = "Full path for output mapfile. A list of the"
-                 "successfully generated images will be written here"
+            help = "Full path of mapfile; contains a list of the"
+                 "successfully generated images"
         ),
         'sourcedb_path': ingredient.StringField(
             '--sourcedb-path',
@@ -59,132 +58,76 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             '--mask-patch-size',
             help = "Scale factor for patches in the awimager mask"
         ),
-        'autogenerate_parameters': ingredient.BoolField(
-            '--autogenerate-parameters',
-            default = True,
-            help = "Turns on the autogeneration of: cellsize, image-size, fov."
-            " MSSS 'type' functionality"
-        ),
-        'specify_fov': ingredient.FloatField(
-            '--specify-fov',
-            default = False,
-            help = "calculated Image parameters are relative to fov, parameter"
-            " is active when autogenerate_parameters is False"
-        ),
-        'fov': ingredient.FloatField(
-            '--fov',
-            default = 0.0,
-            help = "calculated Image parameters are relative to this"
-            " Field Of View in arcSec. This parameter is obligatory when"
-            " specify_fov is True"
-        )
     }
 
     outputs = {
-        'mapfile': ingredient.StringField(),
+        'mapfile': ingredient.StringField()
     }
 
     def go(self):
-        """
-        This member contains all the functionality of the imager_awimager.
-        Functionality is all located at the node side of the script.
-        """
         super(imager_awimager, self).go()
         self.logger.info("Starting imager_awimager run")
 
-        # *********************************************************************
-        # 1. collect the inputs and validate
-        input_map = DataMap.load(self.inputs['args'][0])
-        sourcedb_map = DataMap.load(self.inputs['sourcedb_path'])
+        #collect the inputs        
+        input_map = load_data_map(self.inputs['args'][0])
 
-        if not validate_data_maps(input_map, sourcedb_map):
-            self.logger.error(
-                        "the supplied input_ms mapfile and sourcedb mapfile"
-                        "are incorrect. Aborting")
-            self.logger.error(repr(input_map))
-            self.logger.error(repr(sourcedb_map))
-            return 1
-
-        # *********************************************************************
-        # 2. Start the node side of the awimager recipe
+        executable = self.inputs['executable']
+        init_script = self.inputs['initscript']
+        parset = self.inputs['parset']
+        output_image = self.inputs['output_image']
+        working_directory = self.inputs['working_directory']
+        sourcedb_path = self.inputs['sourcedb_path']
+        mask_patch_size = self.inputs['mask_patch_size']
         # Compile the command to be executed on the remote machine
         node_command = "python %s" % (self.__file__.replace("master", "nodes"))
+        # Create the jobs
         jobs = []
+        sourcedb_map = load_data_map(sourcedb_path)
+        outnames = collections.defaultdict(list)
 
-        output_map = copy.deepcopy(input_map)        
-        for w, x, y in zip(input_map, output_map, sourcedb_map):
-            w.skip = x.skip = y.skip = (
-                w.skip or x.skip or y.skip
-            )
+        if not validate_data_maps(input_map, sourcedb_map):
+            self.logger.error("the supplied input_ms mapfile and sourcedb mapfile"
+                              "are incorrect. Aborting")
+            self.logger.error(repr(input_map))
+            self.logger.error(repr(sourcedb_map))
 
-        sourcedb_map.iterator = input_map.iterator = output_map.iterator = \
-            DataMap.SkipIterator
-
-        for measurement_item, source_item in zip(input_map, sourcedb_map):
-            if measurement_item.skip or source_item.skip:
-                jobs.append(None)
-                continue
+        for ms, source in zip(input_map, sourcedb_map):
             # both the sourcedb and the measurement are in a map
             # unpack both
-            host , measurement_path = measurement_item.host, measurement_item.file
-            host2 , sourcedb_path = source_item.host, source_item.file
+            host , measurement_set = ms
+            host2 , sourcedb_path = source
 
-            # construct and save the output name
-            arguments = [self.inputs['executable'],
-                         self.environment,
-                         self.inputs['parset'],
-                         self.inputs['working_directory'],
-                         self.inputs['output_image'],
-                         measurement_path,
-                         sourcedb_path,
-                         self.inputs['mask_patch_size'],
-                         self.inputs['autogenerate_parameters'],
-                         self.inputs['specify_fov'],
-                         self.inputs['fov'],
-                         ]
+            #construct and save the output name
+            outnames[host].append(measurement_set)
+            arguments = [executable, init_script, parset, working_directory, output_image,
+                       measurement_set, sourcedb_path, mask_patch_size]
 
             jobs.append(ComputeJob(host, node_command, arguments))
         self._schedule_jobs(jobs)
 
-        # *********************************************************************
-        # 3. Check output of the node scripts
+        created_awimages = []
+        for job in  jobs:
+            if job.results.has_key("image"):
+                created_awimages.append((job.host, job.results["image"]))
+            #TODO else: aw imager failed. Currently partial runs cannot be
+            # restarted: for the next lofar version the framework needs to 
+            # be expanded with a partial rerun capability
 
-        for job, output_item in  zip(jobs, output_map):
-            # job ==  None on skipped job
-            if not "image" in job.results:
-                output_item.file = "failed"
-                output_item.skip = True
-
-            else:
-                output_item.file = job.results["image"]
-                output_item.skip = False
-
-        # Check if there are finished runs
-        succesfull_runs = None
-        for item in output_map:
-            if item.skip == False:
-                succesfull_runs = True
-                break
-
-        if not succesfull_runs:
-            self.logger.error(
-                    "None of the starter awimager run finished correct")
-            self.logger.error(
-                    "No work left to be done: exiting with error status")
+        if len(created_awimages) == 0:
+            self.logger.error("None of the starter awimager run finished correct")
+            self.logger.error("No work left to be done: exiting with error status")
             return 1
 
-        # If partial succes
         if self.error.isSet():
-            self.logger.warn("Failed awimager node run detected. continue with"
+            self.logger.error("Failed awimager node run detected. continue with"
                               "successful tasks.")
 
-        self._store_data_map(self.inputs['mapfile'], output_map,
-                             "mapfile containing produces awimages")
-
+        store_data_map(self.inputs['mapfile'], created_awimages)
+        self.logger.debug("Wrote mapfile containing produces awimages: {0}".format(
+                           self.inputs['mapfile']))
         self.outputs["mapfile"] = self.inputs['mapfile']
         return 0
 
 
 if __name__ == "__main__":
     sys.exit(imager_awimager().main())
-

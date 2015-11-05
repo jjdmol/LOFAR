@@ -32,7 +32,6 @@
 #include <DPPP/DPBuffer.h>
 #include <DPPP/Patch.h>
 #include <DPPP/PhaseShift.h>
-#include <DPPP/Filter.h>
 
 #include <casa/Arrays/Cube.h>
 #include <casa/Quanta/Quantum.h>
@@ -46,9 +45,9 @@
 
 namespace LOFAR {
 
-  class ParameterSet;
-
   namespace DPPP {
+    class ParSet;
+
     // @ingroup NDPPP
 
     typedef vector<Patch::ConstPtr> PatchList;
@@ -68,7 +67,9 @@ namespace LOFAR {
     public:
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
-      Demixer (DPInput*, const ParameterSet&, const string& prefix);
+      Demixer (DPInput*, const ParSet&, const string& prefix);
+
+      virtual ~Demixer();
 
       // Process the data.
       // It keeps the data.
@@ -91,6 +92,11 @@ namespace LOFAR {
       virtual void showTimings (std::ostream&, double duration) const;
 
     private:
+      void initUnknowns();
+
+      // Solve gains and subtract sources.
+      void demix();
+
       // Add the decorrelation factor contribution for each time slot.
       void addFactors (const DPBuffer& newBuf,
                        casa::Array<casa::DComplex>& factorBuf);
@@ -103,72 +109,62 @@ namespace LOFAR {
                         uint nChanOut,
                         uint nChanAvg);
 
-      // Do the demixing.
-      void handleDemix();
-
       // Deproject the sources without a model.
       void deproject (casa::Array<casa::DComplex>& factors,
                       vector<MultiResultStep*> avgResults,
                       uint resultIndex);
 
-      // Solve gains and subtract sources.
-      void demix();
+      // Calculate the P matrix telling how to deal with sources that will
+      // not be predicted.
+      // Those sources are the last columns in the demixing matrix.
+      vector<casa::Array<casa::DComplex> > getP
+      (const vector<casa::Array<casa::DComplex> >& factors, uint nsources);
+
+      // Convert a double value to a string (with sufficient precision).
+      string toString (double value) const;
+
+      // Convert a angle string with an optional unit to radians.
+      // The default input unit is degrees.
+      double getAngle (const casa::String& value) const;
 
       // Export the solutions to a ParmDB.
       void dumpSolutions();
 
-      // Merge the data of the selected baselines from the subtract buffer
-      // into the full buffer.
-      void mergeSubtractResult();
-
       //# Data members.
       DPInput*                              itsInput;
       string                                itsName;
-      DPBuffer                              itsBufTmp;
       string                                itsSkyName;
       string                                itsInstrumentName;
-      double                                itsDefaultGain;
-      size_t                                itsMaxIter;
-      BaselineSelection                     itsSelBL;
-      Filter                                itsFilter;
       vector<PhaseShift*>                   itsPhaseShifts;
-      //# Phase shift and average steps for demix.
+      //# Phase shift and average steps.
       vector<DPStep::ShPtr>                 itsFirstSteps;
       //# Result of phase shifting and averaging the directions of interest
       //# at the demix resolution.
       vector<MultiResultStep*>              itsAvgResults;
-      DPStep::ShPtr                         itsAvgStepSubtr;
-      Filter*                               itsFilterSubtr;
       //# Result of averaging the target at the subtract resolution.
-      MultiResultStep*                      itsAvgResultFull;
       MultiResultStep*                      itsAvgResultSubtr;
-      //# Ignore target in demixing?
-      bool                                  itsIgnoreTarget;
       //# Name of the target. Empty if no model is available for the target.
       string                                itsTargetSource;
       vector<string>                        itsSubtrSources;
       vector<string>                        itsModelSources;
       vector<string>                        itsExtraSources;
       vector<string>                        itsAllSources;
-//      vector<double>                        itsCutOffs;
-      bool                                  itsPropagateSolutions;
+//      vector<uint>                          itsCutOffs;
       uint                                  itsNDir;
       uint                                  itsNModel;
-      uint                                  itsNStation;
       uint                                  itsNBl;
       uint                                  itsNCorr;
       uint                                  itsNChanIn;
       uint                                  itsNTimeIn;
-      uint                                  itsNTimeDemix;
+      uint                                  itsNChanOutSubtr;
       uint                                  itsNChanAvgSubtr;
       uint                                  itsNTimeAvgSubtr;
-      uint                                  itsNChanOutSubtr;
-      uint                                  itsNTimeOutSubtr;
-      uint                                  itsNTimeChunk;
       uint                                  itsNTimeChunkSubtr;
+      uint                                  itsNTimeOutSubtr;
+      uint                                  itsNChanOut;
       uint                                  itsNChanAvg;
       uint                                  itsNTimeAvg;
-      uint                                  itsNChanOut;
+      uint                                  itsNTimeChunk;
       uint                                  itsNTimeOut;
       double                                itsTimeIntervalAvg;
 
@@ -190,24 +186,26 @@ namespace LOFAR {
       //# shape #directions x #directions.
       vector<casa::Array<casa::DComplex> >  itsFactorsSubtr;
 
-      PatchList                             itsPatchList;
-      Position                              itsPhaseRef;
-      vector<Baseline>                      itsBaselines;
-      vector<int>                           itsUVWSplitIndex;
-      casa::Vector<double>                  itsFreqDemix;
-      casa::Vector<double>                  itsFreqSubtr;
-      vector<double>                        itsUnknowns;
-      vector<double>                        itsPrevSolution;
-      uint                                  itsTimeIndex;
-      uint                                  itsNConverged;
-      FlagCounter                           itsFlagCounter;
-
       //# Timers.
       NSTimer                               itsTimer;
       NSTimer                               itsTimerPhaseShift;
       NSTimer                               itsTimerDemix;
       NSTimer                               itsTimerSolve;
-      NSTimer                               itsTimerDump;
+
+      uint                                  itsNConverged;
+      uint                                  itsTimeCount;
+      PatchList                             itsPatchList;
+      vector<Baseline>                      itsBaselines;
+      casa::Vector<double>                  itsFreqDemix;
+      casa::Vector<double>                  itsFreqSubtr;
+      uint                                  itsNTimeDemix;
+      uint                                  itsNStation;
+      Position                              itsPhaseRef;
+      casa::Array<double>                   itsUnknowns;
+//      casa::Array<double>                   itsErrors;
+      casa::Array<double>                   itsLastKnowns;
+//      vector<casa::MeasFrame>               itsFrames;
+//      vector<casa::MDirection::Convert>     itsConverters;
     };
 
   } //# end namespace

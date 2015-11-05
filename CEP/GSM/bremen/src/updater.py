@@ -6,7 +6,6 @@ _UPDATER_EXTRAS = {
     'runningcatalog_fluxes': ['runcat_id', 'band', 'stokes'],
 }
 
-
 def _refactor_update(sql):
     """
     Special refactoring for MonetDB update..from imitation.
@@ -15,9 +14,9 @@ def _refactor_update(sql):
         return ' '.join(map(lambda x: 'and {0}.{1} = x.{1}'.format(tabname, x),
                             _UPDATER_EXTRAS[tabname]))
     sqlupdate, sqlfrom = sql.strip().split('from', 1)
-    table, sqlupd_list = sqlupdate.split('set')
-    sqlupd_list = sqlupd_list.split(',')
-    table = table.split()[1]
+    sqlupd_list = sqlupdate.split('set')[1].split(',')
+    table = sqlupdate.split('set')[0].split()[1]
+
     if sqlfrom.endswith(';'):
         sqlfrom = sqlfrom[:-1]
     sqlfrom_split = sqlfrom.split('where', 1)
@@ -34,9 +33,9 @@ def _refactor_update(sql):
     for sqlf in sqlupd_list:
         field, update_stmt = sqlf.split('=')
         update_field.append('%s = (select %s from %s x, %s %s %s)' % (
-                                field, update_stmt.replace(table, 'x'),
-                                table, sqlfrom2, sqlwhere,
-                                _get_extra_conditions(table)))
+                                                    field, update_stmt.replace(table, 'x'),
+                                                    table, sqlfrom2, sqlwhere,
+                                                    _get_extra_conditions(table)))
     result = []
     for field in update_field:
         result.append("""update %s set %s

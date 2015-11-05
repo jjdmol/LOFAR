@@ -1,7 +1,7 @@
-V 11
+V 10
 1
 LANG:1 0 
-PANEL,-1 -1 1200 823 N "_3DFace" 0
+PANEL,-1 -1 1097 709 N "_3DFace" 0
 E E E E E 1 -1 -1 0  30 40
 ""0  1
 E E 2
@@ -25,8 +25,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  -2 -2 1201 824
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ -2 -2 1082 692
 E2 "Systems" 1
 LANG:1 7 Systems
 1 "Reports/LOFAR_System.pnl" 1

@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -66,11 +66,9 @@ namespace LOFAR {
       virtual ~SubbandSelection() {}
 
       /**
-       * Return the crosslet or beamlet array.
+       * Return the subbands array.
        */
-      blitz::Array<uint16, 3>& crosslets();
-      blitz::Array<uint16, 3>& beamlets();
-       
+      blitz::Array<uint16, 2>& operator()();
 
       /**
        * Return type of selection.
@@ -89,27 +87,22 @@ namespace LOFAR {
       /**
        * marshalling methods
        */
-	size_t getSize() const;
-	size_t pack  (char* buffer) const;
-	size_t unpack(const char *buffer);
+      unsigned int getSize();
+      unsigned int pack  (void* buffer);
+      unsigned int unpack(void *buffer);
       /*@}*/
 
     private:
       /**
        * Subband selection array.
        * dim 1 = n_rcus (== 1 on SETSUBBANDS, == count(rcumask) on GETSUBBANDS_ACK)
-       * dim 2 = number of planes (16bit = 1plane, 8bit=2planes, 4bit=4planes)
-       * dim 3 = n_beamlets (if type == BEAMLET)
-       * dim 3 = 1          (if type == XLET)
+       * dim 2 = n_beamlets (if type == BEAMLET)
+       * dim 2 = 1          (if type == XLET)
        */
-      blitz::Array<uint16, 3> itsCrosslets;
-      blitz::Array<uint16, 3> itsBeamlets;
+      blitz::Array<uint16, 2> m_subbands;
 
       uint16 m_type; // type of subband selection (BEAMLET or XLET)
     };
-    
-    inline blitz::Array<uint16, 3>& SubbandSelection::crosslets() { return itsCrosslets; }
-    inline blitz::Array<uint16, 3>& SubbandSelection::beamlets() { return itsBeamlets; }
   };
 }; // namespace LOFAR
 

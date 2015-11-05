@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh ExampleShMem
+./runctest.sh ExampleShMem > ExampleShMem_test.log 2>&1

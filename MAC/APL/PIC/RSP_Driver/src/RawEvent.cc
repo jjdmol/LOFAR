@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -67,19 +67,11 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_WRITEACK,      /* WRITEACK */
     },
     
-    /* reg = 0x03 (RSR_BEAMMODE) */
+    /* reg = 0x03 (RSR_NOFBEAM new in 8/4bit mode) */
     { 0,
       EPA_READ,          /* READ     */
-      EPA_RSR_BEAMMODE,  /* WRITE    */
-      EPA_RSR_BEAMMODE,  /* READACK  */
-      EPA_WRITEACK,      /* WRITEACK */
-    },
-    
-    /* reg = 0x04 (RSR_SUBBAND_DATA_OUTPUT_MODE) */
-    { 0,
-      EPA_READ,          /* READ     */
-      EPA_RSR_SDOMODE,   /* WRITE    */
-      EPA_RSR_SDOMODE,   /* READACK  */
+      EPA_WRITE,         /* WRITE    */
+      EPA_READACK,       /* READACK  */
       EPA_WRITEACK,      /* WRITEACK */
     },
   },
@@ -191,25 +183,25 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_SS_SELECT, /* READACK */
       EPA_WRITEACK,  /* WRITEACK */
     },
-    /* reg = 0x01 (Subband Select parameters) */
+    /* reg = 0x01 (Subband 1 Select parameters, new in 8/4bit mode) */
     { 0,
       EPA_READ,      /* READ    */
-      EPA_SS_SELECT+1, /* WRITE   */
-      EPA_SS_SELECT+1, /* READACK */
+      EPA_SS_SELECT, /* WRITE   */
+      EPA_SS_SELECT, /* READACK */
       EPA_WRITEACK,  /* WRITEACK */
     },
-    /* reg = 0x02 (Subband Select parameters) */
+    /* reg = 0x02 (Subband 2 Select parameters, new in 8/4bit mode) */
     { 0,
       EPA_READ,      /* READ    */
-      EPA_SS_SELECT+2, /* WRITE   */
-      EPA_SS_SELECT+2, /* READACK */
+      EPA_SS_SELECT, /* WRITE   */
+      EPA_SS_SELECT, /* READACK */
       EPA_WRITEACK,  /* WRITEACK */
     },
-    /* reg = 0x03 (Subband Select parameters) */
+    /* reg = 0x03 (Subband 3 Select parameters, new in 8/4bit mode) */
     { 0,
       EPA_READ,      /* READ    */
-      EPA_SS_SELECT+3, /* WRITE   */
-      EPA_SS_SELECT+3, /* READACK */
+      EPA_SS_SELECT, /* WRITE   */
+      EPA_SS_SELECT, /* READACK */
       EPA_WRITEACK,  /* WRITEACK */
     },
   },
@@ -226,106 +218,106 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
     /* reg = 0x01 (BF_XIOUT subband 0) */
     { 0,
       EPA_READ,           /* READ    */
-      EPA_BF_COEFS_WRITE+1, /* WRITE   */
-      EPA_BF_COEFS_READ+1,  /* READACK */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
     /* reg = 0x02 (BF_YROUT subband 0) */
     { 0,
       EPA_READ,           /* READ    */
-      EPA_BF_COEFS_WRITE+2, /* WRITE   */
-      EPA_BF_COEFS_READ+2,  /* READACK */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
     /* reg = 0x03 (BF_YIOUT subband 0) */
     { 0,
       EPA_READ,           /* READ    */
-      EPA_BF_COEFS_WRITE+3, /* WRITE   */
-      EPA_BF_COEFS_READ+3,  /* READACK */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
-    /* reg = 0x04 (BF_XROUT) */
+    /* reg = 0x04 (BF_XROUT subband 1 new in 8/4bit mode) */
     { 0,
       EPA_READ,           /* READ    */
-      EPA_BF_COEFS_WRITE+4, /* WRITE   */
-      EPA_BF_COEFS_READ+4,  /* READACK */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
-    /* reg = 0x05 (BF_XIOUT) */
+    /* reg = 0x05 (BF_XIOUT subband 1 new in 8/4bit mode) */
     { 0,
       EPA_READ,           /* READ    */
-      EPA_BF_COEFS_WRITE+5, /* WRITE   */
-      EPA_BF_COEFS_READ+5,  /* READACK */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
-    /* reg = 0x06 (BF_YROUT) */
+    /* reg = 0x06 (BF_YROUT subband 1 new in 8/4bit mode) */
     { 0,
       EPA_READ,           /* READ    */
-      EPA_BF_COEFS_WRITE+6, /* WRITE   */
-      EPA_BF_COEFS_READ+6,  /* READACK */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
-    /* reg = 0x07 (BF_YIOUT) */
+    /* reg = 0x07 (BF_YIOUT subband 1 new in 8/4bit mode) */
     { 0,
       EPA_READ,           /* READ    */
-      EPA_BF_COEFS_WRITE+7, /* WRITE   */
-      EPA_BF_COEFS_READ+7,  /* READACK */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
-    /* reg = 0x08 (BF_XROUT) */
+    /* reg = 0x08 (BF_XROUT subband 2 new in 8/4bit mode) */
     { 0,
       EPA_READ,           /* READ    */
-      EPA_BF_COEFS_WRITE+8, /* WRITE   */
-      EPA_BF_COEFS_READ+8,  /* READACK */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
-    /* reg = 0x09 (BF_XIOUT) */
+    /* reg = 0x09 (BF_XIOUT subband 2 new in 8/4bit mode) */
     { 0,
       EPA_READ,           /* READ    */
-      EPA_BF_COEFS_WRITE+9, /* WRITE   */
-      EPA_BF_COEFS_READ+9,  /* READACK */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
-    /* reg = 0x0A (BF_YROUT) */
+    /* reg = 0x0A (BF_YROUT subband 2 new in 8/4bit mode) */
     { 0,
       EPA_READ,           /* READ    */
-      EPA_BF_COEFS_WRITE+10, /* WRITE   */
-      EPA_BF_COEFS_READ+10,  /* READACK */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
-    /* reg = 0x0B (BF_YIOUT) */
+    /* reg = 0x0B (BF_YIOUT subband 2 new in 8/4bit mode) */
     { 0,
       EPA_READ,           /* READ    */
-      EPA_BF_COEFS_WRITE+11, /* WRITE   */
-      EPA_BF_COEFS_READ+11,  /* READACK */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
-    /* reg = 0x0C (BF_XROUT) */
+    /* reg = 0x0C (BF_XROUT subband 3 new in 8/4bit mode) */
     { 0,
       EPA_READ,           /* READ    */
-      EPA_BF_COEFS_READ+12, /* WRITE   */
-      EPA_BF_COEFS_READ+12,  /* READACK */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
-    /* reg = 0x0D (BF_XIOUT) */
+    /* reg = 0x0D (BF_XIOUT subband 3 new in 8/4bit mode) */
     { 0,
       EPA_READ,           /* READ    */
-      EPA_BF_COEFS_WRITE+13, /* WRITE   */
-      EPA_BF_COEFS_READ+13,  /* READACK */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
-    /* reg = 0x0E (BF_YROUT) */
+    /* reg = 0x0E (BF_YROUT subband 3 new in 8/4bit mode) */
     { 0,
       EPA_READ,           /* READ    */
-      EPA_BF_COEFS_WRITE+14, /* WRITE   */
-      EPA_BF_COEFS_READ+14,  /* READACK */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
-    /* reg = 0x0F (BF_YIOUT) */
+    /* reg = 0x0F (BF_YIOUT subband 3 new in 8/4bit mode) */
     { 0,
       EPA_READ,           /* READ    */
-      EPA_BF_COEFS_WRITE+15, /* WRITE   */
-      EPA_BF_COEFS_READ+15,  /* READACK */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
   },
@@ -847,37 +839,6 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
     },
   },
 
-   /* pid = 0x13 (SDO) */
-  {
-    /* reg = 0x00 (Subband 0 Select parameters) */
-    { 0,
-      EPA_READ,      /* READ    */
-      EPA_SDO_SELECT, /* WRITE   */
-      EPA_SDO_SELECT, /* READACK */
-      EPA_WRITEACK,  /* WRITEACK */
-    },
-    /* reg = 0x01 (Subband Select parameters) */
-    { 0,
-      EPA_READ,      /* READ    */
-      EPA_SDO_SELECT+1, /* WRITE   */
-      EPA_SDO_SELECT+1, /* READACK */
-      EPA_WRITEACK,  /* WRITEACK */
-    },
-    /* reg = 0x02 (Subband Select parameters) */
-    { 0,
-      EPA_READ,      /* READ    */
-      EPA_SDO_SELECT+2, /* WRITE   */
-      EPA_SDO_SELECT+2, /* READACK */
-      EPA_WRITEACK,  /* WRITEACK */
-    },
-    /* reg = 0x03 (Subband Select parameters) */
-    { 0,
-      EPA_READ,      /* READ    */
-      EPA_SDO_SELECT+3, /* WRITE   */
-      EPA_SDO_SELECT+3, /* READACK */
-      EPA_WRITEACK,  /* WRITEACK */
-    },
-  },
 
 };
 

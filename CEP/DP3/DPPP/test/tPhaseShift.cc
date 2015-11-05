@@ -25,7 +25,7 @@
 #include <DPPP/PhaseShift.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 #include <Common/StringUtil.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -49,7 +49,7 @@ public:
     : itsCount(0), itsNTime(ntime), itsNBl(nbl), itsNChan(nchan),
       itsNCorr(ncorr), itsFlag(flag)
   {
-    info().init (ncorr, nchan, ntime, 0., 10., string(), string());
+    info().init (ncorr, nchan, ntime, 0., 10., string());
     MDirection phaseCenter(Quantity(45,"deg"), Quantity(30,"deg"),
                            MDirection::J2000);
     info().set (MPosition(), phaseCenter, phaseCenter, phaseCenter);
@@ -92,8 +92,7 @@ public:
     }
     Vector<String> antNames(nant);
     vector<MPosition> antPos(nant);
-    Vector<double> antDiam(nant, 70.);
-    info().set (antNames, antDiam, antPos, ant1, ant2);
+    info().set (antNames, antPos, ant1, ant2);
     itsStatUVW.resize (3, nant);
     for (int i=0; i<nant; ++i) {
       itsStatUVW(0,i) = 0.01 + i*0.02;

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -28,18 +28,9 @@
 namespace LOFAR {
   namespace MACIO {
 
-//
-// +-------------------------------++-------------------------------+
-// | O | I | p | p | p | p | p | p || m | m | m | m | m | m | m | m |
-// +-------------------------------++-------------------------------+
-//
-// O : out going message
-// I : incoming message
-// p : protocol number (0..63)
-// m : messagenumber (0..255)
-//
-
-// Macro to encode an event's signal from the signal id, protocal an in/out direction
+/**
+ * Macro to encode an event's signal from the signal id, protocal an in/out direction
+ */
 #define F_SIGNAL(prot, sig, inout) (   (((unsigned short)(inout) & 0x3) << 14) \
 				     | (((unsigned short)(prot) & 0x3f) << 8)  \
 				     | ((unsigned short)(sig) & 0xff)          \
@@ -50,7 +41,9 @@ namespace LOFAR {
 #define F_ERR_PROTOCOL(errID) ( ((unsigned short)(errID) / 100) & 0x3f )
 #define F_ERR_NR(errID) ( (unsigned short)(errID) % 100 )
 
-// Define different types of signals
+/**
+ * Define different types of signals
+ */
 #define F_IN    0x01
 #define F_OUT   0x02
 #define F_INOUT (F_IN | F_OUT)

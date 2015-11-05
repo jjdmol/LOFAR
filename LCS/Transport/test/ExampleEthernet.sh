@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh ExampleEthernet
+./runctest.sh ExampleEthernet > ExampleEthernet_test.log 2>&1

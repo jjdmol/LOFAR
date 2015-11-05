@@ -1,5 +1,5 @@
 #from message import ErrorLevel, NotifyLevel, VerboseLevel, DebugLevel
-import time, os, select, sys, logging, imp
+import time, os, select, pty, fcntl, sys, logging, imp
 from lofarpipe.support.pipelinelogging import getSearchingLogger
 
 class CookError(Exception):
@@ -31,12 +31,7 @@ class PipelineCook(WSRTCook):
                 # ...also support lower-cased file names.
                 module_details = imp.find_module(task.lower(), recipe_path)
             module = imp.load_module(task, *module_details)
-            self.recipe = None
-            try:
-                self.recipe = getattr(module, task)()
-            except AttributeError:
-                # Try with first letter capital (python type nameconvention)
-                self.recipe = getattr(module, task.capitalize())()
+            self.recipe = getattr(module, task)()
             self.recipe.logger = getSearchingLogger("%s.%s" % (self.logger.name, task))
             self.recipe.logger.setLevel(self.logger.level)
         except Exception, e:
@@ -93,9 +88,8 @@ class SystemCook(WSRTCook):
     def set_expect(self, expectlist):
         self._expect = expectlist
 
-    def spawn(self, env=None):
+    def spawn(self, env = None):
         """Try to start the task."""
-        import pty
         try:
             (self._pid, self._child_fd) = pty.fork()
         except OSError, e:
@@ -121,7 +115,6 @@ class SystemCook(WSRTCook):
                 sys.stderr.write('Process could not be started: ' + self.task)
                 os._exit(1)
         else: ## the parent
-            import fcntl
 ##            self.poll.register(self._child_fd)
 ##            self.poll.register(self._errorpipe_end)
             os.close(self._errorpipe_front) ## close what we don't need

@@ -1,0 +1,59 @@
+# -- Output_SkyImage_ --
+#
+# Component description of a SkyImage Dataproduct
+#
+# $Id$
+#
+# name          name of the node
+# version       version of this node specification
+# quality       stable | test | development
+# constraint    python script to check multiparameter constrains
+#               may return OK, NotOK, Unknown
+# description   What this module does.
+#
+# Note 1: to seperate the parameterlines from the Node lines each node line
+#         begins with the label 'Node'.
+# Note 2: To define dependancies between nodes the label 'Uses' is used.
+#         A + sign may be added to the versionnr to indicate that the given
+#         versionnr is the minimal version the module schould have. (NOT YET IMPLEMENTED)
+#
+
+#########################################################################################################
+# -- Output_SkyImage_ --
+#      name       	vers   qual  		constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  Output_SkyImage_	4.0.0  development  	'node constraint'  "SkyImageDataProduct specification"
+
+#
+# name			name of the parameter
+# direction		I: input only; O: changes will be logged during runtime; IO: both
+# type			parametertype: should exist in param_type table of OTDB (= ParamTypeConv)
+# unit			name of unit of parameter (should exist in unit table (= UnitConv)
+# pruninglevel		when parameter values are thrown away from the database. (NOT YET USED)
+# validationMoment	moment the parameter values is validated (NOT YET USED)
+# value			value(range) of the parameter.
+# constraint		script to run to check its value
+# description		what the parameter manages.
+#--------------------------------------------------------------------------------------------------------
+#    name                  	  dir. type   unit   prun. vm   value	constr.	descr.
+#--------------------------------------------------------------------------------------------------------
+par  size 	                  O    ulng   -      10    0    0      	- 	''
+par  fileFormat                   O    ptext  -      10    0    'FITS|AIPS++/CASA|HDF5;AIPS++/CASA'      -       ''
+par  filename                     O    text   -      10    0    ''      	-       ''
+par  location                     O    text   -      10    0    ''      	-       ''
+par  percentageWritten            O    uint   -      10    0    0      	-       ''
+par  numberOfAxes	          O    uint   -      10    0    0	        -	''
+par  nrOfDirectionCoordinates     O    uint   -      10    0    0	        -	''
+par  nrOfSpectralCoordinates      O    uint   -      10    0    0	        -	''
+par  nrOfPolarizationCoordinates  O    uint   -      10    0    0	        -	''
+par  locationFrame                O    ptext  -      10    0    'GEOCENTER|BARYCENTER|HELIOCENTER|TOPOCENTER|LSRK|LSRD|GALACTIC|LOCAL_GROUP|RELOCATABLE;GEOCENTER'      -       ''
+par  timeFrame	   	          O    text   -      10    0    ''      	- 	''
+
+
+#      name              	vers   qual        constr.       descr.
+#--------------------------------------------------------------------------------------------------------
+uses  Pointing     		4.0.0  development '1'		"Pointing specification"
+uses  DirectionCoordinate    	4.0.0  development '1'		"DirectionCoordinate specification"
+uses  SpectralCoordinate        4.0.0  development '1'		"SpectralCoordinate specification"
+uses  PolarizationCoordinate    4.0.0  development '1'		"PolarizationCoordinate specification"
+

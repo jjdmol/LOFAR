@@ -20,21 +20,11 @@ using namespace aoRemote;
 lane<ObservationTimerange*> *readLane;
 lane<ObservationTimerange*> *writeLane;
 
-boost::mutex commanderMutex;
-ProcessCommander *commander;
-
 fftw_plan fftPlanForward, fftPlanBackward;
-const size_t rowCountPerRequest = 128;
 
 // fringe size is given in units of wavelength / fringe. Fringes smaller than that will be filtered.
 double filterFringeSize;
 
-bool isFilterSizeInChannels;
-
-/**
- * This function returns the distance between the u,v points of the highest and lowest frequencies.
- * The returned distance is in wavelengths.
- */
 double uvDist(double u, double v, double frequencyWidth)
 {
 	const double
@@ -65,11 +55,9 @@ void workThread()
 				{
 					// Calculate the frequencies to filter
 					double u = timerange->U(t), v = timerange->V(t);
-					double limitFrequency = isFilterSizeInChannels ?
-						(channelCount / filterFringeSize) :
-						(uvDist(u, v, timerange->FrequencyWidth()) / filterFringeSize);
+					double limitFrequency = uvDist(u, v, timerange->FrequencyWidth()) / filterFringeSize;
 					
-					if(limitFrequency*2 <= channelCount) // otherwise no frequencies had to be removed
+					if(limitFrequency < channelCount) // otherwise no frequencies had to be removed
 					{
 						if(limitFrequency > maxFilterSizeInChannels) maxFilterSizeInChannels = limitFrequency;
 						if(limitFrequency < minFilterSizeInChannels) minFilterSizeInChannels = limitFrequency;
@@ -88,8 +76,8 @@ void workThread()
 							}
 							
 							fftw_execute_dft(fftPlanForward, fftIn, fftOut);
-							size_t filterIndexSize = (limitFrequency > 1.0) ? (size_t) ceil(limitFrequency/2.0) : 1;
-							// Remove the high frequencies [filterIndexSize : n-filterIndexSize]
+							// Remove the high frequencies [n/2-filterIndexSize : n/2+filterIndexSize]
+							size_t filterIndexSize = (limitFrequency > 1.0) ? (size_t) ceil(limitFrequency) : 1;
 							for(size_t f=filterIndexSize;f<channelCount - filterIndexSize;++f)
 							{
 								fftOut[f][0] = 0.0;
@@ -112,7 +100,7 @@ void workThread()
 					}
 				}
 			}
-			writeLane->write(timerange);
+			delete timerange;
 		} while(readLane->read(timerange));
 		fftw_free(fftIn);
 		fftw_free(fftOut);
@@ -120,64 +108,8 @@ void workThread()
 	std::cout << "Worker finished. Filtersize range in channel: " << minFilterSizeInChannels << "-" << maxFilterSizeInChannels << '\n';
 }
 
-void readThreadFunction(ObservationTimerange &timerange, const size_t &totalRows)
+void writeThread()
 {
-	MSRowDataExt *rowBuffer[commander->Observation().Size()];
-	for(size_t i=0;i<commander->Observation().Size();++i)
-		rowBuffer[i] = new MSRowDataExt[rowCountPerRequest];
-
-	size_t currentRow = 0;
-	while(currentRow < totalRows)
-	{
-		size_t currentRowCount = rowCountPerRequest;
-		if(currentRow + currentRowCount > totalRows)
-			currentRowCount = totalRows - currentRow;
-		timerange.SetZero();
-		
-		boost::mutex::scoped_lock lock(commanderMutex);
-		std::cout << "Reading... " << std::flush;
-		commander->PushReadDataRowsTask(timerange, currentRow, currentRowCount, rowBuffer);
-		commander->Run(false);
-		commander->CheckErrors();
-		std::cout << "Done.\n" << std::flush;
-		lock.unlock();
-		
-		currentRow += currentRowCount;
-		cout << "Read " << currentRow << '/' << totalRows << '\n';
-		readLane->write(new ObservationTimerange(timerange));
-	}
-	for(size_t i=0;i<commander->Observation().Size();++i)
-		delete[] rowBuffer[i];
-}
-
-void writeThreadFunction()
-{
-	const ClusteredObservation &obs = commander->Observation();
-	MSRowDataExt *rowBuffer[obs.Size()];
-	for(size_t i=0;i<obs.Size();++i)
-		rowBuffer[i] = new MSRowDataExt[rowCountPerRequest];
-		
-	ObservationTimerange *timerange;
-	if(writeLane->read(timerange))
-	{
-		for(size_t i=0;i<obs.Size();++i)
-		{
-			for(size_t row=0;row<rowCountPerRequest;++row)
-				rowBuffer[i][row] = MSRowDataExt(timerange->PolarizationCount(), timerange->Band(i).channels.size());
-		}
-		do {
-			boost::mutex::scoped_lock lock(commanderMutex);
-			std::cout << "Writing... " << std::flush;
-			commander->PushWriteDataRowsTask(*timerange, rowBuffer);
-			commander->Run(false);
-			commander->CheckErrors();
-			std::cout << "Done.\n" << std::flush;
-			lock.unlock();
-			
-			delete timerange;
-		} while(writeLane->read(timerange));
-	}
-	std::cout << "Writer thread finished.\n";
 }
 
 void initializeFFTW(size_t channelCount)
@@ -201,36 +133,29 @@ void deinitializeFFTW()
 
 int main(int argc, char *argv[])
 {
-	if(argc != 4)
+	if(argc == 1)
 	{
-		cerr << "Usage: aofrequencyfilter <reffile> <mode> <filterfringesize>\n"
-		"\tmode can be 'inChannels' (CH) or in uv wavelengths (UV)\n";
+		cerr << "Usage: aofrequencyfilter <reffile> <filterfringesize>\n";
 	}
 	else {
-		string modeStr(argv[2]);
-		if(modeStr == "CH")
-			isFilterSizeInChannels = true;
-		else if(modeStr == "UV")
-			isFilterSizeInChannels = false;
-		else throw std::runtime_error("Bad mode");
-		
-		filterFringeSize = atof(argv[3]);
+		filterFringeSize = atof(argv[2]);
 		ClusteredObservation *obs = ClusteredObservation::Load(argv[1]);
-		commander = new ProcessCommander(*obs);
-		commander->PushReadAntennaTablesTask();
-		commander->PushReadBandTablesTask();
-		commander->Run(false);
-		commander->CheckErrors();
+		ProcessCommander commander(*obs);
+		commander.PushReadAntennaTablesTask();
+		commander.PushReadBandTablesTask();
+		commander.Run(false);
+		commander.CheckErrors();
 		
 		ObservationTimerange timerange(*obs);
-		const std::vector<BandInfo> &bands = commander->Bands();
+		const std::vector<BandInfo> &bands = commander.Bands();
 		for(size_t i=0; i!=bands.size(); ++i)
 			timerange.SetBandInfo(i, bands[i]);
 		
 		const unsigned processorCount = System::ProcessorCount();
 		cout << "CPUs: " << processorCount << '\n';
-		unsigned polarizationCount = commander->PolarizationCount();
+		unsigned polarizationCount = commander.PolarizationCount();
 		cout << "Polarization count: " << polarizationCount << '\n';
+		const size_t rowCountPerRequest = 128;
 		
 		timerange.Initialize(polarizationCount, rowCountPerRequest);
 		
@@ -238,11 +163,15 @@ int main(int argc, char *argv[])
 		initializeFFTW(timerange.ChannelCount());
 		cout << " Done.\n";
 		
+		MSRowDataExt *rowBuffer[obs->Size()];
+		for(size_t i=0;i<obs->Size();++i)
+			rowBuffer[i] = new MSRowDataExt[rowCountPerRequest];
+		
 		// We ask for "0" rows, which means we will ask for the total number of rows
-		commander->PushReadDataRowsTask(timerange, 0, 0, 0);
-		commander->Run(false);
-		commander->CheckErrors();
-		const size_t totalRows = commander->RowsTotal();
+		commander.PushReadDataRowsTask(timerange, 0, 0, rowBuffer);
+		commander.Run(false);
+		commander.CheckErrors();
+		const size_t totalRows = commander.RowsTotal();
 		cout << "Total rows to filter: " << totalRows << '\n';
 		
 		readLane = new lane<ObservationTimerange*>(processorCount);
@@ -254,25 +183,37 @@ int main(int argc, char *argv[])
 		{
 			threads[i] = new boost::thread(&workThread);
 		}
-		boost::thread writeThread(&writeThreadFunction);
 		
-		readThreadFunction(timerange, totalRows);
 		
-		// Shut down read workers
+		size_t currentRow = 0;
+		while(currentRow < totalRows)
+		{
+			size_t currentRowCount = rowCountPerRequest;
+			if(currentRow + currentRowCount > totalRows)
+				currentRowCount = totalRows - currentRow;
+			timerange.SetZero();
+			commander.PushReadDataRowsTask(timerange, 0, currentRowCount, rowBuffer);
+			commander.Run(false);
+			commander.CheckErrors();
+			
+			currentRow += currentRowCount;
+			cout << "Read " << currentRow << '/' << totalRows << '\n';
+			readLane->write(new ObservationTimerange(timerange));
+		}
 		readLane->write_end();
+		
 		for(size_t i=0; i<processorCount; ++i)
 		{
 			threads[i]->join();
 		}
-		delete readLane;
 		
-		// Shut down write worker
 		writeLane->write_end();
-		writeThread.join();
+		
+		delete readLane;
 		delete writeLane;
 		
-		// Clean
-		delete commander;
+		for(size_t i=0;i<obs->Size();++i)
+			delete[] rowBuffer[i];
 		delete obs;
 	}
 }

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <APL/CR_Protocol/CRstopRequest.h>
-#include <MACIO/Marshalling.tcc>
+#include <MACIO/Marshalling.h>
 
 namespace LOFAR {
   namespace CR_Protocol {
@@ -40,26 +40,26 @@ ostream& CRstopRequest::print (ostream& os) const
 
 
 // --- marshalling methods --- 
-size_t CRstopRequest::getSize()
+unsigned int CRstopRequest::getSize()
 {
-	return(MSH_size(stationList) + MSH_size(rcuList) + stopTime.getSize());
+	return(MSH_STRING_SIZE(stationList) + MSH_STRING_SIZE(rcuList) + stopTime.getSize());
 }
 
-size_t CRstopRequest::pack  (char* buffer) const
+unsigned int CRstopRequest::pack  (void* buffer)
 {
-	size_t offset = 0;
-	offset = MSH_pack(buffer, offset, stationList);	
-	offset = MSH_pack(buffer, offset, rcuList);	
-	offset += stopTime.pack(buffer + offset);
+	unsigned int	offset(0);
+	MSH_PACK_STRING(buffer, offset, stationList);	
+	MSH_PACK_STRING(buffer, offset, rcuList);	
+	offset += stopTime.pack((char*)(buffer)+offset);
 	return (offset);
 }
- 
-size_t CRstopRequest::unpack(const char *buffer)
+
+unsigned int CRstopRequest::unpack(void *buffer)
 {
-	size_t offset = 0;
-	offset = MSH_unpack(buffer, offset, stationList);	
-	offset = MSH_unpack(buffer, offset, rcuList);	
-	offset += stopTime.unpack(buffer + offset);
+	unsigned int	offset(0);
+	MSH_UNPACK_STRING(buffer, offset, stationList);	
+	MSH_UNPACK_STRING(buffer, offset, rcuList);	
+	offset += stopTime.unpack((char*)(buffer)+offset);
 	return (offset);
 }
 

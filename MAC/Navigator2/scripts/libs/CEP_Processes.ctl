@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -129,9 +129,9 @@ bool CEP_Processes_UpdateCEPControllers() {
     // get the real name from the selected Observation
     CEP_obsBaseDP=claimManager_nameToRealName("LOFAR_ObsSW_"+CEP_selectedObservation);   
     
-//    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_BGPApplPanel",
-//        DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(CEP_obsBaseDP));
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","PythonControlPanel",
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_BGPApplPanel",
+        DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(CEP_obsBaseDP));
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_StorageApplPanel",
         DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(CEP_obsBaseDP));
   
   }
@@ -248,8 +248,6 @@ CEP_Processes_ActiveObsCallback(string dp1, dyn_string activeObservations) {
   string oldSelection=activeObs.selectedItem();
   CEP_selectedObservation=oldSelection;
   LOG_DEBUG("CEP_Processes.ctl:activeObsCallback|oldSelection: "+oldSelection);
-  dynSortAsc(activeObservations);      
-  activeObservations = dynUnique(activeObservations);
   for (int i=1; i<= dynlen(activeObservations);i++) {
     string realName=claimManager_nameToRealName("LOFAR_ObsSW_"+activeObservations[i]);
     activeObs.appendItem("",realName,activeObservations[i]);

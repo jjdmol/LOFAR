@@ -27,12 +27,6 @@
 # include <casa/Inputs/Input.h>
 #endif
 
-// Read input args from command line if given as key=value or as --key value
-// First arg can be parset name
-// Otherwise use default parset name (can be empty)
-// Do this in parset class
-
-
 namespace LOFAR {
 
   InputParSet::InputParSet()
@@ -214,7 +208,7 @@ namespace LOFAR {
 
   void InputParSet::setVersion (const string& version)
   {
-    itsVersion = version;
+    itsVersion == version;
 #ifdef HAVE_AIPSPP
     itsInput->version (version);
 #endif

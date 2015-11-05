@@ -5,7 +5,7 @@
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
-from subprocess import CalledProcessError
+from subprocess import Popen, CalledProcessError, PIPE, STDOUT
 import errno
 import os
 import tempfile
@@ -19,21 +19,9 @@ from lofarpipe.support.utilities import catch_segfaults
 
 
 class setupsourcedb(LOFARnodeTCP):
-    """
-    Create the sourcedb at the supplied location
-    
-    1. Create output directory if it does not yet exist.
-    2. Create sourcedb
-    3. validate performance, cleanup
-    
-    """
-    def run(self, executable, catalogue, skydb, dbtype):
-        """
-        Contains all functionality
-        """
+    def run(self, executable, catalogue, skydb):
         with log_time(self.logger):
-            # ****************************************************************
-            # 1. Create output directory if it does not yet exist.
+            # Create output directory if it does not yet exist.
             skydb_dir = os.path.dirname(skydb)
             try:
                 os.makedirs(skydb_dir)
@@ -43,19 +31,16 @@ class setupsourcedb(LOFARnodeTCP):
                 if err[0] != errno.EEXIST:
                     raise
 
-            # ****************************************************************
-            # 2 Remove any old sky database
-            #   Create the sourcedb
+            # Remove any old sky database
             shutil.rmtree(skydb, ignore_errors=True)
 
             self.logger.info("Creating skymodel: %s" % (skydb))
-            scratch_dir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
+            scratch_dir = tempfile.mkdtemp()
             try:
                 cmd = [executable,
-                       "in=%s" % catalogue,
-                       "out=%s" % skydb,
-                       "outtype=%s" % dbtype,
                        "format=<",
+                       "in=%s" % (catalogue),
+                       "out=%s" % (skydb),
                        "append=false"
                       ]
                 with CatchLog4CPlus(
@@ -64,13 +49,10 @@ class setupsourcedb(LOFARnodeTCP):
                     os.path.basename(executable)
                 ) as logger:
                     catch_segfaults(cmd, scratch_dir, None, logger)
-
-            # *****************************************************************
-            # 3. Validate performance and cleanup temp files
-            except CalledProcessError, err:
+            except CalledProcessError, e:
                 # For CalledProcessError isn't properly propagated by IPython
                 # Temporary workaround...
-                self.logger.error(str(err))
+                self.logger.error(str(e))
                 return 1
             finally:
                 shutil.rmtree(scratch_dir)

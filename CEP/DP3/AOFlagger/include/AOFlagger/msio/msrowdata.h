@@ -54,11 +54,9 @@ class MSRowData : public Serializable
 		/**
 		 * Copy construct.
 		 */
-		MSRowData(const MSRowData &source) :
-			_polarizationCount(source._polarizationCount),
-			_channelCount(source._channelCount)
+		MSRowData(const MSRowData &source)
 		{
-			size_t size = _polarizationCount * _channelCount;
+			size_t size = source._polarizationCount * source._channelCount;
 			_realData = new num_t[size*2];
 			_imagData = &_realData[size];
 			memcpy(_realData, source._realData, size*2*sizeof(num_t));
@@ -81,8 +79,6 @@ class MSRowData : public Serializable
 				_realData = new num_t[size*2];
 				_imagData = &_realData[size];
 			}
-			_polarizationCount = source._polarizationCount;
-			_channelCount = source._channelCount;
 			memcpy(_realData, source._realData, size*2*sizeof(num_t));
 			return *this;
 		}

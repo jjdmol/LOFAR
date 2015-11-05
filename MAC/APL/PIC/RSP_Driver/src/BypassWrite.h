@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ class BypassWrite : public SyncAction
 {
 public:
 	// Constructors for a BypassWrite object.
-	BypassWrite(GCFPortInterface& board_port, int board_id);
+	BypassWrite(GCFPortInterface& board_port, int board_id, int bpNr);
 
 	// Destructor for BypassWrite
 	virtual ~BypassWrite();
@@ -55,6 +55,7 @@ public:
 
 private:
 	EPA_Protocol::MEPHeader  m_hdr;
+	int						 itsBPNr;
 
 	//      const Scheduler&         m_scheduler; // for getCurrentTime
 //	RTC::Timestamp           m_mark;      // mark time

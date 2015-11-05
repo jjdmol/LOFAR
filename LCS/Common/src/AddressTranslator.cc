@@ -82,7 +82,7 @@ namespace LOFAR
       // Walk through list of shared objects (ref. man dl_iterate_phdr(3)).
       // The callback function #find_matching_file() will set #bfdFile and
       // #base_addr.
-      if (!dl_iterate_phdr(find_matching_file, this)) continue;
+      dl_iterate_phdr(find_matching_file, this);
 
       // Lookup the SymbolTable using #base_addr as key. Create a new entry
       // if the symbol table of #bfdFile is not yet present in the map.
@@ -110,11 +110,6 @@ namespace LOFAR
       bfd_map_over_sections(abfd, find_address_in_section, this);
 
       if (found) {
-        // Unwind inlined functions to get the source information of the first
-        // non-inlined function. In general, this will improve the usefulness
-        // of the backtrace information.
-        while(bfd_find_inliner_info(abfd, &filename, &functionname, &line));
-        
         if (functionname && *functionname) {
 # ifdef __GNUG__
           char* realname = abi::__cxa_demangle(functionname, 0, 0, 0);

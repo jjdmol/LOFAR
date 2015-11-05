@@ -4,7 +4,7 @@ insert into runningcatalog_fluxes(runcat_id, band, datapoints,
                                   avg_wf_peak, avg_weight_f_peak,
                                   wm_f_int, wm_f_int_err,
                                   avg_wf_int, avg_weight_f_int)
-select a.runcat_id, [b], 1,
+select a.runcat_id, {1}, 1,
        e.f_peak, e.f_peak_err,
        e.f_peak/(e.f_peak_err*e.f_peak_err), 1/(e.f_peak_err*e.f_peak_err),
        e.f_int, e.f_int_err,
@@ -16,8 +16,7 @@ select a.runcat_id, [b], 1,
  where a.xtrsrc_id = e.xtrsrcid
    and ta.xtrsrc_id = a.xtrsrc_id
    and ta.runcat_id = a.runcat_id
-   and ta.image_id = [i]
-   and ta.kind <> 4
+   and ta.kind not in (3, 4)
    and i.imageid = e.image_id
    and not exists (select f.band
                      from runningcatalog_fluxes f
@@ -25,7 +24,7 @@ select a.runcat_id, [b], 1,
                       and f.band = i.band
                       and f.stokes = i.stokes)
    and ta.lr_method = 1
-   and e.image_id = [i];
+   and e.image_id = {0};
 
 
 --#update runningcatalog
@@ -39,7 +38,7 @@ update runningcatalog
    and runningcatalog.runcatid = a.runcat_id
    and runningcatalog.group_head_id is null
    and runningcatalog.source_kind = 0
-   and e.image_id = [i];
+   and e.image_id = {0};
 
 --#update runningcatalog extended
 update runningcatalog
@@ -54,7 +53,7 @@ update runningcatalog
            and r.runcatid = a.runcat_id
            and r.group_head_id is null
            and r.source_kind <> 0
-           and e.image_id = [i]
+           and e.image_id = {0}
         group by runcatid) as y
 where y.runcatid = runningcatalog.runcatid;
 
@@ -71,7 +70,7 @@ update runningcatalog
  where a.xtrsrc_id = e.xtrsrcid
    and runningcatalog.runcatid = a.runcat_id
    and runningcatalog.group_head_id is null
-   and e.image_id = [i]);
+   and e.image_id = {0});
 
 
 --#update runningcatalog_fluxes
@@ -86,8 +85,8 @@ update runningcatalog_fluxes
              runningcatalog_fluxes f
        where a.xtrsrc_id = e.xtrsrcid
          and f.runcat_id = a.runcat_id
-         and e.image_id = [i]
-         and i.imageid = [i]
+         and e.image_id = {0}
+         and e.image_id = i.imageid
          and a.lr_method <> 5 --not a group association
          and f.band = i.band
          and f.stokes = i.stokes

@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -131,9 +131,9 @@ public:
 	  /**
 	   * marshalling methods
 	   */
-	  size_t getSize() const;
-	  size_t pack  (char* buffer) const;
-	  size_t unpack(const char *buffer);
+	  unsigned int getSize();
+	  unsigned int pack  (void* buffer);
+	  unsigned int unpack(void *buffer);
 	  /*@}*/
 
 private:
@@ -156,18 +156,18 @@ private:
   }
   inline void Timestamp::get(struct timeval *tv) const { if (tv) *tv = m_tv; }
 
-  inline size_t Timestamp::getSize() const
+  inline unsigned int Timestamp::getSize()
   {
     return sizeof(struct timeval);
   }
 
-  inline size_t Timestamp::pack  (char* buffer) const
+  inline unsigned int Timestamp::pack  (void* buffer)
   {
     memcpy(buffer, &m_tv, sizeof(struct timeval));
     return sizeof(struct timeval);
   }
 
-  inline size_t Timestamp::unpack(const char *buffer)
+  inline unsigned int Timestamp::unpack(void *buffer)
   {
     memcpy(&m_tv, buffer, sizeof(struct timeval));
     return sizeof(struct timeval);

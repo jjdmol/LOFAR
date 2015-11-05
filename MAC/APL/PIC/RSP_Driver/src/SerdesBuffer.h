@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -54,11 +54,11 @@ public:
 	~SerdesBuffer() {}
 
 	void clear();
-	bool newCommand   (unsigned char* cmdbuf, int	cmdLen);
-	bool appendCommand(unsigned char* cmdbuf, int	cmdLen);
+	bool newCommand   (char* cmdbuf, int	cmdLen);
+	bool appendCommand(char* cmdbuf, int	cmdLen);
 
 	// bdatabuffer functions
-	inline const unsigned char*	getBufferPtr()
+	inline const char*	getBufferPtr()
 		{ return (&itsBuffer[0]); }
 	inline int			getDataLen	() 
 		{ return (itsNrBytes);	}
@@ -72,7 +72,7 @@ private:
 	SerdesBuffer& operator=(const SerdesBuffer& that);
 
 	//# --- Datamembers ---
-	unsigned char				itsBuffer [SERDES_BUFFER_SIZE];
+	char						itsBuffer [SERDES_BUFFER_SIZE];
 	int							itsNrBytes;
 };
 

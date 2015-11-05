@@ -33,10 +33,7 @@
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
-class EarthPosition {
-public:
-	EarthPosition() : x(0.0), y(0.0), z(0.0) { }
-	
+struct EarthPosition {
 	double x, y, z;
 	std::string ToString() {
 		std::stringstream s;
@@ -94,15 +91,13 @@ public:
 	}
 };
 
-class UVW {
-public:
+struct UVW {
 	UVW() : u(0.0), v(0.0), w(0.0) { }
 	UVW(num_t _u, num_t _v, num_t _w) : u(_u), v(_v), w(_w) { }
 	num_t u, v, w;
 };
 
-class AntennaInfo {
-public:
+struct AntennaInfo {
 	AntennaInfo() { }
 	AntennaInfo(const AntennaInfo &source)
 		: id(source.id), position(source.position), name(source.name), diameter(source.diameter), mount(source.mount), station(source.station)
@@ -145,8 +140,7 @@ public:
 	}
 };
 
-class ChannelInfo {
-public:
+struct ChannelInfo {
 	unsigned frequencyIndex;
 	double frequencyHz;
 	double channelWidthHz;
@@ -176,20 +170,22 @@ public:
 	}
 };
 
-class BandInfo {
-public:
+struct BandInfo {
 	unsigned windowIndex;
+	unsigned channelCount;
 	std::vector<ChannelInfo> channels;
 
-	BandInfo() : windowIndex(0) { }
+	BandInfo() { }
 	BandInfo(const BandInfo &source) :
 		windowIndex(source.windowIndex),
+		channelCount(source.channelCount),
 		channels(source.channels)
 	{
 	}
 	void operator=(const BandInfo &source)
 	{
 		windowIndex = source.windowIndex;
+		channelCount = source.channelCount;
 		channels = source.channels;
 	}
 	num_t CenterFrequencyHz() const
@@ -210,15 +206,14 @@ public:
 	void Unserialize(std::istream &stream)
 	{
 		windowIndex = Serializable::UnserializeUInt32(stream);
-		size_t channelCount = Serializable::UnserializeUInt32(stream);
+		channelCount = Serializable::UnserializeUInt32(stream);
 		channels.resize(channelCount);
 		for(size_t i=0;i<channelCount;++i)
 			channels[i].Unserialize(stream);
 	}
 };
 
-class FieldInfo {
-public:
+struct FieldInfo {
 	unsigned fieldId;
 	num_t delayDirectionRA;
 	num_t delayDirectionDec;
@@ -226,11 +221,8 @@ public:
 	num_t delayDirectionDecNegCos;
 };
 
-class Baseline {
-public:
+struct Baseline {
 	EarthPosition antenna1, antenna2;
-	Baseline()
-		: antenna1(), antenna2() { }
 	Baseline(const AntennaInfo &_antenna1, const AntennaInfo &_antenna2)
 		: antenna1(_antenna1.position), antenna2(_antenna2.position) { }
 	Baseline(EarthPosition _antenna1, EarthPosition _antenna2)
@@ -258,8 +250,7 @@ public:
 	num_t DeltaZ() const { return antenna2.z-antenna1.z; }
 };
 
-class Frequency {
-public:
+struct Frequency {
 	static std::string ToString(num_t value)
 	{
 		std::stringstream s;
@@ -273,8 +264,7 @@ public:
 	}
 };
 
-class RightAscension {
-public:
+struct RightAscension {
 	static std::string ToString(numl_t value)
 	{
 		value = fmod(value, 2.0*M_PInl);
@@ -291,8 +281,7 @@ public:
 	}
 };
 
-class Declination {
-public:
+struct Declination {
 	static std::string ToString(numl_t value)
 	{
 		value = fmod(value, 2.0*M_PInl);
@@ -315,8 +304,7 @@ public:
 	}
 };
 
-class Angle {
-public:
+struct Angle {
 	static std::string ToString(numl_t valueRad)
 	{
 		std::stringstream s;

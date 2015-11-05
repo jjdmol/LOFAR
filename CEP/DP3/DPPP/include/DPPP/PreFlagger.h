@@ -34,10 +34,11 @@
 #include <measures/Measures/MDirection.h>
 
 namespace LOFAR {
-  class ParameterSet;
   class ParameterValue;
 
   namespace DPPP {
+    class ParSet;
+
     // @ingroup NDPPP
 
     // This class is a DPStep class flagging data points based on data
@@ -74,7 +75,7 @@ namespace LOFAR {
 
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
-      PreFlagger (DPInput*, const ParameterSet&, const string& prefix);
+      PreFlagger (DPInput*, const ParSet&, const string& prefix);
 
       virtual ~PreFlagger();
 
@@ -124,10 +125,10 @@ namespace LOFAR {
         {}
 
         // Construct from the parset parameters.
-        PSet (DPInput*, const ParameterSet& parset, const string& prefix);
+        PSet (DPInput*, const ParSet& parset, const string& prefix);
 
         // Set and return the flags.
-        casa::Cube<bool>* process (const DPBuffer&, DPBuffer&, uint timeSlot,
+        casa::Cube<bool>* process (DPBuffer&, uint timeSlot,
                                    const casa::Block<bool>& matchBL,
                                    NSTimer& timer);
 
@@ -282,7 +283,6 @@ namespace LOFAR {
       //# Data members of PreFlagger.
       string      itsName;
       DPInput*    itsInput;
-      DPBuffer    itsBuffer;
       Mode        itsMode;
       NSTimer     itsTimer;
       PSet        itsPSet;

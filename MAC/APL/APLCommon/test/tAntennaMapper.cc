@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -38,10 +38,8 @@ void doTest(int	antNr, int antType, AntennaMapper&	AM)
 		 << AM.YRCU(antNr) << " using input " << AM.RCUinput(antNr, antType) << endl;
 }
 
-int main (int, char *argv[]) 
+int main (int	argc, char* argv[]) 
 {
-	INIT_LOGGER(argv[0]);
-
 	//						rcus, lbas, hbas
 	AntennaMapper	AMCore  (96, 96, 48);
 	AntennaMapper	AMRemote(96, 96, 0);

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -94,7 +94,6 @@ PVSSresult DPservice::setValue (const string&		DPname,
 	// write value to it.
 	if (valueObj->setValue(value) != GCF_NO_ERROR) {
 		LOG_WARN_STR("Could not set value for DP " << DPname);
-		delete valueObj;
 		if (wantAnswer) {
 			itsExtResponse->dpeValueSet(DPname, SA_SETPROP_FAILED);
 		}
@@ -102,9 +101,7 @@ PVSSresult DPservice::setValue (const string&		DPname,
 	}
 
 	// finally write value to the database.
-	PVSSresult	result = itsService->dpeSet(DPname, *valueObj, timestamp, wantAnswer);
-	delete valueObj;
-	return (result);
+	return (itsService->dpeSet(DPname, *valueObj, timestamp, wantAnswer));
 }
 
 PVSSresult DPservice::setValue (const string&		DPname, 

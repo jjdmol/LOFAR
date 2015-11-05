@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: NamedPipeStream.cc 15528 2010-04-22 14:08:39Z romein $
 
 #include <lofar_config.h>
 
@@ -43,10 +43,10 @@ NamedPipeStream::NamedPipeStream(const char *name, bool serverSide)
 {
   try {
     if (mknod(itsReadName.c_str(), 0600 | S_IFIFO, 0) < 0 && errno != EEXIST)
-      THROW_SYSCALL(std::string("mknod ") + itsReadName);
+      throw SystemCallException(std::string("mknod ") + itsReadName, errno, THROW_ARGS);
 
     if (mknod(itsWriteName.c_str(), 0600 | S_IFIFO, 0) < 0 && errno != EEXIST)
-      THROW_SYSCALL(std::string("mknod ") + itsWriteName);
+      throw SystemCallException(std::string("mknod ") + itsWriteName, errno, THROW_ARGS);
 
     itsReadStream = new FileStream(itsReadName.c_str(), O_RDWR, 0600); // strange; O_RDONLY hangs ???
     itsWriteStream = new FileStream(itsWriteName.c_str(), O_RDWR, 0600);

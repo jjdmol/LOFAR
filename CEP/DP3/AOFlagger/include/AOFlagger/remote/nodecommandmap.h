@@ -21,8 +21,6 @@
 #ifndef AOREMOTE__NODE_COMMAND_MAP_H
 #define AOREMOTE__NODE_COMMAND_MAP_H
 
-#include <stdexcept>
-
 #include "clusteredobservation.h"
 
 namespace aoRemote {
@@ -47,8 +45,6 @@ class NodeCommandMap
 		const ClusteredObservationItem &Top(const std::string &hostname) const
 		{
 			NodeMap::const_iterator iter = _nodeMap.find(hostname);
-			if(iter == _nodeMap.end())
-				throw std::runtime_error("Could not find hostname in map. This might mean that your host knows the host under a different name (check case).");
 			const std::deque<ClusteredObservationItem> &items = iter->second;
 			return items.front();
 		}

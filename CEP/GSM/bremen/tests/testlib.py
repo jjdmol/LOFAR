@@ -54,25 +54,22 @@ def cleanup_db(conn):
                 'runningcatalog',
                 'temp_associations',
                 'images',
-                'image_stats',
-                'runs',
                 'extractedsources',
                 'detections']:
         if isinstance(conn, MonetConnection):
-            conn._execute_with_cursor("delete from %s;" % tbl, cursor)
+            cursor.execute("delete from %s;" % tbl)
         else:
-            conn._execute_with_cursor("truncate table %s;" % tbl, cursor)
+            cursor.execute("truncate table %s;" % tbl)
 
     for seq in ['seq_datasets',
                 'seq_images',
-                'seq_runs',
                 'seq_runningcatalog']:
-        conn._execute_with_cursor('alter sequence %s restart with 1;' % seq, cursor)
-    conn._execute_with_cursor('alter sequence seq_extractedsources restart with 1001;', cursor)
+        cursor.execute('alter sequence %s restart with 1;' % seq)
+    cursor.execute('alter sequence seq_extractedsources restart with 1001;')
     conn.commit()
     cursor.close()
 
-def write_parset(filename, source, freq, ra=0.0, decl=0.0, beam=1.0):
+def write_parset(filename, source, freq, ra=0.0, decl=0.0):
     fil = open(filename, 'w')
     fil.write("""##############################
 # Lofar GSM input parset.    #
@@ -83,6 +80,6 @@ image_date = ???
 frequency = %s # in Hz
 pointing_ra = %s # in degrees
 pointing_decl = %s # in degrees
-beam_size = %s # in degrees
-stokes = I""" % (source, filename, freq, ra, decl, beam))
+beam_size = 1.00 # in degrees
+stokes = I""" % (source, filename, freq, ra, decl))
     fil.close()

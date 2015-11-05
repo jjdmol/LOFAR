@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,18 +25,14 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Common/ParameterSet.h>
 #include <Common/StringUtil.h>
+#include <Common/lofar_datetime.h>
 #include <Common/lofar_string.h>
 #include <fstream>
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/OTDBnode.h>
 #include <OTDB/OTDBparam.h>
 #include <OTDB/misc.h>
-
-#include <pqxx/transaction>
-
-using namespace pqxx;
 
 namespace LOFAR {
   namespace OTDB {
@@ -581,35 +577,33 @@ vector<OTDBnode> TreeMaintenance::getPICitemList (treeIDType	aTreeID,
 //
 // get a number of levels of children
 vector<OTDBnode> TreeMaintenance::getItemList (treeIDType		aTreeID,
-											   const string&	aNameFragment,
-											   bool				isRegex)
+											   const string&	aNameFragment)
 {
 	LOG_TRACE_FLOW_STR("TM:getItemList(" << aTreeID << "," 
-										 << aNameFragment 
-										 << (isRegex ? "True" : "False") << ")");
+										 << aNameFragment << ")");
 
 	// First resolve function to call
 	string		functionName;
 	OTDBtree	theTree = itsConn->getTreeInfo(aTreeID);
 	switch (theTree.type) {
 	case TThardware:
-		ASSERTSTR(isRegex == false, "Regex function not yet supported for PIC trees");
 		functionName = "getPICitemList";
 		break;
 	case TTtemplate:
-		ASSERTSTR(isRegex == false, "Regex function not yet supported for template trees");
 		functionName = "getVTitemList";
 		break;
 	case TTVHtree:
-		functionName = isRegex ? "getVHitemListRegex" : "getVHitemList";		break;
+		functionName = "getVHitemList";
+		break;
 	default:
 		ASSERTSTR(false, "Treetype " << theTree.type << " is unknown");
 	}
 
 	vector<OTDBnode>	resultVec;
 	// construct a query that calls a stored procedure.
-	string	query = formatString("SELECT * from %s('%d','%s')", functionName.c_str(), aTreeID, aNameFragment.c_str());
-	LOG_DEBUG_STR(query);
+	string	query("SELECT * from " + functionName + "('" +
+					toString(aTreeID) + "','" +
+					aNameFragment + "')");
 	work	xAction(*(itsConn->getConn()), functionName);
 	try {
 		result res = xAction.exec(query);
@@ -873,8 +867,6 @@ bool	checkTreeConstraints(treeIDType		TODO_aTreeID,
 							 nodeIDType		TODO_topNode = 0)
 {
 	// TODO: IMPLEMENT THIS FUNCTION
-	(void)TODO_aTreeID;
-	(void)TODO_topNode;
 
 	LOG_WARN("checkTreeConstraints not yet implemented");
 
@@ -927,8 +919,6 @@ bool	TreeMaintenance::pruneTree(treeIDType	TODO_aTreeID,
 								   int16		TODO_pruningLevel)
 {
 	// TODO: IMPLEMENT THIS FUNCTION
-	(void)TODO_aTreeID;
-	(void)TODO_pruningLevel;
 
 	LOG_WARN("pruneTree not yet implemented");
 
@@ -1019,55 +1009,6 @@ bool TreeMaintenance::exportResultTree (treeIDType			aTreeID,
 	}
 	catch (std::exception&	ex) {
 		itsError = string("Exception during exportResultTree:") + ex.what();
-		LOG_FATAL(itsError);
-		return (false);
-	}
-
-	return (false);
-}
-
-//
-// exportMetadata(treeID, filename): bool
-//
-// Export all Metadata of the given VIC tree
-//
-bool	TreeMaintenance::exportMetadata (treeIDType			aTreeID,
-										 const string&		filename,
-										 bool				uniqKeys)
-{
-	// Check connection
-	if (!itsConn->connect()) {
-		itsError = itsConn->errorMsg();
-		return (false);
-	}
-
-	LOG_TRACE_FLOW_STR("TM:exportMetadata(" << aTreeID << "," << filename << ")");
-
-	work	xAction(*(itsConn->getConn()), "exportMetadata");
-	try {
-		ofstream	outFile;
-		outFile.open (filename.c_str());
-		if (!outFile) {
-			LOG_ERROR_STR ("Cannot open exportfile: " << filename);
-			return (false);
-		}
-
-		result	res = xAction.exec("SELECT * from exportMetadata(" +
-									toString(aTreeID) + ")");
-		// Get result
-		string		params;
-		res[0]["exportmetadata"].to(params);
-		if (uniqKeys) {
-			ParameterSet	somePS;
-			somePS.adoptBuffer(params);		// convert to Parser to get rid of the doubles
-			somePS.writeBuffer(params);		// back to our buffer again
-		}
-		outFile << params;
-		outFile.close();
-		return (true);
-	}
-	catch (std::exception&	ex) {
-		itsError = string("Exception during exportMetadata:") + ex.what();
 		LOG_FATAL(itsError);
 		return (false);
 	}
@@ -1170,7 +1111,7 @@ bool	TreeMaintenance::setMomInfo (treeIDType		aTreeID,
 				aTreeID,
 				aMomID,
 				aGroupID,
-				escapeQuotes(aCampaign).c_str()));
+				aCampaign.c_str()));
 
 		// Analyse result
 		bool		updateOK;
@@ -1245,8 +1186,7 @@ bool	TreeMaintenance::setClassification(treeIDType	aTreeID,
 // constraints/validations for the current type must be fulfilled.
 // When errors occur these can be retrieved with the errorMsg function.
 bool	TreeMaintenance::setTreeState(treeIDType		aTreeID,
-									  treeState			aState,
-									  bool				allow_endtime_update)
+									  treeState			aState)
 {
 	// Check connection
 	if (!itsConn->connect()) {
@@ -1255,18 +1195,16 @@ bool	TreeMaintenance::setTreeState(treeIDType		aTreeID,
 	}
 
 	LOG_TRACE_FLOW_STR("TM:setTreeState(" << aTreeID << ","
-										  << aState << ","
-										  << (allow_endtime_update ? "true" : "false") << ")");
+										  << aState << ")");
 
 	work 	xAction(*(itsConn->getConn()), "setTreeState");
 	try {
 		// build and execute query
 		result res = xAction.exec(
-					formatString("SELECT setTreeState(%d,%d,%d::int2,'%s')",
+					formatString("SELECT setTreeState(%d,%d,%d::int2)",
 							itsConn->getAuthToken(),
 							aTreeID,
-							aState,
-							allow_endtime_update ? "true" : "false"));
+							aState));
 							
 		// Analyse result.
 		bool		succes;
@@ -1341,13 +1279,12 @@ bool	TreeMaintenance::setDescription(treeIDType	aTreeID,
 }
 
 //
-// setSchedule(treeID, startTime, stopTime, inTreeAlso): bool
+// setSchedule(treeID, startTime, stopTime): bool
 //
 // Set the Executiontime of a tree
 bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
-								     const string&	aStartTime,
-									 const string&	aStopTime,
-									 bool inTreeAlso)
+								     const ptime&	aStartTime,
+									 const ptime&	aStopTime)
 {
 	// Check connection
 	if (!itsConn->connect()) {
@@ -1355,18 +1292,19 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 		return (false);
 	}
 
-	LOG_TRACE_FLOW_STR("TM:setSchedule(" << aTreeID << "," << aStartTime << "," << aStopTime << ")");
+	LOG_TRACE_FLOW_STR("TM:setSchedule(" << aTreeID << ","
+										 << to_simple_string(aStartTime) << ","
+										 << to_simple_string(aStopTime) << ")");
 
 	work 	xAction(*(itsConn->getConn()), "setSchedule");
 	try {
 		// construct a query that calls a stored procedure.
 		result	res = xAction.exec(
-			formatString("SELECT setSchedule(%d,%d,'%s','%s','%s')",
+			formatString("SELECT setSchedule(%d,%d,'%s','%s')",
 				itsConn->getAuthToken(),
 				aTreeID,
-				aStartTime.c_str(),
-				aStopTime.c_str(),
-				inTreeAlso ? "true" : "false"));
+				to_simple_string(aStartTime).c_str(),
+				to_simple_string(aStopTime).c_str()));
 							
 		// Analyse result.
 		bool		succes;
@@ -1383,6 +1321,19 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 		LOG_FATAL(itsError);
 		return (false);
 	}
+#if 0
+	// update Observation.startTime field
+	vector<OTDBnode>	fieldList = getItemList(aTreeID, "%.Observation.startTime");
+	ASSERTSTR (fieldList.size() == 1, "No uniq Observation.startTime field in tree " << aTreeID);
+	fieldList[0].limits = to_simple_string(aStartTime);
+	saveNode(fieldList[0]);
+
+	// update Observation.stopTime field
+	fieldList = getItemList(aTreeID, "%.Observation.stopTime");
+	ASSERTSTR (fieldList.size() == 1, "No uniq Observation.stopTime field in tree " << aTreeID);
+	fieldList[0].limits = to_simple_string(aStopTime);
+	saveNode(fieldList[0]);
+#endif
 	return (true);
 }
 

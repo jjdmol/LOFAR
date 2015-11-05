@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -38,29 +38,29 @@
 -- Needs the tables:
 --		OTDBtree, classification, param_type, unit, treestate 
 
-DROP TABLE IF EXISTS VICnodedef 	CASCADE;
-DROP TABLE IF EXISTS VICparamdef  CASCADE;
-DROP TABLE IF EXISTS VICtemplate	CASCADE;
-DROP TABLE IF EXISTS VIChierarchy CASCADE;
-DROP TABLE IF EXISTS VICkvt 	CASCADE;
+DROP TABLE VICnodedef 	CASCADE;
+DROP TABLE VICparamdef  CASCADE;
+DROP TABLE VICtemplate	CASCADE;
+DROP TABLE VIChierarchy CASCADE;
+DROP TABLE VICkvt 	CASCADE;
 
-DROP SEQUENCE IF EXISTS VICnodedefID;
-DROP SEQUENCE IF EXISTS VICparamdefID;
-DROP SEQUENCE IF EXISTS VICtemplateID;
-DROP SEQUENCE IF EXISTS VIChierarchID;
+DROP SEQUENCE VICnodedefID;
+DROP SEQUENCE VICparamdefID;
+DROP SEQUENCE VICtemplateID;
+DROP SEQUENCE VIChierarchID;
 
-DROP INDEX IF EXISTS Vnodedef_node_indx;
+DROP INDEX Vnodedef_node_indx;
 
-DROP INDEX IF EXISTS VTempl_nodeid_indx;
-DROP INDEX IF EXISTS VTempl_parent_index_leaf_indx;
-DROP INDEX IF EXISTS VTempl_parentid_indx;
-DROP INDEX IF EXISTS VTempl_parentid_leaf_name;
-DROP INDEX IF EXISTS VTempl_parentid_name_index_indx;
-DROP INDEX IF EXISTS VTempl_treeid_nodeid_indx;
-DROP INDEX IF EXISTS VTempl_treeid_parentid_indx;
+DROP INDEX VTempl_nodeid_indx;
+DROP INDEX VTempl_parent_index_leaf_indx;
+DROP INDEX VTempl_parentid_indx;
+DROP INDEX VTempl_parentid_leaf_name;
+DROP INDEX VTempl_parentid_name_index_indx;
+DROP INDEX VTempl_treeid_nodeid_indx;
+DROP INDEX VTempl_treeid_parentid_indx;
 
-DROP INDEX IF EXISTS VIChierarchy_parentid_indx;
-DROP INDEX IF EXISTS VIChierarchy_treeid_nodeid_indx;
+DROP INDEX VIChierarchy_parentid_indx;
+DROP INDEX VIChierarchy_treeid_nodeid_indx;
 
 --
 -- The VIC node Definition table contains the definitions from
@@ -74,9 +74,8 @@ DROP INDEX IF EXISTS VIChierarchy_treeid_nodeid_indx;
 CREATE SEQUENCE	VICnodedefID;
 
 CREATE TABLE VICnodedef (
-    --  $Id$
 	nodeID		INT4			NOT NULL DEFAULT nextval('VICnodedefID'),
-	name		VARCHAR(150)	NOT NULL,
+	name		VARCHAR(40)		NOT NULL,
 	version		INT4			NOT NULL DEFAULT 010000,
 	classif		INT2			NOT NULL REFERENCES classification(ID),
 	constraints	TEXT,			-- interpreted by OTDB
@@ -100,10 +99,9 @@ CREATE UNIQUE INDEX Vnodedef_node_indx ON VICnodedef(nodeID);
 CREATE SEQUENCE VICparamdefID;
 
 CREATE TABLE VICparamdef (
-    --  $Id$
 	paramID		INT4			NOT NULL DEFAULT nextval('VICparamdefID'),
 	nodeID		INT4			NOT NULL REFERENCES VICnodedef(nodeID),
-	name		VARCHAR(150)	NOT NULL,
+	name		VARCHAR(40)		NOT NULL,
 	par_type	INT2			REFERENCES param_type(ID),
 	unit		INT2			REFERENCES unit(ID),
 	pruning		INT2			DEFAULT 10,
@@ -134,12 +132,11 @@ CREATE TABLE VICparamdef (
 CREATE SEQUENCE	VICtemplateID;
 
 CREATE TABLE VICtemplate (
-    --  $Id$
 	treeID		INT4			NOT NULL REFERENCES OTDBtree(treeID),
 	nodeID		INT4			NOT NULL DEFAULT nextval('VICtemplateID'),
 	parentID	INT4			NOT NULL,  -- REFERENCES VICtemplate(nodeID),
 	originID	INT4			NOT NULL DEFAULT 0, -- REF VICnode or VICparam
-	name		VARCHAR(150)	NOT NULL,
+	name		VARCHAR(40)		NOT NULL,
 	index		INT2			NOT NULL DEFAULT -1,
 	leaf		BOOLEAN			DEFAULT TRUE,
 	instances	INT2			NOT NULL DEFAULT 1,
@@ -185,7 +182,6 @@ CREATE INDEX VTempl_treeid_parentid_indx ON VICTemplate(treeid, parentid);
 CREATE SEQUENCE	VIChierarchID;
 
 CREATE TABLE VIChierarchy (
-    --  $Id$
 	treeID		INT4			NOT NULL REFERENCES OTDBtree(treeID),
 	nodeID		INT4			NOT NULL DEFAULT nextval('VIChierarchID'),
 	parentID	INT4			NOT NULL, -- REFERENCES VIChierachy(nodeID),
@@ -217,7 +213,6 @@ CREATE UNIQUE INDEX VIChierarchy_treeid_nodeid_indx ON VIChierarchy( treeid, nod
 -- parametername is set to NULL.
 --
 CREATE TABLE VICkvt (
-    --  $Id$
 	treeID		INT4			NOT NULL REFERENCES OTDBtree(treeID),
 	paramName	VARCHAR(150)	DEFAULT NULL, -- for shared applications
 	value		TEXT			NOT NULL,

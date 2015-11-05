@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ namespace LOFAR {
 //
 // newCommmand (buf, len)
 //
-bool SerdesBuffer::newCommand   (unsigned char* cmdbuf, int	cmdLen)
+bool SerdesBuffer::newCommand   (char* cmdbuf, int	cmdLen)
 {
 	if (cmdLen > SERDES_BUFFER_SIZE) {
 		LOG_ERROR_STR("Serdes buffer is only " << SERDES_BUFFER_SIZE << " bytes tall, not " << cmdLen);
@@ -48,7 +48,7 @@ bool SerdesBuffer::newCommand   (unsigned char* cmdbuf, int	cmdLen)
 //
 // appendCommmand (buf, len)
 //
-bool SerdesBuffer::appendCommand(unsigned char* cmdbuf, int	cmdLen)
+bool SerdesBuffer::appendCommand(char* cmdbuf, int	cmdLen)
 {
 	if (itsNrBytes + cmdLen > SERDES_BUFFER_SIZE) {
 		LOG_ERROR_STR("Serdes buffer is only " << SERDES_BUFFER_SIZE << " bytes tall, not " << itsNrBytes + cmdLen);

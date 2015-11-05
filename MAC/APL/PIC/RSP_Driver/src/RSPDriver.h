@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -170,17 +170,7 @@ public:
 	
 	void rsp_setswapxy(GCFEvent& event, GCFPortInterface& port);
 	void rsp_getswapxy(GCFEvent& event, GCFPortInterface& port);
-	
-	void rsp_setBitMode(GCFEvent& event, GCFPortInterface &port);
-	void rsp_getBitMode(GCFEvent& event, GCFPortInterface &port);
-	void rsp_subBitMode(GCFEvent& event, GCFPortInterface &port);
-	void rsp_unsubBitMode(GCFEvent& event, GCFPortInterface &port);
-	
-    void rsp_setSDOMode(GCFEvent& event, GCFPortInterface &port);
-	void rsp_getSDOMode(GCFEvent& event, GCFPortInterface &port);
-    void rsp_setSDO(GCFEvent& event, GCFPortInterface &port);
-	void rsp_getSDO(GCFEvent& event, GCFPortInterface &port);
-    /*@}*/
+	/*@}*/
 
 private:
 	// define some constants

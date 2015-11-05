@@ -7,7 +7,6 @@ lofar_add_library(applcommon
   AntField.cc
   AntennaSets.cc
   Observation.cc
-  PosixTime.cc
   StationConfig.cc
   StationDatatypes.cc
   StationInfo.cc)

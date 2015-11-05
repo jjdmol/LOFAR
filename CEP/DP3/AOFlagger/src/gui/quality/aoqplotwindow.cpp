@@ -150,10 +150,9 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, siz
 			Gtk::MessageDialog dialog(*this, s.str(), false, Gtk::MESSAGE_ERROR);
 			dialog.run();
 		}
+		delete observation;
 		
 		_antennas = commander.Antennas();
-		
-		delete observation;
 	}
 	else {
 		MeasurementSet *ms = new MeasurementSet(_filename);

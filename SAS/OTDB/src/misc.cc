@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Common/lofar_string.h>
 #include <Common/StringUtil.h>
 #include <OTDB/misc.h>
 #include <cstdio>
@@ -93,20 +92,6 @@ string cleanNodeName(const string&	aName)
 	// return everything till {
 	return(theName.substr(0, start));
 }
-
-string escapeQuotes(const string& origin)
-{
-	string	result(origin);
-
-	string::size_type	prev_pos = 0;
-	string::size_type	pos;
-	while ((pos = result.find("'", prev_pos)) != string::npos) {
-		result.insert(prev_pos+pos, 1, '\\');
-		prev_pos = pos + 2;
-	}
-
-	return (result);
-}	
 
   } // namespace OTDB
 } // namespace LOFAR
