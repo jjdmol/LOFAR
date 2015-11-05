@@ -22,10 +22,9 @@
 
 #include "CoherentStokesTransposeKernel.h"
 
+#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_utils.h>
-#include <CoInterface/Align.h>
 #include <CoInterface/BlockID.h>
-#include <CoInterface/Config.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 
@@ -45,31 +44,19 @@ namespace LOFAR
     string CoherentStokesTransposeKernel::theirFunction = "coherentStokesTranspose";
 
     CoherentStokesTransposeKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters("coherentStokesTranspose"),
-      nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
-      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
-
-      nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP())
+      Kernel::Parameters(ps),
+      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP())
     {
+      nrChannelsPerSubband =
+        ps.settings.beamFormer.coherentSettings.nrChannels;
+      nrSamplesPerChannel =
+        ps.settings.beamFormer.coherentSettings.nrSamples;
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.CoherentStokesTransposeKernel.dumpOutput", false);
       dumpFilePattern = 
         str(format("L%d_SB%%03d_BL%%03d_CoherentStokesTransposeKernel.dat") % 
             ps.settings.observationID);
-    }
 
-
-    size_t CoherentStokesTransposeKernel::Parameters::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case CoherentStokesTransposeKernel::INPUT_DATA: 
-      case CoherentStokesTransposeKernel::OUTPUT_DATA:
-        return
-          (size_t) nrChannels * nrSamplesPerChannel * 
-            NR_POLARIZATIONS * nrTABs * sizeof(std::complex<float>);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
     }
 
     CoherentStokesTransposeKernel::
@@ -77,37 +64,46 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       ASSERT(params.nrSamplesPerChannel > 0);
-      ASSERT(params.nrTABs > 0);
-      ASSERT(params.nrChannels  % 16 == 0);
+      ASSERT(params.nrTABs >  0);
+      ASSERT(params.nrChannelsPerSubband  % 16 == 0);
 
       setArg(0, buffers.output);
       setArg(1, buffers.input);
-      setEnqueueWorkSizes( gpu::Grid(align(params.nrTABs, 16),
-                                     params.nrChannels,
+      setEnqueueWorkSizes( gpu::Grid((( params.nrTABs + 16 - 1) / 16) * 16 ,  // Get multiple of 16  in the grid size
+                                     params.nrChannelsPerSubband,
                                      params.nrSamplesPerChannel),
                            gpu::Block(16, 16, 1) );
 
       nrOperations = 0;
       nrBytesRead = nrBytesWritten =
-        (size_t) params.nrTABs * NR_POLARIZATIONS * params.nrChannels * 
+        (size_t) params.nrTABs * NR_POLARIZATIONS * params.nrChannelsPerSubband * 
         params.nrSamplesPerChannel * sizeof(std::complex<float>);
     }
 
     //--------  Template specializations for KernelFactory  --------//
+
+    template<> size_t 
+    KernelFactory<CoherentStokesTransposeKernel>::bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case CoherentStokesTransposeKernel::INPUT_DATA: 
+      case CoherentStokesTransposeKernel::OUTPUT_DATA:
+        return
+          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel * 
+            NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
 
     template<> CompileDefinitions
     KernelFactory<CoherentStokesTransposeKernel>::compileDefinitions() const
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
-
-      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
-      defs["NR_SAMPLES_PER_CHANNEL"] = 
-        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
-
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
 

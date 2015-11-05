@@ -35,7 +35,7 @@
 * into account:
 * - @c NR_CHANNELS: 1 or a multiple of 16
 * - if @c NR_CHANNELS == 1 (input data is in integer format):
-*   - @c NR_BITS_PER_SAMPLE: 4, 8 or 16
+*   - @c NR_BITS_PER_SAMPLE: 8 or 16
 *   - @c NR_SAMPLES_PER_SUBBAND: a multiple of 16
 * - if @c NR_CHANNELS > 1 (input data is in floating point format):
 *   - @c NR_SAMPLES_PER_CHANNEL: a multiple of 16
@@ -68,22 +68,13 @@ typedef  fcomplex(*OutputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][N
 //# TODO: Unify #dims in input type to 4: [NR_SAMPLES_PER_SUBBAND] -> [NR_SAMPLES_PER_CHANNEL][NR_CHANNELS] (see kernel test)
 //#       It is technically incorrect, but different dims for the same input type is a real pain to use/supply.
 //#       Also unify order of #chn, #sampl to [NR_SAMPLES_PER_CHANNEL][NR_CHANNELS]
-#ifdef INPUT_IS_STATIONDATA
+#if NR_CHANNELS == 1
 #  if NR_BITS_PER_SAMPLE == 16
 typedef  short_complex rawSampleType;
 typedef  short_complex(*InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
-#define REAL(sample) sample.x
-#define IMAG(sample) sample.y
 #  elif NR_BITS_PER_SAMPLE == 8
 typedef  char_complex  rawSampleType;
 typedef  char_complex(*InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
-#define REAL(sample) sample.x
-#define IMAG(sample) sample.y
-#  elif NR_BITS_PER_SAMPLE == 4
-typedef  signed char   rawSampleType;
-typedef  signed char   (*InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
-#define REAL(sample) extractRI(sample, false)
-#define IMAG(sample) extractRI(sample, true)
 #  else
 #    error unsupported NR_BITS_PER_SAMPLE
 #  endif
@@ -228,13 +219,13 @@ extern "C" {
 
     for (unsigned time = timeStart; time < NR_SAMPLES_PER_CHANNEL; time += timeInc)
     {
-#ifdef INPUT_IS_STATIONDATA
+#if NR_CHANNELS == 1
       const rawSampleType sampleXraw = (*inputData)[station][time][0];
-      fcomplex sampleX = make_float2(convertIntToFloat(REAL(sampleXraw)),
-                                     convertIntToFloat(IMAG(sampleXraw)));
+      fcomplex sampleX = make_float2(convertIntToFloat(sampleXraw.x),
+        convertIntToFloat(sampleXraw.y));
       const rawSampleType sampleYraw = (*inputData)[station][time][1];
-      fcomplex sampleY = make_float2(convertIntToFloat(REAL(sampleYraw)),
-                                     convertIntToFloat(IMAG(sampleYraw)));
+      fcomplex sampleY = make_float2(convertIntToFloat(sampleYraw.x),
+        convertIntToFloat(sampleYraw.y));
 #else
       fcomplex sampleX = (*inputData)[station][0][time][channel];
       fcomplex sampleY = (*inputData)[station][1][time][channel];
@@ -280,10 +271,19 @@ extern "C" {
       (*outputData)[station][0][time][0] = sampleX;
       (*outputData)[station][0][time][1] = sampleY;
 
-#else
       // No transpose: data order is [station][pol][channel][time]
-      (*outputData)[station][0][channel][time] = sampleX;
-      (*outputData)[station][1][channel][time] = sampleY;
+#elif NR_CHANNELS > 1
+      __shared__ fcomplex tmp[16][17][2]; // one too wide to avoid bank-conflicts on read
+
+      tmp[major][minor][0] = sampleX;
+      tmp[major][minor][1] = sampleY;
+      __syncthreads();
+      (*outputData)[station][0][channel][time] = tmp[major][minor][0] ;
+      (*outputData)[station][1][channel][time] = tmp[major][minor][1] ;
+      __syncthreads();
+#else
+      (*outputData)[station][0][0][time] = sampleX;
+      (*outputData)[station][1][0][time] = sampleY;
 #endif
     }
   }

@@ -3,7 +3,7 @@
 //
 //  Copyright (C) 2011
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -34,7 +34,6 @@
 int	gError = 0;
 
 namespace LOFAR {
-  using namespace DP_Protocol;
   using namespace GCF;
   using namespace GCF::TM;
   using namespace GCF::PVSS;

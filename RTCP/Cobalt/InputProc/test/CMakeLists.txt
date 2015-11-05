@@ -22,4 +22,3 @@ endif(UNITTEST++_FOUND)
 if(MPI_FOUND)
   lofar_add_test(tMPI tMPI.cc)
 endif(MPI_FOUND)
-

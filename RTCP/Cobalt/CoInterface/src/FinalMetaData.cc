@@ -53,6 +53,10 @@ namespace LOFAR
     {
       uint64 raw = data;
 
+#if !defined WORDS_BIGENDIAN
+      dataConvert(LittleEndian, &raw, 1);
+#endif
+
       s.write(&raw, sizeof raw);
     }
 
@@ -62,6 +66,10 @@ namespace LOFAR
       uint64 raw_nr;
 
       s.read(&raw_nr, sizeof raw_nr);
+
+#if !defined WORDS_BIGENDIAN
+      dataConvert(LittleEndian, &raw_nr, 1);
+#endif
 
       data = raw_nr;
     }
