@@ -24,6 +24,14 @@ engine_lpath = %(lofarroot)s/lib:%(casaroot)s/lib:%(pyraproot)s/lib:%(hdf5root)s
 log_file = %(runtime_directory)s/%(job_name)s/logs/%(start_time)s/pipeline.log
 xml_stat_file = %(runtime_directory)s/%(job_name)s/logs/%(start_time)s/statistics.xml
 
+[daemon]
+# Controls the communication method
+use_daemon = True
+busname = $ENV{USER}_pipelineBus
+# default broker port is 5672
+broker = $ENV{HOSTNAME}:5672
+
+
 [feedback]
 # Method of providing feedback to LOFAR.
 # Valid options:

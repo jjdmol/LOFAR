@@ -95,27 +95,27 @@ namespace LOFAR {
     uint8 HBAProtocolWrite::i2c_protocol[HBAProtocolWrite::PROTOCOL_SIZE]
     = {
       // Switch LED on/off
-      0x06,    // PROTOCOL_WRITE_BYTE
-      4 >> 1,  // Client i2c slave address (shifted right by 1)
-      0x02,    // LED register access command
-      0xBB,    // Set LED on/off
+      6,      // PROTOCOL_WRITE_BYTE
+      4 >> 1, // Client i2c slave address (shifted right by 1)
+      2,      // LED register access command
+      0xBB,   // Set LED on/off
 
-      0x07,    // PROTOCOL_READ_BYTE
-      4 >> 1,  // Client i2c slave address (shifted right by 1)
-      0x02,    // LED register access command
+      7,      // PROTOCOL_READ_BYTE
+      4>>1,   // Client i2c slave address (shifted right by 1)
+      2,      // LED register access command
 
-      0x13,    // PROTOCOL_C_END
+      19,    // PROTOCOL_C_END
     };
 
      uint8 HBAProtocolWrite::i2c_result[HBAProtocolWrite::RESULT_SIZE] 
      = {
        // Expected protocol result (4 bytes)
-       0x00,   // PROTOCOL_WRITE_BYTE went OK
+       0,    // PROTOCOL_WRITE_BYTE went OK
 
-       0xBB,   // Read LED value
-       0x00,   // PROTOCOL_READ_BYTE  went OK
+       0xBB, // Read LED value
+       0,    // PROTOCOL_READ_BYTE  went OK
 
-       0x00,   // PROTOCOL_C_END      went OK
+       0,    // PROTOCOL_C_END      went OK
      };
 
 #else
@@ -126,7 +126,7 @@ namespace LOFAR {
 
       // Table 32
       // Instruct client to do a broadcast access to the 16 HBA delay servers (42 bytes)
-      0x0D,   // PROTOCOL_C_WRITE_BLOCK_NO_CNT
+      13,   // PROTOCOL_C_WRITE_BLOCK_NO_CNT
       4>>1, // Client i2c slave address (shifted right by 1)
       0,    // Request register access command
       38,   // Count of number of data bytes to write excluding this byte
@@ -171,70 +171,69 @@ namespace LOFAR {
 
       // Table 33
       // Wait to allow for the broadcast to finish (5 bytes)
-      0x12, // PROTOCOL_C_WAIT
-      // data starts on byte 43
+      18, // PROTOCOL_C_WAIT
       0x00, 0x24, 0xF4, 0x00, // 0x00F42400 = 16e6 * 5ns = 80ms
 //    0x80, 0x96, 0x98, 0x00, // 0x00989680 = 10e6 * 5ns = 50ms
 
       // Table 34
       // Instruct the client to do a unicast read request to server 0 (8 bytes)
-      0x0D,   // PROTOCOL_C_WRITE_BLOCK_NO_CNT
+      13,   // PROTOCOL_C_WRITE_BLOCK_NO_CNT
       4>>1, // Client i2c slave address
       0,    // Request register access command
       4,    // Count of number of data bytes to write
-      0,  // Server address 0
+      0, // Server address 0
       3,    // Payload length, including this octet
       5,    // Function: get word (document LOFAR-ASTRON-MEM-175 Revision 1.3 has an error here (value 2))
       0,    // Server X-delay register ID
       
       // Table 35
       // Wait to allow for the multicast to finish
-      0x12, // PROTOCOL_C_WAIT (5 bytes)
+      18, // PROTOCOL_C_WAIT (5 bytes)
       0x00, 0xA8, 0x61, 0x00, // 0x0061A800 = 6.4e6 * 5ns = 32ms pause between write request register and read response register
 //    0x00, 0x09, 0x3D, 0x00, // 0x003D0900 = 4e6 * 5ns = 20ms pause between write request register and read response register
 
       // Table 36
       // Read back the response results from the client (4 bytes)
-      0x0E,   // PROTOCOL_C_READ_BLOCK_NO_CNT
+      14,   // PROTOCOL_C_READ_BLOCK_NO_CNT
       4>>1, // Client i2c slave address
       1,    // Response register access command
       4,    // Count of number of data bytes to read (document LOFAR-ASTRON-MEM-175 has an error here (value 3))
 
       // Repeat tables 34,35,36 fo servers 1 to 15
-      0x0D, 4>>1, 0, 4,  1, 3, 5, 0, 0x12, 0x00, 0x09, 0x3D, 0x00, 0x0E, 4>>1, 1, 4, // server 1
-      0x0D, 4>>1, 0, 4,  2, 3, 5, 0, 0x12, 0x00, 0x09, 0x3D, 0x00, 0x0E, 4>>1, 1, 4, // server 2
-      0x0D, 4>>1, 0, 4,  3, 3, 5, 0, 0x12, 0x00, 0x09, 0x3D, 0x00, 0x0E, 4>>1, 1, 4, // server 3
-      0x0D, 4>>1, 0, 4,  4, 3, 5, 0, 0x12, 0x00, 0x09, 0x3D, 0x00, 0x0E, 4>>1, 1, 4, // server 4
-      0x0D, 4>>1, 0, 4,  5, 3, 5, 0, 0x12, 0x00, 0x09, 0x3D, 0x00, 0x0E, 4>>1, 1, 4, // server 5
-      0x0D, 4>>1, 0, 4,  6, 3, 5, 0, 0x12, 0x00, 0x09, 0x3D, 0x00, 0x0E, 4>>1, 1, 4, // server 6
-      0x0D, 4>>1, 0, 4,  7, 3, 5, 0, 0x12, 0x00, 0x09, 0x3D, 0x00, 0x0E, 4>>1, 1, 4, // server 7
-      0x0D, 4>>1, 0, 4,  8, 3, 5, 0, 0x12, 0x00, 0x09, 0x3D, 0x00, 0x0E, 4>>1, 1, 4, // server 8
-      0x0D, 4>>1, 0, 4,  9, 3, 5, 0, 0x12, 0x00, 0x09, 0x3D, 0x00, 0x0E, 4>>1, 1, 4, // server 9
-      0x0D, 4>>1, 0, 4, 10, 3, 5, 0, 0x12, 0x00, 0x09, 0x3D, 0x00, 0x0E, 4>>1, 1, 4, // server 10
-      0x0D, 4>>1, 0, 4, 11, 3, 5, 0, 0x12, 0x00, 0x09, 0x3D, 0x00, 0x0E, 4>>1, 1, 4, // server 11
-      0x0D, 4>>1, 0, 4, 12, 3, 5, 0, 0x12, 0x00, 0x09, 0x3D, 0x00, 0x0E, 4>>1, 1, 4, // server 12
-      0x0D, 4>>1, 0, 4, 13, 3, 5, 0, 0x12, 0x00, 0x09, 0x3D, 0x00, 0x0E, 4>>1, 1, 4, // server 13
-      0x0D, 4>>1, 0, 4, 14, 3, 5, 0, 0x12, 0x00, 0x09, 0x3D, 0x00, 0x0E, 4>>1, 1, 4, // server 14
-      0x0D, 4>>1, 0, 4, 15, 3, 5, 0, 0x12, 0x00, 0x09, 0x3D, 0x00, 0x0E, 4>>1, 1, 4, // server 15
+      13, 4>>1, 0, 4,  1, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 1
+      13, 4>>1, 0, 4,  2, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 2
+      13, 4>>1, 0, 4,  3, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 3
+      13, 4>>1, 0, 4,  4, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 4
+      13, 4>>1, 0, 4,  5, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 5
+      13, 4>>1, 0, 4,  6, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 6
+      13, 4>>1, 0, 4,  7, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 7
+      13, 4>>1, 0, 4,  8, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 8
+      13, 4>>1, 0, 4,  9, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 9
+      13, 4>>1, 0, 4, 10, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 10
+      13, 4>>1, 0, 4, 11, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 11
+      13, 4>>1, 0, 4, 12, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 12
+      13, 4>>1, 0, 4, 13, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 13
+      13, 4>>1, 0, 4, 14, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 14
+      13, 4>>1, 0, 4, 15, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 15
 
       // Mark the end of the protocol list (1 byte)
-      0x13, // PROTOCOL_C_END
+      19, // PROTOCOL_C_END
     };
 
     uint8 HBAProtocolWrite::i2c_result[HBAProtocolWrite::RESULT_SIZE/* 2 + 7*16 + 1 = 115 bytes*/] 
     = {
-      0x00, // PROTOCOL_C_WRITE_BLOCK_NO_CNT went OK
+      0, // PROTOCOL_C_WRITE_BLOCK_NO_CNT went OK
 
-      0x00, // PROTOCOL_C_WAIT went OK
+      0, // PROTOCOL_C_WAIT went OK
 
       // Expected protocol result (7 bytes)
-      0x00,       // PROTOCOL_C_WRITE_BLOCK_NO_CNT went OK
-      0x00,       // PROTOCOL_C_WAIT_WENT_OK
+      0,       // PROTOCOL_C_WRITE_BLOCK_NO_CNT went OK
+      0,       // PROTOCOL_C_WAIT_WENT_OK
       0 + 128, // Server response address (> 0, indicating OK)
       3,       // Nof bytes (including this byte)
       0xBB,    // X-delay data from server X (offset = RESULT_DELAY_OFFSET)
       0xBB,    // Y-delay data from server X
-      0x00,       // PROTOCOL_C_READ_BLOCK_NO_CNT went OK
+      0,       // PROTOCOL_C_READ_BLOCK_NO_CNT went OK
 
       0, 0,  1 + 128, 3, 0xBB, 0xBB, 0, // server  1 result
       0, 0,  2 + 128, 3, 0xBB, 0xBB, 0, // server  2 result
@@ -253,7 +252,7 @@ namespace LOFAR {
       0, 0, 15 + 128, 3, 0xBB, 0xBB, 0, // server 15 result
 
       // Marks the end of the protocol list (1 byte)
-      0x00,    // PROTOCOL_C_END went OK
+      0,    // PROTOCOL_C_END went OK
     };
 
 #endif
@@ -329,15 +328,9 @@ void HBAProtocolWrite::sendrequest()
 									shape(N_HBA_ELEM_PER_TILE, 2),
 									neverDeleteData);
 
-            // add extra wait to prevent power peaks when switching
-            // 1 tick = 5ns, 16000000 (80ms), 600000 (3ms) 
-            uint32 wait = 16000000 + (600000 * global_blp);
-            LOG_DEBUG_STR(formatString("HBAPotocolWrite add wait %f sec", wait * (1./200e6)));
-            memcpy(i2c_protocol + PROTOCOL_WAIT_OFFSET, &wait, 4);
-
 			delays(Range::all(), 0) = Cache::getInstance().getBack().getHBASettings()()(global_blp * N_POL, Range::all());
 			delays(Range::all(), 1) = Cache::getInstance().getBack().getHBASettings()()(global_blp * N_POL + 1, Range::all());
-            
+	
 			// copy set delays to i2c_result which is the expected result
 			uint8* cur = i2c_result + RESULT_DELAY_OFFSET;
 			for (int elem = 0; elem < N_HBA_ELEM_PER_TILE; elem++){

@@ -31,7 +31,7 @@ python_install(
   master/selfcal_awimager.py
   master/selfcal_bbs.py
   master/selfcal_finalize.py
-  master/executable_args.py
+  master/test_recipe.py
   nodes/__init__.py
   nodes/bbs_reducer.py
   nodes/copier.py
@@ -54,17 +54,10 @@ python_install(
   nodes/selfcal_awimager.py
   nodes/selfcal_bbs.py
   nodes/selfcal_finalize.py
-  nodes/executable_args.py
-  nodes/executable_casa.py
-  nodes/python_plugin.py
-  nodes/calibrate-stand-alone.py
-  plugins/PipelineStep_createMapfile.py
-  plugins/PipelineStep_addMapfile.py
-  plugins/PipelineStep_changeMapfile.py
-  plugins/PipelineStep_combineParsets.py
+  nodes/test_recipe.py
   DESTINATION lofarpipe/recipes)
 
-lofar_add_bin_scripts(
+install(PROGRAMS
   bin/calibration_pipeline.py
   bin/msss_calibrator_pipeline.py
   bin/msss_imager_pipeline.py
@@ -74,13 +67,13 @@ lofar_add_bin_scripts(
   bin/pulsar_pipeline.py
   bin/long_baseline_pipeline.py
   bin/selfcal_imager_pipeline.py
+  bin/test_pipeline.py
   bin/startPython.sh
   bin/startPythonVersion.sh
   bin/stopPython.sh
-  bin/genericpipeline.py
-  bin/loader.py
   external/bad_station_detection/asciistats.py
-  external/bad_station_detection/statsplot.py)
+  external/bad_station_detection/statsplot.py
+  DESTINATION bin)
 
 install(FILES
   demixing/bbs_CasA.parset
@@ -112,6 +105,7 @@ install(FILES
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg
   ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg
+  ${CMAKE_CURRENT_BINARY_DIR}/daemon.cfg
   DESTINATION share/pipeline)
 
 # PIPELINE_FEEDBACK_METHOD is used in pipeline.cfg.in to enable/disable qpid feedback
@@ -129,3 +123,6 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/tasks.cfg.in
   ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg)
 
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/daemon.cfg.in
+  ${CMAKE_CURRENT_BINARY_DIR}/daemon.cfg)  

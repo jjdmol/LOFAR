@@ -34,4 +34,20 @@ python_install(
   support/utilities.py
   support/xmllogging.py
   support/usagestats.py
+  daemons/__init__.py
+  daemons/pipelineMCQDaemonImp.py
+  daemons/pipelineSCQDaemonImp.py
+  daemons/subprocessManager.py
+  daemons/SCQLib.py
+  daemons/MCQLib.py
+  daemons/inMemoryZip.py
   DESTINATION lofarpipe)
+
+install(PROGRAMS
+  daemons/startMCQDaemons.py
+  daemons/pipelineMCQDaemon.py
+  daemons/pipelineSCQDaemon.py
+  daemons/testPipelineSlaveDaemonConnections.py
+  DESTINATION bin)
+  
+

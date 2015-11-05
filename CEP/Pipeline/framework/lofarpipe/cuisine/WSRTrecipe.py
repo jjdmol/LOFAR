@@ -211,6 +211,11 @@ class WSRTrecipe(object):
     def cook_recipe(self, recipe, inputs, outputs):
         """Execute another recipe/pipeline as part of this one"""
         c = cook.PipelineCook(recipe, inputs, outputs, self.logger, self.recipe_path)
+
+        # Add mcqlib to RemoteCommandRecipeMixIn if available
+        if hasattr(self, 'mcqlib'):
+            c.add_mcqlib(self.mcqlib)  
+
         c.spawn()
 
     def cook_system(self, command, options):

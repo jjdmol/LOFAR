@@ -33,16 +33,25 @@ class PipelineCook(WSRTCook):
             module = imp.load_module(task, *module_details)
             self.recipe = None
             try:
-                self.recipe = getattr(module, task)()
+                self.recipe = getattr(module, task)()  # The init
             except AttributeError:
                 # Try with first letter capital (python type nameconvention)
-                self.recipe = getattr(module, task.capitalize())()
+                self.recipe = getattr(module, task.capitalize())() # The init
             self.recipe.logger = getSearchingLogger("%s.%s" % (self.logger.name, task))
             self.recipe.logger.setLevel(self.logger.level)
         except Exception, e:
             self.logger.exception("Exception caught: " + str(e))
             self.recipe = None
             raise CookError (task + ' can not be loaded')
+
+    def add_mcqlib(self, mcqlib):
+        """
+        Explicit adder for mcqlib which controls qpid enabled communication
+        between master and node recipes. 
+        It should be created once for each pipeline run thus be added from
+        the toplevel recipe
+        """
+        self.recipe.add_mcqlib(mcqlib)
 
     def try_running(self):
         """Run the recipe, inputs should already have been checked."""

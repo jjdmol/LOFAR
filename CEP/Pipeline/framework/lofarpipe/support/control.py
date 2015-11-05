@@ -10,13 +10,18 @@ import os
 import sys
 import re
 import traceback
+import socket
 
 from lofarpipe.support.stateful import StatefulRecipe
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.xmllogging import get_active_stack
 from lofar.parameterset import parameterset
-import lofar.messagebus.messagebus as messagebus
+import lofar.messagebus.msgbus as msgbus
 from lofar.messagebus.protocols import TaskFeedbackDataproducts, TaskFeedbackProcessing, TaskFeedbackState
+import lofarpipe.daemons.MCQLib as MCQLib
+import lofar.messagebus.CQExceptions as CQExceptions
+
+# Includes for QPID framework, might not be available. Set status flag 
 
 #                                             Standalone Pipeline Control System
 # ------------------------------------------------------------------------------
@@ -55,7 +60,7 @@ class control(StatefulRecipe):
         """
 
         if self.feedback_method == "messagebus":
-          bus = messagebus.ToBus("lofar.task.feedback.processing")
+          bus = msgbus.ToBus("lofar.task.feedback.processing")
           msg = TaskFeedbackProcessing(
             "lofarpipe.support.control",
             "",
@@ -74,7 +79,7 @@ class control(StatefulRecipe):
         """
 
         if self.feedback_method == "messagebus":
-          bus = messagebus.ToBus("lofar.task.feedback.dataproducts")
+          bus = msgbus.ToBus("lofar.task.feedback.dataproducts")
           msg = TaskFeedbackDataproducts(
             "lofarpipe.support.control",
             "",
@@ -94,7 +99,7 @@ class control(StatefulRecipe):
         """
 
         if self.feedback_method == "messagebus":
-          bus = messagebus.ToBus("lofar.task.feedback.state")
+          bus = msgbus.ToBus("lofar.task.feedback.state")
           msg = TaskFeedbackState(
             "lofarpipe.support.control",
             "",
@@ -134,7 +139,7 @@ class control(StatefulRecipe):
         except:
           self.feedback_method = "messagebus"
 
-        if self.feedback_method == "messagebus" and not messagebus.MESSAGING_ENABLED:
+        if self.feedback_method == "messagebus" and not msgbus.MESSAGING_ENABLED:
           self.logger.error("Feedback over messagebus requested, but messagebus support is not enabled or functional")
           return 1
 
@@ -146,6 +151,33 @@ class control(StatefulRecipe):
         self.logger.info("LOFAR Pipeline (%s) starting." % self.name)
         self.logger.info("SASID = %s, MOMID = %s, Feedback method = %s" % (self.sasID, self.momID, self.feedback_method))
 
+        use_daemon_communication = self.config.getboolean("daemon", 
+                                                          "use_daemon")
+        if use_daemon_communication:
+            self.logger.info("Using QPid based communication")
+            busname = self.config.get(
+                        "daemon", "busname")
+
+            broker =self.config.get(
+                        "daemon", "broker")
+            try:
+                self.mcqlib  = MCQLib.MCQLib(self.logger, 
+                                             broker,
+                                             busname)
+            except msgbus.BusException, busex:
+                if "no such queue:" in str(busex):
+                    self.logger.error(
+                      "*** No queue found: You have to create the bus structure")
+                    self.logger.error(
+                      "see installed/bin/createbus.sh --help")
+                raise
+
+            except CQExceptions.ExceptionMasterUnreachable, ex:
+                self.logger.error("*** No Master daemon found: "
+                                  "see: installed/bin/pipelineMCQDaemon.py")
+                raise
+
+
         try:
             self.pipeline_logic()
         except Exception, message:
@@ -154,9 +186,9 @@ class control(StatefulRecipe):
                         self.inputs['job_name']))
 
             # Get detailed information of the caught exception
-            (type, value, traceback_object) = sys.exc_info()
+            (ex_type, value, traceback_object) = sys.exc_info()
             self.logger.error("Detailed exception information:")
-            self.logger.error(str(type))
+            self.logger.error(str(ex_type))
             self.logger.error(str(value))
             # Get the stacktrace and pretty print it:
             # self.logger.error("\n" + " ".join(traceback.format_list(
@@ -184,5 +216,9 @@ class control(StatefulRecipe):
                 except Exception, except_object:
                     self.logger.error("Failed opening xml stat file:")
                     self.logger.error(except_object)
+
+            # 'destruct' the daemon 
+            if use_daemon_communication:
+                self.mcqlib._release()  # Cleanup of the queues etc.
 
         return 0

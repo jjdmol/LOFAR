@@ -1,0 +1,8 @@
+#!/bin/bash
+
+createbus.sh add testPipelineSCQDaemon 5672 $(hostname) 
+
+python testPipelineSCQDaemon.py
+
+# the a bus structure to be used by the test program
+createbus.sh del testPipelineSCQDaemon 5672 $(hostname) ignore

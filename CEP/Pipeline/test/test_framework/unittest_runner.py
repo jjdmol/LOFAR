@@ -31,6 +31,22 @@ class Discover():
             if hiddenMatcher.match(root):
                 continue
 
+            # First check if this is a dir we should skip, eg. fixture corrupts
+            # functionality irreversible
+            dir_to_skip = False
+            for name in files:
+                fileNameParts = name.split('.')
+                if len(fileNameParts) == 1:
+                    continue
+
+                if fileNameParts[0] == "unittest_runner" and \
+                   fileNameParts[1] == "skip":
+                     dir_to_skip =True
+                     break
+
+            if dir_to_skip:
+                continue
+
             dirSuite = unittest.TestSuite()
             for name in files:
                 fileNameParts = name.split('.')

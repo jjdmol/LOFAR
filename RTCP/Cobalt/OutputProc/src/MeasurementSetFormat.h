@@ -107,7 +107,6 @@ namespace LOFAR
       void fillHistory();
       void fillProcessor();
       void fillState();
-      void fillPointing(unsigned subarray);
     };
 
   } // namespace Cobalt

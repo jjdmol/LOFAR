@@ -97,15 +97,13 @@ namespace LOFAR {
         if (!itsParmDB->getNames("Gain:0:0:Real*").empty()) {
           // Values with :Real present
           itsUseAP = false; 
-        } else if (!itsParmDB->getNames("Gain:0:0:Ampl*").empty() || 
-                   !itsParmDB->getNames("Phase:0:0:Ampl*").empty()) {
+        } else if (!itsParmDB->getNames("Gain:0:0:Ampl*").empty()) {
           // Values with :Ampl present
           itsUseAP = true;
         } else if (!itsParmDB->getDefNames("Gain:0:0:Real*").empty()) {
           // Defvalues with :Real present
           itsUseAP = false;
-        } else if (!itsParmDB->getDefNames("Gain:0:0:Ampl*").empty() ||
-                   !itsParmDB->getDefNames("Gain:0:0:Phase*").empty()) {
+        } else if (!itsParmDB->getDefNames("Gain:0:0:Ampl*").empty()) {
           // Defvalues with :Ampl present
           itsUseAP = true;
         } else {

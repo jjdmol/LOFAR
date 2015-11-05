@@ -27,6 +27,7 @@ python_install(
   __init__.py
   messagebus.py
   message.py
+  msgbus.py
   noqpidfallback.py
   DESTINATION lofar/messagebus)
 

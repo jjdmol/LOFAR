@@ -1,0 +1,7 @@
+#!/bin/bash
+
+createbus.sh add testCQDaemon 5672 $(hostname) 
+
+python testCQDaemon.py
+
+createbus.sh del testCQDaemon 5672 $(hostname) ignore

@@ -209,18 +209,14 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
     set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS FALSE)
   endif(LOFAR_LIBDIR STREQUAL lib64)
 
-  # Create a directory structure in the build directory similar to that in the
-  # install directory. Binaries should be put in bin or sbin, libraries in lib
-  # or lib64 (dependent on architecture), configuration files in etc or share,
-  # and run-time files in var. The include directory will contain symbolic links
-  # to all (sub)projects of the current build. This is needed, because we use
+  # Create include directory that will hold symbolic links to all
+  # (sub)projects of the current build. This is needed, because we use
   # #include's that all contain the names of the different subprojects
   # (e.g. Common, Blob).
-  foreach(_dir bin etc include ${LOFAR_LIBDIR} sbin share var)
+  if(NOT EXISTS ${CMAKE_BINARY_DIR}/include)
     execute_process(COMMAND ${CMAKE_COMMAND} -E 
-      make_directory ${CMAKE_BINARY_DIR}/${_dir})
-  endforeach(_dir bin sbin include ${LOFAR_LIBDIR})
-  
+      make_directory ${CMAKE_BINARY_DIR}/include)
+  endif(NOT EXISTS ${CMAKE_BINARY_DIR}/include)
 
   ## --------------------------------------------------------------------------
   ## Several "Auto-tools variables" needed for backward compatibility

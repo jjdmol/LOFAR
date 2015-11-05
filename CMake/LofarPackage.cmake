@@ -99,7 +99,7 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
         if(_srcdir MATCHES "^$")
           if(NOT DEFINED ${_pkg}_SOURCE_DIR)
             message(FATAL_ERROR "Variable ${_pkg}_SOURCE_DIR is undefined!\n"
-              "Please regenerate LofarPackageList.cmake.\n")
+              "Please regenerate LofarPackageList.cmake using CMake/gen_LofarPackageList_cmake.sh.\n")
           endif(NOT DEFINED ${_pkg}_SOURCE_DIR)
           set(_srcdir ${${_pkg}_SOURCE_DIR})
         endif(_srcdir MATCHES "^$")

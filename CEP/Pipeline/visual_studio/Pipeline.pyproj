@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
@@ -14,9 +14,24 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
+  </PropertyGroup>
   <ItemGroup>
     <Content Include="CMakeLists.txt" />
     <Content Include="framework\CMakeLists.txt" />
+    <Compile Include="framework\lofarpipe\daemons\MCQLib.py" />
+    <Compile Include="framework\lofarpipe\daemons\pipelineMCQDaemon.py" />
+    <Compile Include="framework\lofarpipe\daemons\pipelineMCQDaemonImp.py" />
+    <Compile Include="framework\lofarpipe\daemons\pipelineSCQDaemon.py" />
+    <Compile Include="framework\lofarpipe\daemons\pipelineSCQDaemonImp.py" />
+    <Compile Include="framework\lofarpipe\daemons\SCQLib.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="framework\lofarpipe\daemons\startMCQDaemons.py" />
+    <Compile Include="framework\lofarpipe\daemons\subprocessManager.py" />
+    <Compile Include="framework\lofarpipe\daemons\testPipelineSlaveDaemonConnections.py" />
+    <Compile Include="framework\lofarpipe\daemons\__init__.py" />
     <Compile Include="framework\lofarpipe\process_monitoring\example\example.py" />
     <Compile Include="framework\lofarpipe\process_monitoring\example\script.py" />
     <Compile Include="framework\lofarpipe\process_monitoring\listener.py" />
@@ -33,8 +48,28 @@
     <Content Include="recipes\CMakeLists.txt" />
     <Content Include="test\CMakeLists.txt" />
     <Compile Include="recipes\sip\bin\long_baseline_pipeline.py" />
+    <Compile Include="recipes\sip\bin\test_pipeline.py" />
     <Compile Include="recipes\sip\master\long_baseline.py" />
+    <Compile Include="recipes\sip\master\test_recipe.py" />
     <Compile Include="recipes\sip\nodes\long_baseline.py" />
+    <Compile Include="recipes\sip\nodes\test_recipe.py" />
+    <Compile Include="test\daemons\CQDaemonTestFunctions.py" />
+    <Compile Include="test\daemons\testInMemoryZip.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test\daemons\testMCQLib.py" />
+    <Compile Include="test\daemons\testSCQLib.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test\daemons\testNodeRecipeStart.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test\daemons\testPipelineMCQDaemon.py" />
+    <Compile Include="test\daemons\testPipelineSCQDaemon.py" />
+    <Compile Include="test\daemons\testSubprocessManager.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test\daemons\__init__.py" />
     <Compile Include="test\__init__.py" />
     <Compile Include="deploy\deprecated\fabfile.py" />
     <Compile Include="deploy\deprecated\start_cluster.py" />
@@ -240,6 +275,7 @@
     <Folder Include="framework" />
     <Folder Include="framework\lofarpipe" />
     <Folder Include="framework\lofarpipe\cuisine" />
+    <Folder Include="framework\lofarpipe\daemons\" />
     <Folder Include="framework\lofarpipe\process_monitoring\" />
     <Folder Include="framework\lofarpipe\process_monitoring\config\" />
     <Folder Include="framework\lofarpipe\process_monitoring\example\" />
@@ -270,6 +306,7 @@
     <Folder Include="recipes\sip\nodes\deprecated\demix" />
     <Folder Include="test" />
     <Folder Include="test\cuisine" />
+    <Folder Include="test\daemons\" />
     <Folder Include="test\recipes" />
     <Folder Include="test\recipes\helpers" />
     <Folder Include="test\recipes\master" />
@@ -284,5 +321,6 @@
     <Folder Include="test\test_framework\fixture\monetdb" />
     <Folder Include="test\test_framework\fixture\pyrap" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+  <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
 </Project>

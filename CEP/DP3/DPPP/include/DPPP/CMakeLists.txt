@@ -15,9 +15,7 @@ set(inst_HEADERS
   ModelComponentVisitor.h
   DemixerNew.h DemixInfo.h DemixWorker.h
   ApplyBeam.h ApplyBeam.tcc
-  Predict.h
-  GainCal.h
-)
+  GainCal.h)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink

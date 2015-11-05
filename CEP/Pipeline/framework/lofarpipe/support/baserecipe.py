@@ -101,6 +101,9 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         file_handler.setFormatter(formatter)
         self.logger.addHandler(stream_handler)
         self.logger.addHandler(file_handler)
+        self.logger.propagate = False    # do not propagate to root logger
+                                         # stops double printing to stdout           
+
 
     def run_task(self, configblock, datafiles=[], **kwargs):
         """

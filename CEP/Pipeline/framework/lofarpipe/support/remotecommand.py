@@ -92,23 +92,8 @@ def run_remote_command(config, logger, host, command, env, arguments = None):
         return run_via_mpiexec(logger, command, arguments, host)
     elif method == "cep_mpi":
         return run_via_mpiexec_cep(logger, command, arguments, host)
-    elif method == "slurm_srun_cep3":
-        return run_via_slurm_srun_cep3(logger, command, arguments, host)
     else:
         return run_via_ssh(logger, host, command, env, arguments)
-
-def run_via_slurm_srun_cep3(logger, command, arguments, host):
-    for arg in arguments:
-        command = command + " " + str(arg)
-    commandstring = ["srun","-N 1","-n 1","-w",host, "/bin/sh", "-c", "hostname && " + command]
-    # we have a bug that crashes jobs when too many get startet at the same time
-    # temporary NOT 100% reliable workaround
-    #from random import randint
-    #time.sleep(randint(0,10))
-    ##########################
-    process = spawn_process(commandstring, logger)
-    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
-    return process
 
 def run_via_mpirun(logger, host, command, environment, arguments):
     """
@@ -351,6 +336,16 @@ def threadwatcher(threadpool, logger, killswitch):
 
 
 class RemoteCommandRecipeMixIn(object):
+    def add_mcqlib(self, mcqlib):
+        """
+        Explicit adder for mcqlib which controls qpid enabled communication
+        between master and node recipes. 
+        It should be created once for each pipeline run thus be added from
+        the toplevel recipe
+        """
+        self.mcqlib = mcqlib
+
+
     """
     Mix-in for recipes to dispatch jobs using the remote command mechanism.
     """
@@ -363,6 +358,7 @@ class RemoteCommandRecipeMixIn(object):
         :type max_per_node: integer or none
         :rtype: dict mapping integer job id to :class:`~lofarpipe.support.remotecommand.ComputeJob`
         """
+
         threadpool = []
         jobpool = {}
         if not max_per_node and self.config.has_option('remote', 'max_per_node'):
@@ -370,6 +366,11 @@ class RemoteCommandRecipeMixIn(object):
         limiter = ProcessLimiter(max_per_node)
         killswitch = threading.Event()
 
+        use_daemon_communication = self.config.getboolean("daemon", 
+                                                          "use_daemon")
+        if use_daemon_communication:
+            self.mcqlib.set_killswitch(killswitch) # forward the killswitch 
+                                          # to the mcqlib
         if max_per_node:
             self.logger.info("Limiting to %d simultaneous jobs/node" % max_per_node)
 
@@ -377,15 +378,40 @@ class RemoteCommandRecipeMixIn(object):
             self.logger.debug("Job dispatcher at %s:%d" % (jobhost, jobport))
             for job_id, job in enumerate(jobs):
                 jobpool[job_id] = job
-                threadpool.append(
-                    threading.Thread(
-                        target = job.dispatch,
-                        args = (
-                            self.logger, self.config, limiter, job_id,
-                            jobhost, jobport, self.error, killswitch
+                if use_daemon_communication:
+                    environment = dict(
+                        (k, v) for (k, v) in os.environ.iteritems()
+                        if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
+                        )
+                    # ********************************************************
+                    # This env is read at the node job.
+                    # TODO Q: Is this the correct place to do this?
+                    #         ALT: SubproccessManager (makes it testable)
+                    environment["USE_QPID_DAEMON"] = "True"                   
+                    # ********************************************************
+                    job_parameters = {'node':job.host,
+                                  'environment':environment,
+                                  'cmd':job.command,
+                                  'cdw':'/home/klijn',  # TODO: FIXME!!!!
+                                  'job_parameters':job.arguments}
+
+                    
+                    thread = threading.Thread(
+                            target = self.mcqlib.run_job
+                            ,args = [job_parameters, job, limiter, killswitch])
+                    thread.daemon = True  # shut down thread of owner dies
+                    threadpool.append(thread)
+                    
+                else:
+                    threadpool.append(
+                        threading.Thread(
+                            target = job.dispatch,
+                            args = (
+                                self.logger, self.config, limiter, job_id,
+                                jobhost, jobport, self.error, killswitch)
                         )
                     )
-                )
+
             threadwatcher(threadpool, self.logger, killswitch)
 
         if killswitch.isSet():
@@ -427,5 +453,4 @@ class RemoteCommandRecipeMixIn(object):
         self.outputs._fields["return_xml"] = ingredient.StringField(
                                                 help = "XML return data.")
         self.outputs["return_xml"] = node_durations.toxml(encoding = "ascii")
-
         return jobpool
