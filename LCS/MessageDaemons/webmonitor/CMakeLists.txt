@@ -4,11 +4,6 @@ install(FILES
   QPIDWebserverJSON
   DESTINATION bin)
 
-install(FILES
-  start_QPIDWebMonitor
-  stop_QPIDWebMonitor
-  DESTINATION sbin)
-
 file(GLOB StaticFiles
   lib/*
   Schema.svg.*

@@ -2,7 +2,9 @@
 
 lofar_package(StaticMetaData 1.0)
 
-lofar_add_sbin_scripts(createFiles)
+install(PROGRAMS 
+  createFiles 
+  DESTINATION sbin)
 
 # These files end up in ${prefix}/etc
 file(GLOB sysconf_data *.conf)

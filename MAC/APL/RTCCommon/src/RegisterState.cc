@@ -62,7 +62,6 @@ void RegisterState::print(std::ostream& out) const
 		case FAIL:          out << "F "; break;
 		case WAIT_1:        out << "W1"; break;
 		case WAIT_2:        out << "W2"; break;
-		case WAIT_3:        out << "W3"; break;
 		default:            out << formatString("%02X", m_state(i)); break;
 //		default:            out << "X "; break;
 		}
@@ -138,9 +137,6 @@ void RegisterState::clear(int i)
 
 		} else if (m_state(j) == FAIL) {
 			m_state(j) = DONE;
-
-        } else if (m_state(j) == WAIT_3) {
-			m_state(j) = WAIT_2;
 
 		} else if (m_state(j) == WAIT_2) {
 			m_state(j) = WAIT_1;
