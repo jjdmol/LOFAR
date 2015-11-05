@@ -12,11 +12,3 @@ lofar_add_test(tSocketConnectionSet tSocketConnectionSet.cc)
 lofar_add_test(tfinddproc DEPENDS finddproc)
 lofar_add_test(tstartdproc tstartdproc.cc)
 lofar_add_test(trundist)
-
-# The SocketConnection tests must be run serially
-if(BUILD_TESTING)
-  set_tests_properties(
-    tSocketConnection
-    tSocketConnectionSet
-    PROPERTIES RUN_SERIAL ON)
-endif(BUILD_TESTING)

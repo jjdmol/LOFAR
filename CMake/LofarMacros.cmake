@@ -2,11 +2,9 @@
 #
 # Defines the following macros:
 #   lofar_add_bin_program(name)
-#   lofar_add_bin_scripts([name1 [name2 ..]])
 #   lofar_add_executable(name)
 #   lofar_add_library(name)
 #   lofar_add_sbin_program(name)
-#   lofar_add_sbin_scripts([name1 [name2 ..]])
 #   lofar_add_test(name)
 #   lofar_join_arguments(var)
 #   lofar_search_path(path package)
@@ -17,7 +15,7 @@
 #
 #  Copyright (C) 2008-2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -51,22 +49,6 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
 
 
   # --------------------------------------------------------------------------
-  # lofar_add_bin_scripts([name1 [name2 ..]])
-  #
-  # Add scripts that need to be installed into the <prefix>/bin directory.
-  # Also create a symbolic link in <build-dir>/bin to each of these scripts.
-  # --------------------------------------------------------------------------
-  macro(lofar_add_bin_scripts)
-    foreach(_name ${ARGN})
-      get_filename_component(_abs_name ${_name} ABSOLUTE)
-      execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${_abs_name} ${CMAKE_BINARY_DIR}/bin/${_name})
-      install(PROGRAMS ${_name} DESTINATION bin)
-    endforeach(_name ${ARGN})
-  endmacro(lofar_add_bin_scripts)
-
-
-  # --------------------------------------------------------------------------
   # lofar_add_executable(name)
   #
   # Add an executable like add_executable() does.
@@ -81,9 +63,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     get_property(_libs GLOBAL PROPERTY ${PACKAGE_NAME}_LIBRARIES)
     target_link_libraries(${_name} ${_libs} 
       ${${PACKAGE_NAME}_LINK_LIBRARIES} ${LOFAR_EXTRA_LIBRARIES})
-    if(TARGET ${PACKAGE_NAME}_PackageVersion)
-      add_dependencies(${_name} ${PACKAGE_NAME}_PackageVersion)
-    endif(TARGET ${PACKAGE_NAME}_PackageVersion)
+    add_dependencies(${_name} ${PACKAGE_NAME}_PackageVersion)
     add_dependencies(${PACKAGE_NAME} ${_name})
   endmacro(lofar_add_executable)
 
@@ -116,20 +96,15 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     target_link_libraries(${_name} 
       ${${PACKAGE_NAME}_LINK_LIBRARIES} ${LOFAR_EXTRA_LIBRARIES})
     # For unknown reasons, this seems to cause havoc on Apple.
-    # Moreover, CMake >= 2.8.12 deprecated the use of LINK_INTERFACE_LIBRARIES
-    # (policy CMP0022). Don't bother about overlinking in that case; GCC >= 4.6
-    # (that will likely be used) will not link in unused libraries.
-    if(NOT APPLE AND NOT POLICY CMP0022)
+    if(NOT APPLE)
       target_link_libraries(${_name} LINK_INTERFACE_LIBRARIES
         ${${PACKAGE_NAME}_LINK_LIBRARIES})
-    endif(NOT APPLE AND NOT POLICY CMP0022)
+    endif(NOT APPLE)
 #    set_target_properties(${_name} PROPERTIES 
 #      VERSION ${${PACKAGE_NAME}_VERSION}
 #      OUTPUT_NAME lofar_${_name})
     install(TARGETS ${_name} DESTINATION ${LOFAR_LIBDIR})
-    if(TARGET ${PACKAGE_NAME}_PackageVersion)
-      add_dependencies(${_name} ${PACKAGE_NAME}_PackageVersion)
-    endif(TARGET ${PACKAGE_NAME}_PackageVersion)
+    add_dependencies(${_name} ${PACKAGE_NAME}_PackageVersion)
     add_dependencies(${PACKAGE_NAME} ${_name})
   endmacro(lofar_add_library)
 
@@ -144,22 +119,6 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     lofar_add_executable(${_name} ${ARGN})
     install(TARGETS ${_name} DESTINATION sbin)
   endmacro(lofar_add_sbin_program)
-
-
-  # --------------------------------------------------------------------------
-  # lofar_add_sbin_scripts([name1 [name2 ..]])
-  #
-  # Add scripts that need to be installed into the <prefix>/sbin directory.
-  # Also create a symbolic link in <build-dir>/sbin to each of these scripts.
-  # --------------------------------------------------------------------------
-  macro(lofar_add_sbin_scripts)
-    foreach(_name ${ARGN})
-      get_filename_component(_abs_name ${_name} ABSOLUTE)
-      execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${_abs_name} ${CMAKE_BINARY_DIR}/sbin/${_name})
-      install(PROGRAMS ${_name} DESTINATION sbin)
-    endforeach(_name ${ARGN})
-  endmacro(lofar_add_sbin_scripts)
 
 
   # --------------------------------------------------------------------------

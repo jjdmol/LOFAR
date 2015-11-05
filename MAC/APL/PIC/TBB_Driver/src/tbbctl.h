@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@
 
 
 namespace LOFAR {
-  using namespace TBB_Protocol;
   using GCF::TM::GCFTask;
   using GCF::TM::GCFPort;
   using GCF::TM::GCFTimerPort;
@@ -517,8 +516,8 @@ public:
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
 	void setTime(double time) { itsTime.set(time); }
-	void setTimeBefore(double time) { itsTimeBefore.set(time); }
-	void setTimeAfter(double time) { itsTimeAfter.set(time); }
+	void setTimeBefore(double time) { itsTimeAfter.set(time); }
+	void setTimeAfter(double time) { itsTimeBefore.set(time); }
 	/*
 	void setSecondsTime(uint32 secondstime) { itsSecondsTime = secondstime; }
 	void setSampleNr(uint32 samplenr) { itsSampleNr = samplenr; }
@@ -548,13 +547,12 @@ public:
 	virtual GCFEvent::TResult ack(GCFEvent& e);
 	void setPages(uint32 pages) { itsPages = pages; }
 	void setTime(double time) { itsTime.set(time); }
-	void setTimeBefore(double time) { itsTimeBefore.set(time); }
-	void setTimeAfter(double time) { itsTimeAfter.set(time); }
+	void setTimeBefore(double time) { itsTimeAfter.set(time); }
+	void setTimeAfter(double time) { itsTimeBefore.set(time); }
 
 private:
 	int itsStage;
 	int itsRcu;
-	int itsBoard;
 	uint32 itsPages;
 	NsTimestamp itsTime;
     NsTimestamp itsTimeBefore;

@@ -17,7 +17,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: tCorrelatorSubbandProcProcessSb.cc 26496 2013-09-11 12:58:23Z mol $
 
 #include <lofar_config.h>
 
@@ -29,8 +29,8 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/fpequals.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/SubbandProcs/SubbandProc.h>
-#include <GPUProc/SubbandProcs/KernelFactories.h>
+#include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
+#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
@@ -79,7 +79,7 @@ int main() {
 
   // Input array sizes
   const size_t nrBeams = ps.settings.SAPs.size();
-  const size_t nrStations = ps.settings.antennaFields.size();
+  const size_t nrStations = ps.settings.stations.size();
   const size_t nrPolarisations = ps.settings.nrPolarisations;
   const size_t nrSamplesPerSubband = ps.settings.blockSize;
   const size_t nrBitsPerSample = ps.settings.nrBitsPerSample;
@@ -112,8 +112,8 @@ int main() {
   // correction (but that kernel will run to convert int to float and to
   // transform the data order).
 
-  KernelFactories factories(ps);
-  SubbandProc bwq(ps, ctx, factories);
+  BeamFormerFactories factories(ps);
+  BeamFormerSubbandProc bwq(ps, ctx, factories);
 
   SubbandProcInputData in(ps, ctx);
 
@@ -162,7 +162,7 @@ int main() {
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
-  SubbandProcOutputData out(ps, ctx);
+  BeamFormedData out(ps, ctx);
 
   for (size_t i = 0; i < out.coherentData.num_elements(); i++)
     out.coherentData.get<float>()[i] = 42.0f;

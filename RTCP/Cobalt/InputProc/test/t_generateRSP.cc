@@ -85,7 +85,7 @@ void read_rsp(Stream& is, ostream& os, unsigned bitMode, unsigned nrSubbands)
       }
       os << endl;
     }
-  } catch (EndOfStreamException&) { }
+  } catch (Stream::EndOfStreamException&) { }
 }
 
 int main()
@@ -118,7 +118,7 @@ int main()
         ofstream ascStream(ascFile.c_str());
         generate_input(ascStream, bitMode[b], nrPackets[p], nrSubbands[s]);
 
-        command = str(format("../src/generateRSP -b%d -s%d < %s -o %s") % 
+        command = str(format("../src/generateRSP -b%d -s%d < %s > %s") % 
                       bitMode[b] % nrSubbands[s] % ascFile % rspFile);
         cout << "Executing command: " << command << endl;
         ASSERT(system(command.c_str()) == 0);

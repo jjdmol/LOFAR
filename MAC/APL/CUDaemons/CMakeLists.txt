@@ -16,4 +16,3 @@
 
 lofar_add_package(Service_Broker)
 lofar_add_package(CT_StartDaemon)
-lofar_add_package(PVSSGateway_Stub)

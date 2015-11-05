@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@
 #include <Common/Exceptions.h>
 #include <Common/SystemUtil.h>
 #include <Common/hexdump.h>
-#include <MessageBus/Protocols/TaskFeedbackState.h>
 #include <ApplCommon/StationInfo.h>
 #include <ApplCommon/Observation.h>
 #include <ApplCommon/LofarDirs.h>
@@ -40,7 +39,6 @@
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSservice.h>
 #include <GCF/RTDB/DP_Protocol.ph>
-#include <GCF/RTDB/DPservice.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/ControllerDefines.h>
@@ -59,8 +57,6 @@ using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {
-	using namespace DP_Protocol;
-	using namespace Controller_Protocol;
 	using namespace APLCommon;
 	using namespace OTDB;
 	namespace CEPCU {
@@ -68,14 +64,13 @@ namespace LOFAR {
 // static pointer to this object for signal handler
 static OnlineControl*	thisOnlineControl = 0;
 
-const double QUEUE_POLL_TIMEOUT = 1.0;
-
 //
 // OnlineControl()
 //
 OnlineControl::OnlineControl(const string&	cntlrName) :
 	GCFTask 			((State)&OnlineControl::initial_state,cntlrName),
 	itsPropertySet		(0),
+	itsBGPApplPropSet	(0),
 	itsPropertySetInitialized (false),
 	itsPVSSService		(0),
 	itsPVSSResponse		(0),
@@ -85,9 +80,9 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	itsForcedQuitTimer	(0),
 	itsLogControlPort	(0),
 	itsState			(CTState::NOSTATE),
-	itsMsgQueue			(0),
-	itsQueueTimer		(0),
-	itsFeedbackResult	(CT_RESULT_NO_ERROR),
+	itsFeedbackListener	(0),					// QUICK FIX #4022
+	itsFeedbackPort		(0),					// QUICK FIX #4022
+	itsFeedbackResult	(CT_RESULT_NO_ERROR),	// QUICK FIX #4022
 	itsTreePrefix       (""),
 	itsInstanceNr       (0),
 	itsStartTime        (),
@@ -115,13 +110,14 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 	ASSERTSTR(itsTimerPort, "Can't allocate the timer!");
-    itsQueueTimer = new GCFTimerPort(*this, "MsgQTimer");
-    ASSERTSTR(itsQueueTimer, "Cannot allocate queue timer");
 
 	// Controlport to logprocessor
 	itsLogControlPort = new GCFTCPPort(*this, MAC_SVCMASK_CEPLOGCONTROL, GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
 	ASSERTSTR(itsLogControlPort, "Can't allocate the logControlPort");
 
+	// QUICK FIX #4022
+	itsFeedbackListener = new GCFTCPPort (*this, "Feedbacklistener", GCFPortInterface::MSPP, CONTROLLER_PROTOCOL);
+	ASSERTSTR(itsFeedbackListener, "Cannot allocate TCP port for feedback");
 	itsForcedQuitTimer = new GCFTimerPort(*this, "EmergencyTimer");
 	ASSERTSTR(itsForcedQuitTimer, "Can't allocate the emergency timer!");
 	itsForceTimeout = globalParameterSet()->getTime("emergencyTimeout", 3600);
@@ -145,9 +141,14 @@ OnlineControl::~OnlineControl()
 		delete itsLogControlPort;
 	}
 
-	delete itsTimerPort;
-	delete itsQueueTimer;
-	delete itsMsgQueue;
+	if (itsTimerPort) {
+		delete itsTimerPort;
+	}
+
+	if (itsFeedbackListener) {
+		itsFeedbackListener->close();
+		delete itsFeedbackListener;
+	}
 }
 
 //
@@ -257,6 +258,58 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event, GCFPortInterface
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("initial"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 
+   		LOG_DEBUG ("Going to create BGPAppl datapoint");
+		TRAN(OnlineControl::propset_state);				// go to next state.
+	} break;
+
+	case F_CONNECTED:
+		break;
+
+	case F_DISCONNECTED:
+		_handleDisconnect(port);
+		break;
+	
+	default:
+		LOG_DEBUG_STR ("initial, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}    
+	return (status);
+}
+
+//
+// propset_state(event, port)
+//
+// Connect to BGPAppl DP and start rest of tasks
+//
+GCFEvent::TResult OnlineControl::propset_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_INFO_STR ("propset:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+	case F_ENTRY: {
+		// Get access to my own propertyset.
+		string obsDPname = globalParameterSet()->getString("_DPname");
+		string	propSetName(createPropertySetName(PSN_BGP_APPL, getName(), obsDPname));
+		LOG_DEBUG_STR ("Activating PropertySet: "<< propSetName);
+		itsBGPApplPropSet = new RTDBPropertySet(propSetName,
+											 PST_BGP_APPL,
+											 PSAT_RW,
+											 this);
+	} break;
+
+	case DP_CREATED: {
+		// NOTE: this function may be called DURING the construction of the PropertySet.
+		// Always exit this event in a way that GCF can end the construction.
+		DPCreatedEvent  dpEvent(event);
+		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
+		itsTimerPort->cancelAllTimers();
+		itsTimerPort->setTimer(0.1);
+	} break;
+
+	case F_TIMER: {	// must be timer that PropSet is online.
 		// start StopTimer for safety.
 		LOG_INFO("Starting QUIT timer that expires 5 seconds after end of observation");
 		ptime	now(second_clock::universal_time());
@@ -267,12 +320,11 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event, GCFPortInterface
 		itsParentPort = itsParentControl->registerTask(this);
 		// results in CONTROL_CONNECT
 
-		// open connection with messagebus
-		if (!itsMsgQueue) {
-			string	queueName = globalParameterSet()->getString("TaskStateQueue");
-			itsMsgQueue = new FromBus(queueName);
-			LOG_INFO_STR("Starting to listen on " << queueName);
-		}
+		// QUICK FIX #4022
+		uint32	obsID = globalParameterSet()->getUint32("Observation.ObsID");
+		LOG_INFO_STR("Openening feedback port for OLAP: " << MAC_ONLINE_FEEDBACK_QF + obsID%1000);
+		itsFeedbackListener->setPortNumber(MAC_ONLINE_FEEDBACK_QF + obsID%1000);
+		itsFeedbackListener->open();	// will result in F_CONN
 
 		LOG_DEBUG ("Going to operational state");
 		TRAN(OnlineControl::active_state);				// go to next state.
@@ -286,7 +338,7 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event, GCFPortInterface
 		break;
 	
 	default:
-		LOG_DEBUG_STR ("initial, default");
+		LOG_DEBUG_STR ("propset, default");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}    
@@ -310,7 +362,11 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		// update PVSS
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("active"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
-		itsQueueTimer->setTimer(QUEUE_POLL_TIMEOUT);
+	} break;
+
+	// QUICKFIX #4022
+	case F_ACCEPT_REQ: {
+		_handleAcceptRequest(port);
 	} break;
 
 	case F_CONNECTED: {
@@ -322,39 +378,18 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		_handleDisconnect(port);
 	} break;
 
+	// QUICKFIX #4022
+	case F_DATAIN: {
+		_handleDataIn(port);
+	} break;
+
 	case DP_CHANGED:
 		_databaseEventHandler(event);
 		break;
 
 	case F_TIMER:  {
 		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
-		if (&port == itsQueueTimer) {
-			Message	msg;
-			if (itsMsgQueue->getMessage(msg, 0.1)) {
-				Protocols::TaskFeedbackState content(msg.qpidMsg());
-				string	obsIDstr = content.sasid.get();
-				LOG_INFO_STR("Received message from task " << obsIDstr);
-				if (atoi(obsIDstr.c_str()) == itsObsID) {
-					string	result = content.state.get();
-					if (result == "aborted") {
-						itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
-					}
-					else if (result != "finished") {
-						LOG_FATAL_STR("Unknown result received from correlator: " << result << " assuming failure!");
-						itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
-					}
-					LOG_INFO_STR("Received '" << result << "' on the messagebus");
-					itsMsgQueue->ack(msg);
-					TRAN(OnlineControl::finishing_state);
-					break;
-				} // my obsid
-				else {
-					itsMsgQueue->reject(msg);
-				}
-			} // getMsg
-			itsQueueTimer->setTimer(QUEUE_POLL_TIMEOUT);
-		}
-		else if (timerEvent.id == itsStopTimerID) {
+		if (timerEvent.id == itsStopTimerID) {
 			LOG_DEBUG("StopTimer expired, starting QUIT sequence");
 			itsStopTimerID = 0;
 			_setState(CTState::QUIT);
@@ -377,13 +412,13 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		CONTROLConnectEvent		msg(event);
 		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
 		itsMyName = msg.cntlrName;
-		itsObsID  = getObservationNr(msg.cntlrName);
 		// first inform CEPlogProcessor
 		CONTROLAnnounceEvent		announce;
-		announce.observationID = toString(itsObsID);
+		announce.observationID = toString(getObservationNr(msg.cntlrName));
 		itsLogControlPort->send(announce);
 		// execute this state
 		_setState(CTState::CONNECT);
+		_setupBGPmappingTables();
 		uint32 result = _startApplications();			// prep parset and call startBGP.sh
 		// respond to parent
 		sendControlResult(port, event.signal, msg.cntlrName, result);
@@ -461,6 +496,45 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 }
 
 //
+// completing_state(event, port)
+//
+//
+GCFEvent::TResult OnlineControl::completing_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_INFO_STR ("completing:" << eventName(event) << "@" << port.getName());
+
+	switch (event.signal) {
+	case F_ENTRY: {
+		// update PVSS
+		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("completing"));
+		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
+		itsInFinishState = true;
+
+		_passMetadatToOTDB();
+
+		TRAN(OnlineControl::finishing_state);
+	} break;
+
+	case F_TIMER:
+		break;
+
+	case F_DISCONNECTED:
+		_handleDisconnect(port);
+		break;
+
+	case F_DATAIN:
+		_handleDataIn(port);
+		break;
+
+	default:
+		LOG_DEBUG("completing state default");
+		return (GCFEvent::NOT_HANDLED);
+	}
+
+	return (GCFEvent::HANDLED);
+}
+
+//
 // finishing_state(event, port)
 //
 //
@@ -490,11 +564,85 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		_handleDisconnect(port);
 		break;
 
+	case F_DATAIN:
+		_handleDataIn(port);
+		break;
+
 	default:
 		LOG_DEBUG("finishing_state default");
 		return (GCFEvent::NOT_HANDLED);
 	}
 	return (GCFEvent::HANDLED);
+}
+
+//
+// _setupBGPmappingTables
+//
+void OnlineControl::_setupBGPmappingTables()
+{
+	Observation		theObs(globalParameterSet(), false);
+	int	nrStreams = theObs.streamsToStorage.size();
+	LOG_INFO_STR("_setupBGPmapping: " << nrStreams << " streams found.");
+
+	// Which IOnodes and Adders are used is collected in arrays and written to BGPAppl datapoints.
+	// e.g. BGPAppl.IONodelist = {0,1,2,3} ; BGPAppl.AdderList = {[0,2,3],[0,1,2],[3,6,2],[6,6,6]}
+	// The dataproduct, writer and locus information is written to datapoint in the related adder.
+	// eg. IONode99.Adder0.dataProductType=Correlated, IONode99.Adder0.dataProduct=L55522_SAP000_SB000_uv.MS, 
+	//     IONode99.Adder0.locusnode=2, IONode99.Adder0.writer=0
+	// BGPAppl vectors
+	GCFPValueArray	ionodeArr;
+	GCFPValueArray	adderArr;
+	// Adder vector
+	vector<string>		fields;
+	fields.push_back("dataProductType");
+	fields.push_back("dataProduct");
+	fields.push_back("locusNode");
+	fields.push_back("writer");
+
+	uint	prevPset = (nrStreams ? theObs.streamsToStorage[0].sourcePset : -1);
+	vector<int>		adderVector;
+	for (int i = 0; i < nrStreams; i++) {
+		// BGPAppl information
+		if (theObs.streamsToStorage[i].sourcePset != prevPset) {	// other Pset? write current vector to the database.
+			ionodeArr.push_back(new GCFPVInteger(prevPset));
+			{	stringstream	os;
+				writeVector(os, adderVector);
+				adderArr.push_back (new GCFPVString(os.str()));
+			}
+			// clear the collecting vectors
+			adderVector.clear();
+			prevPset = theObs.streamsToStorage[i].sourcePset;
+		}
+		// extend vector with info
+		adderVector.push_back (theObs.streamsToStorage[i].adderNr);
+
+		// Adder information
+		string	propSetMask(createPropertySetName(PSN_ADDER, "", ""));
+		string	adderDPname(formatString(propSetMask.c_str(), theObs.streamsToStorage[i].sourcePset, 
+							theObs.streamsToStorage[i].adderNr));
+		vector<GCFPValue*>	values;
+		values.push_back(new GCFPVString (theObs.streamsToStorage[i].dataProduct));
+		values.push_back(new GCFPVString (theObs.streamsToStorage[i].filename));
+		int	locusNodeNr(0);
+		if (sscanf(theObs.streamsToStorage[i].destStorageNode.c_str(), "locus%d", &locusNodeNr) != 1) {
+			LOG_ERROR_STR("Cannot determine number in '" << theObs.streamsToStorage[i].destStorageNode <<"'");
+		}
+		values.push_back(new GCFPVInteger(locusNodeNr));
+		values.push_back(new GCFPVInteger(theObs.streamsToStorage[i].writerNr));
+		itsPVSSService->dpeSetMultiple(adderDPname, fields, values, 0.0, false); // ignore answer
+		// release claimed memory for Adder
+		for (int i = values.size()-1; i>=0; i--) {
+			delete values[i];
+		}
+	}
+	itsBGPApplPropSet->setValue(PN_BGPA_IO_NODE_LIST, GCFPVDynArr(LPT_DYNINTEGER, ionodeArr));
+	itsBGPApplPropSet->setValue(PN_BGPA_ADDER_LIST,   GCFPVDynArr(LPT_DYNSTRING,  adderArr));
+
+	// release claimed memory for BGPAppl.
+	for (int i = ionodeArr.size()-1; i>=0; i--) {
+		delete ionodeArr[i];
+		delete adderArr[i];
+	}
 }
 
 //
@@ -505,8 +653,6 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 //
 uint32 OnlineControl::_startApplications()
 {
-	_clearCobaltDatapoints();
-
 	ParameterSet*	thePS  = globalParameterSet();		// shortcut to global PS.
 
 	// Get list of all application that should be managed
@@ -638,141 +784,90 @@ void OnlineControl::_stopApplications()
 }
 
 //
-// _clearCobaltDatapoints()
+// _passMetadatToOTDB();
+// THIS ROUTINE IS A MODIFIED COPY FROM PYTHONCONTROL.CC
 //
-void OnlineControl::_clearCobaltDatapoints()
+void OnlineControl::_passMetadatToOTDB()
 {
-	ParameterSet*	thePS  = globalParameterSet();		// shortcut to global PS.
+	// No name specified?
+	bool	metadataFileAvailable (true);
+	uint32	obsID(globalParameterSet()->getUint32("Observation.ObsID", 0));
+	string  feedbackFile = observationParset(obsID)+"_feedback";
+	LOG_INFO_STR ("Expecting metadata to be in file " << feedbackFile);
+	if (feedbackFile.empty()) {
+		metadataFileAvailable = false;
+	}
 
-	// create a datapoint service for clearing all the datapoints
-	DPservice*	myDPservice = new DPservice(this);
-	if (!myDPservice) {
-		LOG_ERROR_STR("Can't allocate DPservice to PVSS to clear Cobalt values! Navigator contents no longer guaranteed");
+	// read parameterset
+	// Try to setup the connection with the database
+	string	confFile = globalParameterSet()->getString("OTDBconfFile", "SASGateway.conf");
+	ConfigLocator	CL;
+	string	filename = CL.locate(confFile);
+	LOG_INFO_STR("Trying to read database information from file " << filename);
+	ParameterSet	otdbconf;
+	otdbconf.adoptFile(filename);
+	string database = otdbconf.getString("SASGateway.OTDBdatabase");
+	string dbhost   = otdbconf.getString("SASGateway.OTDBhostname");
+	OTDBconnection  conn("paulus", "boskabouter", database, dbhost);
+	if (!conn.connect()) {
+		LOG_FATAL_STR("Cannot connect to database " << database << " on machine " << dbhost);
+		// WE DO HAVE A PROBLEM HERE BECAUSE THIS PIPELINE CANNOT BE SET TO FINISHED IN SAS.
 		return;
 	}
+	LOG_INFO_STR("Connected to database " << database << " on machine " << dbhost);
 
-	// _DPname=LOFAR_ObsSW_TempObs0185
-	string	DPbasename(thePS->getString("_DPname", "NO_DPNAME_IN_PARSET"));
-
-	// OSCBT<000>_CobaltGPUProc<00> for 001-009 and 00-01
-	string	propSetNameMask(createPropertySetName(PSN_COBALTGPU_PROC, getName(), DPbasename));
-	// prepare 'cleared value set'
-	vector<string>		fields;
-	vector<GCFPValue*>	values;
-	fields.push_back(PN_CGP_OBSERVATION_NAME);
-	fields.push_back(PN_CGP_DATA_PRODUCT_TYPE);
-	fields.push_back(PN_CGP_SUBBAND);
-	fields.push_back(PN_CGP_DROPPING);
-	fields.push_back(PN_CGP_WRITTEN);
-	fields.push_back(PN_CGP_DROPPED);
-	GCFPValueArray	emptyArr;
-	values.push_back(new GCFPVString(""));
-	values.push_back(new GCFPVString(""));
-	values.push_back(new GCFPVDynArr(LPT_DYNINTEGER, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_DYNBOOL, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_DYNDOUBLE, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_DYNDOUBLE, emptyArr));
-	for (int nodeNr = 1; nodeNr <= 9; ++nodeNr) {
-		for (int gpuNr = 0; gpuNr <= 1; ++gpuNr) {
-			string	DPname(formatString(propSetNameMask.c_str(), nodeNr, gpuNr));
-			LOG_DEBUG_STR("Clearing " << DPname);
-
-			PVSSresult	result = myDPservice->setValue(DPname, fields, values, 0.0, false);
-			if (result != SA_NO_ERROR) {
-				LOG_WARN_STR("Call to PVSS for setValue for " << DPname << " returned: " << result);
+	if (metadataFileAvailable) {
+		try {
+			TreeValue   tv(&conn, getObservationNr(getName()));
+			ParameterSet	metadata;
+			metadata.adoptFile(feedbackFile);
+			// Loop over the parameterset and send the information to the KVTlogger.
+			// During the transition phase from parameter-based to record-based storage in OTDB the
+			// nodenames ending in '_' are implemented both as parameter and as record.
+			ParameterSet::iterator		iter = metadata.begin();
+			ParameterSet::iterator		end  = metadata.end();
+			while (iter != end) {
+				string	key(iter->first);	// make destoyable copy
+				rtrim(key, "[]0123456789");
+		//		bool	doubleStorage(key[key.size()-1] == '_');
+				bool	isRecord(iter->second.isRecord());
+				//   isRecord  doubleStorage
+				// --------------------------------------------------------------
+				//      Y          Y           store as record and as parameters
+				//      Y          N           store as parameters
+				//      N          *           store parameter
+				if (!isRecord) {
+					LOG_DEBUG_STR("BASIC: " << iter->first << " = " << iter->second);
+					tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
+				}
+				else {
+		//			if (doubleStorage) {
+		//				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
+		//				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
+		//			}
+					// to store is a node/param values the last _ should be stipped of
+					key = iter->first;		// destroyable copy
+		//			string::size_type pos = key.find_last_of('_');
+		//			key.erase(pos,1);
+					ParameterRecord	pr(iter->second.getRecord());
+					ParameterRecord::const_iterator	prIter = pr.begin();
+					ParameterRecord::const_iterator	prEnd  = pr.end();
+					while (prIter != prEnd) {
+						LOG_DEBUG_STR("ELEMENT: " << key+"."+prIter->first << " = " << prIter->second);
+						tv.addKVT(key+"."+prIter->first, prIter->second, ptime(microsec_clock::local_time()));
+						prIter++;
+					}
+				}
+				iter++;
 			}
+			LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
+		}
+		catch (APSException &e) {
+			// Parameterfile not found
+			LOG_FATAL(e.text());
 		}
 	}
-	// free allocated GCFValues.
-	for (int i = values.size()-1 ; i >= 0; i--) {
-		delete values[i];
-	}
-	values.clear();
-	fields.clear();
-
-
-	// CobaltOutputProc
-	string	DPname(createPropertySetName(PSN_COBALT_OUTPUT_PROC, getName(), DPbasename));
-	// prepare 'cleared value set'
-	fields.push_back(PN_COP_LOCUS_NODE);
-	fields.push_back(PN_COP_DATA_PRODUCT_TYPE);
-	fields.push_back(PN_COP_FILE_NAME);
-	fields.push_back(PN_COP_DIRECTORY);
-	fields.push_back(PN_COP_DROPPING);
-	fields.push_back(PN_COP_WRITTEN);
-	fields.push_back(PN_COP_DROPPED);
-	values.push_back(new GCFPVDynArr(LPT_DYNINTEGER, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_DYNSTRING, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_DYNSTRING, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_DYNSTRING, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_DYNBOOL, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_DYNDOUBLE, emptyArr));
-	values.push_back(new GCFPVDynArr(LPT_DYNDOUBLE, emptyArr));
-
-	LOG_DEBUG_STR("Clearing " << DPname);
-	PVSSresult	result = myDPservice->setValue(DPname, fields, values, 0.0, false);
-	if (result != SA_NO_ERROR) {
-		LOG_WARN_STR("Call to PVSS for setValue for " << DPname << " returned: " << result);
-	}
-	// free allocated GCFValues.
-	for (int i = values.size()-1 ; i >= 0; i--) {
-		delete values[i];
-	}
-	values.clear();
-	fields.clear();
-
-
-	// CS<000><xBAy>_CobaltStationInput
-	propSetNameMask = createPropertySetName(PSN_COBALT_STATION_INPUT, getName(), DPbasename);
-	// LOFAR_PermSW_@stationfield@_CobaltStationInput	--> @stationfield@ := %s
-	// prepare 'cleared value set'
-	fields.push_back(PN_CSI_NODE);
-	fields.push_back(PN_CSI_CPU);
-	fields.push_back(PN_CSI_OBSERVATION_NAME);
-	fields.push_back(PN_CSI_STREAM0_BLOCKS_IN);
-	fields.push_back(PN_CSI_STREAM0_REJECTED);
-	fields.push_back(PN_CSI_STREAM1_BLOCKS_IN);
-	fields.push_back(PN_CSI_STREAM1_REJECTED);
-	fields.push_back(PN_CSI_STREAM2_BLOCKS_IN);
-	fields.push_back(PN_CSI_STREAM2_REJECTED);
-	fields.push_back(PN_CSI_STREAM3_BLOCKS_IN);
-	fields.push_back(PN_CSI_STREAM3_REJECTED);
-	values.push_back(new GCFPVString(""));
-	values.push_back(new GCFPVInteger(0));
-	values.push_back(new GCFPVString(""));
-	for (int i = 0; i < 8; ++i) {
-		values.push_back(new GCFPVInteger(0));
-	}
-	const string	AntFields[] = {"LBA", "HBA", "HBA0", "HBA1" };
-	string			ObsLocation(globalParameterSet()->fullModuleName("Observation"));
-	vector<string>	stationList(globalParameterSet()->getStringVector(ObsLocation+".VirtualInstrument.stationList"));
-	int firstAF   = (globalParameterSet()->getString(ObsLocation+".antennaArray") == "LBA") ? 0 : 1;
-	vector<string>::const_iterator	iter = stationList.begin();
-	vector<string>::const_iterator	end  = stationList.end();
-	while (iter != end) {
-		int	nrAFs2Clean = 1 + ((firstAF>0 && iter->substr(0,2)=="CS") ? 2 : 0);
-		for (int AFindex = firstAF; AFindex < firstAF+nrAFs2Clean; ++AFindex) {
-			string	stationField(*iter + AntFields[AFindex]);	// eg. CS001 + LBA
-			string	DPname(formatString(propSetNameMask.c_str(), stationField.c_str()));
-			LOG_DEBUG_STR("Clearing " << DPname);
-
-			PVSSresult	result = myDPservice->setValue(DPname, fields, values, 0.0, false);
-			if (result != SA_NO_ERROR) {
-				LOG_WARN_STR("Call to PVSS for setValue for " << DPname << " returned: " << result);
-			}
-		} // for
-		++iter;
-	}
-	// free allocated GCFValues.
-	for (int i = values.size()-1 ; i >= 0; i--) {
-		delete values[i];
-	}
-	values.clear();
-	fields.clear();
-
-	delete myDPservice;
 }
-
 // -------------------- Application-order administration --------------------
 
 //
@@ -781,6 +876,55 @@ void OnlineControl::_clearCobaltDatapoints()
 void OnlineControl::_handleDisconnect(GCFPortInterface& port)
 {
 	port.close();
+	// QUICKFIX #4022
+	if (&port == itsFeedbackPort) {
+		LOG_FATAL_STR("Lost connection with Feedback of OLAP.");
+		delete itsFeedbackPort;
+		itsFeedbackPort = 0;
+	}
+}
+
+//
+// _handleAcceptRequest(port)
+//
+void OnlineControl::_handleAcceptRequest(GCFPortInterface& port)
+{
+	ASSERTSTR(&port == itsFeedbackListener, "Incoming connection on main listener iso feedbackListener");
+	itsFeedbackPort = new GCFTCPPort();
+	itsFeedbackPort->init(*this, "feedback", GCFPortInterface::SPP, 0, true);   // raw port
+	if (!itsFeedbackListener->accept(*itsFeedbackPort)) {
+		delete itsFeedbackPort;
+		itsFeedbackPort = 0;
+		LOG_ERROR("Connection with Python feedback FAILED");
+	}
+	else {
+		LOG_INFO("Connection made on feedback port, accepting commands");
+	}
+}
+
+//
+// _handleDataIn(port)
+//
+void OnlineControl::_handleDataIn(GCFPortInterface& port)
+{
+	ASSERTSTR(&port == itsFeedbackPort, "Didn't expect raw data on port " << port.getName());
+	char    buf[1024];
+	ssize_t btsRead = port.recv((void*)&buf[0], 1023);
+	buf[btsRead] = '\0';
+	string  s;
+	hexdump(s, buf, btsRead);
+	LOG_INFO_STR("Received command on feedback port: " << s);
+
+	if (!strcmp(buf, "ABORT")) {
+		itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
+		TRAN(OnlineControl::completing_state);	// pass metadata
+	}
+	else if (!strcmp(buf, "FINISHED")) {
+		TRAN(OnlineControl::completing_state);
+	}
+	else {
+		LOG_FATAL_STR("Received command on feedback port unrecognized");
+	}
 }
 
 }; // CEPCU

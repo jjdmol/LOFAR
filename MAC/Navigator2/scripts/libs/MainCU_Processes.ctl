@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -130,6 +130,8 @@ void MainCU_Processes_UpdateMainControllers() {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","ObservationControlPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
     // also connect to CCU Ctrls
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_BGPApplPanel",
+          DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","PythonControlPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
   }

@@ -1,5 +1,5 @@
-//# tTABTranspose.cc
-//# Copyright (C) 2012-2014  ASTRON (Netherlands Institute for Radio Astronomy)
+//# tParset.cc
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -16,30 +16,23 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: tParset.cc 25931 2013-08-05 13:07:35Z klijn $
 
 #include <lofar_config.h>
 
-#include <ctime>
-
 #include <Common/LofarLogger.h>
-#include <Common/Timer.h>
 #include <Stream/StringStream.h>
 #include <CoInterface/TABTranspose.h>
 
 #include <UnitTest++.h>
 #include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 #include <omp.h>
-
-#include "tParsetDefault.h"
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace LOFAR::Cobalt::TABTranspose;
 using namespace std;
 using boost::format;
-using boost::lexical_cast;
 
 SUITE(Block) {
   TEST(OrderedArrival) {
@@ -47,11 +40,11 @@ SUITE(Block) {
     const size_t nrSamples = 1024;
     const size_t nrChannels = 64;
 
-    Block block(0, 0, nrSubbands, nrSamples, nrChannels);
+    Block block(nrSubbands, nrSamples, nrChannels);
 
     for (size_t subbandIdx = 0; subbandIdx < nrSubbands; ++subbandIdx) {
-      SmartPtr<Subband> subband = new Subband(nrSamples, nrChannels);
-      subband->id.subband = subbandIdx;
+      Subband subband(nrSamples, nrChannels);
+      subband.id.subband = subbandIdx;
 
       CHECK(!block.complete());
       block.addSubband(subband);
@@ -65,7 +58,7 @@ SUITE(Block) {
     const size_t nrSamples = 1024;
     const size_t nrChannels = 64;
 
-    Block block(0, 0, nrSubbands, nrSamples, nrChannels);
+    Block block(nrSubbands, nrSamples, nrChannels);
 
     // Our increment needs to be co-prime to nrSubbands for
     // the ring to visit all elements.
@@ -78,51 +71,14 @@ SUITE(Block) {
       // avoid starting at 0, because the ordered test already does
       size_t subbandIdx = (3 + n * subbandIncrement) % nrSubbands;
 
-      SmartPtr<Subband> subband = new Subband(nrSamples, nrChannels);
-      subband->id.subband = subbandIdx;
+      Subband subband(nrSamples, nrChannels);
+      subband.id.subband = subbandIdx;
 
       CHECK(!block.complete());
       block.addSubband(subband);
     }
 
     CHECK(block.complete());
-  }
-
-  TEST(TransposeSpeed) {
-    size_t nrChannelsList[] = { 1, 16, 256 };
-
-    for (size_t c = 0; c < sizeof nrChannelsList / sizeof nrChannelsList[0]; c++) {
-      const size_t nrSubbands = 488;
-      const size_t nrChannels = nrChannelsList[c];
-      const size_t nrSamples = 196608 / nrChannels;
-
-      // Our increment needs to be co-prime to nrSubbands for
-      // the ring to visit all elements.
-      const size_t subbandIncrement = 7;
-
-      CHECK(nrSubbands % subbandIncrement != 0);
-      CHECK(subbandIncrement % nrSubbands != 0);
-
-      Block block(0, 0, nrSubbands, nrSamples, nrChannels);
-
-      for (size_t n = 0; n < nrSubbands; ++n) {
-        size_t subbandIdx = (3 + n * subbandIncrement) % nrSubbands;
-
-        SmartPtr<Subband> subband = new Subband(nrSamples, nrChannels);
-        subband->id.subband = subbandIdx;
-
-        block.addSubband(subband);
-      }
-
-      BeamformedData output(
-        boost::extents[nrSamples][nrSubbands][nrChannels],
-        boost::extents[nrSubbands][nrChannels]);
-
-      NSTimer transposeTimer(str(format("Block::write for %u subbands, %u channels, %u samples") % nrSubbands % nrChannels % nrSamples), true, true);
-      transposeTimer.start();
-      block.write(output);
-      transposeTimer.stop();
-    }
   }
 }
 
@@ -134,18 +90,15 @@ struct Fixture {
   static const size_t nrChannels = 64;
   static const size_t nrBlocks = 3;
 
-  Pool<BeamformedData> outputPool;
+  Pool<Block> outputPool;
   BlockCollector ctr;
 
   Fixture()
   :
-    outputPool("Fixture::outputPool", true),
-    ctr(outputPool, 0, nrSubbands, nrChannels, nrSamples)
+    ctr(outputPool, 0)
   {
     for (size_t i = 0; i < nrBlocks; ++i) {
-      outputPool.free.append(new BeamformedData(
-        boost::extents[nrSamples][nrSubbands][nrChannels],
-        boost::extents[nrSubbands][nrChannels]), false);
+      outputPool.free.append(new Block(nrSubbands, nrSamples, nrChannels));
     }
   }
 };
@@ -157,7 +110,7 @@ struct Fixture_Loss: public Fixture {
 
   Fixture_Loss()
   :
-    ctr_loss(outputPool, 0, nrSubbands, nrChannels, nrSamples, 0, maxInFlight)
+    ctr_loss(outputPool, 0, 0, maxInFlight)
   {
     // add some subbands for both blocks
     for (size_t blockIdx = 0; blockIdx < maxInFlight; ++blockIdx) {
@@ -169,9 +122,9 @@ struct Fixture_Loss: public Fixture {
         if (subbandIdx == 3)
           continue;
 
-        SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-        sb->id.block = blockIdx;
-        sb->id.subband = subbandIdx;
+        Subband sb(nrSamples, nrChannels);
+        sb.id.block = blockIdx;
+        sb.id.subband = subbandIdx;
 
         ctr_loss.addSubband(sb);
       }
@@ -179,10 +132,6 @@ struct Fixture_Loss: public Fixture {
 
     // shouldn't have emitted anything yet
     CHECK_EQUAL(0UL, outputPool.filled.size());
-
-    ctr_loss.finish();
-    // should have emitted all blocks, plus NULL
-    CHECK_EQUAL(maxInFlight + 1, outputPool.filled.size());
   }
 
 };
@@ -191,15 +140,14 @@ SUITE(BlockCollector) {
   TEST_FIXTURE(Fixture, OneBlock) {
     // add all subbands for block 0
     for (size_t subbandIdx = 0; subbandIdx < nrSubbands; ++subbandIdx) {
-      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-      sb->id.block = 0;
-      sb->id.subband = subbandIdx;
+      Subband sb(nrSamples, nrChannels);
+      sb.id.block = 0;
+      sb.id.subband = subbandIdx;
 
       ctr.addSubband(sb);
     }
 
-    ctr.finish();
-    CHECK_EQUAL(2UL,          outputPool.filled.size());
+    CHECK_EQUAL(1UL,          outputPool.filled.size());
     CHECK_EQUAL(nrBlocks - 1, outputPool.free.size());
   }
 
@@ -207,63 +155,16 @@ SUITE(BlockCollector) {
     // add all subbands for all blocks
     for (size_t blockIdx = 0; blockIdx < nrBlocks; ++blockIdx) {
       for (size_t subbandIdx = 0; subbandIdx < nrSubbands; ++subbandIdx) {
-        SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-        sb->id.block = blockIdx;
-        sb->id.subband = subbandIdx;
+        Subband sb(nrSamples, nrChannels);
+        sb.id.block = blockIdx;
+        sb.id.subband = subbandIdx;
 
         ctr.addSubband(sb);
       }
     }
 
-    ctr.finish();
-    CHECK_EQUAL(nrBlocks + 1, outputPool.filled.size());
-    CHECK_EQUAL(0UL,          outputPool.free.size());
-  }
-
-  TEST_FIXTURE(Fixture, OutOfOrder) {
-    // we add different subbands for each block to allow for any arrival order to be tried.
-    // for each block, we add one subband and consider the rest to be lost, to keep the test simple.
-
-    // max of 2 blocks in flight
-    BlockCollector ctr_loss(outputPool, 0, nrSubbands, nrChannels, nrSamples, 0, 2);
-
-    // we add blocks [1,3], enough to keep in flight
-    {
-      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-      sb->id.block = 1;
-      sb->id.subband = 0;
-      ctr_loss.addSubband(sb);
-    }
-    {
-      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-      sb->id.block = 3;
-      sb->id.subband = 1;
-      ctr_loss.addSubband(sb);
-    }
-
-    // we let block 0 arrive, which could (erroneously) emit block 1
-    // in favour of block 0.
-    {
-      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-      sb->id.block = 0;
-      sb->id.subband = 2;
-      ctr_loss.addSubband(sb);
-    }
-
-    // if ok, we now have [1,3] still, and should be able to add block 2,
-    // causing block 1 to be emitted.
-    {
-      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-      sb->id.block = 2;
-      sb->id.subband = 3;
-      ctr_loss.addSubband(sb);
-    }
-
-    // emit remaining blocks: [2,3]
-    ctr_loss.finish();
-
-    // should have emitted blocks [1,2,3], plus terminating NULL
-    CHECK_EQUAL(4UL, outputPool.filled.size());
+    CHECK_EQUAL(+nrBlocks, outputPool.filled.size());
+    CHECK_EQUAL(0UL,       outputPool.free.size());
   }
 
   TEST_FIXTURE(Fixture, Loss_OneSubband) {
@@ -273,65 +174,61 @@ SUITE(BlockCollector) {
       if (subbandIdx == 3)
         continue;
 
-      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-      sb->id.block = 0;
-      sb->id.subband = subbandIdx;
+      Subband sb(nrSamples, nrChannels);
+      sb.id.block = 0;
+      sb.id.subband = subbandIdx;
 
       ctr.addSubband(sb);
     }
 
-    ctr.finish();
-    CHECK_EQUAL(2UL, outputPool.filled.size());
-/*
+    // shouldn't have emitted anything yet
+    CHECK_EQUAL(0UL, outputPool.filled.size());
+
     // add all subbands for block 1
     for (size_t subbandIdx = 0; subbandIdx < nrSubbands; ++subbandIdx) {
-      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-      sb->id.block = 1;
-      sb->id.subband = subbandIdx;
+      Subband sb(nrSamples, nrChannels);
+      sb.id.block = 1;
+      sb.id.subband = subbandIdx;
 
       ctr.addSubband(sb);
     }
 
     // both blocks are now emitted, because subband 3 of block 0 is
     // considered lost by the arrival of subband 3 of block 1
-    ctr.finish();
     CHECK_EQUAL(2UL,            outputPool.filled.size());
     CHECK_EQUAL(nrBlocks - 2UL, outputPool.free.size());
-*/
   }
 
   TEST_FIXTURE(Fixture_Loss, Loss_MaxBlocksInFlight) {
     // add one subband for a new block, causing block
     // 0 to spill.
     {
-      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-      sb->id.block = maxInFlight;
-      sb->id.subband = 0;
+      Subband sb(nrSamples, nrChannels);
+      sb.id.block = maxInFlight;
+      sb.id.subband = 0;
 
       ctr_loss.addSubband(sb);
     }
 
-    ctr_loss.finish();
+    // the first block should have been forced out
+    CHECK_EQUAL(1UL,                          outputPool.filled.size());
 
-    // all blocks should have been forced out
-    CHECK_EQUAL(maxInFlight + 1,        outputPool.filled.size());
-    CHECK_EQUAL(nrBlocks - maxInFlight, outputPool.free.size());
-/*
+    // some blocks are in flight, one has been emitted
+    CHECK_EQUAL(nrBlocks - maxInFlight - 1UL, outputPool.free.size());
+
     // let subband 3 arrive late
     {
-      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-      sb->id.block = 0;
-      sb->id.subband = 3;
+      Subband sb(nrSamples, nrChannels);
+      sb.id.block = 0;
+      sb.id.subband = 3;
 
       ctr_loss.addSubband(sb);
     }
 
     // there should be no change, even though this would have completed
     // a block, the block was already emitted
-    ctr_loss.finish();
     CHECK_EQUAL(1UL,                          outputPool.filled.size());
     CHECK_EQUAL(nrBlocks - maxInFlight - 1UL, outputPool.free.size());
-*/
   }
 
   TEST_FIXTURE(Fixture, Finish) {
@@ -342,17 +239,22 @@ SUITE(BlockCollector) {
         if (subbandIdx == 3)
           continue;
 
-        SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-        sb->id.block = blockIdx;
-        sb->id.subband = subbandIdx;
+        Subband sb(nrSamples, nrChannels);
+        sb.id.block = blockIdx;
+        sb.id.subband = subbandIdx;
 
         ctr.addSubband(sb);
       }
     }
 
+    // shouldn't have emitted anything yet
+    CHECK_EQUAL(0UL, outputPool.filled.size());
+    CHECK_EQUAL(0UL, outputPool.free.size());
+
+    ctr.finish();
+
     // should have emitted everything, plus
     // the terminating NULL entry
-    ctr.finish();
     CHECK_EQUAL(nrBlocks + 1, outputPool.filled.size());
     CHECK_EQUAL(0UL,          outputPool.free.size());
   }
@@ -399,18 +301,16 @@ SUITE(SendReceive) {
 
   TEST_FIXTURE(Fixture, OneToOne) {
     const size_t nrTABs = nrBlocks; // we know we have enough outputPool.free for nrBlocks TABs
-    map<size_t, SmartPtr< Pool<BeamformedData> > > outputPools;
+    map<size_t, SmartPtr< Pool<Block> > > outputPools;
     Receiver::CollectorMap collectors;
 
     for (size_t i = 0; i < nrTABs; ++i) {
-      outputPools[i] = new Pool<BeamformedData>(str(format("OneToOne::outputPool[%u]") % i), true);
+      outputPools[i] = new Pool<Block>;
       for (size_t b = 0; b < nrBlocks; ++b) {
-        outputPools[i]->free.append(new BeamformedData(
-          boost::extents[nrSamples][nrSubbands][nrChannels],
-          boost::extents[nrSubbands][nrChannels]), false);
+        outputPools[i]->free.append(new Block(nrSubbands, nrSamples, nrChannels));
       }
 
-      collectors[i] = new BlockCollector(*outputPools[i], i, nrSubbands, nrChannels, nrSamples);
+      collectors[i] = new BlockCollector(*outputPools[i], i);
     }
 
     StringStream str;
@@ -438,14 +338,15 @@ SUITE(SendReceive) {
     CHECK(receiver.finish());
 
     for (size_t i = 0; i < nrTABs; ++i) {
-      // Should have one complete block, plus NULL
-      CHECK_EQUAL(2UL, outputPools[i]->filled.size());
+      // Should have one complete block
+      CHECK_EQUAL(1UL, outputPools[i]->filled.size());
 
-      SmartPtr<BeamformedData> block = outputPools[i]->filled.remove();
+      SmartPtr<Block> block = outputPools[i]->filled.remove();
 
       CHECK(block != NULL);
+      CHECK(block->complete());
 
-      CHECK_EQUAL(0UL, block->sequenceNumber());
+      CHECK_EQUAL(0UL, block->block);
 
       /* check data */
       for (size_t sb = 0; sb < nrSubbands; ++sb) {
@@ -453,7 +354,7 @@ SUITE(SendReceive) {
 
         for (size_t s = 0; s < nrSamples; ++s) {
           for (size_t c = 0; c < nrChannels; ++c) {
-            size_t expected = (sb * nrTABs + i + 1) * ++x;
+            size_t expected = (sb * nrTABs + block->fileIdx + 1) * ++x;
             size_t actual = static_cast<size_t>(block->samples[s][sb][c]);
 
             if (expected != actual)
@@ -478,8 +379,8 @@ SUITE(MultiReceiver) {
 
     // Connect with multiple clients
     {
-      PortBroker::ClientStream cs1("localhost", PortBroker::DEFAULT_PORT, "foo-1", time(0) + 1);
-      PortBroker::ClientStream cs2("localhost", PortBroker::DEFAULT_PORT, "foo-2", time(0) + 1);
+      PortBroker::ClientStream cs1("localhost", PortBroker::DEFAULT_PORT, "foo-1", 1);
+      PortBroker::ClientStream cs2("localhost", PortBroker::DEFAULT_PORT, "foo-2", 1);
 
       // Disconnect them too! (~cs)
     }
@@ -491,13 +392,13 @@ SUITE(MultiReceiver) {
     // Set up receiver
     Receiver::CollectorMap collectors;
 
-    collectors[0] = new BlockCollector(outputPool, 0, nrSubbands, nrChannels, nrSamples);
+    collectors[0] = new BlockCollector(outputPool, 0);
 
     MultiReceiver mr("foo-", collectors);
 
     // Connect
     {
-      PortBroker::ClientStream cs("localhost", PortBroker::DEFAULT_PORT, "foo-1", time(0) + 1);
+      PortBroker::ClientStream cs("localhost", PortBroker::DEFAULT_PORT, "foo-1", 1);
 
       // Send one block
       {
@@ -525,41 +426,17 @@ SUITE(MultiReceiver) {
 
   TEST(MultiSender) {
     MultiSender::HostMap hostMap;
-    Parset ps = makeDefaultTestParset();
-    ps.replace("Cobalt.realTime", "false");
-    ps.updateSettings();
-    MultiSender msender(hostMap, ps);
+    MultiSender msender(hostMap, 3, false);
   }
 
   TEST(Transpose) {
-    // We use the even fileIdx to simulate a sparse set.
-    // Do create enough filenames. (Ab)use the subbandsPerFile (multiple parts) feature for that.
-    #define SPARSITY 2
-    #define FILEIDX(tabNr) ((tabNr)*SPARSITY)
-
     LOG_DEBUG_STR("Transpose test started");
 
     const int nrSubbands = 4;
     const size_t nrBlocks = 2;
-    const int nrTABs = 2; // keep in sync w/ ps filenames below (others are auto-derived)
+    const int nrTABs = 2;
     const size_t nrSamples = 16;
     const size_t nrChannels = 1;
-
-    // Adapt a copy of the default parset to conform to the above specs.
-    Parset ps = makeDefaultTestParset();
-    ps.replace("Observation.DataProducts.Output_Correlated.enabled", "false");
-    ps.replace("Cobalt.realTime", "false");
-    ps.replace("Observation.Beam[0].subbandList", "[21.." + lexical_cast<string>(21 + nrSubbands - 1) + "]");
-    ps.replace("Observation.Dataslots.CS001LBA.RSPBoardList", "[" + lexical_cast<string>(nrSubbands) + "*0]");
-    ps.replace("Observation.Dataslots.CS001LBA.DataslotList", "[0.." + lexical_cast<string>(nrSubbands - 1) + "]");
-    ps.replace("Observation.Beam[0].nrTiedArrayBeams", lexical_cast<string>(nrTABs));
-    ps.replace("Cobalt.BeamFormer.CoherentStokes.subbandsPerFile", lexical_cast<string>(nrSubbands / SPARSITY));
-    ps.replace("Observation.DataProducts.Output_CoherentStokes.filenames", // size must be SPARSITY * nrTABs
-               "[L12345_SAP000_B000_S000_P000_bf.h5, L12345_SAP000_B000_S000_P001_bf.h5, L12345_SAP000_B001_S000_P000_bf.h5, L12345_SAP000_B001_S000_P001_bf.h5]");
-    ps.replace("Observation.DataProducts.Output_CoherentStokes.locations", "[" + lexical_cast<string>(SPARSITY * nrTABs) + "*localhost:tParset-data/]");
-    ps.replace("Cobalt.blockSize", lexical_cast<string>(nrSamples * nrChannels));
-    ps.replace("Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband", lexical_cast<string>(nrSamples));
-    ps.updateSettings();
 
     // Give both senders and receivers multiple tasks,
     // but not all the same amount.
@@ -580,24 +457,25 @@ SUITE(MultiReceiver) {
         for (int r = 0; r < nrReceivers; ++r) {
           LOG_DEBUG_STR("Receiver thread " << r);
 
-          LOG_DEBUG_STR("Populating outputPools");
+          // Set up pool where all data ends up
+          Pool<Block> outputPool;
+
+          LOG_DEBUG_STR("Populating outputPool");
 
           // collect our TABs
-          std::map<size_t, SmartPtr< Pool<BeamformedData> > > outputPools;
+          std::map<size_t, SmartPtr< Pool<Block> > > outputPools;
           Receiver::CollectorMap collectors;
 
           for (int t = 0; t < nrTABs; ++t) {
             if (t % nrReceivers != r)
               continue;
 
-            outputPools[t] = new Pool<BeamformedData>(str(format("MultiReceiver::Transpose::outputPool[%u]") % t), true);
+            outputPools[t] = new Pool<Block>;
 
             for (size_t i = 0; i < nrBlocks; ++i) {
-              outputPools[t]->free.append(new BeamformedData(
-                boost::extents[nrSamples][nrSubbands][nrChannels],
-                boost::extents[nrSubbands][nrChannels]), false);
+              outputPools[t]->free.append(new Block(nrSubbands, nrSamples, nrChannels));
             }
-            collectors[FILEIDX(t)] = new BlockCollector(*outputPools[t], FILEIDX(t), nrSubbands, nrChannels, nrSamples, nrBlocks);
+            collectors[t] = new BlockCollector(*outputPools[t], t, nrBlocks);
           }
 
           LOG_DEBUG_STR("Starting receiver " << r);
@@ -615,16 +493,16 @@ SUITE(MultiReceiver) {
               continue;
 
             // Check if all blocks arrived, plus NULL marker.
-            collectors[FILEIDX(t)]->finish();
             CHECK_EQUAL(nrBlocks + 1UL, outputPools[t]->filled.size());
 
             for (size_t b = 0; b < nrBlocks; ++b) {
-              SmartPtr<BeamformedData> block = outputPools[t]->filled.remove();
+              SmartPtr<Block> block = outputPools[t]->filled.remove();
 
               CHECK(block != NULL);
+              CHECK(block->complete());
 
               // Blocks should have arrived in-order
-              CHECK_EQUAL(b, block->sequenceNumber());
+              CHECK_EQUAL(b, block->block);
             }
           }
         }
@@ -633,6 +511,7 @@ SUITE(MultiReceiver) {
       // Senders
 #     pragma omp section
       {
+
 #       pragma omp parallel for num_threads(nrSenders)
         for (int s = 0; s < nrSenders; ++s) {
           LOG_DEBUG_STR("Sender thread " << s);
@@ -648,10 +527,10 @@ SUITE(MultiReceiver) {
             host.brokerPort = PortBroker::DEFAULT_PORT;
             host.service = str(format("foo-%s-%s") % r % s);
 
-            hostMap[FILEIDX(t)] = host;
+            hostMap[t] = host;
           }
 
-          MultiSender msender(hostMap, ps);
+          MultiSender msender(hostMap, 3, false);
 
 #         pragma omp parallel sections num_threads(2)
           {
@@ -672,7 +551,7 @@ SUITE(MultiReceiver) {
                   // Send all TABs
                   for (int t = 0; t < nrTABs; ++t) {
                     SmartPtr<Subband> subband = new Subband(nrSamples, nrChannels);
-                    subband->id.fileIdx = FILEIDX(t);
+                    subband->id.fileIdx = t;
                     subband->id.block = b;
                     subband->id.subband = sb;
 

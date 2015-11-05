@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: tTranspose.cc 25978 2013-08-08 03:26:50Z amesfoort $
 
 #include <lofar_config.h>
 
@@ -51,19 +51,11 @@ Exception::TerminateHandler t(Exception::terminate);
 void runTest( Context &ctx, Stream &stream )
 {
   Parset ps;
-  ps.add("Observation.VirtualInstrument.stationList", "[CS001]");
-  ps.add("Observation.antennaSet", "LBA_INNER");
-  ps.add("Observation.Dataslots.CS001LBA.RSPBoardList", "[0]");
-  ps.add("Observation.Dataslots.CS001LBA.DataslotList", "[0]");
-  ps.add("Observation.nrBeams", "1");
-  ps.add("Observation.Beam[0].subbandList", "[0]");
   ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
-  ps.add("Observation.DataProducts.Output_CoherentStokes.filenames", "[L12345_SAP000_B000_P000_bf.h5]");
-  ps.add("Observation.DataProducts.Output_CoherentStokes.locations", "[localhost:.]");
   ps.updateSettings();
 
   BeamFormerTransposeKernel::Parameters params(ps);
-  params.nrChannels = NR_CHANNELS;
+  params.nrChannelsPerSubband = NR_CHANNELS;
   params.nrSamplesPerChannel = NR_SAMPLES_PER_CHANNEL;
   params.nrTABs = NR_TABS;
 
@@ -84,7 +76,8 @@ void runTest( Context &ctx, Stream &stream )
   MultiDimArrayHostBuffer<fcomplex, 4> hOutput(boost::extents[NR_TABS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL], ctx);
 
   // Create kernel
-  std::auto_ptr<BeamFormerTransposeKernel> kernel(factory.create(stream, dInput, dOutput));
+  BeamFormerTransposeKernel::Buffers buffers(dInput, dOutput);
+  std::auto_ptr<BeamFormerTransposeKernel> kernel(factory.create(stream, buffers));
 
   // Run kernel
   stream.writeBuffer(dInput, hInput, false);
