@@ -52,7 +52,7 @@ namespace LOFAR
         const std::vector<gpu::Device> &devices,
         Pool<struct MPIRecvData> &pool,
         RTmetadata &mdLogger, const std::string &mdKeyPrefix,
-        unsigned hostID = 0);
+        int hostID = 0);
 
       ~Pipeline();
 
@@ -136,9 +136,6 @@ namespace LOFAR
 
       // Output send engine, takes care of the host connections and the multiplexing.
       TABTranspose::MultiSender multiSender;
-
-      // MPI rank for this node
-      const unsigned hostID;
     };
   }
 }

@@ -29,7 +29,7 @@
 
 #include "StationSettings.h"
 #include "SetBitModeCmd.h"
-//#include "Sequencer.h"
+#include "Sequencer.h"
 #include "Cache.h"
 
 using namespace blitz;
