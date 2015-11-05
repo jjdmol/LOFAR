@@ -1,0 +1,121 @@
+------------------------
+Beamformer Pipeline
+------------------------
+
+Design decisions:
+-------------------
+
+* The PPF is at the end of the pipeline, because CS and IS can request a different number of channels.
+* The Delay Compensation has to run on a specific time/frequency resolution depending on the baseline and
+  declination of the source.
+* Coherent Dedispersion is under construction, as is the IS pipeline.
+
+To investigate:
+
+* Coherent Dedispersion
+* FFT scaling (FFT + FFT-1 means scaling the amplitude), does it require compensation?
+  If so, we can do so in the Delay Compensation kernel.
+
+Pipeline
+-------------------
+
+For max size, we assume:
+ - 48 stations
+ - 1 subband
+ - 1 second blocks (195312.5 samples)
+
+Note:
+  MB = 1e6 bytes
+  (*) = requires change from current implementation
+  (**) = is a new kernel (wrt what we already ported)
+
+Flow:		Data dimensions:			Max size:				Buffer:
+=====================================================================================================================
+(input)		[station][samples][pol]			[48][195312.5][2] = 75 MB		A
+   |
+   V
+IntToFloat + Transpose
+   |            [station][pol][samples]                 [48][2][195312.5] = 150 MB              B
+   V
+FFT-64 {inplace}
+   |            [station][pol][samples][channel]                          = 150 MB              B
+Delay compensation (*: no transpose) {I/O: delays}
+   |            [station][pol][samples][channel]                          = 150 MB              A
+   V
+iFFT-64 {inplace}
+   |            [station][pol][samples]                                   = 150 MB              A
+   V
+(Flagger (broad-band) {inplace})
+   |            [???]                                                     = 150 MB              A
+   V
+FFT-4k {inplace}
+   |            [station][pol][samples][channel]                          = 150 MB              B
+   V
+BandPass + Transpose {I/O: weights}
+   |            [station][channel][samples][pol]                          = 150 MB              A
+   V
+(Flagger (narrow-band) {inplace})
+   |            [???]                                                     = 150 MB              A
+   V
+   X
+
+Complex Voltages/Coherent Stokes:
+-----------------------------------
+   X            [station][channel][samples][pol]        [48][256][768][2] = 150 MB		A
+   |
+   V
+BeamFormer {I/O: weights}
+   |            [channel][samples][tab][pol]                              = 3.1 MB/TAB		B
+   V
+Transpose
+   |            [tab][pol][samples][channel]                              = 3.1 MB/TAB		1ch: CS: C, CV: D
+   |                                                                                            Nch: CS: D, CV: C
+   V
+Coherent Dedispersion (*: different data order) {inplace, I/O: DMs}
+   |            [tab][pol][samples][channel]                              = 3.1 MB/TAB		1ch: CS: C, CV: D
+   |                                                                                            Nch: CS: D, CV: C
+   V
+  iFFT-4k {inplace}
+   |            [tab][pol][samples]                                       = 3.1 MB/TAB		1ch: CS: C, CV: D
+   |                                                                                            Nch: CS: D, CV: C
+   V
+  FIR-16 (if >1ch)
+   |            [tab][pol][samples]                                       = 3.1 MB/TAB		1ch: CS: -, CV: -
+   |                                                                                            Nch: CS: C, CV: D
+   V
+  FFT-16 {inplace} (if >1ch)
+   |            [tab][pol][samples][channel]                              = 3.1 MB/TAB		1ch: CS: -, CV: -
+   |                                                                                            Nch: CS: C, CV: D
+   V
+Coherent Stokes (*: no transpose)
+   |            [tab][stokes][samples][channel]                           = 0.8 MB/TAB/Stokes	1ch: CS: D, CV: -
+   |                                                                                            Nch: CS: D, CV: -
+   V
+(output)
+
+Incoherent Stokes: [UNDER CONSTRUCTION]
+-----------------------------------
+   X            [station][channel][samples][pol]        [48][256][768][2] = 150 MB <- - +	A
+   |
+   V                                                                                    |
+Transpose + Copy
+   |            [station][pol][samples][channel]        [48][2][768][256] = 150 MB      |	B
+   V
+Coherent Dedispersion {inplace, I/O: DMs}                                               |
+   |            [station][pol][samples][channel]        [48][2][768][256] = 150 MB		B
+   V                                                                                    |
+  iFFT-64k/N {inplace}
+   |            [station][pol][samples]                 [48][2][195312.5] = 150 MB      |	B
+   V
+Incoherent Stokes (*: no transpose) - - - - - - - - - - - - - - - - - - - - - - - - - - +
+   |            [tab][stokes][samples][channel]                           = 0.8 MB/TAB/Stokes	D
+   V
+(output)
+
+A = max(150 MB, 3.1 MB * #coherent TABs/pass)
+B = 150 MB
+C = max(150 MB, 3.1 MB * #coherent TABs/pass)
+D = 0.8 MB/TAB/Stokes (size of output)
+
+Because each pass is ~6 beams, and certainly less than 150/3.1=~48, we need 450 MB of intermediate buffers. If the WQ has 1791 MB, we can form (1791 MB - 450 MB) / 0.8 MB/TAB/Stokes = 1676 * TABs * Stokes.
+

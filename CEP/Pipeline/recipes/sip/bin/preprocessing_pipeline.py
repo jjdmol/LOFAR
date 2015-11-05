@@ -16,6 +16,9 @@ from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
 from lofarpipe.support.loggingdecorators import mail_log_on_exception, duration
 
+from lofarpipe.support.xmllogging import  get_active_stack
+import xml.dom.minidom as _xml
+
 class preprocessing_pipeline(control):
     """
     The pre-processing pipeline can be used to average raw UV-data in time
@@ -30,9 +33,19 @@ class preprocessing_pipeline(control):
 
     def __init__(self):
         super(preprocessing_pipeline, self).__init__()
+        self.parset = parameterset()
         self.input_data = []
         self.output_data = []
         self.io_data_mask = []
+        self.parset_feedback_file = None
+
+
+    def usage(self):
+        """
+        Display usage
+        """
+        print >> sys.stderr, "Usage: %s [options] <parset-file>" % sys.argv[0]
+        return 1
 
 
     def _get_io_product_specs(self):
@@ -66,38 +79,28 @@ class preprocessing_pipeline(control):
             raise PipelineException(
                 "Validation of input/output data product specification failed!"
             )
-#        # Validate input data, by searching the cluster for files
-#        self._validate_input_data()
-#        # Update input- and output-data product specifications if needed
-#        if not all(self.io_data_mask):
-#            self.logger.info("Updating input/output product specifications")
-#            self.input_data = [
-#                f for (f, m) in zip(self.input_data, self.io_data_mask) if m
-#            ]
-#            self.output_data = [
-#                f for (f, m) in zip(self.output_data, self.io_data_mask) if m
-#            ]
 
+    def go(self):
+        """
+        Read the parset-file that was given as input argument;
+        set jobname, and input/output data products before calling the
+        base-class's `go()` method.
+        """
+        try:
+            parset_file = os.path.abspath(self.inputs['args'][0])
+        except IndexError:
+            return self.usage()
+        self.parset.adoptFile(parset_file)
+        self.parset_feedback_file = parset_file + "_feedback"
 
-#    def _validate_input_data(self):
-#        """
-#        Search for the requested input files and mask the files in
-#        `self.input_data[]` that could not be found on the system.
-#        """
-#        # Use filename glob-pattern as defined in LOFAR-USG-ICD-005.
-#        self.io_data_mask = tally_data_map(
-#            self.input_data, 'L*_SB???_uv.MS', self.logger
-#        )
-#        # Log a warning if not all input data files were found.
-#        if not all(self.io_data_mask):
-#            self.logger.warn(
-#                "The following input data files were not found: %s" %
-#                ', '.join(
-#                    ':'.join(f) for (f, m) in zip(
-#                        self.input_data, self.io_data_mask
-#                    ) if not m
-#                )
-#            )
+        # Set job-name to basename of parset-file w/o extension, if it's not
+        # set on the command-line with '-j' or '--job-name'
+        if not self.inputs.has_key('job_name'):
+            self.inputs['job_name'] = (
+                os.path.splitext(os.path.basename(parset_file))[0])
+
+        # Call the base-class's `go()` method.
+        return super(preprocessing_pipeline, self).go()
 
 
     @mail_log_on_exception
@@ -143,16 +146,16 @@ class preprocessing_pipeline(control):
 
         # Read metadata (start, end times, pointing direction) from GVDS.
         with duration(self, "vdsreader"):
-            vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
+            vdsinfo = self.run_task("vdsreader", gvds = gvds_file)
 
         # Create a parameter database that will be used by the NDPPP demixing
         with duration(self, "setupparmdb"):
             parmdb_mapfile = self.run_task(
                 "setupparmdb", input_data_mapfile,
-                mapfile=os.path.join(mapfile_dir, 'dppp.parmdb.mapfile'),
-                suffix='.dppp.parmdb'
+                mapfile = os.path.join(mapfile_dir, 'dppp.parmdb.mapfile'),
+                suffix = '.dppp.parmdb'
             )['mapfile']
-                
+
         # Create a source database from a user-supplied sky model
         # The user-supplied sky model can either be a name, in which case the
         # pipeline will search for a file <name>.skymodel in the default search
@@ -170,48 +173,81 @@ class preprocessing_pipeline(control):
         with duration(self, "setupsourcedb"):
             sourcedb_mapfile = self.run_task(
                 "setupsourcedb", input_data_mapfile,
-                mapfile=os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
-                skymodel=skymodel,
-                suffix='.dppp.sourcedb',
-                type='blob'
+                mapfile = os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
+                skymodel = skymodel,
+                suffix = '.dppp.sourcedb',
+                type = 'blob'
             )['mapfile']
 
 
         # *********************************************************************
-        # 3. Average and flag data, using NDPPP.
+        # 3. Average, flag and optionally demix data, using NDPPP
+        ndppp_parset_path = os.path.join(parset_dir, "NDPPP.parset")
+        ndppp_parset = py_parset.makeSubset('DPPP.')
+        ndppp_parset.writeFile(ndppp_parset_path)
 
-        ndppp_parset = os.path.join(parset_dir, "NDPPP.parset")
-        py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
+        # Get the demixing information and add to the pipeline xml-node
+        # Use a new node with the node demix to allow searching at later stages
+        stack = get_active_stack(self)
+        demix_node = add_child(stack, "demixed_sources_meta_information")
+
+        demix_parset = ndppp_parset.makeSubset("demixer.")
+        # If there is demixer information add it to the active stack node
+        if len(demix_parset) > 0:
+            demix_node.setAttribute("modelsources", demix_parset.getString(
+                                "modelsources"))
+            demix_node.setAttribute("othersources", demix_parset.getString(
+                                "othersources"))
+            demix_node.setAttribute("subtractsources", demix_parset.getString(
+                                "subtractsources"))
 
         # Run the Default Pre-Processing Pipeline (DPPP);
         with duration(self, "ndppp"):
             self.run_task("ndppp",
                 (input_data_mapfile, output_data_mapfile),
-                data_start_time=vdsinfo['start_time'],
-                data_end_time=vdsinfo['end_time'],
-                demix_always=
+                data_start_time = vdsinfo['start_time'],
+                data_end_time = vdsinfo['end_time'],
+                demix_always =
                     py_parset.getStringVector('PreProcessing.demix_always'),
-                demix_if_needed=
+                demix_if_needed =
                     py_parset.getStringVector('PreProcessing.demix_if_needed'),
-                parset=ndppp_parset,
-                parmdb_mapfile=parmdb_mapfile,
-                sourcedb_mapfile=sourcedb_mapfile
+                parset = ndppp_parset_path,
+                parmdb_mapfile = parmdb_mapfile,
+                sourcedb_mapfile = sourcedb_mapfile
             )
 
         # *********************************************************************
         # 6. Create feedback file for further processing by the LOFAR framework
-        # Create a parset containing the metadata
-        metadata_file = "%s_feedback_Correlated" % (self.parset_file,)
+        # (MAC)
+        # Create a parset-file containing the metadata for MAC/SAS
+        correlated_metadata = os.path.join(self.parset_dir,
+                                           "Correlated.metadata")
+
         with duration(self, "get_metadata"):
             self.run_task("get_metadata", output_data_mapfile,
-                parset_prefix=(
+                parset_file = correlated_metadata,
+                parset_prefix = (
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')),
-                product_type="Correlated",
-                metadata_file=metadata_file)
+                product_type = "Correlated")
 
-        self.send_feedback_processing(parameterset())
-        self.send_feedback_dataproducts(parameterset(metadata_file))
+
+        # add pipeline meta information
+        pipeline_metadata = os.path.join(self.parset_dir, "pipeline.metadata")
+        stackDocument = _xml.Document()
+        stackDocument.appendChild(get_active_stack(self))
+        self.run_task("get_metadata", output_data_mapfile,
+                parset_file = pipeline_metadata,
+                parset_prefix = (
+                    self.parset.getString('prefix') +
+                    self.parset.fullModuleName('DataProducts')),
+                product_type = "PipelineMeta",
+                xml_log = stackDocument.toprettyxml(encoding = 'ascii')
+                )
+
+        parset = parameterset(correlated_metadata)
+        parset.adoptFile(pipeline_metadata)
+        parset.writeFile(self.parset_feedback_file)
 
         return 0
 

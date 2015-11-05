@@ -31,16 +31,17 @@ using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
 
+int rank;
+int nrHosts;
+
 const size_t BUFSIZE = 128 * 1024 * 1024;
 
 const size_t nrRuns = 10;
 
-LOFAR::Cobalt::MPI mpi;
-
 void test()
 {
-  MultiDimArray<char, 2> send_buffers(boost::extents[mpi.size()][BUFSIZE], 1, mpiAllocator);
-  MultiDimArray<char, 2> receive_buffers(boost::extents[mpi.size()][BUFSIZE], 1, mpiAllocator);
+  MultiDimArray<char, 2> send_buffers(boost::extents[nrHosts][BUFSIZE]);
+  MultiDimArray<char, 2> receive_buffers(boost::extents[nrHosts][BUFSIZE]);
 
   NSTimer timer("MPI I/O", true, false);
 
@@ -51,45 +52,51 @@ void test()
 
     timer.start();
 
-    {
-      ScopedLock sl(MPIMutex);
-
     // post our sends
-    for (int n = 0; n < mpi.size(); ++n) {
-      if (n == mpi.rank()) continue;
+    for (int n = 0; n < nrHosts; ++n) {
+      if (n == rank) continue;
 
-      requests.push_back(Guarded_MPI_Issend(&send_buffers[n][0], BUFSIZE, n, 1000 * mpi.rank() + 200 + n));
+      requests.push_back(Guarded_MPI_Isend(&send_buffers[n][0], BUFSIZE, n, 1000 * rank + 200 + n));
     }
 
     // post our receives
-    for (int n = 0; n < mpi.size(); ++n) {
-      if (n == mpi.rank()) continue;
+    for (int n = 0; n < nrHosts; ++n) {
+      if (n == rank) continue;
 
-      requests.push_back(Guarded_MPI_Irecv(&receive_buffers[n][0], BUFSIZE, n, 1000 * n + 200 + mpi.rank()));
-    }
-
+      requests.push_back(Guarded_MPI_Irecv(&receive_buffers[n][0], BUFSIZE, n, 1000 * n + 200 + rank));
     }
 
     // wait for all to finish
-    RequestSet rs(requests, true);
-    rs.waitAll();
+    waitAll(requests);
 
     timer.stop();
   }
 
-  const size_t bytesPerNode = BUFSIZE * mpi.size();
+  const size_t bytesPerNode = BUFSIZE * nrHosts;
 
   LOG_INFO_STR("Avr. data rate in & out (per node): " << (8.0 * bytesPerNode / 1024 / 1024 / 1024) / timer.getAverage() << " Gbit/s");
-  LOG_INFO_STR("Avr. data rate in & out (total)   : " << (8.0 * bytesPerNode * mpi.size() / 1024 / 1024 / 1024) / timer.getAverage() << " Gbit/s");
+  LOG_INFO_STR("Avr. data rate in & out (total)   : " << (8.0 * bytesPerNode * nrHosts / 1024 / 1024 / 1024) / timer.getAverage() << " Gbit/s");
 }
 
 int main( int argc, char **argv )
 {
-  INIT_LOGGER("tMPI");
+  INIT_LOGGER( "tMPI" );
 
-  mpi.init(argc, argv);
+  int provided_threading_support;
+
+  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_threading_support) != MPI_SUCCESS) {
+    LOG_ERROR_STR("MPI_Init failed");
+    return 1;
+  }
+
+  LOG_INFO_STR("Threading support level : " << provided_threading_support << ", and MPI_THREAD_MULTIPLE = " << MPI_THREAD_MULTIPLE);
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
 
   test();
+
+  MPI_Finalize();
 
   return 0;
 }

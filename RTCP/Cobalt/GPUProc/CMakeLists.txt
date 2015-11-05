@@ -2,11 +2,10 @@
 
 # Handle options USE_CUDA and USE_OPENCL.
 if(USE_CUDA AND NOT USE_OPENCL)
-  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO BrokenAntennaInfo MessageBus)
+  # We need at least CMake 2.8 for CUDA support
+  cmake_minimum_required(VERSION 2.8)
 
-  # We use runtime compilation, except for 2 tests compiled by nvcc.
-  # nvcc passes our C++ flags to GCC for C compilation printing spurious warnings. Suppress.
-  set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc)
   lofar_find_package(CUDA 4.1 REQUIRED)
   lofar_find_package(CUDADriver REQUIRED)
 
@@ -15,7 +14,7 @@ if(USE_CUDA AND NOT USE_OPENCL)
     list(APPEND CUDA_NVCC_FLAGS -g -G)
   endif()
 
-  if(0)  # for dev to see what is available how; disabled to reduce spam
+  if(1)  # for dev to see what is available how; disabled to reduce spam
     message(STATUS "CUDA_FOUND = ${CUDA_FOUND}")
     message(STATUS "CUDA_VERSION_MAJOR = ${CUDA_VERSION_MAJOR}")
     message(STATUS "CUDA_VERSION_MINOR = ${CUDA_VERSION_MINOR}")
@@ -38,7 +37,7 @@ if(USE_CUDA AND NOT USE_OPENCL)
   endif()
 
 elseif(USE_OPENCL AND NOT USE_CUDA)
-  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO BrokenAntennaInfo OpenCL_FFT MessageBus)
+  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc OpenCL_FFT)
   lofar_find_package(OpenCL REQUIRED)
   add_definitions(-DUSE_OPENCL)
 else()
@@ -50,11 +49,21 @@ lofar_package(GPUProc 1.0 DEPENDS ${_gpuproc_deps})
 
 lofar_find_package(OpenMP REQUIRED)
 lofar_find_package(Boost REQUIRED)
-lofar_find_package(MPI REQUIRED)
-#lofar_find_package(ALGLIB)
-lofar_find_package(LibNuma)
-lofar_find_package(FFTW3 COMPONENTS single double threads REQUIRED)
+lofar_find_package(MPI)
+lofar_find_package(FFTW3 COMPONENTS single double threads REQUIRED)  # 'double threads' for FFT unit test refs
 lofar_find_package(UnitTest++)
+
+# LibSSH2 can be linked against either OpenSSL or GCrypt. We need to
+# find the right one, and initialise it for multi-threaded execution.
+lofar_find_package(LibSSH2 REQUIRED)
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/links_gcrypt.sh ${LIBSSH2_LIBRARY}
+  RESULT_VARIABLE LIBSSH2_LINKS_GCRYPT)
+
+if (LIBSSH2_LINKS_GCRYPT MATCHES 0)
+  lofar_find_package(GCrypt REQUIRED)
+else()
+  lofar_find_package(OpenSSL REQUIRED)
+endif()
 
 # InputProc/Delays.h drags in a dependency on casa; hence we need to add the
 # following line. This should be fixed someday.

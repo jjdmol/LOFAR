@@ -49,10 +49,7 @@ class Op_collapse(Op):
         # assume all Stokes images have the same blank pixels as I:
         blank = N.isnan(img.image_arr[0])
         hasblanks = blank.any()
-        if img.opts.kappa_clip is None:
-            kappa = -img.pixel_beamarea()
-        else:
-            kappa = img.opts.kappa_clip
+        kappa = img.opts.kappa_clip
 
         mean, rms, cmean, crms = chan_stats(img, kappa)
         img.channel_mean = mean; img.channel_rms = rms
@@ -126,62 +123,17 @@ class Op_collapse(Op):
       # create mask if needed (assume all pols have the same mask as I)
       image = img.ch0_arr
       mask = N.isnan(image)
-      img.blankpix = N.sum(mask)
-      frac_blank = round(
-          float(img.blankpix) / float(image.shape[0] * image.shape[1]),
-          3)
-      mylogger.userinfo(mylog, "Number of blank pixels", str(img.blankpix)
-                        + ' (' + str(frac_blank * 100.0) + '%)')
-
-      # Check whether the input image might be an AWimage. If so, and there
-      # are no blank pixels, tell the user that they might to set blank_limit.
-      # Once the AWimager incorporates blanking, this check can be removed.
-      if img.opts.blank_limit is None and (img.blankpix == 0 and
-              ('restored' in img.filename.lower() or
-              'corr' in img.filename.lower() or
-              'aw' in img.filename.lower())):
-          check_low = True
-      else:
-          check_low = False
-
-      if img.opts.blank_limit is not None or check_low:
-          import scipy
-          import sys
-          if check_low:
-              threshold = 1e-5
-          else:
-              threshold = img.opts.blank_limit
-              mylogger.userinfo(mylog, "Blanking pixels with values "
-                  "below %.1e Jy/beam" % (threshold,))
-          bad = (abs(image) < threshold)
-          original_stdout = sys.stdout  # keep a reference to STDOUT
-          sys.stdout = func.NullDevice()  # redirect the real STDOUT
-          count = scipy.signal.convolve2d(bad, N.ones((3, 3)), mode='same')
-          sys.stdout = original_stdout  # turn STDOUT back on
-          mask_low = (count >= 5)
-          if check_low:
-              nlow = len(N.where(mask_low)[0])
-              if nlow / float(image.shape[0] * image.shape[1]) > 0.2:
-                  mylog.warn('A significant area of the image has very low values. To blank\nthese regions (e.g., because they are outside the primary beam), set the\nblank_limit option (values of 1e-5 to 1e-4 Jy/beam usually work well).\n')
-
-          else:
-              image[N.where(mask_low)] = N.nan
-              mask = N.isnan(image)
-              img.blankpix = N.sum(mask)
-              frac_blank = round(
-                  float(img.blankpix) / float(image.shape[0] *
-                  image.shape[1]), 3)
-              mylogger.userinfo(mylog, "Total number of blanked pixels",
-                  str(img.blankpix) + ' (' + str(frac_blank * 100.0) + '%)')
-
       masked = mask.any()
       img.masked = masked
       if masked:
           img.mask_arr = mask
       else:
           img.mask_arr = None
-
-      if img.blankpix == image.shape[0] * image.shape[1]:
+      img.blankpix = N.sum(mask)
+      frac_blank = round(float(img.blankpix)/float(image.shape[0]*image.shape[1]),3)
+      mylogger.userinfo(mylog, "Number of blank pixels", str(img.blankpix)
+                        +' ('+str(frac_blank*100.0)+'%)')
+      if img.blankpix == image.shape[0]*image.shape[1]:
           # ALL pixels are blanked!
           raise RuntimeError('All pixels in the image are blanked.')
       img.completed_Ops.append('collapse')
@@ -191,7 +143,6 @@ class Op_collapse(Op):
 
 def chan_stats(img, kappa):
 
-    bstat = func.bstat #_cbdsm.bstat
     nchan = img.shape[1]
     mean = []; rms = []; cmean = []; crms = []
     for ichan in range(nchan):
@@ -206,9 +157,9 @@ def chan_stats(img, kappa):
           m, r, cm, cr = 0, 0, 0, 0
         else:
           if immask.any():
-            m, r, cm, cr, cnt = bstat(im, immask, kappa)
+            m, r, cm, cr, cnt = _cbdsm.bstat(im, immask, kappa)
           else:
-            m, r, cm, cr, cnt = bstat(im, None, kappa)
+            m, r, cm, cr, cnt = _cbdsm.bstat(im, None, kappa)
       else:
         m, r, cm, cr = 0, 0, 0, 0
       mean.append(m); rms.append(r); cmean.append(cm); crms.append(cr)
@@ -223,7 +174,7 @@ def avspc_direct(c_list, image, rmsarr, c_wts, wtarr=None):
     shape2 = image.shape[1:]
     ch0 = N.zeros(shape2, dtype=N.float32)
     sumwts = 0.0
-    if wtarr is None:
+    if wtarr == None:
       wtarr = N.zeros(len(c_list))
       for i, ch in enumerate(c_list):
         im = image[ch]
@@ -253,7 +204,7 @@ def avspc_blanks(c_list, image, rmsarr, c_wts, wtarr=None):
     shape2 = image.shape[1:]
     ch0 = N.zeros(shape2, dtype=N.float32)
     sumwtim = N.zeros(shape2, dtype=N.float32)
-    if wtarr is None:
+    if wtarr == None:
       wtarr = N.zeros(len(c_list))
       for i, ch in enumerate(c_list):
         im = image[ch]
@@ -283,7 +234,7 @@ def avspc_blanks(c_list, image, rmsarr, c_wts, wtarr=None):
 def init_freq_collapse(img, wtarr):
     # Place appropriate, post-collapse frequency info in img
     # Calculate weighted average frequency
-    if img.opts.frequency_sp is not None:
+    if img.opts.frequency_sp != None:
         c_list = img.opts.collapse_av
         if c_list == []: c_list = N.arange(img.image_arr.shape[1])
         freqs = img.opts.frequency_sp
@@ -304,7 +255,7 @@ def init_freq_collapse(img, wtarr):
         sumwts = 0.0
         sumfrq = 0.0
         spec_indx = img.wcs_obj.wcs.spec
-        if spec_indx == -1 and img.opts.frequency_sp is None:
+        if spec_indx == -1 and img.opts.frequency_sp == None:
             raise RuntimeError("Frequency information not found in header and frequencies "\
                          "not specified by user")
         else:

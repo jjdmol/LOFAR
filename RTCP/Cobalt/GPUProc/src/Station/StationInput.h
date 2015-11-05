@@ -24,147 +24,49 @@
 
 #include <map>
 #include <vector>
-#include <cstring>
 
-#include <Stream/Stream.h>
-#include <Common/Thread/Trigger.h>
-#include <MACIO/RTmetadata.h>
+#include <Common/Thread/Semaphore.h>
+#include <Common/Singleton.h>
+#include <InputProc/Buffer/BlockReader.h>
+#include <InputProc/Transpose/ReceiveStations.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/Pool.h>
 #include <CoInterface/SubbandMetaData.h>
-#include <CoInterface/Queue.h>
-#include <CoInterface/BestEffortQueue.h>
-#include <InputProc/Buffer/StationID.h>
-#include <InputProc/Buffer/BoardMode.h>
-#include <InputProc/RSPTimeStamp.h>
-#include <InputProc/Station/RSP.h>
-
-#include "StationTranspose.h"
+#include <GPUProc/BestEffortQueue.h>
 
 namespace LOFAR {
   namespace Cobalt {
-    /*
-     * Generates MPIData<Sample> blocks, and computes its meta data (delays, etc).
-     */
-    template <typename SampleT>
-    class StationMetaData {
-    public:
-      StationMetaData( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution );
 
-      void computeMetaData(Trigger *stopSwitch = NULL);
+#ifndef HAVE_MPI
+    class DirectInput: public ReceiveStations {
+    public:
+      // The first call should provide the parset to allow
+      // the instance to be constructed.
+      static DirectInput &instance(const Parset *ps = NULL);
+
+      template<typename T> void sendBlock(unsigned stationIdx, const struct BlockReader<T>::LockedBlock &block, const vector<SubbandMetaData> &metaDatas);
+
+      template<typename T> void receiveBlock(std::vector<struct ReceiveStations::Block<T> > &block);
 
     private:
-      const Parset &ps;
-      const size_t stationIdx;
-      const struct StationID stationID;
-      const std::string logPrefix;
+      DirectInput(const Parset &ps);
 
-      const TimeStamp startTime;
-      const TimeStamp stopTime;
+      const Parset ps;
 
-      const size_t nrSamples;
-    public:
-      const size_t nrBlocks;
-
-      Pool< MPIData<SampleT> > metaDataPool;
-    private:
-
-      const std::vector<size_t> subbands;
-    };
-
-
-    class StationInput {
-    public:
-      StationInput( const Parset &ps, size_t stationIdx, 
-      const SubbandDistribution &subbandDistribution );
-
-      template <typename SampleT>
-      void processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, 
-                         Queue< SmartPtr< MPIData<SampleT> > > &outputQueue,
-                         MACIO::RTmetadata &mdLogger, const string &mdKeyPrefix );
-
-    private:
-      // Each packet is expected to have 16 samples per subband, i.e. ~80 us worth of data @ 200 MHz.
-      // So 512 packets is ~40 ms of data.
-      static const unsigned RT_PACKET_BATCH_SIZE = 512;
-
-      static const unsigned NONRT_PACKET_BATCH_SIZE = 1;
-
-      // Data received from an RSP board
-      struct RSPData {
-        std::vector<struct RSP> packets;
-        size_t board; // annotation used in non-rt mode
-
-        RSPData(size_t numPackets):
-          packets(numPackets)
-        {
-        }
+      struct InputBlock {
+        std::vector<char> samples;
+        SubbandMetaData metaData;
       };
 
-      const Parset &ps;
-
-      const size_t stationIdx;
-      const struct StationID stationID;
-
-      const std::string logPrefix;
-
-      const BoardMode mode;
-      const size_t nrBoards;
-      std::vector< SmartPtr< Pool< RSPData > > > rspDataPool; // [nrboards]
-
-      const std::vector<size_t> targetSubbands;
-
-      // Mapping of
-      // [board][slot] -> offset of this beamlet in the MPIData struct
-      //                  or: -1 = discard this beamlet (not used in obs)
-      const MultiDimArray<ssize_t, 2> beamletIndices;
-
-      MultiDimArray<ssize_t, 2> generateBeamletIndices();
-
-      SmartPtr<Stream> inputStream(size_t board) const;
-
-      /*
-       * Reads data from all the station input streams, and puts their packets in rspDataPool.
-       *
-       * Real-time mode:
-       *   - Packets are collected in batches per board
-       *   - Batches are interleaved as they arrive
-       *
-       * Non-real-time mode:
-       *   - Packets are interleaved between the streams,
-       *     staying as close to in-order as possible.
-       *   - An "+inf" TimeStamp is added at the end to signal
-       *     end-of-data
-       *
-       * Reads:  rspDataPool.free
-       * Writes: rspDataPool.filled
-       *
-       * Read data from one board in real-time mode.
-       */
-      void readRSPRealTime( size_t board, MACIO::RTmetadata &mdLogger,
-                            const std::string &mdKeyPrefix );
-
-      /*
-       * Read data from all boards in non-real-time mode.
-       */
-      void readRSPNonRealTime( MACIO::RTmetadata &mdLogger,
-                               const std::string &mdKeyPrefix );
-
-      /*
-       * Fills 'current' with RSP data. Potentially spills into 'next'.
-       */
-      template <typename SampleT>
-      void writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT> *next );
-      template <typename SampleT>
-      void writeRSPNonRealTime( MPIData<SampleT> &current, MPIData<SampleT> *next );
+      MultiDimArray< SmartPtr< BestEffortQueue< SmartPtr<struct InputBlock> > >, 2> stationDataQueues; // [stationIdx][globalSubbandIdx]
     };
+#endif
 
+    // Which MPI rank receives which subbands?
+    typedef std::map<int, std::vector<size_t> > SubbandDistribution;
 
-    void sendInputToPipeline(const Parset &ps, size_t stationIdx,
-                             const SubbandDistribution &subbandDistribution,
-                             MACIO::RTmetadata &mdLogger,
-                             const std::string &mdKeyPrefix,
-                             Trigger *stopSwitch = NULL);
+    void receiveStation(const Parset &ps, const struct StationID &stationID, Semaphore &stopSignal);
+
+    void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution);
   }
 }
 

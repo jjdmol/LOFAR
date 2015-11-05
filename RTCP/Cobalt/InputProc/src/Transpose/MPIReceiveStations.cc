@@ -26,7 +26,6 @@
 #include <InputProc/SampleType.h>
 
 #include <Common/LofarLogger.h>
-#include <Common/Timer.h>
 
 #include <boost/format.hpp>
 
@@ -36,76 +35,123 @@ using namespace LOFAR::Cobalt::MPIProtocol;
 namespace LOFAR {
   namespace Cobalt {
 
-    namespace {
-      ssize_t first(const std::vector<size_t> &v) {
-        return v.empty() ? -1 : v.at(0);
-      }
-      ssize_t last(const std::vector<size_t> &v) {
-        return v.empty() ? -1 : v.at(v.size()-1);
-      }
-    };
-
     MPIReceiveStations::MPIReceiveStations( size_t nrStations, const std::vector<size_t> &beamlets, size_t blockSize )
     :
-      logPrefix(str(boost::format("[beamlets %d..%d (%u)] [MPIReceiveStations] ") % first(beamlets) % last(beamlets) % beamlets.size())),
+      logPrefix(str(boost::format("[beamlets %u..%u (%u)] [MPIReceiveStations] ") % beamlets[0] % beamlets[beamlets.size()-1] % beamlets.size())),
       nrStations(nrStations),
       beamlets(beamlets),
-      blockSize(blockSize),
-      stationSourceRanks(nrStations, MPI_ANY_SOURCE),
-      stationDone(nrStations, false)
+      blockSize(blockSize)
     {
     }
 
 
+    MPI_Request MPIReceiveStations::receiveHeader( size_t station, struct MPIProtocol::Header &header )
+    {
+      tag_t tag;
+      tag.bits.type    = CONTROL;
+      tag.bits.station = station;
+
+      return Guarded_MPI_Irecv(&header, sizeof header, MPI_ANY_SOURCE, tag.value);
+    }
+
+
     template<typename T>
-    MPI_Request MPIReceiveStations::receiveData( size_t station, T *buffer )
+    MPI_Request MPIReceiveStations::receiveData( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples )
     {
       tag_t tag;
       tag.bits.type    = BEAMLET;
       tag.bits.station = station;
-      tag.bits.beamlet = beamlets[0];
+      tag.bits.beamlet = beamlet;
+      tag.bits.transfer = transfer;
 
-      return Guarded_MPI_Irecv(buffer, beamlets.size() * blockSize * sizeof(T), stationSourceRanks[station], tag.value);
+      return Guarded_MPI_Irecv(from, nrSamples * sizeof(T), MPI_ANY_SOURCE, tag.value);
     }
 
 
-    MPI_Request MPIReceiveStations::receiveMetaData( size_t station, struct MPIProtocol::MetaData *buffer )
+    MPI_Request MPIReceiveStations::receiveMetaData( size_t station, size_t beamlet, struct MetaData &metaData )
     {
       tag_t tag;
       tag.bits.type    = METADATA;
       tag.bits.station = station;
-      tag.bits.beamlet = beamlets[0];
+      tag.bits.beamlet = beamlet;
 
-      return Guarded_MPI_Irecv(buffer, beamlets.size() * sizeof(struct MPIProtocol::MetaData), stationSourceRanks[station], tag.value);
+      return Guarded_MPI_Irecv(&metaData, sizeof metaData, MPI_ANY_SOURCE, tag.value);
     }
 
 
     template<typename T>
-    bool MPIReceiveStations::receiveBlock( MultiDimArray<T, 3> &data, MultiDimArray<struct MPIProtocol::MetaData, 2> &metaData )
+    void MPIReceiveStations::receiveBlock( std::vector< struct ReceiveStations::Block<T> > &blocks )
     {
-      if (beamlets.empty())
-        return true;
-
-      ASSERT(data.num_elements() == nrStations * beamlets.size() * blockSize);
-      ASSERT(metaData.num_elements() == nrStations * beamlets.size());
+      ASSERT(blocks.size() == nrStations);
 
       // All requests except the headers
       std::vector<MPI_Request> requests;
 
-      {
-        ScopedLock sl(MPIMutex);
+      /*
+       * RECEIVE HEADERS (ASYNC)
+       */
 
-        for (size_t stat = 0; stat < nrStations; ++stat) {
-          if (stationDone[stat]) {
-            // Set EOS bit for this station
-            for (size_t b = 0; b < beamlets.size(); ++b )
-              metaData[stat][b].EOS = true;
+      // Post receives for all headers
+      std::vector<MPI_Request> header_requests(nrStations, MPI_REQUEST_NULL);
+      std::vector<struct Header> headers(nrStations);
 
-            continue;
+      for (size_t stat = 0; stat < nrStations; ++stat) {
+        //LOG_DEBUG_STR(logPrefix << "Posting receive for header from station " << stat);
+
+        // receive the header
+        header_requests[stat] = receiveHeader(stat, headers[stat]);
+      }
+
+      // Process stations in the order in which we receive the headers
+      Matrix<struct MetaData> metaData(nrStations, beamlets.size()); // [station][beamlet]
+
+      for (size_t i = 0; i < nrStations; ++i) {
+        /*
+         * WAIT FOR ANY HEADER
+         */
+
+        //LOG_DEBUG_STR(logPrefix << "Waiting for headers");
+
+        // Wait for any header request to finish
+        int stat = waitAny(header_requests);
+
+        /*
+         * CHECK HEADER
+         */
+
+        const struct Header &header = headers[stat];
+
+        //LOG_DEBUG_STR(logPrefix << "Received header from station " << stat);
+
+        ASSERTSTR(header.nrBeamlets == beamlets.size(), "Got " << header.nrBeamlets << " beamlets, but expected " << beamlets.size());
+
+        // Post receives for all beamlets from this station
+        for (size_t beamletIdx = 0; beamletIdx < header.nrBeamlets; ++beamletIdx) {
+          const size_t beamlet = beamlets[beamletIdx];
+          const size_t wrapOffset = header.wrapOffsets[beamletIdx];
+
+          ASSERTSTR(header.beamlets[beamletIdx] == beamlet, "Got beamlet " << header.beamlets[beamletIdx] << ", but expected beamlet " << beamlet);
+          ASSERT(wrapOffset < blockSize);
+
+          /*
+           * RECEIVE BEAMLET (ASYNC)
+           */
+
+          //LOG_DEBUG_STR(logPrefix << "Receiving beamlet " << beamlet << " from station " << stat << " using " << (wrapOffset > 0 ? 2 : 1) << " transfers");
+
+          // First sample transfer
+          requests.push_back(receiveData<T>(stat, beamlet, 0, &blocks[stat].beamlets[beamletIdx].samples[0], wrapOffset ? wrapOffset : blockSize));
+
+          // Second sample transfer
+          if (wrapOffset > 0) {
+            requests.push_back(receiveData<T>(stat, beamlet, 1, &blocks[stat].beamlets[beamletIdx].samples[wrapOffset], blockSize - wrapOffset));
           }
 
-          requests.push_back(receiveData<T>(stat, &data[stat][0][0]));
-          requests.push_back(receiveMetaData(stat, &metaData[stat][0]));
+          /*
+           * RECEIVE FLAGS (ASYNC)
+           */
+
+          requests.push_back(receiveMetaData(stat, beamlet, metaData[stat][beamletIdx]));
         }
       }
 
@@ -113,27 +159,24 @@ namespace LOFAR {
        * WAIT FOR ALL DATA TO ARRIVE
        */
 
-      RequestSet payload_rs(requests, true, str(boost::format("%s data & metadata") % logPrefix));
-      payload_rs.waitAll();
+      waitAll(requests);
 
-      // Sync stationDone and metaData[stat][0].EOS, and count the number of finished stations
-      size_t nrStationsDone = 0;
+      /*
+       * PROCESS DATA
+       */
 
       for (size_t stat = 0; stat < nrStations; ++stat) {
-        if (metaData[stat][0].EOS)
-          stationDone[stat] = true;
-
-        if (stationDone[stat])
-          nrStationsDone++;
+        // Convert the flags array
+        for (size_t beamletIdx = 0; beamletIdx < beamlets.size(); ++beamletIdx) {
+          blocks[stat].beamlets[beamletIdx].metaData = metaData[stat][beamletIdx];
+        }
       }
-
-      return nrStationsDone == nrStations;
     }
 
     // Create all necessary instantiations
 #define INSTANTIATE(T) \
-    template MPI_Request MPIReceiveStations::receiveData<T>( size_t station, T *buffer ); \
-    template bool MPIReceiveStations::receiveBlock<T>( MultiDimArray<T, 3> &data, MultiDimArray<struct MPIProtocol::MetaData, 2> &metaData );
+    template MPI_Request MPIReceiveStations::receiveData<T>( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples ); \
+    template void MPIReceiveStations::receiveBlock<T>( std::vector< struct ReceiveStations::Block<T> > &blocks );
 
     INSTANTIATE(SampleType<i4complex>);
     INSTANTIATE(SampleType<i8complex>);

@@ -39,6 +39,7 @@
  * NR_SAMPLES_PER_CHANNEL  | multiple of 16 and > 0  | number of input samples per channel
  * NR_CHANNELS             | >= 1                    | number of frequency channels per subband
  * NR_TABS                 | >= 1                    | number of Tied Array Beams to create
+ * ----------------------- | ------------------------| 
  *
  * Note that this kernel assumes  NR_POLARIZATIONS == 2
  *

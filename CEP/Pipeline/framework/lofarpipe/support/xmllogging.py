@@ -29,7 +29,7 @@ def get_child(node, name):
     return None
 
 
-def get_active_stack(calling_object, stack_name="active_stack"):
+def get_active_stack(calling_object, stack_name = "active_stack"):
     """
     returns the active stack on the current class
     return None of it is not present
@@ -43,13 +43,13 @@ def get_active_stack(calling_object, stack_name="active_stack"):
 
 
 def add_child_to_active_stack_head(calling_object, child,
-                              stack_name="active_stack"):
+                              stack_name = "active_stack"):
     """
     Add the supplied child to the current active node in the active stack.
     returns the added child on succes, None if not active stack was found.
     Selection between active stacks can be done with the stack_name argument
     """
-    active_stack = get_active_stack(calling_object, stack_name="active_stack")
+    active_stack = get_active_stack(calling_object, stack_name = "active_stack")
     if not active_stack == None:
         active_stack_node = get_child(active_stack, stack_name)
         last_child = active_stack_node.lastChild
@@ -61,7 +61,7 @@ def add_child_to_active_stack_head(calling_object, child,
 
 
 def enter_active_stack(calling_object, child,
-             stack_name="active_stack", comment=None):
+             stack_name = "active_stack", comment = None):
     """
     This function adds stack-like behaviour to an object:
     On a 'fresh' class an xml node is added as a class attribute. This node
@@ -114,7 +114,7 @@ def enter_active_stack(calling_object, child,
     return stacked_child
 
 
-def exit_active_stack(calling_object, stack_name="active_stack"):
+def exit_active_stack(calling_object, stack_name = "active_stack"):
     """
     Mirror function to enter_active_stack.
     Performs bookkeeping after leaving a stack:

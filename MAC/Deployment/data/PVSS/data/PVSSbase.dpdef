@@ -5,7 +5,6 @@
 TypeName
 Claim.Claim	1#
 	claimDate	26#
-	freeDate	26#
 	name	25#
 
 TypeName
@@ -26,7 +25,6 @@ ClaimManager.ClaimManager	1#
 		newObjectNames	9#
 		DPNames	9#
 		claimDates	10#
-		freeDates	10#
 
 TypeName
 LofarSpeedTest.LofarSpeedTest	1#
@@ -106,7 +104,7 @@ ScriptInfo.ScriptInfo	1#
 		debug	23#
 	monitorStationAlarms	1#
 		debug	23#
-	readStationConnections	1#
+	readStationBGPconnections	1#
 		debug	23#
 		runDone	23#
 	readStationConfigs	1#
@@ -120,6 +118,15 @@ ScriptInfo.ScriptInfo	1#
 DpName	TypeName
 _mp_ProcessStatus	ProcessStatus
 _dt_ProcessStatus	_DynamicDatapoints
+
+ElementName	TypeName	_original.._value
+_dt_ProcessStatus.Leaf	_DynamicDatapoints	"_mp_ProcessStatus.logMsg:_archive"
+_dt_ProcessStatus.DynamicAttribute	_DynamicDatapoints	"_da_none"
+
+ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class
+_mp_ProcessStatus.logMsg	ProcessStatus		45	1
+_mp_ProcessStatus.logMsg	ProcessStatus	1	15		_ValueArchive_2
+
 
 # create datapoints for ClaimManager,NCFObjectState and lofarSpeedTest
 DpName	TypeName

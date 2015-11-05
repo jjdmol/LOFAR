@@ -9,7 +9,7 @@
 [+ DEFINE signal_id +][+ signal_name +]_ID[+ ENDDEF +]
 [+ DEFINE cap_signal +][+ (string-substitute (string-capitalize! (get "signal")) '( "_" )' ( "" )) +][+ ENDDEF +]
 [+ DEFINE event_class_name +][+ prefix_cap +][+ cap_signal +]Event[+ ENDDEF +]
-[+ DEFINE event_class_decl +][+ event_class_name +] : public LOFAR::MACIO::GCFEvent[+ ENDDEF +]
+[+ DEFINE event_class_decl +][+ event_class_name +] : public MACIO::GCFEvent[+ ENDDEF +]
 [+ DEFINE protocol_name +][+ (string-upcase (base-name)) +][+ ENDDEF +]
 [+ DEFINE project +][+ IF (exist? "project") +][+ (get "project") +][+ ELSE +]LOFAR[+ ENDIF +][+ ENDDEF +]
 [+ DEFINE event_class_member_type +][+ IF (*== (get "type") "]") +][+ (substring (get "type") 0 (string-index (get "type") #\[)) +][+ ELSE +][+ (get "type") +][+ ENDIF +][+ ENDDEF +]
@@ -21,7 +21,7 @@
 //
 //  Copyright (C) 2003-2012
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 [+ IF (== autogen-version "5.12") +]
 //  [+ (lgpl "This program" "ASTRON" "//  ") +]
@@ -38,16 +38,15 @@
 #include <MACIO/Marshalling.tcc>
 #include "[+ (base-name) +].ph"
 
-// using namespace LOFAR::MACIO;
-namespace [+ project +] {
-  namespace [+ (base-name) +] {
-    using namespace std;
+using namespace LOFAR::MACIO;
+[+ IF (exist? "project") +]using namespace LOFAR;[+ ENDIF +]
+using namespace std;
 
-[+ FOR Cfunction "" +][+ (get "result")+] [+ (get "name") +] {
+[+ FOR Cfunction "" +][+ (get "result")+] [+ project +]::[+ (base-name) +]::[+ (get "name") +] {
 [+ (get "code") +]
 }[+ ENDFOR +]
 
-const char* [+ protocol_name +]_signalnames[] = 
+const char* [+ project +]::[+ (base-name) +]::[+ protocol_name +]_signalnames[] = 
 {
   "[+ protocol_name +]: invalid signal",[+ FOR event "," +]
   "[+ signal_name +]"[+ ENDFOR +]
@@ -58,9 +57,9 @@ const char* [+ protocol_name +]_errornames[] =
 	"[+ (get "msg") +]"[+ ENDFOR error +]
 };
 
-const struct LOFAR::MACIO::protocolStrings		[+ protocol-name +]_STRINGS = {
+const struct protocolStrings		[+ project +]::[+ (base-name) +]::[+ protocol-name +]_STRINGS = {
 	[+ (count "event") +]+1, [+ (count "error") +], 
-	[+ protocol_name +]_signalnames,
+	[+ project +]::[+ (base-name) +]::[+ protocol_name +]_signalnames,
 	[+ protocol_name +]_errornames
 };
 [+ ELSE +]
@@ -75,9 +74,10 @@ const struct LOFAR::MACIO::protocolStrings		[+ protocol-name +]_STRINGS = {
 #include <string>
 #include <cstring>
 
-namespace [+ project +] {
-  namespace [+ (base-name) +] {
-    using namespace LOFAR;
+namespace [+ project +]
+{
+	namespace [+ (base-name) +]
+	{
 
 [+ (get "prelude") +]
 
@@ -121,7 +121,7 @@ extern const struct LOFAR::MACIO::protocolStrings [+ protocol-name +]_STRINGS;
   class [+ event_class_decl +]
   {
     public:
-      [+ event_class_name +](LOFAR::MACIO::GCFEvent& e);
+      [+ event_class_name +](MACIO::GCFEvent& e);
       [+ event_class_name +]();
       virtual ~[+ event_class_name +]();
 
@@ -130,7 +130,7 @@ extern const struct LOFAR::MACIO::protocolStrings [+ protocol-name +]_STRINGS;
 
       void pack();
       virtual [+ event_class_name +]*	clone();
-      virtual void print (ostream& os) const;
+      ostream& print (ostream& os) const;
 
     private:
       [+ event_class_name +]([+ event_class_name +]&);
@@ -141,12 +141,11 @@ extern const struct LOFAR::MACIO::protocolStrings [+ protocol-name +]_STRINGS;
 
 inline ostream& operator<<(ostream& os, const [+ event_class_name +]& event)
 {
-    event.print(os);
-	return os;
+    return (event.print(os));
 };
  [+ ELSE +]
-[+ event_class_name +]::[+ event_class_name +](LOFAR::MACIO::GCFEvent& e)
-  : LOFAR::MACIO::GCFEvent(e)[+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +],
+[+ event_class_name +]::[+ event_class_name +](MACIO::GCFEvent& e)
+  : MACIO::GCFEvent(e)[+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +],
     [+ (get "name") +](0)[+ ENDIF +][+ IF (*== (get "type") "[]") +],
     [+ (get "name") +]NOE(0)[+ ENDIF +][+ ENDFOR +]
 {
@@ -154,7 +153,7 @@ inline ostream& operator<<(ostream& os, const [+ event_class_name +]& event)
 }
       
 [+ event_class_name +]::[+ event_class_name +]()
-  : LOFAR::MACIO::GCFEvent([+ signal_name +])[+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +],
+  : MACIO::GCFEvent([+ signal_name +])[+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +],
     [+ (get "name") +](0)[+ ENDIF +][+ IF (*== (get "type") "[]") +],
     [+ (get "name") +]NOE(0)[+ ENDIF +][+ ENDFOR +]
 {        
@@ -186,7 +185,7 @@ void [+ event_class_name +]::pack()
   [+ ELIF (*== (get "type") "[]") +]
   __offset += packMember(__offset, [+ (get "name") +], [+ (get "name") +]NOE, sizeof([+ event_class_member_type +]));
   [+ ELSE +]
-  __offset = MSH_pack(_buffer, __offset, [+ (get "name") +]);
+  MSH_pack(_buffer, __offset, [+ (get "name") +]);
   [+ ENDIF +][+ ENDFOR +]
 	[+ IF (= (count "param") 0) +]
   // no params in this event to pack
@@ -213,7 +212,7 @@ void [+ event_class_name +]::unpack()
     [+ ELIF (*== (get "type") "[]") +]
     [+ (get "name") +] = ([+ event_class_member_type +]*) unpackMember(_buffer, __offset, [+ (get "name") +]NOE,  sizeof([+ event_class_member_type +]));
     [+ ELSE +]
-    __offset = MSH_unpack(_buffer, __offset, [+ (get "name") +]);
+    MSH_unpack(_buffer, __offset, [+ (get "name") +]);
     [+ ENDIF +][+ ENDFOR +]
 	_buffer  = 0;
 	__offset = 0;
@@ -228,12 +227,12 @@ void [+ event_class_name +]::unpack()
     return (clonedEvent);
 }
 
-void [+ event_class_name +]::print(ostream& os) const
+ostream& [+ event_class_name +]::print(ostream& os) const
 {
 using LOFAR::operator<<;
   // Note: 'userdefined' classes are only printed if they are 'printable'
   //       base classes are printed except when they are 'nonprintable'
-  LOFAR::MACIO::GCFEvent::print(os);
+  MACIO::GCFEvent::print(os);
   [+ FOR param "" +][+ IF (==* (get "type") "struct") +][+ ELSE +]
     [+ IF (or (and (exist? "userdefined") (exist? "printable")) (and (not(exist? "userdefined")) (not(exist? "nonprintable")))) +]
       [+ IF (*== (get "type") "*") +]
@@ -241,13 +240,15 @@ using LOFAR::operator<<;
       [+ ELSE +]
       os << " [+ (get "name") +] = " <<  [+ (get "name") +] << endl; // [+ (get "type") +]
       [+ ENDIF +][+ ENDIF +][+ ENDIF +]
-  [+ ENDFOR +]
+  [+ ENDFOR +]return (os);
 }
 [+ ENDIF +][+ ENDFOR +]
 
+[+ IF (= (suffix) "ph") +]
 	} // namespace [+ (base-name) +]
 } // namespace [+ project +]
 
-[+ IF (= (suffix) "ph") +]
+using namespace [+ project +]::[+ (base-name) +];
+
 #endif
 [+ ENDIF +]

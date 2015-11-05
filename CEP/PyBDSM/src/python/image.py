@@ -70,7 +70,7 @@ class Image(object):
         if name.endswith("_arr"):
             if self.do_cache:
                 map_data = func.retrieve_map(self, name)
-                if map_data is not None:
+                if map_data != None:
                     return map_data
                 else:
                     return object.__getattribute__(self, name)
@@ -85,13 +85,6 @@ class Image(object):
             func.store_map(self, name, value)
         else:
             super(Image, self).__setattr__(name, value)
-
-    def __delattr__(self, name):
-        import functions as func
-        if self.do_cache and name.endswith("_arr"):
-            func.del_map(self, name)
-        else:
-            super(Image, self).__delattr__(name)
 
     def get_map(self, map_name):
         """Returns requested map."""
@@ -135,11 +128,11 @@ class Image(object):
         """Load parameter values."""
         import interface
         import os
-        if loadfile is None or loadfile == '':
+        if loadfile == None or loadfile == '':
             loadfile = self.opts.filename + '.pybdsm.sav'
         if os.path.exists(loadfile):
             timg, err = interface.load_pars(loadfile)
-            if timg is not None:
+            if timg != None:
                 orig_filename = self.opts.filename
                 self.opts = timg.opts
                 self.opts.filename = orig_filename # reset filename to original

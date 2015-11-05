@@ -160,7 +160,6 @@ class Op_polarisation(Op):
               pimg.pix2coord = img.pix2coord
               pimg.wcs_obj = img.wcs_obj
               pimg.mask_arr = mask
-              pimg.masked = img.masked
               pimg.ch0_arr = ch0_pi
               pimg._pi = True
 
@@ -527,9 +526,9 @@ class Op_polarisation(Op):
                  Op_gausfit(), Op_gaul2srl(), Op_make_residimage()]
 
         opts = img.opts.to_dict()
-        if img.opts.pi_thresh_isl is not None:
+        if img.opts.pi_thresh_isl != None:
             opts['thresh_isl'] = img.opts.pi_thresh_isl
-        if img.opts.pi_thresh_pix is not None:
+        if img.opts.pi_thresh_pix != None:
             opts['thresh_pix'] = img.opts.pi_thresh_pix
         opts['thresh'] = 'hard'
         opts['polarisation_do'] = False

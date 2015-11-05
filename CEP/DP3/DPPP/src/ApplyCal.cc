@@ -25,7 +25,6 @@
 #include <DPPP/ApplyCal.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
-#include <DPPP/MSReader.h>
 #include <Common/ParameterSet.h>
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
@@ -48,12 +47,10 @@ namespace LOFAR {
       : itsInput       (input),
         itsName        (prefix),
         itsParmDBName  (parset.getString (prefix + "parmdb")),
-        itsCorrectType (toLower(parset.getString (prefix + "correction", "gain"))),
-        itsInvert      (parset.getBool (prefix + "invert", true)),
+        itsCorrectType (toLower(parset.getString (prefix + "correction"))),
         itsTimeSlotsPerParmUpdate (parset.getInt (prefix +
             "timeslotsperparmupdate", 500)),
         itsSigmaMMSE   (parset.getDouble (prefix + "MMSE.Sigma", 0)),
-        itsUpdateWeights (parset.getBool (prefix + "updateweights", false)),
         itsTimeStep    (0),
         itsNCorr       (0),
         itsTimeInterval (-1),
@@ -61,9 +58,8 @@ namespace LOFAR {
         itsUseAP       (false)
     {
       ASSERT (!itsParmDBName.empty());
-      if (itsCorrectType=="fulljones" && itsUpdateWeights) {
-        ASSERTSTR (itsInvert, "Updating weights has not been implemented for invert=false and fulljones");
-      }
+      // Possible corrections one (or more?) of:
+      //   Gain (real/imag or ampl/phase), RM, TEC, Clock, Bandpass
     }
 
     ApplyCal::~ApplyCal()
@@ -73,11 +69,7 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      info().setWriteData();
-      info().setWriteFlags();
-      if (itsUpdateWeights) {
-        info().setWriteWeights();
-      }
+      info().setNeedWrite();
       itsTimeInterval = infoIn.timeInterval();
       itsNCorr = infoIn.ncorr();
 
@@ -85,35 +77,17 @@ namespace LOFAR {
 
       itsParmDB.reset(new BBS::ParmFacade(itsParmDBName));
 
-      // Detect if full jones solutions are present
-      if ((itsCorrectType == "gain" || itsCorrectType=="fulljones") &&
+      // Handle the correction type.
+
+      if ((itsCorrectType == "gain" || itsCorrectType=="fullgain") &&
           (itsParmDB->getNames("Gain:0:1:*").size() +
            itsParmDB->getDefNames("Gain:0:1:*").size() >0 )) {
-        itsCorrectType="fulljones";
-      }
-
-      // Detect if solutions are saved as Real/Imag or Ampl/Phase 
-      if (itsCorrectType == "gain" || itsCorrectType == "fulljones" ){
-        if (!itsParmDB->getNames("Gain:0:0:Real*").empty()) {
-          // Values with :Real present
-          itsUseAP = false; 
-        } else if (!itsParmDB->getNames("Gain:0:0:Ampl*").empty() || 
-                   !itsParmDB->getNames("Phase:0:0:Ampl*").empty()) {
-          // Values with :Ampl present
-          itsUseAP = true;
-        } else if (!itsParmDB->getDefNames("Gain:0:0:Real*").empty()) {
-          // Defvalues with :Real present
-          itsUseAP = false;
-        } else if (!itsParmDB->getDefNames("Gain:0:0:Ampl*").empty() ||
-                   !itsParmDB->getDefNames("Gain:0:0:Phase*").empty()) {
-          // Defvalues with :Ampl present
-          itsUseAP = true;
-        } else {
-          THROW (Exception, "No gains found in parmdb");
-        }
+        itsCorrectType="fullgain";
       }
 
       if (itsCorrectType == "gain") {
+        itsUseAP = (itsParmDB->getNames("Gain:0:0:Real*").empty() &&
+            itsParmDB->getDefNames("Gain:0:0:Real*").empty());
         if (itsUseAP) {
           itsParmExprs.push_back("Gain:0:0:Ampl");
           itsParmExprs.push_back("Gain:0:0:Phase");
@@ -125,7 +99,9 @@ namespace LOFAR {
           itsParmExprs.push_back("Gain:1:1:Real");
           itsParmExprs.push_back("Gain:1:1:Imag");
         }
-      } else if (itsCorrectType == "fulljones") {
+      } else if (itsCorrectType == "fullgain") {
+        itsUseAP = (itsParmDB->getNames("Gain:0:0:Real*").empty() &&
+            itsParmDB->getDefNames("Gain:0:0:Real*").empty());
         if (itsUseAP) {
           itsParmExprs.push_back("Gain:0:0:Ampl");
           itsParmExprs.push_back("Gain:0:0:Phase");
@@ -145,7 +121,7 @@ namespace LOFAR {
           itsParmExprs.push_back("Gain:1:1:Real");
           itsParmExprs.push_back("Gain:1:1:Imag");
         }
-      } else if (itsCorrectType == "tec") {
+      }  else if (itsCorrectType == "tec") {
         itsParmExprs.push_back("TEC");
       } else if (itsCorrectType == "clock") {
         if (itsParmDB->getNames("Clock:0:*").empty() &&
@@ -156,18 +132,12 @@ namespace LOFAR {
           itsParmExprs.push_back("Clock:0");
           itsParmExprs.push_back("Clock:1");
         }
-      } else if (itsCorrectType == "commonrotationangle") {
-        itsParmExprs.push_back("CommonRotationAngle");
-      } else if (itsCorrectType == "commonscalarphase") {
-        itsParmExprs.push_back("CommonScalarPhase");
-      }
-      else {
+      } else {
         THROW (Exception, "Correction type " + itsCorrectType +
                          " is unknown");
       }
 
       initDataArrays();
-      itsFlagCounter.init(getInfo());
     }
 
     void ApplyCal::show (std::ostream& os) const
@@ -175,12 +145,7 @@ namespace LOFAR {
       os << "ApplyCal " << itsName << std::endl;
       os << "  parmdb:         " << itsParmDBName << endl;
       os << "  correction:     " << itsCorrectType << endl;
-      if (itsCorrectType=="gain" || itsCorrectType=="fulljones") {
-        os << "    Ampl/Phase:   " << boolalpha << itsUseAP << endl;
-      }
-      os << "  update weights: " << boolalpha << itsUpdateWeights << endl;
       os << "  sigmaMMSE:      " << itsSigmaMMSE << endl;
-      os << "  invert:         " << boolalpha << itsInvert <<endl;
       os << "  timeSlotsPerParmUpdate: " << itsTimeSlotsPerParmUpdate <<endl;
     }
 
@@ -194,10 +159,13 @@ namespace LOFAR {
     bool ApplyCal::process (const DPBuffer& bufin)
     {
       itsTimer.start();
-      itsBuffer.copy (bufin);
-      double bufStartTime = bufin.getTime() - 0.5*itsTimeInterval;
+      DPBuffer buf(bufin);
+      buf.getData().unique();
+      RefRows rowNrs(buf.getRowNrs());
 
-      if (bufin.getTime() > itsLastTime) {
+      double bufStartTime = buf.getTime() - 0.5*itsTimeInterval;
+
+      if (buf.getTime() > itsLastTime) {
         updateParms(bufStartTime);
         itsTimeStep=0;
       }
@@ -206,19 +174,18 @@ namespace LOFAR {
       }
 
       // Loop through all baselines in the buffer.
-      size_t nbl = itsBuffer.getData().shape()[2];
+      size_t nbl = bufin.getData().shape()[2];
 
-      Complex* data = itsBuffer.getData().data();
+      Complex* data = buf.getData().data();
 
-      itsInput->fetchWeights (bufin, itsBuffer, itsTimer);
-      float* weight = itsBuffer.getWeights().data();
+      float* weight = buf.getWeights().data();
 
-      size_t nchan = itsBuffer.getData().shape()[1];
+      size_t nchan = buf.getData().shape()[1];
 
 #pragma omp parallel for
       for (size_t bl=0; bl<nbl; ++bl) {
         for (size_t chan=0;chan<nchan;chan++) {
-          if (itsParms.size()>2) {
+          if (itsCorrectType=="fullgain") {
             applyFull( &data[bl * itsNCorr * nchan + chan * itsNCorr ],
                 &weight[bl * itsNCorr * nchan + chan * itsNCorr ],
                 info().getAnt1()[bl], info().getAnt2()[bl], chan, itsTimeStep);
@@ -231,11 +198,8 @@ namespace LOFAR {
         }
       }
 
-      MSReader::flagInfNaN(itsBuffer.getData(), itsBuffer.getFlags(),
-                           itsFlagCounter);
-
       itsTimer.stop();
-      getNextStep()->process(itsBuffer);
+      getNextStep()->process(buf);
       return false;
     }
 
@@ -298,11 +262,10 @@ namespace LOFAR {
             }
             else if (itsParmDB->getDefValues(itsParmExprs[parmExprNum]).size()
                 == 1) { //Default value
+              //TODO: not including * in the pattern above may be too strict
               itsParmDB->getDefValues(itsParmExprs[parmExprNum]).get(0,defValues);
               ASSERT(defValues.size()==1);
               defValue=defValues.data()[0];
-            } else if (itsParmExprs[parmExprNum].substr(0,5)=="Gain:") {
-              defValue=0.;
             }
             else {
               THROW (Exception, "No parameter value found for "+
@@ -340,7 +303,7 @@ namespace LOFAR {
                                  parmvalues[3][ant][tf]);
             }
           }
-          else if (itsCorrectType=="fulljones") {
+          else if (itsCorrectType=="fullgain") {
             if (itsUseAP) { // Data as Amplitude / Phase
               itsParms[0][ant][tf] = polar(parmvalues[0][ant][tf],
                                parmvalues[1][ant][tf]);
@@ -379,22 +342,6 @@ namespace LOFAR {
                   parmvalues[1][ant][tf] * freq * casa::C::_2pi);
             }
           }
-          else if (itsCorrectType=="commonrotationangle") {
-            itsParms[0][ant][tf] =  cos(parmvalues[0][ant][tf]);
-            itsParms[1][ant][tf] = -sin(parmvalues[0][ant][tf]);
-            itsParms[2][ant][tf] =  sin(parmvalues[0][ant][tf]);
-            itsParms[3][ant][tf] =  cos(parmvalues[0][ant][tf]);
-          }
-          else if (itsCorrectType=="commonscalarphase") {
-            itsParms[0][ant][tf] = polar(1., parmvalues[0][ant][tf]);
-            itsParms[1][ant][tf] = polar(1., parmvalues[0][ant][tf]);
-          }
-
-          // Invert diagonal corrections (not fulljones and commonrotationangle)
-          if (itsInvert && itsParms.size()==2) {
-            itsParms[0][ant][tf] = 1./itsParms[0][ant][tf];
-            itsParms[1][ant][tf] = 1./itsParms[1][ant][tf];
-          }
         }
       }
     }
@@ -404,7 +351,7 @@ namespace LOFAR {
       uint tfDomainSize=itsTimeSlotsPerParmUpdate*info().chanFreqs().size();
 
       uint numParms;
-      if (itsCorrectType=="fulljones" || itsCorrectType=="commonrotationangle") {
+      if (itsCorrectType=="fullgain") {
         numParms = 4;
       }
       else {
@@ -430,21 +377,20 @@ namespace LOFAR {
       DComplex diag0B = itsParms[0][antB][timeFreqOffset];
       DComplex diag1B = itsParms[1][antB][timeFreqOffset];
 
-      vis[0] *= diag0A * conj(diag0B);
-      vis[1] *= diag0A * conj(diag1B);
-      vis[2] *= diag1A * conj(diag0B);
-      vis[3] *= diag1A * conj(diag1B);
+      vis[0] /= diag0A * conj(diag0B);
+      vis[1] /= diag0A * conj(diag1B);
+      vis[2] /= diag1A * conj(diag0B);
+      vis[3] /= diag1A * conj(diag1B);
 
-      if (itsUpdateWeights) {
-        weight[0] /= norm(diag0A) * norm(diag0B);
-        weight[1] /= norm(diag0A) * norm(diag1B);
-        weight[2] /= norm(diag1A) * norm(diag0B);
-        weight[3] /= norm(diag1A) * norm(diag1B);
-      }
+      // TODO: implement DPInput::getWeights
+      //weight[0]*= real(diag0A) * real(diag0A) * real(diag0B) * real(diag0B);
+      //weight[1]*= real(diag0A) * real(diag0A) * real(diag1B) * real(diag1B);
+      //weight[2]*= real(diag1A) * real(diag1A) * real(diag0B) * real(diag0B);
+      //weight[3]*= real(diag1A) * real(diag1A) * real(diag1B) * real(diag1B);
     }
 
     // Inverts complex 2x2 input matrix
-    void ApplyCal::invert (DComplex* v, double sigmaMMSE)
+    void ApplyCal::invert (DComplex* v, double sigmaMMSE) const
     {
       // Add the variance of the nuisance term to the elements on the diagonal.
       const double variance = sigmaMMSE * sigmaMMSE;
@@ -475,10 +421,8 @@ namespace LOFAR {
       gainB[3] = itsParms[3][antB][timeFreqOffset];
 
       DComplex gainAxvis[4];
-      if (itsInvert) {
-        invert(gainA,itsSigmaMMSE);
-        invert(gainB,itsSigmaMMSE);
-      }
+      invert(gainA,itsSigmaMMSE);
+      invert(gainB,itsSigmaMMSE);
 
       // gainAxvis = gainA * vis
       for (uint row=0;row<2;++row) {
@@ -496,48 +440,9 @@ namespace LOFAR {
         }
       }
 
-      // The code below does the same as the combination of BBS + python script
-      // covariance2weight.py (cookbook), except it stores weights per freq.
-      // The diagonal of covariance matrix is transferred to the weights.
-      // Note that the real covariance (mixing of noise terms after which they
-      // are not independent anymore) is not stored.
-      // The input covariance matrix C is assumed to be diagonal with elements
-      // w_i (the weights), the result the diagonal of
-      // (gainA kronecker gainB^H).C.(gainA kronecker gainB^H)^H
-      if (itsUpdateWeights) {
-        ASSERTSTR (itsInvert, "Updating weights has not been implemented for invert=false");
-        float cov[4], normGainA[4], normGainB[4];
-        for (uint i=0;i<4;++i) {
-          cov[i]=1./weight[i];
-          normGainA[i]=norm(gainA[i]);
-          normGainB[i]=norm(gainB[i]);
-        }
-
-        weight[0]=cov[0]*(normGainA[0]*normGainB[0])
-                 +cov[1]*(normGainA[0]*normGainB[1])
-                 +cov[2]*(normGainA[1]*normGainB[0])
-                 +cov[3]*(normGainA[1]*normGainB[1]);
-        weight[0]=1./weight[0];
-
-        weight[1]=cov[0]*(normGainA[0]*normGainB[2])
-                 +cov[1]*(normGainA[0]*normGainB[3])
-                 +cov[2]*(normGainA[1]*normGainB[2])
-                 +cov[3]*(normGainA[1]*normGainB[3]);
-        weight[1]=1./weight[1];
-
-        weight[2]=cov[0]*(normGainA[2]*normGainB[0])
-                 +cov[1]*(normGainA[2]*normGainB[1])
-                 +cov[2]*(normGainA[3]*normGainB[0])
-                 +cov[3]*(normGainA[3]*normGainB[1]);
-        weight[2]=1./weight[2];
-
-        weight[3]=cov[0]*(normGainA[2]*normGainB[2])
-                 +cov[1]*(normGainA[2]*normGainB[3])
-                 +cov[2]*(normGainA[3]*normGainB[2])
-                 +cov[3]*(normGainA[3]*normGainB[3]);
-        weight[3]=1./weight[3];
-      }
+      // TODO: weights for this case are not implemented
+      // see combination of BBS + python script covariance2weight.py (cookbook)
+      // for what to do (diagonal of covariance matrix is transferred to WEIGHT)
     }
-
   } //# end namespace
 }

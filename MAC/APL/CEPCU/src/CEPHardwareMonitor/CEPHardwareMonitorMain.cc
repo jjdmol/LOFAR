@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include <Common/Version.h>
 
 #include <Common/ParameterSet.h>
+#include "BlueGeneMonitor.h"
 #include "ClusterMonitor.h"
 #include <CEPCU/Package__Version.h>
 
@@ -42,15 +43,15 @@ int main(int argc, char* argv[])
 	LOG_INFO(Version::getInfo<CEPCUVersion>("CEPHardwareMonitor"));
 
 	// Create tasks and call initial routines
-//	BlueGeneMonitor*	bgm(0);
+	BlueGeneMonitor*	bgm(0);
 	ClusterMonitor*		ctm(0);
 	
 	// monitor BLUEGENE?
-//	if (globalParameterSet()->getUint32("WatchBlueGene",0)) {
-//		bgm = new BlueGeneMonitor("BlueGeneMonitor");
-//		bgm->start();
-//		LOG_INFO("Monitoring the BlueGene");
-//	}
+	if (globalParameterSet()->getUint32("WatchBlueGene",0)) {
+		bgm = new BlueGeneMonitor("BlueGeneMonitor");
+		bgm->start();
+		LOG_INFO("Monitoring the BlueGene");
+	}
 
 	// monitor CEP2Cluster?
 	if (globalParameterSet()->getUint32("WatchCluster",0)) {
@@ -60,8 +61,7 @@ int main(int argc, char* argv[])
 	}
 
 	// sanity check
-//	if (!bgm && !ctm) {
-	if (!ctm) {
+	if (!bgm && !ctm) {
 		LOG_FATAL_STR("Non of the monitortask (WatchBlueGene, WatchCluster) "
 						"was switched on in the configfile, terminating program");
 		return (0);
@@ -71,9 +71,9 @@ int main(int argc, char* argv[])
 	GCFScheduler::instance()->setDelayedQuit(true);	// we need a clean shutdown
 	GCFScheduler::instance()->run();				// until stop was called
 
-//	if (bgm) {
-//		bgm->quit();		// let task quit nicely
-//	}
+	if (bgm) {
+		bgm->quit();		// let task quit nicely
+	}
 	if (ctm) {
 		ctm->quit();		// let task quit nicely
 	}

@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -94,8 +94,9 @@ string claimManager_nameToRealName( string strName )
 
 string claimManager_realNameToName( string strName )
 {
+  
   // Do we know the 'Claimed' name
-  int iPos = dynContains( strClaimDPName, dpSubStr(strName,DPSUB_DP) );
+  int iPos = dynContains( strClaimDPName, strName );
   
   if( iPos < 1 )
     return "";
@@ -122,7 +123,7 @@ void claimManager_queryConnectClaims()
   if (g_standAlone) {
     DPT = "StnObservation";
   }    
-  string strQuery = "SELECT '.claim.name:_original.._value, .claim.claimDate:_original.._value, .claim.freeDate:_original.._value' FROM 'LOFAR_ObsSW_*' WHERE _DPT = \""+DPT+"\"";
+  string strQuery = "SELECT '.claim.name:_original.._value, .claim.claimDate:_original.._value' FROM 'LOFAR_ObsSW_*' WHERE _DPT = \""+DPT+"\"";
 
   LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaims|*** Doing a query for : claimManager_QueryConnectClaims() " );
  
@@ -144,7 +145,6 @@ void claimManager_queryConnectClaim_Callback(string strIdent,  dyn_dyn_anytype a
   string strDP;
   string strName;
   time tClaimDate;
-  time tFreeDate;
   bool bClaimed;
   
   LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaim_Callback| has " + dynlen( aResult ) + " results" );
@@ -160,23 +160,16 @@ void claimManager_queryConnectClaim_Callback(string strIdent,  dyn_dyn_anytype a
     aDP        = aResult[t][1];
     strName    = aResult[t][2];
     tClaimDate = aResult[t][3];
-    tFreeDate  = aResult[t][4];
     
     strDP=dpSubStr(aDP,DPSUB_DP);
     
-//    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| strDP     : "+ strDP);
-//    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| strName   : "+strName);
-//    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| ClaimDate : "+year(tClaimDate));
-//    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| FreeDate  : "+year(tFreeDate));
+    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| strDP     : "+ strDP);
+    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| strName   : "+strName);
+    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| tClaimDate: "+tClaimDate);
     
-    
-    // We are unclaimed when the date == 1970 and the freedate == 1970
-    if (year(tClaimDate) == 1970 && year(tFreeDate) == 1970) {
-      bClaimed = false;
-    } else {
-      bClaimed = true;
-    }
-    
+    // We are claimed when the date is not 1970
+    bClaimed = year( tClaimDate ) != 1970;
+  
     // Do we already have this name 
     iPos = dynContains( strClaimDPName, strDP );  
     

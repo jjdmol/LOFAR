@@ -23,46 +23,102 @@
 
 #include <string>
 #include <map>
-#include <complex>
-#include <memory>
 
-#include <boost/shared_ptr.hpp>
-#include <Common/LofarLogger.h>
-#include <CoInterface/BudgetTimer.h>
-#include <CoInterface/CorrelatedData.h>
+#include <Common/Timer.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/Pool.h>
 #include <CoInterface/SmartPtr.h>
-#include <CoInterface/BlockID.h>
-#include <CoInterface/Config.h>
 #include <CoInterface/SubbandMetaData.h>
+#include <CoInterface/StreamableData.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 
-#include "SubbandProcInputData.h"
-#include "SubbandProcOutputData.h"
-#include "CorrelatorStep.h"
-#include "BeamFormerPreprocessingStep.h"
-#include "BeamFormerCoherentStep.h"
-#include "BeamFormerIncoherentStep.h"
-
-// \file
-// TODO: Update documentation
+#include "Pool.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    //# Forward declarations
-    struct KernelFactories;
+    // 
+    //   Collect all inputData for the correlatorSubbandProc item:
+    //    \arg inputsamples
+    //    \arg delays
+    //    \arg phaseOffSets
+    //    \arg flags
+    // It also contains a read function parsing all this data from an input stream.   
+    class SubbandProcInputData
+    {
+    public:
+
+      // The set of GPU buffers to link our host buffers to.
+      // Device buffers may be reused between different pairs of kernels,
+      // since device memory size is a concern. Use inputSamplesMinSize
+      // to specify a minimum derived from other uses apart from input.
+      struct DeviceBuffers
+      {
+        gpu::DeviceMemory delaysAtBegin;
+        gpu::DeviceMemory delaysAfterEnd;
+        gpu::DeviceMemory phaseOffsets;
+        gpu::DeviceMemory inputSamples;
+
+        DeviceBuffers(size_t inputSamplesSize, size_t delaysSize, 
+                      size_t phaseOffsetsSize, gpu::Context &context) :
+          delaysAtBegin(context, delaysSize),
+          delaysAfterEnd(context, delaysSize),
+          phaseOffsets(context, phaseOffsetsSize),
+          inputSamples(context, inputSamplesSize)
+        {
+        }
+      };
+
+      // Which block this InputData represents
+      struct BlockID blockID;
+
+      //!< Whole sample delays at the start of the workitem      
+      MultiDimArrayHostBuffer<float, 3> delaysAtBegin;
+
+      //!< Whole sample delays at the end of the workitem      
+      MultiDimArrayHostBuffer<float, 3> delaysAfterEnd;
+
+      //!< Remainder of delays
+      MultiDimArrayHostBuffer<float, 2> phaseOffsets;
+
+      // inputdata with flagged data set to zero
+      MultiDimArrayHostBuffer<char, 4> inputSamples;
+
+      // The input flags
+      MultiDimArray<SparseSet<unsigned>, 1> inputFlags;
+
+      // Create the inputData object we need shared host/device memory on the supplied devicequeue
+      SubbandProcInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
+                         size_t n_samples, size_t bytes_per_complex_sample,
+                         gpu::Context &context, unsigned int hostBufferFlags = 0)
+        :
+        delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations],
+                       context, hostBufferFlags),
+        delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations],
+                       context, hostBufferFlags),
+        phaseOffsets(boost::extents[n_stations][n_polarizations],
+                       context, hostBufferFlags),
+        inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample],
+                       context, hostBufferFlags), // TODO: The size of the buffer is NOT validated
+        inputFlags(boost::extents[n_stations])
+      {
+      }
+
+      // process the given meta data 
+      void applyMetaData(const Parset &ps, unsigned station, unsigned SAP, const SubbandMetaData &metaData);
+
+      // set all flagged inputSamples to zero.
+      void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
+    };
 
     /*
      * The SubbandProc does the following transformation:
-     *   SubbandProcInputData -> SubbandProcOutputData
+     *   SubbandProcInputData -> StreamableData
      *
      * The SubbandProcInputData represents one block of one subband
-     * of input data, and the SubbandProcOutputData (for example) the complex
+     * of input data, and the StreamableData (for example) the complex
      * visibilities of such a block.
      *
      * For both input and output, a fixed set of objects is created,
@@ -83,10 +139,10 @@ namespace LOFAR
      *   input->blockID.localSubbandIdx  = subbandIdx;
      *
      *   // Fetch the next output object to fill
-     *   SmartPtr<SubbandProcOutputData> output = queue.outputPool.free.remove();
+     *   SmartPtr<StreamableData> output = queue.outputPool.free.remove();
      *
      *   // Process block
-     *   queue.processSubband(input, output);
+     *   queue.doSubband(input, output);
      *
      *   // Give back input and output objects to queue
      *   queue.inputPool.free.append(input);
@@ -98,59 +154,44 @@ namespace LOFAR
      */
     class SubbandProc {
     public:
-      SubbandProc(const Parset &ps, gpu::Context &context,
-                  KernelFactories &factories,
-                  size_t nrSubbandsPerSubbandProc = 1);
+      SubbandProc(const Parset &ps, gpu::Context &context);
+      virtual ~SubbandProc();
+
+      // TODO: clean up access by Pipeline class and move under protected
+      std::map<std::string, SmartPtr<NSTimer> > timers;
+
+      class Flagger
+      {
+      public:
+        // 1.1 Convert the flags per station to channel flags, change time scale if nchannel > 1
+        static void convertFlagsToChannelFlags(Parset const &parset,
+          MultiDimArray<SparseSet<unsigned>, 1> const &inputFlags,
+          MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChannel);
+
+        // 1.3 Get the LOG2 of the input. Used to speed up devisions by 2
+        static unsigned log2(unsigned n);
+      };
 
       // A pool of input data, to allow items to be filled and
       // computed on in parallel.
       Pool<SubbandProcInputData> inputPool;
 
-      // A pool of input data, that has been pre processed.
-      Pool<SubbandProcInputData> processPool;
-
       // A pool of output data, to allow items to be filled
       // and written in parallel.
-      Pool<SubbandProcOutputData> outputPool;
+      Pool<StreamableData> outputPool;
 
       // Correlate the data found in the input data buffer
-      void processSubband(SubbandProcInputData &input, SubbandProcOutputData &output);
+      virtual void processSubband(SubbandProcInputData &input, StreamableData &output) = 0;
 
-      // Do post processing on the CPU.
-      void postprocessSubband(SubbandProcOutputData &output);
+      // Do post processing on the CPU
+      virtual void postprocessSubband(StreamableData &output) = 0;
 
     protected:
       const Parset &ps;
-      const size_t nrSubbandsPerSubbandProc;
 
       gpu::Stream queue;
 
-      // The previously processed SAP/block, or -1 if nothing has been
-      // processed yet. Used in order to determine if new delays have
-      // to be uploaded.
-      ssize_t prevBlock;
-      signed int prevSAP;
-
-      // @{
-      // Device memory buffers. These buffers are used interleaved. For details,
-      // please refer to the document bf-pipeline.txt in the directory
-      // GPUProc/doc.
-      boost::shared_ptr<gpu::DeviceMemory> devA;
-      boost::shared_ptr<gpu::DeviceMemory> devB;
-      // @}
-
-      PerformanceCounter totalCounter;
-      PerformanceCounter inputCounter;
-      BudgetTimer processCPUTimer;
-
-      std::auto_ptr<CorrelatorStep> correlatorStep;
-      std::auto_ptr<BeamFormerPreprocessingStep> preprocessingStep;
-      std::auto_ptr<BeamFormerCoherentStep> coherentStep;
-      std::auto_ptr<BeamFormerIncoherentStep> incoherentStep;
-
-      // Returns the number of output elements to create to get a smooth
-      // running pipeline.
-      size_t nrOutputElements() const;
+      void addTimer(const std::string &name);
     };
   }
 }

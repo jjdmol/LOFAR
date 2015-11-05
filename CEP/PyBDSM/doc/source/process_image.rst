@@ -318,8 +318,7 @@ The advanced options are:
                                    fluxes measured
       :term:`aperture_posn` .. 'centroid': Position the aperture (if aperture is not None) on: 'centroid' or
                                    'peak' of the source.
-      :term:`blank_limit` ......... None : Limit in Jy/beam below which pixels are blanked. None => no such
-                                   blanking is done
+      :term:`blank_zeros` ........ False : Blank zeros in the image
       :term:`bmpersrc_th` ......... None : Theoretical estimate of number of beams per
                                    source. None => calculate inside program
       :term:`check_outsideuniv` .. False : Check for pixels outside the universe
@@ -393,11 +392,9 @@ The advanced options are:
         If 'peak', the aperture is centered on the source peak. If aperture=None
         (i.e., no aperture radius is specified), this parameter is ignored.
 
-    blank_limit
-        This parameter is a float (default is ``None``) that sets the limit in
-        Jy/beam below which pixels are blanked. All pixels in the ch0 image with
-        a value less than the specified limit and with at least 4 neighboring
-        pixels with values also less than this limit are blanked. If ``None``,
+    blank_zeros
+        This parameter is a Boolean (default is ``False``). If ``True``, all
+        pixels in the input image with values of 0.0 are blanked. If ``False``,
         any such pixels are left unblanked (and hence will affect the rms and
         mean maps, etc.). Pixels with a value of NaN are always blanked.
 
@@ -709,10 +706,7 @@ The output options are:
                                    patches. 'single' => all Gaussians in one patch.
                                    'gaussian' => each Gaussian gets its own patch.
                                    'source' => all Gaussians belonging to a single
-                                   source are grouped into one patch. 'mask' => use mask
-                                   file specified by bbs_patches_mask
-      :term:`bbs_patches_mask` .... None : Name of the mask file (of same size as input image)
-                                   that defines the patches if bbs_patches = 'mask'
+                                   source are grouped into one patch
       :term:`indir` ............... None : Directory of input FITS files. None => get from
                                    filename
       :term:`opdir_overwrite` .. 'overwrite': 'overwrite'/'append': If output_all=True,
@@ -738,15 +732,15 @@ The output options are:
 .. glossary::
 
     bbs_patches
-        This parameter is a string (default is ``None``) that sets the type of patch to use in BBS-formatted catalogs. When the Gaussian catalogue is written as a BBS-readable sky file, this option determines whether all Gaussians are in a single patch (``'single'``), there are no patches (``None``), all Gaussians for a given source are in a separate patch (``'source'``), each Gaussian gets its own patch (``'gaussian'``), or a mask image is used to define the patches (``'mask'``).
+        This parameter is a string (default is ``None``) that sets the type of patch to use in BBS-formatted catalogs. When the Gaussian catalogue is written as a BBS-readable sky file, this
+        determines whether all Gaussians are in a single patch (``'single'``), there are no
+        patches (``None``), all Gaussians for a given source are in a separate patch (``'source'``), or
+        each Gaussian gets its own patch (``'gaussian'``).
 
         If you wish to have patches defined by island, then set
         ``group_by_isl = True`` before fitting to force all
         Gaussians in an island to be in a single source. Then set
         ``bbs_patches = 'source'`` when writing the catalog.
-
-    bbs_patches_mask
-        This parameter is a string (default is ``None``) that sets the file name of the mask file to use to define patches in BBS-formatted catalogs. The mask image should be 1 inside the patches and 0 elsewhere and should be the same size as the input image (before any ``trim_box`` is applied). Any Gaussians that fall outside of the patches will be ignored and will not appear in the output sky model.
 
     indir
         This parameter is a string (default is ``None``) that sets the directory of input FITS files. If ``None``, the directory is defined by the input filename.
@@ -887,9 +881,7 @@ The wavelet module performs the following steps:
 
 * For each scale (*j*), the appropriate *à trous* wavelet transformation is made (see Holschneider et al. 1989 for details). Additionally, the "remainder" image (called the *c_J* image) is also made. This image includes all emission not included in the other wavelet images.
 
-* Depending on the value of the ``atrous_sum`` option, fitting is done to either an image that is a sum over all scales equal to or larger than the scale under consideration (``atrous_sum = True``) or to an image of a single scale (``atrous_sum = False``). Fitting to the sum over all larger scales will generally result in increased signal to noise.
-
-* If ``atrous_bdsm = True``, an rms map and a mean map are made for each wavelet image and Gaussians are fit in the normal way. Gaussians can be optionally restricted to lie within islands found from the initial image. If a wavelet island overlaps spatially with an existing island, the two islands are merged together to form a single island. The wavelet Gaussians can then be included in source catalogs (see :ref:`write_catalog`).
+* If ``atrous_bdsm = True``, an rms map and a mean map are made for each wavelet image and Gaussians are fit in the normal way. These wavelet Gaussians can then be included in source catalogs (see :ref:`write_catalog`).
 
 The options for this module are as follows:
 
@@ -902,15 +894,11 @@ The options for this module are as follows:
                                    inside program
       :term:`atrous_lpf` ........... 'b3': Low pass filter, either 'b3' or 'tr', for B3
                                    spline or Triangle
-      :term:`atrous_orig_isl` .... False : Restrict wavelet Gaussians to islands found in
-                                   original image
-      :term:`atrous_sum` .......... True : Fit to the sum of images of the remaining wavelet
-                                   scales
 
 .. glossary::
 
     atrous_bdsm_do
-        This parameter is a Boolean (default is ``False``). If ``True``, PyBDSM performs source extraction on each wavelet scale.
+        This parameter is a Boolean (default is ``False``). If ``True``\, PyBDSM performs source extraction on each wavelet scale.
 
     atrous_jmax
         This parameter is an integer (default is 0) which is the maximum order of the *à trous* wavelet
@@ -925,19 +913,11 @@ The options for this module are as follows:
         3-4 times smaller than the smallest image dimension.
 
     atrous_lpf
-        This parameter is a string (default is ``'b3'``) that sets the low pass filter, which can be either the B3 spline
+        This parameter is a string (default is ``'b3'``) that sets the low pass filter, which can currently be either the B3 spline
         or the triangle function, which is used to generate the *à trous*
         wavelets. The B3 spline is [1, 4, 6, 4, 1] and the triangle is [1, 2,
         1], normalised so that the sum is unity. The lengths of the filters are
         hence 5 and 3 respectively.
-
-    atrous_orig_isl
-        This parameter is a Boolean (default is ``False``). If ``True``, all wavelet Gaussians must lie within the boundaries of islands found in the original image. If ``False``, new islands that are found only
-        in the wavelet images are included in the final fit.
-
-    atrous_sum
-        This parameter is a Boolean (default is ``True``). If ``True``, fitting is done on an image that is the sum of the remaining wavelet scales. Using the sum will generally result in improved signal.
-        If ``False``, fitting is done on only the wavelet scale under consideration.
 
 .. _psf_vary_do:
 

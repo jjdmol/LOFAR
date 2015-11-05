@@ -34,9 +34,11 @@
 #include <ParmDB/Parm.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/ArrayMath.h>
-#include <DPPP/FlagCounter.h>
 
 namespace LOFAR {
+
+  class ParameterSet;
+
   namespace DPPP {
     // @ingroup NDPPP
 
@@ -68,34 +70,32 @@ namespace LOFAR {
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
 
-      // Invert a 2x2 matrix in place
-      static void invert (casa::DComplex* v, double sigmaMMSE=0);
 
     private:
-      // Apply a diagonal Jones matrix to the 2x2 visibilities matrix: A.V.B^H
+      // Apply a diagonal Jones matrix to the 2x2 visibilities matrix
       void applyDiag (casa::Complex* vis, float* weight, int antA, int antB,
           int chan, int time);
 
-      // Apply a full Jones matrix to the 2x2 visibilities matrix: A.V.B^H
+      // Apply a full Jones matrix to the 2x2 visibilities matrix
       void applyFull (casa::Complex* vis, float* weight, int antA, int antB,
           int chan, int time);
 
       // Read parameters from the associated parmdb and store them in itsParms
       void updateParms (const double bufStartTime);
 
+      // Invert a 2x2 matrix in place
+      void invert (casa::DComplex* v, double sigmaMMSE=0) const;
+
       void initDataArrays();
 
       //# Data members.
       DPInput*         itsInput;
-      DPBuffer         itsBuffer;
       string           itsName;
       string           itsParmDBName;
       boost::shared_ptr<BBS::ParmFacade> itsParmDB;
       string           itsCorrectType;
-      bool             itsInvert;
       uint             itsTimeSlotsPerParmUpdate;
       double           itsSigmaMMSE;
-      bool             itsUpdateWeights;
 
       // Expressions to search for in itsParmDB
       vector<casa::String>   itsParmExprs;
@@ -106,7 +106,6 @@ namespace LOFAR {
       uint            itsNCorr;
       double          itsTimeInterval;
       double          itsLastTime;
-      FlagCounter     itsFlagCounter;
       bool            itsUseAP;      //# use ampl/phase or real/imag
       NSTimer         itsTimer;
     };

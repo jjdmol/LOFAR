@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -160,7 +160,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   // Loop through all alarms in this callback
   for (int nr = 2; nr < dynlen (aResult);nr+=4) {
     //get the stateNr and DP that go with this message
-    if (!dpExists(aResult[nr][1])) continue;
+    
     time aTime     = getCurrentTime();
     string aSystem = dpSubStr(aResult[nr][1],DPSUB_SYS);
     string aDP     = aResult[nr][2];
@@ -461,22 +461,17 @@ private void sendMail(string state, string aDP,time aTime,string message) {
   
   string t = formatTime("%c",aTime);
 
-  email_cont[1] = "dummymail@astron.nl";
+  email_cont[1] = "observer@astron.nl";
   email_cont[2] = "lofarsys@control.lofar";
   aS="LOFAR_ALARM "+dpSubStr(aDP,DPSUB_SYS)+" "+message+" "+state;
   email_cont[3] = aS;
   aS="This is a generated message, replying is useless.\n\n New alarm from LOFAR: \n\n time     : "+t+"\n status   : "+state+"\n datapoint: "+aDP+"\n message  : "+message; 
   email_cont[4] = aS;
   
-  dyn_string emails;
-  dpGet("MCU001:__navigator.alarmSettings.emails",emails);
+
+  // sending the message
+  if (bDebug) DebugTN("sending msg to observer: ");
+  emSendMail ("smtp.lofar.eu","mcu001.control.lofar", email_cont, ret);
+  if (bDebug) DebugTN("SendMail return value: "+ret);
   
-  for(int i=1;i<=dynlen(emails);i++) {
-    email_cont[1] = emails[i];
-  
-    // sending the message
-    if (bDebug) DebugTN("sending msg to listeners: ");
-    emSendMail ("smtp.lofar.eu","mcu001.control.lofar", email_cont, ret);
-    if (bDebug) DebugTN("SendMail return value: "+ret);
-  }
 }

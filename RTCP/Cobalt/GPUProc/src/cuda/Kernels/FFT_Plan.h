@@ -34,11 +34,11 @@ namespace LOFAR
     class FFT_Plan
     {
     public:
-      FFT_Plan(const gpu::Context &context, unsigned fftSize, unsigned nrFFTs);
+      FFT_Plan(gpu::Context &context, unsigned fftSize, unsigned nrFFTs);
       ~FFT_Plan();
 
       // Tie the plan to a specific stream
-      void setStream(const gpu::Stream &stream) const;
+      void setStream(gpu::Stream &stream);
 
       cufftHandle plan;
 

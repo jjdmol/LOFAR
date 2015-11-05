@@ -1,8 +1,8 @@
-V 11
+V 10
 2
 LANG:1 15 System overview
 LANG:0 15 Systemübersicht
-PANEL,-1 -1 1200 823 N "_3DFace" 0
+PANEL,-1 -1 1060 699 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -348,15 +348,16 @@ LANG:0 0
 E E 0 1 1 0 1 E U  0 E 52 262 768 288
 0 2 0 "0s" 0 0 0 64 0 0  52 262 1
 2
-LANG:1 26 Arial,-1,20,5,40,0,0,0,0,0
+LANG:1 84 -*-Arial-*-r-normal-*-20-*-100-100-*-*-iso8859-1|-20,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 LANG:0 84 -*-Arial-*-r-normal-*-20-*-100-100-*-*-iso8859-1|-20,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 2
+0 ""
+2
 LANG:1 49 Error: Please check DISTmanager of active system!
 LANG:0 66 Fehler: Bitte überprüfen Sie den DISTManager des aktiven Systemes!
 2 262
 "Text1"
 ""
-1 0 801 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 11 612 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 99 0 0 0 0 0
 E E E
@@ -367,18 +368,19 @@ LANG:0 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 2 803 74 818
-0 2 0 "0s" 0 0 0 192 0 0  2 803 1
+E E 0 1 1 0 1 E U  0 E 13 614 85 630
+0 2 0 "0s" 0 0 0 192 0 0  13 614 1
 2
-LANG:1 26 Arial,-1,12,5,40,0,0,0,0,0
+LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 LANG:0 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 2
+0 ""
+2
 LANG:1 13 Current user:
 LANG:0 19 aktueller Benutzer:
 14 260
 "TextField1"
 ""
-1 380 800 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 390 611 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 98 0 0 0 0 0
 E E E
@@ -389,9 +391,10 @@ LANG:0 0
 
 0
 2
-LANG:1 26 Arial,-1,12,5,40,0,0,0,0,0
+LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 LANG:0 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0  378 798 986 824
+0 ""
+ 388 609 996 635
 2 "0s" 0 0 0 0 0 -1  E "main()
 {
   if ( isRedundant())           // possible splitmode
@@ -467,7 +470,7 @@ setText(string dp1, bool b1, string dp2, bool b2, string dp3, bool b3, string dp
 14 261
 "TextField2"
 ""
-1 129 800 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 140 611 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 98 0 0 0 0 0
 E E E
@@ -478,9 +481,10 @@ LANG:0 0
 
 0
 2
-LANG:1 26 Arial,-1,12,5,40,0,0,0,0,0
+LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 LANG:0 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0  127 798 371 824
+0 ""
+ 138 609 382 635
 2 "0s" 0 0 0 0 0 -1  E "main()
 {
 STD_showUser();
@@ -489,7 +493,7 @@ STD_showUser();
 28 264
 "Systemoverview"
 ""
-1 17 13.1666666666667 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+1 17 23 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
  E E
 100 0 0 0 0 0
 E E E
@@ -556,9 +560,10 @@ resetbBlock()
   bBlock = FALSE;
 }"
 2
-LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 LANG:0 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0  -2 -2 1201 792
+0 ""
+ 8 8 997 607
 E1 "#1" 2
 LANG:1 4 #001
 LANG:0 2 #1

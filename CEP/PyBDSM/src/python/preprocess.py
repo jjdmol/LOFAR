@@ -38,15 +38,10 @@ class Op_preprocess(Op):
 
     def __call__(self, img):
         mylog = mylogger.logging.getLogger("PyBDSM."+img.log+"Preprocess")
-        bstat = func.bstat
-        if img.opts.kappa_clip is None:
-            kappa = -img.pixel_beamarea()
-        else:
-            kappa = img.opts.kappa_clip
-
         if img.opts.polarisation_do:
           pols = ['I', 'Q', 'U', 'V']
           ch0images = [img.ch0_arr, img.ch0_Q_arr, img.ch0_U_arr, img.ch0_V_arr]
+#           ch0images = ['ch0', 'ch0_Q', 'ch0_U', 'ch0_V']
           img.clipped_mean_QUV = []
           img.clipped_rms_QUV = []
         else:
@@ -58,12 +53,13 @@ class Op_preprocess(Op):
         else:
             mask = img.mask_arr
         opts = img.opts
-
+        kappa = opts.kappa_clip
         for ipol, pol in enumerate(pols):
+#           image = img.get_map(ch0images[ipol])
           image = ch0images[ipol]
 
           ### basic stats
-          mean, rms, cmean, crms, cnt = bstat(image, mask, kappa)
+          mean, rms, cmean, crms, cnt = _cbdsm.bstat(image, mask, kappa)
           if cnt > 198: cmean = mean; crms = rms
           if pol == 'I':
             if func.approx_equal(crms, 0.0, rel=None):
@@ -76,13 +72,13 @@ class Op_preprocess(Op):
             img.clipped_rms = crms
             mylog.info('%s %.4f %s %.4f %s ' % ("Raw mean (Stokes I) = ", mean*1000.0, \
                        'mJy and raw rms = ',rms*1000.0, 'mJy'))
-            mylog.info('%s %.4f %s %s %.4f %s ' % ("sigma clipped mean (Stokes I) = ", cmean*1000.0, \
-                       'mJy and ','sigma clipped rms = ',crms*1000.0, 'mJy'))
+            mylog.info('%d %s %.4f %s %d %s %.4f %s ' % (kappa,"sigma clipped mean (Stokes I) = ", cmean*1000.0, \
+                       'mJy and ',kappa,'sigma clipped rms = ',crms*1000.0, 'mJy'))
           else:
             img.clipped_mean_QUV.append(cmean)
             img.clipped_rms_QUV.append(crms)
-            mylog.info('%s %s %s %.4f %s %s %.4f %s ' % ("sigma clipped mean (Stokes ", pol, ") = ", cmean*1000.0, \
-                       'mJy and ','sigma clipped rms = ',crms*1000.0, 'mJy'))
+            mylog.info('%d %s %s %s %.4f %s %d %s %.4f %s ' % (kappa,"sigma clipped mean (Stokes ", pol, ") = ", cmean*1000.0, \
+                       'mJy and ',kappa,'sigma clipped rms = ',crms*1000.0, 'mJy'))
 
         image = img.ch0_arr
         # Check if pixels are outside the universe
@@ -108,7 +104,7 @@ class Op_preprocess(Op):
 
         ### max/min pixel value & coordinates
         shape = image.shape[0:2]
-        if mask is not None:
+        if mask != None:
             img.blankpix = N.sum(mask)
         if img.blankpix == 0:
           max_idx = image.argmax()
@@ -143,11 +139,7 @@ class Op_preprocess(Op):
         ### if image seems confused, then take background mean as zero instead
         alpha_sourcecounts = 2.5  # approx diff src count slope. 2.2?
         if opts.bmpersrc_th is None:
-          if mask is not None:
-              unmasked = N.where(~img.mask_arr)
-              n = (image[unmasked] >= 5.*crms).sum()
-          else:
-              n = (image >= 5.*crms).sum()
+          n = (image >= 5.*crms).sum()
           if n <= 0:
             n = 1
             mylog.info('No pixels in image > 5-sigma.')

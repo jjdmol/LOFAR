@@ -399,7 +399,7 @@ def moment(x,mask=None):
     """
     import numpy as N
 
-    if mask is None:
+    if mask == None:
         mask=N.zeros(x.shape, dtype=bool)
     m1=N.zeros(1)
     m2=N.zeros(x.ndim)
@@ -432,7 +432,7 @@ def fit_mask_1d(x, y, sig, mask, funct, do_err, order=0, p0 = None):
       if isinstance(sig, list): sig = N.array(sig)
       xfit=x[ind]; yfit=y[ind]; sigfit=sig[ind]
 
-      if p0 is None:
+      if p0 == None:
         if funct == poly:
            p0=N.array([0]*(order+1))
            p0[1]=(yfit[0]-yfit[-1])/(xfit[0]-xfit[-1])
@@ -461,7 +461,7 @@ def fit_mask_1d(x, y, sig, mask, funct, do_err, order=0, p0 = None):
         sys.stdout = original_stdout  # turn STDOUT back on
 
       if do_err:
-        if cov is not None:
+        if cov != None:
           if N.sum(sig != 1.) > 0:
             err = N.array([sqrt(abs(cov[i,i])) for i in range(len(p))])
           else:
@@ -594,17 +594,17 @@ def fit_gaus2d(data, p_ini, x, y, mask = None, err = None):
     import numpy as N
     import sys
 
-    if mask is not None and mask.shape != data.shape:
+    if mask != None and mask.shape != data.shape:
         print 'Data and mask array dont have the same shape, ignoring mask'
         mask = None
-    if err is not None and err.shape != data.shape:
+    if err != None and err.shape != data.shape:
         print 'Data and error array dont have the same shape, ignoring error'
         err = None
 
-    if mask is None: mask = N.zeros(data.shape, bool)
+    if mask == None: mask = N.zeros(data.shape, bool)
     g_ind = N.where(~N.ravel(mask))[0]
 
-    if err is None:
+    if err == None:
         errorfunction = lambda p: N.ravel(gaus_2d(p, x, y) - data)[g_ind]
     else:
         errorfunction = lambda p: N.ravel((gaus_2d(p, x, y) - data)/err)[g_ind]
@@ -780,7 +780,7 @@ def get_errors(img, p, stdav, bm_pix=None):
         errors = errors + [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
       else:
         sq2 = sqrt(2.0)
-        if bm_pix is None:
+        if bm_pix == None:
             bm_pix = N.array([img.pixel_beam()[0]*fwsig, img.pixel_beam()[1]*fwsig, img.pixel_beam()[2]])
         dumr = sqrt(abs(size[0] * size[1] / (4.0 * bm_pix[0] * bm_pix[1])))
         dumrr1 = 1.0 + bm_pix[0] * bm_pix[1] / (size[0] * size[0])
@@ -889,13 +889,13 @@ def fit_mulgaus2d(image, gaus, x, y, mask = None, fitfix = None, err = None, adj
     import numpy as N
     import sys
 
-    if mask is not None and mask.shape != image.shape:
+    if mask != None and mask.shape != image.shape:
         print 'Data and mask array dont have the same shape, ignoring mask'
         mask = None
-    if err is not None and err.shape != image.shape:
+    if err != None and err.shape != image.shape:
         print 'Data and error array dont have the same shape, ignoring error'
         err = None
-    if mask is None: mask = N.zeros(image.shape, bool)
+    if mask == None: mask = N.zeros(image.shape, bool)
 
     g_ind = N.where(~N.ravel(mask))[0]
 
@@ -906,7 +906,7 @@ def fit_mulgaus2d(image, gaus, x, y, mask = None, fitfix = None, err = None, adj
         p_ini = p_ini + g2param(g, adj)
       p_ini = N.array(p_ini)
 
-      if fitfix is None: fitfix = [0]*ngaus
+      if fitfix == None: fitfix = [0]*ngaus
       ind = N.ones(6*ngaus)                                     # 1 => fit ; 0 => fix
       for i in range(ngaus):
         if fitfix[i] == 1: ind[i*6+1:i*6+6] = 0
@@ -915,7 +915,7 @@ def fit_mulgaus2d(image, gaus, x, y, mask = None, fitfix = None, err = None, adj
       ind = N.array(ind)
       p_tofit = p_ini[N.where(ind==1)[0]]
       p_tofix = p_ini[N.where(ind==0)[0]]
-      if err is None: err = N.ones(image.shape)
+      if err == None: err = N.ones(image.shape)
 
       errorfunction = lambda p, x, y, p_tofix, ind, image, err, g_ind: \
                      N.ravel((gaus_2d_itscomplicated(p, x, y, p_tofix, ind)-image)/err)[g_ind]
@@ -1006,7 +1006,7 @@ def get_maxima(im, mask, thr, shape, beam, im_pos=None):
     from copy import deepcopy as cp
     import numpy as N
 
-    if im_pos is None:
+    if im_pos == None:
         im_pos = im
     im1 = cp(im)
     ind = N.array(N.where(~mask)).transpose()
@@ -1073,7 +1073,7 @@ def read_image_from_file(filename, img, indir, quiet=False):
     from distutils.version import StrictVersion
 
     mylog = mylogger.logging.getLogger("PyBDSM."+img.log+"Readfile")
-    if indir is None or indir == './':
+    if indir == None or indir == './':
         prefix = ''
     else:
         prefix = indir + '/'
@@ -1089,23 +1089,10 @@ def read_image_from_file(filename, img, indir, quiet=False):
         if img.use_io == 'fits':
             try:
                 from astropy.io import fits as pyfits
-                old_pyfits = False
-                use_sections = True
             except ImportError, err:
                 import pyfits
-                if StrictVersion(pyfits.__version__) < StrictVersion('2.2'):
-                    old_pyfits = True
-                    use_sections = False
-                elif StrictVersion(pyfits.__version__) < StrictVersion('2.4'):
-                    old_pyfits = False
-                    use_sections = False
-                else:
-                    old_pyfits = False
             try:
-                if not old_pyfits:
-                    fits = pyfits.open(image_file, mode="readonly", ignore_missing_end=True)
-                else:
-                    fits = pyfits.open(image_file, mode="readonly")
+                fits = pyfits.open(image_file, mode="readonly", ignore_missing_end=True)
             except IOError, err:
                 img._reason = 'Problem reading file.\nOriginal error: {0}'.format(str(err))
                 return None
@@ -1123,19 +1110,8 @@ def read_image_from_file(filename, img, indir, quiet=False):
         try:
             try:
                 from astropy.io import fits as pyfits
-                old_pyfits = False
-                use_sections = True
             except ImportError, err:
                 import pyfits
-                if StrictVersion(pyfits.__version__) < StrictVersion('2.2'):
-                    old_pyfits = True
-                    use_sections = False
-                elif StrictVersion(pyfits.__version__) < StrictVersion('2.4'):
-                    old_pyfits = False
-                    use_sections = False
-                else:
-                    old_pyfits = False
-                    use_sections = True
             has_pyfits = True
         except ImportError, err:
             raise RuntimeError("Astropy or PyFITS is required.")
@@ -1151,10 +1127,7 @@ def read_image_from_file(filename, img, indir, quiet=False):
         failed_read = False
         reason = 0
         try:
-            if not old_pyfits:
-                fits = pyfits.open(image_file, mode="readonly", ignore_missing_end=True)
-            else:
-                fits = pyfits.open(image_file, mode="readonly")
+            fits = pyfits.open(image_file, mode="readonly", ignore_missing_end=True)
             img.use_io = 'fits'
         except IOError, err:
             e_pyfits = str(err)
@@ -1175,25 +1148,13 @@ def read_image_from_file(filename, img, indir, quiet=False):
             return None
 
     # Now that image has been read in successfully, get header (data is loaded
-    # later to take advantage of sectioning if trim_box is specified).
+    # later to take advantage of sectioning if trim_box is specified.
     if not quiet:
         mylogger.userinfo(mylog, "Opened '"+image_file+"'")
     if img.use_io == 'rap':
-        tmpdir = img.parentname+'_tmp'
-        hdr = convert_pyrap_header(inputimage, tmpdir)
-        coords = inputimage.coordinates()
-        img.coords_dict = coords.dict()
-        if img.coords_dict.has_key('telescope'):
-            img._telescope = img.coords_dict['telescope']
-        else:
-            img._telescope = None
+        hdr = convert_pyrap_header(inputimage)
     if img.use_io == 'fits':
         hdr = fits[0].header
-        img.coords_dict = None
-        if 'TELESCOP' in hdr:
-            img._telescope = hdr['TELESCOP']
-        else:
-            img._telescope = None
 
     # Make sure data is in proper order. Final order is [pol, chan, x (RA), y (DEC)],
     # so we need to rearrange dimensions if they are not in this order. Use the
@@ -1221,12 +1182,10 @@ def read_image_from_file(filename, img, indir, quiet=False):
 
     # Check for incorrect spectral units. For example, "M/S" is not
     # recognized by PyWCS as velocity ("S" is actually Siemens, not
-    # seconds). Note that we check CUNIT3 and CUNIT4 even if the
-    # image has only 2 axes, as the header may still have these
-    # entries.
-    for i in range(4):
+    # seconds).
+    for i in range(naxis):
         key_val_raw = hdr.get('CUNIT' + str(i+1))
-        if key_val_raw is not None:
+        if key_val_raw != None:
             if 'M/S' in key_val_raw or 'm/S' in key_val_raw or 'M/s' in key_val_raw:
                 hdr['CUNIT' + str(i+1)] = 'm/s'
             if 'HZ' in key_val_raw or 'hZ' in key_val_raw or 'hz' in key_val_raw:
@@ -1269,14 +1228,10 @@ def read_image_from_file(filename, img, indir, quiet=False):
         shape_out[0] = data_shape[indx_out[0]]
     if indx_out[1] != -1:
         shape_out[1] = data_shape[indx_out[1]]
-    indx_out = [a for a in indx_out if a >= 0] # trim unused axes
 
     # Read in data. If only a subsection of the image is desired (as defined
     # by the trim_box option), we can try to use PyFITS to read only that section.
-    img._original_naxis = data_shape
-    img._original_shape = (shape_out[2], shape_out[3])
-    img._xy_hdr_shift = (0, 0)
-    if img.opts.trim_box is not None:
+    if img.opts.trim_box != None:
         img.trim_box = img.opts.trim_box
         xmin, xmax, ymin, ymax = img.trim_box
         if xmin < 0: xmin = 0
@@ -1285,9 +1240,6 @@ def read_image_from_file(filename, img, indir, quiet=False):
         if ymax > shape_out[3]: ymax = shape_out[3]
         if xmin >= xmax or ymin >= ymax:
             raise RuntimeError("The trim_box option does not specify a valid part of the image.")
-        shape_out_untrimmed = shape_out[:]
-        shape_out[2] = xmax-xmin
-        shape_out[3] = ymax-ymin
 
         if img.use_io == 'fits':
             sx = slice(int(xmin),int(xmax))
@@ -1297,39 +1249,31 @@ def read_image_from_file(filename, img, indir, quiet=False):
             for i in range(naxis-2):
                 s_array.append(sn)
             s_array.reverse() # to match ordering of data array returned by PyFITS
-            if not old_pyfits and use_sections:
-                if naxis == 2:
-                    data = fits[0].section[s_array[0], s_array[1]]
-                elif naxis == 3:
-                    data = fits[0].section[s_array[0], s_array[1], s_array[2]]
-                elif naxis == 4:
-                    data = fits[0].section[s_array[0], s_array[1], s_array[2], s_array[3]]
-                else:
-                    # If more than 4 axes, just read in the whole image and
-                    # do the trimming after reordering.
-                    data = fits[0].data
+            if naxis == 2:
+                data = fits[0].section[s_array[0], s_array[1]]
+            elif naxis == 3:
+                data = fits[0].section[s_array[0], s_array[1], s_array[2]]
+            elif naxis == 4:
+                data = fits[0].section[s_array[0], s_array[1], s_array[2], s_array[3]]
             else:
+                # If more than 4 axes, just read in the whole image and
+                # do the trimming after reordering.
                 data = fits[0].data
             fits.close()
             data = data.transpose(*indx_out) # transpose axes to final order
             data.shape = data.shape[0:4] # trim unused dimensions (if any)
-            if naxis > 4 or not use_sections:
-                data = data.reshape(shape_out_untrimmed) # Add axes if needed
+            if naxis > 4:
                 data = data[:, :, xmin:xmax, ymin:ymax] # trim to trim_box
-            else:
-                data = data.reshape(shape_out) # Add axes if needed
         else:
             # With pyrap, just read in the whole image and then trim
             data = inputimage.getdata()
             data = data.transpose(*indx_out) # transpose axes to final order
             data.shape = data.shape[0:4] # trim unused dimensions (if any)
-            data = data.reshape(shape_out_untrimmed) # Add axes if needed
             data = data[:, :, xmin:xmax, ymin:ymax] # trim to trim_box
 
         # Adjust WCS keywords for trim_box starting x and y.
         hdr['crpix1'] -= xmin
         hdr['crpix2'] -= ymin
-        img._xy_hdr_shift = (xmin, ymin)
     else:
         if img.use_io == 'fits':
             data = fits[0].data
@@ -1338,7 +1282,6 @@ def read_image_from_file(filename, img, indir, quiet=False):
             data = inputimage.getdata()
         data = data.transpose(*indx_out) # transpose axes to final order
         data.shape = data.shape[0:4] # trim unused dimensions (if any)
-        data = data.reshape(shape_out) # Add axes if needed
 
     mylog.info("Final data shape (npol, nchan, x, y): " + str(data.shape))
 
@@ -1349,56 +1292,28 @@ def read_image_from_file(filename, img, indir, quiet=False):
     return data, hdr
 
 
-def convert_pyrap_header(pyrap_image, tmpdir):
+def convert_pyrap_header(pyrap_image):
     """Converts a pyrap header to a PyFITS header."""
     import tempfile
-    import os
-    import atexit
-    import shutil
     try:
         from astropy.io import fits as pyfits
     except ImportError, err:
         import pyfits
 
-    if not os.path.exists(tmpdir):
-        os.makedirs(tmpdir)
-    tfile = tempfile.NamedTemporaryFile(delete=False, dir=tmpdir)
+    tfile = tempfile.NamedTemporaryFile(delete=False)
     pyrap_image.tofits(tfile.name)
     hdr = pyfits.getheader(tfile.name)
-    if os.path.isfile(tfile.name):
-        os.remove(tfile.name)
-
-    # Register deletion of temp directory at exit to be sure it is deleted
-    atexit.register(shutil.rmtree, tmpdir, ignore_errors=True)
-
     return hdr
 
 
 def write_image_to_file(use, filename, image, img, outdir=None,
-                        pad_image=False, clobber=True, is_mask=False):
-    """ Writes image array to dir/filename"""
+                                           clobber=True):
+    """ Writes image array to dir/filename using pyfits"""
     import numpy as N
     import os
     import mylogger
 
     mylog = mylogger.logging.getLogger("PyBDSM."+img.log+"Writefile")
-
-    wcs_obj = img.wcs_obj
-    if pad_image and img.opts.trim_box is not None:
-        # Pad image to original size
-        xsize, ysize = img._original_shape
-        xmin, ymin = img._xy_hdr_shift
-        image_pad = N.zeros((xsize, ysize), dtype=N.float32)
-        image_pad[xmin:xmin+image.shape[0], ymin:ymin+image.shape[1]] = image
-        image = image_pad
-    else:
-        xmin = 0
-        ymin = 0
-
-    if not hasattr(img, '_telescope'):
-        telescope = None
-    else:
-        telescope = img._telescope
 
     if filename == 'SAMP':
         import tempfile
@@ -1408,67 +1323,25 @@ def write_image_to_file(use, filename, image, img, outdir=None,
             img.samp_key = private_key
 
         # Broadcast image to SAMP Hub
-        temp_im = make_fits_image(N.transpose(image), wcs_obj, img.beam,
-            img.frequency, img.equinox, telescope, xmin=xmin, ymin=ymin,
-            is_mask=is_mask)
+        temp_im = make_fits_image(N.transpose(image), img.wcs_obj, img.beam, img.frequency)
         tfile = tempfile.NamedTemporaryFile(delete=False)
-        temp_im.writeto(tfile.name, clobber=clobber)
+        temp_im.writeto(tfile.name,  clobber=clobber)
         send_fits_image(img.samp_client, img.samp_key, 'PyBDSM image', tfile.name)
     else:
         # Write image to FITS file
-        if outdir is None:
+        if outdir == None:
             outdir = img.indir
         if not os.path.exists(outdir) and outdir != '':
             os.makedirs(outdir)
-        if os.path.isfile(outdir+filename):
+        if os.path.exists(outdir + filename):
             if clobber:
-                os.remove(outdir+filename)
+                os.remove(outdir + filename)
             else:
                 return
-        if os.path.isdir(outdir+filename):
-            if clobber:
-                os.system("rm -rf "+outdir+filename)
-            else:
-                return
-        temp_im = make_fits_image(N.transpose(image), wcs_obj, img.beam,
-            img.frequency, img.equinox, telescope, xmin=xmin, ymin=ymin,
-            is_mask=is_mask, shape=(img.shape[1], img.shape[0], img.shape[2],
-            img.shape[3]))
-        if use == 'rap':
-            outfile = outdir + filename + '.fits'
-        else:
-            outfile = outdir + filename
-        temp_im.writeto(outfile,  clobber=clobber)
-        temp_im.close()
+        temp_im = make_fits_image(N.transpose(image), img.wcs_obj, img.beam, img.frequency)
+        temp_im.writeto(outdir + filename,  clobber=clobber)
 
-        if use == 'rap':
-            # For CASA images, read in FITS image and convert
-            try:
-                import pyrap.images as pim
-                import pyrap.tables as pt
-                import os
-                outimage = pim.image(outfile)
-                outimage.saveas(outdir+filename, overwrite=clobber)
-
-                # For masks, use the coordinates dictionary from the input
-                # image, as this is needed in order for the
-                # image to work as a clean mask in CASA.
-                if is_mask:
-                    if img.coords_dict is None:
-                        mylog.warning('Mask header information may be incomplete.')
-                    else:
-                        outtable = pt.table(outdir+filename, readonly=False, ack=False)
-                        outtable.putkeywords({'coords': img.coords_dict})
-                        outtable.done()
-
-            except ImportError, err:
-                import os
-                os.remove(outfile)
-                raise RuntimeError("Error writing CASA image. Use img_format = 'fits' instead.")
-
-
-def make_fits_image(imagedata, wcsobj, beam, freq, equinox, telescope, xmin=0, ymin=0,
-                    is_mask=False, shape=None):
+def make_fits_image(imagedata, wcsobj, beam, freq):
     """Makes a simple FITS hdulist appropriate for single-channel images"""
     from distutils.version import StrictVersion
     try:
@@ -1484,14 +1357,8 @@ def make_fits_image(imagedata, wcsobj, beam, freq, equinox, telescope, xmin=0, y
             use_header_update = True
         else:
             use_header_update = False
-    import numpy as np
-
-    # If mask, expand to all channels and Stokes for compatibility with casa
-    if is_mask and shape is not None:
-        shape_out = shape
-    else:
-        shape_out = [1, 1, imagedata.shape[0], imagedata.shape[1]]
-    hdu = pyfits.PrimaryHDU(np.resize(imagedata, shape_out))
+    shape_out = [1, 1, imagedata.shape[0], imagedata.shape[1]]
+    hdu = pyfits.PrimaryHDU(imagedata.reshape(shape_out))
     hdulist = pyfits.HDUList([hdu])
     header = hdulist[0].header
 
@@ -1499,81 +1366,107 @@ def make_fits_image(imagedata, wcsobj, beam, freq, equinox, telescope, xmin=0, y
     if use_header_update:
         header.update('CRVAL1', wcsobj.wcs.crval[0])
         header.update('CDELT1', wcsobj.wcs.cdelt[0])
-        header.update('CRPIX1', wcsobj.wcs.crpix[0] + xmin)
-        header.update('CUNIT1', str(wcsobj.wcs.cunit[0]).strip().lower()) # needed due to bug in pywcs/astropy
+        header.update('CRPIX1', wcsobj.wcs.crpix[0])
+        header.update('CUNIT1', wcsobj.wcs.cunit[0])
         header.update('CTYPE1', wcsobj.wcs.ctype[0])
         header.update('CRVAL2', wcsobj.wcs.crval[1])
         header.update('CDELT2', wcsobj.wcs.cdelt[1])
-        header.update('CRPIX2', wcsobj.wcs.crpix[1] + ymin)
-        header.update('CUNIT2', str(wcsobj.wcs.cunit[1]).strip().lower())
+        header.update('CRPIX2', wcsobj.wcs.crpix[1])
+        header.update('CUNIT2', wcsobj.wcs.cunit[1])
         header.update('CTYPE2', wcsobj.wcs.ctype[1])
     else:
         header['CRVAL1'] = wcsobj.wcs.crval[0]
         header['CDELT1'] = wcsobj.wcs.cdelt[0]
-        header['CRPIX1'] = wcsobj.wcs.crpix[0] + xmin
+        header['CRPIX1'] = wcsobj.wcs.crpix[0]
         header['CUNIT1'] = str(wcsobj.wcs.cunit[0]).strip().lower() # needed due to bug in pywcs/astropy
         header['CTYPE1'] = wcsobj.wcs.ctype[0]
         header['CRVAL2'] = wcsobj.wcs.crval[1]
         header['CDELT2'] = wcsobj.wcs.cdelt[1]
-        header['CRPIX2'] = wcsobj.wcs.crpix[1] + ymin
-        header['CUNIT2'] = str(wcsobj.wcs.cunit[1]).strip().lower()
+        header['CRPIX2'] = wcsobj.wcs.crpix[1]
+        header['CUNIT2'] = str(wcsobj.wcs.cunit[1]).strip().lower() # needed due to bug in pywcs/astropy
         header['CTYPE2'] = wcsobj.wcs.ctype[1]
 
     # Add STOKES info
     if use_header_update:
-        header.update('CRVAL3', 1.0)
-        header.update('CDELT3', 1.0)
-        header.update('CRPIX3', 1.0)
-        header.update('CUNIT3', ' ')
+        header.update('CRVAL3', 1)
+        header.update('CDELT3', 1)
+        header.update('CRPIX3', 1)
+        header.update('CUNIT3', '')
         header.update('CTYPE3', 'STOKES')
     else:
-        header['CRVAL3'] = 1.0
-        header['CDELT3'] = 1.0
-        header['CRPIX3'] = 1.0
+        header['CRVAL3'] = 1
+        header['CDELT3'] = 1
+        header['CRPIX3'] = 1
         header['CUNIT3'] = ''
         header['CTYPE3'] = 'STOKES'
 
-    # Add frequency info
+    # Add or alter frequency info if needed
     if use_header_update:
-        header.update('RESTFRQ', freq)
         header.update('CRVAL4', freq)
-        header.update('CDELT4', 3e8)
-        header.update('CRPIX4', 1.0)
-        header.update('CUNIT4', 'HZ')
+        header.update('CDELT4', 0.0)
+        header.update('CRPIX4', 1)
+        header.update('CUNIT4', 'Hz')
         header.update('CTYPE4', 'FREQ')
-        header.update('SPECSYS', 'TOPOCENT')
     else:
-        header['RESTFRQ'] = freq
         header['CRVAL4'] = freq
-        header['CDELT4'] = 3e8
-        header['CRPIX4'] = 1.0
-        header['CUNIT4'] = 'HZ'
+        header['CDELT4'] = 0.0
+        header['CRPIX4'] = 1
+        header['CUNIT4'] = 'Hz'
         header['CTYPE4'] = 'FREQ'
-        header['SPECSYS'] = 'TOPOCENT'
 
     # Add beam info
-    if not is_mask:
-        if use_header_update:
-            header.update('BMAJ', beam[0])
-            header.update('BMIN', beam[1])
-            header.update('BPA', beam[2])
-        else:
-            header['BMAJ'] = beam[0]
-            header['BMIN'] = beam[1]
-            header['BPA'] = beam[2]
-
-    # Add equinox
     if use_header_update:
-        header.update('EQUINOX', equinox)
+        header.update('BMAJ', beam[0])
+        header.update('BMIN', beam[1])
+        header.update('BPA', beam[2])
     else:
-        header['EQUINOX'] = equinox
+        header['BMAJ'] = beam[0]
+        header['BMIN'] = beam[1]
+        header['BPA'] = beam[2]
 
-    # Add telescope
-    if telescope is not None:
+    # Add STOKES info
+    if use_header_update:
+        header.update('CRVAL3', 1)
+        header.update('CDELT3', 1)
+        header.update('CRPIX3', 1)
+        header.update('CUNIT3', '')
+        header.update('CTYPE3', 'STOKES')
+    else:
+        header['CRVAL3'] = 1
+        header['CDELT3'] = 1
+        header['CRPIX3'] = 1
+        header['CUNIT3'] = ''
+        header['CTYPE3'] = 'STOKES'
+
+    # Add or alter frequency info if needed
+    if wcsobj.wcs.spec != -1:
         if use_header_update:
-            header.update('TELESCOP', telescope)
+            header.update('CRVAL' + str(wcsobj.wcs.spec + 1), freq)
         else:
-            header['TELESCOP'] = telescope
+            header['CRVAL' + str(wcsobj.wcs.spec + 1)] =  freq
+    else:
+        if use_header_update:
+            header.update('CRVAL4', freq)
+            header.update('CDELT4', 0.0)
+            header.update('CRPIX4', 1)
+            header.update('CUNIT4', 'Hz')
+            header.update('CTYPE4', 'FREQ')
+        else:
+            header['CRVAL4'] = freq
+            header['CDELT4'] = 0.0
+            header['CRPIX4'] = 1
+            header['CUNIT4'] = 'Hz'
+            header['CTYPE4'] = 'FREQ'
+
+    # Add beam info
+    if use_header_update:
+        header.update('BMAJ', beam[0])
+        header.update('BMIN', beam[1])
+        header.update('BPA', beam[2])
+    else:
+        header['BMAJ'] = beam[0]
+        header['BMIN'] = beam[1]
+        header['BPA'] = beam[2]
 
     hdulist[0].header = header
     return hdulist
@@ -1599,14 +1492,6 @@ def store_map(img, map_name, map_data):
     outfile = file(filename, 'wb')
     N.save(outfile, map_data)
     outfile.close()
-
-def del_map(img, map_name):
-    """Deletes a cached map."""
-    import os
-
-    filename = get_name(img, map_name)
-    if os.path.isfile(filename):
-        os.remove(filename)
 
 def get_name(img, map_name):
     """Returns name of cache file."""
@@ -1734,7 +1619,7 @@ def open_isl(mask, index):
     labels, n_subisl = nd.label(open, connectivity)  # get label/rank image for open. label = 0 for masked pixels
     labels, mask = assign_leftovers(mask, open, n_subisl, labels)  # add the leftover pixels to some island
 
-    if labels is not None:
+    if labels != None:
         isl_pixs = [len(N.where(labels==i)[0]) for i in range(1,n_subisl+1)]
         isl_pixs = N.array(isl_pixs)/float(N.sum(isl_pixs))
     else:
@@ -1877,10 +1762,10 @@ def isl_tosplit(isl, opts):
 
                                 # take open 3 or 5
     open3, open5 = False, False
-    if n_subisl3 > 0 and isl_pixs3 is not None:                                 # open 3 breaks up island
+    if n_subisl3 > 0 and isl_pixs3 != None:                                 # open 3 breaks up island
       max_sub3 = N.max(isl_pixs3)
       if max_sub3 < frac_bigisl3 : open3 = True       # if biggest sub island isnt too big
-    if n_subisl5 > 0 and isl_pixs5 is not None:                                 # open 5 breaks up island
+    if n_subisl5 > 0 and isl_pixs5 != None:                                 # open 5 breaks up island
       max_sub5 = N.max(isl_pixs5)                     # if biggest subisl isnt too big OR smallest extra islands add upto 10 %
       if (max_sub5 < 0.75*max_sub3) or (N.sum(N.sort(isl_pixs5)[:len(isl_pixs5)-n_subisl3]) > size_extra5):
         open5 = True
@@ -1918,7 +1803,7 @@ def ch0_aperture_flux(img, posn_pix, aperture_pix):
     """
     import numpy as N
 
-    if aperture_pix is None:
+    if aperture_pix == None:
         return [0.0, 0.0]
 
     # Make ch0 and rms subimages
@@ -1973,7 +1858,7 @@ def make_src_mask(mask_size, posn_pix, aperture_pix):
     import numpy as N
 
     xsize, ysize = mask_size
-    if aperture_pix is None:
+    if aperture_pix == None:
         return N.zeros((xsize, ysize), dtype=N.int)
 
     # Make subimages
@@ -2160,76 +2045,3 @@ def make_curvature_map(subim):
     sys.stdout = original_stdout  # turn STDOUT back on
 
     return curv_map
-
-
-def bstat(indata, mask, kappa_npixbeam):
-    """Numpy version of the c++ bstat routine
-
-    Uses the PySE method for calculating the clipped mean and rms of an array.
-    This method is superior to the c++ bstat routine (see section 2.7.3 of
-    http://dare.uva.nl/document/174052 for details) and, since the Numpy
-    functions used here are written in c, there should be no big computational
-    penalty in using Python code.
-    """
-    import numpy
-    from scipy.special import erf, erfcinv
-
-    # Flatten array
-    skpix = indata.flatten()
-    if mask is not None:
-        msk_flat = mask.flatten()
-        unmasked = numpy.where(~msk_flat)
-        skpix = skpix[unmasked]
-
-    ct = skpix.size
-    iter = 0
-    c1 = 1.0
-    c2 = 0.0
-    maxiter = 200
-    converge_num = 1e-6
-    m_raw = numpy.mean(skpix)
-    r_raw = numpy.std(skpix, ddof=1)
-
-    while (c1 >= c2) and (iter < maxiter):
-        npix = skpix.size
-        if kappa_npixbeam > 0.0:
-            kappa = kappa_npixbeam
-        else:
-            npixbeam = abs(kappa_npixbeam)
-            kappa = numpy.sqrt(2.0)*erfcinv(1.0 / (2.0*npix/npixbeam))
-            if kappa < 3.0:
-                kappa = 3.0
-        lastct = ct
-        medval = numpy.median(skpix)
-        sig = numpy.std(skpix)
-        wsm = numpy.where(abs(skpix-medval) < kappa*sig)
-        ct = len(wsm[0])
-        if ct > 0:
-            skpix = skpix[wsm]
-
-        c1 = abs(ct - lastct)
-        c2 = converge_num * lastct
-        iter += 1
-
-    mean  = numpy.mean(skpix)
-    median = numpy.median(skpix)
-    sigma = numpy.std(skpix, ddof=1)
-    mode = 2.5*median - 1.5*mean
-
-    if sigma > 0.0:
-        skew_par = abs(mean - median)/sigma
-    else:
-        raise RuntimeError("A region with an unphysical rms value has been found. "
-            "Please check the input image.")
-
-    if skew_par <= 0.3:
-        m = mode
-    else:
-        m = median
-
-    r1 = numpy.sqrt(2.0*numpy.pi)*erf(kappa/numpy.sqrt(2.0))
-    r = numpy.sqrt(sigma**2 * (r1 / (r1 - 2.0*kappa*numpy.exp(-kappa**2/2.0))))
-
-    return m_raw, r_raw, m, r, iter
-
-
