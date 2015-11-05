@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -39,8 +39,8 @@ import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepExplorerPanel
  */
 public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implements IBBSStepOperationPanel{
     
-    private HashMap<String,String> itsOperationParameters = new HashMap<>();
-    private HashMap<String,String> itsInheritedOperationParameters = new HashMap<>();
+    private HashMap<String,String> itsOperationParameters = new HashMap<String,String>();
+    private HashMap<String,String> itsInheritedOperationParameters = new HashMap<String,String>();
     
     
     /** 
@@ -211,7 +211,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
     }
     
     public HashMap<String,String> getBBSStepOperationAttributes(){
-        HashMap<String,String> returnMap = new HashMap<>();
+        HashMap<String,String> returnMap = new HashMap<String,String>();
         
         //Max iterations
         if(this.maxIterationsText.getText().equals("")){
@@ -724,7 +724,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
             selectedIndices = excludedParmsList.getSelectedIndices();
             excludedParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
         }
-        if(theSourceModel.isEmpty()){
+        if(theSourceModel.size()==0){
             this.deleteExcludedParmButton.setEnabled(false);
         }
     }//GEN-LAST:event_deleteExcludedParmButtonActionPerformed
@@ -764,7 +764,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
             selectedIndices = solvableParmsList.getSelectedIndices();
             this.solvableParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
         }
-        if(theSourceModel.isEmpty()){
+        if(theSourceModel.size()==0){
             this.deleteSolvableParmButton.setEnabled(false);
         }
     }//GEN-LAST:event_deleteSolvableParmButtonActionPerformed

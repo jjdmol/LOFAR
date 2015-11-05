@@ -37,7 +37,7 @@
 //# also need different names for _Complex.
 //# Note: include StdInt and BuiltinFP in this order, otherwise the gcc
 //# compiler complains that conj already exists in LOFAR namespace.
-#if defined __INTEL_COMPILER
+#if defined __INTEL_COMPILER || defined HAVE_BGL
 # define LOFAR_BUILTIN_COMPLEXFP  __complex__
 # include <Common/ComplexStdInt.h>
 # include <Common/ComplexBuiltinFP.h>

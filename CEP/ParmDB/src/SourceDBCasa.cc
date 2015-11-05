@@ -44,8 +44,7 @@ namespace BBS {
 
   SourceDBCasa::SourceDBCasa (const ParmDBMeta& pdm, bool forceNew)
     : SourceDBRep   (pdm, forceNew),
-      itsSetsFilled (false),
-      itsRowNr      (1, 0)
+      itsSetsFilled (false)
   {
     string tableName = pdm.getTableName() + "/SOURCES";
     // Create the table if needed or if it does not exist yet.
@@ -84,7 +83,6 @@ namespace BBS {
     td.addColumn (ScalarColumnDesc<String>("SOURCENAME"));
     td.addColumn (ScalarColumnDesc<uint>  ("PATCHID"));
     td.addColumn (ScalarColumnDesc<int>   ("SOURCETYPE"));
-    td.addColumn (ScalarColumnDesc<String>("REFTYPE"));
     td.addColumn (ScalarColumnDesc<uint>  ("SPINX_NTERMS"));
     td.addColumn (ScalarColumnDesc<double>("SPINX_REFFREQ"));
     td.addColumn (ScalarColumnDesc<bool>  ("USE_ROTMEAS"));
@@ -100,7 +98,7 @@ namespace BBS {
     TableDesc tdpat("Local Sky Model patches", TableDesc::Scratch);
     tdpat.comment() = String("Table containing the patches in the Local Sky Model");
     tdpat.addColumn (ScalarColumnDesc<String>("PATCHNAME"));
-    tdpat.addColumn (ScalarColumnDesc<uInt>  ("CATEGORY"));
+    tdpat.addColumn (ScalarColumnDesc<uint>  ("CATEGORY"));
     tdpat.addColumn (ScalarColumnDesc<double>("APPARENT_BRIGHTNESS"));
     tdpat.addColumn (ScalarColumnDesc<double>("RA"));
     tdpat.addColumn (ScalarColumnDesc<double>("DEC"));
@@ -141,14 +139,14 @@ namespace BBS {
   {
     TableLocker lockerp(itsPatchTable, FileLocker::Read);
     Table tabp = itsPatchTable.sort ("PATCHNAME", Sort::Ascending,
-                                     Sort::QuickSort + Sort::NoDuplicates);
+                                     Sort::HeapSort + Sort::NoDuplicates);
     ASSERTSTR (tabp.nrow() == itsPatchTable.nrow(),
                "The PATCHES table has " <<
                itsPatchTable.nrow() - tabp.nrow() <<
                " duplicate patch names");
     TableLocker lockers(itsSourceTable, FileLocker::Read);
     Table tabs = itsSourceTable.sort ("SOURCENAME", Sort::Ascending,
-                                     Sort::QuickSort + Sort::NoDuplicates);
+                                     Sort::HeapSort + Sort::NoDuplicates);
     ASSERTSTR (tabs.nrow() == itsSourceTable.nrow(),
                "The SOURCES table has " <<
                itsSourceTable.nrow() - tabs.nrow() <<
@@ -228,33 +226,20 @@ namespace BBS {
                  "Patch " << patchName << " already exists");
     }
     itsPatchSet.insert (patchName);
-    uint rownr = itsPatchTable.nrow();
-    itsPatchTable.addRow();
+    // Okay, add it to the patch table.
     ScalarColumn<String> nameCol(itsPatchTable, "PATCHNAME");
     ScalarColumn<uint>   catCol (itsPatchTable, "CATEGORY");
-    nameCol.put (rownr, patchName);
-    catCol.put  (rownr, catType);
-    writePatch (apparentBrightness, ra, dec, rownr);
-    return rownr;
-  }
-
-  void SourceDBCasa::updatePatch (uint patchId,
-                                  double apparentBrightness,
-                                  double ra, double dec)
-  {
-    // Note: patchId is the rownr in the PATCHES subtable.
-    writePatch (apparentBrightness, ra, dec, patchId);
-  }
-
-  void SourceDBCasa::writePatch (double apparentBrightness,
-                                 double ra, double dec, uint rownr)
-  {
     ScalarColumn<double> brCol  (itsPatchTable, "APPARENT_BRIGHTNESS");
     ScalarColumn<double> raCol  (itsPatchTable, "RA");
     ScalarColumn<double> decCol (itsPatchTable, "DEC");
+    uint rownr = itsPatchTable.nrow();
+    itsPatchTable.addRow();
+    nameCol.put (rownr, patchName);
+    catCol.put  (rownr, catType);
     brCol.put   (rownr, apparentBrightness);
     raCol.put   (rownr, ra);
     decCol.put  (rownr, dec);
+    return rownr;
   }
 
   void SourceDBCasa::addSource (const SourceInfo& sourceInfo,
@@ -283,17 +268,7 @@ namespace BBS {
     addSrc (sourceInfo, patchId, defaultParameters, ra, dec);
   }
 
-  void SourceDBCasa::addSource (const SourceData& source,
-                                bool check)
-  {
-    ParmMap parms;
-    source.getParms (parms);
-    addSource (source.getInfo(), source.getPatchName(),
-               parms, 0, 0, check);
-  }
-
   void SourceDBCasa::addSource (const SourceInfo& sourceInfo,
-                                const string& patchName,
                                 int catType,
                                 double apparentBrightness,
                                 const ParmMap& defaultParameters,
@@ -305,14 +280,14 @@ namespace BBS {
     TableLocker lockerp(itsPatchTable, FileLocker::Write);
     TableLocker lockers(itsSourceTable, FileLocker::Write);
     if (check) {
-      ASSERTSTR (!patchExists(patchName),
-                 "Patch " << patchName << " already exists");
+      ASSERTSTR (!patchExists(sourceInfo.getName()),
+                 "Patch " << sourceInfo.getName() << " already exists");
       ASSERTSTR (!sourceExists(sourceInfo.getName()),
                  "Source " << sourceInfo.getName() << " already exists");
     }
-    itsPatchSet.insert  (patchName);
+    itsPatchSet.insert  (sourceInfo.getName());
     itsSourceSet.insert (sourceInfo.getName());
-    uint patchId = addPatch (patchName, catType,
+    uint patchId = addPatch (sourceInfo.getName(), catType,
                              apparentBrightness, ra, dec, false);
     addSrc (sourceInfo, patchId, defaultParameters, ra, dec);
   }
@@ -326,7 +301,6 @@ namespace BBS {
     ScalarColumn<String> nameCol (itsSourceTable, "SOURCENAME");
     ScalarColumn<uint>   idCol   (itsSourceTable, "PATCHID");
     ScalarColumn<int>    typeCol (itsSourceTable, "SOURCETYPE");
-    ScalarColumn<String> reftCol (itsSourceTable, "REFTYPE");
     ScalarColumn<uint>   spinxCol(itsSourceTable, "SPINX_NTERMS");
     ScalarColumn<double> sirefCol(itsSourceTable, "SPINX_REFFREQ");
     ScalarColumn<bool>   usermCol(itsSourceTable, "USE_ROTMEAS");
@@ -343,7 +317,6 @@ namespace BBS {
     nameCol.put  (rownr, sourceInfo.getName());
     idCol.put    (rownr, patchId);
     typeCol.put  (rownr, sourceInfo.getType());
-    reftCol.put  (rownr, sourceInfo.getRefType());
     spinxCol.put (rownr, sourceInfo.getSpectralIndexNTerms());
     sirefCol.put (rownr, sourceInfo.getSpectralIndexRefFreq());
     usermCol.put (rownr, sourceInfo.getUseRotationMeasure());
@@ -363,23 +336,12 @@ namespace BBS {
     // Now add the default parameters to the ParmDB DEFAULTVALUES table.
     bool foundRa = false;
     bool foundDec = false;
-    string suffix = ':' + sourceInfo.getName();
     for (ParmMap::const_iterator iter=defaultParameters.begin();
          iter!=defaultParameters.end(); ++iter) {
-      // Add source name suffix if not part of name yet.
-      string name = iter->first;
-      if (name.size() <= suffix.size()  ||
-          name.substr(name.size() - suffix.size()) != suffix) {
-        name = name + suffix;
-      }
-      getParmDB().putDefValue (name, iter->second, false);
-      if (name.substr(0,3) == "Ra:") {
-        foundRa  = true;
-        ra = iter->second.getFirstParmValue().getValues().data()[0];
-      } else if (name.substr(0,4) == "Dec:") {
-        foundDec = true;
-        dec = iter->second.getFirstParmValue().getValues().data()[0];
-      }
+      if (iter->first == "Ra")  foundRa  = true;
+      if (iter->first == "Dec") foundDec = true;
+      getParmDB().putDefValue (iter->first + ':' + sourceInfo.getName(),
+                               iter->second, false);
     }
     // If Ra or Dec given and not in parameters, put it.
     // Use absolute perturbations for them.
@@ -418,11 +380,11 @@ namespace BBS {
                                                    Point( 1e30, 1e30)));
   }
 
-  Table SourceDBCasa::selectPatches (int category,
-                                     const string& pattern,
-                                     double minBrightness,
-                                     double maxBrightness) const
+  vector<string> SourceDBCasa::getPatches (int category, const string& pattern,
+                                           double minBrightness,
+                                           double maxBrightness)
   {
+    TableLocker locker(itsPatchTable, FileLocker::Read);
     Table table = itsPatchTable;
     if (category >= 0) {
       table = table(table.col("CATEGORY") == category);
@@ -437,48 +399,15 @@ namespace BBS {
     if (maxBrightness >= 0) {
       table = table(table.col("APPARENT_BRIGHTNESS") <= maxBrightness);
     }
-    return table;
-  }
-
-  vector<string> SourceDBCasa::getPatches (int category, const string& pattern,
-                                           double minBrightness,
-                                           double maxBrightness)
-  {
-    TableLocker locker(itsPatchTable, FileLocker::Read);
-    Table table (selectPatches(category, pattern,
-                               minBrightness, maxBrightness));
-    Block<String> keys(3);
-    Block<Int> orders(3);
+    Block<String> keys(2);
+    Block<Int> orders(2);
     keys[0] = "CATEGORY";
     keys[1] = "APPARENT_BRIGHTNESS";
-    keys[2] = "PATCHNAME";
     orders[0] = Sort::Ascending;
     orders[1] = Sort::Descending;
-    orders[2] = Sort::Ascending;
     table = table.sort (keys, orders);
     Vector<String> nm(ROScalarColumn<String>(table, "PATCHNAME").getColumn());
     return vector<string>(nm.cbegin(), nm.cend());
-  }
-
-  vector<PatchInfo> SourceDBCasa::getPatchInfo (int category,
-                                                const string& pattern,
-                                                double minBrightness,
-                                                double maxBrightness)
-  {
-    TableLocker locker(itsPatchTable, FileLocker::Read);
-    Table table (selectPatches(category, pattern,
-                               minBrightness, maxBrightness));
-    Vector<String> nm(ROScalarColumn<String>(table, "PATCHNAME").getColumn());
-    Vector<Double> ra(ROScalarColumn<double>(table, "RA").getColumn());
-    Vector<Double> dc(ROScalarColumn<double>(table, "DEC").getColumn());
-    Vector<uInt>   ca(ROScalarColumn<uInt>  (table, "CATEGORY").getColumn());
-    Vector<Double> ab(ROScalarColumn<double>(table, "APPARENT_BRIGHTNESS").getColumn());
-    vector<PatchInfo> vec;
-    vec.reserve (nm.size());
-    for (uint i=0; i<nm.size(); ++i) {
-      vec.push_back (PatchInfo(nm[i], ra[i], dc[i], ca[i], ab[i]));
-    }
-    return vec;
   }
 
   vector<SourceInfo> SourceDBCasa::getPatchSources (const string& patchName)
@@ -495,23 +424,6 @@ namespace BBS {
     uint patchid = table.rowNumbers()[0];
     table = itsSourceTable(itsSourceTable.col("PATCHID") == patchid);
     return readSources(table);
-  }
-
-
-  vector<SourceData> SourceDBCasa::getPatchSourceData (const string& patchName)
-  {
-    vector<SourceInfo> info = getPatchSources(patchName);
-    vector<SourceData> result;
-    result.reserve (info.size());
-    for (vector<SourceInfo>::const_iterator iter=info.begin();
-         iter!=info.end(); ++iter) {
-      ParmMap pmap;
-      getParmDB().getDefValues (pmap, "*:" + iter->getName());
-      SourceData srcData(*iter, patchName, 0, 0);
-      srcData.setParms (pmap);
-      result.push_back (srcData);
-    }
-    return result;
   }
 
   SourceInfo SourceDBCasa::getSource (const string& sourceName)
@@ -539,11 +451,6 @@ namespace BBS {
   {
     Vector<String> nm(ROScalarColumn<String>(table, "SOURCENAME").getColumn());
     Vector<int>    tp(ROScalarColumn<int>   (table, "SOURCETYPE").getColumn());
-    // Default RefType is J2000 (for backward compatibility).
-    Vector<String> rt(tp.size(), "J2000");
-    if (table.tableDesc().isColumn("REFTYPE")) {
-      ROScalarColumn<String>(table, "REFTYPE").getColumn(rt);
-    }
     vector<SourceInfo> res;
     res.reserve (nm.size());
     if (table.tableDesc().isColumn("SPINX_NTERMS")) {
@@ -560,7 +467,7 @@ namespace BBS {
       ROArrayColumn<double>  vcoefCol(table, "SHAPELET_VCOEFF");
       for (uint i=0; i<nm.size(); ++i) {
         SourceInfo::Type type = SourceInfo::Type((tp[i]));
-        res.push_back (SourceInfo(nm[i], type, rt[i], sd[i], sr[i], rm[i]));
+        res.push_back (SourceInfo(nm[i], type, sd[i], sr[i], rm[i]));
         if (type == SourceInfo::SHAPELET) {
           ASSERTSTR (icoefCol.isDefined(i), "No coefficients defined for "
                      " shapelet source " << nm[i]);
@@ -589,85 +496,11 @@ namespace BBS {
                         getValues().data());
           }
         }
-        res.push_back (SourceInfo(nm[i], SourceInfo::Type(tp[i]), rt[i],
+        res.push_back (SourceInfo(nm[i], SourceInfo::Type(tp[i]),
                                   degree+1, refFreq));
       }
     }
     return res;
-  }
-
-  bool SourceDBCasa::atEnd()
-  {
-    return itsRowNr[0] >= itsSourceTable.nrow();
-  }
-
-  void SourceDBCasa::rewind()
-  {
-    itsRowNr[0] = 0;
-  }
-
-  void SourceDBCasa::getNextSource (SourceData& src)
-  {
-    TableLocker slocker(itsSourceTable, FileLocker::Read);
-    TableLocker plocker(itsPatchTable, FileLocker::Read);
-    // Read the main info for the current row.
-    src.setInfo (readSources(itsSourceTable(itsRowNr))[0]);
-    ROScalarColumn<String> patchNameCol(itsPatchTable, "PATCHNAME");
-    ROScalarColumn<uint> patchIdCol(itsSourceTable, "PATCHID");
-    src.setPatchName (patchNameCol(patchIdCol(itsRowNr[0])));
-    // Read the other SourceData info from the default Parm values.
-    const string& srcName = src.getInfo().getName();
-    // Fetch position.
-    src.setRa  (getDefaultParmValue("Ra:" + srcName));
-    src.setDec (getDefaultParmValue("Dec:" + srcName));
-    src.setI   (getDefaultParmValue("I:" + srcName));
-    src.setV   (getDefaultParmValue("V:" + srcName));
-    src.setQ   (getDefaultParmValue("Q:" + srcName));
-    src.setU   (getDefaultParmValue("U:" + srcName));
-    if (src.getInfo().getType() == SourceInfo::GAUSSIAN) {
-      src.setOrientation (getDefaultParmValue ("Orientation:" + srcName));
-      src.setMajorAxis (getDefaultParmValue ("MajorAxis:" + srcName));
-      src.setMinorAxis (getDefaultParmValue ("MinorAxis:" + srcName));
-    } else {
-      src.setOrientation (0);
-      src.setMajorAxis (0);
-      src.setMinorAxis (0);
-    }
-    // Fetch spectral index attributes (if applicable).
-    size_t nTerms = src.getInfo().getSpectralIndexNTerms();
-    vector<double> terms;
-    if (nTerms > 0) {
-      terms.reserve(nTerms);
-      for (size_t i=0; i<nTerms; ++i) {
-        ostringstream oss;
-        oss << "SpectralIndex:" << i << ":" << srcName;
-        terms.push_back (getDefaultParmValue(oss.str()));
-      }
-    }
-    src.setSpectralIndex(terms);
-    // Fetch rotation measure attributes (if applicable).
-    if (src.getInfo().getUseRotationMeasure()) {
-      src.setPolarizedFraction (getDefaultParmValue
-                                ("PolarizedFraction:" + srcName));
-      src.setPolarizationAngle (getDefaultParmValue
-                                ("PolarizationAngle:" + srcName));
-      src.setRotationMeasure (getDefaultParmValue
-                              ("RotationMeasure:" + srcName));
-    } else {
-      src.setPolarizedFraction (0);
-      src.setPolarizationAngle (0);
-      src.setRotationMeasure (0);
-    }
-    itsRowNr[0]++;
-  }
-
-  double SourceDBCasa::getDefaultParmValue(const string& name)
-  {
-    ParmValueSet valueSet = getParmDB().getDefValue(name, ParmValue());
-    ASSERT(valueSet.empty() && valueSet.getType() == ParmValue::Scalar);
-    const casa::Array<double> &values = valueSet.getDefParmValue().getValues();
-    ASSERT(values.size() == 1);
-    return values.data()[0];
   }
 
 } // namespace BBS

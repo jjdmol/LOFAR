@@ -3,8 +3,7 @@
 # List of header files that will be installed.
 set(inst_HEADERS
   DPservice.h
-  RTDB_PropertySet.h
-  GCF_RTDBPort.h)
+  RTDB_PropertySet.h)
 
 # Add definition of include path suffix definition, because the header files
 # reside in a non-standard location. 

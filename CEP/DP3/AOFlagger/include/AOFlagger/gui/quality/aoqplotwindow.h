@@ -59,9 +59,9 @@ class AOQPlotWindow : public Gtk::Window {
 			onStatusChange(newStatus);
 		}
 	private:
-		void onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize, bool correctHistograms);
+		void onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize);
 		void close();
-		void readStatistics(bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize, bool correctHistograms);
+		void readStatistics(bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize);
 		void onHide()
 		{
 			Gtk::Main::quit();

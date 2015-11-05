@@ -28,16 +28,14 @@
 
 # Set srcdir if undefined (if run outside 'make check')
 if test "$srcdir" = ""; then
-  srcdir=../../../../../LOFAR/CEP/ParmDB/test
+  srcdir=../../../test
 fi
-curdir=`pwd`
 srcdir=`cd $srcdir/../src > /dev/null && pwd`
+curdir=`pwd`
 exedir=`cd ../src > /dev/null && pwd`
-mwsdir=`cd $srcdir/../../LMWCommon/src > /dev/null && pwd`
-mwedir=`cd ../../LMWCommon/src > /dev/null && pwd`
 
 # Extend PATH.
-PATH=$curdir:$srcdir:$exedir:$mwsdir:$mwedir:$PATH
+PATH=$curdir:$srcdir:$exedir:$PATH
 export PATH
 
 
@@ -86,8 +84,8 @@ StartTime = 0
 EndTime = 2
 StepTime = 0.5
 NChan = [64,128]
-StartFreqs = [1,4]
-EndFreqs = [7,10]
+StartFreqs = [20,120]
+EndFreqs = [100,300]
 NParts = 2
 
 Part0.Name = /usr/local/xyx0.vds
@@ -97,8 +95,8 @@ Part0.StartTime = 0
 Part0.EndTime = 2
 Part0.StepTime = 0.5
 Part0.NChan = [64,128]
-Part0.StartFreqs = [1,2.5]
-Part0.EndFreqs = [2.5,4]
+Part0.StartFreqs = [20,120]
+Part0.EndFreqs = [100,300]
 Part1.Name = /usr/local/xyx0.vds
 Part1.FileName = $fname2
 Part1.FileSys = node1:/usr
@@ -106,8 +104,8 @@ Part1.StartTime = 0
 Part1.EndTime = 2
 Part1.StepTime = 0.5
 Part1.NChan = [64,128]
-Part1.StartFreqs = [7,8.5]
-Part1.EndFreqs = [8.5,10]
+Part1.StartFreqs = [20,120]
+Part1.EndFreqs = [100,300]
 EOF
 
 if test "$1" = ""; then
@@ -118,6 +116,4 @@ if test "$1" = ""; then
   # The other output is created by startdistproc and is too system specific.
   sed -n -e '/^>start</,/^>end</p' tParmFacadeDistr_tmp.out1
   sed -n -e '/^>start</,/^>end</p' tParmFacadeDistr_tmp.out2
-  # Remove the parmdbremote log files.
-  rm -f parmdbremote.log_*
 fi

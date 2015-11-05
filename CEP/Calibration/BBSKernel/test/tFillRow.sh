@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tFillRow
+./runctest.sh tFillRow > tFillRow.log 2>&1

@@ -91,9 +91,9 @@ size_t MeasurementSet::FrequencyCount()
 	return _maxFrequencyIndex;
 }
 
-size_t MeasurementSet::BandCount(const std::string &location)
+size_t MeasurementSet::BandCount()
 {
-	casa::MeasurementSet ms(location);
+	casa::MeasurementSet ms(_location);
 	casa::Table spwTable = ms.spectralWindow();
 	size_t count = spwTable.nrow();
 	return count;
@@ -157,7 +157,7 @@ size_t MeasurementSet::AntennaCount()
 	return count;
 }
 
-class AntennaInfo MeasurementSet::GetAntennaInfo(unsigned antennaId)
+struct AntennaInfo MeasurementSet::GetAntennaInfo(unsigned antennaId)
 {
 	casa::MeasurementSet ms(_location);
 	casa::Table antennaTable = ms.antenna();
@@ -198,27 +198,24 @@ class AntennaInfo MeasurementSet::GetAntennaInfo(unsigned antennaId)
 	return info;
 }
 
-BandInfo MeasurementSet::GetBandInfo(const std::string &filename, unsigned bandIndex)
+struct BandInfo MeasurementSet::GetBandInfo(unsigned bandIndex)
 {
 	BandInfo band;
-	casa::MeasurementSet ms(filename);
+	casa::MeasurementSet ms(_location);
 	casa::Table spectralWindowTable = ms.spectralWindow();
 	casa::ROScalarColumn<int> numChanCol(spectralWindowTable, "NUM_CHAN");
 	casa::ROArrayColumn<double> frequencyCol(spectralWindowTable, "CHAN_FREQ");
 
 	band.windowIndex = bandIndex;
-	size_t channelCount = numChanCol(bandIndex);
+	band.channelCount = numChanCol(bandIndex);
 
 	const casa::Array<double> &frequencies = frequencyCol(bandIndex);
 	casa::Array<double>::const_iterator frequencyIterator = frequencies.begin();
 
-	for(unsigned channel=0;channel<channelCount;++channel) {
+	for(unsigned channel=0;channel<band.channelCount;++channel) {
 		ChannelInfo channelInfo;
 		channelInfo.frequencyIndex = channel;
 		channelInfo.frequencyHz = frequencies(casa::IPosition(1, channel));
-		channelInfo.channelWidthHz = 0.0;
-		channelInfo.effectiveBandWidthHz = 0.0;
-		channelInfo.resolutionHz = 0.0;
 		band.channels.push_back(channelInfo);
 
 		++frequencyIterator;
@@ -235,7 +232,7 @@ size_t MeasurementSet::FieldCount()
 	return fieldCount;
 }
 
-class FieldInfo MeasurementSet::GetFieldInfo(unsigned fieldIndex)
+struct FieldInfo MeasurementSet::GetFieldInfo(unsigned fieldIndex)
 {
 	casa::MeasurementSet ms(_location);
 	casa::Table fieldTable = ms.field();
@@ -289,36 +286,38 @@ MSIterator::~MSIterator()
 
 void MeasurementSet::InitCacheData()
 {
-	if(!_cacheInitialized)
+	AOLogger::Debug << "Initializing ms cache data...\n"; 
+	MSIterator iterator(*this, false);
+	size_t antenna1=0xFFFFFFFF, antenna2 = 0xFFFFFFFF;
+	double time = nan("");
+	for(size_t row=0;row<iterator.TotalRows();++row)
 	{
-		AOLogger::Debug << "Initializing ms cache data...\n"; 
-		std::set<double>::iterator obsTimePos = _observationTimes.end();
-		MSIterator iterator(*this, false);
-		size_t antenna1=0xFFFFFFFF, antenna2 = 0xFFFFFFFF;
-		double time = nan("");
-		std::set<std::pair<size_t, size_t> > baselineSet;
-		for(size_t row=0;row<iterator.TotalRows();++row)
+		size_t cur_a1 = iterator.Antenna1();
+		size_t cur_a2 = iterator.Antenna2();
+		double cur_time = iterator.Time();
+		if(cur_a1 != antenna1 || cur_a2 != antenna2)
 		{
-			size_t cur_a1 = iterator.Antenna1();
-			size_t cur_a2 = iterator.Antenna2();
-			double cur_time = iterator.Time();
-			if(cur_a1 != antenna1 || cur_a2 != antenna2)
+			bool exists = false;
+			for(vector<pair<size_t,size_t> >::const_iterator i=_baselines.begin();i!=_baselines.end();++i)
 			{
-				baselineSet.insert(std::pair<size_t,size_t>(cur_a1, cur_a2));
-				antenna1 = cur_a1;
-				antenna2 = cur_a2;
+				if(i->first == cur_a1 && i->second == cur_a2)
+				{
+					exists = true;
+					break;
+				}
 			}
-			if(cur_time != time)
-			{
-				obsTimePos = _observationTimes.insert(obsTimePos, cur_time);
-				time = cur_time;
-			}
-			++iterator;
+			if(!exists)
+				_baselines.push_back(std::pair<size_t,size_t>(cur_a1, cur_a2));
+			antenna1 = cur_a1;
+			antenna2 = cur_a2;
 		}
-		for(std::set<std::pair<size_t, size_t> >::const_iterator i=baselineSet.begin(); i!=baselineSet.end(); ++i)
-			_baselines.push_back(*i);
+		if(cur_time != time)
+		{
+			_observationTimes.insert(cur_time);
+			time = cur_time;
+		}
+		++iterator;
 	}
-	
 	_cacheInitialized = true;
 }
 
@@ -462,7 +461,7 @@ bool MeasurementSet::ChannelZeroIsRubish()
 		if(station != "LOFAR") return false;
 		// This is of course a hack, but its the best estimate we can make :-/ (easily)
 		const BandInfo bandInfo = GetBandInfo(0);
-		return (bandInfo.channels.size() == 256 || bandInfo.channels.size()==64);
+		return (bandInfo.channelCount == 256 || bandInfo.channelCount==64);
 	} catch(std::exception &e)
 	{
 		return false;

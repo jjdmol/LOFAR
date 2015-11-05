@@ -22,19 +22,10 @@
 #include <lofar_config.h>
 #include <ParmDB/ParmFacade.h>
 
-#include <casa/aips.h>
-#if defined(casacore)
-#include <python/Converters/PycExcp.h>
-#include <python/Converters/PycBasicData.h>
-#include <python/Converters/PycRecord.h>
-#include <python/Converters/PycBasicData.h>
-#define pyrap python
-#else
 #include <pyrap/Converters/PycExcp.h>
 #include <pyrap/Converters/PycBasicData.h>
 #include <pyrap/Converters/PycRecord.h>
 #include <pyrap/Converters/PycBasicData.h>
-#endif
 #include <boost/python.hpp>
 #include <boost/python/args.hpp>
 
@@ -42,14 +33,15 @@
 
 using namespace boost::python;
 using namespace casa;
+using namespace casa::pyrap;
 
 namespace LOFAR { namespace BBS  {
 
   class PyParmDB : public ParmFacade
   {
   public:
-    PyParmDB (const string& tableName, bool create)
-      : ParmFacade (tableName, create)
+    PyParmDB (const string& tableName)
+      : ParmFacade (tableName)
     {}
     string version (const string& type) const
     { return Version::getInfo<pyparmdbVersion> ("parmdb", type); }
@@ -58,30 +50,29 @@ namespace LOFAR { namespace BBS  {
   Record (ParmFacade::*fgetvalues0)(const string&,
                                     double, double,
                                     double, double,
-                                    bool, bool) = &ParmFacade::getValues;
+                                    bool) = &ParmFacade::getValues;
   Record (ParmFacade::*fgetvalues1)(const string&,
                                     double, double, double,
                                     double, double, double,
-                                    bool, bool) = &ParmFacade::getValues;
+                                    bool) = &ParmFacade::getValues;
   Record (ParmFacade::*fgetvalues2)(const string&,
                                     const vector<double>&,
                                     const vector<double>&,
                                     const vector<double>&,
                                     const vector<double>&,
-                                    bool, bool) = &ParmFacade::getValues;
+                                    bool) = &ParmFacade::getValues;
 
   void pyparmdb()
   {
     class_<PyParmDB> ("ParmDB",
-                      init<std::string, bool>())
+                      init<std::string>())
 
       .def ("_version", &PyParmDB::version,
             (boost::python::arg("type")="other"))
       .def ("_getRange", &ParmFacade::getRange,
  	    (boost::python::arg("parmnamepattern")=""))
       .def ("_getNames", &ParmFacade::getNames,
- 	    (boost::python::arg("parmnamepattern")="",
-	     boost::python::arg("includeDefaults")=false))
+ 	    (boost::python::arg("parmnamepattern")=""))
       .def ("_getDefNames", &ParmFacade::getDefNames,
  	    (boost::python::arg("parmnamepattern")=""))
       .def ("_getDefValues", &ParmFacade::getDefValues,
@@ -92,8 +83,7 @@ namespace LOFAR { namespace BBS  {
 	     boost::python::arg("efreq")= 1e30,
 	     boost::python::arg("stime")=-1e30,
 	     boost::python::arg("etime")= 1e30,
-	     boost::python::arg("asStartEnd")=true,
-	     boost::python::arg("includeDefaults")=false))
+	     boost::python::arg("asStartEnd")=true))
       .def ("_getValues", fgetvalues1,
  	    (boost::python::arg("parmnamepattern"),
 	     boost::python::arg("sfreq"),
@@ -102,16 +92,14 @@ namespace LOFAR { namespace BBS  {
 	     boost::python::arg("stime"),
 	     boost::python::arg("etime"),
 	     boost::python::arg("timestep"),
-	     boost::python::arg("asStartEnd")=true,
-	     boost::python::arg("includeDefaults")=false))
+	     boost::python::arg("asStartEnd")=true))
       .def ("_getValuesVec", fgetvalues2,
  	    (boost::python::arg("parmnamepattern"),
 	     boost::python::arg("sfreq"),
 	     boost::python::arg("efreq"),
 	     boost::python::arg("stime"),
 	     boost::python::arg("etime"),
-	     boost::python::arg("asStartEnd")=true,
-	     boost::python::arg("includeDefaults")=false))
+	     boost::python::arg("asStartEnd")=true))
       .def ("_getValuesGrid", &ParmFacade::getValuesGrid,
  	    (boost::python::arg("parmnamepattern"),
 	     boost::python::arg("sfreq")=-1e30,
@@ -126,30 +114,6 @@ namespace LOFAR { namespace BBS  {
 	     boost::python::arg("stime")=-1e30,
 	     boost::python::arg("etime")= 1e30,
 	     boost::python::arg("asStartEnd")=true))
-      .def ("_clearTables", &ParmFacade::clearTables)
-      .def ("_flush", &ParmFacade::flush,
- 	    (boost::python::arg("fsync")))
-      .def ("_lock", &ParmFacade::lock)
-      .def ("_unlock", &ParmFacade::unlock,
- 	    (boost::python::arg("lockForWrite")))
-      .def ("_getDefaultSteps", &ParmFacade::getDefaultSteps)
-      .def ("_setDefaultSteps", &ParmFacade::setDefaultSteps,
-            (boost::python::arg("steps")))
-      .def ("_addDefValues", &ParmFacade::addDefValues,
-            (boost::python::arg("nameValue"),
-             boost::python::arg("check")))
-      .def ("_deleteDefValues", &ParmFacade::deleteDefValues,
-            (boost::python::arg("parmNamePattern")))
-      .def ("_deleteValues", &ParmFacade::deleteValues,
-            (boost::python::arg("parmNamePattern"),
-	     boost::python::arg("sfreq"),
-	     boost::python::arg("efreq"),
-	     boost::python::arg("stime"),
-	     boost::python::arg("etime"),
-	     boost::python::arg("asStartEnd")))
-      .def  ("_addValues", &ParmFacade::addValues,
-             (boost::python::arg("nameValue")))
-
       ;
   }
     

@@ -70,12 +70,12 @@ namespace LOFAR {
         } else if (itsValue[i] == ')') {
           nrpar--;
         } else if (itsValue[i] == '[') {
-          ASSERTSTR (nrpar == 0, "Unbalanced () around '" << itsValue << '\'');
+          ASSERT (nrpar == 0);
           nrbracket++;
         } else if (itsValue[i] == ']') {
           nrbracket--;
         } else if (itsValue[i] == '{') {
-          ASSERTSTR (nrpar == 0, "Unbalanced () around '" << itsValue << '\'');
+          ASSERT (nrpar == 0);
           nrbrace++;
         } else if (itsValue[i] == '}') {
           nrbrace--;
@@ -85,14 +85,12 @@ namespace LOFAR {
             st = i+1;
           }
         }
-        ASSERTSTR (nrpar >= 0  &&  nrbracket >= 0  &&  nrbrace >= 0,
-                   "Unbalanced () [] or {} in '" << itsValue << '\'');
+        ASSERT (nrpar >= 0  &&  nrbracket >= 0);
         i++;
       }
     }
     result.push_back (ParameterValue(substr(st, last)));
-    ASSERTSTR (nrpar == 0  &&  nrbracket == 0  &&  nrbrace == 0,
-               "Unbalanced () [] or {} in '" << itsValue << '\'');
+    ASSERT (nrpar == 0  &&  nrbracket == 0  &&  nrbrace == 0);
     return result;
   }
 
@@ -100,18 +98,12 @@ namespace LOFAR {
   {
     uint st   = 1;
     uint last = itsValue.size() - 1;
-    // An empty string is an empty vector.
-    if (itsValue.empty()) {
-      return vector<ParameterValue>();
-    }
     // A single value if there is no opening and closing bracket.
-    if (!(itsValue[0] == '['  &&  itsValue[last] == ']')) {
+    if (itsValue.empty() || !(itsValue[0] == '['  &&  itsValue[last] == ']')) {
       return vector<ParameterValue> (1, *this);
     }
-    ASSERTSTR (itsValue.size() >= 2  &&  itsValue[0] == '['  &&
-               itsValue[last] == ']',
-               "Invalid vector specification in value '"
-               << itsValue << '\'');
+    ASSERT (itsValue.size() >= 2  &&  itsValue[0] == '['  &&
+            itsValue[last] == ']');
     return splitValue (st, last);
   }
 
@@ -119,10 +111,8 @@ namespace LOFAR {
   {
     uint st   = 1;
     uint last = itsValue.size() - 1;
-    ASSERTSTR (itsValue.size() >= 2  &&  itsValue[0] == '{'  &&
-               itsValue[last] == '}',
-               "Invalid record specification in value '"
-               << itsValue << '\'');
+    ASSERT (itsValue.size() >= 2  &&  itsValue[0] == '{'  &&
+            itsValue[last] == '}');
     vector<ParameterValue> values (splitValue (st, last));
     // Loop over all values and split in names and values.
     ParameterRecord result;
@@ -134,8 +124,7 @@ namespace LOFAR {
         st = skipQuoted (str, 0);
       }
       string::size_type pos = str.find(':', st);
-      ASSERTSTR (pos != string::npos, "Invalid record specification in value '"
-                 << str << '\'');
+      ASSERT (pos != string::npos);
       // Get name and value.
       // ParameterValue is used to remove possible whitespace.
       // getString also removes quotes in case the name was quoted.
@@ -148,31 +137,13 @@ namespace LOFAR {
 
   string ParameterValue::getString() const
   {
-    // Remove possible quotes used to escape special chars in the value.
-    string result;
-    uint end = itsValue.size();
-    uint pos = 0;
-    uint stv = 0;
-    while (pos < end) {
-      if (itsValue[pos] == '"'  ||  itsValue[pos] == '\'') {
-        if (stv < pos) {
-          // Add unquoted part.
-          result += itsValue.substr(stv, pos-stv);
-        }
-        // Add quoted part without the quotes.
-        stv = pos+1;
-        pos = skipQuoted (itsValue, pos);
-        result += itsValue.substr(stv, pos-stv-1);
-        stv = pos;
-      } else {
-        pos++;
-      }
+    // Remove possible quotes around the value.
+    uint sz = itsValue.size();
+    if (sz < 2  ||  (itsValue[0] != '"'  &&  itsValue[0] != '\'')) {
+      return itsValue;
     }
-    if (stv < end) {
-      // Add remaining part.
-      result += itsValue.substr (stv, end-stv);
-    }
-    return result;
+    ASSERT (itsValue[0] == itsValue[sz-1]);
+    return itsValue.substr(1, sz-2);
   }
 
   vector<bool> ParameterValue::getBoolVector() const
@@ -339,7 +310,7 @@ time_t ParameterValue::StringToTime_t (const string& aString)
   char   unit[1024];
   unit[0] = '\0';
   if (sscanf (aString.c_str(), "%ld%s", &theTime, unit) < 1) {
-    THROW (APSException, aString + " is not a time value");
+    THROW (APSException, aString + " is not an time value");
   }
   switch (unit[0]) {
   case 's':

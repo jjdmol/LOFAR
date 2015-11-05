@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -21,14 +21,15 @@
 //#  $Id$
 
 #include <lofar_config.h>
+
+#include <GCF/PVSS/PVSSinfo.h>
+#include <GCF/PVSS/PVSSservice.h>
+#include <GCF/PVSS/PVSSresult.h>
 #include <Manager.hxx>
 #include <Datapoint.hxx>
 #include <DpContainer.hxx>
 #include <DpIdentification.hxx>
 #include <Common/StringUtil.h>
-#include <GCF/PVSS/PVSSinfo.h>
-#include <GCF/PVSS/PVSSservice.h>
-#include <GCF/PVSS/PVSSresult.h>
 
 namespace LOFAR {
  namespace GCF {
@@ -42,57 +43,57 @@ uint 	PVSSinfo::_lastManNum 	= 0;
 uint 	PVSSinfo::_lastManType 	= 0;
 
 TMACValueType macValueTypes[] = 
-{// PVSS/GCF_Defines.h		// api/include/Basics/DpBasics/DpElementType.hxx
-  NO_LPT,           		// DPELEMENT_NOELEMENT,
-  NO_LPT,           		// DPELEMENT_RECORD,
-  NO_LPT,           		// DPELEMENT_ARRAY,
-  LPT_DYNCHAR,      		// DPELEMENT_DYNCHAR,
-  LPT_DYNUNSIGNED,  		// DPELEMENT_DYNUINT,
-  LPT_DYNINTEGER,   		// DPELEMENT_DYNINT,
-  LPT_DYNDOUBLE,    		// DPELEMENT_DYNFLOAT,
-  LPT_DYNBOOL,      		// DPELEMENT_DYNBIT,
-  NO_LPT,           		// DPELEMENT_DYN32BIT, not yet
-  LPT_DYNSTRING,    		// DPELEMENT_DYNTEXT,
-  NO_LPT,           		// DPELEMENT_DYNTIME, not yet
-  NO_LPT,           		// DPELEMENT_CHARARRAY,
-  NO_LPT,           		// DPELEMENT_UINTARRAY,
-  NO_LPT,           		// DPELEMENT_INTARRAY,
-  NO_LPT,           		// DPELEMENT_FLOATARRAY,
-  NO_LPT,           		// DPELEMENT_BITARRAY,
-  NO_LPT,           		// DPELEMENT_32BITARRAY,
-  NO_LPT,           		// DPELEMENT_TEXTARRAY,
-  NO_LPT,           		// DPELEMENT_TIMEARRAY,
-  LPT_CHAR,         		// DPELEMENT_CHAR,
-  LPT_UNSIGNED,     		// DPELEMENT_UINT,
-  LPT_INTEGER,      		// DPELEMENT_INT,
-  LPT_DOUBLE,       		// DPELEMENT_FLOAT,
-  LPT_BOOL,         		// DPELEMENT_BIT,
-  NO_LPT,           		// DPELEMENT_32BIT, not yet
-  LPT_STRING,       		// DPELEMENT_TEXT,
-  NO_LPT,           		// DPELEMENT_TIME, not yet
-  NO_LPT,           		// DPELEMENT_DPID,
-  NO_LPT,           		// DPELEMENT_NOVALUE,
-  NO_LPT,           		// DPELEMENT_DYNDPID,
-  NO_LPT,           		// DPELEMENT_DYNCHARARRAY,
-  NO_LPT,           		// DPELEMENT_DYNUINTARRAY,
-  NO_LPT,           		// DPELEMENT_DYNINTARRAY,
-  NO_LPT,           		// DPELEMENT_DYNFLOATARRAY,
-  NO_LPT,           		// DPELEMENT_DYNBITARRAY,
-  NO_LPT,           		// DPELEMENT_DYN32BITARRAY,
-  NO_LPT,           		// DPELEMENT_DYNTEXTARRAY,
-  NO_LPT,           		// DPELEMENT_DYNTIMEARRAY,
-  NO_LPT,           		// DPELEMENT_DYNDPIDARRAY,
-  NO_LPT,           		// DPELEMENT_DPIDARRAY,
-  NO_LPT,           		// DPELEMENT_NOVALUEARRAY,
-  NO_LPT,           		// DPELEMENT_TYPEREFERENCE,
-  NO_LPT,           		// DPELEMENT_LANGTEXT,
-  NO_LPT,           		// DPELEMENT_LANGTEXTARRAY,
-  NO_LPT,           		// DPELEMENT_DYNLANGTEXT,
-  NO_LPT,           		// DPELEMENT_DYNLANGTEXTARRAY,
-  LPT_BLOB,         		// DPELEMENT_BLOB,
-  NO_LPT,           		// DPELEMENT_BLOBARRAY,
-  LPT_DYNBLOB,      		// DPELEMENT_DYNBLOB,
-  NO_LPT,           		// DPELEMENT_DYNBLOBARRAY,
+{
+  NO_LPT,           // DPELEMENT_NOELEMENT,
+  NO_LPT,           // DPELEMENT_RECORD,
+  NO_LPT,           // DPELEMENT_ARRAY,
+  LPT_DYNCHAR,      // DPELEMENT_DYNCHAR,
+  LPT_DYNUNSIGNED,  // DPELEMENT_DYNUINT,
+  LPT_DYNINTEGER,   // DPELEMENT_DYNINT,
+  LPT_DYNDOUBLE,    // DPELEMENT_DYNFLOAT,
+  LPT_DYNBOOL,      // DPELEMENT_DYNBIT,
+  NO_LPT,           // DPELEMENT_DYN32BIT, not yet
+  LPT_DYNSTRING,    // DPELEMENT_DYNTEXT,
+  NO_LPT,           // DPELEMENT_DYNTIME, not yet
+  NO_LPT,           // DPELEMENT_CHARARRAY,
+  NO_LPT,           // DPELEMENT_UINTARRAY,
+  NO_LPT,           // DPELEMENT_INTARRAY,
+  NO_LPT,           // DPELEMENT_FLOATARRAY,
+  NO_LPT,           // DPELEMENT_BITARRAY,
+  NO_LPT,           // DPELEMENT_32BITARRAY,
+  NO_LPT,           // DPELEMENT_TEXTARRAY,
+  NO_LPT,           // DPELEMENT_TIMEARRAY,
+  LPT_CHAR,         // DPELEMENT_CHAR,
+  LPT_UNSIGNED,     // DPELEMENT_UINT,
+  LPT_INTEGER,      // DPELEMENT_INT,
+  LPT_DOUBLE,       // DPELEMENT_FLOAT,
+  LPT_BOOL,         // DPELEMENT_BIT,
+  NO_LPT,           // DPELEMENT_32BIT, not yet
+  LPT_STRING,       // DPELEMENT_TEXT,
+  NO_LPT,           // DPELEMENT_TIME, not yet
+  NO_LPT,           // DPELEMENT_DPID,
+  NO_LPT,           // DPELEMENT_NOVALUE,
+  NO_LPT,           // DPELEMENT_DYNDPID,
+  NO_LPT,           // DPELEMENT_DYNCHARARRAY,
+  NO_LPT,           // DPELEMENT_DYNUINTARRAY,
+  NO_LPT,           // DPELEMENT_DYNINTARRAY,
+  NO_LPT,           // DPELEMENT_DYNFLOATARRAY,
+  NO_LPT,           // DPELEMENT_DYNBITARRAY,
+  NO_LPT,           // DPELEMENT_DYN32BITARRAY,
+  NO_LPT,           // DPELEMENT_DYNTEXTARRAY,
+  NO_LPT,           // DPELEMENT_DYNTIMEARRAY,
+  NO_LPT,           // DPELEMENT_DYNDPIDARRAY,
+  NO_LPT,           // DPELEMENT_DPIDARRAY,
+  NO_LPT,           // DPELEMENT_NOVALUEARRAY,
+  NO_LPT,           // DPELEMENT_TYPEREFERENCE,
+  NO_LPT,           // DPELEMENT_LANGTEXT,
+  NO_LPT,           // DPELEMENT_LANGTEXTARRAY,
+  NO_LPT,           // DPELEMENT_DYNLANGTEXT,
+  NO_LPT,           // DPELEMENT_DYNLANGTEXTARRAY,
+  LPT_BLOB,         // DPELEMENT_BLOB,
+  NO_LPT,           // DPELEMENT_BLOBARRAY,
+  LPT_DYNBLOB,      // DPELEMENT_DYNBLOB,
+  NO_LPT,           // DPELEMENT_DYNBLOBARRAY,
 };
 
 //
@@ -105,11 +106,11 @@ bool PVSSinfo::propExists(const string& dpeName)
 
 	if (Manager::getId(dpePvssName, dpId) == PVSS_FALSE) {
 		LOG_TRACE_VAR_STR("propExists(" << dpeName << "): FALSE");
-		return (false);
+		return false;
 	}
 
 	LOG_TRACE_VAR_STR("propExists(" << dpeName << "): OK");
-	return (true);
+	return true;
 }
 
 //
@@ -119,7 +120,7 @@ bool PVSSinfo::typeExists (const string& dpTypeName)
 {
 	CharString 	pvssTypeName(dpTypeName.c_str());
 	DpTypeId 	dpTypeId; 
-	if (Manager::getTypeId(pvssTypeName, dpTypeId) != PVSS_TRUE) {
+	if (Manager::getTypeId(pvssTypeName, dpTypeId) == PVSS_TRUE) {
 		LOG_TRACE_VAR_STR("typeExists(" << dpTypeName << "): FALSE");
 		return (false);
 	}
@@ -180,23 +181,6 @@ const string PVSSinfo::getSystemName(uint sysnr)
 	CharString sysName;
 	if (Manager::getSystemName(sysnr, sysName) == PVSS_TRUE) {      
 		return ((const char*) sysName);
-	}
-	return ("");
-}
-
-//
-// getMainDBName()
-//
-string PVSSinfo::getMainDBName()
-{
-	SystemNumType		sysNr;
-	CharString	sysName("MCU001");
-	if (Manager::getSystemId(sysName, sysNr) == PVSS_TRUE) {      
-		return ("MCU001");
-	}
-	sysName = "MCU099";
-	if (Manager::getSystemId(sysName, sysNr) == PVSS_TRUE) {      
-		return ("MCU099");
 	}
 	return ("");
 }
@@ -403,11 +387,11 @@ void buildTypeStructTree(const string 			path,
 		}
 		delete [] elName; 
 	}
-//	LOG_INFO_STR("propName=" << propName);
+//	LOG_TRACE_COND_STR("propName=" << propName);
 
 	if (elType != DPELEMENT_RECORD && elType != DPELEMENT_TYPEREFERENCE) {
 		if (macValueTypes[elType] != NO_LPT) {      
-			if (propName.empty() || PVSSinfo::isValidPropName(propName.c_str())) {
+			if (PVSSinfo::isValidPropName(propName.c_str())) {
 				TPropertyInfo propInfo;
 				propInfo.propName = propName;
 				propInfo.type 	  = macValueTypes[elType];
@@ -415,14 +399,14 @@ void buildTypeStructTree(const string 			path,
 			}
 			else {
 				LOG_WARN(formatString ( 
-					"Property name %s does not meet the name convention! Not added!!!",
+					"Property name %s does not meet the name convention! Not add!!!",
 					propName.c_str()));
 			}
 		}
 		else {
 			// TODO: IMPLEMENT THESE TYPES LATER.
 			LOG_DEBUG(formatString(
-				"TypeElement type %d (see DpElementType.hxx) is unknown to GCF (%s). Not added!!!",
+				"TypeElement type %d (see DpElementType.hxx) is unknown to GCF (%s). Not add!!!",
 				elType, propName.c_str()));      
 		}
 	} 
@@ -443,50 +427,45 @@ bool PVSSinfo::isValidPropName(const char* propName)
 {
 	ASSERT(propName);
 
-	if (!*propName) {
-		LOG_WARN("isValidPropName: property name is empty");
-		return (false);
-	}
-
 	char			doubleSep[] = {GCF_PROP_NAME_SEP, GCF_PROP_NAME_SEP, 0};
 	unsigned int	length = strlen(propName);
 
 	// Invalid: .***   ***.  and  ***..***
 	if (propName[0] == GCF_PROP_NAME_SEP || propName[length - 1] == GCF_PROP_NAME_SEP ) {
-		LOG_WARN_STR("isValidPropName(" << propName << "): dot at edge of name");
+		LOG_TRACE_COND_STR("isValidPropName(" << propName << "): dot at edge of name");
 		return (false);
 	}
 	if (strstr(propName, doubleSep) != 0) {
-		LOG_WARN_STR("isValidPropName(" << propName << "): double dot");
+		LOG_TRACE_COND_STR("isValidPropName(" << propName << "): double dot");
 		return (false);
 	}
 
 	// ref indication may only found at begin or after a GCF_PROP_NAME_SEP
 	char	refInd[] = "__";
-	const char*	refIndPos = strstr(propName, refInd);
+	char*	refIndPos = strstr(propName, refInd);
 	if (refIndPos != 0) {									// we found it
 		if (refIndPos > propName) {							// not at begin
 			if (*(refIndPos - 1) != GCF_PROP_NAME_SEP) {	// not at a dot
-				LOG_WARN_STR("isValidPropName(" << propName << "): double underscore not after dot");
+				LOG_TRACE_COND_STR("isValidPropName(" << propName << "): double underscore not after dot");
 				return (false);
 			}
 		}
 		// ref indication may not used in struct name: ***__***.*** is not valid
-		if (strchr(refIndPos, GCF_PROP_NAME_SEP) != 0) {
-			LOG_WARN_STR("isValidPropName(" << propName << "): double underscore in DP-part");
+		if (strchr(refIndPos, GCF_PROP_NAME_SEP) > 0) {
+			LOG_TRACE_COND_STR("isValidPropName(" << propName << "): double underscore in DP-part");
 			return (false);
 		}
 	}
 
 	// only allow dots, :  and __ in the name.
 	for (unsigned short i = 0; i < length; i++) {
-		if (refIndPos != 0 && ((propName + i) == refIndPos)) {
+		if (refIndPos > 0 && ((propName + i) == refIndPos)) {
 			i += 2; // skip the ref indicator
 		}
 		if (!isalnum(propName[i]) && (propName[i] != GCF_PROP_NAME_SEP) && 
 									 (propName[i] != GCF_SYS_NAME_SEP) &&
 									 (propName[i] != GCF_SCOPE_NAME_SEP)) {
-			LOG_WARN_STR("isValidPropName(" << propName << "): illegal character at pos " << i << ":" << propName[i]);
+			LOG_TRACE_COND_STR("isValidPropName(" << propName << "): illegal character at pos " << i << ":" << propName[i]);
 			return (false);
 		}
 	}

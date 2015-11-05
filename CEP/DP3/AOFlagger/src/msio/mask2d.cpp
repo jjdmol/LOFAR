@@ -25,14 +25,12 @@
 Mask2D::Mask2D(size_t width, size_t height) :
 	_width(width),
 	_height(height),
-	_stride((((width-1)/4)+1)*4)
+	_stride((((width-1)/4)+1)*4),
+	_values(new bool*[height])
 {
 	if(_width == 0) _stride=0;
-	unsigned allocHeight = ((((height-1)/4)+1)*4);
-	if(height == 0) allocHeight = 0;
-	_valuesConsecutive = new bool[_stride * allocHeight * sizeof(bool)];
-	
-	_values = new bool*[allocHeight];
+	_valuesConsecutive = new bool[_stride * height * sizeof(bool)];
+
 	for(size_t y=0;y<height;++y)
 	{
 		_values[y] = &_valuesConsecutive[_stride * y];
@@ -40,15 +38,6 @@ Mask2D::Mask2D(size_t width, size_t height) :
 		// initialize them to true to prevent valgrind to report unset values when they
 		// are used in SSE instructions.
 		for(size_t x=_width;x<_stride;++x)
-		{
-			_values[y][x] = true;
-		}
-	}
-	for(size_t y=height;y<allocHeight;++y)
-	{
-		_values[y] = &_valuesConsecutive[_stride * y];
-		// (see remark above about initializing to true)
-		for(size_t x=0;x<_stride;++x)
 		{
 			_values[y][x] = true;
 		}

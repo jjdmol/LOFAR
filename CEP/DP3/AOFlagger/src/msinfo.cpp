@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 			cout.width(16);
 			cout.precision(16);
 			const AntennaInfo antenna = set.GetAntennaInfo(i);
-			cout << antenna.id << '\t' << antenna.position.Latitude()*180.0/M_PI << '\t' << antenna.position.Longitude()*180.0/M_PI << '\t' << antenna.position.Altitude() << '\n';
+			cout << antenna.id << '\t' << antenna.position.Lattitude()*180.0/M_PI << '\t' << antenna.position.Longitude()*180.0/M_PI << '\t' << antenna.position.Altitude() << '\n';
 		}
 	}
 	else {
@@ -145,9 +145,9 @@ int main(int argc, char *argv[])
 		for(unsigned i=0;i<=set.MaxSpectralBandIndex();++i) {
 			cout << "== Spectral band index " << i << " ==" << endl;
 			BandInfo bandInfo = set.GetBandInfo(i);
-			cout << "Channel count: " << bandInfo.channels.size() << std::endl;
+			cout << "Channel count: " << bandInfo.channelCount << std::endl;
 			cout << "Channels: ";
-			for(unsigned j=0;j<bandInfo.channels.size();++j) {
+			for(unsigned j=0;j<bandInfo.channelCount;++j) {
 				if(j > 0) cout << ", ";
 				cout << round(bandInfo.channels[j].frequencyHz/1000000) << "MHz";
 			}

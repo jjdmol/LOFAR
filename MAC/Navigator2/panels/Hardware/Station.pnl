@@ -1,18 +1,15 @@
-V 11
+V 10
 3
 LANG:1 12 antennaField
 LANG:6 8 (NoName)
 LANG:30 8 (NoName)
-PANEL,-1 -1 1200 823 N "_3DFace" 0
+PANEL,-1 -1 1013 750 N "_3DFace" 0
 "main()
 {     
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
   
-  
   baseDP=g_currentDatapoint;
-  sysName = dpSubStr(g_currentDatapoint,DPSUB_SYS);
-
   
   if (navFunct_getRingFromStation(sysName) == \"Core\") {
     isCore=true;
@@ -47,17 +44,17 @@ PANEL,-1 -1 1200 823 N "_3DFace" 0
 
     bool fill=true;
     for (int i=0; i<=1;i++) {
-      if (dpConnect(\"updatePositions\",fill,sysName+\"LOFAR_PIC_StationInfo.\"+arrayList.text(i)+\".centerX\",
-                                       sysName+\"LOFAR_PIC_StationInfo.\"+arrayList.text(i)+\".centerY\",
-                                       sysName+\"LOFAR_PIC_StationInfo.\"+arrayList.text(i)+\".centerZ\",
-                                       sysName+\"LOFAR_PIC_StationInfo.N_RSPBoards\",        
-                                       sysName+\"LOFAR_PIC_StationInfo.N_TBBoards\",
-                                       sysName+\"LOFAR_PIC_StationInfo.N_LBAS\",
-                                       sysName+\"LOFAR_PIC_StationInfo.N_HBAS\",
-                                       sysName+\"LOFAR_PIC_StationInfo.HBA_Split\",         
-                                       sysName+\"LOFAR_PIC_StationInfo.wide_LBAS\",
-                                       sysName+\"LOFAR_PIC_StationInfo.\"+arrayList.text(i)+\".centerX:_online.._invalid\") == -1) {
-        LOG_DEBUG(\"station.pnl:main| couldn't connect to \"+sysName+\"LOFAR_PIC_StationInfo.\"+arrayList.text(i)+\".centerX \"+ getLastError());
+      if (dpConnect(\"updatePositions\",fill,sysName+\"remoteStation.\"+arrayList.text(i)+\".centerX\",
+                                       sysName+\"remoteStation.\"+arrayList.text(i)+\".centerY\",
+                                       sysName+\"remoteStation.\"+arrayList.text(i)+\".centerZ\",
+                                       sysName+\"remoteStation.N_RSPBoards\",        
+                                       sysName+\"remoteStation.N_TBBoards\",
+                                       sysName+\"remoteStation.N_LBAS\",
+                                       sysName+\"remoteStation.N_HBAS\",
+                                       sysName+\"remoteStation.HBA_Split\",         
+                                       sysName+\"remoteStation.wide_LBAS\",
+                                       sysName+\"remoteStation.\"+arrayList.text(i)+\".centerX:_online.._invalid\") == -1) {
+        LOG_DEBUG(\"station.pnl:main| couldn't connect to \"+sysName+\"remoteStation.\"+arrayList.text(i)+\".centerX \"+ getLastError());
       }  
 
       if (fill) {
@@ -129,19 +126,17 @@ void updatePositions(string dp1, float cX,
   HBASplit=hbasplit;         
   WideLBAs=widelbas;
   
-  dpGet(sysName+\"LOFAR_PIC_StationInfo.HBA.HBA0.rotation\",HBA0Angle);
+  dpGet(sysName+\"remoteStation.HBA.HBA0.rotation\",HBA0Angle);
   if (isCore) {
-    dpGet(sysName+\"LOFAR_PIC_StationInfo.HBA.HBA1.rotation\",HBA1Angle);
+    dpGet(sysName+\"remoteStation.HBA.HBA1.rotation\",HBA1Angle);
   } else {
     HBA1Angle=0;
   }
   
-  string dpt = txt+\"Antenna\";
-  dyn_string X=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaX;\",dpt);
-  dyn_string Y=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaY;\",dpt);
-  dyn_string Z=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaZ;\",dpt);
- 
- /*  dyn_string X=unsortX;
+  dyn_string unsortX=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
+  dyn_string unsortY=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
+  dyn_string unsortZ= dpNames(sysName+txt+\"*.deltaZ;\",\"Antenna\");
+  dyn_string X=unsortX;
   dyn_string Y=unsortY;
   dyn_string Z=unsortZ;
   
@@ -157,9 +152,9 @@ void updatePositions(string dp1, float cX,
     Z[idx+1]=unsortZ[i];         
   }
 
-  */
   
   
+        
   // found match, save found strings and redraw screen
   
   centerX = cX;
@@ -179,7 +174,6 @@ void updatePositions(string dp1, float cX,
 E "#uses \"navPanel.ctl\"
 
 string baseDP=\"\";
-string sysName = \"\";
 bool isCore=false;
 bool isRemote=false;
 bool isEurope=false;
@@ -230,7 +224,6 @@ void calcViewboxSize() {
 
 void redraw(string mode) {
   
-  
   float maxXOffsetValue=1.;
   float maxYOffsetValue=1.;
   float expandFactorX;
@@ -243,14 +236,13 @@ void redraw(string mode) {
   
   navFunct_clearGlobalLists();
   
-  if (!undocked) g_stationList[1] = navFunct_bareDBName(sysName);
+  g_stationList[1] = navFunct_bareDBName(sysName);
   
   LOG_DEBUG(\"Station.pnl:redraw|Mode: \"+mode);
-
-  if (mode == \"LBA\") {
+  if (strpos(mode,\"LBA\") > -1) {
     addPanelName    = \"objects/Hardware/Station_LBA.pnl\";
     angle=0;
-  } else if (mode == \"HBA\") {
+  } else if (strpos(mode,\"HBA\") > -1) {
     addPanelName    = \"objects/Hardware/Station_HBA.pnl\";
     angle=HBA0Angle;
   }
@@ -312,16 +304,18 @@ void redraw(string mode) {
       YRCU = 2*i-1 - NRSP*8;
     }
       
-    if (isCore && mode == \"HBA\") {
+    if (isCore && strpos(mode,\"HBA\") > -1) {
       if (i > 24) angle=HBA1Angle;
     }
 
-    string xDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(XRCU)+\"_Subrack\"+
+      string xDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(XRCU)+\"_Subrack\"+
                navFunct_receiver2Subrack(XRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(XRCU)+\"_RCU\"+XRCU;
     string yDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(YRCU)+\"_Subrack\"+
                navFunct_receiver2Subrack(YRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(YRCU)+\"_RCU\"+YRCU;
-    if (mode == \"HBA\" && !undocked)  dynAppend(g_HBAList,i-1);
-    if (mode == \"LBA\" && !undocked)  dynAppend(g_LBAList,i-1);
+    if (i-1 < NRSP*8/2) {
+      dynAppend(g_RCUList,XRCU);
+      dynAppend(g_RCUList,YRCU);
+    }
     refNames[ref]=\"ant\"+(ref);
     xPos_AddSymbol = (mainpanel_midX+shiftFactorX) + (antennaOffsetsX[i] * expandFactorX);
     yPos_AddSymbol = (mainpanel_midY+shiftFactorY) - (antennaOffsetsY[i] * expandFactorY);
@@ -333,8 +327,7 @@ void redraw(string mode) {
 		      makeDynString( \"$aNr:\" + (i-1) ,     // Define all $values
 		                     \"$aX:\" + antennaOffsetsX[i]  ,    
 		                     \"$aY:\" + antennaOffsetsY[i]  ,
-		                     \"$aZ:\"  + antennaOffsetsZ[i] ,
-                        \"$sysName:\" + sysName) ,                  // of particular addedpanel
+		                     \"$aZ:\"  + antennaOffsetsZ[i]),                  // of particular addedpanel
 		      xPos_AddSymbol,                  // Xpos of the AddedSymbol
 		      yPos_AddSymbol,                  // Ypos of the AddedSymbol
 		      angle,                           // angle
@@ -360,15 +353,14 @@ void updateField() {
   // Check if the update concerns the current view
   string txt= arrayList.text(arrayList.number());
 
-  string dpt=txt+\"Antenna\";
-  dyn_string unsortX=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaX;\",dpt);
-  dyn_string unsortY=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaY;\",dpt);
-  dyn_string unsortZ= dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaZ;\",dpt);
+  dyn_string unsortX=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
+  dyn_string unsortY=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
+  dyn_string unsortZ= dpNames(sysName+txt+\"*.deltaZ;\",\"Antenna\");
   dyn_string X=unsortX;
   dyn_string Y=unsortY;
   dyn_string Z=unsortZ;
                
-  /*
+  
   // since we have Antenna's with 1 digit and 2 digits we need to resort the dynstrings here, otherwise we get them as:
   // HBA0 HBA1 HBA10 HBA11-HBA19 HBA 2 HBA 20 etc
   //
@@ -380,28 +372,29 @@ void updateField() {
     Y[idx+1]=unsortY[i];
     Z[idx+1]=unsortZ[i];         
   }
-  */
   
+    
 
-  string field=sysName+\"LOFAR_PIC_StationInfo.\";
-  if (dpExists(field+txt+\".centerX:_online.._value\")) {
+  
+  string field=sysName+\"remoteStation.\"+txt;
+  if (dpExists(field+\".centerX:_online.._value\")) {
     // found match, save found strings and redraw screen
-    dpGet(field+txt+\".centerX:_online.._value\",centerX,
-          field+txt+\".centerY:_online.._value\",centerY,
-          field+txt+\".centerZ:_online.._value\",centerZ);
+    dpGet(field+\".centerX:_online.._value\",centerX,
+          field+\".centerY:_online.._value\",centerY,
+          field+\".centerZ:_online.._value\",centerZ);
     dpGet(X,antennaOffsetsX);          
     dpGet(Y,antennaOffsetsY);          
     dpGet(Z,antennaOffsetsZ);
-    dpGet(field+\"N_RSPBoards\",NRSP);         
-    dpGet(field+\"N_TBBoards\",NTBB);         
-    dpGet(field+\"N_LBAS\",NLBA);         
-    dpGet(field+\"N_HBAS\",NHBA);         
-    dpGet(field+\"HBA_Split\",HBASplit);         
-    dpGet(field+\"wide_LBAS\",WideLBAs);
+    dpGet(sysName+\"remoteStation.N_RSPBoards\",NRSP);         
+    dpGet(sysName+\"remoteStation.N_TBBoards\",NTBB);         
+    dpGet(sysName+\"remoteStation.N_LBAS\",NLBA);         
+    dpGet(sysName+\"remoteStation.N_HBAS\",NHBA);         
+    dpGet(sysName+\"remoteStation.HBA_Split\",HBASplit);         
+    dpGet(sysName+\"remoteStation.wide_LBAS\",WideLBAs);
  
     redraw(txt);
   } else {
-    LOG_ERROR(\"Station.pnl:updateField|Error, couldn't find:\"+field+txt+\".centerX:_online.._value\");
+    LOG_ERROR(\"Station.pnl:updateField|Error, couldn't find:\"+field+\".centerOX:_online.._value\");
   }
 }
 
@@ -450,7 +443,7 @@ E E 0 1 1 0 1 E  0 100 1499 100
 2 26
 "PRIMITIVE_TEXT1"
 ""
-1 1002 4 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 796 5 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 11 0 0 0 0 0
 E E E
@@ -460,11 +453,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 1002 4 1075 17
-0 2 2 "0s" 0 0 0 192 0 0  1002 4 1
+E E 0 1 1 2 1 E U  1 E 796 5 869 19
+0 2 2 "0s" 0 0 0 192 0 0  796 5 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 13 Select Array:
 1 167 5 "" 2190
 0
@@ -477,7 +471,7 @@ LANG:1 13 Select Array:
 19 53
 "arrayList"
 ""
-1 1095 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 889 1 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 14 0 0 0 0 0
 E E E
@@ -487,8 +481,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1093 -2 1157 42
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 887 -1 951 43
 2
 T 
 1
@@ -522,7 +517,7 @@ E "main(int button)
 13 80
 "zoomOut"
 ""
-1 1078 39 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 872 40 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 15 0 0 0 0 0
 E E E
@@ -532,8 +527,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1076 37 1096 57
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 870 38 890 58
 
 T 
 1
@@ -548,7 +544,7 @@ LANG:1 1 -
 13 107
 "zoomIn"
 ""
-1 1000 39 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 794 40 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 17 0 0 0 0 0
 E E E
@@ -558,8 +554,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1108 37 1128 57
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 902 38 922 58
 
 T 
 1
@@ -574,7 +571,7 @@ LANG:1 1 +
 2 108
 "PRIMITIVE_TEXT2"
 ""
-1 1137 39 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 931 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 18 0 0 0 0 0
 E E E
@@ -584,16 +581,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 1137 39 1168 52
-0 2 2 "0s" 0 0 0 192 0 0  1137 39 1
+E E 0 1 1 2 1 E U  1 E 931 40 962 54
+0 2 2 "0s" 0 0 0 192 0 0  931 40 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 4 Zoom
 13 136
 "shift_down"
 ""
-1 784 58 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 578 59 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 20 0 0 0 0 0
 E E E
@@ -603,8 +601,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1092 86 1112 106
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 886 87 906 107
 
 P 
 4294967295
@@ -621,7 +620,7 @@ LANG:1 12 PUSH_BUTTON1
 13 137
 "shift_up"
 ""
-1 1094 56 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 888 57 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 22 0 0 0 0 0
 E E E
@@ -631,8 +630,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1092 54 1112 74
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 886 55 906 75
 
 P 
 4294967295
@@ -649,7 +649,7 @@ LANG:1 12 PUSH_BUTTON1
 13 138
 "shift_left"
 ""
-1 1078 72 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 872 73 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 24 0 0 0 0 0
 E E E
@@ -659,8 +659,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1076 70 1096 90
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 870 71 890 91
 
 P 
 4294967295
@@ -677,7 +678,7 @@ LANG:1 12 PUSH_BUTTON1
 13 139
 "shift_right"
 ""
-1 1110 72 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 904 73 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 26 0 0 0 0 0
 E E E
@@ -687,8 +688,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1108 70 1128 90
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 902 71 922 91
 
 P 
 4294967295
@@ -705,7 +707,7 @@ LANG:1 12 PUSH_BUTTON1
 13 140
 "PUSH_BUTTON5"
 ""
-1 1094 72 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 888 73 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 28 0 0 0 0 0
 E E E
@@ -715,8 +717,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1092 70 1112 90
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 886 71 906 91
 
 P 
 4294967295
@@ -734,7 +737,7 @@ LANG:1 12 PUSH_BUTTON1
 14 141
 "shift_value"
 ""
-1 1146 70 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 940 71 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 29 0 0 0 0 0
 E E E
@@ -755,8 +758,9 @@ LANG:1 31 Give the shift value to be used
   }
 }"
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1144 68 1197 89
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 938 69 991 90
 3 "0d" 0 0 0 1 0 -1  E "main()
 {
   setValue(\"\",\"text\",shiftValue);
@@ -765,7 +769,7 @@ LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 13 143
 "originalSize"
 ""
-1 1094 39 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 888 40 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 32 0 0 0 0 0
 E E E
@@ -775,8 +779,9 @@ LANG:1 26 set zoomsize to 100% again
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1092 37 1112 57
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 886 38 906 58
 
 P 
 4294967295
@@ -793,7 +798,7 @@ LANG:1 12 PUSH_BUTTON1
 2 144
 "PRIMITIVE_TEXT4"
 ""
-1 1137 57 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 931 58 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 34 0 0 0 0 0
 E E E
@@ -803,11 +808,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 1137 57 1199 70
-0 2 2 "0s" 0 0 0 192 0 0  1137 57 1
+E E 0 1 1 2 1 E U  1 E 931 58 993 72
+0 2 2 "0s" 0 0 0 192 0 0  931 58 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 11 ShiftFactor
 0
 LAYER, 1 
@@ -882,10 +888,10 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 2 "PANEL_REF3" -1
+3 2 "PANEL_REF3"
 "objects\\compass.pnl" 212 350 T 12 0.742857142857143 0 0.752688172043011 -29.7142857142857 -52.6881720430108
 0
-3 5 "PANEL_REF6" -1
+3 5 "PANEL_REF6"
 "objects\\Hardware\\Station_Cabinet_top.pnl" 298 258 T 13 1 0 1 40 -100
 0
 0

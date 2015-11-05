@@ -117,7 +117,7 @@ namespace LOFAR
       // Read the contents from the ParameterSet \a ps into \c *this,
       // overriding the default values, "inherited" from the parent step
       // object.
-      virtual void read(const ParameterSet& ps, const std::string prefix);
+      virtual void read(const ParameterSet& ps);
 
     protected:
       // Default constructor. Construct an empty Step object and make it a

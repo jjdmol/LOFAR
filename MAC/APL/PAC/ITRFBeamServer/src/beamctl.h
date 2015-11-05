@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@ namespace LOFAR {
   using GCF::TM::GCFPort;
   using GCF::TM::GCFTCPPort;
   using GCF::TM::GCFPortInterface;
-  using IBS_Protocol::Pointing;
   namespace BS {
 
 class beamctl : public GCFTask
@@ -57,18 +56,17 @@ public:
 	GCFEvent::TResult create_subarray(GCFEvent& e, GCFPortInterface &p);
 	GCFEvent::TResult create_beam	 (GCFEvent& e, GCFPortInterface &p);
 	GCFEvent::TResult sendPointings	 (GCFEvent& e, GCFPortInterface &p);
-	GCFEvent::TResult askCalInfo	 (GCFEvent& e, GCFPortInterface &p);
 	GCFEvent::TResult final		     (GCFEvent& e, GCFPortInterface &p);
 	/*@}*/
 
 private:
 	// Return the seleted rcus as bitset<MAX_N_RCUS>
-	bool				parseOptions(int myArgc, char** myArgv);
-	bool				checkOptions();
-	bitset<MAX_RCUS> 	getRCUMask() const;
-	list<int> 			strtolist(const char* str, int max) const;
-	void 		 		printList(list<int>&		theList) const;
-	void 				usage() const;
+	bool					parseOptions(int myArgc, char** myArgv);
+	bool					checkOptions();
+	bitset<LOFAR::MAX_RCUS> getRCUMask() const;
+	list<int> 				strtolist(const char* str, int max) const;
+	void 			 		printList(list<int>&		theList) const;
+	void 					usage() const;
 	void send_direction(double	longitude, double	latitude, const string&	dirType, bool	isAnalogue);
 
 	// ports
@@ -86,7 +84,6 @@ private:
 	int				itsRCUmode;
 	list<Pointing>	itsDigPointings;
 	list<Pointing>	itsAnaPointings;
-	bool			itsCalInfo;			// request for calibrationinformation
 
 	int 	itsSkyScanTotalTime;
 	int 	itsSkyScanPointTime;

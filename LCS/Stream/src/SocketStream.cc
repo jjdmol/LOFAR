@@ -1,6 +1,6 @@
 //# SocketStream.cc: 
 //#
-//# Copyright (C) 2008, 2015
+//# Copyright (C) 2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -22,150 +22,157 @@
 
 #include <lofar_config.h>
 
+#include <Common/LofarLogger.h>
+#include <Common/Thread/Cancellation.h>
 #include <Stream/SocketStream.h>
 
-#include <cstdlib>
 #include <cstring>
 #include <cstdio>
-#include <ctime>
-#include <cerrno>
-#include <sys/types.h>
-#include <unistd.h>
+
+#include <dirent.h>
+#include <errno.h>
+#include <netdb.h>
 #include <sys/select.h>
 #include <sys/socket.h>
-#include <netdb.h>
-#include <dirent.h>
-#include <net/if.h>
-#include <arpa/inet.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
+#include <cstdlib>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-
-#include <Common/SystemCallException.h>
-#include <Common/Thread/Cancellation.h>
-#include <Common/LofarLogger.h>
-
-#include "NetFuncs.h"
 
 //# AI_NUMERICSERV is not defined on OS-X
 #ifndef AI_NUMERICSERV
 # define AI_NUMERICSERV 0
 #endif
 
-using boost::format;
-
 
 namespace LOFAR {
 
-SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol,
-                           Mode mode, time_t deadline, bool doAccept, const std::string &bind_local_iface)
+// port range for unused ports search
+const int MINPORT = 10000;
+const int MAXPORT = 30000;
+
+
+static struct RandomState {
+  RandomState() { 
+    xsubi[0] = getpid();
+    xsubi[1] = time(0);
+    xsubi[2] = time(0) >> 16;
+  }
+
+  unsigned short xsubi[3];
+} randomState;
+
+
+SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol, Mode mode, time_t timeout, const char *nfskey)
 :
   protocol(protocol),
   mode(mode),
   hostname(hostname),
   port(_port),
+  nfskey(nfskey),
   listen_sk(-1)
 {  
-  const std::string description = str(boost::format("%s:%s:%s")
-      % (protocol == TCP ? "tcp" : "udp")
-      % hostname
-      % _port);
+  struct addrinfo hints;
+  bool            autoPort = (port == 0);
+
+  // use getaddrinfo, because gethostbyname is not thread safe
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_INET; // IPv4
+  hints.ai_flags = AI_NUMERICSERV; // we only use numeric port numbers, not strings like "smtp"
+
+  if (protocol == TCP) {
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+  } else {
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_protocol = IPPROTO_UDP;
+  }
 
   for(;;) {
     try {
-      // Not all potentially blocking calls below have a timeout arg.
-      // So check early every round. It may abort hanging tests early (=good).
-      if (deadline > 0 && deadline <= time(0))
-        THROW(TimeOutException, "SocketStream");
+      try {
+        char portStr[16];
+        int  retval;
+        struct addrinfo *result;
 
-      // Resolve host + port to a 'struct addrinfo'
-      safeAddrInfo result;
-      safeGetAddrInfo(result, protocol == SocketStream::TCP, hostname, port);
+        if (mode == Client && nfskey)
+          port = boost::lexical_cast<uint16>(readkey(nfskey, timeout));
 
-      // result is a linked list of resolved addresses, we only use the first
+        if (mode == Server && autoPort)
+          port = MINPORT + static_cast<unsigned short>((MAXPORT - MINPORT) * erand48(randomState.xsubi)); // erand48() not thread safe, but not a problem.
 
-      if ((fd = socket(result.addrinfo->ai_family, result.addrinfo->ai_socktype, result.addrinfo->ai_protocol)) < 0)
-        THROW_SYSCALL("socket");
+        snprintf(portStr, sizeof portStr, "%hu", port);
 
-      if (bind_local_iface != "") {
-        // Bind socket to a specific network interface, causing packets to be
-        // emitted through this interface.
-        //
-        // Requires CAP_NET_RAW (or root)
-        LOG_DEBUG_STR("Binding socket " << description << " to interface " << bind_local_iface);
+        if ((retval = getaddrinfo(hostname, portStr, &hints, &result)) != 0)
+          throw SystemCallException("getaddrinfo", retval, THROW_ARGS);
 
-        struct ifreq ifr;
-        memset(&ifr, 0, sizeof ifr);
-        snprintf(ifr.ifr_name, sizeof ifr.ifr_name, "%s", bind_local_iface.c_str());
-
-        if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof ifr) < 0)
-          try {
-            THROW_SYSCALL("setsockopt(SO_BINDTODEVICE)");
-          } catch(Exception &ex) {
-            LOG_ERROR_STR("Could not bind socket to device " << bind_local_iface << ": " << ex);
+        // make sure result will be freed
+        struct D {
+          ~D() {
+            freeaddrinfo(result);
           }
-      }
 
-      if (mode == Client) {
-        if (bind_local_iface != "") {
-          struct sockaddr sa = getInterfaceIP(bind_local_iface);
-          LOG_DEBUG_STR("Binding socket " << description << " to IP " << inet_ntoa(((struct sockaddr_in*)&sa)->sin_addr) << " of interface " << bind_local_iface);
+          struct addrinfo *result;
+        } onDestruct = { result };
+        (void) onDestruct;
 
-          if (bind(fd, &sa, sizeof sa) < 0)
-            THROW_SYSCALL(str(boost::format("bind [%s]") % description));
+        // result is a linked list of resolved addresses, we only use the first
+
+        if ((fd = socket(result->ai_family, result->ai_socktype, result->ai_protocol)) < 0)
+          throw SystemCallException("socket", errno, THROW_ARGS);
+
+        if (mode == Client) {
+          time_t latestTime = time(0) + timeout;
+
+          while (connect(fd, result->ai_addr, result->ai_addrlen) < 0)
+            if (errno == ECONNREFUSED) {
+              if (timeout > 0 && time(0) >= latestTime)
+                throw TimeOutException("client socket", THROW_ARGS);
+
+              if (usleep(999999) < 0) {
+                // interrupted by a signal handler -- abort to allow this thread to
+                // be forced to continue after receiving a SIGINT, as with any other
+                // system call in this constructor 
+                throw SystemCallException("sleep", errno, THROW_ARGS);
+              }
+            } else
+              throw SystemCallException("connect", errno, THROW_ARGS);
+        } else {
+          int on = 1;
+
+          if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) < 0)
+            throw SystemCallException("setsockopt(SO_REUSEADDR)", errno, THROW_ARGS);
+
+          if (bind(fd, result->ai_addr, result->ai_addrlen) < 0)
+            throw BindException("bind", errno, THROW_ARGS);
+
+          if (protocol == TCP) {
+            listen_sk = fd;
+            fd	= -1;
+
+            if (listen(listen_sk, 5) < 0)
+              throw BindException("listen", errno, THROW_ARGS);
+
+            accept(timeout);  
+          }
         }
 
-        while (connect(fd, result.addrinfo->ai_addr, result.addrinfo->ai_addrlen) < 0)
-          if (errno == ECONNREFUSED || errno == ETIMEDOUT) {
-            if (deadline > 0 && time(0) >= deadline)
-              throw TimeOutException("client socket", THROW_ARGS);
+        // we have an fd! break out of the infinite loop
+        break;
+      } catch (...) {
+        if (listen_sk >= 0) { close(listen_sk); listen_sk = -1; }
+        if (fd >= 0)        { close(fd);        fd = -1; }
 
-            if (usleep(999999) < 0) { // near 1 sec; max portably safe arg val
-              // interrupted by a signal handler -- abort to allow this thread to
-              // be forced to continue after receiving a SIGINT, as with any other
-              // system call in this constructor 
-              THROW_SYSCALL("usleep");
-            }
-          } else
-            THROW_SYSCALL(str(boost::format("connect [%s]") % description));
+        throw;
+      }
+    } catch (BindException &) {
+      if (mode == Server && autoPort) {
+        continue;
       } else {
-        const int on = 1;
-
-        if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) < 0)
-          THROW_SYSCALL("setsockopt(SO_REUSEADDR)");
-
-        if (bind(fd, result.addrinfo->ai_addr, result.addrinfo->ai_addrlen) < 0)
-          THROW_SYSCALL(str(boost::format("bind [%s]") % description));
-
-        if (port == 0) {
-          // we let OS search for a free port
-          port = getSocketPort(fd);
-
-          LOG_DEBUG(str(boost::format("Bound socket %s to port %s") % description % port));
-        }
-
-        if (protocol == TCP) {
-          listen_sk = fd;
-          fd	= -1;
-
-          const int listenBacklog = 15;
-          if (listen(listen_sk, listenBacklog) < 0)
-            THROW_SYSCALL(str(boost::format("listen [%s]") % description));
-
-          if (doAccept)
-            accept(deadline);
-          else
-            break;
-        }
+        throw;
       }
-
-      // we have an fd! break out of the infinite loop
-      break;
-    } catch (...) {
-      if (listen_sk >= 0) { close(listen_sk); listen_sk = -1; }
-      if (fd >= 0)        { close(fd);        fd = -1; }
-
-      throw;
     }
   }
 }
@@ -182,7 +189,7 @@ SocketStream::~SocketStream()
     // backtrace if available, and the proper representation
     // of exceptions in general.
     try {
-      THROW_SYSCALL("close listen_sk");
+      throw SystemCallException("close listen_sk", errno, THROW_ARGS);
     } catch (Exception &ex) {
       LOG_ERROR_STR("Exception in destructor: " << ex);
     }
@@ -190,32 +197,41 @@ SocketStream::~SocketStream()
 }
 
 
-FileDescriptorBasedStream *SocketStream::detach()
-{
-  ASSERT( mode == Server );
-
-  FileDescriptorBasedStream *client = new FileDescriptorBasedStream(fd);
-
-  fd = -1;
-
-  return client;
-}
-
-
-void SocketStream::reaccept(time_t deadline)
+void SocketStream::reaccept( time_t timeout )
 {
   ASSERT( mode == Server );
 
   if (fd >= 0 && close(fd) < 0)
-    THROW_SYSCALL("close");
+    throw SystemCallException("close", errno, THROW_ARGS);
 
-  accept(deadline);
+  accept( timeout );  
 }
 
 
-void SocketStream::accept(time_t deadline)
+void SocketStream::accept( time_t timeout )
 {
-  if (deadline > 0) {
+  if (nfskey)
+    writekey(nfskey, port);
+
+  // make sure the key will be deleted
+  struct D {
+    ~D() {
+      if (nfskey) {
+        ScopedDelayCancellation dc; // unlink is a cancellation point
+
+        try {
+          deletekey(nfskey);
+        } catch (Exception &ex) {
+          LOG_ERROR_STR("Exception in destructor: " << ex);
+        }
+      }  
+    }
+
+    const char *nfskey;
+  } onDestruct = { nfskey };
+  (void)onDestruct;
+
+  if (timeout > 0) {
     fd_set fds;
 
     FD_ZERO(&fds);
@@ -223,109 +239,82 @@ void SocketStream::accept(time_t deadline)
 
     struct timeval timeval;
 
-    time_t now = time(0);
-    
-    if (now > deadline)
-      THROW(TimeOutException, "server socket");
-
-    timeval.tv_sec  = deadline - now;
+    timeval.tv_sec  = timeout;
     timeval.tv_usec = 0;
 
     switch (select(listen_sk + 1, &fds, 0, 0, &timeval)) {
-      case -1 : THROW_SYSCALL("select");
+      case -1 : throw SystemCallException("select", errno, THROW_ARGS);
 
-      case  0 : THROW(TimeOutException, "server socket");
+      case  0 : throw TimeOutException("server socket", THROW_ARGS);
     }
   }
 
   if ((fd = ::accept(listen_sk, 0, 0)) < 0)
-    THROW_SYSCALL("accept");
+    throw SystemCallException("accept", errno, THROW_ARGS);
 }
 
 
 void SocketStream::setReadBufferSize(size_t size)
 {
   if (fd >= 0 && setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &size, sizeof size) < 0)
-    THROW_SYSCALL("setsockopt(SO_RCVBUF)");
+    perror("setsockopt failed");
 }
 
 
-void SocketStream::setTimeout(double timeout)
+std::string SocketStream::readkey(const char *nfskey, time_t &timeout)
 {
-  ASSERT(timeout >= 0.0);
+  for(;;) {
+    // sync NFS
+    DIR *dir = opendir(".");
 
-  struct timeval tv;
-  tv.tv_sec = static_cast<long>(timeout);
-  tv.tv_usec = static_cast<long>((timeout - floor(timeout)) * 1000.0 * 1000.0);
+    if (!dir)
+      throw SystemCallException("opendir", errno, THROW_ARGS);
 
-  if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof tv) < 0)
-    THROW_SYSCALL("setsockopt(SO_RCVTIMEO)");
+    if (!readdir(dir))
+      throw SystemCallException("readdir", errno, THROW_ARGS);
 
-  if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof tv) < 0)
-    THROW_SYSCALL("setsockopt(SO_SNDTIMEO)");
+    if (closedir(dir) != 0)
+      throw SystemCallException("closedir", errno, THROW_ARGS);
+
+    char portStr[16];
+    ssize_t len;
+
+    len = readlink(nfskey, portStr, sizeof portStr - 1); // reserve 1 character to insert \0 below
+
+    if (len >= 0) {
+      portStr[len] = 0;
+      return std::string(portStr);
+    }
+
+    if (timeout == 0)
+      throw TimeOutException("client socket", THROW_ARGS);
+
+    if (usleep(999999) > 0) {
+      // interrupted by a signal handler -- abort to allow this thread to
+      // be forced to continue after receiving a SIGINT, as with any other
+      // system call
+      throw SystemCallException("sleep", errno, THROW_ARGS);
+    }
+
+    timeout--;
+  }
 }
 
-
-#if defined __linux__ && __GLIBC_PREREQ(2,12)
-// Actually, recvmmsg is supported by Linux 2.6.32+ using glibc 2.12+
-#define HAVE_RECVMMSG
-#else
-// Equalize data structures to share more code. Declared within LOFAR namespace.
-// Need it as vector template arg, so cannot be locally declared (ok w/ C++11).
-struct mmsghdr {
-  struct msghdr msg_hdr;
-};
-#endif
-
-unsigned SocketStream::recvmmsg( void *bufBase, unsigned maxMsgSize,
-                                 std::vector<unsigned> &recvdMsgSizes ) const
+void SocketStream::writekey(const char *nfskey, uint16 port)
 {
-  ASSERT(protocol == UDP);
-  ASSERT(mode == Server);
+  char portStr[16];
 
-  // If recvmmsg() is not available, then use recvmsg() (1 call) as fall-back.
-#ifdef HAVE_RECVMMSG
-  const unsigned numBufs = recvdMsgSizes.size();
-#else
-  const unsigned numBufs = 1;
-#endif
+  snprintf(portStr, sizeof portStr, "%hu", port);
 
-  // register our receive buffer(s)
-  std::vector<struct iovec> iov(numBufs);
-  for (unsigned i = 0; i < numBufs; i++) {
-    iov[i].iov_base = (char*)bufBase + i * maxMsgSize;
-    iov[i].iov_len  = maxMsgSize;
-  }
+  // Symlinks can be atomically created over NFS
+  if (symlink(portStr, nfskey) < 0)
+    throw SystemCallException("symlink", errno, THROW_ARGS);
+}
 
-  std::vector<struct mmsghdr> msgs(numBufs);
-  for (unsigned i = 0; i < numBufs; ++i) {
-    msgs[i].msg_hdr.msg_name    = NULL; // we don't need to know who sent the data
-    msgs[i].msg_hdr.msg_iov     = &iov[i];
-    msgs[i].msg_hdr.msg_iovlen  = 1;
-    msgs[i].msg_hdr.msg_control = NULL; // we're not interested in OoB data
-  }
-
-  int numRead;
-#ifdef HAVE_RECVMMSG
-  // Note: the timeout parameter doesn't work as expected: only between datagrams
-  // is the timeout checked, not when waiting for one (i.e. numBufs=1 or MSG_WAITFORONE).
-  numRead = ::recvmmsg(fd, &msgs[0], numBufs, 0, NULL);
-  if (numRead < 0)
-    THROW_SYSCALL("recvmmsg");
-
-  for (int i = 0; i < numRead; ++i) {
-    recvdMsgSizes[i] = msgs[i].msg_len; // num bytes received is stored in msg_len by recvmmsg()
-  }
-#else
-  numRead = ::recvmsg(fd, &msgs[0].msg_hdr, 0);
-  if (numRead < 0)
-    THROW_SYSCALL("recvmsg");
-
-  recvdMsgSizes[0] = static_cast<unsigned>(numRead); // num bytes received is returned by recvmsg()
-  numRead = 1; // equalize return val semantics to num msgs received
-#endif
-
-  return static_cast<unsigned>(numRead);
+void SocketStream::deletekey(const char *nfskey)
+{
+  if (unlink(nfskey) < 0)
+    throw SystemCallException("unlink", errno, THROW_ARGS);
 }
 
 } // namespace LOFAR

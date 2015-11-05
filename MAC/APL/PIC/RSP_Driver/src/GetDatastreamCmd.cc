@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -81,8 +81,7 @@ void GetDatastreamCmd::complete(CacheBuffer& cache)
 	RSPGetdatastreamackEvent ack;
 	ack.timestamp = getTimestamp();
 	ack.status = RSP_SUCCESS;
-	ack.switch_on0 = cache.isCepEnabled(0);
-	ack.switch_on1 = cache.isCepEnabled(1);
+	ack.switch_on = cache.isCepEnabled();
 	getPort()->send(ack);
 }
 

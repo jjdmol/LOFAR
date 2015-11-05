@@ -57,12 +57,6 @@ namespace BBS {
     int unlink()
       { return --itsCount; }
 
-    // Flush possible changes to disk.
-    // <br>If <src>fsync=True</src> the file contents are fsync-ed to disk,
-    // to ensure that the system buffers are actually written to disk.
-    // The default implementation does nothing.
-    virtual void flush (bool fsync);
-
     // Writelock and unlock the database tables.
     // The user does not need to lock/unlock, but it can increase performance
     // if many small accesses have to be done.
@@ -202,12 +196,6 @@ namespace BBS {
 
     // Assignment has reference semantics.
     ParmDB& operator= (const ParmDB&);
-
-    // Flush possible changes to disk.
-    // <br>If <src>fsync=True</src> the file contents are fsync-ed to disk,
-    // to ensure that the system buffers are actually written to disk.
-    void flush (bool fsync=false)
-      { itsRep->flush(fsync); }
 
     // Lock and unlock the database tables.
     // The user does not need to lock/unlock, but it can increase performance

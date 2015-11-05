@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004  // TabChanoged: The Tab has changed, so a new panel needs to be initialized and put in place
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -37,19 +37,6 @@
 // navCtrl_handleAlertEvent                  : handles alert
 // navCtrl_handleFastJumperEvent             : handles fastJumper
 
-// defined possible events:
-//
-//       ChangeTab         :         This is used when a point on one tab refers to a point that belaongs to another tab. 
-//       ChangePanel       :         The currentDataPoint has been changed and we have to see if we need to load another panel
-//       Reload            :         A reload of all current active panels is requested 
-//       Update            :         An update of all current active panels is requested
-//       Initialized       :         The Navigator base is initialized, all other wondeows can initialize now also
-//       EventClick        :         An EventClick event has been done
-//       EventDoubleClick  :         An EventDoubleClick event has been done
-//       EventRightClick   :         An EventRightClick event has been done
-//       ChangeSelection   :         The selectionBox has changed its main selection
-//
-
 #uses "navigator.ctl"
 
 global string   ACTIVE_TAB                = "Observations";
@@ -78,9 +65,8 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
   string aShape;
   string anEvent;
   dyn_string aSelection;
-  string selection="";
   
-   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".fw_viewBox.selection")) {
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".fw_viewBox.selection")) {
     dpGet(DPNAME_NAVIGATOR + g_navigatorID+".fw_viewBox.selection", aSelection);
   } else {
     LOG_WARN("navCtrl.ctl:navCtrl_handleViewBoxEvent| Error getting selection from : " + DPNAME_NAVIGATOR + g_navigatorID+".fw_viewBox.selection");
@@ -101,26 +87,20 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
   LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| Found event    : " + anEvent);
   LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| Found selection: " + aSelection);
   navCtrl_handleNavigatorEvent(aSelection,anEvent,aShape); 
-
   
   // depending on the event received, actions need to be taken
   
  
-  // ChangeTab: This is used when a point on one tab refers to a point that belaongs to another tab. 
-  // Obviously we dont want a restore  a previously saved panel in this caes
-  // Check for top tab and change when needed, also set the new active DP panel if available 
+  // TabChanged: The Tab has changed, so a new panel needs to be initialized and put in place
+    // Check for top tab and change when needed, also set the new active DP panel if available 
   if (anEvent == "ChangeTab") {
     if (ACTIVE_TAB != aSelection) {
-      navFunct_clearGlobalLists();
-      // if on the other Tab a dp was saved restore it, and also
-      navTabCtrl_removeView();
       navTabCtrl_setSelectedTab(aSelection);
       ACTIVE_TAB = aSelection;
     }
-
     if (navTabCtrl_showView()) {
       
-      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangeTab wait navTabCtrl_showView");
+      navFunct_waitObjectReady(500);
       
       //clear old highlights
       dynClear(strHighlight);        
@@ -128,67 +108,41 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
       
-      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangeTab wait Locator ChangeSelection"+aSelection);
+      navFunct_waitObjectReady(500);
       
       // change fastJumper
       dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
 
-      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangeTab wait FastJumper ChangeSelection"+aSelection);
+      navFunct_waitObjectReady(500);
 
       // inform headLines Object
       dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
 
-      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangeTab wait HeadLines ChangeInfo");
+      navFunct_waitObjectReady(500);
       
     }
-    return;
   }
   
   // Panel needs to be changed
   if (anEvent == "ChangePanel") {
-    // To be able to handle same panel for different choices we introduce the possiblity to give a fake extra _level in the
-    // selection datapoint, in that case the selection will be stripped from the fake point and set to the one b4 that
-    // a fake point will be known by the # delim
-    
-    string var="";
-    if (strpos(aSelection[1],"#") >= 0) {
-      dyn_string aS = strsplit(aSelection[1],"#");
-      selection = aS[1];
-      var= aS[2];
-      
-      LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|#selection: "+selection);
-      LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|#var:       "+var);
-      if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList")) {
-        dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList",var);
-      } else {
-        LOG_WARN("navCtrl.ctl:navCtrl_handleViewBoxEvent| Error: no dp " + DPNAME_NAVIGATOR + g_navigatorID+".panelParamList");
-      }
-    }
-      
-
-    
-    if (dpExists(selection)) {
-      g_currentDatapoint=selection;
-    }
-    
     if (navTabCtrl_showView()) {
         
-      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangePanel wait navTabCtrl_showView");
+      navFunct_waitObjectReady(500);
       
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
       
-      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangePanel wait Locator ChangeSelection"+aSelection);
+      navFunct_waitObjectReady(500);
 
       // change fastJumper
       dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
 
-      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangePanel wait FastJumper ChangeSelection"+aSelection);
+      navFunct_waitObjectReady(500);
       
       // inform headLines Object
       dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
    
-      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangePanel wait HeadLines ChangeInfo");
+      navFunct_waitObjectReady(500);
       
     }
     return;
@@ -197,8 +151,7 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
   if (anEvent == "Reload") {
     dpSet(VIEWBOXACTIONDP,"Reload");
 
-    navFunct_waitObjectReady(500,"handleViewBoxEvent:Reload wait ViewBox Reload");
-    return;
+    navFunct_waitObjectReady(500);
       
   }
   
@@ -209,70 +162,45 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
     // so if g_observationsList is filled, fill hardware and processes based on this
     // if g_processesList is filled, fill hardware and observations list based on this
     // and if g_harwareList is filled, fill observation and processes List based on this
-    // We can assume that when we are in hardware tab that the hardware is filled and we have to determine the rest of the lists from this
-    // if we are in the observations tab then the observation list is fileld and we can determine the other lists from this
-    // and if we are in the processes tab the processes are filled.
     
+    if (dynlen(g_observationsList) > 0) {
+      LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_observations entry");
+      
+      navFunct_fillObservationsTree();
+      navFunct_fillHardwareLists();
+      navFunct_fillProcessesList();
+    } else if (dynlen(g_processesList) > 0) {
+      LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_processes entry");
+      navFunct_fillProcessesTree();
+      navFunct_fillHardwareLists();
+      navFunct_fillObservationsList();
+    } else if (dynlen(g_stationList) > 0) {
+      LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_stationList entry");
+      navFunct_fillHardwareTree();
+      navFunct_fillProcessesList();
+      navFunct_fillObservationsList();
+    }
     
-    if (ACTIVE_TAB == "Hardware") {
-      if (dynlen(g_stationList) > 0) {
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_stationList entry");
-        navFunct_fillHardwareTree();
-        navFunct_fillObservationsList();
-        navFunct_fillPipelinesList();
-        navFunct_fillProcessesList();
-      } else {    
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| in hardware but g_stationList is empy ????");
-      }
-    } else if (ACTIVE_TAB == "Observations") {
-      if (dynlen(g_observationsList) > 0) {
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_observations entry");
-        navFunct_fillObservationsTree();
-        navFunct_fillHardwareLists();
-        navFunct_fillProcessesList();       
-        navFunct_fillPipelinesList();
-      } else {
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| in observations but g_observationsList is empy ????");
-      }
-    } else if (ACTIVE_TAB == "Pipelines") {
-      if (dynlen(g_pipelinesList) > 0) {
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_pipelines entry");
-        navFunct_fillPipelinesTree();
-        navFunct_fillHardwareLists();
-        navFunct_fillProcessesList();       
-        navFunct_fillObservationsList();
-      } else {
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| in observations but g_pipelinesList is empy ????");
-      }
-    } else if (ACTIVE_TAB == "Processes") {
-      if (dynlen(g_processesList) > 0) {
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_processes entry");
-        navFunct_fillProcessesTree();
-        navFunct_fillHardwareLists();
-        navFunct_fillObservationsList();
-        navFunct_fillPipelinesList();
-      } else {
-        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| in processes but g_processesList is empy ????");
-      }
-    }    
 
     dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
-    navFunct_waitObjectReady(1500,"handleViewBoxEvent:Update wait TopDetail");
+    navFunct_waitObjectReady(500);
       
     dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Update");
-    navFunct_waitObjectReady(500,"handleViewBoxEvent:Update wait BottomDetailSelection");
+    navFunct_waitObjectReady(500);
       
     dpSet(LOCATORACTIONDP,"Update");
-    navFunct_waitObjectReady(500,"handleViewBoxEvent:Update wait Locator");
-            
+    navFunct_waitObjectReady(500);
+      
+    navFunct_waitObjectReady(500);
+      
     dpSet(FASTJUMPERACTIONDP,"Update");
-    navFunct_waitObjectReady(500,"handleViewBoxEvent:Update wait FastJumper");
+    navFunct_waitObjectReady(500);
       
     dpSet(PROGRESSBARACTIONDP,"Update");
-    navFunct_waitObjectReady(500,"handleViewBoxEvent:Update wait ProgressBar");
+    navFunct_waitObjectReady(500);
       
     dpSet(HEADLINESACTIONDP,"Update");
-    navFunct_waitObjectReady(500,"handleViewBoxEvent:Update wait HeadLines");
+    navFunct_waitObjectReady(500);
       
 
     return;
@@ -310,25 +238,16 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_stationList: ",g_stationList);
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_processesList: ",g_processesList);
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_observationsList: ",g_observationsList);
-          LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_pipelinesList: ",g_pipelinesList);
-
-        LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|ACTIVE TAB: "+ACTIVE_TAB); 
    
         // if ACTIVE_TAB is hardware, we also want to look for all involved processes and observations
         if (ACTIVE_TAB == "Hardware") {
-          // if launched from mainscreen the TAB is hardware, but an Observation might have been clicked, 
-          // so evaluate this as being launched from Observation TAB
-          if (strpos(sel[j],"Observation") >=0 ) {
-            navCtrl_highlightAddHardwareFromObservation(sel[j]);
-            navCtrl_highlightAddProcessesFromObservation(sel[j]);
-          } else {
-            navCtrl_highlightAddObservationsFromHardware(sel[j]);
-            navCtrl_highlightAddProcessesFromHardware(sel[j]);
-          }
+          navCtrl_highlightAddObservationsFromHardware(sel[j]);
+          navCtrl_highlightAddProcessesFromHardware(sel[j]);
+  
         } else if (ACTIVE_TAB == "Observations") {
           // if selection == observation, add involved hardware
-          navCtrl_highlightAddHardwareFromObservation(sel[j]);
-          navCtrl_highlightAddProcessesFromObservation(sel[j]);
+           navCtrl_highlightAddHardwareFromObservation(sel[j]);
+           navCtrl_highlightAddProcessesFromObservation(sel[j]);
 
         } else if (ACTIVE_TAB == "Processes") {
           // The selected event was allready added to the selectionList above
@@ -367,13 +286,13 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
     
     // inform headLines Object
     dpSet(HEADLINESACTIONDP,"ChangeInfo|"+aSelection);
-    navFunct_waitObjectReady(500,"handleViewBoxEvent:EventClick wait HeadLines");
+    navFunct_waitObjectReady(500);
       
     dpSet(TOPDETAILSELECTIONACTIONDP,"Highlight");
-    navFunct_waitObjectReady(500,"handleViewBoxEvent:EventClick wait TopDetailSelection");
+    navFunct_waitObjectReady(500);
       
     dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Highlight");
-    navFunct_waitObjectReady(500,"handleViewBoxEvent:EventClick wait BottomDetailSelection");
+    navFunct_waitObjectReady(500);
 
     return;
   }
@@ -392,7 +311,6 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
   string aShape;
   string anEvent;
   dyn_string aSelection;
-  string selection="";
   
   
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".fw_viewSelection.selection")) {
@@ -423,71 +341,46 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
   // navigator object can be initialized now.
   if (anEvent == "Initialized") {
     dpSet(TOPDETAILSELECTIONACTIONDP,"Initialize");
-    navFunct_waitObjectReady(2000,"handleViewSelectionEvent:Initialized wait TopDetailSelection");
+    navFunct_waitObjectReady(500);
       
     dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Initialize");
-    navFunct_waitObjectReady(500,"handleViewSelectionEvent:Initialized wait BottomDetailSelection");
+    navFunct_waitObjectReady(500);
       
     dpSet(LOCATORACTIONDP,"Initialize");
-    navFunct_waitObjectReady(500,"handleViewSelectionEvent:Initialized wait Locator");
+    navFunct_waitObjectReady(500);
       
     dpSet(FASTJUMPERACTIONDP,"Initialize");
-    navFunct_waitObjectReady(500,"handleViewSelectionEvent:Initialized wait FastJumper");
+    navFunct_waitObjectReady(500);
       
     dpSet(PROGRESSBARACTIONDP,"Initialize");
-    navFunct_waitObjectReady(500,"handleViewSelectionEvent:Initialized wait ProgressBar");
+    navFunct_waitObjectReady(500);
       
     dpSet(HEADLINESACTIONDP,"Initialize");
-    navFunct_waitObjectReady(500,"handleViewSelectionEvent:Initialized wait HeadLines");
+    navFunct_waitObjectReady(500);
       
     dpSet(ALERTSACTIONDP,"Initialize");
-    navFunct_waitObjectReady(500,"handleViewSelectionEvent:Initialized wait Alerts");
+    navFunct_waitObjectReady(500);
       
     return;
   }
   
   //ChangePanel
   if (anEvent == "ChangePanel") {
- 
-    // To be able to handle same panel for different choices we introduce the possiblity to give a fake extra _level in the
-    // selection datapoint, in that case the selection will be stripped from the fake point and set to the one b4 that
-    // a fake point will be known by the # delim
-    
-    string var="";
-    if (strpos(selection,"#") >= 0) {
-      dyn_string aS = strsplit(selection,"#");
-      selection = aS[1];
-      var= aS[2];
-      
-      LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewSelectionEvent|#selection: "+selection);
-      LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewSelectionEvent|#var:       "+var);
-      if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList")) {
-        dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList",var);
-      } else {
-        LOG_WARN("navCtrl.ctl:navCtrl_handleViewSelectionEvent| Error: no dp " + DPNAME_NAVIGATOR + g_navigatorID+".panelParamList");
-      }
-    }
-      
-
-    if (dpExists(selection)) {
-      g_currentDatapoint=selection;
-    }
-    
+   
     if (navTabCtrl_showView()) {
-      navFunct_waitObjectReady(500,"handleViewSelectionEvent:ChangePanel wait navTabCtrl_showView");
+      navFunct_waitObjectReady(500);
       
         
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+g_currentDatapoint);
-      navFunct_waitObjectReady(500,"handleViewSelectionEvent:ChangePanel wait Locator ChangeSelection");
+      navFunct_waitObjectReady(500);
       
 
       // change fastJumper
       dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+g_currentDatapoint);
-      navFunct_waitObjectReady(500,"handleViewSelectionEvent:ChangePanel wait FastJumper ChangeSelection");
+      navFunct_waitObjectReady(500);
       
     }
-    return;
   }  
   
   // TabChanged: The Tab has changed, so a new panel needs to be initialized and put in place
@@ -502,35 +395,35 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
       
       ACTIVE_TAB = aSelection;
       if (navTabCtrl_showView()) {
-        navFunct_waitObjectReady(750,"handleViewSelectionEvent:TabChanged wait navTabCtrl_showView");
+        navFunct_waitObjectReady(500);
       
         
         // change locator
         dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
-        navFunct_waitObjectReady(500,"handleViewSelectionEvent:TabChanged wait Locator ChangeSelection "+ aSelection);
+        navFunct_waitObjectReady(500);
       
 
         // change fastJumper
         dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
-        navFunct_waitObjectReady(500,"handleViewSelectionEvent:TabChanged wait FastJumper ChangeSelection "+ aSelection);
+        navFunct_waitObjectReady(500);
       
 
         // inform headLines Object
         dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
-        navFunct_waitObjectReady(500,"handleViewSelectionEvent:TabChanged wait HeadLines ChangeInfo");
+        navFunct_waitObjectReady(500);
       
         
         // update selectors   
         dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
-        navFunct_waitObjectReady(500,"handleViewSelectionEvent:TabChanged wait TopDetailSelection Update");
+        navFunct_waitObjectReady(500);
       
         dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Update");      }
-        navFunct_waitObjectReady(500,"handleViewSelectionEvent:TabChanged wait BottomDetailSelection Update");
+        navFunct_waitObjectReady(500);
       
     }
-    LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewSelectionEvent| ACTIVE_TAB now        : " + ACTIVE_TAB);
     return;
   } 
+  LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewSelectionEvent| ACTIVE_TAB now        : " + ACTIVE_TAB);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -606,7 +499,6 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
         typeSelector=sel[1];
         if (dynlen(sel) >= 2 ) observationType=sel[2];
         if (dynlen(sel) >= 3 ) selection=sel[3];
-
       } else {
         typeSelector=sel[1];
         observationType="";
@@ -618,14 +510,13 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
   if (anEvent == "ChangeSelection") {
     if (target == "bottom") {
       dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Update");
-        navFunct_waitObjectReady(500,"handleDetailSelectionEvent:ChangeSelectiond wait BottomDetailSelection Update");
+      navFunct_waitObjectReady(500);
       
     } else {
       dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
-        navFunct_waitObjectReady(500,"handleDetailSelectionEvent:ChangeSelectiond wait TopDetailSelection Update");
+      navFunct_waitObjectReady(500);
       
     }
-    return;
   }
   
   // Fill highlight string        
@@ -641,30 +532,17 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|g_processesList: ",g_processesList);
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|g_observationsList: ",g_observationsList);
 
-          
         if (sel[1] == "Observations") {
           typeSelector=sel[1];
-          if (dynlen(sel) >= 2) observationType=sel[2];
-          if (dynlen(sel) >= 3) { 
-            selection=sel[3];
-            navProgressCtrl_handleObservation(selection);
-            if (!dynContains(highlight,selection)) {
-              dynAppend(highlight,selection);
-            }
+          observationType=sel[2];
+          selection=sel[3];
+          if (!dynContains(highlight,selection)) {
+            dynAppend(highlight,selection);
           }
-      // if on one of the "main" groups we need to add all observations that are within this group    
-          if (selection == "planned" || selection == "active" || selection == "finished") {
-            dyn_string selections="";
-            dpGet("MCU001:LOFAR_PermSW_MACScheduler."+selection+"Observations",selections);
-            for (int o=1; o <=dynlen(selections) ; o++) {
-              navCtrl_highlightAddHardwareFromObservation(selections[o]);
-              navCtrl_highlightAddProcessesFromObservation(selections[o]);
-            }
-          } else { 
-            // if selection == observation, add involved hardware && software
-            navCtrl_highlightAddHardwareFromObservation(selection);
-            navCtrl_highlightAddProcessesFromObservation(selection);
-          }
+          
+          // if selection == observation, add involved hardware && software
+          navCtrl_highlightAddHardwareFromObservation(selection);
+          navCtrl_highlightAddProcessesFromObservation(selection);
         } else if (sel[1] == "Hardware") {  // Hardware
           typeSelector=sel[1];
           observationType="";
@@ -692,11 +570,10 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
       dpSet(DPNAME_NAVIGATOR + g_navigatorID+".objectTrigger",true);
           
     }
-    return;
   }
   
   if (anEvent == "ChangePanel") {
- 
+
     //check if a tab change should be initiated
     if (ACTIVE_TAB != typeSelector && typeSelector != "") {
       LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|Active tab should be changed to : "+ typeSelector);
@@ -710,7 +587,7 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
     // a fake point will be known by the # delim
     
     string var="";
-    if (strpos(selection,"#") >= 0) {
+    if (strtok(selection,"#") >= 0) {
       dyn_string aS = strsplit(selection,"#");
       selection = aS[1];
       var= aS[2];
@@ -720,7 +597,7 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
       if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList")) {
         dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList",var);
       } else {
-        LOG_WARN("navCtrl.ctl:navCtrl_handleDetailSelectionEvent| Error: no dp " + DPNAME_NAVIGATOR + g_navigatorID+".panelParamList");
+        LOG_WARN("navCtrl.ctl:navCtrl_handleLocatorEvent| Error: no dp " + DPNAME_NAVIGATOR + g_navigatorID+".panelParamList");
       }
     }
       
@@ -730,21 +607,20 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
     }
     
     if (navTabCtrl_showView()) {
-        navFunct_waitObjectReady(500,"handleDetailSelectionEvent:ChangePanel wait navTabCtrl_showView");
+      navFunct_waitObjectReady(500);
       
         
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
-        navFunct_waitObjectReady(500,"handleDetailSelectionEvent:ChangePanel wait Locator ChangeSelection "+aSelection);
+      navFunct_waitObjectReady(500);
       
 
       // change fastJumper
       dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
-        navFunct_waitObjectReady(500,"handleDetailSelectionEvent:ChangePanel wait FastJumper ChangeSelection "+aSelection);
+      navFunct_waitObjectReady(500);
       
     }
-  }
-  return;  
+  }       
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -786,7 +662,7 @@ void navCtrl_handleLocatorEvent(string dp,string value){
   // depending on the event received, actions need to be taken
   if (anEvent == "ChangePanel") {
     if (navTabCtrl_showView()) {
-        navFunct_waitObjectReady(500,"handleLocatorEvent:ChangePanel wait navTabCtrl_showView");
+      navFunct_waitObjectReady(500);
       
       
       //clear old highlights
@@ -794,20 +670,19 @@ void navCtrl_handleLocatorEvent(string dp,string value){
       
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
-        navFunct_waitObjectReady(500,"handleLocatorEvent:ChangePanel wait Locator ChangeSelection " + aSelection);
+      navFunct_waitObjectReady(500);
       
       
       // change fastJumper
       dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
-        navFunct_waitObjectReady(500,"handleLocatorEvent:ChangePanel wait FastJumper ChangeSelection " + aSelection);
+      navFunct_waitObjectReady(500);
       
 
       // inform headLines Object
       dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
-        navFunct_waitObjectReady(500,"handleLocatorEvent:ChangePanel wait HeadLines ChangeInfo ");
+      navFunct_waitObjectReady(500);
       
     }
-    return;
   }  
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -923,18 +798,14 @@ void navCtrl_handleAlertsEvent(string dp,string value){
  	navCtrl_handleNavigatorEvent(aSelection,anEvent,aShape); 
         
        
- // ChangeTab: This is used when a point on one tab refers to a point that belaongs to another tab. 
- // Obviously we dont want a restore  a previously saved panel in this caes
- // Check for top tab and change when needed, also set the new active DP panel if available 
- if (anEvent == "ChangeTab") {
+  // Check for top tab and change when needed, also set the new active DP panel if available 
+  if (anEvent == "ChangeTab") {
     if (ACTIVE_TAB != aSelection) {
-      navTabCtrl_setSelectedTab(aSelection);
-      navTabCtrl_removeView();
       navTabCtrl_setSelectedTab(aSelection);
       ACTIVE_TAB = aSelection;
     }
     if (navTabCtrl_showView()) {
-        navFunct_waitObjectReady(500,"handleAlertsEvent:ChangeTab wait navTabCtrl_showView");
+      navFunct_waitObjectReady(500);
       
       
       //clear old highlights
@@ -942,19 +813,19 @@ void navCtrl_handleAlertsEvent(string dp,string value){
       
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
-      navFunct_waitObjectReady(500,"handleAlertsEvent:ChangeTab wait Locator ChangeSelection " + aSelection);
-     
+      navFunct_waitObjectReady(500);
+      
       
       // change fastJumper
       dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
-      navFunct_waitObjectReady(500,"handleAlertsEvent:ChangeTab wait FastJumper ChangeSelection " + aSelection);     
+      navFunct_waitObjectReady(500);
+      
 
       // inform headLines Object
       dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
-      navFunct_waitObjectReady(500,"handleAlertsEvent:ChangeTab wait HeadLines ChangeInfo " + aSelection);
+      navFunct_waitObjectReady(500);
       
     }
-    return;
   }
 
 }
@@ -998,7 +869,7 @@ void navCtrl_handleFastJumperEvent(string dp,string value){
   
   if (anEvent == "ChangePanel") {
     if (navTabCtrl_showView()) {
-      navFunct_waitObjectReady(500,"handleFastJumperEvent:ChangePanel wait navTabCtrl_showView");
+      navFunct_waitObjectReady(500);
       
       
       //clear old highlights
@@ -1006,16 +877,15 @@ void navCtrl_handleFastJumperEvent(string dp,string value){
       
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
-      navFunct_waitObjectReady(500,"handleFastJumperEvent:ChangePanel wait Locator ChangeSelection "+aSelection);
+      navFunct_waitObjectReady(500);
       
       
       // change fastJumper
       dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
-      navFunct_waitObjectReady(500,"handleFastJumperEvent:ChangePanel wait FastJumper ChangeSelection "+aSelection);
+      navFunct_waitObjectReady(500);
       
 
     }
-    return;
   }
   
 }
@@ -1097,16 +967,6 @@ void navCtrl_highlightAddObservationsFromHardware(string selection) {
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddObservationsFromHardware|leaving with highlight now: ", highlight);
 }
 
-void navCtrl_highlightAddPipelinesFromHardware(string selection) {
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddPipelinesFromHardware|entered with highlight: "+ highlight + " selection: " + selection);  
-
-  // To be done
-  
-  
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddPipelinesFromHardware|leaving with highlight now: ", highlight);
-}
-
-
 void navCtrl_highlightAddHardwareFromObservation(string selection) {
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservation|entered with highlight: " + highlight+ "selection: " + selection); 
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservation|g_stationList: " + g_stationList); 
@@ -1119,7 +979,7 @@ void navCtrl_highlightAddHardwareFromObservation(string selection) {
   string station="";  
   if (dynlen(g_stationList) > 1 || (dynlen(g_stationList) == 1 && ACTIVE_TAB != "Hardware")) {
     for (int k=1; k<= dynlen(g_stationList); k++) {
-      if (g_stationList[k] == navFunct_bareDBName(CEPDBName) || navFunct_hardware2Obs(g_stationList[k], longObs,"Station",g_stationList[k],0)) {
+      if (g_stationList[k] == "CCU001" || navFunct_hardware2Obs(g_stationList[k], longObs,"Station",g_stationList[k],0)) {
         if (!dynContains(highlight,g_stationList[k])) {
           dynAppend(highlight,g_stationList[k]);
         }
@@ -1163,15 +1023,6 @@ void navCtrl_highlightAddHardwareFromObservation(string selection) {
       }
     }
   }
-  
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservation|leaving with highlight: " + highlight);
-}
-
-void navCtrl_highlightAddHardwareFromPipeline(string selection) {
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromPipeline|entered with highlight: " + highlight+ "selection: " + selection); 
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromPipeline|g_stationList: " + g_stationList); 
-   
-  // To be done
   
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddHardwareFromObservation|leaving with highlight: " + highlight);
 }
@@ -1239,16 +1090,6 @@ void navCtrl_highlightAddObservationsFromProcess(string selection) {
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddObservationsFromProcess|leaving with highlight: " + highlight);
 }
 
-// selection is a single processline, check if it contains an observation
-void navCtrl_highlightAddPipelinesFromProcess(string selection) {
-  
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddPipelinesFromProcess|entered with highlight: "+ highlight + " selection: " + selection);  
-
-    // To be done
-  
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddObservationsFromProcess|leaving with highlight: " + highlight);
-}
-
 // selection is a single observationitem, check for all processes that have that hardware in its line
 void navCtrl_highlightAddProcessesFromObservation(string selection) {
   
@@ -1265,16 +1106,6 @@ void navCtrl_highlightAddProcessesFromObservation(string selection) {
     }
   }
   LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddProcessesFromHardware|leaving with highlight: " + highlight);
-}
-
-// selection is a single pipelineitem, check for all processes that have that hardware in its line
-void navCtrl_highlightAddProcessesFromPipeline(string selection) {
-  
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddProcessesFromPipeline|entered with highlight: "+ highlight + " selection: " + selection);  
-  
-  // To be done
-  
-  LOG_DEBUG("navCtrl.ctl:navCtrl_highlightAddProcessesFromPipeline|leaving with highlight: " + highlight);
 }
 
 // Strips names like xxxx:yyyy_zzzz_wwww
@@ -1315,7 +1146,7 @@ void navCtrl_handleNavigatorEvent(string selection,string event, string initiato
     if (event == "DistChanged") {
       // change locator
       dpSet(VIEWBOXACTIONDP,"DistChanged");
-        navFunct_waitObjectReady(500,"handleNavigatorEvent:DistChanged wait ViewBox DistChanged");
+      navFunct_waitObjectReady(500);
       
       
     }

@@ -78,8 +78,7 @@ void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequen
 	saveBaselineFrequencyInfo(_filePrefix + "counts-baselfreq.txt");
 	afLock.unlock();
 	
-	bool isCross = (!metaData->HasAntenna1()) || (!metaData->HasAntenna2()) || metaData->Antenna1().id == metaData->Antenna2().id;
-	if(isCross)
+	if(metaData->Antenna1().id == metaData->Antenna2().id)
 	{
 		boost::mutex::scoped_lock genLock(_genericMutex);
 		addFeatures(_autoAmplitudes, image, mask, metaData, segmentedMask);
@@ -624,32 +623,22 @@ void RFIStatistics::addBaselines(const TimeFrequencyData &data, TimeFrequencyMet
 			}
 		}
 	}
-	int a1, a2;
-	if(metaData->HasAntenna1())
-		a1 = metaData->Antenna1().id;
-	else
-		a1 = 0;
-	if(metaData->HasAntenna2())
+	int
+		a1 = metaData->Antenna1().id,
 		a2 = metaData->Antenna2().id;
-	else
-		a2 = 0;
 	if(_baselines.count(a1) == 0)
 		_baselines.insert(BaselineMatrix::value_type(a1, std::map<int, BaselineInfo>() ));
 	BaselineMatrix::mapped_type &row = _baselines.find(a1)->second;
 	
-	Baseline baselineMSData;
-	if(metaData->HasAntenna1() && metaData->HasAntenna2())
-		baselineMSData = Baseline(metaData->Antenna1(), metaData->Antenna2());
+	Baseline baselineMSData(metaData->Antenna1(), metaData->Antenna2());
 
 	if(row.count(a2) == 0)
 	{
 		BaselineInfo baseline;
 		baseline.antenna1 = a1;
 		baseline.antenna2 = a2;
-		if(metaData->HasAntenna1())
-			baseline.antenna1Name = metaData->Antenna1().name;
-		if(metaData->HasAntenna2())
-			baseline.antenna2Name = metaData->Antenna2().name;
+		baseline.antenna1Name = metaData->Antenna1().name;
+		baseline.antenna2Name = metaData->Antenna2().name;
 		baseline.baselineLength = baselineMSData.Distance();
 		baseline.baselineAngle = baselineMSData.Angle();
 
@@ -833,14 +822,8 @@ void RFIStatistics::addAmplitudeComparison(std::map<double, AmplitudeBin> &ampli
 void RFIStatistics::addBaselineFrequencyInfo(TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask)
 {
 	IndexTriple index;
-	if(metaData->HasAntenna1())
-		index.antenna1Index = metaData->Antenna1().id;
-	else
-		index.antenna1Index = 0;
-	if(metaData->HasAntenna2())
-		index.antenna2Index = metaData->Antenna2().id;
-	else
-		index.antenna2Index = 0;
+	index.antenna1Index = metaData->Antenna1().id;
+	index.antenna2Index = metaData->Antenna2().id;
 	index.thirdIndex = (metaData->Band().channels.begin()->frequencyHz + metaData->Band().channels.rbegin()->frequencyHz) / 2.0;
 	std::map<IndexTriple, BaselineFrequencyInfo>::iterator element = _baselineFrequencyInfo.find(index);
 	if(element == _baselineFrequencyInfo.end())
@@ -868,14 +851,8 @@ void RFIStatistics::addBaselineFrequencyInfo(TimeFrequencyMetaDataCPtr metaData,
 void RFIStatistics::addBaselineTimeInfo(TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask)
 {
 	IndexTriple index;
-	if(metaData->HasAntenna1())
-		index.antenna1Index = metaData->Antenna1().id;
-	else
-		index.antenna1Index = 0;
-	if(metaData->HasAntenna2())
-		index.antenna2Index = metaData->Antenna2().id;
-	else
-		index.antenna2Index = 0;
+	index.antenna1Index = metaData->Antenna1().id;
+	index.antenna2Index = metaData->Antenna2().id;
 	//double timeStart = metaData->ObservationTimes()[0];
 	//double duration = metaData->ObservationTimes()[image->Width()-1] - timeStart;
 	for(size_t x=0;x<image->Width();++x)
@@ -1565,10 +1542,10 @@ void RFIStatistics::saveMetaData(const std::string &filename) const
 	if(_crossTimesteps.empty() || _crossChannels.empty())
 		return;
 	
-	const class TimestepInfo
+	const struct TimestepInfo
 		&firstStep = _crossTimesteps.begin()->second,
 		&lastStep = _crossTimesteps.rbegin()->second;
-	const class ChannelInfo
+	const struct ChannelInfo
 		&startChannel = _crossChannels.begin()->second,
 		&endChannel = _crossChannels.rbegin()->second;
 
@@ -1669,13 +1646,13 @@ void RFIStatistics::saveMetaData(const std::string &filename) const
 void RFIStatistics::savePlots(const std::string &basename) const
 {
 	
-	class TimestepInfo firstStep, lastStep;
+	struct TimestepInfo firstStep, lastStep;
 	if(!_crossTimesteps.empty())
 	{
 		firstStep = _crossTimesteps.begin()->second;
 		lastStep = _crossTimesteps.rbegin()->second;
 	}
-	class ChannelInfo startChannel, endChannel;
+	struct ChannelInfo startChannel, endChannel;
 	if(!_crossChannels.empty())
 	{
 		startChannel = _crossChannels.begin()->second;

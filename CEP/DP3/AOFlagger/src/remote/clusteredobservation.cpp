@@ -18,8 +18,6 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <lofar_config.h>
-
 #include <AOFlagger/remote/clusteredobservation.h>
 
 #include <stdexcept>
@@ -58,7 +56,7 @@ ClusteredObservation *ClusteredObservation::LoadFromVds(const std::string &vdsFi
 			throw std::runtime_error("One of the file system descriptors in the VDS file has an unexpected format");
 		const std::string hostname = filesystem.substr(0, separatorPos);
 		
-		ClusteredObservationItem newItem(cObs->Size(), filename, hostname);
+		ClusteredObservationItem newItem(filename, hostname);
 		cObs->AddItem(newItem);
 	}
 	
@@ -74,7 +72,7 @@ ClusteredObservation *ClusteredObservation::LoadFromRef(const std::string &refFi
 	for(AOTools::RefFile::const_iterator i=refFile.begin();i!=refFile.end();++i)
 	{
 		const AOTools::RefFileEntry &entry = *i;
-		cObs->AddItem(ClusteredObservationItem(cObs->Size(), entry.Path(), entry.Node()));
+		cObs->AddItem(ClusteredObservationItem(entry.Path(), entry.Node()));
 	}
 	return cObs.release();
 }

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -70,8 +70,12 @@ void SetDatastreamCmd::ack(CacheBuffer& cache)
 //
 void SetDatastreamCmd::apply(CacheBuffer& cache, 	bool setModFlag)
 {
-	cache.setCepEnabled(0, itsEvent->switch_on0); // enable datastream to cep
-	cache.setCepEnabled(1, itsEvent->switch_on1); // enable datastream to cep
+	if (itsEvent->switch_on) {
+		cache.setCepEnabled(true); // enable datastream to cep
+	}
+	else {
+		cache.setCepEnabled(false); // disable datastream to cep
+	}
 
 	// mark registers that the serdes registers should be written.
 	if (setModFlag) {

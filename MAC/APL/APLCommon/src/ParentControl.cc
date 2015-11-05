@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -36,10 +36,7 @@
 #include <StartDaemon_Protocol.ph>
 
 namespace LOFAR {
-  using namespace Controller_Protocol;
-  using namespace StartDaemon_Protocol;
   using namespace GCF::TM;
-  using namespace boost::posix_time;
   namespace APLCommon {
 
 typedef struct stateFlow_t {
@@ -535,7 +532,7 @@ bool ParentControl::_confirmState(uint16			signal,
 		return (true);
 	}
 
-	if (F_ERR_NR(result) != 0) {			// error reaching a state?
+	if (result != CT_RESULT_NO_ERROR) {		// error reaching a state?
 		parent->failed = true;				// report problem
 		LOG_INFO_STR(cntlrName << " DID NOT reach the " << cts.name(requestedState(signal)) << " state, error=" << result);
 		return (false);

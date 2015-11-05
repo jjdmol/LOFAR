@@ -2,7 +2,7 @@
 
 #  Copyright (C) 2008-2010
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -32,23 +32,17 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
   ## --------------------------------------------------------------------------
   ## Handle contradicting options
   ## --------------------------------------------------------------------------
-  if(BUILD_STATIC_EXECUTABLES AND BUILD_SHARED_LIBS)
-    message(FATAL_ERROR 
-      "Cannot create static executables, when creating shared libraries. "
-      "Please check your variants file!")
-  endif(BUILD_STATIC_EXECUTABLES AND BUILD_SHARED_LIBS)
-
   if(USE_LOG4CXX AND USE_LOG4CPLUS)
     message(FATAL_ERROR 
       "You cannot use more than one logger implementation. "
       "Please check your variants file!")
   endif(USE_LOG4CXX AND USE_LOG4CPLUS)
 
-  if(USE_OPENMP AND NOT USE_THREADS)
-    message(FATAL_ERROR
-      "Using OpenMP implies using threads. "
+  if(BUILD_STATIC_EXECUTABLES AND BUILD_SHARED_LIBS)
+    message(FATAL_ERROR 
+      "Cannot create static executables, when creating shared libraries. "
       "Please check your variants file!")
-  endif(USE_OPENMP AND NOT USE_THREADS)
+  endif(BUILD_STATIC_EXECUTABLES AND BUILD_SHARED_LIBS)
 
   ## --------------------------------------------------------------------------
   ## Handle each option
@@ -103,6 +97,12 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
     set(HAVE_OPENMP OFF)
   endif(USE_OPENMP)
 
+  if(USE_PQXX)
+    lofar_find_package(PQXX REQUIRED)
+  else(USE_PQXX)
+    set(HAVE_PQXX OFF)
+  endif(USE_PQXX)
+
   if(USE_SHMEM)
     set(HAVE_SHMEM 1)
   endif(USE_SHMEM)
@@ -114,18 +114,16 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
   if(USE_THREADS)
     set(_errmsg "FIXME: Don't know how to enable thread support for ")
     lofar_find_package(Pthreads REQUIRED)
-    if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR 
-       CMAKE_C_COMPILER_ID MATCHES "Clang")
+    if(CMAKE_COMPILER_IS_GNUCC)
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
-    else()
+    else(CMAKE_COMPILER_IS_GNUCC)
       message(FATAL_ERROR "${_errmsg} ${CMAKE_C_COMPILER}")
-    endif()
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR 
-       CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    endif(CMAKE_COMPILER_IS_GNUCC)
+    if(CMAKE_COMPILER_IS_GNUCXX)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-    else()
+    else(CMAKE_COMPILER_IS_GNUCXX)
       message(FATAL_ERROR "${_errmsg} ${CMAKE_CXX_COMPILER}")
-    endif()
+    endif(CMAKE_COMPILER_IS_GNUCXX)
     add_definitions(-DUSE_THREADS)
   endif(USE_THREADS)
 

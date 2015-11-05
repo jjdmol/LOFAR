@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -89,11 +89,9 @@ public:
 private:
 	// Private types.
 	typedef std::priority_queue<Ptr<Command>, std::vector<Ptr<Command> >, RSP::Command_greater> pqueue;
-	typedef std::priority_queue<Ptr<Command>, std::vector<Ptr<Command> >, RSP::Command_order>   oqueue;
 
 	// Private helper methods.
 	int pqueue_remove_commands(pqueue& p, GCFPortInterface& port, memptr_t handle = 0);
-	int oqueue_remove_commands(oqueue& p, GCFPortInterface& port, memptr_t handle = 0);
 
 	// Constants from the config file converted to the correct type.
 	static int SYNC_INTERVAL_INT;
@@ -112,7 +110,7 @@ private:
 	pqueue	m_later_queue;				// commands to be exec later
 	pqueue	m_periodic_queue;			// commands to be executed peiodically
 	pqueue	m_now_queue;				// filled every second from later and periodic queue
-	oqueue	m_done_queue;				// commands that wait for cache switching
+	pqueue	m_done_queue;				// commands that wait for cache switching
 	pqueue	itsDelayedResponseQueue;	// commands that wait for two cache switchings
 
 	std::map< GCFPortInterface*, std::vector<SyncAction*> > m_syncactions;

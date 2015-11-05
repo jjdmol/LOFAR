@@ -2,7 +2,7 @@
 #
 #  Copyright (C) 2008-2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -19,9 +19,6 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 lofar_package(IBS_Protocol 1.0 DEPENDS Common MACIO RTCCommon RSP_Protocol)
-
-include(LofarFindPackage)
-lofar_find_package(Boost REQUIRED)
 
 add_subdirectory(include/APL/IBS_Protocol)
 add_subdirectory(src)

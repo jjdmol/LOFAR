@@ -26,7 +26,7 @@
 #include <DPPP/DPInput.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 #include <Common/StringUtil.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -51,13 +51,13 @@ public:
   {
     // Fill the baseline stations; use 4 stations.
     // So they are called 00 01 02 03 10 11 12 13 20, etc.
-    Vector<Int> ant1(itsNBl);
-    Vector<Int> ant2(itsNBl);
+    itsAnt1.resize (itsNBl);
+    itsAnt2.resize (itsNBl);
     int st1 = 0;
     int st2 = 0;
     for (int i=0; i<itsNBl; ++i) {
-      ant1[i] = st1;
-      ant2[i] = st2;
+      itsAnt1[i] = st1;
+      itsAnt2[i] = st2;
       if (++st2 == 4) {
         st2 = 0;
         if (++st1 == 4) {
@@ -65,33 +65,29 @@ public:
         }
       }
     }
-    Vector<String> antNames(4);
-    antNames[0] = "rs01.s01";
-    antNames[1] = "rs02.s01";
-    antNames[2] = "cs01.s01";
-    antNames[3] = "cs01.s02";
+    itsAntNames.resize(4);
+    itsAntNames[0] = "rs01.s01";
+    itsAntNames[1] = "rs02.s01";
+    itsAntNames[2] = "cs01.s01";
+    itsAntNames[3] = "cs01.s02";
     // Define their positions (more or less WSRT RT0-3).
-    vector<MPosition> antPos (4);
+    itsAntPos.resize (4);
     Vector<double> vals(3);
     vals[0] = 3828763; vals[1] = 442449; vals[2] = 5064923;
-    antPos[0] = MPosition(Quantum<Vector<double> >(vals,"m"),
+    itsAntPos[0] = MPosition(Quantum<Vector<double> >(vals,"m"),
                              MPosition::ITRF);
     vals[0] = 3828746; vals[1] = 442592; vals[2] = 5064924;
-    antPos[1] = MPosition(Quantum<Vector<double> >(vals,"m"),
+    itsAntPos[1] = MPosition(Quantum<Vector<double> >(vals,"m"),
                              MPosition::ITRF);
     vals[0] = 3828729; vals[1] = 442735; vals[2] = 5064925;
-    antPos[2] = MPosition(Quantum<Vector<double> >(vals,"m"),
+    itsAntPos[2] = MPosition(Quantum<Vector<double> >(vals,"m"),
                              MPosition::ITRF);
     vals[0] = 3828713; vals[1] = 442878; vals[2] = 5064926;
-    antPos[3] = MPosition(Quantum<Vector<double> >(vals,"m"),
+    itsAntPos[3] = MPosition(Quantum<Vector<double> >(vals,"m"),
                              MPosition::ITRF);
-    Vector<double> antDiam(4, 70.);
-    info().set (antNames, antDiam, antPos, ant1, ant2);
     // Define the frequencies.
-    Vector<double> chanFreqs(nchan);
-    Vector<double> chanWidth(nchan, 100000.);
-    indgen (chanFreqs, 1050000., 100000.);
-    info().set (chanFreqs, chanWidth);
+    itsChanFreqs.resize (nchan);
+    indgen (itsChanFreqs, 1050000., 100000.);
   }
 private:
   virtual bool process (const DPBuffer&)
@@ -129,9 +125,9 @@ private:
 
   virtual void finish() {getNextStep()->finish();}
   virtual void show (std::ostream&) const {}
-  virtual void updateInfo (const DPInfo&)
+  virtual void updateInfo (DPInfo& info)
     // Use startchan=0 and timeInterval=5
-    { info().init (itsNCorr, itsNChan, itsNTime, 100, 5, string(), string()); }
+    { info.init (itsNCorr, 0, itsNChan, itsNBl, itsNTime, 5); }
 
   int itsCount, itsNTime, itsNBl, itsNChan, itsNCorr;
   bool itsFlag;
@@ -141,9 +137,13 @@ private:
 class TestOutput: public DPStep
 {
 public:
-  TestOutput(int ntime, int nant, int nchan, int ncorr)
+  TestOutput(int ntime, int nant, int nchan, int ncorr,
+             bool flag, bool useAutoCorr, bool shortbl)
     : itsCount(0), itsNTime(ntime), itsNBl(nant*(nant+1)/2), itsNChan(nchan),
-      itsNCorr(ncorr)
+      itsNCorr(ncorr),
+      itsFlag(flag),
+      itsUseAutoCorr(useAutoCorr),
+      itsShortBL(shortbl)
   {}
 private:
   virtual bool process (const DPBuffer& buf)
@@ -168,35 +168,38 @@ private:
 
   virtual void finish() {}
   virtual void show (std::ostream&) const {}
-  virtual void updateInfo (const DPInfo& info)
+  virtual void updateInfo (DPInfo& info)
   {
+    ASSERT (info.startChan()==0);
     ASSERT (int(info.origNChan())==itsNChan);
     ASSERT (int(info.nchan())==itsNChan);
     ASSERT (int(info.ntime())==itsNTime);
-    ASSERT (info.startTime()==100);
     ASSERT (info.timeInterval()==5);
     ASSERT (int(info.nchanAvg())==1);
     ASSERT (int(info.ntimeAvg())==1);
-    ASSERT (int(info.chanFreqs().size()) == itsNChan);
-    ASSERT (int(info.chanWidths().size()) == itsNChan);
-    ASSERT (info.msName().empty());
   }
 
   int itsCount;
-  int itsNTime, itsNBl, itsNChan, itsNCorr;
+  int itsNTime, itsNBl, itsNChan, itsNCorr, itsNAvgTime, itsNAvgChan;
+  bool itsFlag, itsUseAutoCorr, itsShortBL;
 };
 
 
 // Execute steps.
 void execute (const DPStep::ShPtr& step1)
 {
-  // Set the info in each step.
-  step1->setInfo (DPInfo());
+  // Set DPInfo.
+  DPInfo info;
+  DPStep::ShPtr step = step1;
+  while (step) {
+    step->updateInfo (info);
+    step = step->getNextStep();
+  }
   // Execute the steps.
   DPBuffer buf;
   while (step1->process(buf));
   step1->finish();
-  DPStep::ShPtr step = step1;
+  step = step1;
   while (step) {
     step->showCounts (cout);
     step = step->getNextStep();
@@ -204,17 +207,20 @@ void execute (const DPStep::ShPtr& step1)
 }
 
 // Test simple flagging with or without preflagged points.
-void test1(int ntime, int nant, int nchan, int ncorr, bool flag, int threshold)
+void test1(int ntime, int nant, int nchan, int ncorr, bool flag, int threshold,
+           bool shortbl)
 {
   cout << "test1: ntime=" << ntime << " nrant=" << nant << " nchan=" << nchan
-       << " ncorr=" << ncorr << " threshold=" << threshold << endl;
+       << " ncorr=" << ncorr << " threshold=" << threshold
+       << " shortbl=" << shortbl << endl;
   // Create the steps.
   TestInput* in = new TestInput(ntime, nant, nchan, ncorr, flag);
   DPStep::ShPtr step1(in);
   ParameterSet parset;
   parset.add ("timewindow", "1");
   DPStep::ShPtr step2(new AORFlagger(in, parset, ""));
-  DPStep::ShPtr step3(new TestOutput(ntime, nant, nchan, ncorr));
+  DPStep::ShPtr step3(new TestOutput(ntime, nant, nchan, ncorr, flag, false,
+                                     shortbl));
   step1->setNextStep (step2);
   step2->setNextStep (step3);
   step2->show (cout);
@@ -222,10 +228,12 @@ void test1(int ntime, int nant, int nchan, int ncorr, bool flag, int threshold)
 }
 
 // Test applyautocorr flagging with or without preflagged points.
-void test2(int ntime, int nant, int nchan, int ncorr, bool flag, int threshold)
+void test2(int ntime, int nant, int nchan, int ncorr, bool flag, int threshold,
+           bool shortbl)
 {
   cout << "test2: ntime=" << ntime << " nrant=" << nant << " nchan=" << nchan
-       << " ncorr=" << ncorr << " threshold=" << threshold << endl;
+       << " ncorr=" << ncorr << " threshold=" << threshold
+       << " shortbl=" << shortbl << endl;
   // Create the steps.
   TestInput* in = new TestInput(ntime, nant, nchan, ncorr, flag);
   DPStep::ShPtr step1(in);
@@ -233,7 +241,8 @@ void test2(int ntime, int nant, int nchan, int ncorr, bool flag, int threshold)
   parset.add ("timewindow", "4");
   parset.add ("overlapmax", "1");
   DPStep::ShPtr step2(new AORFlagger(in, parset, ""));
-  DPStep::ShPtr step3(new TestOutput(ntime, nant, nchan, ncorr));
+  DPStep::ShPtr step3(new TestOutput(ntime, nant, nchan, ncorr, flag, true,
+                                     shortbl));
   step1->setNextStep (step2);
   step2->setNextStep (step3);
   execute (step1);
@@ -246,13 +255,13 @@ int main()
   try {
 
     for (uint i=0; i<2; ++i) {
-      test1(10, 2, 32, 4, false, 1);
-      test1(10, 5, 32, 4, true, 1);
-      test2( 4, 2,  8, 4, false, 100);
-      test2(10, 5, 32, 4, true, 1);
-      test2( 8, 2,  8, 4, false, 100);
-      test2(14, 2,  8, 4, false, 100);
-      ///      test2(99, 8, 64, 4, false, 100);
+      test1(10, 2, 32, 4, false, 1, i>0);
+      test1(10, 5, 32, 4, true, 1, i>0);
+      test2( 4, 2,  8, 4, false, 100, i>0);
+      test2(10, 5, 32, 4, true, 1, i>0);
+      test2( 8, 2,  8, 4, false, 100, i>0);
+      test2(14, 2,  8, 4, false, 100, i>0);
+      ///      test2(99, 8, 64, 4, false, 100, i>0);
     }
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;

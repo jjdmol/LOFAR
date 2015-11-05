@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@
 //# Includes
 #include <Common/lofar_vector.h>
 #include <Common/StreamUtil.h>
+#include <MACIO/Marshalling.h>
 
 // Avoid 'using namespace' in headerfiles
 
@@ -47,9 +48,9 @@ public:
 	DoubleVector() {};
 	~DoubleVector() {};
 
-	uint32 getSize() const;
-	uint32 pack  (char	*buffer) const;
-	uint32 unpack(char	*buffer);
+	unsigned int getSize();
+	unsigned int pack  (void	*buffer);
+	unsigned int unpack(void	*buffer);
 	ostream& print (ostream& os) const;
 
 	vector<double>&	operator()()
@@ -63,24 +64,26 @@ private:
 // @}
 
 // getSize()
-inline uint32 DoubleVector::getSize() const
+inline unsigned int DoubleVector::getSize()
 {
-	return (MSH_size(theVector));
+	unsigned int	offset = 0;
+	MSH_SIZE_VECTOR_DOUBLE(offset, theVector);
+	return (offset);
 }
 
 // pack()
-inline uint32 DoubleVector::pack(char	*buffer) const
+inline unsigned int DoubleVector::pack(void	*buffer)
 {
-	uint32 offset = 0;
-	MSH_pack(buffer, offset, theVector);
+	unsigned int offset = 0;
+	MSH_PACK_VECTOR_DOUBLE(buffer, offset, theVector);
 	return (offset);
 }
 
 // unpack()
-inline uint32 DoubleVector::unpack(char	*buffer)
+inline unsigned int DoubleVector::unpack(void	*buffer)
 {
-	uint32 offset = 0;
-	MSH_unpack(buffer, offset, theVector);
+	unsigned int offset = 0;
+	MSH_UNPACK_VECTOR_DOUBLE(buffer, offset, theVector);
 	return (offset);
 }
 

@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,7 +24,8 @@ package nl.astron.lofar.sas.otbcomponents.bbs;
 
 import java.awt.Component;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Vector;
 import javax.swing.JPanel;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
@@ -49,7 +50,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                     
     private jOTDBnode itsNode = null;
     private MainFrame  itsMainFrame;
-    private ArrayList<jOTDBparam> itsParamList;
+    private Vector<jOTDBparam> itsParamList;
     
     // Global Settings parameters
     private jOTDBnode dataSet;
@@ -122,10 +123,13 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         jOTDBparam aParam=null;
         try {
             //we need to get all the childs from this node.
-            ArrayList<jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1));
+            Vector childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
             
-            for (jOTDBnode aNode:childs) {
+            // get all the params per child
+            Enumeration e = childs.elements();
+            while( e.hasMoreElements()  ) {
                 aParam=null;
+                jOTDBnode aNode = (jOTDBnode)e.nextElement();
                 
                 // We need to keep all the nodes needed by this panel
                 // if the node is a leaf we need to get the pointed to value via Param.
@@ -203,9 +207,12 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private void retrieveAndDisplayChildDataForNode(jOTDBnode aNode){
         jOTDBparam aParam=null;
         try {
-            ArrayList<jOTDBnode> HWchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
+            Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
             // get all the params per child
-            for (jOTDBnode aHWNode:HWchilds) {
+            Enumeration e1 = HWchilds.elements();
+            while( e1.hasMoreElements()  ) {
+                
+                jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
                 aParam=null;
                 // We need to keep all the params needed by this panel
                 if (aHWNode.leaf) {
@@ -290,26 +297,25 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         boolean isRef = LofarUtils.isReference(aNode.limits);
         String aKeyName = LofarUtils.keyName(aNode.name);
         String parentName = LofarUtils.keyName(String.valueOf(parent.name));
-        switch (parentName) {
-            case "BBSControl":
-                if (aKeyName.equals("DataSet")) {
-                    this.BBSDatasetText.setToolTipText(aParam.description);
-                    this.dataSet=aNode;
-                    
-                    if (isRef && aParam != null) {
-                        this.BBSDatasetDeRefText.setVisible(true);
-                        BBSDatasetText.setText(aNode.limits);
-                        BBSDatasetDeRefText.setText(aParam.limits);
-                    } else {
-                        BBSDatasetDeRefText.setVisible(false);
-                        BBSDatasetDeRefText.setText("");
-                        BBSDatasetText.setText(aNode.limits);
-                    }
+        
+        if(parentName.equals("BBSControl")){
+            if (aKeyName.equals("DataSet")) {
+                this.BBSDatasetText.setToolTipText(aParam.description);
+                this.dataSet=aNode;
+                
+                if (isRef && aParam != null) {
+                    this.BBSDatasetDeRefText.setVisible(true);
+                    BBSDatasetText.setText(aNode.limits);
+                    BBSDatasetDeRefText.setText(aParam.limits);
+                } else {
+                    BBSDatasetDeRefText.setVisible(false);
+                    BBSDatasetDeRefText.setText("");
+                    BBSDatasetText.setText(aNode.limits);
                 }
-                break;
-            case "BBDB":
-        switch (aKeyName) {
-            case "DBName":
+            }
+        } else if(parentName.equals("BBDB")){
+            
+            if (aKeyName.equals("DBName")) {
                 this.BBDBDBNameText.setToolTipText(aParam.description);
                 this.BBDBDBName=aNode;
                 if (isRef && aParam != null) {
@@ -317,8 +323,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     BBDBDBNameText.setText(aNode.limits);
                 }
-                break;
-            case "Host":
+            }else if (aKeyName.equals("Host")) {
                 this.BBDBHostText.setToolTipText(aParam.description);
                 this.BBDBHost=aNode;
                 if (isRef && aParam != null) {
@@ -326,8 +331,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     BBDBHostText.setText(aNode.limits);
                 }
-                break;
-            case "Port":
+            }else if (aKeyName.equals("Port")) {
                 this.BBDBPortText.setToolTipText(aParam.description);
                 this.BBDBPort=aNode;
                 if (isRef && aParam != null) {
@@ -335,8 +339,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     BBDBPortText.setText(aNode.limits);
                 }
-                break;
-            case "UserName":
+            }else if (aKeyName.equals("UserName")) {
                 this.BBDBDBUsernameText.setToolTipText(aParam.description);
                 this.BBDBUsername=aNode;
                 if (isRef && aParam != null) {
@@ -344,8 +347,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     BBDBDBUsernameText.setText(aNode.limits);
                 }
-                break;
-            case "PassWord":
+            }else if (aKeyName.equals("PassWord")) {
                 this.BBDBDBPasswordText.setToolTipText(aParam.description);
                 this.BBDBPassword=aNode;
                 if (isRef && aParam != null) {
@@ -353,12 +355,9 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     BBDBDBPasswordText.setText(aNode.limits);
                 }
-                break;
-        }
-                break;
-            case "ParmDB":
-        switch (aKeyName) {
-            case "Instrument":
+            }
+        } else if(parentName.equals("ParmDB")){
+            if (aKeyName.equals("Instrument")) {
                 this.ParmDBInstrumentText.setToolTipText(aParam.description);
                 this.ParmDBInstrument=aNode;
                 if (isRef && aParam != null) {
@@ -366,8 +365,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     ParmDBInstrumentText.setText(aNode.limits);
                 }
-                break;
-            case "LocalSky":
+            }else if (aKeyName.equals("LocalSky")) {
                 this.ParmDBLocalSkyText.setToolTipText(aParam.description);
                 this.ParmDBLocalSky=aNode;
                 if (isRef && aParam != null) {
@@ -375,8 +373,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     ParmDBLocalSkyText.setText(aNode.limits);
                 }
-                break;
-            case "History":
+            }else if (aKeyName.equals("History")) {
                 this.ParmDBHistoryText.setToolTipText(aParam.description);
                 this.ParmDBHistory=aNode;
                 if (isRef && aParam != null) {
@@ -384,12 +381,9 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     ParmDBHistoryText.setText(aNode.limits);
                 }
-                break;
-        }
-                break;
-            case "Controller":
-        switch (aKeyName) {
-            case "Host":
+            }
+        } else if (parentName.equals("Controller")) {
+            if (aKeyName.equals("Host")) {
                 this.ControllerHostText.setToolTipText(aParam.description);
                 this.ControllerHost=aNode;
                 if (isRef && aParam != null) {
@@ -397,8 +391,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     ControllerHostText.setText(aNode.limits);
                 }
-                break;
-            case "Port":
+            } else if (aKeyName.equals("Port")) {
                 this.ControllerPortText.setToolTipText(aParam.description);
                 this.ControllerPort=aNode;
                 if (isRef && aParam != null) {
@@ -406,9 +399,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     ControllerPortText.setText(aNode.limits);
                 }
-                break;
-        }
-                break;
+            }
         }
     }
     /** 
@@ -669,13 +660,10 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     }// </editor-fold>//GEN-END:initComponents
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        switch (evt.getActionCommand()) {
-            case "Apply":
-                saveInput();
-                break;
-            case "Restore":
-                this.restoreBBSGlobalSettingsPanel();
-                break;
+        if(evt.getActionCommand().equals("Apply")) {
+            saveInput();
+        }else if(evt.getActionCommand().equals("Restore")) {
+            this.restoreBBSGlobalSettingsPanel();
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     

@@ -60,7 +60,7 @@ enum CollectingMode
 	CollectHistograms
 };
 
-void actionCollect(const std::string &filename, enum CollectingMode mode, StatisticsCollection &statisticsCollection, HistogramCollection &histogramCollection, bool mwaChannels, size_t flaggedTimesteps, const std::set<size_t> &flaggedAntennae)
+void actionCollect(const std::string &filename, enum CollectingMode mode, StatisticsCollection &statisticsCollection, HistogramCollection &histogramCollection)
 {
 	MeasurementSet *ms = new MeasurementSet(filename);
 	const unsigned polarizationCount = ms->GetPolarizationCount();
@@ -73,9 +73,9 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 	for(unsigned b=0;b<bandCount;++b)
 	{
 		bands[b] = ms->GetBandInfo(b);
-		frequencies[b] = new double[bands[b].channels.size()];
-		totalChannels += bands[b].channels.size();
-		for(unsigned c=0;c<bands[b].channels.size();++c)
+		frequencies[b] = new double[bands[b].channelCount];
+		totalChannels += bands[b].channelCount;
+		for(unsigned c=0;c<bands[b].channelCount;++c)
 		{
 			frequencies[b][c] = bands[b].channels[c].frequencyHz;
 		}
@@ -85,7 +85,8 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 	std::cout
 		<< "Polarizations: " << polarizationCount << '\n'
 		<< "Bands: " << bandCount << '\n'
-		<< "Channels/band: " << (totalChannels / bandCount) << '\n';
+		<< "Channels/band: " << (totalChannels / bandCount) << '\n'
+		<< "Name of obseratory: " << stationName << '\n';
 	if(ignoreChannelZero)
 		std::cout << "Channel zero will be ignored, as this looks like a LOFAR data set with bad channel 0.\n";
 	else
@@ -98,9 +99,9 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 		for(unsigned b=0;b<bandCount;++b)
 		{
 			if(ignoreChannelZero)
-				statisticsCollection.InitializeBand(b, (frequencies[b]+1), bands[b].channels.size()-1);
+				statisticsCollection.InitializeBand(b, (frequencies[b]+1), bands[b].channelCount-1);
 			else
-				statisticsCollection.InitializeBand(b, frequencies[b], bands[b].channels.size());
+				statisticsCollection.InitializeBand(b, frequencies[b], bands[b].channelCount);
 		}
 	}
 	// Initialize Histograms collection
@@ -118,44 +119,13 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 	
 	std::cout << "Collecting statistics..." << std::endl;
 	
-	size_t channelCount = bands[0].channels.size();
-	bool correlatorFlags[channelCount], correlatorFlagsForBadAntenna[channelCount];
-	for(size_t ch=0; ch!=channelCount; ++ch)
-	{
-		correlatorFlags[ch] = false;
-		correlatorFlagsForBadAntenna[ch] = true;
-	}
-	
-	if(mwaChannels)
-	{
-		if(channelCount%24 != 0)
-			std::cout << "MWA channels requested, but nr of channels not a multiply of 24. Ignoring.\n";
-		else {
-			size_t chanPerSb = channelCount/24;
-			for(size_t x=0;x!=24;++x)
-			{
-				correlatorFlags[x*chanPerSb] = true;
-				correlatorFlags[x*chanPerSb + chanPerSb/2] = true;
-				correlatorFlags[x*chanPerSb + chanPerSb-1] = true;
-			}
-		}
-	}
-	
 	const unsigned nrow = table.nrow();
-	size_t timestepIndex = (size_t) -1;
-	double prevtime = -1.0;
 	for(unsigned row = 0; row!=nrow; ++row)
 	{
 		const double time = timeColumn(row);
 		const unsigned antenna1Index = antenna1Column(row);
 		const unsigned antenna2Index = antenna2Column(row);
 		const unsigned bandIndex = windowColumn(row);
-		
-		if(time != prevtime)
-		{
-			++timestepIndex;
-			prevtime = time;
-		}
 		
 		const BandInfo &band = bands[bandIndex];
 		
@@ -166,12 +136,9 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 		bool *isRFI[polarizationCount];
 		for(unsigned p = 0; p < polarizationCount; ++p)
 		{
-			isRFI[p] = new bool[band.channels.size()];
-			samples[p] = new std::complex<float>[band.channels.size()];
+			isRFI[p] = new bool[band.channelCount];
+			samples[p] = new std::complex<float>[band.channelCount];
 		}
-		const bool antennaIsFlagged =
-			flaggedAntennae.find(antenna1Index) != flaggedAntennae.end() ||
-			flaggedAntennae.find(antenna2Index) != flaggedAntennae.end();
 		
 		casa::Array<casa::Complex>::const_iterator dataIter = dataArray.begin();
 		casa::Array<bool>::const_iterator flagIter = flagArray.begin();
@@ -184,7 +151,7 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 				++flagIter;
 			}
 		}
-		for(unsigned channel = startChannel ; channel<band.channels.size(); ++channel)
+		for(unsigned channel = startChannel ; channel<band.channelCount; ++channel)
 		{
 			for(unsigned p = 0; p < polarizationCount; ++p)
 			{
@@ -201,13 +168,13 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 			switch(mode)
 			{
 				case CollectDefault:
-					if(antennaIsFlagged || timestepIndex < flaggedTimesteps)
-						statisticsCollection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], correlatorFlagsForBadAntenna, band.channels.size() - startChannel, 2, 1, 1);
-					else
-						statisticsCollection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], correlatorFlags, band.channels.size() - startChannel, 2, 1, 1);
+					{
+						const bool origFlags = false;
+						statisticsCollection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], &origFlags, band.channelCount - startChannel, 2, 1, 0);
+					}
 					break;
 				case CollectHistograms:
-					histogramCollection.Add(antenna1Index, antenna2Index, p, samples[p], isRFI[p], band.channels.size() - startChannel);
+					histogramCollection.Add(antenna1Index, antenna2Index, p, samples[p], isRFI[p], band.channelCount - startChannel);
 					break;
 			}
 		}
@@ -228,12 +195,12 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 	std::cout << "100\n";
 }
 
-void actionCollect(const std::string &filename, enum CollectingMode mode, bool mwaChannels, size_t flaggedTimesteps, const std::set<size_t> &flaggedAntennae)
+void actionCollect(const std::string &filename, enum CollectingMode mode)
 {
 	StatisticsCollection statisticsCollection;
 	HistogramCollection histogramCollection;
 	
-	actionCollect(filename, mode, statisticsCollection, histogramCollection, mwaChannels, flaggedTimesteps, flaggedAntennae);
+	actionCollect(filename, mode, statisticsCollection, histogramCollection);
 	
 	switch(mode)
 	{
@@ -258,10 +225,10 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, bool m
 	std::cout << "Done.\n";
 }
 
-void actionCollectHistogram(const std::string &filename, HistogramCollection &histogramCollection, bool mwaChannels, size_t flaggedTimesteps, const std::set<size_t> &flaggedAntennae)
+void actionCollectHistogram(const std::string &filename, HistogramCollection &histogramCollection)
 {
 	StatisticsCollection tempCollection;
-	actionCollect(filename, CollectHistograms, tempCollection, histogramCollection, mwaChannels, flaggedTimesteps, flaggedAntennae);
+	actionCollect(filename, CollectHistograms, tempCollection, histogramCollection);
 }
 
 void printStatistics(std::complex<long double> *complexStat, unsigned count)
@@ -308,33 +275,6 @@ void printStatistics(const DefaultStatistics &statistics)
 	printStatistics(statistics.dSumP2, statistics.PolarizationCount());
 	std::cout << "\nRFICount=";
 	printStatistics(statistics.rfiCount, statistics.PolarizationCount());
-	std::cout << '\n';
-}
-
-void actionQueryGlobalStat(const std::string &kindName, const std::string &filename)
-{
-	MeasurementSet *ms = new MeasurementSet(filename);
-	const unsigned polarizationCount = ms->GetPolarizationCount();
-	const BandInfo band = ms->GetBandInfo(0);
-	delete ms;
-	
-	const QualityTablesFormatter::StatisticKind kind = QualityTablesFormatter::NameToKind(kindName);
-	
-	QualityTablesFormatter formatter(filename);
-	StatisticsCollection collection(polarizationCount);
-	collection.Load(formatter);
-	DefaultStatistics statistics(polarizationCount);
-	collection.GetGlobalCrossBaselineStatistics(statistics);
-	StatisticsDerivator derivator(collection);
-	
-	double start = band.channels.begin()->frequencyHz;
-	double end = band.channels.rbegin()->frequencyHz;
-	std::cout << round(start/10000.0)/100.0 << '\t' << round(end/10000.0)/100.0;
-	for(unsigned p=0;p<polarizationCount;++p)
-	{
-		long double val = derivator.GetStatisticAmplitude(kind, statistics, p);
-		std::cout << '\t' << val;
-	}
 	std::cout << '\n';
 }
 
@@ -433,35 +373,10 @@ void actionSummarize(const std::string &filename)
 	statisticsCollection.GetGlobalCrossBaselineStatistics(statistics);
 	std::cout << "\nCross-correlated baseline statistics: \n";
 	printStatistics(statistics);
-	
-	DefaultStatistics singlePolStat = statistics.ToSinglePolarization();
-	std::cout << "RFIPercentange: " << StatisticsDerivator::GetStatisticAmplitude(QualityTablesFormatter::RFIPercentageStatistic, singlePolStat, 0) << '\n';
 
 	statisticsCollection.GetGlobalAutoBaselineStatistics(statistics);
 	std::cout << "\nAuto-correlated baseline: \n";
 	printStatistics(statistics);
-}
-
-void actionSummarizeRFI(const std::string &filename)
-{
-	MeasurementSet *ms = new MeasurementSet(filename);
-	const unsigned polarizationCount = ms->GetPolarizationCount();
-	const BandInfo band = ms->GetBandInfo(0);
-	delete ms;
-	
-	StatisticsCollection statisticsCollection;
-	statisticsCollection.SetPolarizationCount(polarizationCount);
-	QualityTablesFormatter qualityData(filename);
-	statisticsCollection.Load(qualityData);
-	DefaultStatistics statistics(statisticsCollection.PolarizationCount());
-	statisticsCollection.GetGlobalCrossBaselineStatistics(statistics);
-	DefaultStatistics singlePolStat = statistics.ToSinglePolarization();
-	
-	double start = band.channels.begin()->frequencyHz;
-	double end = band.channels.rbegin()->frequencyHz;
-	std::cout << "Start:\t" << round(start/10000.0)/100.0 << "\tEnd:\t" << round(end/10000.0)/100.0
-		<<  "\tRFIPercentange:\t"
-		<< StatisticsDerivator::GetStatisticAmplitude(QualityTablesFormatter::RFIPercentageStatistic, singlePolStat, 0) << '\n';
 }
 
 void actionCombine(const std::string outFilename, const std::vector<std::string> inFilenames)
@@ -528,7 +443,7 @@ void printRFISlopeForHistogram(const std::map<HistogramCollection::AntennaPair, 
 	}
 }
 
-void actionHistogram(const std::string &filename, const std::string &query, bool mwaChannels)
+void actionHistogram(const std::string &filename, const std::string &query)
 {
 	HistogramTablesFormatter histogramFormatter(filename);
 	const unsigned polarizationCount = MeasurementSet::GetPolarizationCount(filename);
@@ -548,7 +463,7 @@ void actionHistogram(const std::string &filename, const std::string &query, bool
 	} else if(query == "rfislope-per-baseline")
 	{
 		HistogramCollection collection;
-		actionCollectHistogram(filename, collection, mwaChannels, 0, std::set<size_t>());
+		actionCollectHistogram(filename, collection);
 		MeasurementSet set(filename);
 		size_t antennaCount = set.AntennaCount();
 		AntennaInfo antennae[antennaCount];
@@ -585,10 +500,8 @@ void printSyntax(std::ostream &stream, char *argv[])
 		"\thistogram   - Various histogram actions.\n"
 		"\tquery_b     - Query baselines.\n"
 		"\tquery_t     - Query time.\n"
-		"\tquery_g     - Query single global statistic.\n"
 		"\tremove      - Remove all quality tables.\n"
-		"\tsummarize   - Give a summary of the statistics currently in the quality tables.\n"
-		"\tsummarizerfi- Give a summary of the rfi statistics.\n";
+		"\tsummarize   - Give a summary of the statistics currently in the quality tables.\n";
 }
 
 int main(int argc, char *argv[])
@@ -644,11 +557,6 @@ int main(int argc, char *argv[])
 					std::cout << "Syntax: " << argv[0] << " query_t <kind> <ms>\n\n"
 						"Print the given statistic for each time step.\n";
 				}
-				else if(helpAction == "query_g")
-				{
-					std::cout << "Syntax " << argv[0] << " query_g <kind> <ms>\n\n"
-						"Print the given statistic for this measurement set.\n";
-				}
 				else if(helpAction == "combine")
 				{
 					std::cout << "Syntax: " << argv[0] << " combine <target_ms> [<in_ms> [<in_ms> ..]]\n\n"
@@ -675,30 +583,16 @@ int main(int argc, char *argv[])
 				}
 			}
 		}
-		else if(action == "collect" || action == "mwacollect")
+		else if(action == "collect")
 		{
-			bool mwacollect = (action == "mwacollect");
-			if(argc < 3)
+			if(argc != 3 && !(argc == 4 && std::string(argv[2]) == "-h") )
 			{
 				std::cerr << "collect actions needs one or two parameters (the measurement set)\n";
 				return -1;
 			}
 			else {
-				bool histograms = (std::string(argv[2]) == "-h");
-				int argi = histograms ? 3 : 2;
-				std::string filename = argv[argi];
-				size_t flaggedTimesteps = 0;
-				++argi;
-				std::set<size_t> flaggedAntennae;
-				if(argi != argc) {
-					flaggedTimesteps = atoi(argv[argi]);
-					++argi;
-					while(argi != argc) {
-						flaggedAntennae.insert(atoi(argv[argi]));
-						++argi;
-					}
-				}
-				actionCollect(filename, histograms ? CollectHistograms : CollectDefault, mwacollect, flaggedTimesteps, flaggedAntennae);
+				std::string filename = (argc==3) ? argv[2] : argv[3];
+				actionCollect(filename, argc==4 ? CollectHistograms : CollectDefault);
 			}
 		}
 		else if(action == "combine")
@@ -724,7 +618,7 @@ int main(int argc, char *argv[])
 				return -1;
 			}
 			else {
-				actionHistogram(argv[3], argv[2], false);
+				actionHistogram(argv[3], argv[2]);
 			}
 		}
 		else if(action == "summarize")
@@ -736,28 +630,6 @@ int main(int argc, char *argv[])
 			}
 			else {
 				actionSummarize(argv[2]);
-			}
-		}
-		else if(action == "summarizerfi")
-		{
-			if(argc != 3)
-			{
-				std::cerr << "summarizerfi actions needs one parameter (the measurement set)\n";
-				return -1;
-			}
-			else {
-				actionSummarizeRFI(argv[2]);
-			}
-		}
-		else if(action == "query_g")
-		{
-			if(argc != 4)
-			{
-				std::cerr << "Syntax for query global stat: 'aoquality query_g <KIND> <MS>'\n";
-				return -1;
-			}
-			else {
-				actionQueryGlobalStat(argv[2], argv[3]);
 			}
 		}
 		else if(action == "query_b")

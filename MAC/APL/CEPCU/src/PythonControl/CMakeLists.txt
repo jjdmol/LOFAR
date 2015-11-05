@@ -2,7 +2,7 @@
 #
 #  Copyright (C) 2008-2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -27,8 +27,6 @@ lofar_add_bin_program(PythonControl
   PythonControlMain.cc
   PythonControl.cc)
 
-lofar_add_sbin_program(uploadMetadata uploadMetadata.cc)
-
-install(FILES
-  PythonControl.conf
-  DESTINATION etc)
+install(PROGRAMS
+  startPython.sh
+  DESTINATION bin)

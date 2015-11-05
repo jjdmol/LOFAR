@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -26,8 +26,6 @@
 #include <Common/SystemUtil.h>
 
 #include <Common/ParameterSet.h>
-#include <ApplCommon/LofarDirs.h>
-#include <ApplCommon/StationInfo.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>
@@ -41,7 +39,6 @@ using namespace std;
 namespace LOFAR {
 	using namespace APLCommon;
 	using namespace GCF::TM;
-	using namespace Controller_Protocol;
 	namespace Test {
 	
 //
@@ -550,12 +547,9 @@ void ControllerMenu::_doStartMenu()
 {
 	cout << endl;
 	cout << "You need an exportFile from OTDB containing an Observation." << endl;
-	cout << "Its name has the format " << LOFAR_SHARE_LOCATION 
-	     << "/Observation<nr>." << endl;
-	string	command("ls -1 " LOFAR_SHARE_LOCATION "/Observation[0-9]*");
-	if (system(command.c_str()) != 0) {
-		cout << "Command '" << command << "' failed!" << endl;
-	}
+	cout << "Its name has the format /opt/lofar/share/Observation<nr>." << endl;
+	string	command("ls -1 /opt/lofar/share/Observation[0-9]*");
+	system(command.c_str());
 
 	int32	obsnr(-1);
 	while (obsnr < 0) {
@@ -568,8 +562,7 @@ void ControllerMenu::_doStartMenu()
 			return;
 		}
 		ifstream	iFile;
-		string obsFileName(formatString("%s/Observation%d", 
-		                                LOFAR_SHARE_LOCATION, obsnr));
+		string obsFileName(formatString("/opt/lofar/share/Observation%d", obsnr));
 		iFile.open(obsFileName.c_str(), ifstream::in);
 		if (!iFile) {
 			cout << endl << "Cannot open file " << obsFileName << endl;

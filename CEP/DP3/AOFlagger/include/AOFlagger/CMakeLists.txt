@@ -168,6 +168,7 @@ install(FILES
   DESTINATION include/${PACKAGE_NAME}/strategy/control)
 
 install(FILES
+  strategy/imagesets/bandcombinedset.h
   strategy/imagesets/fitsimageset.h
   strategy/imagesets/imageset.h
   strategy/imagesets/msimageset.h

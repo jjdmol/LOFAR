@@ -37,7 +37,13 @@
 
 #if !defined(USE_NOSOCKETS)
 // netdb is not available on Cray XT machines with Catamount.
+#if defined HAVE_BGL && !defined HAVE_ZOID
+// netdb is not available on BGL; all code using netdb will be 
+// conditionally included using the HAVE_BGL definition;
+#define OPTIMAL_CIOD_CHUNK_SIZE (64 * 1024)
+#else
 #include <netdb.h>
+#endif
 #endif
 
 namespace LOFAR {
@@ -67,7 +73,7 @@ int remoteCopy (const	string& localFile,
 	}
 
 	// execute the command.
-	int error = std::system(command.c_str());
+	int error = system(command.c_str());
 	LOG_DEBUG(formatString("copy command: %s",command.c_str()));
 
 	if (error == 0) {			
@@ -78,7 +84,7 @@ int remoteCopy (const	string& localFile,
 		// an error occured, try to reconstruct the message
 		char 	outputLine[200];
 		string 	outputString;
-		FILE* 	f = std::fopen(tmpResultFile.c_str(),"rt");	// open file with errormsg
+		FILE* 	f = fopen(tmpResultFile.c_str(),"rt");	// open file with errormsg
 		if (f == NULL) {						// oops, problems opening the file
 			LOG_ERROR(
 				formatString("Unable to remote copy %s to %s:%s: reason unknown",
@@ -93,7 +99,7 @@ int remoteCopy (const	string& localFile,
 					outputString+=string(outputLine);
 				}
 			}
-			std::fclose(f);
+			fclose(f);
 			LOG_ERROR(formatString("Unable to remote copy %s to %s:%s: %s",
 						localFile.c_str(),remoteHost.c_str(),remoteFile.c_str(),
 						outputString.c_str()));
@@ -101,7 +107,7 @@ int remoteCopy (const	string& localFile,
 	}
 
 	// remove the temporarely file.
-	std::remove(tmpResultFile.c_str());
+	remove(tmpResultFile.c_str());
 
 	return (error);
 }
@@ -120,7 +126,7 @@ int copyFromRemote(const string& remoteHost,
 									remoteHost.c_str(), remoteFile.c_str(), localFile.c_str(),
 									tmpResultFile.c_str()));
 	// execute the command.
-	int error = std::system(command.c_str());
+	int error = system(command.c_str());
 	LOG_DEBUG(formatString("copy command: %s",command.c_str()));
 
 	if(error == 0) {			
@@ -131,7 +137,7 @@ int copyFromRemote(const string& remoteHost,
 		// an error occured, try to reconstruct the message
 		char 	outputLine[200];
 		string 	outputString;
-		FILE* 	f = std::fopen(tmpResultFile.c_str(),"rt");	// open file with errormsg
+		FILE* 	f = fopen(tmpResultFile.c_str(),"rt");	// open file with errormsg
 		if (f == NULL) {						// oops, problems opening the file
 			LOG_ERROR(
 				formatString("Unable to remote copy %s:%s to %s: reason unknown",
@@ -146,7 +152,7 @@ int copyFromRemote(const string& remoteHost,
 					outputString+=string(outputLine);
 				}
 			}
-			std::fclose(f);
+			fclose(f);
 			LOG_ERROR(formatString("Unable to remote copy %s:%s to %s: %s",
 								   remoteHost.c_str(),remoteFile.c_str(),localFile.c_str(),
 								   outputString.c_str()));
@@ -154,7 +160,7 @@ int copyFromRemote(const string& remoteHost,
 	}
 
 	// remove the temporarely file.
-	std::remove(tmpResultFile.c_str());
+	remove(tmpResultFile.c_str());
 
 	return (error);
 }
@@ -217,7 +223,10 @@ string myHostname(bool	giveFullName)
 //
 uint32 myIPV4Address()
 {
-#if defined USE_NOSOCKETS
+#if defined HAVE_BGL && !defined HAVE_ZOID
+	LOG_ERROR ("Function myIPV4Address not available for Blue Gene.");
+	return (0);
+#elif defined USE_NOSOCKETS
 	LOG_ERROR ("Function myIPV4Address not available.");
 	return (0);
 #else

@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ bool CEP_Processes_initList() {
   int z;
   dyn_dyn_anytype tab;
   //PermSW + PermSW_Daemons
-  dpQuery("SELECT '_original.._value' FROM 'LOFAR_PermSW_*.status.state' REMOTE '"+CEPDBName+"'", tab);
+  dpQuery("SELECT '_original.._value' FROM 'LOFAR_PermSW_*.status.state' REMOTE 'CCU001:'", tab);
   LOG_TRACE("CEP_Processes.ctl:initList|Found: "+ tab);
   
   dyn_string aDS=navFunct_getDynString(tab, 2,1);
@@ -75,9 +75,8 @@ bool CEP_Processes_initList() {
     // strip all including PermsSW out of the string
     strreplace(aS,syst+dpSubStr(baseDP,DPSUB_DP)+"_PermSW_","");
 
-    
-    // Remainder should be PermsSW Programs + Daemons  split on _
-    // leave out IOnodes 
+
+    // Remainder should be PermsSW Programs + Daemons  split on _ 
     dyn_string spl=strsplit(aS,"_");
     if (dynlen(spl) > 1) { // Daemon
       dynAppend(CEP_result,navFunct_dpStripLastElement(path)+","+spl[2]+","+path);
@@ -129,9 +128,9 @@ bool CEP_Processes_UpdateCEPControllers() {
     // get the real name from the selected Observation
     CEP_obsBaseDP=claimManager_nameToRealName("LOFAR_ObsSW_"+CEP_selectedObservation);   
     
-//    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_BGPApplPanel",
-//        DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(CEP_obsBaseDP));
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","PythonControlPanel",
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_BGPApplPanel",
+        DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(CEP_obsBaseDP));
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_StorageApplPanel",
         DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(CEP_obsBaseDP));
   
   }
@@ -174,15 +173,15 @@ bool CEP_Processes_UpdateProcessesList() {
     if (strtok(CEP_selectedStation,":") < 0) { 
       CEP_selectedStation+=":";
     }
-    if (strpos(CEPObsDP,CEPDBName) < 0) {     
-      CEPObsDP=CEPDBName+dpSubStr(CEPObsDP,DPSUB_DP);
+    if (strpos(CEPObsDP,"CCU001") < 0) {     
+      CEPObsDP="CCU001:"+dpSubStr(CEPObsDP,DPSUB_DP);
     }    
     CEP_obsBaseDP = CEPObsDP;
     // add Observation 
     dynAppend(list,","+CEP_selectedObservation+","+CEPObsDP);
 
-    //select all Ctrl under CEP:LOFAR_ObsSW_'CEP_selectedObservation'
-    string query="SELECT '_original.._value' FROM '"+CEPObsDP+"_*.status.state' REMOTE '"+CEPDBName+"'";
+    //select all Ctrl under CEP:LOFAR_PermSW_'CEP_selectedObservation'
+    string query="SELECT '_original.._value' FROM '"+CEPObsDP+"_*.status.state' REMOTE 'CCU001:'";
     LOG_DEBUG("CEP_Processes.ctl:updateProcessesList|Query: "+ query);
     dpQuery(query, tab);
     LOG_TRACE("CEP_Processes.ctl:updateProcessesList|CEP Controllers Found: "+ tab);
@@ -248,8 +247,6 @@ CEP_Processes_ActiveObsCallback(string dp1, dyn_string activeObservations) {
   string oldSelection=activeObs.selectedItem();
   CEP_selectedObservation=oldSelection;
   LOG_DEBUG("CEP_Processes.ctl:activeObsCallback|oldSelection: "+oldSelection);
-  dynSortAsc(activeObservations);      
-  activeObservations = dynUnique(activeObservations);
   for (int i=1; i<= dynlen(activeObservations);i++) {
     string realName=claimManager_nameToRealName("LOFAR_ObsSW_"+activeObservations[i]);
     activeObs.appendItem("",realName,activeObservations[i]);
@@ -260,8 +257,8 @@ CEP_Processes_ActiveObsCallback(string dp1, dyn_string activeObservations) {
     }
   }
   
-  if (strpos(newSelection,CEPDBName) < 0) {     
-      CEP_obsBaseDP=CEPDBName+dpSubStr(newSelection,DPSUB_DP);
+  if (strpos(newSelection,"CCU001") < 0) {     
+      CEP_obsBaseDP="CCU001:"+dpSubStr(newSelection,DPSUB_DP);
   } else {   
       CEP_obsBaseDP = newSelection;
     }

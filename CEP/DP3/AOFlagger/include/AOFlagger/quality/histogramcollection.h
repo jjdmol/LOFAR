@@ -144,7 +144,9 @@ class HistogramCollection : public Serializable
 		void Save(class HistogramTablesFormatter &histogramTables);
 		
 		void Load(class HistogramTablesFormatter &histogramTables);
-				
+		
+		void Plot(class Plot2D &plot, unsigned polarization);
+		
 		unsigned PolarizationCount() const { return _polarizationCount; }
 		
 		virtual void Serialize(std::ostream &stream) const
@@ -169,21 +171,6 @@ class HistogramCollection : public Serializable
 			for(unsigned p=0;p<_polarizationCount;++p)
 				newCollection->add(*this, p, 0);
 			return newCollection;
-		}
-		
-		void Rescale(double factor)
-		{
-			for(unsigned p=0;p<_polarizationCount;++p)
-			{
-				for(std::map<AntennaPair, LogHistogram*>::iterator i=_totalHistograms[p].begin(); i!=_totalHistograms[p].end(); ++i)
-				{
-					i->second->Rescale(factor);
-				}
-				for(std::map<AntennaPair, LogHistogram*>::iterator i=_rfiHistograms[p].begin(); i!=_rfiHistograms[p].end(); ++i)
-				{
-					i->second->Rescale(factor);
-				}
-			}
 		}
 	private:
 		unsigned _polarizationCount;
@@ -305,8 +292,6 @@ class HistogramCollection : public Serializable
 					target.Add(*i->second);
 			}
 		}
-
-
 };
 
 #endif

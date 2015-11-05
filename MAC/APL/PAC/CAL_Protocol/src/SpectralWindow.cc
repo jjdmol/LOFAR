@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 #include <blitz/array.h>
 #include <sstream>
 
-#include <MACIO/Marshalling.tcc>
+#include <MACIO/Marshalling.h>
 #include <APL/RTCCommon/MarshallBlitz.h>
 
 #include <math.h>
@@ -126,12 +126,6 @@ int SpectralWindow::rcumode() const
 	}
 }
 
-uint32 SpectralWindow::raw_rcumode() const
-{
-    LOG_DEBUG (formatString("rcumode(%06X)", m_rcucontrol));
-    return (m_rcucontrol);
-}
-
 //
 // print
 //
@@ -143,44 +137,44 @@ ostream& SpectralWindow::print(ostream& os) const
 }
 
 
-size_t SpectralWindow::getSize() const
+unsigned int SpectralWindow::getSize() const
 {
-  return MSH_size(m_name) +
+  return MSH_STRING_SIZE(m_name) +
     sizeof(m_sampling_freq) +
     sizeof(m_nyquist_zone) +
     sizeof(m_numsubbands) +
     sizeof(m_rcucontrol);
 }
 
-size_t SpectralWindow::pack(char* buffer) const
+unsigned int SpectralWindow::pack(void* buffer) const
 {
-  size_t offset = 0;
+  unsigned int offset = 0;
 
-  offset = MSH_pack(buffer, offset, m_name);
-  memcpy(buffer + offset, &m_sampling_freq, sizeof(m_sampling_freq));
+  MSH_PACK_STRING(buffer, offset, m_name);
+  memcpy(((char*)buffer) + offset, &m_sampling_freq, sizeof(m_sampling_freq));
   offset += sizeof(m_sampling_freq);
-  memcpy(buffer + offset, &m_nyquist_zone, sizeof(m_nyquist_zone));
+  memcpy(((char*)buffer) + offset, &m_nyquist_zone, sizeof(m_nyquist_zone));
   offset += sizeof(m_nyquist_zone);
-  memcpy(buffer + offset, &m_numsubbands, sizeof(m_numsubbands));
+  memcpy(((char*)buffer) + offset, &m_numsubbands, sizeof(m_numsubbands));
   offset += sizeof(m_numsubbands);
-  memcpy(buffer + offset, &m_rcucontrol, sizeof(m_rcucontrol));
+  memcpy(((char*)buffer) + offset, &m_rcucontrol, sizeof(m_rcucontrol));
   offset += sizeof(m_rcucontrol);
 
   return offset;
 }
 
-size_t SpectralWindow::unpack(const char* buffer)
+unsigned int SpectralWindow::unpack(void* buffer)
 {
-  size_t offset = 0;
+  unsigned int offset = 0;
 
-  offset = MSH_unpack(buffer, offset, m_name);
-  memcpy(&m_sampling_freq, buffer + offset, sizeof(m_sampling_freq));
+  MSH_UNPACK_STRING(buffer, offset, m_name);
+  memcpy(&m_sampling_freq, ((char*)buffer) + offset, sizeof(m_sampling_freq));
   offset += sizeof(m_sampling_freq);
-  memcpy(&m_nyquist_zone, buffer + offset, sizeof(m_nyquist_zone));
+  memcpy(&m_nyquist_zone, ((char*)buffer) + offset, sizeof(m_nyquist_zone));
   offset += sizeof(m_nyquist_zone);
-  memcpy(&m_numsubbands, buffer + offset, sizeof(m_numsubbands));
+  memcpy(&m_numsubbands, ((char*)buffer) + offset, sizeof(m_numsubbands));
   offset += sizeof(m_numsubbands);
-  memcpy(&m_rcucontrol, buffer + offset, sizeof(m_rcucontrol));
+  memcpy(&m_rcucontrol, ((char*)buffer) + offset, sizeof(m_rcucontrol));
   offset += sizeof(m_rcucontrol);
 
   return offset;

@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -30,8 +30,6 @@
 #include <Common/lofar_bitset.h>
 #include <Common/ParameterSet.h>
 #include <Common/Version.h>
-
-#include <ApplCommon/LofarDirs.h>
 
 #include <APL/APLCommon/AntennaField.h>
 #include <APL/APLCommon/AntennaSets.h>
@@ -156,9 +154,9 @@ GCFEvent::TResult CalServer::initial(GCFEvent& event, GCFPortInterface& port)
 			LOG_INFO_STR("Calibration subbandrange: " << itsLowestSubband << ".." << itsHighestSubband);
 
 			// Setup datapath
-			itsDataDir = globalParameterSet()->getString("CalServer.DataDirectory", LOFAR_LOG_LOCATION);
+			itsDataDir = globalParameterSet()->getString("CalServer.DataDirectory", "/opt/lofar/log");
 			if (itsDataDir.empty()) {
-				itsDataDir = LOFAR_LOG_LOCATION;
+				itsDataDir="/opt/lofar/log";
 			}
 			else if ((*itsDataDir.rbegin()) == '/') {       // strip off last /
 				itsDataDir.erase(itsDataDir.length()-1);

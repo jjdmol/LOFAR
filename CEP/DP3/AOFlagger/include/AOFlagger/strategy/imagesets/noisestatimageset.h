@@ -161,6 +161,7 @@ namespace rfiStrategy {
 					bandInfo.channels.push_back(channel);
 					++index;
 				}
+				bandInfo.channelCount = bandInfo.channels.size();
 				bandInfo.windowIndex = 0;
 				
 				// Rescan map and fill image
@@ -238,7 +239,7 @@ namespace rfiStrategy {
 			static void MergeInTime(TimeFrequencyData &data, TimeFrequencyMetaDataPtr metaData)
 			{
 				Mask2DPtr mask = Mask2D::CreateCopy(data.GetSingleMask());
-                                std::vector<Image2DPtr> images(data.ImageCount());
+				Image2DPtr images[data.ImageCount()];
 				for(unsigned i=0;i<data.ImageCount();++i)
 					images[i] = Image2D::CreateCopy(data.GetImage(i));
 				bool hasObsTimes = metaData != 0;
@@ -311,7 +312,7 @@ namespace rfiStrategy {
 				
 				// Remove the timesteps
 				unsigned newWidth = data.ImageWidth() - removedColumns.size();
-                                std::vector<Image2DPtr> resizedImages(data.ImageCount());
+				Image2DPtr resizedImages[data.ImageCount()];
 				for(unsigned i=0;i<data.ImageCount();++i)
 				{
 					resizedImages[i] = Image2D::CreateUnsetImagePtr(newWidth, data.ImageHeight());
