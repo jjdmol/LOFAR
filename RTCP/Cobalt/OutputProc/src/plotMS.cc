@@ -81,7 +81,15 @@ static void usage(char *progname, int exitcode)
 
 int main(int argc, char *argv[])
 {
+#if defined HAVE_LOG4CPLUS
   INIT_LOGGER(string(getenv("LOFARROOT") ? : ".") + "/etc/outputProc.log_prop");
+#elif defined HAVE_LOG4CXX
+  #error LOG4CXX support is broken (nonsensical?) -- please fix this code if you want to use it
+  Context::initialize();
+  setLevel("Global",8);
+#else
+  INIT_LOGGER_WITH_SYSINFO(str(boost::format("outputProc@%02d") % (argc > 1 ? atoi(argv[1]) : -1)));
+#endif
 
   try {
     int opt;

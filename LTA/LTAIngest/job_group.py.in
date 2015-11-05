@@ -131,7 +131,7 @@ class job_group():
   def check_finished(self):
     total = len(self.jobs)
     finished = (self.scheduled['Total'] == 0) and (self.active['Total'] == 0) and (self.inactive['Total'] == 0) and (self.retry['Total'] == 0)
-    self.logger.debug('job_group %i progress: #done=%i #failed=%i #scheduled=%i #active=%i #inactive=%i #retry=%i' % (self.Id, self.done['Total'], self.failed['Total'], self.scheduled['Total'], self.active['Total'], self.inactive['Total'], self.retry['Total']))
+    self.logger.debug('job_group %i progress: #done=%i #failed=%i #scheduled=%i #active=%i #inactive=%i #retry=%i' % (self.Id, self.done['Total'], self.done['Total'], self.failed['Total'], self.scheduled['Total'], self.active['Total'], self.inactive['Total'], self.retry['Total']))
     if finished and (total == self.failed['Total'] + self.done['Total']): ## sanity check, somewhat redundant
       self.logger.info('job_group %i is finished, total of %i files' % (self.Id, total))
       return True
@@ -149,18 +149,19 @@ class job_group():
                       'project': 'unknown', 'ltalocation': "unknown", 'eid': "unknown"}
     if self.Type == 'MoM':
       try:
-        db = MySQLdb.connect(host="mysql1.control.lofar", user="@MOMREADONLY_USER@", passwd="@MOMREADONLY_PASSWORD@", db="@MOM3SCHEMA@")
+        ## should be read from config file
+        #m = "lofartest_sas099_mom3_two"
+        m = "lofar_mom3"
+        #e = "lofartest_sas099_export"
+        e = "lofar_export"
+        db = MySQLdb.connect(host="mysql1.control.lofar", user="@MOMREADONLY_USER@", passwd="@MOMREADONLY_PASSWORD@", db=m)
         c = db.cursor()
-        c.execute("SELECT * from export_jobs_advanced2 where export_mom2id = %i;" % (self.Id))
+        c.execute("SELECT a.id,toexportdate as started,a.status_date as last_update,a.exportername,b.name as state,d.name,e.name as projectname,g.name as location,a.data_location,d.mom2id FROM %s.exports AS a, %s.status AS b, %s.mom_references AS c, %s.mom2object AS d, %s.mom2object AS e, %s.resource AS f, %s.resourcetype AS g WHERE status_id=b.id AND a.mom_reference_id = c.id AND c.mom_id=d.mom2id AND d.ownerprojectid = e.id AND e.id=f.projectid AND g.type = \"LTA_STORAGE\" AND f.resourcetypeid = g.id and a.id = %i;" % (e,e,e,m,m,m,m,self.Id))
         db_job = c.fetchone()
-
-        if db_job:
-          self.job_info = {'id': db_job[1], 'start_time': db_job[4], 'update_time': db_job[7],
-                          'user': db_job[3].rjust(8), 'status': db_job[6], 'name': db_job[2].rjust(9),
-                          'project': db_job[8], 'ltalocation': db_job[9]}
-        else:
-          self.logger.warning('Could not find result for exportjob %i in momdb' % str(self.Id))
-
+        ## (1137L, datetime.datetime(2014, 2, 6, 8, 30, 34), datetime.datetime(2014, 2, 8, 18, 41, 2), 'toribio', 'running', 'Orion', 'LC1_055', 'Lofar Storage (J\xfclich)', 'LC1_055/358795', 358795L)
+        self.job_info = {'id': db_job[0], 'start_time': db_job[1], 'update_time': db_job[2],
+                         'user': db_job[3].rjust(8), 'status': db_job[4], 'name': db_job[5].rjust(9),
+                         'project': db_job[6], 'ltalocation': db_job[7], 'eid': db_job[8]}
       except Exception as e:
         self.logger.warning('Caught an exception trying to talk to the Mom database: %s' % str(e))
     else:
@@ -265,7 +266,7 @@ if __name__ == '__main__':
   standalone = job_group(l, Id, 'MoM', 'schaap@astron.nl')
   jobs = []
   for i in range(2):
-    k = {'Status': JobScheduled, 'ExportID': 'jA_%s_%s_%i_L12345_SAP000_SB000_uv.MS' % (Id, Id, i), 'ObservationId': 12345, 'ArchiveId': 654321, 'DataProduct': 'L12345_SAP000_SB000_uv.MS', 'Location': 'locus123:/data/L12345/L12345_SAP000_SB000_uv.MS', 'errors': []}
+    k = {'Status': JobScheduled, 'ExportID': 'jA_%s_%s_%i_L12345_SAP000_SB000_uv.MS' % (Id, Id, i), 'ObservationId': 12345, 'MoMId': 654321, 'DataProduct': 'L12345_SAP000_SB000_uv.MS', 'Location': 'locus123:/data/L12345/L12345_SAP000_SB000_uv.MS', 'errors': []}
     jobs.append(k)
   for job in jobs:
     standalone.add_job(job)

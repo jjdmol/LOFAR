@@ -9,27 +9,14 @@ JobScheduled =  1
 JobProducing =  2
 JobProduced  =  3
 
-def jobState2String(jobstate):
-  if jobstate == JobRetry:
-    return "%d (JobRetry)" % jobstate
-  elif jobstate == JobError:
-    return "%d (JobError)" % jobstate
-  elif jobstate == JobHold:
-    return "%d (JobHold)" % jobstate
-  elif jobstate == JobScheduled:
-    return "%d (JobScheduled)" % jobstate
-  elif jobstate == JobProducing:
-    return "%d (JobProducing)" % jobstate
-  elif jobstate == JobProduced:
-    return "%d (JobProduced)" % jobstate
-  return str(jobstate)
-
 ## Job should probably be refactored into a class at some point.
 ## Right now it's just a big dict.
 
 ##------------------ Job keys --------------------------
 ## job['Status'] : JobRetry, JobError, JobHold, JobScheduled, JobProducing, JobProduced
 ## job['ExportID'] : nodeName == 'exportjob'
+## job['scriptname'] : nodeName == 'scriptname'
+## job['repository'] : ('server','resultdir') in nodeName == 'repository'
 ## job['Location'] : <input name="Location">locus029:/data/L202708/L202708_SB243_uv.dppp.MS</input>
 ## job['host'] : job['Location'].split(':')[0]
 ## job['filename'] : SOAP call, filename argument in new_job
@@ -37,7 +24,7 @@ def jobState2String(jobstate):
 ## DataProduct = job['DataProduct'] : <input name="DataProduct">L202708_SB243_uv.dppp.MS</input>
 ## FileName = job['DataProduct'] (+ '.tar')
 ## JobId = job['JobId'] : <input name="JobId">A_1134_1134_3767569_10318605_L202708_SB243_uv.dppp.MS</input>
-## ArchiveId = int(job['ArchiveId']) : <input name="ArchiveId">10318605</input>
+## MomId = int(job['MomId']) : <input name="MomId">10318605</input>
 ## ObsId = int(job['ObservationId']) : <input name="ObservationId">202708</input>
 ## unused : <input name="Subband">-1</input>
 ## Source = job['Source'] : <input name="Source">L201198_red</input>
@@ -69,7 +56,18 @@ class parser():
             if doc.documentElement.nodeName == 'exportjob':
                 self.job['ExportID'] = str(doc.documentElement.attributes.get('exportID').nodeValue)
                 for node in doc.documentElement.childNodes:
-                    if node.nodeName == 'inputlist':
+                    if node.nodeName == 'scriptname':
+                        value = node.childNodes[0].nodeValue
+                        self.job['scriptname'] = value
+                    elif node.nodeName == 'repository':
+                        for itemnode in node.childNodes:
+                            if itemnode.nodeName == 'server':
+                                name = itemnode.childNodes[0].nodeValue
+                            elif itemnode.nodeName == 'resultdir':
+                                res  = itemnode.childNodes[0].nodeValue
+                        if res and name: 
+                            self.job['repository'] = (name, res)
+                    elif node.nodeName == 'inputlist':
                         name  = "'" + node.attributes.get('name').nodeValue + "'"
                         exec(eval("'self.job[%s] = []' % (name)"))
                         for itemnode in node.childNodes:
@@ -88,7 +86,7 @@ class parser():
                 if self.job['ObservationId'][0] == 'L':
                     self.job['ObservationId'] = self.job['ObservationId'][1:]
                 test = int(self.job['ObservationId']) ## check if it can be converted to an int
-                test = int(self.job['ArchiveId']) ## check if it can be converted to an int
+                test = int(self.job['MomId']) ## check if it can be converted to an int
                 self.job['host'] = self.job['Location'].split(':')[0]
                 self.job['Status'] = JobScheduled
                 self.job['retry'] = 0
