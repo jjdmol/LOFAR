@@ -12,7 +12,7 @@ void main()
   if (dpExists("scriptInfo.transferMPs.debug")) {
     dpConnect("debugCB",true,"scriptInfo.transferMPs.debug");
   } else {
-    DebugTN("transferMPs.ctl:main|scriptInfo.transferMPs.debugpoint not found in Database");  
+    DebugTN("transferMPs.ctl:main|scriptInfo.transferMPs.runDone point not found in Database");  
   } 
 
   if (dpExists("scriptInfo.transferMPs.runDone")) {
@@ -27,13 +27,6 @@ void main()
     DebugTN("transferMPs.ctl:main|set new points to Operational done");  
   } else {
     DebugTN("transferMPs.ctl:main|set new points to Operational failed");
-  }
-
-  //Check all _mp**.leaf points in the database and set the DP.leaf point according to the mp.leaf point
-  if (setLeaf()) {
-    DebugTN("transferMPs.ctl:main|set leafpoints to value in mp done");
-  } else {
-    DebugTN("transferMPs.ctl:main|set leafpoints to value in mp failed");
   }
 }
 
@@ -134,52 +127,6 @@ private bool setOperational() {
       dpSet(dp,10);
     }
   }
-  return true;
-}
-
-private bool setLeaf() {
-
-  dyn_dyn_anytype tab;
-  string dpstr="",dp="";
-  bool dpb ="FALSE";
-  string query="";
-  int z,i;
-  int aVal;
-  int err;
-
-  query = "SELECT '_online.._value' FROM '{_mp_**.**.status.leaf}'";
- 
-  if (bDebug) DebugN("transferMPs.ctl:setLeaf|Query: ",query);
-  err = dpQuery(query, tab);
-   
-  if (err < 0) {
-    if (bDebug) DebugN("transferMPs.ctl:setLeaf|Error " + err + " while getting query.");
-    return false;
-  }
-
-  for(z=2;z<=dynlen(tab);z++) {
-
-    dpstr = tab[z][1];
-    dpGet(dpstr,dpb);
-    // for each dp get all dps and set the leaf value accordingly
-    dyn_string dsDps = dpNames("*",dpTypeName(dpstr));
-  
-    // no datapoints found
-    if ( dynlen(dsDps) > 1 ) {
-      for ( i = 1; i <= dynlen(dsDps); i++ ) {
-        dp=dsDps[i]+".status.leaf";
-        
-        // filter out the _mp_ points
-        if (strpos(dp,"_mp_") < 0) {
-            dpSet(dp,dpb);
-        }
-      }
-    }
-    
-  }
-    
-  
-  
   return true;
 }
 

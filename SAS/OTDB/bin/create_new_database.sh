@@ -315,7 +315,6 @@ if [ $load_otdb_comps -eq 1 ]; then
       loadComponents_command="./loadComponents -l "
       loadComponents_runlog="loadComponents_run.log"
       loadComponents_outlog="loadComponents.log"
-      loadComponents_compdir="."
     else
       echo "Cannot find loadComponents in $PWD"
     fi
@@ -328,24 +327,16 @@ if [ $load_otdb_comps -eq 1 ]; then
     loadComponents_command=`which loadComponents`
     loadComponents_runlog="/tmp/loadComponents_run.log"
     loadComponents_outlog="/opt/lofar/var/log/loadComponents.log"
-    loadComponents_compdir="/opt/lofar/etc/otdb"
   fi
   echo "== Loading new OTDB components using version $otdb_comp_version =="
   rm -f $loadComponents_log || exit
-  $loadComponents_command -D $DBNAME -H $DBHOST -v $otdb_comp_version -o $loadComponents_outlog -c $loadComponents_compdir 2>&1 1>$loadComponents_runlog
+  $loadComponents_command -D $DBNAME -H $DBHOST -v $otdb_comp_version 2>&1 1>$loadComponents_runlog
 
   loadComponents_exit=$?
   loadComponents_problem=`grep -E 'FATAL|ERROR' $loadComponents_outlog 2>&1 1>/dev/null; echo $?`
 
   if [[ $loadComponents_exit -ne 0 || $loadComponents_problem -eq 0 ]]; then
-     echo "loadComponents failed or has an error"
-     if [ $loadComponents_exit -ne 0 ]; then 
-       echo " See $loadComponents_outlog and $loadComponents_runlog for more information"
-     else
-       echo "List of errors from logfile $loadComponents_outlog:"
-       echo "--------------------"
-       grep -C 5 -E 'FATAL|ERROR' $loadComponents_outlog
-     fi
+     echo "loadComponents failed or has an error; see $loadComponents_outlog and $loadComponents_runlog for more information"
      exit
   fi
 fi

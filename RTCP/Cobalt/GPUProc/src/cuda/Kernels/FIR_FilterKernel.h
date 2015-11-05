@@ -33,11 +33,26 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class FIR_FilterKernel : public CompiledKernel
+    class FIR_FilterKernel : public Kernel
     {
     public:
       static std::string theirSourceFile;
       static std::string theirFunction;
+
+      // Parameters that must be passed to the constructor of the
+      // FIR_FilterKernel class.
+      struct Parameters : Kernel::Parameters
+      {
+        Parameters(const Parset& ps);
+        size_t nrBitsPerSample;
+        size_t nrBytesPerComplexSample;
+        size_t nrHistorySamples;
+        size_t nrPPFTaps;
+
+        // The number of subbands \e this kernel instance will process,
+        // typically equal to \c nrSubbandsPerSubbandProc.
+        size_t nrSubbands;
+      };
 
       enum BufferType
       {
@@ -47,47 +62,18 @@ namespace LOFAR
         HISTORY_DATA
       };
 
-      // Parameters that must be passed to the constructor of the
-      // FIR_FilterKernel class.
-      struct Parameters : Kernel::Parameters
+      // Buffers that must be passed to the constructor of the FIR_FilterKernel
+      // class.
+      struct Buffers : Kernel::Buffers
       {
-        Parameters(const Parset& ps, unsigned nrSTABs, bool inputIsStationData, unsigned nrSubbands, unsigned nrChannels, float scaleFactor, const std::string &name = "FIR");
-
-        // The number of stations or TABs to filter. The FIR filter will
-        // deal with either in the same way.
-        unsigned nrSTABs;
-
-        unsigned nrBitsPerSample;
-        unsigned nrBytesPerComplexSample() const;
-
-        unsigned nrChannels;
-        unsigned nrSamplesPerChannel;
-        unsigned nrSamplesPerSubband() const;
-
-
-        // The number of subbands \e this kernel instance will process,
-        // typically equal to \c nrSubbandsPerSubbandProc.
-        unsigned nrSubbands;
-
-        // The number of PPF filter taps.
-        static const unsigned nrTaps = 16;
-
-        // The number of history samples used for each block
-        unsigned nrHistorySamples() const;
-
-        // Additional scale factor (e.g. for FFT normalization).
-        // Derived differently from nrChannelsPerSubband for correlation
-        // and beamforming, so must be passed into this class.
-        float scaleFactor;
-
-        // If true, we'll read integers in the order as they're coming from the
-        // stations: intXX[stab][sample][pol]
-        //
-        // If false, we'll read floats in the order produced by the beam-former
-        // pipeline: float[stab][pol][sample]
-        bool inputIsStationData;
-
-        size_t bufferSize(FIR_FilterKernel::BufferType bufferType) const;
+        Buffers(const gpu::DeviceMemory& in, 
+                const gpu::DeviceMemory& out,
+                const gpu::DeviceMemory& fw,
+                const gpu::DeviceMemory& hs) :
+          Kernel::Buffers(in, out), filterWeights(fw), historySamples(hs)
+        {}
+        gpu::DeviceMemory filterWeights;
+        gpu::DeviceMemory historySamples;
       };
 
       FIR_FilterKernel(const gpu::Stream& stream,
@@ -95,23 +81,17 @@ namespace LOFAR
                        const Buffers& buffers,
                        const Parameters& param);
 
-      void enqueue(const BlockID &blockId,
-                   unsigned subbandIdx);
+      void enqueue(PerformanceCounter &counter,
+                   size_t subbandIdx);
 
       // Put the historyFlags[subbandIdx] in front of the given inputFlags,
       // and update historyFlags[subbandIdx] with the flags of the last samples
       // in inputFlags.
-      void prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, unsigned subbandIdx);
+      void prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx);
 
     private:
       // The Kernel parameters as given to the constructor
       const Parameters params;
-
-      // The FIR filter weights
-      gpu::DeviceMemory filterWeights;
-
-      // The history samples
-      gpu::DeviceMemory historySamples;
 
       // The flags of the history samples.
       //
@@ -119,7 +99,10 @@ namespace LOFAR
       MultiDimArray<SparseSet<unsigned>, 2> historyFlags;
     };
 
-    //# --------  Template specializations for KernelFactory  -------- #//
+    // Specialization of the KernelFactory for
+    // FIR_FilterKernel
+    template<> size_t
+    KernelFactory<FIR_FilterKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
     KernelFactory<FIR_FilterKernel>::compileDefinitions() const;

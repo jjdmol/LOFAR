@@ -52,7 +52,7 @@ class Op_readimage(Op):
             img.opts.filename = img.opts.filename[:-1]
 
         # Determine indir if not explicitly given by user (in img.opts.indir)
-        if img.opts.indir is None:
+        if img.opts.indir == None:
             indir = os.path.dirname(img.opts.filename)
             if indir == '':
                 indir = './'
@@ -81,7 +81,7 @@ class Op_readimage(Op):
         # Read in data and header
         image_file = os.path.basename(img.opts.filename)
         result = read_image_from_file(image_file, img, img.indir)
-        if result is None:
+        if result == None:
             raise RuntimeError("Cannot open file " + repr(image_file) + ". " + img._reason)
         else:
             data, hdr = result
@@ -131,7 +131,7 @@ class Op_readimage(Op):
         self.init_beam(img)
         self.init_freq(img)
         year, code = self.get_equinox(img)
-        if year is None:
+        if year == None:
             mylog.info('Equinox not found in image header. Assuming J2000.')
             img.equinox = 2000.0
         else:
@@ -153,7 +153,7 @@ class Op_readimage(Op):
                 os.makedirs(img.basedir)
 
             # Now add solname (if any) and time to basedir
-            if img.opts.solnname is not None:
+            if img.opts.solnname != None:
                 img.basedir += img.opts.solnname + '_'
             img.basedir += time.strftime("%d%b%Y_%H.%M.%S")
 
@@ -192,33 +192,23 @@ class Op_readimage(Op):
         # spectral) are striped out.
         def p2s(self, xy):
             xy = list(xy)
-            for i in range(self.naxis-2):
+            for i in range(2):
                 xy.append(0)
+            xy_arr = N.array([xy])
             if hasattr(self, 'wcs_pix2world'):
-                try:
-                    xy_arr = N.array([xy[0:2]])
-                    sky = self.wcs_pix2world(xy_arr, 0)
-                except:
-                    xy_arr = N.array([xy])
-                    sky = self.wcs_pix2world(xy_arr, 0)
+                sky = self.wcs_pix2world(xy_arr, 0)
             else:
-                xy_arr = N.array([xy])
                 sky = self.wcs_pix2sky(xy_arr, 0)
             return sky.tolist()[0][0:2]
 
         def s2p(self, rd):
             rd = list(rd)
-            for i in range(self.naxis-2):
-                rd.append(1) # For some reason, 0 gives nans with astropy in some situations
+            for i in range(2):
+                rd.append(0)
+            rd_arr = N.array([rd])
             if hasattr(self, 'wcs_world2pix'):
-                try:
-                    rd_arr = N.array([rd[0:2]])
-                    pix = self.wcs_world2pix(rd_arr, 0)
-                except:
-                    rd_arr = N.array([rd])
-                    pix = self.wcs_world2pix(rd_arr, 0)
+                pix = self.wcs_world2pix(rd_arr, 0)
             else:
-                rd_arr = N.array([rd])
                 pix = self.wcs_sky2pix(rd_arr, 0)
             return pix.tolist()[0][0:2]
 
@@ -360,7 +350,7 @@ class Op_readimage(Op):
         def pixel_beam():
             """Returns the beam in sigma units in pixels"""
             pbeam = beam2pix(img.beam)
-            return (pbeam[0]/fwsig, pbeam[1]/fwsig, pbeam[2])
+            return (pbeam[0] / fwsig, pbeam[1] / fwsig, pbeam[2])
 
         def pixel_beamarea():
             """Returns the beam area in pixels"""
@@ -407,7 +397,8 @@ class Op_readimage(Op):
         img.pixel_beam = pixel_beam   # IN SIGMA UNITS in pixels
         img.pixel_beamarea = pixel_beamarea
         mylogger.userinfo(mylog, 'Beam shape (major, minor, pos angle)',
-                          '(%.5e, %.5e, %s) degrees' % (beam[0], beam[1],
+                          '(%s, %s, %s) degrees' % (round(beam[0], 5),
+                                                    round(beam[1], 5),
                                                     round(beam[2], 1)))
 
     def init_freq(self, img):
@@ -431,13 +422,13 @@ class Op_readimage(Op):
                 from pywcs import WCS
 
         mylog = mylogger.logging.getLogger("PyBDSM.InitFreq")
-        if img.opts.frequency_sp is not None and img.image_arr.shape[1] > 1:
+        if img.opts.frequency_sp != None and img.image_arr.shape[1] > 1:
             # If user specifies multiple frequencies, then let
             # collapse.py do the initialization
             img.frequency = img.opts.frequency_sp[0]
             img.freq_pars = (0.0, 0.0, 0.0)
             mylog.info('Using user-specified frequencies.')
-        elif img.opts.frequency is not None and img.image_arr.shape[1] == 1:
+        elif img.opts.frequency != None and img.image_arr.shape[1] == 1:
             img.frequency = img.opts.frequency
             img.freq_pars = (img.frequency, 0.0, 0.0)
             mylog.info('Using user-specified frequency.')
@@ -453,7 +444,7 @@ class Op_readimage(Op):
                 # First, convert frequency to Hz if needed:
                 img.wcs_obj.wcs.sptr('FREQ-???')
                 def p2f(self, spec_pix):
-                    spec_list = [0] * self.naxis
+                    spec_list = [0, 0, 0, 0]
                     spec_list[spec_indx] = spec_pix
                     spec_pix_arr = N.array([spec_list])
                     if hasattr(self, 'wcs_pix2world'):
@@ -462,7 +453,7 @@ class Op_readimage(Op):
                         freq = self.wcs_pix2sky(spec_pix_arr, 0)
                     return freq.tolist()[0][spec_indx]
                 def f2p(self, freq):
-                    freq_list = [0] * self.naxis
+                    freq_list = [0, 0, 0, 0]
                     freq_list[spec_indx] = freq
                     freq_arr = N.array([freq_list])
                     if hasattr(self, 'wcs_world2pix'):
@@ -481,7 +472,7 @@ class Op_readimage(Op):
                     instancemethod = type(img.wcs_obj.wcs_sky2pix)
                 img.wcs_obj.f2p = instancemethod(f2p, img.wcs_obj, WCS)
 
-                if img.opts.frequency is not None:
+                if img.opts.frequency != None:
                     img.frequency = img.opts.frequency
                 else:
                     img.frequency = img.wcs_obj.p2f(0)
@@ -529,7 +520,7 @@ class Op_readimage(Op):
 
         location specifies the location in pixels (x, y) for which angle is desired
         """
-        if location is None:
+        if location == None:
             x1 = img.image_arr.shape[2] / 2.0
             y1 = img.image_arr.shape[3] / 2.0
         else:
@@ -556,7 +547,7 @@ class Op_readimage(Op):
         """
         import functions as func
 
-        if location is None:
+        if location == None:
             x1 = int(img.image_arr.shape[2] / 2.0)
             y1 = int(img.image_arr.shape[3] / 2.0)
         else:
@@ -588,7 +579,7 @@ class Op_readimage(Op):
         """
         import functions as func
 
-        if location is None:
+        if location == None:
             x1 = int(img.image_arr.shape[2] / 2.0)
             y1 = int(img.image_arr.shape[3] / 2.0)
         else:

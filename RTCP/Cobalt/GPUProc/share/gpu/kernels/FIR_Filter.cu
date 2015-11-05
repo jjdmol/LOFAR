@@ -19,6 +19,7 @@
 //# $Id$
 
 #include "IntToFloat.cuh"
+#include <stdio.h>
 
 #if !(NR_STABS >= 1)
 #error Precondition violated: NR_STABS >= 1
@@ -36,26 +37,17 @@
 #error Precondition violated: NR_SAMPLES_PER_CHANNEL > 0 && NR_SAMPLES_PER_CHANNEL % NR_TAPS == 0
 #endif
 
-#ifdef INPUT_IS_STATIONDATA
-// Each SampleType is HALF a COMPLEX sample (so real OR imag)
-#  if NR_BITS_PER_SAMPLE == 16
+#if NR_BITS_PER_SAMPLE == 16
 typedef signed short SampleType;
-#  elif NR_BITS_PER_SAMPLE == 8
+#elif NR_BITS_PER_SAMPLE == 8
 typedef signed char SampleType;
-#  elif NR_BITS_PER_SAMPLE == 4
-// Input samples are half a byte, requiring a special implementation.
-// The HistorySamples will store each input as a full byte though,
-// to avoid unnecessary marshalling and unmarshalling, and locking
-// between different threads that write real and imag of the same (complex) sample.
-typedef signed char SampleType;
-#  else
-#    error Precondition violated: NR_BITS_PER_SAMPLE == 4 || NR_BITS_PER_SAMPLE == 8 || NR_BITS_PER_SAMPLE == 16
-#  endif
 #else
-typedef float SampleType;
+#error Precondition violated: NR_BITS_PER_SAMPLE == 8 || NR_BITS_PER_SAMPLE == 16
 #endif
 
-#if !(NR_CHANNELS > 0 && NR_CHANNELS % 16 == 0)
+#if NR_CHANNELS == 1
+#warning TODO: NR_CHANNELS == 1 is not (yet) supported
+#elif !(NR_CHANNELS > 0 && NR_CHANNELS % 16 == 0)
 #error Precondition violated: NR_CHANNELS > 0 && NR_CHANNELS % 16 == 0
 #endif
 
@@ -67,31 +59,8 @@ typedef float SampleType;
 #error Precondition violated: COMPLEX == 2
 #endif
 
-//# NR_STABS means #stations (correlator) or #TABs (beamformer).
-
-#ifdef INPUT_IS_STATIONDATA
-// Data comes from station: icomplex[stab][sample][pol]
-#  if NR_BITS_PER_SAMPLE == 4
-typedef signed char (*SampledDataType)[NR_STABS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][NR_POLARIZATIONS];
-#define SAMPLE(time) extractRI((*sampledData)[station][time][channel][pol], ri)
-#  else
+// NR_STABS means #stations (correlator) or #TABs (beamformer).
 typedef SampleType (*SampledDataType)[NR_STABS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][NR_POLARIZATIONS * COMPLEX];
-#define SAMPLE(time) (*sampledData)[station][time][channel][pol_ri]
-#endif
-
-#else
-
-// Data comes from beam-former pipeline: fcomplex [stab][pol][sample]
-typedef float (*SampledDataType)[NR_STABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][COMPLEX];
-#define SAMPLE(time) (*sampledData)[station][pol][time][channel][ri]
-
-// No conversion needed, but define this function to keep the code simple
-inline __device__ float convertIntToFloat(float x)
-{
-  return x;
-}
-#endif
-
 typedef SampleType (*HistoryDataType)[NR_SUBBANDS][NR_STABS][NR_TAPS - 1][NR_CHANNELS][NR_POLARIZATIONS * COMPLEX];
 typedef float (*FilteredDataType)[NR_STABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][COMPLEX];
 typedef const float (*WeightsType)[NR_CHANNELS][NR_TAPS];
@@ -111,8 +80,6 @@ typedef const float (*WeightsType)[NR_CHANNELS][NR_TAPS];
  * \param[out] filteredDataPtr         4D output array of floats
  * \param[in]  sampledDataPtr          4D input array of signed chars or shorts
  * \param[in]  weightsPtr              2D per-channel FIR filter coefficient array of floats (considering float16 as a dim)
- * \param[in]  historyDataPtr          5D input array of history input samples needed to initialize the FIR filter
- * \param[in]  subbandIdx              index of the subband to process
  *
  * Pre-processor input symbols (some are tied to the execution configuration)
  * Symbol                  | Valid Values                | Description
@@ -120,12 +87,10 @@ typedef const float (*WeightsType)[NR_CHANNELS][NR_TAPS];
  * NR_STABS                | >= 1                        | number of antenna fields (correlator), or number of tight array beams (tabs) (beamformer)
  * NR_TAPS                 | 16                          | number of FIR filtering coefficients
  * NR_SAMPLES_PER_CHANNEL  | multiple of NR_TAPS and > 0 | number of input samples per channel
- * NR_BITS_PER_SAMPLE      | 4, 8 or 16                  | number of bits of signed integral value type of sampledDataPtr
+ * NR_BITS_PER_SAMPLE      | 8 or 16                     | number of bits of signed integral value type of sampledDataPtr (TODO: support 4)
  * NR_CHANNELS             | multiple of 16 and > 0      | number of frequency channels per subband
  * NR_POLARIZATIONS        | 2                           | number of polarizations
  * COMPLEX                 | 2                           | size of complex in number of floats/doubles
- * INPUT_IS_STATIONDATA    | defined or not              | if true, input is intX[stabs][samples][pol]
- *                         |                             | if false, input is float[stabs][pol][samples]
  *
  * Execution configuration: (TODO: enforce using __attribute__ reqd_work_group_size)
  * - Work dim == 2  (can be 1 iff NR_STABS == 1)
@@ -210,9 +175,9 @@ __global__ void FIR_filter( void *filteredDataPtr,
 
   for (unsigned time = 0; time < NR_SAMPLES_PER_CHANNEL; time += NR_TAPS) 
   {
-    delayLine_sF = convertIntToFloat(SAMPLE(time + 0));
+    delayLine_sF = convertIntToFloat((*sampledData)[station][time + 0][channel][pol_ri]);
     sum_s0 = weights_sF * delayLine_s0;
-    delayLine_s0 = convertIntToFloat(SAMPLE(time + 1));
+    delayLine_s0 = convertIntToFloat((*sampledData)[station][time + 1][channel][pol_ri]);
     sum_s0 += weights_sE * delayLine_s1;
     sum_s0 += weights_sD * delayLine_s2;
     sum_s0 += weights_sC * delayLine_s3;
@@ -231,7 +196,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 0][channel][ri] = sum_s0;
 
     sum_s1 = weights_sF * delayLine_s1;
-    delayLine_s1 = convertIntToFloat(SAMPLE(time + 2));
+    delayLine_s1 = convertIntToFloat((*sampledData)[station][time + 2][channel][pol_ri]);
     sum_s1 += weights_sE * delayLine_s2;
     sum_s1 += weights_sD * delayLine_s3;
     sum_s1 += weights_sC * delayLine_s4;
@@ -250,7 +215,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 1][channel][ri] = sum_s1;
 
     sum_s2 = weights_sF * delayLine_s2;
-    delayLine_s2 = convertIntToFloat(SAMPLE(time + 3));
+    delayLine_s2 = convertIntToFloat((*sampledData)[station][time + 3][channel][pol_ri]);
     sum_s2 += weights_sE * delayLine_s3;
     sum_s2 += weights_sD * delayLine_s4;
     sum_s2 += weights_sC * delayLine_s5;
@@ -269,7 +234,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 2][channel][ri] = sum_s2;
 
     sum_s3 = weights_sF * delayLine_s3;
-    delayLine_s3 = convertIntToFloat(SAMPLE(time + 4));
+    delayLine_s3 = convertIntToFloat((*sampledData)[station][time + 4][channel][pol_ri]);
     sum_s3 += weights_sE * delayLine_s4;
     sum_s3 += weights_sD * delayLine_s5;
     sum_s3 += weights_sC * delayLine_s6;
@@ -288,7 +253,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 3][channel][ri] = sum_s3;
 
     sum_s4 = weights_sF * delayLine_s4;
-    delayLine_s4 = convertIntToFloat(SAMPLE(time + 5));
+    delayLine_s4 = convertIntToFloat((*sampledData)[station][time + 5][channel][pol_ri]);
     sum_s4 += weights_sE * delayLine_s5;
     sum_s4 += weights_sD * delayLine_s6;
     sum_s4 += weights_sC * delayLine_s7;
@@ -307,7 +272,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 4][channel][ri] = sum_s4;
 
     sum_s5 = weights_sF * delayLine_s5;
-    delayLine_s5 = convertIntToFloat(SAMPLE(time + 6));
+    delayLine_s5 = convertIntToFloat((*sampledData)[station][time + 6][channel][pol_ri]);
     sum_s5 += weights_sE * delayLine_s6;
     sum_s5 += weights_sD * delayLine_s7;
     sum_s5 += weights_sC * delayLine_s8;
@@ -326,7 +291,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 5][channel][ri] = sum_s5;
 
     sum_s6 = weights_sF * delayLine_s6;
-    delayLine_s6 = convertIntToFloat(SAMPLE(time + 7));
+    delayLine_s6 = convertIntToFloat((*sampledData)[station][time + 7][channel][pol_ri]);
     sum_s6 += weights_sE * delayLine_s7;
     sum_s6 += weights_sD * delayLine_s8;
     sum_s6 += weights_sC * delayLine_s9;
@@ -345,7 +310,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 6][channel][ri] = sum_s6;
 
     sum_s7 = weights_sF * delayLine_s7;
-    delayLine_s7 = convertIntToFloat(SAMPLE(time + 8));
+    delayLine_s7 = convertIntToFloat((*sampledData)[station][time + 8][channel][pol_ri]);
     sum_s7 += weights_sE * delayLine_s8;
     sum_s7 += weights_sD * delayLine_s9;
     sum_s7 += weights_sC * delayLine_sA;
@@ -364,7 +329,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 7][channel][ri] = sum_s7;
 
     sum_s8 = weights_sF * delayLine_s8;
-    delayLine_s8 = convertIntToFloat(SAMPLE(time + 9));
+    delayLine_s8 = convertIntToFloat((*sampledData)[station][time + 9][channel][pol_ri]);
     sum_s8 += weights_sE * delayLine_s9;
     sum_s8 += weights_sD * delayLine_sA;
     sum_s8 += weights_sC * delayLine_sB;
@@ -383,7 +348,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 8][channel][ri] = sum_s8;
 
     sum_s9 = weights_sF * delayLine_s9;
-    delayLine_s9 = convertIntToFloat(SAMPLE(time + 10));
+    delayLine_s9 = convertIntToFloat((*sampledData)[station][time + 10][channel][pol_ri]);
     sum_s9 += weights_sE * delayLine_sA;
     sum_s9 += weights_sD * delayLine_sB;
     sum_s9 += weights_sC * delayLine_sC;
@@ -402,7 +367,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 9][channel][ri] = sum_s9;
 
     sum_sA = weights_sF * delayLine_sA;
-    delayLine_sA = convertIntToFloat(SAMPLE(time + 11));
+    delayLine_sA = convertIntToFloat((*sampledData)[station][time + 11][channel][pol_ri]);
     sum_sA += weights_sE * delayLine_sB;
     sum_sA += weights_sD * delayLine_sC;
     sum_sA += weights_sC * delayLine_sD;
@@ -421,7 +386,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 10][channel][ri] = sum_sA;
 
     sum_sB = weights_sF * delayLine_sB;
-    delayLine_sB = convertIntToFloat(SAMPLE(time + 12));
+    delayLine_sB = convertIntToFloat((*sampledData)[station][time + 12][channel][pol_ri]);
     sum_sB += weights_sE * delayLine_sC;
     sum_sB += weights_sD * delayLine_sD;
     sum_sB += weights_sC * delayLine_sE;
@@ -440,7 +405,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 11][channel][ri] = sum_sB;
 
     sum_sC = weights_sF * delayLine_sC;
-    delayLine_sC = convertIntToFloat(SAMPLE(time + 13));
+    delayLine_sC = convertIntToFloat((*sampledData)[station][time + 13][channel][pol_ri]);
     sum_sC += weights_sE * delayLine_sD;
     sum_sC += weights_sD * delayLine_sE;
     sum_sC += weights_sC * delayLine_sF;
@@ -459,7 +424,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 12][channel][ri] = sum_sC;
 
     sum_sD = weights_sF * delayLine_sD;
-    delayLine_sD = convertIntToFloat(SAMPLE(time + 14));
+    delayLine_sD = convertIntToFloat((*sampledData)[station][time + 14][channel][pol_ri]);
     sum_sD += weights_sE * delayLine_sE;
     sum_sD += weights_sD * delayLine_sF;
     sum_sD += weights_sC * delayLine_s0;
@@ -478,7 +443,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 13][channel][ri] = sum_sD;
 
     sum_sE = weights_sF * delayLine_sE;
-    delayLine_sE = convertIntToFloat(SAMPLE(time + 15));
+    delayLine_sE = convertIntToFloat((*sampledData)[station][time + 15][channel][pol_ri]);
     sum_sE += weights_sE * delayLine_sF;
     sum_sE += weights_sD * delayLine_s0;
     sum_sE += weights_sC * delayLine_s1;
@@ -518,7 +483,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
   for (unsigned time = 0; time < NR_TAPS - 1; time++)
   {
     (*historyData)[subbandIdx][station][time][channel][pol_ri] =
-      SAMPLE(NR_SAMPLES_PER_CHANNEL - (NR_TAPS - 1) + time);
+      (*sampledData)[station][NR_SAMPLES_PER_CHANNEL - (NR_TAPS - 1) + time][channel][pol_ri];
   }
 }
 }

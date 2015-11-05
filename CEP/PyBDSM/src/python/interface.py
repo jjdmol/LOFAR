@@ -96,7 +96,7 @@ def get_op_chain(img):
                 'outlist',
                 'cleanup']
     prev_opts = img._prev_opts
-    if prev_opts is None:
+    if prev_opts == None:
         return img, default_chain
     new_opts = img.opts.to_dict()
 
@@ -213,7 +213,6 @@ def get_op_chain(img):
                 if hasattr(img, 'mean_U_arr'): del img.mean_U_arr
                 if hasattr(img, 'rms_V_arr'): del img.rms_V_arr
                 if hasattr(img, 'mean_V_arr'): del img.mean_V_arr
-                if hasattr(img, '_adapt_rms_isl_pos'): del img._adapt_rms_isl_pos
                 while 'rmsimage' in img.completed_Ops:
                     img.completed_Ops.remove('rmsimage')
                 found = True
@@ -235,14 +234,12 @@ def get_op_chain(img):
                 found = True
             if k in wavelet_atrous_opts:
                 if hasattr(img, 'atrous_gaussians'): del img.atrous_gaussians
-                if hasattr(img, 'islands'): del img.islands
-                if hasattr(img, 'sources'): del img.sources
-                if hasattr(img, 'dsources'): del img.dsources
-                if hasattr(img, 'gaussians'): del img.gaussians
-                while 'islands' in img.completed_Ops:
-                    img.completed_Ops.remove('islands')
-                while 'gausfit' in img.completed_Ops:
-                    img.completed_Ops.remove('gausfit')
+                g_filt = []
+                if hasattr(img, 'gaussians'):
+                    for g in img.gaussians:
+                        if g.jlevel == 0:
+                            g_filt.append(g)
+                    img.gaussians = g_filt
                 while 'wavelet_atrous' in img.completed_Ops:
                     img.completed_Ops.remove('wavelet_atrous')
                 found = True
@@ -313,7 +310,6 @@ def get_op_chain(img):
         if hasattr(img, 'model_gaus_arr'): del img.model_gaus_arr
         if hasattr(img, 'resid_shap_arr'): del img.resid_shap_arr
         if hasattr(img, 'model_shap_arr'): del img.model_shap_arr
-        if hasattr(img, '_adapt_rms_isl_pos'): del img._adapt_rms_isl_pos
         return img, Op_chain
 
     while 'outlist' in img.completed_Ops:
@@ -370,7 +366,7 @@ def save_pars(img, savefile=None, quiet=False):
     import tc
     import sys
 
-    if savefile is None or savefile == '':
+    if savefile == None or savefile == '':
         savefile = img.opts.filename + '.pybdsm.sav'
 
     # convert opts to dictionary
@@ -397,7 +393,7 @@ def list_pars(img, opts_list=None, banner=None, use_groups=True):
     opts = img.opts.to_list()
 
     # Filter list
-    if opts_list is not None:
+    if opts_list != None:
         opts_temp = []
         for o in opts:
             if o[0] in opts_list:
@@ -471,7 +467,7 @@ def group_opts(opts):
     gp = []
     for i in range(len(opts)):
         grp = opts[i][1].group()
-        if grp is not None and grp not in groups:
+        if grp != None and grp not in groups:
             groups.append(opts[i][1].group())
 
     groups.sort()
@@ -528,7 +524,7 @@ def print_opts(grouped_opts_list, img, banner=None):
     nc = '\033[0m'    # normal text color
     ncb = '\033[1m'    # normal text color bold
 
-    if banner is not None:
+    if banner != None:
         print banner
     spcstr = ' ' * minwidth # spaces string for second or later lines
     infix = nc + ': ' + nc # infix character used to separate values from comments
@@ -626,9 +622,9 @@ def print_opts(grouped_opts_list, img, banner=None):
                     else:
                         if isinstance(val, float):
                             val = round_float(val)
-                        if k == 'beam_spectrum' and val is not None:
+                        if k == 'beam_spectrum' and val != None:
                             val = round_list_of_tuples(val)
-                        if k == 'frequency_sp' and val is not None:
+                        if k == 'frequency_sp' and val != None:
                             val = round_list(val)
                         valstr = v1 + str(val) + v2
                         width_par_val = max(minwidth, len(k) + len(str(val)) + 6)
@@ -745,8 +741,8 @@ def round_list_of_tuples(val):
 
 # The following functions give convenient access to the output functions in
 # output.py
-def export_image(img, outfile=None, img_format='fits', pad_image = False,
-                 img_type='gaus_resid', mask_dilation=0, clobber=False):
+def export_image(img, outfile=None, img_format='fits',
+                 img_type='gaus_resid', clobber=False):
     """Write an image to a file. Returns True if successful, False if not.
 
     outfile - name of resulting file; if None, file is
@@ -771,7 +767,6 @@ def export_image(img, outfile=None, img_format='fits', pad_image = False,
         'psf_pa' - PSF position angle image (degrees east of north)
         'psf_ratio' - PSF peak-to-total flux ratio (in units of 1/beam)
         'psf_ratio_aper' - PSF peak-to-aperture flux ratio (in units of 1/beam)
-        'island_mask' - Island mask image (0 = outside island, 1 = inside island)
     """
     import os
     import functions as func
@@ -806,8 +801,11 @@ def export_image(img, outfile=None, img_format='fits', pad_image = False,
     if (format in ['fits', 'casa']) == False:
         print '\033[91mERROR\033[0m: img_format must be "fits" or "casa"'
         return False
+    if format == 'casa':
+        print "\033[91mERROR\033[0m: Only img_format = 'fits' is supported at the moment"
+        return False
     filename = outfile
-    if filename is None or filename == '':
+    if filename == None or filename == '':
         filename = img.imagename + '_' + img_type + '.' + format
     if os.path.exists(filename) and clobber == False:
         print '\033[91mERROR\033[0m: File exists and clobber = False.'
@@ -820,81 +818,58 @@ def export_image(img, outfile=None, img_format='fits', pad_image = False,
     try:
         if img_type == 'ch0':
             func.write_image_to_file(use_io, filename,
-                                     img.ch0_arr, img, bdir, pad_image,
+                                     img.ch0_arr, img, bdir,
                                      clobber=clobber)
         elif img_type == 'rms':
             func.write_image_to_file(use_io, filename,
-                                     img.rms_arr, img, bdir, pad_image,
+                                     img.rms_arr, img, bdir,
                                      clobber=clobber)
         elif img_type == 'mean':
             func.write_image_to_file(use_io, filename,
-                                     img.mean_arr, img, bdir, pad_image,
+                                     img.mean_arr, img, bdir,
                                      clobber=clobber)
         elif img_type == 'pi':
             func.write_image_to_file(use_io, filename,
-                                     img.ch0_pi_arr, img, bdir, pad_image,
+                                     img.ch0_pi_arr, img, bdir,
                                      clobber=clobber)
         elif img_type == 'psf_major':
             func.write_image_to_file(use_io, filename,
-                                     img.psf_vary_maj_arr*fwsig, img, bdir, pad_image,
+                                     img.psf_vary_maj_arr*fwsig, img, bdir,
                                      clobber=clobber)
         elif img_type == 'psf_minor':
             func.write_image_to_file(use_io, filename,
-                                     img.psf_vary_min_arr*fwsig, img, bdir, pad_image,
+                                     img.psf_vary_min_arr*fwsig, img, bdir,
                                      clobber=clobber)
         elif img_type == 'psf_pa':
             func.write_image_to_file(use_io, filename,
-                                     img.psf_vary_pa_arr, img, bdir, pad_image,
+                                     img.psf_vary_pa_arr, img, bdir,
                                      clobber=clobber)
         elif img_type == 'psf_ratio':
             func.write_image_to_file(use_io, filename,
-                                     img.psf_vary_ratio_arr, img, bdir, pad_image,
+                                     img.psf_vary_ratio_arr, img, bdir,
                                      clobber=clobber)
         elif img_type == 'psf_ratio_aper':
             func.write_image_to_file(use_io, filename,
-                                     img.psf_vary_ratio_aper_arr, img, bdir, pad_image,
+                                     img.psf_vary_ratio_aper_arr, img, bdir,
                                      clobber=clobber)
         elif img_type == 'gaus_resid':
             im = img.resid_gaus_arr
             func.write_image_to_file(use_io, filename,
-                                     im, img, bdir, pad_image,
+                                     im, img, bdir,
                                      clobber=clobber)
         elif img_type == 'gaus_model':
             im = img.model_gaus_arr
             func.write_image_to_file(use_io, filename,
-                                     im, img, bdir, pad_image,
+                                     im, img, bdir,
                                      clobber=clobber)
         elif img_type == 'shap_resid':
             func.write_image_to_file(use_io, filename,
-                                     img.resid_shap_arr, img, bdir, pad_image,
+                                     img.resid_shap_arr, img, bdir,
                                      clobber=clobber)
         elif img_type == 'shap_model':
             func.write_image_to_file(use_io, filename,
-                                     img.model_shap_arr, img, bdir, pad_image,
+                                     img.model_shap_arr, img, bdir,
                                      clobber=clobber)
-        elif img_type == 'island_mask':
-            import numpy as N
-            import scipy.ndimage as nd
-            island_mask_bool = img.pyrank + 1 > 0
-            if mask_dilation > 0:
-                # Dilate the mask by specified number of iterations
-                island_mask_bool = nd.binary_dilation(island_mask_bool,
-                    iterations=mask_dilation)
-                # Perform a binary closing to remove small holes/gaps. The
-                # structure array is chosen to be about the size of the
-                # beam (assuming a normally sampled psf), so that holes/gaps
-                # smaller than the beam are removed.
-                pbeam = int(round(img.beam2pix(img.beam)[0] * 1.5))
-                island_mask_bool = nd.binary_closing(island_mask_bool,
-                    structure=N.ones((pbeam, pbeam)))
-
-            # Check for telescope, needed for CASA clean masks
-            if img._telescope is None:
-                print '\033[91mWARNING\033[0m: Telescope is unknown. Mask may not work correctly in CASA.'
-            island_mask = N.array(island_mask_bool, dtype=N.float32)
-            func.write_image_to_file(use_io, filename,
-                                     island_mask, img, bdir, pad_image,
-                                     clobber=clobber, is_mask=True)
         else:
             print "\n\033[91mERROR\033[0m: img_type not recognized."
             return False
@@ -902,11 +877,6 @@ def export_image(img, outfile=None, img_format='fits', pad_image = False,
             print '--> Image sent to SMAP hub'
         else:
             print '--> Wrote file ' + repr(filename)
-            if use_io == 'rap':
-                # remove the temporary fits file used as a pyrap template
-                import os
-                os.remove(filename+'.fits')
-
         return True
     except RuntimeError, err:
         # Catch and log error
@@ -924,13 +894,12 @@ def export_image(img, outfile=None, img_format='fits', pad_image = False,
 
 def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='gaul',
                bbs_patches=None, incl_chan=False, incl_empty=False, clobber=False,
-               force_output=False, correct_proj=True, bbs_patches_mask=None):
+               force_output=False, correct_proj=True):
     """Write the Gaussian, source, or shapelet list to a file. Returns True if
     successful, False if not.
 
     filename - name of resulting file; if None, file is
-               named automatically. If 'SAMP', table is sent to a samp hub
-               (must be running already).
+               named automatically.
     catalog_type - type of catalog
         "gaul"  - Gaussian list
         "srl"   - Source list
@@ -951,8 +920,6 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
         "single"   - all Gaussians are put into a single
                      patch
         "source"   - sources are grouped by source into patches
-        "mask"     - use a Boolean mask to define the patches
-    bbs_patches_mask - file name of mask file if bbs_patches="mask"
     incl_chan - Include fluxes for each channel?
     incl_empty - Include islands without any valid Gaussians (source list only)?
     sort_by - Property to sort output list by:
@@ -979,35 +946,27 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
     filename = outfile
     if isinstance(patch, str):
         patch = patch.lower()
-    if format not in ['fits', 'ascii', 'bbs', 'ds9', 'star',
-                   'kvis', 'sagecal', 'csv', 'casabox']:
+    if (format in ['fits', 'ascii', 'bbs', 'ds9', 'star',
+                   'kvis', 'sagecal']) == False:
         print '\033[91mERROR\033[0m: format must be "fits", '\
-            '"ascii", "ds9", "star", "kvis", "csv", "casabox", or "bbs"'
+            '"ascii", "ds9", "star", "kvis",  or "bbs"'
         return False
-    if patch not in [None, 'gaussian', 'single', 'source', 'mask']:
+    if (patch in [None, 'gaussian', 'single', 'source']) == False:
         print '\033[91mERROR\033[0m: patch must be None, '\
-                '"gaussian", "source", "single", or "mask"'
+            '"gaussian", "source", or "single"'
         return False
-    if patch == 'mask':
-        if bbs_patches_mask is None:
-            print '\033[91mERROR\033[0m: if patch is "mask", bbs_patches_mask must be set to the file name of the mask file'
-            return False
     if (catalog_type in ['gaul', 'srl', 'shap']) == False:
         print '\033[91mERROR\033[0m: catalog_type must be "gaul", '\
               '"srl", or "shap"'
-        return False
-    if catalog_type == 'shap' and format != 'fits':
-        print "\033[91mERROR\033[0m: Only format = 'fits' is supported with shapelet output."
         return False
     if (len(img.sources) == 0 and not incl_empty) or (len(img.sources) == 0 and len(img.dsources) == 0 and incl_empty):
         if not force_output:
             print 'No sources were found in the image. Output file not written.'
             return False
-    if filename == '':
-        filename = None
+    if filename == '': filename = None
 
     # Now go format by format and call appropriate function
-    if filename == 'samp' or filename == 'SAMP':
+    if filename == 'SAMP':
         import tempfile
         import functions as func
         import os
@@ -1029,23 +988,22 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
         func.send_fits_table(img.samp_client, img.samp_key, table_name, tfile.name)
         print '--> Table sent to SMAP hub'
         return True
-
     if format == 'fits':
         filename = output.write_fits_list(img, filename=filename,
                                              incl_chan=incl_chan, incl_empty=incl_empty,
                                              clobber=clobber, objtype=catalog_type)
-        if filename is None:
+        if filename == None:
             print '\033[91mERROR\033[0m: File exists and clobber = False.'
             return False
         else:
             print '--> Wrote FITS file ' + repr(filename)
             return True
-    if format == 'ascii' or format == 'csv':
+    if format == 'ascii':
         filename = output.write_ascii_list(img, filename=filename,
                                               incl_chan=incl_chan, incl_empty=incl_empty,
-                                              sort_by='index', format = format,
+                                              sort_by='index',
                                               clobber=clobber, objtype=catalog_type)
-        if filename is None:
+        if filename == None:
             print '\033[91mERROR\033[0m: File exists and clobber = False.'
             return False
         else:
@@ -1060,7 +1018,7 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
                                             patch=patch, correct_proj=correct_proj,
                                             sort_by='flux',
                                             clobber=clobber)
-        if filename is None:
+        if filename == None:
             print '\033[91mERROR\033[0m: File exists and clobber = False.'
             return False
         else:
@@ -1075,7 +1033,7 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
                                             patch=patch,
                                             sort_by='flux',
                                             clobber=clobber)
-        if filename is None:
+        if filename == None:
             print '\033[91mERROR\033[0m: File exists and clobber = False.'
             return False
         else:
@@ -1085,7 +1043,7 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
         filename = output.write_ds9_list(img, filename=filename,
                                             srcroot=srcroot, incl_empty=incl_empty,
                                             clobber=clobber, objtype=catalog_type)
-        if filename is None:
+        if filename == None:
             print '\033[91mERROR\033[0m: File exists and clobber = False.'
             return False
         else:
@@ -1097,7 +1055,7 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
             return False
         filename = output.write_star(img, filename=filename,
                                         clobber=clobber)
-        if filename is None:
+        if filename == None:
             print '\033[91mERROR\033[0m: File exists and clobber = False.'
             return False
         else:
@@ -1109,19 +1067,20 @@ def write_catalog(img, outfile=None, format='bbs', srcroot=None, catalog_type='g
             return False
         filename = output.write_kvis_ann(img, filename=filename,
                                             clobber=clobber)
-        if filename is None:
+        if filename == None:
             print '\033[91mERROR\033[0m: File exists and clobber=False.'
             return False
         else:
             print '--> Wrote kvis file ' + repr(filename)
             return True
-    if format == 'casabox':
-        filename = output.write_casa_gaul(img, filename=filename,
-                                      incl_empty=incl_empty, clobber=clobber)
-        if filename is None:
-            print '\033[91mERROR\033[0m: File exists and clobber=False.'
-        else:
-            print '--> Wrote CASA clean box file ' + filename
+    # if format == 'casabox':
+    #     filename = output.write_casa_gaul(img, filename=filename,
+    #                                   incl_wavelet=incl_wavelet,
+    #                                   clobber=clobber)
+    #     if filename == None:
+    #         print '\033[91mERROR\033[0m: File exists and clobber=False.'
+    #     else:
+    #         print '--> Wrote CASA clean box file ' + filename
 
 def add_break_to_logfile(logfile):
     f = open(logfile, 'a')

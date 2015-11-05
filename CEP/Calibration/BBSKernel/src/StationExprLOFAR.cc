@@ -25,13 +25,20 @@
 #include <BBSKernel/StationExprLOFAR.h>
 #include <BBSKernel/Exceptions.h>
 #include <BBSKernel/MeasurementExprLOFARUtil.h>
+#include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/CachePolicy.h>
+#include <BBSKernel/Expr/Delay.h>
+#include <BBSKernel/Expr/EquatorialCentroid.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
+#include <BBSKernel/Expr/FaradayRotation.h>
+#include <BBSKernel/Expr/ITRFDirection.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/MatrixInverse.h>
 #include <BBSKernel/Expr/MatrixInverseMMSE.h>
 #include <BBSKernel/Expr/MatrixMul2.h>
 #include <BBSKernel/Expr/ScalarMatrixMul.h>
+#include <BBSKernel/Expr/StationBeamFormer.h>
+#include <BBSKernel/Expr/TileArrayFactor.h>
 
 namespace LOFAR
 {
@@ -74,8 +81,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         if(config.useClock())
         {
             itsExpr[i] = compose(itsExpr[i],
-                makeClockExpr(itsScope, instrument->station(i),
-                    config.getClockConfig()));
+                makeClockExpr(itsScope, instrument->station(i)));
         }
 
         // Bandpass.
@@ -90,7 +96,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         {
             itsExpr[i] = compose(itsExpr[i],
                 makeGainExpr(itsScope, instrument->station(i),
-                config.getGainConfig()));
+                config.usePhasors()));
         }
 
         // Create a direction independent TEC expression per station.
@@ -128,7 +134,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 " correction can only be applied for a single direction on the"
                 " sky.");
         }
-
+        
         // Beam reference position on the sky.
         Expr<Vector<2> >::Ptr exprRefDelay = makeDirectionExpr(refDelay);
         Expr<Vector<3> >::Ptr exprRefDelayITRF =
@@ -183,8 +189,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 {
                     itsExpr[i] = compose(itsExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprRefPhaseITRF,
-                        exprIonosphere));
+                        instrument->position(), exprRefPhaseITRF, exprIonosphere));
                 }
             }
         }
@@ -208,10 +213,8 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 {
                     itsExpr[i] = compose(itsExpr[i],
                         makeDirectionalGainExpr(itsScope,
-                        instrument->station(i), patch,
-                        config.getDirectionalGainConfig()));
+                        instrument->station(i), patch, config.usePhasors()));
                 }
-
                 // Beam.
                 if(config.useBeam())
                 {
@@ -258,8 +261,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 {
                     itsExpr[i] = compose(itsExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprPatchPositionITRF,
-                        exprIonosphere));
+                        instrument->position(), exprPatchPositionITRF, exprIonosphere));
                 }
             }
         }
@@ -462,7 +464,7 @@ PatchExprBase::Ptr StationExprLOFAR::makePatchExpr(const string &name,
             it->second));
     }
 
-    return PatchExprBase::Ptr(new PatchExpr(itsScope, sourceDB, name,
+    return PatchExprBase::Ptr(new PatchExpr(itsScope, sourceDB, name, 
         refPhase));
 }
 

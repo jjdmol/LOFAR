@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ class CRSyncWrite : public SyncAction
 {
 public:
 	// Constructors for a CRSyncWrite object.
-	CRSyncWrite(GCFPortInterface& board_port, int board_id);
+	CRSyncWrite(GCFPortInterface& board_port, int board_id, blitz::Array<int, 1>);
 
 	// Destructor for CRSyncWrite.
 	virtual ~CRSyncWrite();

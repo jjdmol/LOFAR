@@ -29,9 +29,6 @@ namespace LOFAR
   namespace Cobalt
   {
     struct BlockID {
-      // Default constructor to provide sane defaults for our data members.
-      BlockID();
-
       // Block number: -inf .. inf (blocks before start have negative values)
       ssize_t block;
 

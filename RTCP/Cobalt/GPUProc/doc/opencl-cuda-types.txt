@@ -24,20 +24,3 @@ For the GPUProc types, we use the CUDA names as much as possible.
 To match the ref counting OpenCL types, all resource managing (meaningful
 destructor) CUDA types have a boost::shared_ptr around Impl classes.
 
-
-Mapping of OpenCL Dimensions and Indices to CUDA
-================================================
-
-OpenCL API Call         Explanation                     CUDA Equivalent
--------------------------------------------------------------------------------
-get_global_id(0)        global index of the work        blockIdx.x * blockDim.x
-                        item in the x dimension         + threadIdx.x
-get_local_id(0)         local index of the work         threadIdx.x
-                        item within the work
-                        group in the x dimension
-get_global_size(0)      size of NDRange in the x        gridDim.x * blockDim.x
-                        dimension
-get_local_size(0)       size of each work group         blockDim.x
-                        in the x dimension
-
-OpenCL id/size 1 maps onto CUDA dimension y; and id/size 2 on dimension z.

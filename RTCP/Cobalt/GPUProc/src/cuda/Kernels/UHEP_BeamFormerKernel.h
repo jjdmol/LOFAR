@@ -30,7 +30,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class UHEP_BeamFormerKernel : public CompiledKernel
+    class UHEP_BeamFormerKernel : public Kernel
     {
     public:
       UHEP_BeamFormerKernel(const Parset &ps, gpu::Module &program,

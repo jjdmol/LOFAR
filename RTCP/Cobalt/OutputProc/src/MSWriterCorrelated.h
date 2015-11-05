@@ -40,7 +40,7 @@ namespace LOFAR
     class MSWriterCorrelated : public MSWriterFile
     {
     public:
-      MSWriterCorrelated(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex);
+      MSWriterCorrelated(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian);
       ~MSWriterCorrelated();
 
       virtual void write(StreamableData *data);
@@ -55,7 +55,7 @@ namespace LOFAR
       SmartPtr<FileStream>             itsSequenceNumbersFile;
 
     private:
-      void makeMeasurementSet(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex);
+      void makeMeasurementSet(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian);
     };
 
 

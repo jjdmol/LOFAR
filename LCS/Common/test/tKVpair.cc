@@ -1,8 +1,8 @@
 //#  tKVpair.cc: test KVpair class
 //#
-//#  Copyright (C) 2011, 2014
+//#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: tKVpair.cc 11044 2008-03-21 08:38:09Z overeem $
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -59,6 +59,14 @@ int main (int, char*	argv[])
 	KVpair	KV6("TimeTValue", t);
 	cout << "KV6: " << KV6 << endl;
 
+	vector<int>		vi;
+	vi.push_back( 5);
+	vi.push_back(78);
+	vi.push_back(32);
+	vi.push_back(39);
+	vi.push_back(5003);
+	KVpair	KV7("IntVectorValue", vi);
+	cout << "KV7: " << KV7 << endl;
 
 	cout << "\n--- Testing constructors with timestamp ---" << endl;
 	KVpair	KVT0("stringValue", string("aap noot mies"), true, true);
@@ -81,6 +89,9 @@ int main (int, char*	argv[])
 
 	KVpair	KVT6("TimeTValue", t, true, true);
 	cout << ">>>KVT6: " << KVT6 << "<<<" << endl;
+
+	KVpair	KVT7("IntVectorValue", vi, true, true);
+	cout << ">>>KVT7: " << KVT7 << "<<<" << endl;
 
 	cout << "\n--- Testing copy and assignment operators ---" << endl;
 	KVpair	KVT1D(KVT1);

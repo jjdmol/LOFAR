@@ -1,4 +1,4 @@
-//# tIntToFloatKernel.cc
+//# tDelayAndBandPassKernel.cc: test Kernels/DelayAndBandPassKernel class
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -16,17 +16,17 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: tDelayAndBandPassKernel.cc 25199 2013-06-05 23:46:56Z amesfoort $
 
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/BlockID.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/IntToFloatKernel.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
@@ -67,10 +67,10 @@ int main() {
   gpu::HostMemory convertedData(ctx,  factory.bufferSize(IntToFloatKernel::OUTPUT_DATA));
   //stream.writeBuffer(devConvertedData, sampledData, true);
 
-  auto_ptr<IntToFloatKernel> kernel(factory.create(stream, devSampledData, devConvertedData));
+  IntToFloatKernel::Buffers buffers(devSampledData, devConvertedData);
+  auto_ptr<IntToFloatKernel> kernel(factory.create(stream, buffers));
 
-  BlockID blockId;
-  kernel->enqueue(blockId);
+  kernel->enqueue();
   stream.synchronize();
   stream.readBuffer(convertedData, devConvertedData, true);
   stream.synchronize();

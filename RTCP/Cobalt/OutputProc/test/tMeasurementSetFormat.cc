@@ -50,7 +50,7 @@ int main()
 
       Parset parset(parsetName);
       MeasurementSetFormat msf(parset);
-      msf.addSubband(msName, 0);
+      msf.addSubband(msName, 0, false);
       // Also create the data file, otherwise it is not a true table.
       ///FILE* file= fopen ("tMeasurementSetFormat_tmp.ms/f0data", "w");
       ///fclose (file);

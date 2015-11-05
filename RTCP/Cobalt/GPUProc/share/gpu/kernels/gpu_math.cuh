@@ -22,7 +22,7 @@
 #ifndef LOFAR_GPUPROC_CUDA_GPU_MATH_CUH
 #define LOFAR_GPUPROC_CUDA_GPU_MATH_CUH
 
-// \file
+// \file cuda/gpu_math.cuh
 // Functions and operators for CUDA-specific types.
 // This file contains functions and operators for CUDA-specific types, like
 // float4. Only a minimal set of operators is provided, the ones that are
@@ -97,31 +97,10 @@ inline __device__ fcomplex operator+(fcomplex a, fcomplex b)
   return make_float2(a.x + b.x, a.y + b.y);
 }
 
-inline __device__ dcomplex operator+(dcomplex a, dcomplex b)
-{
-  return make_double2(a.x + b.x, a.y + b.y);
-}
-
-inline __device__ fcomplex operator-(fcomplex a, fcomplex b)
-{
-  return make_float2(a.x - b.x, a.y - b.y);
-}
-
-inline __device__ dcomplex operator-(dcomplex a, dcomplex b)
-{
-  return make_double2(a.x - b.x, a.y - b.y);
-}
-
 inline __device__ fcomplex operator*(fcomplex a, fcomplex b)
 {
   return make_float2(a.x * b.x - a.y * b.y,
                      a.x * b.y + a.y * b.x);
-}
-
-inline __device__ dcomplex operator*(dcomplex a, dcomplex b)
-{
-  return make_double2(a.x * b.x - a.y * b.y,
-                      a.x * b.y + a.y * b.x);
 }
 
 inline __device__ fcomplex operator*(fcomplex a, float b)
@@ -129,20 +108,11 @@ inline __device__ fcomplex operator*(fcomplex a, float b)
   return make_float2(a.x * b, a.y * b);
 }
 
-inline __device__ dcomplex operator*(dcomplex a, double b)
-{
-  return make_double2(a.x * b, a.y * b);
-}
-
 inline __device__ fcomplex operator*(float a, fcomplex b)
 {
   return make_float2(a * b.x, a * b.y);
 }
 
-inline __device__ dcomplex operator*(double a, dcomplex b)
-{
-  return make_double2(a * b.x, a * b.y);
-}
 
 inline __device__ dcomplex dphaseShift(double frequency, double delay)
 {

@@ -40,12 +40,13 @@ namespace StationResponse
 // \addtogroup StationResponse
 // @{
 
+
 class Station
 {
 public:
-    typedef shared_ptr<Station>             Ptr;
-    typedef shared_ptr<const Station>       ConstPtr;
-    typedef vector<AntennaField::ConstPtr>  FieldList;
+    typedef shared_ptr<Station>         Ptr;
+    typedef shared_ptr<const Station>   ConstPtr;
+    typedef vector<AntennaField::Ptr>   FieldList;
 
     /*!
      *  \brief Construct a new Station instance.
@@ -94,22 +95,7 @@ public:
      *
      *  Use this method to add the appropriate antenna fields to the station.
      */
-    void addField(const AntennaField::ConstPtr &field);
-
-
-    /*!
-     *  \brief Return the number of available antenna fields.
-     */
-    size_t nFields() const;
-
-    /*!
-     *  \brief Return the requested antenna field.
-     *
-     *  \param i Antenna field number (0-based).
-     *  \return An AntennaField::ConstPtr to the requested AntennaField
-     *  instance, or an empty AntennaField::ConstPtr if \p i is out of bounds.
-     */
-    AntennaField::ConstPtr field(size_t i) const;
+    void addAntennaField(const AntennaField::Ptr &field);
 
     /*!
      *  \brief Return an iterator that points to the beginning of the list of

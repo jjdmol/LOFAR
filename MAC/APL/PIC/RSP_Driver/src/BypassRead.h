@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ class BypassRead : public SyncAction
 {
 public:
 	// Constructors for a BypassRead object.
-	BypassRead(GCFPortInterface& board_port, int board_id);
+	BypassRead(GCFPortInterface& board_port, int board_id, int	bpNr);
 
 	// Destructor for BypassRead.
 	virtual ~BypassRead();
@@ -52,6 +52,7 @@ public:
 
 private:
 	EPA_Protocol::MEPHeader m_hdr;
+	int					  itsBPNr;
 };
 
   }; // namespace RSP

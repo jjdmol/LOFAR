@@ -187,10 +187,8 @@ c_cdo_settings_size          = 30   # nof bytes in CDO settings register
 c_cdo_settings_ctrl_offset   = 6    # byte index of the first byte of the ctrl field in CDO settings register
 c_cdo_transport_size         = 28   # nof bytes in CDO transport header register (IPv4 + UDP = 20 + 8 = 28)
 
-c_beam_mode_str              = ['1 x 16-bit', '2 x 8-bit', '4 x 4-bit']                # bm = 0, 1 or 2
-
 # SDO = Subband Data Output
-c_sdo_mode_str               = ['1 x 16-bit', '2 x 8-bit', '3 x 5-bit', '4 x 4-bit']   # sm = 0, 1, 2 or 3
+c_sdo_mode_str               = ['1 x 16-bit', '2 x 8-bit', '3 x 5-bit', '4 x 4-bit']
 c_ss_sel_zero                = 0x8000
 
 c_sdo_nof_subbands           = 36                               # Number of SDO subbands per SP
@@ -731,21 +729,18 @@ def write_diag_bypass(tc, msg, bypass, fpgaId=['blp0'], rspId=['rsp0'], applev=2
   Return: void
   """
   tc.appendLog(applev, '>>> RSP-%s, BLP-%s, write DIAG bypass:' % (rspId, fpgaId))
-  tc.appendLog(applev, '      bit(0) : Bypass DC                         = %d' % ((bypass &  1    ) > 0))
-  tc.appendLog(applev, '      bit(1) : Bypass PFS                        = %d' % ((bypass & (1<<1)) > 0))
-  tc.appendLog(applev, '      bit(2) : Bypass PFT                        = %d' % ((bypass & (1<<2)) > 0))
-  tc.appendLog(applev, '      bit(3) : Bypass BF                         = %d' % ((bypass & (1<<3)) > 0))
-  tc.appendLog(applev, '      bit(4) : SI enable X                       = %d' % ((bypass & (1<<4)) > 0))
-  tc.appendLog(applev, '      bit(5) : SI enable Y                       = %d' % ((bypass & (1<<5)) > 0))
-  tc.appendLog(applev, '      bit(6) : DIAG result buffer use sync       = %d' % ((bypass & (1<<6)) > 0))
-  tc.appendLog(applev, '      bit(7) : DIAG result buffer use resync     = %d' % ((bypass & (1<<7)) > 0))
-  tc.appendLog(applev, '      bit(8) : PFT switching disable             = %d' % ((bypass & (1<<8)) > 0))
-  tc.appendLog(applev, '   bit(10:9) : DIAG result buffer for AP BM bank = %d' % ((bypass & (3<<9)) > 0))
-  tc.appendLog(applev, '     bit(11) : DIAG result buffer for BP         = %d' % ((bypass & (1<<11)) > 0))
-  tc.appendLog(applev, '     bit(12) : Page swap on system sync          = %d' % ((bypass & (1<<12)) > 0))
-  tc.appendLog(applev, '     bit(13) : RAD tx beamlet disable            = %d' % ((bypass & (1<<13)) > 0))
-  tc.appendLog(applev, '     bit(14) : RAD tx crosslet disable           = %d' % ((bypass & (1<<14)) > 0))
-  tc.appendLog(applev, '     bit(15) : RAD tx subband disable            = %d' % ((bypass & (1<<15)) > 0))
+  tc.appendLog(applev, '      bit(0) : Bypass DC                      = %d' % ((bypass &  1    ) > 0))
+  tc.appendLog(applev, '      bit(1) : Bypass PFS                     = %d' % ((bypass & (1<<1)) > 0))
+  tc.appendLog(applev, '      bit(2) : Bypass PFT                     = %d' % ((bypass & (1<<2)) > 0))
+  tc.appendLog(applev, '      bit(3) : Bypass BF                      = %d' % ((bypass & (1<<3)) > 0))
+  tc.appendLog(applev, '      bit(4) : SI enable X                    = %d' % ((bypass & (1<<4)) > 0))
+  tc.appendLog(applev, '      bit(5) : SI enable Y                    = %d' % ((bypass & (1<<5)) > 0))
+  tc.appendLog(applev, '      bit(6) : DIAG result buffer use sync    = %d' % ((bypass & (1<<6)) > 0))
+  tc.appendLog(applev, '      bit(7) : DIAG result buffer use resync  = %d' % ((bypass & (1<<7)) > 0))
+  tc.appendLog(applev, '      bit(8) : PFT switching disable          = %d' % ((bypass & (1<<8)) > 0))
+  tc.appendLog(applev, '   bit(10:9) : DIAG result buffer for BM bank = %d' % ((bypass & (3<<9)) > 0))
+  tc.appendLog(applev, '     bit(11) : DIAG result buffer for BP      = %d' % ((bypass & (1<<11)) > 0))
+  tc.appendLog(applev, '     bit(12) : Page swap on system sync       = %d' % ((bypass & (1<<12)) > 0))
     
   for ri in rspId:
     msg.packAddr(fpgaId, 'diag', 'bypass')
@@ -773,21 +768,18 @@ def read_diag_bypass(tc, msg, fpgaId=['blp0'], rspId=['rsp0'], applev=21):
   bypass = bypass[0]
   
   tc.appendLog(applev, '>>> RSP-%s, BLP-%s, read DIAG bypass:' % (rspId, fpgaId))
-  tc.appendLog(applev, '      bit(0) : Bypass DC                         = %d' % ((bypass &  1    ) > 0))
-  tc.appendLog(applev, '      bit(1) : Bypass PFS                        = %d' % ((bypass & (1<<1)) > 0))
-  tc.appendLog(applev, '      bit(2) : Bypass PFT                        = %d' % ((bypass & (1<<2)) > 0))
-  tc.appendLog(applev, '      bit(3) : Bypass BF                         = %d' % ((bypass & (1<<3)) > 0))
-  tc.appendLog(applev, '      bit(4) : SI enable X                       = %d' % ((bypass & (1<<4)) > 0))
-  tc.appendLog(applev, '      bit(5) : SI enable Y                       = %d' % ((bypass & (1<<5)) > 0))
-  tc.appendLog(applev, '      bit(6) : DIAG result buffer use sync       = %d' % ((bypass & (1<<6)) > 0))
-  tc.appendLog(applev, '      bit(7) : DIAG result buffer use resync     = %d' % ((bypass & (1<<7)) > 0))
-  tc.appendLog(applev, '      bit(8) : PFT switching disable             = %d' % ((bypass & (1<<8)) > 0))
-  tc.appendLog(applev, '   bit(10:9) : DIAG result buffer for AP BM bank = %d' % ((bypass & (3<<9)) > 0))
-  tc.appendLog(applev, '     bit(11) : DIAG result buffer for BP         = %d' % ((bypass & (1<<11)) > 0))
-  tc.appendLog(applev, '     bit(12) : Page swap on system sync          = %d' % ((bypass & (1<<12)) > 0))
-  tc.appendLog(applev, '     bit(13) : RAD tx beamlet disable            = %d' % ((bypass & (1<<13)) > 0))
-  tc.appendLog(applev, '     bit(14) : RAD tx crosslet disable           = %d' % ((bypass & (1<<14)) > 0))
-  tc.appendLog(applev, '     bit(15) : RAD tx subband disable            = %d' % ((bypass & (1<<15)) > 0))
+  tc.appendLog(applev, '      bit(0) : Bypass DC                      = %d' % ((bypass &  1    ) > 0))
+  tc.appendLog(applev, '      bit(1) : Bypass PFS                     = %d' % ((bypass & (1<<1)) > 0))
+  tc.appendLog(applev, '      bit(2) : Bypass PFT                     = %d' % ((bypass & (1<<2)) > 0))
+  tc.appendLog(applev, '      bit(3) : Bypass BF                      = %d' % ((bypass & (1<<3)) > 0))
+  tc.appendLog(applev, '      bit(4) : SI enable X                    = %d' % ((bypass & (1<<4)) > 0))
+  tc.appendLog(applev, '      bit(5) : SI enable Y                    = %d' % ((bypass & (1<<5)) > 0))
+  tc.appendLog(applev, '      bit(6) : DIAG result buffer use sync    = %d' % ((bypass & (1<<6)) > 0))
+  tc.appendLog(applev, '      bit(7) : DIAG result buffer use resync  = %d' % ((bypass & (1<<7)) > 0))
+  tc.appendLog(applev, '      bit(8) : PFT switching disable          = %d' % ((bypass & (1<<8)) > 0))
+  tc.appendLog(applev, '   bit(10:9) : DIAG result buffer for BM bank = %d' % ((bypass & (3<<9)) > 0))
+  tc.appendLog(applev, '     bit(11) : DIAG result buffer for BP      = %d' % ((bypass & (1<<11)) > 0))
+  tc.appendLog(applev, '     bit(12) : Page swap on system sync       = %d' % ((bypass & (1<<12)) > 0))
   return bypass
 
 

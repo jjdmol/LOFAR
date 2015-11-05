@@ -1,26 +1,21 @@
-# All the *Arr keys in this file represent a (dyn) array. There must be one
-# element in each array for _every_ file that will be written. For correlated data,
-# the number of files is the same as the number of subbands. For beamformed data,
-# there can be more or fewer files than subbands.
+# locusnode number
+locusNode	int
 
-# Number of the locus node, i.e. the node name with 'locus' stripped off.
-locusNode	intArr
+# Data type: Correlated/Beamformed
+dataProductType	string
 
-# Data type: "Correlated" or "Beamformed"
-dataProductType	stringArr
+# Filename
+fileName	string
 
-# Name of the output file
-fileName	stringArr
+# Directory
+directory string
 
-# Directory where the output file will be written
-directory	stringArr
+# Dropping output?
+dropping  bool
 
-# Are we dropping output at the moment?
-dropping	boolArr
+# Data written (seconds)
+written		float
 
-# The number of seconds that data was successfully written
-written		floatArr
-
-# The number of seconds that data was (partially) dropped
-dropped		floatArr
+# Data dropped (seconds)
+dropped		float
 

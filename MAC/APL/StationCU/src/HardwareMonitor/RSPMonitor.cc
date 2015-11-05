@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -25,15 +25,16 @@
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
 #include <Common/ParameterSet.h>
-#include <ApplCommon/StationInfo.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include <MACIO/MACServiceInfo.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/AntennaMapper.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
+//#include <APL/APLCommon/StationInfo.h>
 #include <signal.h>
 #include <unistd.h>	// usleep
 
@@ -44,8 +45,6 @@
 #define MAX2(a,b)	((a) > (b)) ? (a) : (b)
 
 namespace LOFAR {
-	using namespace RSP_Protocol;
-	using namespace DP_Protocol;
 	using namespace APLCommon;
 	using namespace APL::RTDBCommon;
 	using namespace GCF::TM;
@@ -68,7 +67,6 @@ RSPMonitor::RSPMonitor(const string&	cntlrName) :
 	itsNrSubracks		(0),
 	itsNrCabinets		(0),
 	itsStationInfo		(0),
-	itsAartfaacInfo     (0),
 	itsRCUquery			(0),
 	itsAntMapper		(0)
 {
@@ -112,8 +110,6 @@ RSPMonitor::~RSPMonitor()
 	}
 
 	if (itsStationInfo)	delete itsStationInfo;
-
-	if (itsAartfaacInfo) delete itsAartfaacInfo;
 
 	if (itsRSPDriver)	itsRSPDriver->close();
 
@@ -299,7 +295,6 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 		itsNrHBAs = RSconf.getInt("RS.N_HBAS", 0);
 		itsNrLBAs = RSconf.getInt("RS.N_LBAS", 0);
 		itsHasSplitters = RSconf.getBool("RS.HBA_SPLIT", false);
-		itsHasAartfaac  = RSconf.getBool("RS.AARTFAAC", false);
 
 		// inform user
 		LOG_INFO(formatString("nr RCUs      = %d",ack.n_rcus));
@@ -310,7 +305,6 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 		LOG_INFO(formatString("nr HBAs      = %d", itsNrHBAs));
 		LOG_INFO_STR(         "RSPmask      = " << itsRSPmask);
 		LOG_INFO(formatString("has splitters= %s", (itsHasSplitters ? "yes" : "no")));
-		LOG_INFO(formatString("has aartfaac = %s", (itsHasAartfaac ? "yes" : "no")));
 	
 		// do some checks
 		if (itsNrRSPboards != (uint32)ack.max_rspboards) {
@@ -416,8 +410,7 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 			}
 			usleep (2000); // wait 2 ms in order not to overload the system  
 		}
-		itsStationInfo  = new RTDBPropertySet(PSN_STATION_INFO, PST_STATION_INFO, PSAT_WO | PSAT_CW, this);
-		itsAartfaacInfo = new RTDBPropertySet(PSN_AARTFAAC, PST_AARTFAAC, PSAT_WO | PSAT_CW, this);
+		itsStationInfo = new RTDBPropertySet(PSN_STATION_INFO, PST_STATION_INFO, PSAT_WO | PSAT_CW, this);
 		itsTimerPort->setTimer(5.0);	// give database some time to finish the job
 	}
 	break;
@@ -1252,12 +1245,7 @@ GCFEvent::TResult RSPMonitor::askDatastream(GCFEvent& event, GCFPortInterface& p
 	case F_TIMER:
 		LOG_ERROR_STR ("RSP:Timeout on getting the datastream information, trying other information");
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getdatastream timeout"));
-		if (itsHasAartfaac) {
-			TRAN(RSPMonitor::askAartfaacState);			// go to next state.
-		}
-		else {
-			TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
-		}	
+		TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
 		break;
 
 	case RSP_GETDATASTREAMACK: {
@@ -1266,12 +1254,7 @@ GCFEvent::TResult RSPMonitor::askDatastream(GCFEvent& event, GCFPortInterface& p
 		if (ack.status != RSP_SUCCESS) {
 			LOG_ERROR ("RSP:Failed to get the datastream information. Trying other information");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getdatastream error"));
-			if (itsHasAartfaac) {
-				TRAN(RSPMonitor::askAartfaacState);			// go to next state.
-			}
-			else {
-				TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
-			}	
+			TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
 			break;
 		}
 
@@ -1282,12 +1265,7 @@ GCFEvent::TResult RSPMonitor::askDatastream(GCFEvent& event, GCFPortInterface& p
 
 		LOG_DEBUG ("Updated datastream information, waiting for next cycle");
 //		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
-		if (itsHasAartfaac) {
-			TRAN(RSPMonitor::askAartfaacState);			// go to next state.
-		}
-		else {
-			TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
-		}
+		TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
 	}
 	break;
 
@@ -1313,85 +1291,6 @@ GCFEvent::TResult RSPMonitor::askDatastream(GCFEvent& event, GCFPortInterface& p
 
 	return (status);
 }
-
-
-//
-// askAartfaacState(event, port)
-//
-// Get the info of Aartfaac
-//
-GCFEvent::TResult RSPMonitor::askAartfaacState(GCFEvent& event, GCFPortInterface& port)
-{
-	if (eventName(event) != "DP_SET") {
-		LOG_DEBUG_STR ("askAartfaacState:" << eventName(event) << "@" << port.getName());
-	}
-
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-
-	switch (event.signal) {
-	case F_ENTRY: {
-		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:updating Aartfaac state info"));
-
-		RSPGetbypassEvent	getStatus;
-		getStatus.rcumask = itsRCUmask;
-		getStatus.timestamp.setNow();
-		getStatus.cache   = true;
-		itsRSPDriver->send(getStatus);
-		itsTimerPort->setTimer(5.0);		// in case the answer never comes
-		break;
-	}
-
-	case F_TIMER:
-		LOG_ERROR_STR ("RSP:Timeout on getting Aartfaac state information, trying other information");
-		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getbypass timeout"));
-		TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
-		break;
-
-	case RSP_GETBYPASSACK: {
-		itsTimerPort->cancelAllTimers();
-		RSPGetbypassackEvent	ack(event);
-		if (ack.status != RSP_SUCCESS) {
-			LOG_ERROR ("RSP:Failed to get Aartfaac state information. Trying other information");
-			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getAartfaac state error"));
-			TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
-			break;
-		}
-
-		LOG_DEBUG ("Try to update aartfaac information");
-		// move the information to the database.
-		// take information of first RSP board
-		itsAartfaacInfo->setValue(PN_AF_PIGGYBACK, GCFPVBool(ack.settings()(0).getSDO()), double(ack.timestamp), false);
-		itsAartfaacInfo->flush();
-
-		LOG_DEBUG ("Updated aartfaac information, waiting for next cycle");
-//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
-		TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
-	}
-	break;
-
-	case F_DISCONNECTED:
-		_disconnectedHandler(port);		// might result in transition to connect2RSP
-		break;
-
-	case DP_SET:
-		break;
-
-	case DP_QUERY_CHANGED:
-		_doQueryChanged(event);
-		break;
-
-	case F_QUIT:
-		TRAN (RSPMonitor::finish_state);
-		break;
-
-	default:
-		LOG_DEBUG("askAartfaac status, DEFAULT");
-		break;
-	}
-
-	return (status);
-}
-
 
 //
 // waitForNextCycle(event, port)

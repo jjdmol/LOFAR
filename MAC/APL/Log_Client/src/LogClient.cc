@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007-2013
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@ using namespace log4cplus;
 using namespace log4cplus::helpers;
 namespace LOFAR {
 	using namespace GCF::TM;
-	using namespace LOG_Protocol;
     namespace Log_Client {
 
 #define		MAX_ADMINLINE_LEN	1024
@@ -423,15 +422,13 @@ string LogClient::_searchClientDP(spi::InternalLoggingEvent&	logEvent,
 		return ("");	// [2][4]
 	}
 
-	// DPname is not filled in yet, tried to find it if we are still within the
-	// first maxInitMsgCount messages. 
-	// Note: msgCnt is initialized with -maxInitMsgCount.
+	// DPname is not filled in yet, tried to find it if we are still
+	// within the first 10 messages. Note: msgCnt is initialized with -10.
 	if (++(iter->second.msgCnt) > 0) {
-		// when msgCnt reached 0 we will report that we tried it maxInitMsgCount
-		// times but we don't know the name of the log-stream, so just return
+		// when msgCnt reached 0 we could report that we tried it 10 times
+		// but we don't know the name of the log-stream, so just return
 		if (itsInTestMode && iter->second.msgCnt == 1) {
-			LOG_ERROR_STR("*** *** No 'MACProcessScope:' found in the first "
-				<< LogProc::maxInitMsgCount << " messages! *** ***");
+			LOG_ERROR("*** *** No 'MACProcessScope:' found in the first 10 message! *** ***");
 		}
 		return ("");
 	}

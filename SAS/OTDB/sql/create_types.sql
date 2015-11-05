@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ CREATE TYPE OTDBnode AS (
 );
 
 -- make constructor for OTDBnode
-CREATE OR REPLACE FUNCTION makeOTDBnode(INT4,INT4,INT4,VARCHAR(150),INT2,BOOLEAN,INT2,TEXT,TEXT)
+CREATE OR REPLACE FUNCTION makeOTDBnode(INT4,INT4,INT4,VARCHAR(40),INT2,BOOLEAN,INT2,TEXT,TEXT)
   RETURNS OTDBnode AS $$
     --  $Id$
 	DECLARE
@@ -95,7 +95,7 @@ CREATE TYPE OTDBparamDef AS (
     --  $Id$
 	paramID			INT4,
 	nodeID			INT4,
-	name			VARCHAR(150),
+	name			VARCHAR(40),
 	par_type		INT2,			-- param_type.ID%TYPE,
 	unit			INT2,
 	pruning			INT2,
@@ -111,14 +111,14 @@ CREATE TYPE OTDBvalue AS (
 	paramID			INT4,
 	name			VARCHAR(150),
 	value			TEXT,
-	time			timestamp
+	time			timestamp(0)
 );
 
 
 CREATE TYPE OTDBnodeDef AS (
     --  $Id$
 	nodeID			INT4,
-	name			VARCHAR(150),
+	name			VARCHAR(40),
 	version			INT4,
 	classif			INT2,
 	constraints		TEXT,

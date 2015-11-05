@@ -17,18 +17,18 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: gpu_math.cuh 25137 2013-05-31 12:53:30Z loose $
 
 #ifndef LOFAR_GPUPROC_CUDA_INTTOFLOAT_CUH
 #define LOFAR_GPUPROC_CUDA_INTTOFLOAT_CUH
 
-// \file
-// Device function to convert integer types to float.
-// This file contains a helper function for converting integer types to floats.
-// The actual function used depends on the define \c NR_BITS_PER_SAMPLE
+// \file cuda/IntToFloat.cuh
+// Device function to convert integer types to float
+// This file contains a helper function for converting integer types to floats
+// The actual function used depends on the define NR_BITS_PER_SAMPLE
 // If this is 8 the input char get convert with instances of -128 clamped
 // to -127.
-// If <tt>NR_BITS_PER_SAMPLE == 16</tt> a simple conversion to float is performed.
+// If NR_BITS_PER_SAMPLE == 16 a simple conversion to float is performed.
 //
 // Output values are scaled in terms of 16 bit mode.
 
@@ -47,25 +47,6 @@ inline __device__ float convertIntToFloat(signed char x)
   // Gains (input and complex voltages) end up x16,
   // power (visibilities and Stokes) end up x16^2.
   return 16 * i;
-}
-#elif NR_BITS_PER_SAMPLE == 4
-// Extract the 4-bit real or imaginary part of an 8-bit input sample
-inline __device__ signed char extractRI(signed char x, bool imag)
-{
-  // Note 1: Imaginary part is in the top 4 bits. See also RSP::decode4bit() in InputProc/Station/RSP.h.
-  // Note 2: Preserve the sign, so use sign-extending shifts to extract the right bits.
-  return imag ? x >> 4 : (x << 4) >> 4;
-}
-
-// WARNING: Caller is responsible for extracting 4-bit real or imaginary part from sample byte
-inline __device__ float convertIntToFloat(signed char x)
-{
-  // Edge case. -8 should be returned as -7
-  int i = x == -8 ? -7 : x;
-
-  // TODO: Is this the right scaling for 4-bit mode?
-  // Keep output scale the same as 16 bit mode.
-  return 64 * i;
 }
 #else
 #error unsupported NR_BITS_PER_SAMPLE

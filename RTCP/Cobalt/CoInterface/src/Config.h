@@ -21,9 +21,9 @@
 #ifndef LOFAR_INTERFACE_CONFIG_H
 #define LOFAR_INTERFACE_CONFIG_H
 
-#include <Common/LofarConstants.h>
-
-#define NR_POLARIZATIONS           ((unsigned)LOFAR::N_POL) // sanitise to unsigned to avoid compiler warnings
+/* This is included by C++ and assembly files.  Do not put anything but
+   constants here! */
+#define NR_POLARIZATIONS           2
 #define NR_TAPS                    16
 
 #endif
