@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2013
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@
 //#
 //#  $Id: PVSSGateway.h 19796 2012-01-17 10:06:03Z overeem $
 
-#ifndef PVSSGATEWAY_H
-#define PVSSGATEWAY_H
+#ifndef KEYVALUELOGGER_H
+#define KEYVALUELOGGER_H
 
 // \file PVSSGateway.h
 // one_line_description

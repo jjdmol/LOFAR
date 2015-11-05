@@ -31,10 +31,11 @@ if __name__ == "__main__":
   for idx in range(len(header[2])):
     plt.plot(header[4], resultLines[idx])
 
-  plt.grid(b=True, which='major', color='black', linestyle='-')
-  plt.title("Duration of beamformer pipeline a ")
-  
-  plt.legend(['1 channel','2 channels','8 channels','16 channels'], loc='upper left')
+  ##plt.ylim((0,0.0035))
+  #plt.xlim((4,max(tabRange)))
+
+  #plt.legend(['1 channel', '16 channel', '64 channel', '256 channel'], loc='upper left')
   plt.ylabel('Duration (sec)')
-  plt.xlabel('Number of stations')
+  #plt.xlabel('Number of tabs')
   plt.show()
+

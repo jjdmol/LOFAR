@@ -27,7 +27,7 @@ echo "  in directory $(pwd)"
   rm -rf * || error "Failed to cleanup temporary directory ${OUTDIR}"
 
   # run an observation
-  runObservation.sh -B -C -F -l 2 "${PARSET}" || error "Observation failed!"
+  runObservation.sh -C -F -l 2 "${PARSET}" || error "Observation failed!"
 
   # Expand wildcard pattern to null string, if there no matching files
   shopt -s nullglob
@@ -36,7 +36,7 @@ echo "  in directory $(pwd)"
   [ -n "$(echo *.raw)" ]  || error "runObservation.sh produced no output files"
 
   # create script to accept output (ie. copy it to the source dir for check in)
-  echo "#!/bin/bash
+  echo "#!/bin/sh
   cp ${PWD}/*.raw ${REFDIR}" > accept_output
   chmod a+x accept_output
 
@@ -60,21 +60,5 @@ echo "  in directory $(pwd)"
     done
   done
 
-  if have_qpid; then
-    # validate the contents of the queues
-    mkdir "queues" || error "Failed to create temporary directory ${OUTDIR}/queues"
-    echo "[ -d ${PWD}/queues ] && cp -r ${PWD}/queues ${REFDIR}" >> accept_output
-    QUEUES=`cd ${REFDIR}/queues 2>/dev/null && ls`
-    INCORRECT_QUEUES=""
-    for Q in $QUEUES; do
-      echo "Comparing output of queue $Q"
-      recv_all_msgs "$Q" > queues/$Q
-      compare_msg ${REFDIR}/queues/$Q queues/$Q || INCORRECT_QUEUES+="$Q " 
-    done
-
-    if [ "$INCORRECT_QUEUES" != "" ]; then
-      error "Output of queue(s) $INCORRECT_QUEUES do(es) not match"
-    fi
-  fi
 ) || exit 1
 

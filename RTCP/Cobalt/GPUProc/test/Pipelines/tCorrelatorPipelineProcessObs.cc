@@ -22,13 +22,14 @@
 
 #include <vector>
 
-#include <omp.h>
+#ifdef HAVE_MPI
+#  include <mpi.h>
+#endif
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/OMPThread.h>
-#include <InputProc/Transpose/MPIUtil.h>
-#include <GPUProc/Pipelines/Pipeline.h>
+#include <InputProc/OMPThread.h>
+#include <GPUProc/Pipelines/CorrelatorPipeline.h>
 #include <GPUProc/Station/StationInput.h>
 
 using namespace std;
@@ -37,8 +38,6 @@ using namespace LOFAR::Cobalt;
 
 int main(int argc, char *argv[]) {
   INIT_LOGGER("tCorrelatorPipelineProcessObs");
-
-  LOFAR::Cobalt::MPI mpi;
 
   // Note: we just need to test the Pipeline part (processObservation()),
   // not the SubbandProc and other logic below it, as that is already covered
@@ -66,31 +65,41 @@ int main(int argc, char *argv[]) {
 
   // "distribute" subbands over 1 node
   vector<size_t> subbands;
-  for (size_t sb = 0; sb < ps.settings.subbands.size(); sb++)
+  for (size_t sb = 0; sb < ps.nrSubbands(); sb++)
   {
     subbands.push_back(sb);
   }
 
-  Pool<struct MPIRecvData> MPI_receive_pool("MPI_receive_pool", true);
-
-
-
   // Init the pipeline *before* touching MPI. MPI doesn't like fork().
   // So do kernel compilation (reqs fork()) first.
-  // Don't bother passing a hostname to (or start()ing) the mdLogger.
-  MACIO::RTmetadata rtmd(ps.settings.observationID, "", "");
-  SmartPtr<Pipeline> pipeline = new Pipeline(ps, subbands, devices,
-      MPI_receive_pool, rtmd, "rtmd key prefix");
+  SmartPtr<Pipeline> pipeline = new CorrelatorPipeline(ps, subbands, devices);
 
-  mpi.init(argc, argv);
+  int rank = 0;
+  int nrHosts = 1;
+#ifdef HAVE_MPI
+  // Initialize and query MPI
+  int mpi_thread_support;
+  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_support) != MPI_SUCCESS) {
+    cerr << "MPI_Init failed" << endl;
+    exit(1);
+  }
 
-  MPI_receive_pool.filled.append(NULL);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
+#else
+  DirectInput::instance(&ps); // I don't think this is needed. We didn't have an input instance for MPI in this test; see the comment below. And USE_MPI=OFF broke after the input revamp, which also changed the interface. JD put it in redmine.
+#endif
 
   // no data, so no need to run a sender:
   // receiver(s) from processObservation() will fwd a end of data NULL pool item immediately.
   // idem for storage proc: we'll get a failed to connect to storage log msg, but don't care.
   pipeline->processObservation();
+
   pipeline = 0;
+
+#ifdef HAVE_MPI
+  MPI_Finalize();
+#endif
 
   return 0;
 }

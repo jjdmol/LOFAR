@@ -22,36 +22,32 @@
 
 #include <lofar_config.h>
 
+#include <Common/LofarLogger.h>
+#include <Common/SystemCallException.h>
 #include <Stream/FileDescriptorBasedStream.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <unistd.h>
 
-#include <Common/SystemCallException.h>
-#include <Common/Thread/Cancellation.h>
-#include <Common/LofarLogger.h>
+#include <stdexcept>
+
 
 namespace LOFAR {
 
-
 FileDescriptorBasedStream::~FileDescriptorBasedStream()
 {
-  if (fd >= 0) {
-    int rv;
-  
-    {
-      // Avoid close() throwing in the destructor,
-      // as it is a cancellation point (see pthreads(7)).
-      ScopedDelayCancellation dc;
+  ScopedDelayCancellation dc; // close() can throw as it is a cancellation point
 
-      rv = ::close(fd);
-    }
-    if (rv < 0) {
-      // Print error message similar to other failed system calls.
-      try {
-        THROW_SYSCALL("close");
-      } catch (Exception &exc) {
-        LOG_ERROR_STR(exc);
-      }
+  if (fd >= 0 && close(fd) < 0) {
+    // try/throw/catch to match patterns elsewhere. 
+    //
+    // This ensures a proper string for errno, a
+    // backtrace if available, and the proper representation
+    // of exceptions in general.
+    try {
+      THROW_SYSCALL("close");
+    } catch (Exception &ex) {
+      LOG_ERROR_STR("Exception in destructor: " << ex);
     }
   }
 }
@@ -84,7 +80,7 @@ size_t FileDescriptorBasedStream::tryWrite(const void *ptr, size_t size)
 
 void FileDescriptorBasedStream::sync()
 {
-  if (::fsync(fd) < 0)
+  if (fsync(fd) < 0)
     THROW_SYSCALL("fsync");
 }
 

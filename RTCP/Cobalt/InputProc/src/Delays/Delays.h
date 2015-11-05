@@ -32,6 +32,7 @@
 #include <map>
 
 #include <Common/LofarTypes.h>
+#include <Common/Timer.h>
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SubbandMetaData.h>
@@ -87,6 +88,8 @@ namespace LOFAR
     public:
       Delays(const Parset &ps, size_t stationIdx, const TimeStamp &from, size_t increment);
       ~Delays();
+
+      void start();
 
       // Output structures for adjusted directions and delays
       struct Delay {
@@ -183,6 +186,8 @@ namespace LOFAR
       // Station to reference station position difference vector.
       casa::MVPosition phasePositionDiff;
 #endif
+
+      NSTimer delayTimer;
     };
 
   } // namespace Cobalt

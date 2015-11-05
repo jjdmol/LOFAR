@@ -19,21 +19,14 @@
 //# $Id$
 
 #include <lofar_config.h>
-
 #include "TABTranspose.h"
 
-#include <algorithm>
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
-
 #include <Common/LofarLogger.h>
-#include <Common/Timer.h>
-#include <ApplCommon/PVSSDatapointDefs.h>
-#include <CoInterface/TimeFuncs.h>
+#include <boost/format.hpp>
+#include <algorithm>
 
 using namespace std;
 using boost::format;
-using boost::lexical_cast;
 
 namespace LOFAR {
 namespace Cobalt {
@@ -98,7 +91,8 @@ Block::Block( size_t fileIdx, size_t blockIdx, size_t nrSubbands, size_t nrSampl
   nrSubbands(nrSubbands),
   nrChannels(nrChannels),
   subbandCache(nrSubbands, NULL),
-  nrSubbandsLeft(nrSubbands)
+  nrSubbandsLeft(nrSubbands),
+  writeTimer("Block: data transpose/zeroing", true, true)
 {
 }
 
@@ -141,6 +135,7 @@ void Block::write( BeamformedData &output ) {
   output.setSequenceNumber(blockIdx);
 
   // Set data
+  writeTimer.start();
 
   /*
    * Input:
@@ -211,6 +206,7 @@ void Block::write( BeamformedData &output ) {
       }
     }
   }
+  writeTimer.stop();
 
   // Report summary
   size_t nrLost = std::count(subbandCache.begin(), subbandCache.end(), (Subband*)NULL);
@@ -228,10 +224,7 @@ bool Block::complete() const {
 // More precisely, we have one BlockCollector per file (i.e. part).
 BlockCollector::BlockCollector( Pool<BeamformedData> &outputPool, size_t fileIdx, size_t nrSubbands, size_t nrChannels, size_t nrSamples, size_t nrBlocks, size_t maxBlocksInFlight )
 :
-  // drop = false: we drop at the output, not at the input, but we do want to protect against unbounded growth
-  inputQueue(str(format("BlockCollector::inputQueue [file %u]") % fileIdx), (1 + maxBlocksInFlight) * nrSubbands, false),
-  outputQueue(str(format("BlockCollector::outputQueue [file %u]") % fileIdx), 3, false),
-
+  inputQueue((1 + maxBlocksInFlight) * nrSubbands, false), // drop = false: we drop at the output, not at the input
   outputPool(outputPool),
 
   fileIdx(fileIdx),
@@ -244,8 +237,11 @@ BlockCollector::BlockCollector( Pool<BeamformedData> &outputPool, size_t fileIdx
   canDrop(maxBlocksInFlight > 0),
   lastEmitted(-1),
 
-  inputThread(this, &BlockCollector::inputLoop, str(format("BC:input %u") % fileIdx)),
-  outputThread(this, &BlockCollector::outputLoop, str(format("BC:output %u") % fileIdx))
+  addSubbandTimer("BlockCollector::addSubband", true, true),
+  fetchTimer("BlockCollector: fetch new block", true, true),
+
+  inputThread(this, &BlockCollector::inputLoop),
+  outputThread(this, &BlockCollector::outputLoop)
 {
   ASSERT(nrSubbands > 0);
   ASSERT(nrChannels > 0);
@@ -257,7 +253,7 @@ BlockCollector::~BlockCollector()
 {
   // Make SURE the threads can finish, regardless of whether finish() was called
   inputQueue.noMore();
-  outputQueue.noMore();
+  outputQueue.append(NULL);
 }
 
 
@@ -270,7 +266,7 @@ void BlockCollector::inputLoop() {
   SmartPtr<Subband> subband;
 
   while ((subband = inputQueue.remove()) != NULL) {
-    processSubband(subband);
+    _addSubband(subband);
   }
 }
 
@@ -278,14 +274,10 @@ void BlockCollector::inputLoop() {
 void BlockCollector::outputLoop() {
   SmartPtr<Block> block;
 
-  NSTimer writeTimer("Block: data transpose/zeroing", true, true);
-
   while ((block = outputQueue.remove()) != NULL) {
     SmartPtr<BeamformedData> output = outputPool.free.remove();
 
-    writeTimer.start();
     block->write(*output);
-    writeTimer.stop();
 
     outputPool.filled.append(output);
   }
@@ -294,11 +286,13 @@ void BlockCollector::outputLoop() {
 }
 
 
-// Used by BlockCollector::inputLoop to add a Subband to a Block into a BlockCollector.
+// Used by a Receiver inputThread to add a Subband to a Block into a BlockCollector.
 // If this completes a Block (all Subbands for this Block received) and no
 // subsequent Blocks are missing something, send it (or them) off into the
 // outputQueue for write-back to storage.
-void BlockCollector::processSubband( SmartPtr<Subband> &subband ) {
+void BlockCollector::_addSubband( SmartPtr<Subband> &subband ) {
+  NSTimer::StartStop ss(addSubbandTimer);
+
   LOG_DEBUG_STR("BlockCollector: Add " << subband->id);
 
   const size_t &blockIdx = subband->id.block;
@@ -306,15 +300,19 @@ void BlockCollector::processSubband( SmartPtr<Subband> &subband ) {
   ASSERT(nrBlocks == 0 || blockIdx < nrBlocks);
 
   if (!have(blockIdx)) {
-    if (!fetch(blockIdx)) {
-      // too late -- discard packet
-      LOG_DEBUG_STR("BlockCollector: Dropped subband " << subband->id.subband  << " of file " << subband->id.fileIdx);
-
-      // if we can't drop, we shouldn't even be here.
-      ASSERTSTR(canDrop, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for file " << subband->id.fileIdx << " subband " << subband->id.subband);
-
-      return;
+    if (canDrop) {
+      if ((ssize_t)blockIdx <= lastEmitted) {
+        // too late -- discard packet
+        LOG_DEBUG_STR("BlockCollector: Dropped subband " << subband->id.subband  << " of file " << subband->id.fileIdx);
+        return;
+      }
+    } else {
+      // if we can't drop, we shouldn't have written
+      // this block yet.
+      ASSERTSTR((ssize_t)blockIdx > lastEmitted, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for file " << subband->id.fileIdx << " subband " << subband->id.subband);
     }
+
+    fetch(blockIdx);
   }
 
   SmartPtr<Block> &block = blocks.at(blockIdx);
@@ -324,11 +322,8 @@ void BlockCollector::processSubband( SmartPtr<Subband> &subband ) {
   if (block->complete()) {
     // Block is complete -- send it downstream,
     // and everything before it. We know we won't receive
-    // data from earlier blocks, because each subband
-    // is sent in-order.
-    //
-    // Note that blocks can be received out-of-order once
-    // (many) subbands go missing. 
+    // data from earlier blocks, because all subbands
+    // are sent in-order.
     emitUpTo(blockIdx);
 
     if (nrBlocks > 0 && blockIdx == nrBlocks - 1) {
@@ -338,7 +333,7 @@ void BlockCollector::processSubband( SmartPtr<Subband> &subband ) {
       ASSERT(blocks.empty());
 
       // Signal end-of-stream
-      outputQueue.noMore();
+      outputQueue.append(NULL);
     }
   }
 }
@@ -360,7 +355,7 @@ void BlockCollector::finish() {
   }
 
   // Signal end-of-stream
-  outputQueue.noMore();
+  outputQueue.append(NULL);
   outputThread.wait();
 }
 
@@ -413,22 +408,11 @@ bool BlockCollector::have(size_t block) const {
 }
 
 
-bool BlockCollector::fetch(size_t block) {
-  if ((ssize_t)block <= lastEmitted)
-    // too late -- discard packet
-    return false;
+void BlockCollector::fetch(size_t block) {
+  ASSERT(!have(block));
 
   // Make sure we don't exceed our maximum cache size
   if (canDrop && blocks.size() >= maxBlocksInFlight) {
-    // Under severe data loss, we can get disjunct sets
-    // of subbands for each block. In that case,
-    // the blocks can arrive out-of-order.
-    //
-    // We should not accept any blocks that are even earlier
-    // than the one we're about to emit.
-    if (block < minBlock())
-      return false;
-
     // No more room -- force out oldest block
     emit(minBlock());
   }
@@ -436,8 +420,6 @@ bool BlockCollector::fetch(size_t block) {
   // Add and annotate
   ASSERT(!have(block));
   blocks[block] = new Block(fileIdx, block, nrSubbands, nrSamples, nrChannels);
-
-  return true;
 }
 
 
@@ -490,7 +472,7 @@ void Receiver::receiveLoop()
 
       collectors.at(fileIdx)->addSubband(subband);
     }
-  } catch (EndOfStreamException &) {
+  } catch (Stream::EndOfStreamException &) {
   }
 }
 
@@ -552,7 +534,7 @@ void MultiReceiver::listenLoop()
    
     try {
       stream = new PortBroker::ServerStream(servicePrefix, true);
-    } catch(TimeOutException &) {
+    } catch(SocketStream::TimeOutException &) {
       // fail silently if no client connected
       LOG_DEBUG_STR("TABTranspose::MultiReceiver: Timed out");
       break;
@@ -588,116 +570,65 @@ void MultiReceiver::dispatch( PortBroker::ServerStream *stream )
 
 // Maintains the connections of an rtcp process with all its outputProc processes
 // it needs to send data to.
-MultiSender::MultiSender( const HostMap &hostMap, const Parset &parset,
-                          double maxRetentionTime, const std::string &bind_local_iface )
+MultiSender::MultiSender( const HostMap &hostMap, size_t queueSize, bool canDrop )
 :
-  hostMap(hostMap),
-  itsParset(parset),
-  maxRetentionTime(maxRetentionTime),
-  bind_local_iface(bind_local_iface)
+  hostMap(hostMap)
 {
   for (HostMap::const_iterator i = hostMap.begin(); i != hostMap.end(); ++i) {
-    // keep a list of unique hosts
     if(find(hosts.begin(), hosts.end(), i->second) == hosts.end())
       hosts.push_back(i->second);
-
-    // each file gets a drop_rate counter
-    drop_rates[i->first] = RunningStatistics("%");
   }
 
   for (vector<struct Host>::const_iterator i = hosts.begin(); i != hosts.end(); ++i) {
-    queues[*i] = new Queue< SmartPtr<struct Subband> >(str(format("MultiSender::queue [to %s]") % i->hostName));
-  }
-}
-
-
-MultiSender::~MultiSender()
-{
-  LOG_INFO_STR("MultiSender: realTime = " << itsParset.settings.realTime << ", maxRetentionTime = " << maxRetentionTime);
-  for (HostMap::const_iterator i = hostMap.begin(); i != hostMap.end(); ++i) {
-    LOG_INFO_STR("MultiSender: [file " << i->first << " to " << i->second.hostName << "] Dropped " << drop_rates.at(i->first).mean() << "% of the data");
+    queues[*i] = new BestEffortQueue< SmartPtr<struct Subband> >(queueSize, canDrop);
   }
 }
 
 
 // Sets up the connections from an rtcp process to its outputProc processes.
 // Then, keep writing blocks until we see a NULL Block ptr.
-void MultiSender::process( OMPThreadSet *threadSet )
+void MultiSender::process()
 {
-  // We need to register our threads somewhere...
-  OMPThreadSet dummySet;
-
-  if (!threadSet)
-    threadSet = &dummySet;
-
 #pragma omp parallel for num_threads(hosts.size())
   for (int i = 0; i < (ssize_t)hosts.size(); ++i) {
-    const struct Host &host = hosts[i];
-    const string logPrefix = str(format("[MultiSender -> %s] ") % host.hostName);
-
     try {
-      OMPThreadSet::ScopedRun sr(*threadSet);
+      const struct Host &host = hosts[i];
 
-      LOG_DEBUG_STR(logPrefix << "MultiSender: Connecting to " << host.hostName << ":" << host.brokerPort << ":" << host.service);
+      LOG_DEBUG_STR("MultiSender: Connecting to " << host.hostName << ":" << host.brokerPort << ":" << host.service);
 
-      PortBroker::ClientStream stream(host.hostName, host.brokerPort, host.service, 0, bind_local_iface);
+      PortBroker::ClientStream stream(host.hostName, host.brokerPort, host.service);
 
-      LOG_DEBUG_STR(logPrefix << "Connected");
+      LOG_DEBUG_STR("MultiSender->" << host.hostName << ": connected");
 
-      SmartPtr< Queue< SmartPtr<struct Subband> > > &queue = queues.at(host);
+      SmartPtr< BestEffortQueue< SmartPtr<struct Subband> > > &queue = queues.at(host);
+
+      LOG_DEBUG_STR("MultiSender->" << host.hostName << ": processing queue");
 
       SmartPtr<struct Subband> subband;
       NSTimer sendTimer(str(format("Send Subband to %s") % host.hostName), true, true);
 
       while ((subband = queue->remove()) != NULL) {
-        NSTimer::StartStop ss(sendTimer);
-
-        // Note: this can take any amount of time, even hours, even in real-time mode
+        sendTimer.start();
         subband->write(stream);
+        sendTimer.stop();
       }
 
-      LOG_DEBUG_STR(logPrefix << "Done");
-    } catch (SystemCallException &ex) {
-      LOG_ERROR_STR(logPrefix << "Caught exception: " << ex.what());
+      LOG_DEBUG_STR("MultiSender->" << host.hostName << ": done");
     } catch (Exception &ex) {
-      LOG_ERROR_STR(logPrefix << "Caught exception: " << ex);
+      LOG_ERROR_STR("Caught exception: " << ex);
     }
   }
 }
 
 
 // The pipeline calls here to write a block for a single file (part).
-bool MultiSender::append( SmartPtr<struct Subband> &subband )
+void MultiSender::append( SmartPtr<struct Subband> &subband )
 {
-  using namespace TimeSpec;
-
   // Find the host to send these data to
-  const size_t fileIdx = subband->id.fileIdx;
-  const struct Host &host = hostMap.at(fileIdx);
-
-  SmartPtr< Queue< SmartPtr<struct Subband> > > &queue = queues.at(host);
-
-  bool dropped = false;
-
-  // If oldest packet in queue is too old, drop it in lieu of this new one
-  if (itsParset.settings.realTime && TimeSpec::now() - queue->oldest() > maxRetentionTime) {
-    drop_rates.at(fileIdx).push(100.0);
-
-    // remove oldest item
-    SmartPtr<struct Subband> subband = queue->remove();
-
-    // would be weird to have NULL in here while we're appending elements
-    ASSERT(subband);
-
-    dropped = true;
-  } else {
-    drop_rates.at(fileIdx).push(0.0);
-  }
+  const struct Host &host = hostMap.at(subband->id.fileIdx);
 
   // Append the data to the respective queue
-  queue->append(subband);
-
-  return !dropped;
+  queues.at(host)->append(subband);
 }
 
 
@@ -706,7 +637,7 @@ bool MultiSender::append( SmartPtr<struct Subband> &subband )
 void MultiSender::finish()
 {
   for (vector<struct Host>::const_iterator i = hosts.begin(); i != hosts.end(); ++i) {
-    queues.at(*i)->append(NULL, false);
+    queues.at(*i)->noMore();
   }
 }
 

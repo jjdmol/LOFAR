@@ -30,9 +30,19 @@ class preprocessing_pipeline(control):
 
     def __init__(self):
         super(preprocessing_pipeline, self).__init__()
+        self.parset = parameterset()
         self.input_data = []
         self.output_data = []
         self.io_data_mask = []
+        self.parset_feedback_file = None
+
+
+    def usage(self):
+        """
+        Display usage
+        """
+        print >> sys.stderr, "Usage: %s [options] <parset-file>" % sys.argv[0]
+        return 1
 
 
     def _get_io_product_specs(self):
@@ -98,6 +108,28 @@ class preprocessing_pipeline(control):
 #                    ) if not m
 #                )
 #            )
+
+    def go(self):
+        """
+        Read the parset-file that was given as input argument;
+        set jobname, and input/output data products before calling the
+        base-class's `go()` method.
+        """
+        try:
+            parset_file = os.path.abspath(self.inputs['args'][0])
+        except IndexError:
+            return self.usage()
+        self.parset.adoptFile(parset_file)
+        self.parset_feedback_file = parset_file + "_feedback"
+
+        # Set job-name to basename of parset-file w/o extension, if it's not
+        # set on the command-line with '-j' or '--job-name'
+        if not self.inputs.has_key('job_name'):
+            self.inputs['job_name'] = (
+                os.path.splitext(os.path.basename(parset_file))[0])
+
+        # Call the base-class's `go()` method.
+        return super(preprocessing_pipeline, self).go()
 
 
     @mail_log_on_exception
@@ -200,18 +232,15 @@ class preprocessing_pipeline(control):
 
         # *********************************************************************
         # 6. Create feedback file for further processing by the LOFAR framework
-        # Create a parset containing the metadata
-        metadata_file = "%s_feedback_Correlated" % (self.parset_file,)
+        # (MAC)
+        # Create a parset-file containing the metadata for MAC/SAS
         with duration(self, "get_metadata"):
             self.run_task("get_metadata", output_data_mapfile,
+                parset_file=self.parset_feedback_file,
                 parset_prefix=(
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')),
-                product_type="Correlated",
-                metadata_file=metadata_file)
-
-        self.send_feedback_processing(parameterset())
-        self.send_feedback_dataproducts(parameterset(metadata_file))
+                product_type="Correlated")
 
         return 0
 

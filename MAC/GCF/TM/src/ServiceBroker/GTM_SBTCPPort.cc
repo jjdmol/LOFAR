@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -43,8 +43,7 @@ GTMSBTCPPort::GTMSBTCPPort(GCFTask& 	 task,
 						   TPortType 	 type, 
 						   int 			 protocol, 
 						   bool 		 transportRawData) 
-  : GCFTCPPort(task, name, type, protocol, transportRawData),
-    itsConnectTimer(0)
+  : GCFTCPPort(task, name, type, protocol, transportRawData)
 {
 }
 
@@ -67,34 +66,27 @@ bool GTMSBTCPPort::open()
 		return (false);
 	}
 
-    uint32	sbPortNumber(MAC_SERVICEBROKER_PORT);
-
 	if (!_pSocket) {
 		_pSocket = new GTMTCPSocket(*this);
 		ASSERTSTR(_pSocket, "Could not create GTMTCPSocket for SBtask");
-    }
+		_pSocket->setBlocking(false);
+	}
 
-    setState(S_CONNECTING);
-    if (!_pSocket->open(sbPortNumber)) { 
-        _handleDisconnect();
-        return (false);
-    }
+	uint32	sbPortNumber(MAC_SERVICEBROKER_PORT);
 
-    // set to non-blocking
-    //
-    // BLOCK on localhost, to speed up connecting. The polling timers are quite slow,
-    // and some scripts need many connections in sequence.
-    if (!isLocalhost()) {
-      _pSocket->setBlocking(false);
-    }
+	setState(S_CONNECTING);
+	if (!_pSocket->open(sbPortNumber)) { 
+		_handleDisconnect();
+		return (false);
+	}
 
 	switch (_pSocket->connect(sbPortNumber, getHostName())) {
 	case -1: _handleDisconnect();  break; 
 	case 0:		// in progress
-		LOG_DEBUG_STR("GTMSBTCPPort:connect(" << getHostName() << ") still in progress");
+		LOG_INFO_STR("GTMSBTCPPort:connect(" << getHostName() << ") still in progress");
 		if (!itsConnectTimer) {
 //			itsConnectTimer = setTimer(*this, (uint64)(1000000.0), (uint64)(1000000.0), &itsConnectTimer);
-			itsConnectTimer = setTimer(0.2, 0.2, &itsConnectTimer);
+			itsConnectTimer = setTimer(1.0, 1.0, &itsConnectTimer);
 		}
 		break;
 	case 1: 

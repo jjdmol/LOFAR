@@ -27,7 +27,8 @@ logFile=/opt/lofar/var/log/startPython.log
 
 usage()
 {
-  echo "Usage: $0 <pythonProgram> <parsetname>"
+  echo "Usage: $0 <pythonProgram> <parsetname> <MAC-Python-control-host> \\"
+  echo "         <MAC-Python-control-listener> <MAC-Python-control-server>"
   exit 1
 }
 
@@ -40,9 +41,10 @@ usage()
 
 pythonProgram="${1}"
 parsetFile="${2}"
+controlHost="${3}"
 
 echo "**** $(date) ****" >> ${logFile}
-echo "Executing: $0 ${pythonProgram} ${parsetFile}" >> ${logFile}
+echo "Executing: $0 ${pythonProgram} ${parsetFile} ${controlHost}" >> ${logFile}
 
 use_pulp="$(getparsetvalue $parsetFile "ObsSW.Observation.processSubtype")"
 if [ "${use_pulp}" == "Pulsar Pipeline" ]; then 
@@ -51,9 +53,6 @@ if [ "${use_pulp}" == "Pulsar Pipeline" ]; then
 fi
 echo "Initializing Lofar" >> ${logFile}
 use Lofar
-echo "Initializing QPID" >> ${logFile}
-# TODO: implement 'use Qpid'
-source /opt/cep/qpid/.profile || source /opt/qpid/.profile || source /data/qpid/.profile || echo "Could NOT load qpid .profile" >> ${logFile}
 
 # Try to reset the environment based on a parset software version value
 
@@ -82,14 +81,14 @@ if [ -n "$debug" ]; then
   echo "PATH=${PATH}" >> ${logFile}
   echo "PYTHONPATH=${PYTHONPATH}" >> ${logFile}
   echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> ${logFile}
-  echo "${pythonProgram} ${programOptions} ${parsetFile}" \
+  echo "${pythonProgram} ${programOptions} ${parsetFile} ${controlHost}" \
     >> ${logFile}
 fi
 
 # Start the Python program in the background. 
 # This script should return ASAP so that MAC can set the task to ACTIVE.
 # STDERR will be redirected to the log-file.
-${pythonProgram} ${programOptions} ${parsetFile} \
+${pythonProgram} ${programOptions} ${parsetFile} ${controlHost} \
     1> /dev/null 2>> ${logFile} &
 
 # Check if the Python program died early. If so, this indicates an error.

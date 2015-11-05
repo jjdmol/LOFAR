@@ -26,11 +26,7 @@
 //# Includes
 #include <LofarStMan/LofarStMan.h>
 #include <Common/lofar_vector.h>
-#if defined(casacore)
-#include <tables/DataMan/StManColumn.h>
-#else
 #include <tables/Tables/StManColumn.h>
-#endif
 #include <measures/Measures/MeasFrame.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MBaseline.h>

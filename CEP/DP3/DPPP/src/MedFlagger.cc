@@ -112,7 +112,7 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      info().setWriteFlags();
+      info().setNeedWrite (DPInfo::NeedWriteFlags);
       // Get baseline indices of autocorrelations.
       itsAutoCorrIndex = info().getAutoCorrIndex();
       itsNrAutoCorr    = 0;
@@ -130,11 +130,6 @@ namespace LOFAR {
       // Evaluate the window size expressions.
       getExprValues (infoIn.nchan(), infoIn.ntime());
       itsBuf.resize (itsTimeWindow);
-      itsAmpl.resize (itsTimeWindow);
-      for (size_t i=0; i<itsAmpl.size(); ++i) {
-        itsAmpl[i].resize (infoIn.ncorr(), infoIn.nchan(),
-                           infoIn.nbaselines());
-      }
       // Set or check the correlations to flag on.
       vector<uint> flagCorr;
       uint ncorr = infoIn.ncorr();
@@ -168,10 +163,12 @@ namespace LOFAR {
       // Accumulate in the time window.
       // The buffer is wrapped, thus oldest entries are overwritten.
       uint index = itsNTimes % itsTimeWindow;
-      itsBuf[index].copy (buf);
-      DPBuffer& dbuf = itsBuf[index];
+      itsBuf[index] = buf;
       // Calculate amplitudes if needed.
-      amplitude (itsAmpl[index], dbuf.getData());
+      DPBuffer& dbuf = itsBuf[index];
+      if (dbuf.getAmplitudes().empty()) {
+        dbuf.setAmplitudes (amplitude(dbuf.getData()));
+      }
       // Fill flags if needed.
       if (dbuf.getFlags().empty()) {
         dbuf.getFlags().resize (dbuf.getData().shape());
@@ -276,7 +273,7 @@ namespace LOFAR {
       int nrbl   = shp[2];    // OpenMP 2.5 needs signed iteration variables
       uint ntime = timeEntries.size();
       // Get pointers to data and flags.
-      const float* bufDataPtr = itsAmpl[index].data();
+      const float* bufDataPtr = buf.getAmplitudes().data();
       bool* bufFlagPtr = buf.getFlags().data();
       float MAD = 1.4826;   //# constant determined by Pandey
       itsComputeTimer.start();
@@ -434,10 +431,9 @@ namespace LOFAR {
       const uint* endIter = iter + itsTimeWindowArr[bl];
       for (; iter!=endIter; ++iter) {
         const DPBuffer& inbuf = itsBuf[*iter];
-        const Cube<float>& ampl = itsAmpl[*iter];
         // Get pointers to given baseline and correlation.
         uint offset = bl*nchan*ncorr + corr;
-        const float* dataPtr = ampl.data() + offset;
+        const float* dataPtr = inbuf.getAmplitudes().data() + offset;
         const bool*  flagPtr = inbuf.getFlags().data() + offset;
         // Now move data from the two channel parts.
         for (int i=s1*ncorr; i<e1*ncorr; i+=ncorr) {
