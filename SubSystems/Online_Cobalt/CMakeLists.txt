@@ -1,8 +1,8 @@
 # $Id$
 
-# Online_OutputProc is needed for tests on cbt nodes
+# should cover everything that Online_OutputProc has (e.g. for tests on cbt009)
+#
 # APLCommon is needed for the `swlevel' script
-# PVSSGateway_Stub and Service_Broker are needed for the tRTmetadataToFile test
-lofar_package(Online_Cobalt DEPENDS Cobalt Online_OutputProc APLCommon PVSSGateway_Stub Service_Broker Log_Client)
+lofar_package(Online_Cobalt DEPENDS Cobalt Online_OutputProc APLCommon)
 
 add_subdirectory(test)

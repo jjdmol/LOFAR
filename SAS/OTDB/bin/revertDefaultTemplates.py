@@ -46,9 +46,6 @@ if __name__ == '__main__':
     # Give user escape possibility
     print "About to REVERT the default templates in database %s on host %s. Starting in 5 seconds..." % (dbName, dbHost)
     time.sleep(5)
-
-    # Wrap all modifications in a transaction, to avoid leaving behind a broken database
-    otdb.query("BEGIN")
     
     print "=> Collecting info about default templates..."
     # built dictionary with componentID, nodeID, nodeName, version and treeName of the default templates like:
@@ -96,7 +93,5 @@ if __name__ == '__main__':
         #print ("select * from assignProcessType (1, %s, '%s', '%s', '%s')" % (oldTreeID, oldTrees[oTreeName]['processType'][1:], oldTrees[oTreeName]['processSubtype'][1:], oldTrees[oTreeName]['strategy'][1:]))
         otdb.query("select * from assignProcessType (1, %s, '%s', '%s', '%s')" % (oldTreeID, oldTrees[oTreeName]['processType'][1:], oldTrees[oTreeName]['processSubtype'][1:], oldTrees[oTreeName]['strategy'][1:]))
 
-    # Write all changes to the database
-    otdb.query("COMMIT")
     otdb.close()
     sys.exit(0)

@@ -23,12 +23,16 @@ namespace LOFAR
   namespace Cobalt 
   {
 
-template <typename T> inline BestEffortQueue<T>::BestEffortQueue(const std::string &name, size_t maxSize, bool canDrop)
+template <typename T> inline BestEffortQueue<T>::BestEffortQueue(const std::string &name, size_t maxSize, bool drop)
 :
   Queue<T>(name),
   maxSize(maxSize),
-  canDrop(canDrop),
-  dropped("%"),
+  drop(drop),
+  //removing(false), // <-- this will prevent append() if noone is remove()ing. Disabled for now, because
+                     // it causes tests to fail, and even if a thread is remove()ing, objects can still
+                     // pile up in the queue.
+  dropped_on_append("%"),
+  freeSpace(maxSize),
   flushing(false)
 {
 }
@@ -36,83 +40,58 @@ template <typename T> inline BestEffortQueue<T>::BestEffortQueue(const std::stri
 
 template <typename T> inline BestEffortQueue<T>::~BestEffortQueue()
 {
-  LOG_INFO_STR("BestEffortQueue " << Queue<T>::itsName << ": maxSize = " << maxSize << ", dropped = " << dropped.mean() << "%");
+  LOG_INFO_STR("BestEffortQueue " << Queue<T>::itsName << ": maxSize = " << maxSize << ", dropped on append = " << dropped_on_append.mean() << "%");
 }
 
 
-template <typename T> inline bool BestEffortQueue<T>::_overflow() const
+template <typename T> inline bool BestEffortQueue<T>::append(const T& element)
 {
-  return this->itsSize > maxSize;
-}
-
-
-template <typename T> inline bool BestEffortQueue<T>::append(T& element, bool timed)
-{
-  /*
-   * Note that if the queue overflows, we drop the FRONT of the queue, that is,
-   * the oldest item. That's because the oldest item is less likely to be relevant
-   * anymore in the real-time system.
-   */
-
-  ScopedLock sl(this->itsMutex);
+  bool canAppend;
 
   if (flushing) {
-    dropped.push(100.0);
-    return false;
+    // can't append if we're emptying the queue
+    canAppend = false;
+  } else if (drop) {
+    canAppend = freeSpace.tryDown();
+  } else {
+    canAppend = freeSpace.down();
   }
 
-  this->unlocked_append(element, timed);
-
-  if (_overflow()) {
-    if (canDrop) {
-      // drop the head of the queue:
-      // 1. bypass the statistics kept by Queue<T>
-      // 2. retrieve its value and assign it to `element' to prevent it from being deallocated
-      element = this->pop_front().value;
-
-      dropped.push(100.0);
-      return false;
-    } else {
-      // can't drop -- wait for space to become available
-      do {
-        removeSignal.wait(this->itsMutex);
-      } while(_overflow() && !flushing);
-    }
+  // append if possible
+  if (canAppend) {
+    Queue<T>::append(element);
   }
 
-  dropped.push(0.0);
-  return true;
+  dropped_on_append.push(canAppend ? 0.0 : 100.0);
+
+  return canAppend;
 }
 
 
-template <typename T> inline T BestEffortQueue<T>::remove(const struct timespec &deadline, T null)
+template <typename T> inline T BestEffortQueue<T>::remove()
 {
-  T result = Queue<T>::remove(deadline, null);
+  T element = Queue<T>::remove();
 
-  if (!canDrop && result != null) {
-    // if we can't drop, append() can be waiting for us
-    removeSignal.signal();
-  }
+  // freed up one spot
+  freeSpace.up();
 
-  return result;
+  return element;
 }
 
 
 template <typename T> inline void BestEffortQueue<T>::noMore()
 {
-  ScopedLock sl(this->itsMutex);
-
   if (flushing)
     return;
 
   // mark queue as flushing
   flushing = true;
 
-  // signal end-of-stream to reader
-  this->unlocked_append(0, false);
+  // prevent writer from blocking
+  freeSpace.noMore();
 
-  // signal all append()s that we're flushing
-  removeSignal.broadcast();
+  // signal end-of-stream to reader
+  Queue<T>::append(0, false);
 }
 
 

@@ -3,9 +3,9 @@
 #include <GPUProc/Station/StationInput.h>
 #include <InputProc/Station/PacketFactory.h>
 #include <InputProc/SampleType.h>
-#include <InputProc/Transpose/MPIUtil.h>
 
 #include <UnitTest++.h>
+#include <mpi.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -55,8 +55,11 @@ public:
   :
     nrSubbands(10),
     nrSamples(1024),
-    data(TimeStamp::now(mode.clockHz()), nrSubbands, nrSamples)
+    data(nrSubbands, nrSamples)
   {
+    data.block = 0;
+    data.from = TimeStamp::now(mode.clockHz());
+    data.to   = data.from + nrSamples;
   }
 
   // Test whether the data in the packet is the ONLY data written.
@@ -240,7 +243,7 @@ SUITE(StationMetaData) {
 
     // Just send everything to rank 0
     SubbandDistribution subbandDistribution;
-    for (size_t sb = 0; sb < ps.settings.subbands.size(); ++sb)
+    for (size_t sb = 0; sb < ps.nrSubbands(); ++sb)
       subbandDistribution[0].push_back(sb);
 
     // Compute meta data
@@ -268,8 +271,11 @@ SUITE(StationMetaData) {
 int main(int argc, char **argv) {
   INIT_LOGGER("tStationInput");
 
-  LOFAR::Cobalt::MPI mpi;
-  mpi.init(argc, argv);
+  MPI_Init(&argc, &argv);
 
-  return UnitTest::RunAllTests() > 0;
+  int result = UnitTest::RunAllTests() > 0;
+
+  MPI_Finalize();
+
+  return result;
 }

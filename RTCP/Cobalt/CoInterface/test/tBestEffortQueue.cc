@@ -43,16 +43,13 @@ void test_drop()
   }
 
   // queue is full -- append should fail
-  size_t e = 100 + queueSize;
+  size_t e = 1000;
   ASSERT(!queue.append(e));
   ASSERT(queue.size() == queueSize);
 
-  // note that we now removed the oldest item
-  ASSERT(e == 100);
-
   // removal should succeed
   for (size_t i = 0; i < queueSize; ++i) {
-    ASSERT(queue.remove() == 101 + i);
+    ASSERT(queue.remove() == 100 + i);
     ASSERT(queue.size() == queueSize - i - 1);
   }
 
@@ -79,9 +76,6 @@ void test_nondrop()
       for (size_t i = 0; i < queueSize; ++i) {
         size_t e = 100 + i;
         ASSERT(queue.append(e));
-
-        // limit on queue size should be honoured
-        ASSERT(queue.size() <= queueSize);
       }
     }
 

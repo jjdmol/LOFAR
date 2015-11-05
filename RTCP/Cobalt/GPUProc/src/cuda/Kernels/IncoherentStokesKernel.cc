@@ -22,32 +22,32 @@
 
 #include "IncoherentStokesKernel.h"
 
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-
+#include <GPUProc/global_defines.h>
 #include <Common/lofar_complex.h>
-#include <CoInterface/Align.h>
-#include <CoInterface/Config.h>
+
+#include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    using boost::lexical_cast;
     using boost::format;
+    using boost::lexical_cast;
 
     string IncoherentStokesKernel::theirSourceFile = "IncoherentStokes.cu";
     string IncoherentStokesKernel::theirFunction = "incoherentStokes";
 
     IncoherentStokesKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters("incoherentStokes"),
-      nrStations(ps.settings.antennaFields.size()),
-      nrChannels(ps.settings.beamFormer.incoherentSettings.nrChannels),
-      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
-
+      Kernel::Parameters(ps),
       nrStokes(ps.settings.beamFormer.incoherentSettings.nrStokes),
-      timeIntegrationFactor(ps.settings.beamFormer.incoherentSettings.timeIntegrationFactor)
+      timeIntegrationFactor(
+        ps.settings.beamFormer.incoherentSettings.timeIntegrationFactor)
     {
+      nrChannelsPerSubband = 
+        ps.settings.beamFormer.incoherentSettings.nrChannels;
+      nrSamplesPerChannel =
+        ps.settings.beamFormer.incoherentSettings.nrSamples;
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.IncoherentStokesKernel.dumpOutput", false);
       dumpFilePattern = 
@@ -55,30 +55,11 @@ namespace LOFAR
             ps.settings.observationID);
     }
 
-
-    size_t IncoherentStokesKernel::Parameters::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case IncoherentStokesKernel::INPUT_DATA:
-        return 
-          (size_t) nrStations * NR_POLARIZATIONS * 
-          nrSamplesPerChannel * 
-          nrChannels * sizeof(std::complex<float>);
-      case IncoherentStokesKernel::OUTPUT_DATA:
-        return 
-          (size_t) nrStokes * nrSamplesPerChannel / 
-          timeIntegrationFactor * 
-          nrChannels * sizeof(float);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
-
     IncoherentStokesKernel::IncoherentStokesKernel(const gpu::Stream& stream,
                                                    const gpu::Module& module,
                                                    const Buffers& buffers,
                                                    const Parameters& params) :
-      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -86,40 +67,57 @@ namespace LOFAR
       unsigned nrTimes = 
         params.nrSamplesPerChannel / params.timeIntegrationFactor;
       unsigned nrPasses = 
-        ceilDiv(nrTimes, maxThreadsPerBlock);
+        (nrTimes + maxThreadsPerBlock - 1) / maxThreadsPerBlock;
       unsigned nrTimesPerPass = 
-        ceilDiv(nrTimes, nrPasses);
+        (nrTimes + nrPasses - 1) / nrPasses;
 
       LOG_DEBUG_STR("nrTimes = " << nrTimes);
       LOG_DEBUG_STR("nrPasses = " << nrPasses);
       LOG_DEBUG_STR("nrTimesPerPass = " << nrTimesPerPass);
 
       setEnqueueWorkSizes(
-        gpu::Grid(params.nrChannels, nrTimesPerPass * nrPasses),
+        gpu::Grid(params.nrChannelsPerSubband, nrTimesPerPass * nrPasses),
         gpu::Block(1, nrTimesPerPass));
 
     }
 
     //--------  Template specializations for KernelFactory  --------//
 
+    template<> size_t
+    KernelFactory<IncoherentStokesKernel>::
+    bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case IncoherentStokesKernel::INPUT_DATA:
+        return 
+          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
+          itsParameters.nrSamplesPerChannel * 
+          itsParameters.nrChannelsPerSubband * sizeof(std::complex<float>);
+      case IncoherentStokesKernel::OUTPUT_DATA:
+        return 
+          (size_t) itsParameters.nrStokes * itsParameters.nrSamplesPerChannel / 
+          itsParameters.timeIntegrationFactor * 
+          itsParameters.nrChannelsPerSubband * sizeof(float);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
     template<> CompileDefinitions
     KernelFactory<IncoherentStokesKernel>::compileDefinitions() const
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
-
-      defs["NR_STATIONS"] = 
-        lexical_cast<string>(itsParameters.nrStations);
-
-      defs["NR_CHANNELS"] = 
-        lexical_cast<string>(itsParameters.nrChannels);
-      defs["NR_SAMPLES_PER_CHANNEL"] = 
-        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
-
-      defs["NR_INCOHERENT_STOKES"] = 
-        lexical_cast<string>(itsParameters.nrStokes);
       defs["TIME_INTEGRATION_FACTOR"] = 
         lexical_cast<string>(itsParameters.timeIntegrationFactor);
+      defs["NR_CHANNELS"] = 
+        lexical_cast<string>(itsParameters.nrChannelsPerSubband);
+      defs["NR_INCOHERENT_STOKES"] = 
+        lexical_cast<string>(itsParameters.nrStokes);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
+      defs["NR_STATIONS"] = 
+        lexical_cast<string>(itsParameters.nrStations);
       return defs;
     }
 

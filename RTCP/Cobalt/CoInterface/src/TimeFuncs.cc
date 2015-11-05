@@ -23,10 +23,6 @@
 
 #include <cmath>
 #include <time.h>
-#include <sys/time.h>
-#include <boost/format.hpp>
-
-using boost::format;
 
 namespace LOFAR
 {
@@ -108,27 +104,6 @@ namespace LOFAR
         return a.tv_sec != b.tv_sec || a.tv_nsec != b.tv_nsec;
       }
 
-    }
-
-    namespace TimeDouble
-    {
-      std::string toString(double seconds, bool milliseconds) {
-        time_t s = static_cast<time_t>(floor(seconds));
-
-        char   buf[26];
-        struct tm tm;
-
-        gmtime_r(&s, &tm);
-        size_t len = strftime(buf, sizeof buf, "%F %T", &tm);
-        buf[len] = '\0';
-
-        if (milliseconds) {
-          unsigned ms = static_cast<unsigned>(floor((seconds - s) * 1000 + 0.5));
-          return str(format("%s.%3u") % buf % ms);
-        } else {
-          return buf;
-        }
-      }
     }
   }
 }

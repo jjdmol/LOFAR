@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 #include <CoInterface/TimeFuncs.h>
 #include <CoInterface/RunningStatistics.h>
 
-#include <deque>
+#include <list>
 #include <time.h>
 #include <string>
 
@@ -43,7 +43,7 @@ template <typename T> class Queue
 {
   public:
     // Create a named queue
-    Queue(const std::string &name, bool warnIfEmptyOnRemove = false);
+    Queue(const std::string &name);
 
     // Log queue statistics
     ~Queue();
@@ -60,14 +60,16 @@ template <typename T> class Queue
     // Put an element back to the front of the queue
     void     prepend(const T&);
 
+    // Remove the front element; waits for an element to be appended
+    T	       remove();
+
     // Remove the front element; waits until `deadline' for an element,
     // and returns `null' if the deadline passed.
-    T	       remove(const struct timespec &deadline = TimeSpec::universe_heat_death, T null = 0);
+    T	       remove(const struct timespec &deadline, T null);
 
     unsigned size() const;
     bool     empty() const;
     struct timespec oldest() const;
-    std::string name() const;
 
   private:
     Queue(const Queue&);
@@ -75,10 +77,6 @@ template <typename T> class Queue
 
   protected:
     const std::string itsName;
-
-    // The number of elements in the queue. We maintain this info
-    // because itsQueue::size() is O(N), at least until C++11.
-    size_t itsSize;
 
     // The time an element spent in a queue
     RunningStatistics retention_time;
@@ -92,8 +90,6 @@ template <typename T> class Queue
     // The average queue size on append() (excluding the inserted element)
     RunningStatistics queue_size_on_append;
 
-    const bool warn_if_empty;
-
     struct Element {
       T value;
       struct timespec arrival_time;
@@ -101,31 +97,17 @@ template <typename T> class Queue
 
     mutable Mutex              itsMutex;
     Condition	                 itsNewElementAppended;
-    std::deque<struct Element> itsQueue;
-
-    // append() without grabbing itsMutex
-    void     unlocked_append(const T&, bool timed);
-
-    // pushes an item to the front of the queue ("prepend")
-    void     push_front( const Element &e );
-
-    // pushes an item to the back of the queue ("append")
-    void     push_back( const Element &e );
-
-    // pops the oldest item in the queue and returns it
-    Element  pop_front();
+    std::list<struct Element>  itsQueue;
 };
 
 
-template <typename T> Queue<T>::Queue(const std::string &name, bool warnIfEmptyOnRemove)
+template <typename T> Queue<T>::Queue(const std::string &name)
 :
   itsName(name),
-  itsSize(0),
   retention_time("s"),
   remove_on_empty_queue("%"),
   remove_wait_time("s"),
-  queue_size_on_append("elements"),
-  warn_if_empty(warnIfEmptyOnRemove)
+  queue_size_on_append("elements")
 {
 }
 
@@ -155,7 +137,7 @@ template <typename T> Queue<T>::~Queue()
    *
    */
   if (itsName != "")
-    LOG_INFO_STR("Queue " << itsName << ": avg #elements on append = " << queue_size_on_append.mean() << ", queue empty on remove = " << remove_on_empty_queue.mean() << "%, remove wait time = " << remove_wait_time.mean() << " s, element retention time: " << retention_time);
+    LOG_INFO_STR("Queue " << itsName << ": avg #elements on append = " << queue_size_on_append.mean() << ", queue empty on remove = " << remove_on_empty_queue.mean() << "%, remove wait time = " << remove_wait_time.mean() << " ms, element retention time: " << retention_time);
 }
 
 
@@ -163,12 +145,6 @@ template <typename T> inline void Queue<T>::append(const T& element, bool timed)
 {
   ScopedLock scopedLock(itsMutex);
 
-  unlocked_append(element, timed);
-}
-
-
-template <typename T> inline void Queue<T>::unlocked_append(const T& element, bool timed)
-{
   Element e;
 
   // Copy the value to queue
@@ -178,9 +154,10 @@ template <typename T> inline void Queue<T>::unlocked_append(const T& element, bo
   e.arrival_time = timed ? TimeSpec::now() : TimeSpec::big_bang;
 
   // Record the queue size
-  queue_size_on_append.push(itsSize);
+  queue_size_on_append.push(itsQueue.size());
 
-  push_back(e);
+  itsQueue.push_back(e);
+  itsNewElementAppended.signal();
 }
 
 
@@ -198,59 +175,25 @@ template <typename T> inline void Queue<T>::prepend(const T& element)
   // screw up statistics.
   e.arrival_time = TimeSpec::big_bang;
 
-  push_front(e);
-}
-
-
-template <typename T> inline void Queue<T>::push_front( const Element &e )
-{
   itsQueue.push_front(e);
-  itsSize++;
-
   itsNewElementAppended.signal();
 }
 
 
-template <typename T> inline void Queue<T>::push_back( const Element &e )
-{
-  itsQueue.push_back(e);
-  itsSize++;
-
-  itsNewElementAppended.signal();
-}
-
-
-template <typename T> inline typename Queue<T>::Element Queue<T>::pop_front()
-{
-  Element e = itsQueue.front();
-  itsQueue.pop_front();
-  itsSize--;
-
-  return e;
-}
-
-
-template <typename T> inline T Queue<T>::remove(const struct timespec &deadline, T null)
+template <typename T> inline T Queue<T>::remove()
 {
   using namespace LOFAR::Cobalt::TimeSpec;
 
-  // Return null if deadline passed
-  if (TimeSpec::now() > deadline)
-    return null;
-
   ScopedLock scopedLock(itsMutex);
 
-  const bool beganEmpty = itsSize == 0;
+  const bool beganEmpty = itsQueue.empty();
   const struct timespec begin = TimeSpec::now();
 
-  if (beganEmpty && warn_if_empty)
-    LOG_WARN_STR("remove() called on empty queue: " << name());
-
   while (itsQueue.empty())
-    if (!itsNewElementAppended.wait(itsMutex, deadline))
-      return null;
+    itsNewElementAppended.wait(itsMutex);
 
-  Element e = pop_front();
+  Element e = itsQueue.front();
+  itsQueue.pop_front();
 
   const struct timespec end = TimeSpec::now();
 
@@ -270,18 +213,59 @@ template <typename T> inline T Queue<T>::remove(const struct timespec &deadline,
 }
 
 
+template <typename T> inline T Queue<T>::remove(const struct timespec &deadline, T null)
+{
+  using namespace LOFAR::Cobalt::TimeSpec;
+
+  // Return null if deadline passed
+  if (TimeSpec::now() > deadline)
+    return null;
+
+  ScopedLock scopedLock(itsMutex);
+
+  const bool beganEmpty = itsQueue.empty();
+  const struct timespec begin = TimeSpec::now();
+
+  while (itsQueue.empty())
+    if (!itsNewElementAppended.wait(itsMutex, deadline))
+      return null;
+
+  Element e = itsQueue.front();
+  itsQueue.pop_front();
+
+  const struct timespec end = TimeSpec::now();
+
+  // Record waiting time if queue was not empty
+  if (beganEmpty) {
+    remove_wait_time.push(end - begin);
+  }
+
+  // Record whether we'll need to wait
+  remove_on_empty_queue.push(beganEmpty ? 1.0 : 0.0);
+
+  // Record the time this element spent in this queue
+  if (e.arrival_time != TimeSpec::big_bang)
+    retention_time.push(end - e.arrival_time);
+
+  return e.value;
+}
+
+
 template <typename T> inline unsigned Queue<T>::size() const
 {
   ScopedLock scopedLock(itsMutex);
 
   // Note: list::size() is O(N)
-  return itsSize;
+  return itsQueue.size();
 }
 
 
 template <typename T> inline bool Queue<T>::empty() const
 {
-  return size() == 0;
+  ScopedLock scopedLock(itsMutex);
+
+  // Note: list::empty() is O(1)
+  return itsQueue.empty();
 }
 
 
@@ -290,12 +274,6 @@ template <typename T> inline struct timespec Queue<T>::oldest() const
   ScopedLock scopedLock(itsMutex);
 
   return itsQueue.empty() ? TimeSpec::now() : itsQueue.front().arrival_time;
-}
-
-
-template <typename T> inline std::string Queue<T>::name() const
-{
-  return itsName;
 }
 
 } // namespace Cobalt

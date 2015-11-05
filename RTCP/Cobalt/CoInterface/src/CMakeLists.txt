@@ -12,19 +12,13 @@ lofar_add_library(cointerface
   Allocator.cc
   CorrelatedData.cc
   BlockID.cc
-  BudgetTimer.cc
   FinalMetaData.cc
-  LTAFeedback.cc
   Stream.cc
   Parset.cc
   RunningStatistics.cc
   TABTranspose.cc
   TimeFuncs.cc
-  RingCoordinates.cc
-  SelfDestructTimer.cc
-)
+  RingCoordinates.cc)
 
 lofar_add_bin_program(versioncointerface versioncointerface.cc)
-
 lofar_add_sbin_program(cmpfloat cmpfloat.cc)
-lofar_add_sbin_program(createFeedback createFeedback.cc)
