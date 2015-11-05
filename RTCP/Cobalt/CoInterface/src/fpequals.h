@@ -53,20 +53,18 @@ namespace LOFAR
     template <typename T>
     bool fpEquals(T x, T y, 
                   typename Epsilon<T>::Type eps = 
-                  std::numeric_limits<typename Epsilon<T>::Type>::epsilon(),
-                  bool absolute = true,
-                  bool relative = true)
+                  std::numeric_limits<typename Epsilon<T>::Type>::epsilon())
     {
       //# equality: shortcut, also needed to correctly handle inf args.
       if (x == y) return true;
 
       //# absolute
       typename Epsilon<T>::Type d_xy = std::abs(x - y);
-      if (absolute && d_xy <= eps) return true;
+      if (d_xy <= eps) return true;
 
       //# relative
       typename Epsilon<T>::Type d_max = std::max(std::abs(x), std::abs(y));
-      return relative && d_xy / d_max <= eps;
+      return d_xy / d_max <= eps;
     }
 
   }

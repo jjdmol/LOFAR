@@ -25,7 +25,7 @@
 #include <string>
 
 #include <Common/Thread/Thread.h>
-#include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Trigger.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/FinalMetaData.h>
@@ -60,18 +60,18 @@ namespace LOFAR
     {
     public:
       // user must call start()
-      StorageProcess( const Parset &parset, const std::string &logPrefix, int rank, const std::string &hostname );
+      StorageProcess( const Parset &parset, const std::string &logPrefix, int rank, const std::string &hostname, FinalMetaData &finalMetaData, Trigger &finalMetaDataAvailable );
 
       // calls stop(0)
       ~StorageProcess();
 
       void start();
       void stop( struct timespec deadline );
-
-      bool isSuccesful() const; // return whether communication with OutputProc went perfect
       bool isDone() const;
 
-      void setFinalMetaData( const FinalMetaData &finalMetaData );
+      // Returns feedback for the LTA -- only access this once the
+      // StorageProcess has finished!
+      ParameterSet feedbackLTA() const;
 
     private:
       void                               controlThread();
@@ -82,11 +82,10 @@ namespace LOFAR
       const int itsRank;
       const std::string itsHostname;
 
-      bool                               itsSentFeedback;
-      bool                               itsSuccessful;
+      FinalMetaData                      &itsFinalMetaData;
+      Trigger                            &itsFinalMetaDataAvailable;
 
-      FinalMetaData                      itsFinalMetaData;
-      Semaphore                          itsFinalMetaDataAvailable;
+      ParameterSet                       itsFeedbackLTA;
 
       SmartPtr<Thread> itsThread;
     };

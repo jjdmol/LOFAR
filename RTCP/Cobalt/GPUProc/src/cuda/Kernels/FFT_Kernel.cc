@@ -24,8 +24,8 @@
 #include <cufft.h>
 
 #include <Common/LofarLogger.h>
+#include <GPUProc/global_defines.h>
 #include <CoInterface/BlockID.h>
-#include <CoInterface/Config.h>
 
 #include "FFT_Kernel.h"
 
@@ -53,105 +53,90 @@ namespace LOFAR
      */
     const size_t maxNrFFTpoints = 1024 * 1024;
 
-    FFT_Kernel::Parameters::Parameters(unsigned fftSize, unsigned nrSamples, bool forward, const std::string &name)
-    :
-      Kernel::Parameters(name),
-      fftSize(fftSize),
-      nrSamples(nrSamples),
-      forward(forward)
-    {
-    }
-
-    size_t FFT_Kernel::Parameters::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case FFT_Kernel::INPUT_DATA: 
-      case FFT_Kernel::OUTPUT_DATA:
-        return (size_t) nrSamples * sizeof(std::complex<float>);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
-
-    FFT_Kernel::FFT_Kernel(const gpu::Stream &stream,
-                           const Buffers& buffers,
-                           const Parameters& params)
+    FFT_Kernel::FFT_Kernel(const gpu::Stream &stream, unsigned fftSize,
+                           unsigned nrFFTs, bool forward, 
+                           const gpu::DeviceMemory &buffer)
       :
-      Kernel(stream, buffers, params),
-      nrFFTs(params.nrSamples / params.fftSize),
-      nrMajorFFTs(nrFFTs / (maxNrFFTpoints / params.fftSize)),
-      nrMinorFFTs(nrFFTs % (maxNrFFTpoints / params.fftSize)),
-      direction(params.forward ? CUFFT_FORWARD : CUFFT_INVERSE),
-      planMajor(stream.getContext(), params.fftSize, maxNrFFTpoints / params.fftSize),
-      planMinor(stream.getContext(), params.fftSize, nrMinorFFTs)
+      itsCounter(stream.getContext()),
+      context(stream.getContext()),
+      nrMajorFFTs(nrFFTs / (maxNrFFTpoints / fftSize)),
+      nrMinorFFTs(nrFFTs % (maxNrFFTpoints / fftSize)),
+      fftSize(fftSize),
+      direction(forward ? CUFFT_FORWARD : CUFFT_INVERSE),
+      planMajor(context, fftSize, maxNrFFTpoints / fftSize),
+      planMinor(context, fftSize, nrMinorFFTs),
+      buffer(buffer),
+      itsStream(stream)
     {
-      // fftSize must fit into nrSamples an exact number of times
-      ASSERT(params.nrSamples % params.fftSize == 0);
-
       // fftSize must fit into maxNrFFTpoints an exact number of times
-      ASSERT(maxNrFFTpoints % params.fftSize == 0);
-
-      // Tie our plan to the specified stream
-      planMajor.setStream(itsStream);
-      planMinor.setStream(itsStream);
-
-      // buffer must be big enough for the job
-      // Untill we have optional kernel compilation this test will fail on unused and thus incorrect kernels
-      //ASSERT(buffer.size() >= fftSize * nrFFTs * sizeof(fcomplex));
+      ASSERT(maxNrFFTpoints % fftSize == 0);
 
       LOG_DEBUG_STR("FFT_Kernel: " <<
-                    "fftSize=" << params.fftSize << 
-                    ", direction=" << (params.forward ? "forward" : "inverse") <<
+                    "fftSize=" << fftSize << 
+                    ", direction=" << (forward ? "forward" : "inverse") <<
                     ", nrFFTs=" << nrFFTs);
     }
 
-    void FFT_Kernel::executePlan(const cufftHandle &plan, cufftComplex *in_data, cufftComplex *out_data) const
+    void FFT_Kernel::executePlan(const cufftHandle &plan, cufftComplex *data) const
     {
-      cufftResult error = cufftExecC2C(plan, in_data, out_data, direction);
+      cufftResult error = cufftExecC2C(plan, data, data, direction);
 
       if (error != CUFFT_SUCCESS)
         THROW(gpu::CUDAException, "cufftExecC2C: " << gpu::cufftErrorMessage(error));
     }
 
 
-    void FFT_Kernel::launch() const
+    void FFT_Kernel::enqueue(const BlockID &/*blockId*/) const
     {
-      gpu::ScopedCurrentContext scc(itsStream.getContext());
+      gpu::ScopedCurrentContext scc(context);
+
+      // Tie our plan to the specified stream
+      planMajor.setStream(itsStream);
+      planMinor.setStream(itsStream);
 
       // Enqueue the FFT execution
+      itsStream.recordEvent(itsCounter.start);
       LOG_DEBUG("Launching cuFFT");
 
       // Running pointer of the GPU data we're about to FFT
-      cufftComplex *in_data  = static_cast<cufftComplex*>(itsBuffers.input.get());
-      cufftComplex *out_data = static_cast<cufftComplex*>(itsBuffers.output.get());
+      cufftComplex *data = static_cast<cufftComplex*>(buffer.get());
 
       // Execute the major FFTs
       for (size_t major = 0; major < nrMajorFFTs; ++major) {
-        executePlan(planMajor.plan, in_data, out_data);
-        in_data  += maxNrFFTpoints;
-        out_data += maxNrFFTpoints;
+        executePlan(planMajor.plan, data);
+        data += maxNrFFTpoints;
       }
 
       // Execute the minor FFT
       if (nrMinorFFTs > 0) {
-        executePlan(planMinor.plan, in_data, out_data);
+        executePlan(planMinor.plan, data);
       }
+
+      // Wrap up
+      itsStream.recordEvent(itsCounter.stop);
+
+      if (itsStream.isSynchronous()) {
+        itsStream.synchronize();
+      }
+
+/*
+      counter.doOperation(event,
+                          (size_t) nrFFTs * 5 * fftSize * log2(fftSize),
+                          (size_t) nrFFTs * fftSize * sizeof(std::complex<float>),
+                          (size_t) nrFFTs * fftSize * sizeof(std::complex<float>));*/
     }
 
-    //# --------  Template specializations for KernelFactory  -------- #//
-
-    template<> std::string KernelFactory<FFT_Kernel>::_createPTX() const {
-      return "";
-    }
-
-    template <> FFT_Kernel* KernelFactory<FFT_Kernel>::create(
-              const gpu::Stream& stream,
-              gpu::DeviceMemory &inputBuffer,
-              gpu::DeviceMemory &outputBuffer) const
+    size_t FFT_Kernel::bufferSize(const Parset& ps, BufferType bufferType)
     {
-      const FFT_Kernel::Buffers buffers(inputBuffer, outputBuffer);
-
-      return new FFT_Kernel(stream, buffers, itsParameters);
+      switch (bufferType) {
+      case INPUT_DATA: 
+      case OUTPUT_DATA:
+        return
+          (size_t) ps.nrStations() * NR_POLARIZATIONS * 
+            ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
     }
   }
 }

@@ -24,7 +24,6 @@ PANEL,-1 -1 414 134 N "_3DFace" 2
   } else {
     setValue(\"streamObject\", \"backCol\", \"Lofar_dpOffline\");
   }
- 
 }
 
 private void obsRunning(string dp1,string running,

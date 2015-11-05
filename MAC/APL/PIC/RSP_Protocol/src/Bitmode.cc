@@ -1,8 +1,8 @@
-//#  Bitmode.cc: implementation of the Bitmode class
+//#  Bitmode.h: implementation of the Bitmode class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -39,11 +39,17 @@ size_t BitmodeInfo::getSize() const
 size_t BitmodeInfo::pack  (char* buffer) const
 {
   size_t offset = 0;
-  return MSH_pack(buffer, offset, itsBitmodeInfo);
+
+  MSH_pack(buffer, offset, itsBitmodeInfo);
+
+  return offset;
 }
 
 size_t BitmodeInfo::unpack(const char *buffer)
 {
   size_t offset = 0;
-  return MSH_unpack(buffer, offset, itsBitmodeInfo);
+
+  MSH_unpack(buffer, offset, itsBitmodeInfo);
+
+  return offset;
 }

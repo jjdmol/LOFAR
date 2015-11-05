@@ -67,8 +67,7 @@ namespace LOFAR {
       info() = infoIn;
       // Update the info of this object.
       info().setNeedVisData();
-      info().setWriteData();
-      info().setWriteFlags();
+      info().setNeedWrite();
       // Handle possible data selection.
       itsFilter.updateInfo (getInfo());
       // Update itsDemixInfo and info().
@@ -82,7 +81,7 @@ namespace LOFAR {
       itsWorkers.reserve (nthread);
       for (int i=0; i<nthread; ++i) {
         itsWorkers.push_back (DemixWorker (itsInput, itsName, itsDemixInfo,
-                                           infoIn, i));
+                                           infoIn));
       }
     }
 
@@ -191,23 +190,14 @@ namespace LOFAR {
       if (itsDemixInfo.doSubtract()) {
         os << endl << "Mean/stddev percentage of subtracted Stokes I amplitude"
            << " for the middle channel" << endl;
-        os << setw(8) << ' ';
+        os << "     ";
         for (size_t dr=0; dr<ndir; ++dr) {
           if (nsources[dr] > 0) {
-	    // Print name a bit right of the center.
-            const string& nm = itsDemixInfo.ateamList()[dr]->name().substr(0,13);
-	    if (nm.size() > 10) {
-	      cout << setw(13) << nm;
-	    } else {
-	      int szws = 13 - nm.size();    // whitespace
-	      os << setw(szws/2+1) << ' ';
-	      os << nm;
-	      os << setw(szws-szws/2-1) << ' ';
-	    }
+            os << setw(13) << itsDemixInfo.ateamList()[dr]->name().substr(0,13);
           }
         }
-        os << setw(10) << "Total" << endl;
-        os << "baseline";
+        os << setw(13) << "Total" << endl;
+        os << " baseline";
         for (size_t dr=0; dr<ndir; ++dr) {
           if (nsources[dr] > 0) {
             os << "  mean stddev";
@@ -341,10 +331,18 @@ namespace LOFAR {
       // Collect sufficient data buffers.
       // Make sure all required data arrays are filled in.
       DPBuffer& newBuf = itsBufIn[itsNTime];
-      newBuf.copy (buf);
-      itsInput->fetchUVW(buf, newBuf, itsTimer);
-      itsInput->fetchWeights(buf, newBuf, itsTimer);
-      itsInput->fetchFullResFlags(buf, newBuf, itsTimer);
+      newBuf = buf;
+      RefRows refRows(newBuf.getRowNrs());
+      if (newBuf.getUVW().empty()) {
+        newBuf.setUVW(itsInput->fetchUVW(newBuf, refRows, itsTimer));
+      }
+      if (newBuf.getWeights().empty()) {
+        newBuf.setWeights(itsInput->fetchWeights(newBuf, refRows, itsTimer));
+      }
+      if (newBuf.getFullResFlags().empty()) {
+        newBuf.setFullResFlags(itsInput->fetchFullResFlags(newBuf, refRows,
+                                                           itsTimer));
+      }
       // Process the data if entire buffer is filled.
       if (++itsNTime >= itsBufIn.size()) {
         processData();

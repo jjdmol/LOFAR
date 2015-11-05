@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -78,15 +78,10 @@ RCUCables::RCUCables(const string&	attFilename, const string&	delayFilename) :
 			ASSERTSTR(rcuNr >= 0 && rcuNr < MAX_RCUS, "RCUNumber " << rcuNr << " not in range [0.." << MAX_RCUS-1 << "]");
 			ASSERTSTR(nrArgs == EXPECTED_NR_COLUMNS, "Expected " << EXPECTED_NR_COLUMNS << " fields on line: " << line);
 
-			if (LBLlen > 0) {
 			ASSERTSTR(itsCableAtts.isLegalLength(LBLlen), "LBL cablelength " << LBLlen << " is not allowed");
-			}
-			if (LBHlen > 0) {
 			ASSERTSTR(itsCableAtts.isLegalLength(LBHlen), "LBH cablelength " << LBHlen << " is not allowed");
-			}
-			if (HBAlen > 0) {
 			ASSERTSTR(itsCableAtts.isLegalLength(HBAlen), "HBA cablelength " << HBAlen << " is not allowed");
-			}
+
 			// copy values to internal arrays.
 			itsCableLengths(rcuNr, 0) = LBLlen;
 			itsCableLengths(rcuNr, 1) = LBHlen;

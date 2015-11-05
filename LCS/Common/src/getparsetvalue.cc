@@ -24,55 +24,24 @@
 #include <lofar_config.h>
 
 #include <Common/ParameterSet.h>
-#include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
 #include <stdexcept>
 #include <iostream>
-
-using namespace std;
-
-void showHelp()
-{
-  cerr << endl
-       << "getparsetvalue gives the string value of a parset parameter."
-       << endl
-       << "If the value in the parset is a vector of values, the i-th value"
-       << endl
-       << "can be obtained by giving an index as the 3rd argument."
-       << endl
-       << "An exception is raised if the index exceeds the vector length."
-       << endl
-       << endl
-       << "Using the -d option a default value can be supplied which will be"           << endl
-       << "used if the parameter does not exist."
-       << endl
-       << "If the parameter does not exist and an index is given, the default"          << endl
-       << "value is used as a single value and the index is ignored."
-       << endl
-       << "Note that a parameter exists if its value is empty!"
-       << endl
-       << endl
-       << "Run as:"
-       << endl
-       <<"     getparsetvalue [-d defaultvalue] parsetfile parmname [index]"
-       << endl
-       << "         a negative index counts from the end (a la python)"
-       << endl
-       << endl;
-}
 
 int main (int argc, const char* argv[])
 {
   int st = 1;
   try {
     bool hasDefVal = false;
-    string defVal;
+    std::string defVal;
     while (true) {
       if (argc < 3) {
-        showHelp();
+        std::cerr << "Run as: getparsetvalue [-d defaultvalue] parsetfile parmname [index]"
+                  << "    negative index counts from the end (a la python)"
+                  << std::endl;
         return 1;
       }
-      if (string(argv[st]) == "-d") {
+      if (std::string(argv[st]) == "-d") {
         hasDefVal = true;
         defVal = argv[st+1];
         st += 2;
@@ -81,47 +50,38 @@ int main (int argc, const char* argv[])
         break;
       }
     }
-    if (argc < 2 || argc > 4) {
-      showHelp();
-      return 1;
-    }
     int inx = 0;
     bool useAll = true;
     if (argc > 3) {
-      inx = LOFAR::strToInt (argv[st+2]);
+      std::istringstream iss(argv[st+2]);
+      iss >> inx;
       useAll = false;
     }
     LOFAR::ParameterSet parset(argv[st]);
     if (useAll) {
-      string value;
+      std::string value;
       if (hasDefVal) {
         value = parset.getString (argv[st+1], defVal);
       } else {
         value = parset.getString (argv[st+1]);
       }
-      cout << value << endl;
+      std::cout << value << std::endl;
     } else {
-      if (hasDefVal) {
-        if (! parset.isDefined (argv[st+1])) {
-          cout << defVal << endl;
-          return 0;
-        }
-      }
-      vector<string> values = parset.getStringVector (argv[st+1]);
-      // Negative index counts from the end.
+      std::vector<std::string> values = parset.getStringVector (argv[st+1]);
+      // Negative index is 
       int i = inx;
       if (i < 0) {
 	i += values.size();
       }
       ASSERTSTR (i >= 0  &&  i < int(values.size()),
 		 "Index " << inx
-		 << " exceeds the number of values " << values.size()
+		 << " exceeds value size " << values.size()
 		 << " of parameter " << argv[st+1]);
-      cout << values[i] << endl;
+      std::cout << values[i] << std::endl;
     }
-  } catch (exception &x) {
-    cerr << x.what() << "; file=" << argv[st] << ", key=" << argv[st+1]
-         << endl;
+  } catch (std::exception &x) {
+    std::cerr << x.what() << "; file=" << argv[st] << ", key=" << argv[st+1]
+              << std::endl;
     return 1;
   }
   return 0;

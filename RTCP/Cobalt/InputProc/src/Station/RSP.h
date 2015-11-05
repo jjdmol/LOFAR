@@ -97,8 +97,6 @@ namespace LOFAR
       } header;
 
       // Payload, allocated for maximum size.
-      // Actual size depends on the header (nrBeamlets, nrBlocks). It changed in
-      // the past (61 vs 60) and may be less for tests and old pre-recorded data
       union Payload {
         char data[8130];
 

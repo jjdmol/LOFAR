@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include <GPUProc/cuda/SubbandProcs/CorrelatorStep.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 
 #include <UnitTest++.h>
 #include <iostream>
@@ -29,15 +29,9 @@
 #include <CoInterface/SparseSet.h>
 #include <CoInterface/MultiDimArray.h>
 #include <Common/LofarLogger.h>
-#include <Common/LofarTypes.h>
 #include <complex>
 
-using namespace LOFAR;
 using namespace LOFAR::Cobalt;
-using namespace std;
-
-// Global variable holding the GPU context to bind objects to
-gpu::Context *context = 0;
 
 TEST(propagateFlags)
 {
@@ -50,47 +44,41 @@ TEST(propagateFlags)
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS102, RS103, RS104, RS105]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
-  parset.add("Observation.rspBoardList", "[0]");
-  parset.add("Observation.rspSlotList", "[0]");
-  parset.add("Observation.nrBeams", "1");
-  parset.add("Observation.Beam[0].subbandList", "[0]");
 
   parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
   parset.add("Observation.DataProducts.Output_Correlated.locations","[lse011:/data3/L2011_24523/]");
 
   parset.updateSettings();
-  unsigned number_of_baselines = parset.nrBaselines();
+  unsigned number_of_baselines = (parset.nrStations() * 1.0 * (parset.nrStations() + 1)) / 2;
 
   // Input flags: an array of sparseset
-  MultiDimArray<LOFAR::SparseSet<unsigned>, 1> inputFlags(boost::extents[parset.settings.correlator.stations.size()]);
+  MultiDimArray<LOFAR::SparseSet<unsigned>, 1> inputFlags(boost::extents[parset.nrStations()]);
   // Set some flags
   inputFlags[2].include(100, 101);    // A. a single sample flagged in station 3
   inputFlags[3].include(500, 501);  // B. a single sample flagged is station 4
   
   // The output data to be flagged
-  SubbandProcOutputData::CorrelatedData output(1,
-                     parset.settings.correlator.stations.size(),
-                     parset.settings.correlator.nrChannels, 
-                     parset.settings.correlator.nrSamplesPerIntegration(),
-                     *context);
-  MultiDimArray<fcomplex, 4> &visibilities = output.subblocks[0]->visibilities;
+  CorrelatedData output(parset.nrStations(), 
+                     parset.nrChannelsPerSubband(), 
+                     parset.integrationSteps());
 
   // The content ergo the visibilities should be 1, this allows us to validate the weighting
   //assign all values 1 pol 0
   for(unsigned idx_baseline = 0; idx_baseline < number_of_baselines; ++idx_baseline)
-    for(unsigned idx_channel = 0; idx_channel < parset.settings.correlator.nrChannels; ++idx_channel)    
+    for(unsigned idx_channel = 0; idx_channel < parset.nrChannelsPerSubband(); ++idx_channel)    
       for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
         for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2)    
-           visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
+           output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
+
 
 
   // *********************************************************************************************
   //propageFlags: exercise the functionality
-  CorrelatorStep::Flagger::propagateFlags(parset, inputFlags, output);
+  CorrelatorSubbandProc::Flagger::propagateFlags(parset, inputFlags, output);
 
   // now perform weighting of the data based on the number of valid samples
-  CorrelatorStep::Flagger::applyNrValidSamples(parset, *output.subblocks[0]);  
+  CorrelatorSubbandProc::Flagger::applyWeights<uint16_t>(parset, output);  
   // *********************************************************************************************
 
   // Now validate the functionality:
@@ -99,7 +87,7 @@ TEST(propagateFlags)
     for(unsigned idx_channel = 0; idx_channel < 1; ++idx_channel)    //validate channel zero
       for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
         for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2) 
-          CHECK_EQUAL(std::complex<float>(0,0), visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2]);
+          CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2]);
 
   // 2. station zero and one have no flags, the baselines for these station should be default 
   float weight_of_unflagged_sample = 1.0f/1024; // default weighting / number of samples
@@ -108,7 +96,7 @@ TEST(propagateFlags)
       for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
         for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2) 
            CHECK_CLOSE(weight_of_unflagged_sample,
-                      visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2].real(),
+                      output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2].real(),
                       1e-18f);  // float compare with this delta
 
   // 3. Now check the weights for bl 4 to 6: flagging should be a single flagged sample on the input
@@ -119,7 +107,7 @@ TEST(propagateFlags)
       for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
         for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2) 
           CHECK_CLOSE(weight_of_single_sample,
-                      visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2].real(),
+                      output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2].real(),
                       1e-18f);  // float compare with this delta
 
     // 3. Now check the weights for bl 4 to 6: flagging should be a single flagged sample on the input from station 3
@@ -129,7 +117,7 @@ TEST(propagateFlags)
       for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
         for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2) 
           CHECK_CLOSE(weight_of_single_sample,
-                      visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2].real(),
+                      output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2].real(),
                       1e-18f);  // float compare with this delta
 
   // station 2 and 3: two samples
@@ -139,7 +127,7 @@ TEST(propagateFlags)
       for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
         for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2) 
           CHECK_CLOSE(weight_of_two_sample,
-                      visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2].real(),
+                      output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2].real(),
                       1e-18f);  // float compare with this delta
 
     // station 3 and auto 3: 1 sample
@@ -148,12 +136,13 @@ TEST(propagateFlags)
       for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
         for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2) 
           CHECK_CLOSE(weight_of_single_sample,
-                      visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2].real(),
+                      output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2].real(),
                       1e-18f);  // float compare with this delta
+ 
 }
 
 
-TEST(calcNrValidSamples4Channels)
+TEST(calcWeights4Channels)
 {
   // Create a parset with the needed parameters
   Parset parset;
@@ -164,10 +153,6 @@ TEST(calcNrValidSamples4Channels)
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
-  parset.add("Observation.rspBoardList", "[0]");
-  parset.add("Observation.rspSlotList", "[0]");
-  parset.add("Observation.nrBeams", "1");
-  parset.add("Observation.Beam[0].subbandList", "[0]");
 
   parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
@@ -176,36 +161,34 @@ TEST(calcNrValidSamples4Channels)
   parset.updateSettings();
 
   // Input flags: an array of sparseset
-  MultiDimArray<LOFAR::SparseSet<unsigned>, 1> flagsPerChannel(
-          boost::extents[parset.settings.correlator.stations.size()]);
+  MultiDimArray<LOFAR::SparseSet<unsigned>, 2> flagsPerChanel(
+          boost::extents[parset.nrChannelsPerSubband()][parset.nrStations()]);
 
   // Output object
-  SubbandProcOutputData::CorrelatedData output(1,
-                     parset.settings.correlator.stations.size(),
-                     parset.settings.correlator.nrChannels, 
-                     parset.settings.correlator.nrSamplesPerIntegration(),
-                     *context);
+  CorrelatedData output(parset.nrStations(), 
+                     parset.nrChannelsPerSubband(), 
+                     parset.integrationSteps());
 
   //insert same cases
-  flagsPerChannel[0].include(100,111);//A.
-  flagsPerChannel[1].include(111,120);//E. second station flags
+  flagsPerChanel[1][0].include(100,111);//A.
+  flagsPerChanel[1][1].include(111,120);//E. second station flags
   
   //propageFlags
-  CorrelatorStep::Flagger::calcNrValidSamples(parset, flagsPerChannel, output);
+  CorrelatorSubbandProc::Flagger::calcWeights<uint16_t>(parset, flagsPerChanel, output);
   
   // Now check that the flags are correctly set in the ouput object
 
-  CHECK_EQUAL(256u - 11u, output.subblocks[0]->getNrValidSamples(0,1)); // 11 flagged in station 1
-  CHECK_EQUAL(256u - 20u, output.subblocks[0]->getNrValidSamples(1,1)); // The union is 11+9 == 20 flagged
-  CHECK_EQUAL(256u - 9u, output.subblocks[0]->getNrValidSamples(2,1)); // 9 flagged in station 2
+  CHECK_EQUAL(256u - 11u, output.getNrValidSamples(0,1)); // 11 flagged in station 1
+  CHECK_EQUAL(256u - 20u, output.getNrValidSamples(1,1)); // The union is 11+9 == 20 flagged
+  CHECK_EQUAL(256u - 9u, output.getNrValidSamples(2,1)); // 9 flagged in station 2
  
   // Channel zero should always be all flagged
-  CHECK_EQUAL(0u, output.subblocks[0]->getNrValidSamples(0,0)); // all flagged in station 2
-  CHECK_EQUAL(0u, output.subblocks[0]->getNrValidSamples(1,0)); // all flagged in station 2
-  CHECK_EQUAL(0u, output.subblocks[0]->getNrValidSamples(2,0)); // all flagged in station 2
+  CHECK_EQUAL(0u, output.getNrValidSamples(0,0)); // all flagged in station 2
+  CHECK_EQUAL(0u, output.getNrValidSamples(1,0)); // all flagged in station 2
+  CHECK_EQUAL(0u, output.getNrValidSamples(2,0)); // all flagged in station 2
 }
 
-TEST(calcNrValidSamples1Channels)
+TEST(calcWeights1Channels)
 {
   // on channel so the zero channel should be filled with the flags!!
   // Create a parset with the needed parameters
@@ -217,10 +200,6 @@ TEST(calcNrValidSamples1Channels)
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
-  parset.add("Observation.rspBoardList", "[0]");
-  parset.add("Observation.rspSlotList", "[0]");
-  parset.add("Observation.nrBeams", "1");
-  parset.add("Observation.Beam[0].subbandList", "[0]");
 
   parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
@@ -228,31 +207,29 @@ TEST(calcNrValidSamples1Channels)
 
   parset.updateSettings();
   // Input flags: an array of sparseset
-  MultiDimArray<LOFAR::SparseSet<unsigned>, 1> flagsPerChannel(
-          boost::extents[parset.settings.correlator.stations.size()]);
+  MultiDimArray<LOFAR::SparseSet<unsigned>, 2> flagsPerChanel(
+          boost::extents[parset.nrChannelsPerSubband()][parset.nrStations()]);
 
   // Output object
-  SubbandProcOutputData::CorrelatedData output(1,
-                     parset.settings.correlator.stations.size(),
-                     parset.settings.correlator.nrChannels, 
-                     parset.settings.correlator.nrSamplesPerIntegration(),
-                     *context);
+  CorrelatedData output(parset.nrStations(), 
+                     parset.nrChannelsPerSubband(), 
+                     parset.integrationSteps());
 
   //insert same cases
-  flagsPerChannel[0].include(100,111);//A.
-  flagsPerChannel[1].include(111,120);//E. second station flags
+  flagsPerChanel[0][0].include(100,111);//A.
+  flagsPerChanel[0][1].include(111,120);//E. second station flags
   
   //propageFlags
-  CorrelatorStep::Flagger::calcNrValidSamples(parset, flagsPerChannel, output);
+  CorrelatorSubbandProc::Flagger::calcWeights<uint16_t>(parset, flagsPerChanel, output);
   
   // Now check that the flags are correctly set in the ouput object
   // channel is 1 so no time resolution loss!!
-  CHECK_EQUAL(245u, output.subblocks[0]->getNrValidSamples(0,0)); // 11 flagged in station 1
-  CHECK_EQUAL(236u, output.subblocks[0]->getNrValidSamples(1,0)); // The union is 11+9 == 20 flagged
-  CHECK_EQUAL(247u, output.subblocks[0]->getNrValidSamples(2,0)); // 9 flagged in station 2  
+  CHECK_EQUAL(245u, output.getNrValidSamples(0,0)); // 11 flagged in station 1
+  CHECK_EQUAL(236u, output.getNrValidSamples(1,0)); // The union is 11+9 == 20 flagged
+  CHECK_EQUAL(247u, output.getNrValidSamples(2,0)); // 9 flagged in station 2  
 }
 
-TEST(applyNrValidSamples)
+TEST(applyWeights)
 {
   // Create a parset with the needed parameters
   Parset parset;
@@ -263,55 +240,49 @@ TEST(applyNrValidSamples)
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
-  parset.add("Observation.rspBoardList", "[0]");
-  parset.add("Observation.rspSlotList", "[0]");
-  parset.add("Observation.nrBeams", "1");
-  parset.add("Observation.Beam[0].subbandList", "[0]");
 
   parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
   parset.add("Observation.DataProducts.Output_Correlated.locations","[lse011:/data3/L2011_24523/]");
   parset.updateSettings();
   // Create correlated data object
-  SubbandProcOutputData::CorrelatedData output(1,
-                     parset.settings.correlator.stations.size(), 
-                     parset.settings.correlator.nrChannels, 
-                     parset.settings.correlator.nrSamplesPerIntegration(),
-                     *context);
-  MultiDimArray<fcomplex, 4> &visibilities = output.subblocks[0]->visibilities;
+  CorrelatedData output(parset.nrStations(), 
+                     parset.nrChannelsPerSubband(), 
+                     parset.integrationSteps());
+
  
   //assign all values 1 pol 0
   for(unsigned idx_baseline = 0; idx_baseline < 3; ++idx_baseline)
-    for(unsigned idx_channel = 0; idx_channel < parset.settings.correlator.nrChannels; ++idx_channel)    
+    for(unsigned idx_channel = 0; idx_channel < parset.nrChannelsPerSubband(); ++idx_channel)    
       for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
         for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2)    
-           visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
+           output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
         
   // set some flagged samples
   unsigned n_valid_samples = 20;
-  output.subblocks[0]->setNrValidSamples(0,1,n_valid_samples); //baseline 0, channel 1
-  output.subblocks[0]->setNrValidSamples(1,1,256); //baseline 1, channel 1
-  output.subblocks[0]->setNrValidSamples(2,1,0); //baseline 0, channel 1
-  CorrelatorStep::Flagger::applyNrValidSamples(parset, *output.subblocks[0]);
+  output.setNrValidSamples(0,1,n_valid_samples); //baseline 0, channel 1
+  output.setNrValidSamples(1,1,256); //baseline 1, channel 1
+  output.setNrValidSamples(2,1,0); //baseline 0, channel 1
+  CorrelatorSubbandProc::Flagger::applyWeights<uint16_t>(parset, output);
 
   // 4 channels: therefore the chanel zero should be zero
-  CHECK_EQUAL(std::complex<float>(0,0), visibilities[0][0][0][0]);
-  CHECK_EQUAL(std::complex<float>(0,0), visibilities[2][0][1][1]); // check origin and far corner
+  CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[0][0][0][0]);
+  CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[2][0][1][1]); // check origin and far corner
 
   // the weighted values should be divided by the number of samples
-  CHECK_EQUAL(std::complex<float>(1.0/n_valid_samples,0), visibilities[0][1][0][0]);
-  CHECK_EQUAL(std::complex<float>(1.0/n_valid_samples,0), visibilities[0][1][1][1]);
+  CHECK_EQUAL(std::complex<float>(1.0/n_valid_samples,0), output.visibilities[0][1][0][0]);
+  CHECK_EQUAL(std::complex<float>(1.0/n_valid_samples,0), output.visibilities[0][1][1][1]);
 
   // baselines 1 
-  CHECK_EQUAL(std::complex<float>(1.0/256,0), visibilities[1][1][0][0]);
-  CHECK_EQUAL(std::complex<float>(1.0/256,0), visibilities[1][1][1][1]);
+  CHECK_EQUAL(std::complex<float>(1.0/256,0), output.visibilities[1][1][0][0]);
+  CHECK_EQUAL(std::complex<float>(1.0/256,0), output.visibilities[1][1][1][1]);
 
   //baseline 2 no samples so should be zero
-  CHECK_EQUAL(std::complex<float>(0,0), visibilities[2][1][0][0]);
-  CHECK_EQUAL(std::complex<float>(0,0), visibilities[2][1][1][1]);
+  CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[2][1][0][0]);
+  CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[2][1][1][1]);
 }
 
-TEST(applyNrValidSamples2)
+TEST(applyWeight)
 {
     // on channel so the zero channel should be filled with the flags!!
   // Create a parset with the needed parameters
@@ -324,10 +295,6 @@ TEST(applyNrValidSamples2)
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
-  parset.add("Observation.rspBoardList", "[0]");
-  parset.add("Observation.rspSlotList", "[0]");
-  parset.add("Observation.nrBeams", "1");
-  parset.add("Observation.Beam[0].subbandList", "[0]");
 
   parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
@@ -336,56 +303,33 @@ TEST(applyNrValidSamples2)
   parset.updateSettings();
 
   // Output object
-  SubbandProcOutputData::CorrelatedData output(1,
-                        parset.settings.correlator.stations.size(), 
-                        parset.settings.correlator.nrChannels, 
-                        parset.settings.correlator.nrSamplesPerIntegration(),
-                        *context);
-  MultiDimArray<fcomplex, 4> &visibilities = output.subblocks[0]->visibilities;
+  CorrelatedData output(parset.nrStations(), 
+                        parset.nrChannelsPerSubband(), 
+                        parset.integrationSteps());
+
  
   //assign all visibilities values 1 pol 0
   for(unsigned idx_baseline = 0; idx_baseline < 3; ++idx_baseline)
-    for(unsigned idx_channel = 0; idx_channel < parset.settings.correlator.nrChannels; ++idx_channel)    
+    for(unsigned idx_channel = 0; idx_channel < parset.nrChannelsPerSubband(); ++idx_channel)    
       for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
         for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2)    
-           visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
+           output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
         
   //  multiply all polarization in sb 0 channel 0 with 0,5
-  CorrelatorStep::Flagger::applyWeight(0, parset.settings.correlator.nrChannels, 0.5, *output.subblocks[0]);
+  CorrelatorSubbandProc::Flagger::applyWeight(0,0,0.5,output);
 
-  //ch 0 should be (0, 0)
-  CHECK_EQUAL(std::complex<float>(0,0),   visibilities[0][0][0][0]);
-  CHECK_EQUAL(std::complex<float>(0,0),   visibilities[0][0][0][1]);
-  CHECK_EQUAL(std::complex<float>(0,0),   visibilities[0][0][1][0]);
-  CHECK_EQUAL(std::complex<float>(0,0),   visibilities[0][0][1][1]);
-  //ch 1 should be (0.5, 0)
-  CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][1][0][0]);
-  CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][1][0][1]);
-  CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][1][1][0]);
-  CHECK_EQUAL(std::complex<float>(0.5,0), visibilities[0][1][1][1]);
-  //baseline 1 should be untouched
-  CHECK_EQUAL(std::complex<float>(1,0),   visibilities[1][0][0][0]);
-  CHECK_EQUAL(std::complex<float>(1,0),   visibilities[1][1][0][0]);
+  //sb 0 should be (0.5, 0)
+  CHECK_EQUAL(std::complex<float>(0.5,0),  
+              output.visibilities[0][0][0][0]);
+  //still be 1.0
+  CHECK_EQUAL(std::complex<float>(1,0),  
+              output.visibilities[1][0][0][0]);
    
 }
 
 int main()
 {
   INIT_LOGGER("tCorrelatorSubbandProc");
-
-  try {
-    gpu::Platform pf;
-    LOG_INFO_STR("Detected " << pf.size() << " CUDA devices");
-  } catch (gpu::CUDAException& e) {
-    LOG_FATAL_STR("Caught exception: " << e.what());
-    return 3;
-  }
-
-  gpu::Device device(0);
-  vector<gpu::Device> devices(1, device);
-  gpu::Context ctx(device);
-  context = &ctx;
-
   return UnitTest::RunAllTests() > 0;
 }
 
