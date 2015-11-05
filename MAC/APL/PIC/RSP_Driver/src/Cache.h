@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@
 #include "SerdesBuffer.h"
 
 namespace LOFAR {
-  using namespace RSP_Protocol;
   namespace RSP {
 
 class Cache; // forward declaration
@@ -104,31 +103,23 @@ public:
     bool isSwappedXY(int antenna){ return (itsSwappedXY.test(antenna)); }
     void setSwappedXY(bitset<MAX_ANTENNAS> antennamask) { itsSwappedXY = antennamask; }
     bitset<MAX_ANTENNAS> getSwappedXY() { return(itsSwappedXY); }
-  
-    I2Cuser getI2Cuser() { return (itsI2Cuser); }
-    void setI2Cuser(I2Cuser user) { itsI2Cuser = user; }
+    
+	I2Cuser getI2Cuser() { return (itsI2Cuser); }
+	void setI2Cuser(I2Cuser user) { itsI2Cuser = user; }
 	
-    int getBitsPerSample() { return itsBitsPerSample; }
-    void setBitsPerSample(int bits) { itsBitsPerSample = bits; }
+	int getBitsPerSample() { return itsBitsPerSample; }
+	void setBitsPerSample(int bits) { itsBitsPerSample = bits; }
     
     int getSDOBitsPerSample() { return itsSDOBitsPerSample; }
-    void setSDOBitsPerSample(int bits) { itsSDOBitsPerSample = bits; }
+	void setSDOBitsPerSample(int bits) { itsSDOBitsPerSample = bits; }
 	/*@}*/
     
-    blitz::Array<int, 1> getPPSdelays() { return itsPPSsyncDelays; }
-	void setPPSdelays(blitz::Array<int, 1> pps_delays) { itsPPSsyncDelays = pps_delays; }
     
-    bool getSequencerRequest() { return itsSequencerRequest; }
-    void setSequencerRequest(bool state) { itsSequencerRequest = state; }
-    
-    float getFixedAttenuation(int mode) { return itsFixedAttenuations(mode); }
-    float getAttenuationStepSize() { return itsAttenuationStepSize; }
-    
-    // update timestamp
-    void setTimestamp(const RTC::Timestamp& timestamp);
+	// update timestamp
+	void setTimestamp(const RTC::Timestamp& timestamp);
 
-    // Get const pointer to parent cache.
-    Cache& getCache() { return *m_cache; }
+	// Get const pointer to parent cache.
+	Cache& getCache() { return *m_cache; }
 
 private:
 	// NOTE [reo]: The relation between the RSPprotocol classes,
@@ -143,11 +134,8 @@ private:
 	//	which is never the case.
 
 	CacheBuffer(); // prevent default construction
-    
-    // function to readin PPSdelays
-    void readPPSdelaySettings();
-	
-    // --- datamembers ---
+
+	// --- datamembers ---
 	RTC::Timestamp					m_timestamp;
 	I2Cuser							itsI2Cuser;
 	RSP_Protocol::BeamletWeights	m_beamletweights;
@@ -180,11 +168,7 @@ private:
 	RSP_Protocol::SDOModeInfo       itsSDOModeInfo;
 	RSP_Protocol::SDOSelection      itsSDOSelection;
 	int                             itsSDOBitsPerSample;
-        blitz::Array<int, 1>            itsPPSsyncDelays;  // one delay for each AP
-        bool                            itsSequencerRequest;
-        blitz::Array<float, 1>          itsFixedAttenuations;
-        float                           itsAttenuationStepSize;
-    
+	 
 	Cache* m_cache;		// pointer to container
 };
 
@@ -224,9 +208,7 @@ private:
 	CacheBuffer* m_front;
 	CacheBuffer* m_back;
 	/*@}*/
-    
-   
-    
+
 	// Singleton class.
 	static Cache* m_instance;
 };

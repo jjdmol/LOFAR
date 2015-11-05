@@ -46,7 +46,7 @@ class bbs_reducer(LOFARnodeTCP):
                 return 1
 
             # Run bbs-reducer. Catch log output from bbs-reducer and stdout.
-            scratch_dir = mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
+            scratch_dir = mkdtemp()
             try:
                 cmd = [executable,
                        "--parmdb=%s" % parmdb, 

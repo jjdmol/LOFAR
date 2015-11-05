@@ -28,7 +28,7 @@
 #include <MSLofar/MSLofarObservation.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TableColumn.h>
+
 using namespace casa;
 
 namespace LOFAR {
@@ -283,19 +283,5 @@ namespace LOFAR {
     elementFailure_p.flush (sync);
   }
 
-  void MSLofar::removeMeasKeys (Table& table, const String& colName)
-  {
-    TableColumn col(table, colName);
-    TableRecord& keys = col.rwKeywordSet();
-    if (keys.isDefined ("MEASINFO")) {
-      TableRecord& measKeys = keys.rwSubRecord ("MEASINFO");
-      if (measKeys.isDefined ("TabRefCodes")) {
-        measKeys.removeField ("TabRefCodes");
-      }
-      if (measKeys.isDefined ("TabRefTypes")) {
-        measKeys.removeField ("TabRefTypes");
-      }
-    }
-  }
 
 } // end namespace

@@ -67,9 +67,11 @@ namespace LOFAR
 
       void start();
       void stop( struct timespec deadline );
-
-      bool isSuccesful() const; // return whether communication with OutputProc went perfect
       bool isDone() const;
+
+      // Returns feedback for the LTA -- only access this once the
+      // StorageProcess has finished!
+      ParameterSet feedbackLTA() const;
 
       void setFinalMetaData( const FinalMetaData &finalMetaData );
 
@@ -82,11 +84,10 @@ namespace LOFAR
       const int itsRank;
       const std::string itsHostname;
 
-      bool                               itsSentFeedback;
-      bool                               itsSuccessful;
-
       FinalMetaData                      itsFinalMetaData;
       Semaphore                          itsFinalMetaDataAvailable;
+
+      ParameterSet                       itsFeedbackLTA;
 
       SmartPtr<Thread> itsThread;
     };

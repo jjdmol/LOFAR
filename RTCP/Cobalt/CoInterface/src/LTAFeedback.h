@@ -45,14 +45,6 @@ namespace LOFAR
       ParameterSet                correlatedFeedback(size_t fileno) const;
       ParameterSet                beamFormedFeedback(size_t fileno) const;
 
-      // Return the generic processing LTA feedback parameters.
-      // (Non data-product specific).
-      // \note Details about the meaning of the different meta-data parameters
-      // can be found in the XSD that describes the Submission Information
-      // Package (sip) for the LTA.
-      // \see http://proposal.astron.nl/schemas/LTA-SIP.xsd
-      ParameterSet                processingFeedback() const;
-
       // Return the LTA feedback parameters.
       // \note Details about the meaning of the different meta-data parameters
       // can be found in the XSD that describes the Submission Information
