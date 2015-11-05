@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -181,7 +181,6 @@ void GCFRTDBPort::dpeSubscriptionLost (const string& DPname, PVSSresult /*result
 void GCFRTDBPort::dpeUnsubscribed (const string& DPname, PVSSresult result)
 {
 	LOG_TRACE_FLOW_STR("GCFRTDBPort::dpUnsubscribed(" << DPname << "," << result << ")");
-	(void)DPname, (void)result;
 	itsIsOpened = false;
 	schedule_disconnected();
 }

@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2011
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -34,11 +34,11 @@
 -- Types:   OTDBvalue
 --
 
-CREATE OR REPLACE VIEW pktemp AS SELECT DISTINCT ON (paramid) paramid, value, time  FROM pickvt WHERE value::integer > 10 ORDER BY paramid,time DESC;
+CREATE OR REPLACE VIEW pktemp AS SELECT DISTINCT ON (paramid) paramid, value, time  FROM pickvt WHERE value > 10 ORDER BY paramid,time DESC;
 
 CREATE OR REPLACE FUNCTION nextPICkvt(int,timestamp) 
 	RETURNS SETOF OTDBvalue AS $$ 
-	SELECT   paramid,''::VARCHAR(150),value,time::timestamp
+	SELECT   paramid,''::VARCHAR(150),value,time 
 	FROM     pickvt 
 	WHERE    paramid=$1 AND time>$2 
 	ORDER BY TIME 
@@ -70,12 +70,12 @@ CREATE OR REPLACE FUNCTION getBrokenHardware(VARCHAR(20), VARCHAR(20))
 		END IF;
 		FOR vRecord IN 
 			EXECUTE '
-				SELECT p.paramid,r.pvssname::VARCHAR(150),p.value,p.time::timestamp
+				SELECT p.paramid,r.pvssname,p.value,p.time 
 				FROM pktemp p
 				LEFT JOIN PICparamref r ON r.paramid = p.paramid ' || vWhere
 		LOOP
 			FOR vRecord2 IN 
-				SELECT p.paramid,r.pvssname::VARCHAR(150),p.value,p.time::timestamp
+				SELECT p.paramid,r.pvssname,p.value,p.time 
 				FROM nextPICkvt(vRecord.paramid,vRecord.time) p
 				LEFT JOIN PICparamref r ON r.paramid = p.paramid
 			LOOP

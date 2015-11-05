@@ -8,7 +8,6 @@ python_install(
   helpers/WritableParmDB.py
   helpers/ComplexArray.py
   helpers/MultipartPostHandler.py
-  helpers/data_quality.py
   master/__init__.py
   master/bbs_reducer.py
   master/copier.py
@@ -21,17 +20,12 @@ python_install(
   master/imager_finalize.py
   master/imager_prepare.py
   master/imager_source_finding.py
-  master/long_baseline.py
   master/new_bbs.py
   master/rficonsole.py
   master/setupparmdb.py
   master/setupsourcedb.py
   master/vdsmaker.py
   master/vdsreader.py
-  master/selfcal_awimager.py
-  master/selfcal_bbs.py
-  master/selfcal_finalize.py
-  master/executable_args.py
   nodes/__init__.py
   nodes/bbs_reducer.py
   nodes/copier.py
@@ -45,42 +39,24 @@ python_install(
   nodes/imager_finalize.py
   nodes/imager_prepare.py
   nodes/imager_source_finding.py
-  nodes/long_baseline.py
   nodes/new_bbs.py
   nodes/rficonsole.py
   nodes/setupparmdb.py
   nodes/setupsourcedb.py
   nodes/vdsmaker.py
-  nodes/selfcal_awimager.py
-  nodes/selfcal_bbs.py
-  nodes/selfcal_finalize.py
-  nodes/executable_args.py
-  nodes/executable_casa.py
-  nodes/python_plugin.py
-  nodes/calibrate-stand-alone.py
-  plugins/PipelineStep_createMapfile.py
-  plugins/PipelineStep_addMapfile.py
-  plugins/PipelineStep_changeMapfile.py
-  plugins/PipelineStep_combineParsets.py
   DESTINATION lofarpipe/recipes)
 
-lofar_add_bin_scripts(
+install(PROGRAMS
   bin/calibration_pipeline.py
   bin/msss_calibrator_pipeline.py
   bin/msss_imager_pipeline.py
   bin/msss_target_pipeline.py
   bin/preprocessing_pipeline.py
-  bin/imaging_pipeline.py
-  bin/pulsar_pipeline.py
-  bin/long_baseline_pipeline.py
-  bin/selfcal_imager_pipeline.py
   bin/startPython.sh
   bin/startPythonVersion.sh
-  bin/stopPython.sh
-  bin/genericpipeline.py
-  bin/loader.py
   external/bad_station_detection/asciistats.py
-  external/bad_station_detection/statsplot.py)
+  external/bad_station_detection/statsplot.py
+  DESTINATION bin)
 
 install(FILES
   demixing/bbs_CasA.parset
@@ -106,20 +82,12 @@ install(FILES
   skymodels/3C380.skymodel
   skymodels/3C48.skymodel
   skymodels/Ateam_LBA_CC.skymodel
-  skymodels/CygA.skymodel
   DESTINATION share/pipeline/skymodels)
 
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg
   ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg
   DESTINATION share/pipeline)
-
-# PIPELINE_FEEDBACK_METHOD is used in pipeline.cfg.in to enable/disable qpid feedback
-if(HAVE_QPID)
-  set(PIPELINE_FEEDBACK_METHOD "messagebus")
-else(HAVE_QPID)
-  set(PIPELINE_FEEDBACK_METHOD "none")
-endif(HAVE_QPID)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/pipeline.cfg.in

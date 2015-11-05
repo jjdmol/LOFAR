@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -41,15 +41,19 @@ size_t Versions::getSize() const
 size_t Versions::pack  (char* buffer) const
 {
   size_t offset = 0;
-  offset = MSH_pack(buffer, offset, m_bp_versions);
-  offset = MSH_pack(buffer, offset, m_ap_versions);
+
+  MSH_pack(buffer, offset, m_bp_versions);
+  MSH_pack(buffer, offset, m_ap_versions);
+
   return offset;
 }
 
 size_t Versions::unpack(const char *buffer)
 {
   size_t offset = 0;
-  offset = MSH_unpack(buffer, offset, m_bp_versions);
-  offset = MSH_unpack(buffer, offset, m_ap_versions);
+
+  MSH_unpack(buffer, offset, m_bp_versions);
+  MSH_unpack(buffer, offset, m_ap_versions);
+
   return offset;
 }

@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: tSingleton.cc 14057 2009-09-18 12:26:29Z diepen $
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -28,26 +28,18 @@
 #include <Common/Thread/Mutex.h>
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
-#include <Common/SystemCallException.h>
 #include <unistd.h>
 
 // BARRIER forces the compiler and CPU to stay in-order. An external function
 // call should do the job.
 #define BARRIER         sleep(0)
 
-#define TEST_ALL(x) \
-  std::cerr << "TEST_ALL(" << #x << ")" << std::endl; \
-  test_simple(x); \
-  test_trylock(x); \
-  test_recursive_lock(x); \
-  test_criticalsection(x);
-
 using namespace LOFAR;
 
 // try simple functionality which should succeed even if routines
 // are a no-op (!USE_THREADS)
-void test_simple(Mutex::Type type) {
-  Mutex mutex(type);
+void test_simple() {
+  Mutex mutex;
   
   mutex.lock();
   mutex.unlock();
@@ -58,84 +50,34 @@ void test_simple(Mutex::Type type) {
   {
     ScopedLock sl(mutex);
   }
-
-  {
-    // scoped locking and unlocking should be stackable
-    ScopedLock sl1(mutex, false);
-    ScopedLock sl2(mutex, true);
-    ScopedLock sl3(mutex, false);
-  }
 }
 
-void test_trylock(Mutex::Type type) {
-#ifdef USE_THREADS
-  Mutex mutex(type);
+void test_trylock() {
+#ifdef USE_THREADS  
+  Mutex mutex;
   
   ASSERT( mutex.trylock() );
   mutex.unlock();
 
   mutex.lock();
-  if (type == Mutex::RECURSIVE)
-    ASSERT( mutex.trylock() );
-  else
-    ASSERT( !mutex.trylock() );
+  ASSERT( !mutex.trylock() ); // locks are non-recursive
   mutex.unlock();
 
   {
     ScopedLock sl(mutex);
-    if (type == Mutex::RECURSIVE)
-      ASSERT( mutex.trylock() );
-    else
-      ASSERT( !mutex.trylock() );
+    ASSERT( !mutex.trylock() );
   }
-#else
-  (void)type;
 #endif  
 }
 
-void test_recursive_lock(Mutex::Type type)
-{
 #ifdef USE_THREADS
-  Mutex mutex(type);
-  ScopedLock sl(mutex);
-  
-  switch(type) {
-  default:
-    // Normal mutexes (the default) will dead-lock when locked recursively.
-    // Don't attempt to do so.
-    break;
-
-  case Mutex::RECURSIVE:
-    // Recursive lock must succeed on a recursive mutex
-    {
-      ScopedLock sl(mutex);
-    }
-    break;
-
-  case Mutex::ERRORCHECK:
-    // Recursive lock must fail with a SystemCallException on an error
-    // checking mutex.
-    try {
-      ScopedLock sl(mutex);
-      ASSERTSTR(false, "Recursive lock must fail on error checked mutex");
-    } catch (SystemCallException&) {
-    }
-    break;
-  }
-#else
-  (void)type;
-#endif
-}
-
-#ifdef USE_THREADS
-volatile bool a_started;
-volatile bool b_started;
-volatile unsigned counter;
+Mutex mutex;
+volatile bool a_started = false;
+volatile bool b_started = false;
+volatile unsigned counter = 0;
 
 class A {
-  Mutex& mutex;
 public:
-  A(Mutex& mtx) : mutex(mtx) {}
   void mainLoop() {
     ScopedLock sl(mutex);
 
@@ -155,9 +97,7 @@ public:
   }
 };
 class B {
-  Mutex& mutex;
 public:
-  B(Mutex& mtx) : mutex(mtx) {}
   void mainLoop() {
     ASSERT( counter == 0 ); // A could not have incremented yet
 
@@ -179,22 +119,16 @@ public:
 };
 #endif
 
-void test_criticalsection(Mutex::Type type) {
+void test_criticalsection() {
 #ifdef USE_THREADS
-  Mutex mutex(type);
-  a_started = false;
-  b_started = false;
-  counter = 0;
-  
-  A a(mutex);
-  B b(mutex);
+
+  A a;
+  B b;
 
   {
     Thread ta(&a,&A::mainLoop);
     Thread tb(&b,&B::mainLoop);
   }  
-#else
-  (void)type;
 #endif
 }
 
@@ -206,10 +140,9 @@ int main()
   // kill any deadlocks
   alarm(10);
 
-  TEST_ALL(Mutex::NORMAL);
-  TEST_ALL(Mutex::RECURSIVE);
-  TEST_ALL(Mutex::ERRORCHECK);
-  TEST_ALL(Mutex::DEFAULT);
+  test_simple();
+  test_trylock();
+  test_criticalsection();
 
 #ifdef USE_THREADS
 #else

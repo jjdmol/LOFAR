@@ -33,7 +33,7 @@ class Op_cleanup(Op):
 
             from math import log10
             bdir = img.basedir + '/misc/'
-            if not os.path.isdir(bdir): os.makedirs(bdir)
+            if not os.path.isdir(bdir): os.mkdir(bdir)
             im_mean = img.clipped_mean
             im_rms = img.clipped_rms
             low = 1.1*abs(img.min_value)
@@ -41,7 +41,7 @@ class Op_cleanup(Op):
             if low1 > low: low = low1
             vmin = log10(im_mean-im_rms*5.0 + low)
             vmax = log10(im_mean+im_rms*15.0 + low)
-            im = N.log10(img.ch0_arr + low)
+            im = N.log10(img.ch0 + low)
 
             pl.imshow(N.transpose(im), origin='lower', interpolation='nearest',vmin=vmin, vmax=vmax, \
                       cmap=cm.gray); pl.colorbar()

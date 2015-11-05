@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ CREATE OR REPLACE FUNCTION getPICitemList(INT4, INT4, INT4)
 	    SELECT h.nodeid,
 			   h.parentid, 
 			   h.paramrefid,
-			   h.name::VARCHAR(150), 
+			   h.name, 
 			   h.index, 
 			   h.leaf,
 			   1::int2,
@@ -110,7 +110,7 @@ CREATE OR REPLACE FUNCTION getPICitemList(INT4, VARCHAR(150))
 	    SELECT h.nodeid,
 			   h.parentid, 
 			   h.paramrefid,
-			   h.name::VARCHAR(150), 
+			   h.name, 
 			   h.index, 
 			   h.leaf,
 			   1::int2,

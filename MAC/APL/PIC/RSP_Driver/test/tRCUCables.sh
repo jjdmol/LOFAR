@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tRCUCables
+./runctest.sh tRCUCables 2>&1 > tRCUCables.log

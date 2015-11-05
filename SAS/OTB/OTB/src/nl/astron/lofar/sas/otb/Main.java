@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -72,9 +72,8 @@ public class Main {
      */
     public static void main(String[] argv) {
         try {
-            String logConfigName = "OTB.log_prop";
-            String logConfig = "";
-            String server    = "sasdb";
+            String logConfig = "OTB.log_prop";
+            String server    = "sas001";
             String port      = "10199";
             String database  = "LOFAR_2";
             String user      = "observer";
@@ -125,15 +124,15 @@ public class Main {
             if (errs) {
                 System.err.println("Usage: OTB.jar [-s server] [-p port] [-d database] [-u username] [-l logFile] [-h]");
             }   
-            
+            // install tab focus
             LofarUtils.TextSelector.install();
 
-            if (logConfig.isEmpty()) logConfig = logConfigName;
+
             File f = new File(logConfig);
             if (f.exists()) {
                 PropertyConfigurator.configure(logConfig);
             } else {
-                logConfig = File.separator+"opt"+File.separator+"sas"+File.separator+"otb"+File.separator+"etc"+File.separator+logConfigName;
+                logConfig = File.separator+"opt"+File.separator+"sas"+File.separator+"otb"+File.separator+"etc"+File.separator+logConfig;
                 f = new File(logConfig);
                 if (f.exists()) {
                     PropertyConfigurator.configure(logConfig);

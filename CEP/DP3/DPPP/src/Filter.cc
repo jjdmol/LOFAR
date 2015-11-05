@@ -1,4 +1,4 @@
-//# Filter.cc: DPPP step to filter out baselines and channels
+//# Filter.cc: DPPP step class to add station to a superstation
 //# Copyright (C) 2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -28,8 +28,6 @@
 #include <DPPP/DPLogger.h>
 #include <Common/ParameterSet.h>
 
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/TableRecord.h>
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/RecordGram.h>
 #include <casa/Containers/Record.h>
@@ -46,7 +44,6 @@ namespace LOFAR {
         itsName         (prefix),
         itsStartChanStr (parset.getString(prefix+"startchan", "0")),
         itsNrChanStr    (parset.getString(prefix+"nchan", "0")),
-        itsRemoveAnt    (parset.getBool  (prefix+"remove", false)),
         itsBaselines    (parset, prefix),
         itsDoSelect     (false)
     {}
@@ -55,7 +52,6 @@ namespace LOFAR {
       : itsInput        (input),
         itsStartChanStr ("0"),
         itsNrChanStr    ("0"),
-        itsRemoveAnt    (false),
         itsBaselines    (baselines),
         itsDoSelect     (false)
     {}
@@ -67,11 +63,7 @@ namespace LOFAR {
     {
       info() = infoIn;
       info().setNeedVisData();
-      info().setWriteData();
-      info().setWriteFlags();
-      if (itsRemoveAnt) {
-        info().setMetaChanged();
-      }
+      info().setNeedWrite();
       // Parse the chan expressions.
       // Nr of channels can be used as 'nchan' in the expressions.
       Record rec;
@@ -110,19 +102,14 @@ namespace LOFAR {
           itsDoSelect = true;
         }
       }
-      if (itsDoSelect || itsRemoveAnt) {
+      if (itsDoSelect) {
         // Update the DPInfo object.
-        info().update (itsStartChan, nrChan, itsSelBL, itsRemoveAnt);
-        if (itsDoSelect) {
-          // Shape the arrays in the buffer.
-          IPosition shape (3, infoIn.ncorr(), nrChan, getInfo().nbaselines());
-          itsBuf.getData().resize (shape);
-          itsBuf.getFlags().resize (shape);
-          itsBuf.getWeights().resize (shape);
-          if (! itsSelBL.empty()) {
-            itsBuf.getUVW().resize (IPosition(2, 3, shape[2]));
-          }
-        }
+        info().update (itsStartChan, nrChan, itsSelBL);
+        // Shape the arrays in the buffer.
+        IPosition shape (3, infoIn.ncorr(), nrChan, getInfo().nbaselines());
+        itsBuf.getData().resize (shape);
+        itsBuf.getFlags().resize (shape);
+        itsBuf.getWeights().resize (shape);
       }
     }
 
@@ -134,7 +121,6 @@ namespace LOFAR {
       os << "  nchan:          " << getInfo().nchan() << "  (" << itsNrChanStr
          << ')' << std::endl;
       itsBaselines.show (os);
-      os << "  remove:         " << itsRemoveAnt << std::endl;
     }
 
     void Filter::showTimings (std::ostream& os, double duration) const
@@ -148,23 +134,25 @@ namespace LOFAR {
     {
       itsTimer.start();
       if (!itsDoSelect) {
-        itsBuf.referenceFilled (buf);
+        itsBuf = buf;      // uses reference semantics
         itsTimer.stop();
-        getNextStep()->process (buf);
+        getNextStep()->process (itsBuf);
         return true;
       }
+      // Make sure no other object references the DATA and UVW arrays.
+      itsBuf.getData().unique();
+      itsBuf.getFlags().unique();
+      itsBuf.getWeights().unique();
+      itsBuf.getFullResFlags().unique();
       // Get the various data arrays.
-      itsBufTmp.referenceFilled (buf);
+      RefRows rowNrs(buf.getRowNrs());
       const Array<Complex>& data = buf.getData();
       const Array<Bool>& flags = buf.getFlags();
-      const Array<Float>& weights =
-        itsInput->fetchWeights (buf, itsBufTmp, itsTimer);
-      const Array<Double>& uvws =
-        itsInput->fetchUVW (buf, itsBufTmp, itsTimer);
-      const Array<Bool>& frFlags =
-        itsInput->fetchFullResFlags (buf, itsBufTmp, itsTimer);
-      // Size fullResFlags if not done yet.
+      Array<Float> weights(itsInput->fetchWeights (buf, rowNrs, itsTimer));
+      Array<Double> uvws(itsInput->fetchUVW (buf, rowNrs, itsTimer));
+      Array<Bool> frFlags(itsInput->fetchFullResFlags(buf, rowNrs, itsTimer));
       int frfAvg = frFlags.shape()[0] / data.shape()[1];
+      // Size fullResFlags if not done yet.
       if (itsBuf.getFullResFlags().empty()) {
         IPosition frfShp = frFlags.shape();
         frfShp[0] = getInfo().nchan() * frfAvg;
@@ -185,18 +173,15 @@ namespace LOFAR {
         // No baseline selection; copy all data for given channels to
         // make them contiguous.
         // UVW can be referenced, because not dependent on channel.
-        itsBuf.getData().assign (data(first, last));
-        itsBuf.getFlags().assign (flags(first, last));
-        itsBuf.getWeights().assign (weights(first, last));
-        itsBuf.getFullResFlags().assign (frFlags(frfFirst, frfLast));
+        itsBuf.getData() = data(first, last);
+        itsBuf.getFlags() = flags(first, last);
+        itsBuf.getWeights() = weights(first, last);
+        itsBuf.getFullResFlags() = frFlags(frfFirst, frfLast);
         itsBuf.setUVW (buf.getUVW());
-        itsBuf.setRowNrs (buf.getRowNrs());
       } else {
-        Vector<uint> rowNrs;
-        if (! buf.getRowNrs().empty()) {
-          rowNrs.resize(getInfo().nbaselines());
-        }
         // Copy the data of the selected baselines and channels.
+        itsBuf.getUVW().resize (IPosition(2, 3, getInfo().nbaselines()));
+        itsBuf.getUVW().unique();
         Complex* toData   = itsBuf.getData().data();
         Bool*    toFlag   = itsBuf.getFlags().data();
         Float*   toWeight = itsBuf.getWeights().data();
@@ -212,9 +197,6 @@ namespace LOFAR {
         int nffr = frFlags.shape()[0];
         int nfto = itsBuf.getFullResFlags().shape()[0];
         for (uint i=0; i<itsSelBL.size(); ++i) {
-          if (!buf.getRowNrs().empty()) {
-            rowNrs[i] = buf.getRowNrs()[itsSelBL[i]];
-          }
           objcopy (toData  , frData   + itsSelBL[i]*ndfr, ndto);
           toData += ndto;
           objcopy (toFlag  , frFlag   + itsSelBL[i]*ndfr, ndto);
@@ -232,7 +214,6 @@ namespace LOFAR {
             frFrf += nffr;
           }
         }
-        itsBuf.setRowNrs(rowNrs);
       }
       itsBuf.setTime     (buf.getTime());
       itsBuf.setExposure (buf.getExposure());
@@ -245,97 +226,6 @@ namespace LOFAR {
     {
       // Let the next steps finish.
       getNextStep()->finish();
-    }
-
-    void Filter::addToMS (const string& msName)
-    {
-      getPrevStep()->addToMS(msName);
-      if (! itsRemoveAnt) {
-        return;
-      }
-      // See if and which stations have been removed.
-      Table antTab (msName + "/ANTENNA", Table::Update);
-      Table selTab = antTab(! antTab.col("NAME").in (info().antennaNames()));
-      if (selTab.nrow() == 0) {
-        return;
-      }
-      // Remove these rows from the ANTENNA table.
-      // Note that stations of baselines that have been filtered out before,
-      // will also be removed.
-      Vector<uInt> removedAnt = selTab.rowNumbers();
-      Vector<Int> antMap = createIdMap (antTab.nrow(), removedAnt);
-      antTab.removeRow (removedAnt);
-      // Remove and renumber the stations in other subtables.
-      Table ms(msName);
-      uInt nr;
-      renumberSubTable (ms, "FEED", "ANTENNA_ID", removedAnt, antMap, nr);
-      renumberSubTable (ms, "POINTING", "ANTENNA_ID", removedAnt, antMap, nr);
-      renumberSubTable (ms, "SYSCAL", "ANTENNA_ID", removedAnt, antMap, nr);
-      renumberSubTable (ms, "QUALITY_BASELINE_STATISTIC", "ANTENNA1",
-                        removedAnt, antMap, nr);
-      renumberSubTable (ms, "QUALITY_BASELINE_STATISTIC", "ANTENNA2",
-                        removedAnt, antMap, nr);
-      // Finally remove and renumber in the beam tables.
-      uInt nrAntFldId;
-      Vector<uInt> remAntFldId = renumberSubTable (ms, "LOFAR_ANTENNA_FIELD",
-                                                   "ANTENNA_ID",
-                                                   removedAnt, antMap,
-                                                   nrAntFldId);
-      if (! remAntFldId.empty()) {
-        Vector<Int> antFldIdMap = createIdMap (nrAntFldId, remAntFldId);
-        renumberSubTable (ms, "LOFAR_ELEMENT_FAILURE", "ANTENNA_FIELD_ID",
-                          remAntFldId, antFldIdMap, nr);
-      }
-    }
-
-    Vector<Int> Filter::createIdMap (uInt nrId,
-                                     const Vector<uInt>& removedIds) const
-    {
-      // Create the mapping from old to new id.
-      Vector<Int> idMap (nrId);
-      indgen (idMap);   // fill with 0,1,2,...
-      int nrrem = 0;
-      for (uInt i=0; i<removedIds.size(); ++i) {
-        idMap[removedIds[i]] = -1;
-        nrrem++;
-        if (i < removedIds.size() - 1) {
-          for (uInt j=removedIds[i]+1; j<removedIds[i+1]; ++j) {
-            idMap[j] -= nrrem;
-          }
-        }
-      }
-      for (uInt j=removedIds[removedIds.size()-1]+1; j<idMap.size(); ++j) {
-        idMap[j] -= nrrem;
-      }
-      return idMap;
-    }
-
-    Vector<uInt> Filter::renumberSubTable (const Table& ms,
-                                           const String& name,
-                                           const String& colName,
-                                           const Vector<uInt>& removedAnt,
-                                           const Vector<Int>& antMap,
-                                           uInt& nrId) const
-    {
-      // Exit if no such subtable.
-      if (! ms.keywordSet().isDefined(name)) {
-        return Vector<uInt>();
-      }
-      // Remove the rows of the removed stations.
-      Table subTab (ms.tableName() + '/' + name, Table::Update);
-      nrId = subTab.nrow();
-      Table selTab = subTab(subTab.col(colName).in (removedAnt));
-      subTab.removeRow (selTab.rowNumbers());
-      // Renumber the rest.
-      ScalarColumn<Int> antCol(subTab, colName);
-      Vector<Int> antIds = antCol.getColumn();
-      for (uint i=0; i<antIds.size(); ++i) {
-        Int newId = antMap[antIds[i]];
-        ASSERT (newId >= 0);
-        antIds[i] = newId;
-      }
-      antCol.putColumn (antIds);
-      return selTab.rowNumbers();
     }
 
   } //# end namespace

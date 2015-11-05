@@ -5,7 +5,6 @@
 #                                                      swinbank@transientskp.org
 # ------------------------------------------------------------------------------
 import sys
-import copy
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
@@ -32,56 +31,37 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
         'executable': ingredient.ExecField(
             '--executable',
-            help = "The full path to the  awimager executable"
+            help="The full path to the  awimager executable"
         ),
         'parset': ingredient.FileField(
             '-p', '--parset',
-            help = "The full path to a awimager configuration parset."
+            help="The full path to a awimager configuration parset."
         ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
-            help = "Working directory used on output nodes. Results location"
+            help="Working directory used on output nodes. Results location"
         ),
         'output_image': ingredient.StringField(
             '--output-image',
-            help = "Path of the image to be create by the awimager"
+            help="Path of the image to be create by the awimager"
         ),
         'mapfile': ingredient.StringField(
             '--mapfile',
-            help = "Full path for output mapfile. A list of the"
+            help="Full path for output mapfile. A list of the"
                  "successfully generated images will be written here"
         ),
         'sourcedb_path': ingredient.StringField(
             '--sourcedb-path',
-            help = "Full path of sourcedb used to create a mask for known sources"
+            help="Full path of sourcedb used to create a mask for known sources"
         ),
         'mask_patch_size': ingredient.FloatField(
             '--mask-patch-size',
-            help = "Scale factor for patches in the awimager mask"
+            help="Scale factor for patches in the awimager mask"
         ),
-        'autogenerate_parameters': ingredient.BoolField(
-            '--autogenerate-parameters',
-            default = True,
-            help = "Turns on the autogeneration of: cellsize, image-size, fov."
-            " MSSS 'type' functionality"
-        ),
-        'specify_fov': ingredient.FloatField(
-            '--specify-fov',
-            default = False,
-            help = "calculated Image parameters are relative to fov, parameter"
-            " is active when autogenerate_parameters is False"
-        ),
-        'fov': ingredient.FloatField(
-            '--fov',
-            default = 0.0,
-            help = "calculated Image parameters are relative to this"
-            " Field Of View in arcSec. This parameter is obligatory when"
-            " specify_fov is True"
-        )
     }
 
     outputs = {
-        'mapfile': ingredient.StringField(),
+        'mapfile': ingredient.StringField()
     }
 
     def go(self):
@@ -93,7 +73,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.info("Starting imager_awimager run")
 
         # *********************************************************************
-        # 1. collect the inputs and validate
+        # 1. collect the inputs and validate        
         input_map = DataMap.load(self.inputs['args'][0])
         sourcedb_map = DataMap.load(self.inputs['sourcedb_path'])
 
@@ -110,63 +90,37 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         # Compile the command to be executed on the remote machine
         node_command = "python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
-
-        output_map = copy.deepcopy(input_map)        
-        for w, x, y in zip(input_map, output_map, sourcedb_map):
-            w.skip = x.skip = y.skip = (
-                w.skip or x.skip or y.skip
-            )
-
-        sourcedb_map.iterator = input_map.iterator = output_map.iterator = \
-            DataMap.SkipIterator
-
         for measurement_item, source_item in zip(input_map, sourcedb_map):
-            if measurement_item.skip or source_item.skip:
-                jobs.append(None)
-                continue
             # both the sourcedb and the measurement are in a map
             # unpack both
             host , measurement_path = measurement_item.host, measurement_item.file
             host2 , sourcedb_path = source_item.host, source_item.file
 
-            # construct and save the output name
+            #construct and save the output name
             arguments = [self.inputs['executable'],
                          self.environment,
                          self.inputs['parset'],
-                         self.inputs['working_directory'],
+                          self.inputs['working_directory'],
                          self.inputs['output_image'],
                          measurement_path,
                          sourcedb_path,
-                         self.inputs['mask_patch_size'],
-                         self.inputs['autogenerate_parameters'],
-                         self.inputs['specify_fov'],
-                         self.inputs['fov'],
-                         ]
+                         self.inputs['mask_patch_size']]
 
             jobs.append(ComputeJob(host, node_command, arguments))
         self._schedule_jobs(jobs)
 
         # *********************************************************************
         # 3. Check output of the node scripts
-
-        for job, output_item in  zip(jobs, output_map):
-            # job ==  None on skipped job
-            if not "image" in job.results:
-                output_item.file = "failed"
-                output_item.skip = True
-
+        created_awimages = []
+        for job in  jobs:
+            if job.results.has_key("image"):
+                created_awimages.append(tuple([job.host, job.results["image"], False]))
             else:
-                output_item.file = job.results["image"]
-                output_item.skip = False
+                created_awimages.append(tuple([job.host, "failed", True]))
 
-        # Check if there are finished runs
-        succesfull_runs = None
-        for item in output_map:
-            if item.skip == False:
-                succesfull_runs = True
-                break
 
-        if not succesfull_runs:
+        # If not succesfull runs abort
+        if len(created_awimages) == 0:
             self.logger.error(
                     "None of the starter awimager run finished correct")
             self.logger.error(
@@ -175,10 +129,10 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # If partial succes
         if self.error.isSet():
-            self.logger.warn("Failed awimager node run detected. continue with"
+            self.logger.error("Failed awimager node run detected. continue with"
                               "successful tasks.")
-
-        self._store_data_map(self.inputs['mapfile'], output_map,
+        datamap_of_created_im = DataMap(created_awimages)
+        self._store_data_map(self.inputs['mapfile'], datamap_of_created_im,
                              "mapfile containing produces awimages")
 
         self.outputs["mapfile"] = self.inputs['mapfile']
@@ -187,4 +141,3 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
 if __name__ == "__main__":
     sys.exit(imager_awimager().main())
-

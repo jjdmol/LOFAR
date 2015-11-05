@@ -1,28 +1,3 @@
-//# LofarLog4Cplus.cc
-//#
-//# Copyright (C) 2002-2004
-//# ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
-
-//# Always #include <lofar_config.h> first!
-#include <lofar_config.h>
-
 #include <Common/LofarLog4Cplus.h>
 #include <Common/LofarLocators.h>
 #include <Common/SystemUtil.h>
@@ -38,7 +13,6 @@ namespace LOFAR
   {
     const string gExecutablePath = getExecutablePath();
 
-#ifdef ENABLE_TRACER
     // Define the eight trace log levels
     const LogLevel TRACE1_LOG_LEVEL = 1;
     const LogLevel TRACE2_LOG_LEVEL = 2;
@@ -93,6 +67,7 @@ namespace LOFAR
     // Appender that logs to stderr.
     void initTraceModule (void)
     {
+#ifdef ENABLE_TRACER
       // Register our own loglevels
       getLogLevelManager().pushToStringMethod(traceLevel2String);
       getLogLevelManager().pushFromStringMethod(string2TraceLevel);
@@ -111,8 +86,8 @@ namespace LOFAR
                        "%D{%y%m%d %H%M%S,%q} [%i] %-6p %c{3} [%b:%L] - %m%n");
       PropertyConfigurator(prop).configure();
       Logger::getInstance("TRC").forcedLog(0, "TRACE module activated");
-    }
 #endif
+    }
   } // namespace
 
 
@@ -147,10 +122,8 @@ namespace LOFAR
     // Initialize NDC (nested diagnostic context).
     initNDC();
 
-#ifdef ENABLE_TRACER
     // Initialize tracing module.
     initTraceModule();
-#endif
 
     // Add extension ".log_prop" to \a propFile, if necessary.
     if(propFile.find(".log_prop") == string::npos) {
@@ -182,10 +155,8 @@ namespace LOFAR
     // Initialize NDC (nested diagnostic context).
     initNDC();
 
-#ifdef ENABLE_TRACER
     // Initialize tracing module.
     initTraceModule();
-#endif
 
     // Add extension ".log_prop" to \a propFile, if necessary.
     if(propFile.find(".log_prop") == string::npos) {

@@ -3,40 +3,8 @@
 =                       TODO - List of things to do                          =
 ==============================================================================
 
-* Add option PROPERTIES to LOFAR_ADD_TEST(). As it currently stands, you need
-  to use SET_TESTS_PROPERTIES() to set properties on tests. The problem is
-  that you need to put a SET_TESTS_PROPERTIES() statements inside a
-  'if(BUILD_TESTING) ... endif()' block. CMake's ADD_TEST() and, as a 
-  consequence LOFAR_ADD_TEST(), are no-ops if BUILD_TESTING is OFF, but
-  this is not the case for SET_TESTS_PROPERTIES(). LOFAR_ADD_TEST() could
-  hide this detail, yielding cleaner CMakeLists.txt files.
-
-* Detection of whether we should use lib or lib64 is currently not done
-  correctly. Maybe just copy/paste what's in GNUInstallDirs.cmake?
-
-* Some Find modules use variables that they set in their own macros, e.g.
-  FindCUDA.cmake. Since lofar_find_package() is a function, these variables
-  are lost at the moment that you leave this function. A possible improvement
-  to lofar_find_package() could be to export all non-cached variables that
-  start with <PKG>_ to the parent scope. The following code snippet could 
-  accomplish this:
-
-    get_directory_property(_vars VARIABLES)
-    get_directory_property(_cvars CACHE_VARIABLES)
-    foreach(_var ${_vars})
-      if(_var MATCHES "^${_PKG}" OR _var MATCHES "^${_package}")
-        if(NOT _cvars MATCHES "${_var}")
-          set(${_var} ${${_var}} PARENT_SCOPE)
-        endif()
-      endif()
-    endforeach()
-
-  For the time being, however, I think it will suffice to export only
-  <PKG>_INCLUDE_DIRS and <PKG>_LIBRARIES.
-
-* Make sure that Python code is already compiled during the build phase. 
-  Currently, python sources are compiled during install. What's worse, 
-  compilation failures are not reported, and no non-zero exit status is set.
+* Python byte-code compilation fails during install when using DESTDIR option
+  to specify a different install directory.
 
 * Add option DEPENDS to lofar_add_library() and lofar_add_executable(), which
   can be used to add additional dependencies. This is mainly useful for
@@ -57,6 +25,14 @@
   1) Each library is installed in lib instead of python/site-packages.
   2) For every target, the library prefix must be cleared and an (additional)
      install directory -- python/site-packages -- must be added.
+
+* Use something like set_if_not_set() in the variants files for non-cached
+  CMake variables. Contrary to options, which are just cached variables of
+  type bool, non-cached variables will be overwritten. So, in fact, for
+  non-cached variables the include-order of variants file should be exactly 
+  the opposite of the order for cached variables. The proper way to solve
+  this, IMO, is to use something like set_if_not_set(), which will only set a
+  non-cached variable when it has not already been set.
 
 * Switch from FindPthread to FindThreads, which is the "standard" CMake
   module to use (and it also used by FindBLAS and FindLAPACK). Unfortunately,

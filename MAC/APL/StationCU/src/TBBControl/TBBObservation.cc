@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -121,7 +121,7 @@ TBBObservation::TBBObservation(ParameterSet* aParSet)
 //
 uint16 TBBObservation::_windowNr(const string&        wdwName)
 {
-    static    const char* windowNames[] = {
+    static    char* windowNames[] = {
         "4K", "16K", "64K", "256K", "1M", "4M", "16M", "64M", "256M", "" };
 
     uint32    idx = 0;

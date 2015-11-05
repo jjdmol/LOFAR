@@ -11,11 +11,7 @@ PANEL,-1 -1 1031 124 N "_3DFace" 1
   
   database=dpSubStr(baseDP,DPSUB_SYS);
 
-  if ($name == \"SoftwareMonitor\") {
-    baseDP+=\"_PermSW_Daemons_\"+$name;
-  } else {
-    baseDP+=\"_PermSW_\"+$name;
-  }
+  baseDP+=\"_PermSW_\"+$name;
 
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(baseDP+\".process.logMsg\")) {

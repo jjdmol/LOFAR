@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -54,6 +54,8 @@ SyncAction::~SyncAction()
 
 GCFEvent::TResult SyncAction::idle_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
   switch (event.signal) {
     case F_INIT: {
     }
@@ -73,7 +75,7 @@ GCFEvent::TResult SyncAction::idle_state(GCFEvent& event, GCFPortInterface& /*po
     break;
 
     default:
-      return GCFEvent::NOT_HANDLED;
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
 
@@ -82,6 +84,8 @@ GCFEvent::TResult SyncAction::idle_state(GCFEvent& event, GCFPortInterface& /*po
 
 GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
 	switch (event.signal) {
 	case F_ENTRY: {
 		for (;;) {
@@ -122,7 +126,7 @@ GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterfac
 	break;
 
 	default:
-		return GCFEvent::NOT_HANDLED;
+		status = GCFEvent::NOT_HANDLED;
 	break;
 	}
 

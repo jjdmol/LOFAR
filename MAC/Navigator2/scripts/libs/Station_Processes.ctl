@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -144,7 +144,7 @@ bool Station_Processes_UpdateStationControllers() {
   LOG_TRACE("Station_Processes.ctl:updateStationControllers|selected station: "+ station_selectedStation +" New: "+ newSelectedStation);
 
   // check if selection is made, and the selection is indeed a new one
-  if (newSelectedStation != "") {
+  if (newSelectedStation != 0) {
     if (strpos(newSelectedStation,":") < 0) {
       station_selectedStation=newSelectedStation+":";
     } else {
@@ -154,6 +154,11 @@ bool Station_Processes_UpdateStationControllers() {
   
   stationDBName.text(station_selectedStation);
   
+  DebugN("dpSubSys: ", dpSubStr(station_obsBaseDP,DPSUB_SYS));
+  DebugN("obsBase: " , station_obsBaseDP);
+  DebugN("newselstation: ", newSelectedStation);
+  DebugN("station: ", station_selectedStation);
+    
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","BeamControlPanel",
         DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(station_obsBaseDP,station_selectedStation));
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","CalibrationControlPanel",

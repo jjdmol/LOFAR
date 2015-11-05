@@ -4,22 +4,19 @@
 def gsmMain (name, argv):
 
     import sys
- 
-    import math
 
     import monetdb
     import monetdb.sql as db
     import lofar.gsm.gsmutils as gsm 
     #import gsmutils as gsm 
 
-    if len(argv) < 4  or  (argv[0] == '-p'  and  len(argv) < 6):
+    if len(argv) < 4:
         print ''
         print 'Insufficient arguments given; run as:'
         print ''
-        print '   %s [-p patchname] outfile RA DEC radius [vlssFluxCutoff [assocTheta]]' % name
+        print '   %s outfile RA DEC radius [vlssFluxCutoff [assocTheta]]' % name
         print 'to select using a cone'
         print ''
-        print '   -p patchname    if given, all sources belong to this single patch'
         print '   outfile         path-name of the output file'
         print '                   It will be overwritten if already existing'
         print '   RA              cone center Right Ascension (J2000, degrees)'
@@ -33,30 +30,18 @@ def gsmMain (name, argv):
         return False
 
     # Get the arguments.
-    patch   = ''
-    st = 0
-    if argv[0] == '-p':
-        patch = argv[1]
-        st = 2
-    outfile = argv[st]
-    try:
-      ra      = float(argv[st+1])
-      dec     = float(argv[st+2])
-    except ValueError:
-      # Try to parse ra-dec as in the output of msoverview, e.g. 08:13:36.0000 +48.13.03.0000
-      ralst = argv[st+1].split(':')
-      ra = math.copysign(abs(float(ralst[0]))+float(ralst[1])/60.+float(ralst[2])/3600.,float(ralst[0]))
-      declst = argv[st+2].split('.')
-      dec = math.copysign(abs(float(declst[0]))+float(declst[1])/60.+float('.'.join(declst[2:]))/3600.,float(declst[0]))
-    radius  = float(argv[st+3])
+    outfile = argv[0]
+    ra      = float(argv[1])
+    dec     = float(argv[2])
+    radius  = float(argv[3])
     cutoff  = 4.
     theta   = 0.00278
-    if len(argv) > st+4:
-        cutoff = float(argv[st+4])
-    if len(argv) > st+5:
-        theta = float(argv[st+5])
+    if len(argv) > 4:
+        cutoff = float(argv[4])
+    if len(argv) > 5:
+        theta = float(argv[5])
 
-    db_host = "ldb002.offline.lofar"
+    db_host = "ldb002"
     #db_host = "napels"
     db_dbase = "gsm"
     db_user = "gsm"
@@ -69,7 +54,6 @@ def gsmMain (name, argv):
         conn = db.connect(hostname=db_host, database=db_dbase, username=db_user,
                           password=db_passwd, port=db_port, autocommit=db_autocommit)
         gsm.expected_fluxes_in_fov (conn, ra, dec, radius, theta, outfile,
-                                    patchname=patch,
                                     storespectraplots=False,
                                     deruiter_radius=3.717,
                                     vlss_flux_cutoff=cutoff)

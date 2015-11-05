@@ -12,8 +12,6 @@ _CtrlDebug_CTRL_9	_CtrlDebug
 #Fill some defaults
 # DpValue
 ElementName	TypeName	_original.._value
-scriptInfo.transferMPs.runDone	ScriptInfo	0
-_ValueArchive_2.size.maxDpElGet	_ValueArchive	15000
-_ValueArchive_2.size.maxDpElSet	_ValueArchive	15000
-_ValueArchive_2.size.maxValuesSet	_ValueArchive	1250
-_ValueArchive_2.size.maxValuesGet	_ValueArchive	1250
+scriptInfo.paramDone	ScriptInfo	0
+_ValueArchive_2.size.maxDpElGet	_ValueArchive	4000
+_ValueArchive_2.size.maxDpElSet	_ValueArchive	4000

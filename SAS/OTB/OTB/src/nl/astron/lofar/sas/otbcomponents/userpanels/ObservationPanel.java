@@ -2,7 +2,7 @@
  * ObservationPanel.java
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
- *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+ *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,6 +31,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
@@ -52,6 +54,7 @@ import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.tablemodels.AnaBeamConfigurationTableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.BeamConfigurationTableModel;
+import nl.astron.lofar.sas.otb.util.tablemodels.BeamformerConfigurationTableModel;
 import nl.astron.lofar.sas.otbcomponents.AnaBeamDialog;
 import nl.astron.lofar.sas.otbcomponents.BeamDialog;
 import nl.astron.lofar.sas.otbcomponents.BeamFileDialog;
@@ -152,6 +155,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     setField(itsNode,aParam,aNode);
                 //we need to get all the childs from the following nodes as well.
                 }else if (LofarUtils.keyName(aNode.name).contains("Beam") && 
+                        !LofarUtils.keyName(aNode.name).contains("Beamformer") &&
                         !LofarUtils.keyName(aNode.name).contains("AnaBeam") &&
                         !LofarUtils.keyName(aNode.name).contains("TiedArrayBeam")
                         ) {
@@ -172,6 +176,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     this.retrieveAndDisplayChildDataForNode(aNode);
                     // AnaBeam childs finished, add to AnaBeamArrayList
                     itsAnaBeamList.add(itsActiveAnaBeam);
+                }else if (LofarUtils.keyName(aNode.name).contains("Beamformer")) {
+                    itsBeamformers.add(aNode);
+                    this.retrieveAndDisplayChildDataForNode(aNode);
                 } else if (LofarUtils.keyName(aNode.name).equals("VirtualInstrument")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }
@@ -412,6 +419,14 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         if(parentName.equals("Observation")){        
             // Observation Specific parameters
             switch (aKeyName) {
+                case "channelsPerSubband":
+                    inputNrChannelsPerSubband.setToolTipText(aParam.description);
+                    itsChannelsPerSubband=aNode;
+                    if (isRef && aParam != null) {
+                        inputNrChannelsPerSubband.setText(aNode.limits + " : " + aParam.limits);
+                   } else {
+                        inputNrChannelsPerSubband.setText(aNode.limits);
+                   }break;
                 case "nrBitsPerSample":
                     inputNrBitsPerSample.setToolTipText(aParam.description);
                     itsNrBitsPerSample=aNode;
@@ -426,8 +441,11 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 case "nrAnaBeams":
                     itsNrAnaBeams=aNode;
                     break;
-           }
-        } else if(parentName.contains("Beam") && !parentName.contains("AnaBeam") && !parentName.contains("TiedArrayBeam")){
+                case "nrBeamformers":
+                    itsNrBeamformers=aNode;
+                    break;
+            }
+        } else if(parentName.contains("Beam") && !parentName.contains("Beamformer") && !parentName.contains("AnaBeam") && !parentName.contains("TiedArrayBeam")){
             // Observation Beam parameters
             switch (aKeyName) {
                 case "target":
@@ -585,6 +603,19 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                         itsActiveTAB.setCoherent(aNode.limits);
                    }break;
             }
+        } else if(parentName.contains("Beamformer")){        
+            // Observation Beamformer parameters
+            if (aKeyName.equals("stationList")) {        
+                if (isRef && aParam != null) {
+                    itsStations.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsStations.add(aNode.limits);
+                }
+                
+                // add found stations to usedStationList
+                String[] aList = aNode.limits.split("[,]");
+                itsUsedBeamformStations.addAll(Arrays.asList(aList));
+            }
         } else if(parentName.equals("VirtualInstrument")){        
             // Observation VirtualInstrument parameters
 
@@ -608,14 +639,77 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
     }
 
-     
- 
+    /** Fill the Selectable stations for the Beamformer input
+     * 
+     * Every time the stationList changes we need to fill this list again.
+     * while filling we have to check if the removed station are not filled
+     * in a beamformer allready. If so show warning and remove the station from
+     * that list.
+     * Further we need to fill this list only with the station in the station list 
+     * as far as they are not allready used in the beamformerlists 
+     */
+    private void fillBeamformerStationList() {
+        
+        itsAvailableBeamformStations.clear();
+        int size = stationList.getModel().getSize();
+        String[] tempList=new String[size];
+        DefaultListModel itsModel = new DefaultListModel();
+        beamformerStationList.setModel(itsModel);
+        // get the  available virtual instrument station list
+        for (int i=0; i< size; i++) {
+            String station = stationList.getModel().getElementAt(i).toString();
+            
+            // Check if station is not allready used 
+            if (itsUsedBeamformStations.indexOf(station) < 0) {
+                tempList[i] = station; 
+                itsModel.addElement(station);
+                // check if station is not allready there
+                if (itsAvailableBeamformStations.indexOf(station)<0){
+                    itsAvailableBeamformStations.add(station);
+                }
+            }
+        }
+        LofarUtils.sortModel(itsModel);
+        if(itsAvailableBeamformStations.isEmpty()) {
+            addBeamformerButton.setEnabled(false);
+        } else {
+            addBeamformerButton.setEnabled(true);
+        }
+    }
+    
+    /* add a station to the active beamformer
+     */
+    void addBeamformerStation(String aStation) {
+        // check if a selection in the beamformer table is active.
+        if (aStation == null) {
+            return;
+        }
+        int row=beamformerConfigurationPanel.getSelectedRow();
+        if (row < 0  || aStation.equals("")) {
+            return;
+        }
+        
+        String selection = itsBeamformerConfigurationTableModel.getSelection(row);
+        if (selection != null) {
+            if (!selection.equals("")){
+                selection = selection.concat(",");            
+            }
+            selection = selection.concat(aStation);
+            itsUsedBeamformStations.add(aStation);
+            itsAvailableBeamformStations.remove(aStation);
+            itsBeamformerConfigurationTableModel.updateRow(selection,row);
+            beamformerConfigurationPanel.setSelectedRow(row, row);
+            fillBeamformerStationList();
+        }
+    }
+
     /** Restore original Values in  panel
      */
     private void restore() {
 
       setStationList(antennaConfigPanel.getStationList());
       // Observation Specific parameters
+      inputNrChannelsPerSubband.setText(itsChannelsPerSubband.limits);
       inputNrBitsPerSample.setText(itsNrBitsPerSample.limits);
       inputDescription.setText("");
       inputTreeDescription.setText(itsOldTreeDescription);
@@ -624,7 +718,16 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
       boolean fillTable = itsBeamConfigurationTableModel.fillTable(itsTreeType,itsBeamList,false);
       itsAnaBeamConfigurationTableModel.fillTable(itsTreeType,itsAnaBeamList,false);
       
-       
+      itsBeamformerConfigurationTableModel.fillTable(itsTreeType, itsStations);
+      
+      for (int i=0; i<itsStations.size();i++){
+        String[] involvedStations = itsStations.get(i).split("[,]");
+        for (int j = 0; j < involvedStations.length;j++) {
+            if (!itsUsedBeamformStations.contains(involvedStations[j])) {
+              itsUsedBeamformStations.add(involvedStations[j]);
+            }
+        }
+      }
       
       
       // Observation VirtualInstrument parameters
@@ -637,6 +740,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         LofarUtils.fillList(stationList,itsStationList.limits,false);
       }
       
+      fillBeamformerStationList();
 
       if (beamConfigurationPanel.getTableModel().getRowCount() == 244) {
         this.addBeamButton.setEnabled(false);
@@ -654,7 +758,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         buttonPanel1.addButton("Apply");
         buttonPanel1.setButtonIcon("Apply",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png")));
         this.stationList.setModel(new DefaultListModel());
-  
+        this.beamformerStationList.setModel(new DefaultListModel());
+
         
       
         itsBeamConfigurationTableModel = new BeamConfigurationTableModel();
@@ -678,7 +783,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         anaBeamConfigurationPanel.setColumnSize("rank",34);
         anaBeamConfigurationPanel.repaint();
 
- 
+        itsBeamformerConfigurationTableModel = new BeamformerConfigurationTableModel();
+        beamformerConfigurationPanel.setTableModel(itsBeamformerConfigurationTableModel);
+        beamformerConfigurationPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        beamformerConfigurationPanel.setColumnSize("Beamformer",20);
+        beamformerConfigurationPanel.setColumnSize("Stations",200);
+        beamformerConfigurationPanel.repaint();
+
     }
     
     private void initPanel() {
@@ -721,6 +832,12 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         // create initial table
         restore();
         
+        for (int i=0; i < stationList.getModel().getSize();i++) {
+          if (! itsUsedBeamformStations.contains(stationList.getModel().getElementAt(i).toString()) &&
+                  itsAvailableBeamformStations.indexOf(stationList.getModel().getElementAt(i).toString())< 0) {
+              itsAvailableBeamformStations.add(stationList.getModel().getElementAt(i).toString());
+          }
+        }
 
         
         if (itsTreeType.equals("VHtree")) {
@@ -789,6 +906,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     @Override
     public void setAllEnabled(boolean enabled) {
         this.inputDescription.setEnabled(enabled);
+        this.inputNrChannelsPerSubband.setEnabled(enabled);
         this.inputTreeDescription.setEnabled(enabled);
     }
     
@@ -1147,7 +1265,86 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         }
 
+
+
+
+        jOTDBnode aDefaultBFNode= itsBeamformers.get(0);
+        // validate table
+        // same for beamformer
+        if (itsBeamformerConfigurationTableModel.changed()) {
+            int i=0;
+            //delete all Beamformers from the table (excluding the Default one);
+        
+            // Keep the 1st one, it's the default Beam
+            try {
+                for (i=1; i< itsBeamformers.size(); i++) {
+                    OtdbRmi.getRemoteMaintenance().deleteNode(itsBeamformers.get(i));
+                }
+            } catch (RemoteException ex) {
+                String aS="Error during deletion of defaultNode: "+ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                return false;
+            }
+            boolean succes = itsBeamformerConfigurationTableModel.getTable(itsStations);
+            // keep default save
+            for (int j=0; j< itsStations.size(); j++) {
+                if (itsStations.get(j).equals("")) {
+                    itsStations.remove(j);
+                }
+            }
+            try {
+                // for all elements
+                for (i=1; i < itsStations.size();i++) {
+        
+                    // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
+                    // with the values from the set fields and save the elements again
+                    //
+                    // Duplicates the given node (and its parameters and children)
+                    int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultBFNode.nodeID(),(short)(i-1));
+                    if (aN <= 0) {
+                        String aS="Something went wrong with dupNode("+itsNode.treeID()+","+aDefaultBFNode.nodeID()+") will try to save remainder";
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                    } else {
+                        // we got a new duplicate whos children need to be filled with the settings from the panel.
+                        jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
+                        // store new duplicate in itsBeamformers.
+                        itsBeamformers.add(aNode);
+
+                        ArrayList<jOTDBnode> HWchilds = new ArrayList<>(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
+                        for (jOTDBnode n: HWchilds) {
+                            String aKeyName = LofarUtils.keyName(n.name);
+                            switch (aKeyName) {
+                                case "stationList" :
+                                    n.limits=itsStations.get(i);
+                                    break;
+                            }
+                            saveNode(n);
+                        }
+                    }
+                }
+            
+
+            } catch (RemoteException ex) {
+                String aS="Error during duplication and save : " + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                return false;
+            }
+        }
+        // store new number of instances in baseSetting
+        short bforms= (short)(itsStations.size()-1);
+        aDefaultBFNode.instances=bforms;
+        saveNode(aDefaultBFNode);
+
+
+        
         // Generic Observation
+        if (itsChannelsPerSubband != null && !inputNrChannelsPerSubband.getText().equals(itsChannelsPerSubband.limits)) {
+            itsChannelsPerSubband.limits = inputNrChannelsPerSubband.getText();
+            saveNode(itsChannelsPerSubband);
+        }
         if (itsNrBitsPerSample != null && !inputNrBitsPerSample.getText().equals(itsNrBitsPerSample.limits)) {
             itsNrBitsPerSample.limits = inputNrBitsPerSample.getText();
             saveNode(itsNrBitsPerSample);
@@ -1167,6 +1364,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             saveNode(itsNrAnaBeams);
         }
         
+        if (itsNrBeamformers != null && !Integer.toString(beamformerConfigurationPanel.getTableModel().getRowCount()).equals(itsNrBeamformers.limits)) {
+            itsNrBeamformers.limits = Integer.toString(beamformerConfigurationPanel.getTableModel().getRowCount());
+            saveNode(itsNrBeamformers);
+        }
         // treeDescription
         if (itsOldTreeDescription != null && !inputTreeDescription.getText().equals(itsOldTreeDescription)) {
             try {
@@ -1220,6 +1421,21 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
 
+    private void deleteBeamformer() {
+        String selection = itsBeamformerConfigurationTableModel.getSelection(beamformerConfigurationPanel.getSelectedRow());
+        if (selection== null) {
+            return;
+        }
+        String[] involvedStations = selection.split("[,]");
+        for (int j = 0; j < involvedStations.length;j++) {
+            itsUsedBeamformStations.remove(involvedStations[j]);
+        }
+        itsBeamformerConfigurationTableModel.removeRow(beamformerConfigurationPanel.getSelectedRow());
+        ArrayList<String> sl=new ArrayList<>();
+        itsBeamformerConfigurationTableModel.getTable(sl);
+        itsBeamformerConfigurationTableModel.fillTable(itsTreeType, sl);
+        fillBeamformerStationList();
+    }
 
     private void deleteBeam() {
         int row = beamConfigurationPanel.getSelectedRow();
@@ -1746,6 +1962,33 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
 
+    private void checkBeamformers(Object[] stations ){
+
+        ArrayList<Integer> delrows=new ArrayList<>();
+        ArrayList<String> aVS= new ArrayList<>();
+        for(int k=0; k< stations.length;k++) {
+            aVS.add((String)stations[k]);
+        }
+        this.itsBeamformerConfigurationTableModel.getTable(itsStations);
+        
+        for (int i = 1; i< itsStations.size();i++) {
+            String sl = itsStations.get(i);
+            Collection s = Arrays.asList(sl.split("[,]"));
+            if (aVS.containsAll(s)) {
+                break;
+            }
+            if (delrows != null && !delrows.contains(i-1)) {
+                delrows.add(i-1);
+            }                
+        }
+        // check if we found matches with stations that no longer exist, if so the beamformer involved
+        // will be deleted.
+        
+        for (int i=0; i < delrows.size(); i++) {
+            beamformerConfigurationPanel.setSelectedRow(delrows.get(i),delrows.get(i));
+            deleteBeamformer();
+        }        
+    }
 
     private void setAnaBeamConfiguration(boolean flag) {
         this.anaBeamConfiguration.setVisible(flag);
@@ -1768,6 +2011,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         descriptionScrollPane = new javax.swing.JScrollPane();
         inputDescription = new javax.swing.JTextArea();
         jPanel10 = new javax.swing.JPanel();
+        inputNrChannelsPerSubband = new javax.swing.JTextField();
+        labelNrChannelsPerSubband = new javax.swing.JLabel();
         labelNrBitsPerSample = new javax.swing.JLabel();
         inputNrBitsPerSample = new javax.swing.JTextField();
         jPanel3 = new javax.swing.JPanel();
@@ -1784,6 +2029,15 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         stationList = new javax.swing.JList();
         stationsModPanel = new javax.swing.JPanel();
         stationsButtonPanel = new javax.swing.JPanel();
+        jPanel4 = new javax.swing.JPanel();
+        beamformerConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        jLabel2 = new javax.swing.JLabel();
+        addBeamformerButton = new javax.swing.JButton();
+        deleteBeamformerButton = new javax.swing.JButton();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        beamformerStationsScrollPane = new javax.swing.JScrollPane();
+        beamformerStationList = new javax.swing.JList();
         anaBeamConfiguration = new javax.swing.JPanel();
         anaBeamConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         addAnaBeamButton = new javax.swing.JButton();
@@ -1837,6 +2091,15 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
         jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Generic Observation Input", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
 
+        inputNrChannelsPerSubband.setToolTipText("This field will be removes as soon as the input in the AntennaConfig tab wil be used for receiver selection.");
+        inputNrChannelsPerSubband.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                inputNrChannelsPerSubbandFocusGained(evt);
+            }
+        });
+
+        labelNrChannelsPerSubband.setText("# Channels per Subband");
+
         labelNrBitsPerSample.setText("# Bits per Sample");
 
         inputNrBitsPerSample.setToolTipText("This field will be removes as soon as the input in the AntennaConfig tab wil be used for receiver selection.");
@@ -1851,18 +2114,30 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         jPanel10Layout.setHorizontalGroup(
             jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel10Layout.createSequentialGroup()
-                .add(labelNrBitsPerSample, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 146, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(inputNrBitsPerSample, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 196, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(335, Short.MAX_VALUE))
+                .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel10Layout.createSequentialGroup()
+                        .add(labelNrChannelsPerSubband)
+                        .add(18, 18, 18))
+                    .add(jPanel10Layout.createSequentialGroup()
+                        .add(labelNrBitsPerSample, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
+                        .add(35, 35, 35)))
+                .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, inputNrBitsPerSample)
+                    .add(inputNrChannelsPerSubband, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE))
+                .addContainerGap())
         );
         jPanel10Layout.setVerticalGroup(
             jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel10Layout.createSequentialGroup()
+                .add(32, 32, 32)
+                .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(labelNrChannelsPerSubband)
+                    .add(inputNrChannelsPerSubband, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelNrBitsPerSample)
                     .add(inputNrBitsPerSample, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(24, Short.MAX_VALUE))
         );
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Digital Beam Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
@@ -1936,7 +2211,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel3Layout.createSequentialGroup()
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(beamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1352, Short.MAX_VALUE)
+                    .add(beamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1324, Short.MAX_VALUE)
                     .add(jPanel3Layout.createSequentialGroup()
                         .add(addBeamButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -2008,6 +2283,97 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .addContainerGap(12, Short.MAX_VALUE))
         );
 
+        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Beamformer Input", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
+
+        beamformerConfigurationPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                beamformerConfigurationPanelMouseClicked(evt);
+            }
+        });
+
+        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 12));
+        jLabel2.setText("Stations");
+
+        addBeamformerButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
+        addBeamformerButton.setText("add beamformer");
+        addBeamformerButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addBeamformerButtonActionPerformed(evt);
+            }
+        });
+
+        deleteBeamformerButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
+        deleteBeamformerButton.setText("delete beamformer");
+        deleteBeamformerButton.setEnabled(false);
+        deleteBeamformerButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteBeamformerButtonActionPerformed(evt);
+            }
+        });
+
+        jLabel3.setText("doubleclick on a station to ");
+
+        jLabel4.setText("add it to the highlighted beamformer");
+
+        beamformerStationList.setModel(new javax.swing.AbstractListModel() {
+            String[] strings = { "1", "2", "3", "4", "5" };
+            public int getSize() { return strings.length; }
+            public Object getElementAt(int i) { return strings[i]; }
+        });
+        beamformerStationList.setToolTipText("Stations that can be used in the selected beamformer");
+        beamformerStationList.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                beamformerStationListMouseClicked(evt);
+            }
+        });
+        beamformerStationsScrollPane.setViewportView(beamformerStationList);
+
+        org.jdesktop.layout.GroupLayout jPanel4Layout = new org.jdesktop.layout.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(beamformerConfigurationPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 397, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(jPanel4Layout.createSequentialGroup()
+                        .add(addBeamformerButton)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(deleteBeamformerButton)))
+                .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel4Layout.createSequentialGroup()
+                        .add(28, 28, 28)
+                        .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(jLabel3)
+                            .add(jLabel4)
+                            .add(beamformerStationsScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 132, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                    .add(jPanel4Layout.createSequentialGroup()
+                        .add(57, 57, 57)
+                        .add(jLabel2)))
+                .add(10, 10, 10))
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel4Layout.createSequentialGroup()
+                .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel4Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .add(jLabel2)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(beamformerStationsScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 109, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(beamformerConfigurationPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 128, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(addBeamformerButton)
+                        .add(deleteBeamformerButton))
+                    .add(jPanel4Layout.createSequentialGroup()
+                        .add(jLabel3)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jLabel4)))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
         anaBeamConfiguration.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Analog Beam Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
         anaBeamConfiguration.setEnabled(false);
 
@@ -2057,21 +2423,21 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         anaBeamConfigurationLayout.setHorizontalGroup(
             anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(anaBeamConfigurationLayout.createSequentialGroup()
-                .add(anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(anaBeamConfigurationLayout.createSequentialGroup()
-                        .add(addAnaBeamButton)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(editAnaBeamButton)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(deleteAnaBeamButton)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(loadAnaBeamsButton))
-                    .add(anaBeamConfigurationPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 1348, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(16, Short.MAX_VALUE))
+                .add(anaBeamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1232, Short.MAX_VALUE)
+                .add(102, 102, 102))
+            .add(anaBeamConfigurationLayout.createSequentialGroup()
+                .add(addAnaBeamButton)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(editAnaBeamButton)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(deleteAnaBeamButton)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .add(loadAnaBeamsButton)
+                .add(908, 908, 908))
         );
         anaBeamConfigurationLayout.setVerticalGroup(
             anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, anaBeamConfigurationLayout.createSequentialGroup()
+            .add(anaBeamConfigurationLayout.createSequentialGroup()
                 .add(anaBeamConfigurationPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 123, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .add(anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -2087,22 +2453,18 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel2Layout.createSequentialGroup()
-                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
                     .add(jPanel2Layout.createSequentialGroup()
-                        .add(10, 10, 10)
-                        .add(treeDescriptionScrollPane))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, anaBeamConfiguration, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1374, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel2Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 185, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(jPanel2Layout.createSequentialGroup()
-                                .add(jPanel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 472, Short.MAX_VALUE))
-                            .add(descriptionScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1159, Short.MAX_VALUE))))
-                .addContainerGap(115, Short.MAX_VALUE))
+                        .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 175, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(30, 30, 30)
+                        .add(jPanel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(descriptionScrollPane)
+                    .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1346, Short.MAX_VALUE)
+                    .add(anaBeamConfiguration, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(treeDescriptionScrollPane))
+                .addContainerGap(30, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -2110,16 +2472,20 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 180, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(anaBeamConfiguration, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(18, 18, 18)
-                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel2Layout.createSequentialGroup()
-                        .add(jPanel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .add(descriptionScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 105, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .add(11, 11, 11)
+                        .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                    .add(jPanel2Layout.createSequentialGroup()
+                        .add(18, 18, 18)
+                        .add(jPanel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .add(descriptionScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 54, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(treeDescriptionScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 101, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(199, 199, 199))
+                .add(144, 144, 144))
         );
 
         jScrollPane1.setViewportView(jPanel2);
@@ -2184,6 +2550,30 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
     }//GEN-LAST:event_buttonPanel1ActionPerformed
 
+    private void beamformerConfigurationPanelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_beamformerConfigurationPanelMouseClicked
+        deleteBeamformerButton.setEnabled(true);
+    }//GEN-LAST:event_beamformerConfigurationPanelMouseClicked
+
+    private void deleteBeamformerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBeamformerButtonActionPerformed
+        // delete beamformer, ask confirmation
+        int answer=JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this beamformer?","alert",JOptionPane.YES_NO_OPTION);
+        if (answer == JOptionPane.NO_OPTION) {
+            return;
+        }
+        // get stations involved and add them back to the available station list
+        
+        deleteBeamformer();
+    }//GEN-LAST:event_deleteBeamformerButtonActionPerformed
+
+    private void addBeamformerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addBeamformerButtonActionPerformed
+        String selection="";
+        if (this.itsAvailableBeamformStations.size()>0){  
+          itsBeamformerConfigurationTableModel.addRow(selection);
+          beamformerConfigurationPanel.setSelectedRow((itsBeamformerConfigurationTableModel.getRowCount()-1),(itsBeamformerConfigurationTableModel.getRowCount()-1));
+          JOptionPane.showMessageDialog(this,"New Beamformer created, add stations via doubleclick in stationslist","New Beamformer",JOptionPane.YES_OPTION);
+        }
+    }//GEN-LAST:event_addBeamformerButtonActionPerformed
+
     private void jTabbedPane1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jTabbedPane1StateChanged
         switch (jTabbedPane1.getTitleAt(jTabbedPane1.getSelectedIndex())) {
             case "Station":
@@ -2191,6 +2581,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             case "Generic":
                 LofarUtils.fillList(stationList, antennaConfigPanel.getUsedStations(),false);
                 DefaultListModel aM = (DefaultListModel)stationList.getModel();
+                checkBeamformers(aM.toArray());
+                fillBeamformerStationList();
                 if (this.antennaConfigPanel.isLBASelected()){
                     this.setAnaBeamConfiguration(false);
                 } else {
@@ -2222,6 +2614,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         deleteAnaBeam();
 }//GEN-LAST:event_deleteAnaBeamButtonActionPerformed
 
+    private void inputNrChannelsPerSubbandFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputNrChannelsPerSubbandFocusGained
+        changeDescription(itsChannelsPerSubband);
+}//GEN-LAST:event_inputNrChannelsPerSubbandFocusGained
+
     private void loadBeamsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadBeamsButtonActionPerformed
         loadBeamFile("Beams");
     }//GEN-LAST:event_loadBeamsButtonActionPerformed
@@ -2235,6 +2631,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private void copyBeamButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_copyBeamButtonActionPerformed
         copyBeamToAnaBeam();
     }//GEN-LAST:event_copyBeamButtonActionPerformed
+
+    private void beamformerStationListMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_beamformerStationListMouseClicked
+        if (evt.getClickCount() > 1) {
+            //doubleClick event
+            addBeamformerStation((String) beamformerStationList.getSelectedValue());
+        }
+}//GEN-LAST:event_beamformerStationListMouseClicked
 
     private void antennaConfigPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_antennaConfigPanelActionPerformed
        if (evt.getActionCommand().equals("validInput")) {
@@ -2260,12 +2663,14 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private String                            itsTreeType="";
     private BeamConfigurationTableModel       itsBeamConfigurationTableModel = null;
     private AnaBeamConfigurationTableModel    itsAnaBeamConfigurationTableModel = null;
+    private BeamformerConfigurationTableModel itsBeamformerConfigurationTableModel = null;
     private JFileChooser                      fc = null;
     private BeamDialog                        beamDialog = null;
     private AnaBeamDialog                     anaBeamDialog = null;
     private BeamFileDialog                    beamFileDialog = null;
     
     // Observation Specific parameters
+    private jOTDBnode itsChannelsPerSubband=null;
     private jOTDBnode itsNrBeams=null;
     private jOTDBnode itsNrAnaBeams=null;
     private jOTDBnode itsNrBeamformers=null;
@@ -2289,10 +2694,16 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private ArrayList<TiedArrayBeam>  itsTABList    = new ArrayList<>();
     private TiedArrayBeam       itsActiveTAB;
     
-    
+    // Beamformers
+    private ArrayList<jOTDBnode> itsBeamformers    = new ArrayList<>();
+    private ArrayList<String>    itsStations       = new ArrayList<>();
+   
     // Observation Virtual Instrument parameters
     private jOTDBnode itsStationList=null;
 
+    // keeps lists of available (unused)  and all used stations for Beamformer creation
+    private ArrayList<String>    itsAvailableBeamformStations       = new ArrayList<>();
+    private ArrayList<String>    itsUsedBeamformStations            = new ArrayList<>();
     private boolean  editBeam = false;
     private boolean  editAnaBeam = false;
     private boolean  showBeam = false;
@@ -2306,30 +2717,41 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addAnaBeamButton;
     private javax.swing.JButton addBeamButton;
+    private javax.swing.JButton addBeamformerButton;
     private javax.swing.JPanel anaBeamConfiguration;
     private nl.astron.lofar.sas.otbcomponents.TablePanel anaBeamConfigurationPanel;
     private nl.astron.lofar.sas.otbcomponents.AntennaConfigPanel antennaConfigPanel;
     private nl.astron.lofar.sas.otbcomponents.TablePanel beamConfigurationPanel;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel beamformerConfigurationPanel;
+    private javax.swing.JList beamformerStationList;
+    private javax.swing.JScrollPane beamformerStationsScrollPane;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private nl.astron.lofar.sas.otbcomponents.CampaignInfo campaignInfoPanel;
     private javax.swing.JButton copyBeamButton;
     private javax.swing.JButton deleteAnaBeamButton;
     private javax.swing.JButton deleteBeamButton;
+    private javax.swing.JButton deleteBeamformerButton;
     private javax.swing.JScrollPane descriptionScrollPane;
     private javax.swing.JButton editAnaBeamButton;
     private javax.swing.JButton editBeamButton;
     private javax.swing.JTextArea inputDescription;
     private javax.swing.JTextField inputNrBitsPerSample;
+    private javax.swing.JTextField inputNrChannelsPerSubband;
     private javax.swing.JTextArea inputTreeDescription;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel10;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JLabel labelNrBitsPerSample;
+    private javax.swing.JLabel labelNrChannelsPerSubband;
     private javax.swing.JButton loadAnaBeamsButton;
     private javax.swing.JButton loadBeamsButton;
     private javax.swing.JButton showBeamButton;

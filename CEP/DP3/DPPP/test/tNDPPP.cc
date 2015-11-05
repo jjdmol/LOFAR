@@ -26,7 +26,6 @@
 #include <tables/Tables.h>
 #include <tables/Tables/TableIter.h>
 #include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayPartMath.h>
 #include <Common/LofarLogger.h>
 #include <iostream>
@@ -65,10 +64,8 @@ void checkCopy (const String& in, const String& out, int nms)
     ASSERT (allEQ(oflag.getColumn(), uChar(0)));
     ASSERT (allEQ(ROArrayColumn<float>(t1,"WEIGHT_SPECTRUM").getColumn(),
                   float(1)));
-    //    cout<<ROArrayColumn<double>(t1,"UVW").getColumn()<<
-    //                  ROArrayColumn<double>(tin,"UVW").getColumn();
-    //    ASSERT (allEQ(ROArrayColumn<double>(t1,"UVW").getColumn(),
-    //                  ROArrayColumn<double>(tin,"UVW").getColumn()));
+    ASSERT (allEQ(ROArrayColumn<double>(t1,"UVW").getColumn(),
+                  ROArrayColumn<double>(tin,"UVW").getColumn()));
     ASSERT (allEQ(ROScalarColumn<double>(t1,"TIME").getColumn(),
                   ROScalarColumn<double>(tin,"TIME").getColumn()));
     ASSERT (allEQ(ROScalarColumn<double>(t1,"TIME_CENTROID").getColumn(),
@@ -147,18 +144,6 @@ void checkCopy (const String& in, const String& out, int nms)
   ASSERT (near(timeRange(1), ROScalarColumn<double>(tout,"TIME")(143) + 15));
 }
 
-void checkCopyColumn (const String& in)
-{
-  Table tin(in);
-  ASSERT (tin.nrow() == 6*24);
-  ROArrayColumn<Complex> data1(tin, "DATA");
-  ROArrayColumn<Complex> data2(tin, "COPY_DATA");
-  ROArrayColumn<float> weight1(tin, "NEW_WEIGHT_SPECTRUM");
-  ROArrayColumn<float> weight2(tin, "COPY_NEW_WEIGHT_SPECTRUM");
-  ASSERT (allEQ(data1.getColumn(), data2.getColumn()));
-  ASSERT (allEQ(weight1.getColumn(), weight2.getColumn()));
-}
-
 void testCopy()
 {
   cout << endl << "** testCopy **" << endl;
@@ -177,38 +162,9 @@ void testCopy()
   checkCopy ("tNDPPP_tmp.MS", "tNDPPP_tmp.MS1", 1);
 }
 
-void testCopyColumn()
+void testMulti()
 {
-  cout << endl << "** testCopyColumn 1 **" << endl;
-  {
-    ofstream ostr("tNDPPP_tmp.parset");
-    ostr << "msin=tNDPPP_tmp.MS1" << endl;
-    ostr << "msout=." << endl;
-    ostr << "msout.datacolumn=COPY_DATA" << endl;
-    ostr << "msout.weightcolumn=NEW_WEIGHT_SPECTRUM" << endl;
-    ostr << "steps=[]" << endl;
-  }
-  DPRun::execute ("tNDPPP_tmp.parset");
-
-  cout << endl << "** testCopyColumn 2 **" << endl;
-  {
-    ofstream ostr("tNDPPP_tmp.parset");
-    ostr << "msin=tNDPPP_tmp.MS1" << endl;
-    ostr << "msin.datacolumn=COPY_DATA" << endl;
-    ostr << "msin.weightcolumn=NEW_WEIGHT_SPECTRUM" << endl;
-    ostr << "msout=." << endl;
-    ostr << "msout.datacolumn=DATA" << endl;
-    ostr << "msout.weightcolumn=COPY_NEW_WEIGHT_SPECTRUM" << endl;
-    ostr << "steps=[]" << endl;
-  }
-  DPRun::execute ("tNDPPP_tmp.parset");
-
-  checkCopyColumn ("tNDPPP_tmp.MS1");
-}
-
-void testMultiIn()
-{
-  cout << endl << "** testMultiIn **" << endl;
+  cout << endl << "** testMulti **" << endl;
   {
     ofstream ostr("tNDPPP_tmp.parset");
     ostr << "msin=[tNDPPP_tmp.MS1, tNDPPP_tmp.MS1]" << endl;
@@ -222,7 +178,6 @@ void testMultiIn()
     ofstream ostr("tNDPPP_tmp.parset");
     ostr << "msin=[tNDPPP_tmp.MS1, tNDPPP_tmp.MS1]" << endl;
     ostr << "msin.datacolumn=CORRECTED_DATA" << endl;
-    ostr << "msin.weightcolumn=NEW_WEIGHT_SPECTRUM" << endl;
     ostr << "msin.missingdata=true" << endl;
     ostr << "msin.baseline=0,2&6" << endl;
     ostr << "msout=tNDPPP_tmp.MS1a" << endl;
@@ -233,7 +188,6 @@ void testMultiIn()
   Table tab("tNDPPP_tmp.MS1a");
   ASSERT (tab.nrow() == 48);
   ASSERT (allEQ (ROArrayColumn<Complex>(tab,"DATA").getColumn(), Complex()));
-  ASSERT (tab.tableDesc().isColumn("WEIGHT_SPECTRUM"));
   ASSERT (allEQ (ROArrayColumn<Bool>(tab,"FLAG").getColumn(), True));
   ASSERT (allEQ (ROScalarColumn<Int>(tab,"ANTENNA2").getColumn(), 6));
   {
@@ -453,9 +407,9 @@ void testAvg4()
   }
 }
 
-void testUpdate1()
+void testUpdate()
 {
-  cout << endl << "** testUpdate1 **" << endl;
+  cout << endl << "** testUpdate **" << endl;
   // Test if update works fine.
   // In fact, it does not do anything apart from rewriting the current flags.
   // However, it should ignore the inserted time slots.
@@ -472,56 +426,6 @@ void testUpdate1()
   // Check that the flags did not change.
   {
     Table tab("tNDPPP_tmp.MS");
-    ASSERT (allEQ(ROArrayColumn<bool>(tab,"FLAG").getColumn(), flags));
-  }
-}
-
-void testUpdate2()
-{
-  cout << endl << "** testUpdate2 **" << endl;
-  // Test if update all flags works fine.
-  {
-    Table tab("tNDPPP_tmp.MS");
-    tab.deepCopy ("tNDPPP_tmp.MS_copy1", Table::New);
-    ofstream ostr("tNDPPP_tmp.parset");
-    ostr << "msin=tNDPPP_tmp.MS_copy1" << endl;
-    ostr << "msout=." << endl;
-    ostr << "steps=[preflag]" << endl;
-    ostr << "preflag.blmin=1e6" << endl;     // should flag all data
-  }
-  DPRun::execute ("tNDPPP_tmp.parset");
-  // Check that all flags are true.
-  {
-    Table tab("tNDPPP_tmp.MS_copy1");
-    ASSERT (allEQ(ROArrayColumn<bool>(tab,"FLAG").getColumn(), true));
-  }
-}
-
-void testUpdateScale()
-{
-  cout << endl << "** testUpdateScale **" << endl;
-  // Test if update data works fine.
-  Array<Complex> data;
-  Array<bool> flags;
-  {
-    Table tab("tNDPPP_tmp.MS");
-    data = ROArrayColumn<Complex>(tab,"DATA").getColumn();
-    flags = ROArrayColumn<bool>(tab,"FLAG").getColumn();
-    tab.deepCopy ("tNDPPP_tmp.MS_copy1", Table::New);
-    ofstream ostr("tNDPPP_tmp.parset");
-    ostr << "msin=tNDPPP_tmp.MS_copy1" << endl;
-    ostr << "msout=tNDPPP_tmp.MS_copy1" << endl;   // same name means update
-    ostr << "steps=[scaledata]" << endl;
-    ostr << "scaledata.coeffs=2" << endl;
-    ostr << "scaledata.stations=*" << endl;
-    ostr << "scaledata.scalesize=false" << endl;
-  }
-  DPRun::execute ("tNDPPP_tmp.parset");
-  // Check that all data is doubled.
-  {
-    Table tab("tNDPPP_tmp.MS_copy1");
-    data *= Complex(2,0);
-    ASSERT (allNear(ROArrayColumn<Complex>(tab,"DATA").getColumn(), data, 1e-5));
     ASSERT (allEQ(ROArrayColumn<bool>(tab,"FLAG").getColumn(), flags));
   }
 }
@@ -709,143 +613,6 @@ void testStationAdd()
   ASSERT (t2.nrow() == t1.nrow()+40+12); // 2 baselines and 2 time slots added
 }
 
-void testFilter1()
-{
-  cout << endl << "** testFilter1 **" << endl;
-  // Remove all baselines containing station RT1 or 6.
-  {
-    ofstream ostr("tNDPPP_tmp.parset");
-    ostr << "msin=tNDPPP_tmp.MS" << endl;
-    ostr << "msout=tNDPPP_tmp.MSa" << endl;
-    ostr << "msout.overwrite=true" << endl;
-    ostr << "steps=[filter]" << endl;
-    ostr << "filter.baseline=!RT[16]&&*" << endl;
-    ostr << "filter.remove=True" << endl;
-  }
-  DPRun::execute ("tNDPPP_tmp.parset");
-  Table t1("tNDPPP_tmp.MS/ANTENNA");
-  Table t2("tNDPPP_tmp.MSa/ANTENNA");
-  // Note: the ANTENNA table also contained RT8, RT9, etc., but they do not
-  // have baselines. So these were removed as well meaning only 0,2,7 are left.
-  Vector<uInt> rownrs(3);
-  rownrs[0]=0; rownrs[1]=2; rownrs[2]=7;
-  Table t1s = t1(rownrs);
-  ASSERT (t2.nrow() == t1s.nrow());
-  ASSERT (allEQ (ROScalarColumn<String>(t2,"NAME").getColumn(),
-                 ROScalarColumn<String>(t1s,"NAME").getColumn()));
-  t1 = Table("tNDPPP_tmp.MS/FEED");
-  t2 = Table("tNDPPP_tmp.MSa/FEED");
-  t1s = t1(rownrs);
-  ASSERT (t2.nrow() == t1s.nrow());
-  // The ANTENNA_IDs in the FEED table must be 0,1,2.
-  Vector<Int> ids(t2.nrow());
-  indgen (ids);
-  ASSERT (allEQ (ROScalarColumn<Int>(t2,"ANTENNA_ID").getColumn(), ids));
-  // Check the main table.
-  t1 = Table("tNDPPP_tmp.MS");
-  t2 = Table("tNDPPP_tmp.MSa");
-  ASSERT (t2.nrow() == t1.nrow()-72+4); // 4 baselines removed, 2 timeslots added
-  t1s = t1((t1.col("ANTENNA1")==0 || t1.col("ANTENNA1")==2) &&
-           t1.col("ANTENNA2")==7);
-  // A few dummy time slots were inserted, so ignore those.
-  Table t2s = t2(t2.nodeRownr() < 6  ||  t2.nodeRownr() >= 10);
-  ASSERT (allEQ (ROArrayColumn<Complex>(t2s,"DATA").getColumn(),
-                 ROArrayColumn<Complex>(t1s,"DATA").getColumn()));
-  t2s = t2(t2.nodeRownr() % 2 == 0);
-  ASSERT (allEQ (ROScalarColumn<Int>(t2s,"ANTENNA1").getColumn(), 0));
-  ASSERT (allEQ (ROScalarColumn<Int>(t2s,"ANTENNA2").getColumn(), 2));
-  t2s = t2(t2.nodeRownr() % 2 == 1);
-  ASSERT (allEQ (ROScalarColumn<Int>(t2s,"ANTENNA1").getColumn(), 1));
-  ASSERT (allEQ (ROScalarColumn<Int>(t2s,"ANTENNA2").getColumn(), 2));
-}
-
-void testFilter2()
-{
-  cout << endl << "** testFilter2 **" << endl;
-  // Keep all baselines.
-  // First by not specifying baseline selection, second by all baselines.
-  // Also alter between remove and !remove.
-  for (int iter=0; iter<4; ++iter) {
-    {
-      ofstream ostr("tNDPPP_tmp.parset");
-      ostr << "msin=tNDPPP_tmp.MS" << endl;
-      ostr << "msout=tNDPPP_tmp.MSa" << endl;
-      ostr << "msout.overwrite=true" << endl;
-      ostr << "steps=[filter]" << endl;
-      if (iter%2 == 1) {
-        ostr << "filter.baseline=*&&*" << endl;
-      }
-      if (iter/2 == 1) {
-        ostr << "filter.remove=True" << endl;
-      }
-    }
-    DPRun::execute ("tNDPPP_tmp.parset");
-    //cout << "check ANTENNA"<<endl;
-    Table t1("tNDPPP_tmp.MS/ANTENNA");
-    Table t2("tNDPPP_tmp.MSa/ANTENNA");
-    // Note: the ANTENNA table also contained RT8, RT9, etc., but they do not
-    // have baselines. So these were removed meaning only 0,1,2,6,7 are left.
-    Vector<uInt> rownrs(5);
-    rownrs[0]=0; rownrs[1]=1; rownrs[2]=2; rownrs[3]=6; rownrs[4]=7;
-    Table t1s(t1);
-    if (iter/2 == 1) {
-      t1s = t1(rownrs);
-    }
-    ASSERT (t2.nrow() == t1s.nrow());
-    ASSERT (allEQ (ROScalarColumn<String>(t2,"NAME").getColumn(),
-                   ROScalarColumn<String>(t1s,"NAME").getColumn()));
-    //cout << "check FEED"<<endl;
-    t1 = Table("tNDPPP_tmp.MS/FEED");
-    t2 = Table("tNDPPP_tmp.MSa/FEED");
-    t1s = t1;
-    if (iter/2 == 1) {
-      t1s = t1(rownrs);
-    }
-    ASSERT (t2.nrow() == t1s.nrow());
-    // The ANTENNA_IDs in the FEED table must be 0,1,2.
-    Vector<Int> ids(t2.nrow());
-    indgen (ids);
-    ASSERT (allEQ (ROScalarColumn<Int>(t2,"ANTENNA_ID").getColumn(), ids));
-    // Check the main table.
-    t1 = Table("tNDPPP_tmp.MS");
-    t2 = Table("tNDPPP_tmp.MSa");
-    ASSERT (t2.nrow() == t1.nrow()+12); // 2 timeslots added
-    // A few dummy time slots were inserted, so ignore those.
-    Table t2s = t2(t2.nodeRownr() < 18  ||  t2.nodeRownr() >= 30);
-    ASSERT (allEQ (ROArrayColumn<Complex>(t2s,"DATA").getColumn(),
-                   ROArrayColumn<Complex>(t1,"DATA").getColumn()));
-    int ant1[] = {0,0,1,1,2,2};
-    int ant2[] = {6,7,6,7,6,7};
-    int sub = (iter/2 == 0 ? 0:3);    // if remove, ant2 6->3 and 7->4
-    for (int i=0; i<6; ++i) {
-      t2s = t2(t2.nodeRownr() % 6 == i);
-      ASSERT (allEQ (ROScalarColumn<Int>(t2s,"ANTENNA1").getColumn(),
-                     ant1[i]));
-      ASSERT (allEQ (ROScalarColumn<Int>(t2s,"ANTENNA2").getColumn(),
-                     ant2[i]-sub));
-    }
-  }
-}
-
-
-void testFilter3()
-{
-  cout << endl << "** testFilter3 **" << endl;
-  // Remove some baselines, update original file with different data column
-  // This test justs tests if it runs without throwing exceptions
-  {
-    ofstream ostr("tNDPPP_tmp.parset");
-    ostr << "msin=tNDPPP_tmp.MS" << endl;
-    ostr << "msout=." << endl;
-    ostr << "msout.datacolumn=DATA_FILTER" << endl;
-    ostr << "steps=[filter]" << endl;
-    ostr << "filter.baseline=!RT[16]&&*" << endl;
-    ostr << "filter.remove=False" << endl;
-  }
-  DPRun::execute ("tNDPPP_tmp.parset");
-}
-
-
 void testClear()
 {
   cout << endl << "** testClear **" << endl;
@@ -891,135 +658,22 @@ void testClear()
 }
 
 
-void testMultiOut()
-{
-  cout << endl << "** testMultiOut **" << endl;
-  {
-    // First make the reference output MS.
-    ofstream ostr("tNDPPP_tmp.parset");
-    ostr << "msin=tNDPPP_tmp.MS" << endl;
-    ostr << "msout=tNDPPP_tmp.MS_copy" << endl;
-    ostr << "msout.overwrite=true" << endl;
-    ostr << "steps=[]" << endl;
-  }
-  DPRun::execute ("tNDPPP_tmp.parset");
-  // Test if update data works fine with multiple outputs:
-  // read from tNDPPP_tmp.MS, write to copy3, update to copy3
-  Array<Complex> data;
-  Array<bool> flags;
-  {
-    ofstream ostr("tNDPPP_tmp.parset");
-    ostr << "msin=tNDPPP_tmp.MS" << endl;
-    ostr << "steps=[scaledata,out1,scaledata,out2]" << endl;
-    ostr << "scaledata.coeffs=2" << endl;
-    ostr << "scaledata.stations=*" << endl;
-    ostr << "scaledata.scalesize=false" << endl;
-    ostr << "out1.type=out" << endl;
-    ostr << "out1.name=tNDPPP_tmp.MS_copy3" << endl;
-    ostr << "out1.overwrite=true" << endl;
-    ostr << "out2.type=out" << endl;
-    ostr << "out2.name=." << endl; // Defaults to the previous out, so _copy3
-    ostr << "out2.datacolumn=DATA_2" << endl;
-    ostr << "msout=tNDPPP_tmp.MS_copy4" << endl;   // same name means update
-    ostr << "msout.overwrite=true" << endl;
-  }
-  DPRun::execute ("tNDPPP_tmp.parset");
-  // Check that tables exist, contain the specified columns
-  {
-    Table tab1("tNDPPP_tmp.MS_copy");
-    Table tab2("tNDPPP_tmp.MS_copy3");
-    ///cout<<ROArrayColumn<Complex>(tab2,"DATA_2").getColumn();
-    ///cout<<Complex(2,0)*ROArrayColumn<Complex>(tab1,"DATA").getColumn();
-    ASSERT (allNear(ROArrayColumn<Complex>(tab2,"DATA").getColumn(),
-                    Complex(2,0)*ROArrayColumn<Complex>(tab1,"DATA").getColumn(),
-                    1e-5));
-    ASSERT (allNear(ROArrayColumn<Complex>(tab2,"DATA_2").getColumn(),
-                    Complex(4,0)*ROArrayColumn<Complex>(tab1,"DATA").getColumn(),
-                    1e-5));
-    ASSERT (allNear(ROArrayColumn<Float>(tab2,"WEIGHT_SPECTRUM").getColumn(),
-                    ROArrayColumn<Float>(tab1,"WEIGHT_SPECTRUM").getColumn(),
-                    1e-5));
-    ASSERT (allEQ(ROArrayColumn<Bool>(tab2,"FLAG").getColumn(),
-                  ROArrayColumn<Bool>(tab1,"FLAG").getColumn()));
-    Table tab3("tNDPPP_tmp.MS_copy4");
-    ASSERT (allNear(ROArrayColumn<Complex>(tab3,"DATA").getColumn(),
-                    Complex(4,0)*ROArrayColumn<Complex>(tab1,"DATA").getColumn(),
-                    1e-5));
-    ASSERT (allNear(ROArrayColumn<Float>(tab3,"WEIGHT_SPECTRUM").getColumn(),
-                    ROArrayColumn<Float>(tab1,"WEIGHT_SPECTRUM").getColumn(),
-                    1e-5));
-    ASSERT (allEQ(ROArrayColumn<Bool>(tab3,"FLAG").getColumn(),
-                  ROArrayColumn<Bool>(tab1,"FLAG").getColumn()));
-  }
-
-}
-
-void tryErr (const string& parsetName)
-{
-  bool err = false;
-  try {
-    DPRun::execute (parsetName);
-  } catch (const std::exception& x) {
-    err = true;
-    cout << "Expected exception: " << x.what() << endl;
-  }
-  ASSERT (err);
-}
-
-void testErrorOut()
-{
-  cout << endl << "Trying some incorrect DPPP runs ..." << endl;
-  {
-    ofstream ostr("tNDPPP_tmp.parset");
-    ostr << "msin=tNDPPP_tmp.MS" << endl;
-    ostr << "steps=[filter,out1,average,out2]" << endl;
-    ostr << "out1.type=out" << endl;
-    ostr << "out1.name=''" << endl;
-    ostr << "out2.type=out" << endl;
-    ostr << "out2.name=." << endl;       // update not possible when avg
-    ostr << "msout=''" << endl;
-    tryErr ("tNDPPP_tmp.parset");
-  }
-  {
-    ofstream ostr("tNDPPP_tmp.parset");
-    ostr << "msin=tNDPPP_tmp.MS" << endl;
-    ostr << "steps=[average,out1,filter,out2]" << endl;
-    ostr << "out1.type=out" << endl;
-    ostr << "out1.name=tNDPPP_tmp.MSx" << endl;
-    ostr << "out1.overwrite=true" << endl;
-    ostr << "filter.remove=true" << endl;
-    ostr << "out2.type=out" << endl;
-    ostr << "out2.name=./tNDPPP_tmp.MSx" << endl;  // update not possible (filter)
-    ostr << "msout=''" << endl;
-    tryErr ("tNDPPP_tmp.parset");
-  }
-}
-
-
 int main()
 {
   try
   {
     testCopy();
-    testCopyColumn();
-    testMultiIn();
+    testMulti();
     testAvg1();
     testAvg2();
     testAvg3();
     testAvg4();
-    testUpdate1();
-    testUpdate2();
-    testUpdateScale();
+    testUpdate();
     testFlags1();
     testFlags2();
     testFlags3();
     testStationAdd();
-    testFilter1();
-    testFilter2();
-    testFilter3();
     testClear();
-    testMultiOut();
-    testErrorOut();
   } catch (std::exception& err) {
     std::cerr << "Error detected: " << err.what() << std::endl;
     return 1;

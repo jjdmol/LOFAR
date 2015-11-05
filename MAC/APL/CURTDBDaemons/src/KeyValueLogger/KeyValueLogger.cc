@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007-2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -39,8 +39,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace LOFAR {
-  using namespace KVT_Protocol;
-  using namespace DP_Protocol;
   using namespace MACIO;
   using namespace OTDB;
   namespace GCF {
@@ -193,10 +191,11 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&		event, GCFPortInterface
 	LOG_DEBUG_STR("operational:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
+	static unsigned long garbageTimerID = 0;
 
 	switch (event.signal) {
 	case F_ENTRY:
-		itsTimerPort->setTimer(1.0, 5.0); 
+		garbageTimerID = itsTimerPort->setTimer(1.0, 5.0); 
 	break;
 
 	// Catch incoming connections of new clients
@@ -281,12 +280,12 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&		event, GCFPortInterface
 
 	case KVT_SEND_MSG_POOL: {
 		KVTSendMsgPoolEvent		logEvent(event);
-		if (logEvent.keys.size() != logEvent.nrElements || 
-			logEvent.values.size() != logEvent.nrElements ||
-			logEvent.times.size() != logEvent.nrElements) {
+		if (logEvent.keys().size() != logEvent.nrElements || 
+			logEvent.values().size() != logEvent.nrElements ||
+			logEvent.times().size() != logEvent.nrElements) {
 			LOG_ERROR(formatString("Received kvt pool from %s (seqnr=%d) with unequal vectorsizes (n=%d, k=%d, v=%d, t=%d)", 
 					itsClients[&port].name.c_str(), logEvent.seqnr, logEvent.nrElements, 
-					logEvent.keys.size(), logEvent.values.size(), logEvent.times.size()));
+					logEvent.keys().size(), logEvent.values().size(), logEvent.times().size()));
 			if (logEvent.seqnr > 0) {
 				KVTSendMsgPoolAckEvent	answer;
 				answer.seqnr = logEvent.seqnr;
@@ -298,7 +297,7 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&		event, GCFPortInterface
 
 		bool	sendOk(true);
 		for (uint32 i = 0; i < logEvent.nrElements; i++) {
-			sendOk &= itsKVTgate->addKVT(logEvent.keys[i], logEvent.values[i], from_ustime_t(logEvent.times[i]));
+			sendOk &= itsKVTgate->addKVT(logEvent.keys()[i], logEvent.values()[i], from_ustime_t(logEvent.times()[i]));
 		}
 		itsClients[&port].msgCnt += logEvent.nrElements;
 		if (logEvent.seqnr > 0) {

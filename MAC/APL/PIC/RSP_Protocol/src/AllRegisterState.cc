@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -63,9 +63,7 @@ size_t AllRegisterState::getSize() const
 	+ rawdataread_state.getSize()
 	+ itsSerdesWriteState.getSize()
 	+ itsSerdesReadState.getSize()
-	+ itsBitModeWriteState.getSize()
-	+ itsSDOModeWriteState.getSize()
-	+ itsSDOSelectWriteState.getSize();
+	+ itsBitModeWriteState.getSize();
 }
 
 size_t AllRegisterState::pack  (char* buffer) const
@@ -102,8 +100,6 @@ size_t AllRegisterState::pack  (char* buffer) const
 	offset += itsSerdesWriteState.pack(buffer + offset);
 	offset += itsSerdesReadState.pack(buffer + offset);
 	offset += itsBitModeWriteState.pack(buffer + offset);
-	offset += itsSDOModeWriteState.pack(buffer + offset);
-	offset += itsSDOSelectWriteState.pack(buffer + offset);
 
 	return (offset);
 }
@@ -142,8 +138,6 @@ size_t AllRegisterState::unpack(const char *buffer)
 	offset += itsSerdesWriteState.unpack(buffer + offset);
 	offset += itsSerdesReadState.unpack(buffer + offset);
 	offset += itsBitModeWriteState.unpack(buffer + offset);
-	offset += itsSDOModeWriteState.unpack(buffer + offset);
-	offset += itsSDOSelectWriteState.unpack(buffer + offset);
 
 	return (offset);
 }

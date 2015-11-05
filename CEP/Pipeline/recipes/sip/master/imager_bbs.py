@@ -96,16 +96,6 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
         map_dir = os.path.join(
                         self.config.get("layout", "job_directory"), "mapfiles")
         run_id = str(self.inputs.get("id"))
-
-        # Update the skip fields of the four maps. If 'skip' is True in any of
-        # these maps, then 'skip' must be set to True in all maps.
-        for w, x, y in zip(ms_map, parmdb_map, sourcedb_map):
-            w.skip = x.skip = y.skip = (
-                w.skip or x.skip or y.skip
-            )
-
-        ms_map.iterator = parmdb_map.iterator = sourcedb_map.iterator = \
-            DataMap.SkipIterator
         for (ms, parmdb, sourcedb) in zip(ms_map, parmdb_map, sourcedb_map):
             #host is same for each entry (validate_data_maps)
             host, ms_list = ms.host, ms.file

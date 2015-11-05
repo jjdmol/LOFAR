@@ -3,7 +3,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -59,11 +59,7 @@
 #define xtod(c) ((c>='0' && c<='9') ? c-'0' : ((c>='A' && c<='F') ? \
 								c-'A'+10 : ((c>='a' && c<='f') ? c-'a'+10 : 0)))
 
-int rspctl_exit_code = EXIT_SUCCESS;
-
 namespace LOFAR {
-	using namespace RSP_Protocol;
-	using namespace EPA_Protocol;
 	using namespace GCF::TM;
 	namespace rspctl {
 	using namespace std;
@@ -110,7 +106,6 @@ double  gSampleFrequency = DEFAULT_SAMPLE_FREQUENCY;
 bool    g_getclock       = false;
 bool    gSplitterOn      = false;
 bool    gHasSplitter     = false;
-bool    gHasAartfaac     = false;
 bool    gClockChanged    = false;
 bool    gBitmodeChanged  = false;
 bool    gSplitterChanged = false;
@@ -174,8 +169,8 @@ inline double blitz_angle(complex<double> val)
 }
 BZ_DECLARE_FUNCTION_RET(blitz_angle, double)
 
-WeightsCommand::WeightsCommand(GCFPortInterface& port, const int bitsPerSample) :
-	Command			(port),
+WeightsCommand::WeightsCommand(GCFPortInterface& port, const int bitsPerSample) : 
+	Command			(port), 
 	m_type		    (WeightsCommand::COMPLEX),
 	itsStage		(0),
 	itsBitsPerSample(bitsPerSample)
@@ -205,7 +200,7 @@ void WeightsCommand::send()
 		setweights.timestamp = Timestamp(0,0);
 		setweights.rcumask   = getRCUMask();
 		logMessage(cerr,formatString("rcumask.count()=%d",setweights.rcumask.count()));
-
+        
         int nBanks = (MAX_BITS_PER_SAMPLE / itsBitsPerSample);
 		setweights.weights().resize(1, setweights.rcumask.count(), nBanks, maxBeamletsPerBank(itsBitsPerSample));
 
@@ -224,7 +219,7 @@ void WeightsCommand::send()
 					if (beamlet_mask.test(beamlet)) {
 					    int plane = beamlet / maxBeamletsPerBank(itsBitsPerSample);
 						int beamletnr = beamlet % maxBeamletsPerBank(itsBitsPerSample);
-						setweights.weights()(0,rcunr,plane,beamletnr) = complex<int16>((int16)value.real(), (int16)value.imag());
+						setweights.weights()(0,rcunr,plane,beamletnr) = complex<int16>((int16)value.real(), (int16)value.imag()); 
 						//setweights.weights()(0,rcunr,plane,beamletnr) = complex<int16>(10+plane, beamletnr); // for testing
 					}
 				} // beamlet
@@ -254,7 +249,6 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 
 			if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr,"Error: RSP_GETWEIGHTS command failed.");
-				rspctl_exit_code = EXIT_FAILURE;
 				GCFScheduler::instance()->stop();
 				return status;
 			}
@@ -301,7 +295,6 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 
 			if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr,"Error: RSP_SETWEIGHTS command failed.");
-				rspctl_exit_code = EXIT_FAILURE;
 			}
 			GCFScheduler::instance()->stop();
 			return status;
@@ -317,8 +310,8 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 
 }
 
-SubbandsCommand::SubbandsCommand(GCFPortInterface& port, const int bitsPerSample) :
-	Command		    (port),
+SubbandsCommand::SubbandsCommand(GCFPortInterface& port, const int bitsPerSample) : 
+	Command		    (port), 
 	m_type		    (0),
 	itsBitsPerSample(bitsPerSample)
 {
@@ -345,15 +338,14 @@ void SubbandsCommand::send()
 		setsubbands.subbands.setType(m_type);
 
 	    logMessage(cerr,formatString("rcumask.count()=%d",setsubbands.rcumask.count()));
-
-        if (static_cast<int>(m_subbandlist.size()) > maxBeamlets(itsBitsPerSample)) {
+        
+        if (m_subbandlist.size() > maxBeamlets(itsBitsPerSample)) {
             logMessage(cerr,"Error: too many subbands selected");
-			rspctl_exit_code = EXIT_FAILURE;
 			exit(EXIT_FAILURE);
 		}
-
+		
         int nPlanes = (MAX_BITS_PER_SAMPLE / itsBitsPerSample);
-
+		
 		// if only 1 subband selected, apply selection to all
 		switch (m_type) {
 			case SubbandSelection::BEAMLET: {
@@ -393,7 +385,6 @@ void SubbandsCommand::send()
 
 		default:
 			logMessage(cerr,"Error: invalid subbandselection type");
-			rspctl_exit_code = EXIT_FAILURE;
 			exit(EXIT_FAILURE);
 			break;
 		}
@@ -432,7 +423,6 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
 			}
 			else {
 				logMessage(cerr,"Error: RSP_GETSUBBANDS command failed.");
-			    rspctl_exit_code = EXIT_FAILURE;
 			}
 		}
 		break;
@@ -446,7 +436,6 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
 
 			if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr,"Error: RSP_SETSUBBANDS command failed.");
-			    rspctl_exit_code = EXIT_FAILURE;
 			}
 		}
 		break;
@@ -518,7 +507,6 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 			}
 			else {
 				logMessage(cerr,"Error: RSP_GETRCU command failed.");
-			    rspctl_exit_code = EXIT_FAILURE;
 			}
 		}
 		break;
@@ -527,7 +515,6 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 			RSPSetrcuackEvent ack(e);
 			if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr,"Error: RSP_SETRCU command failed.");
-			    rspctl_exit_code = EXIT_FAILURE;
 			}
 		}
 	break;
@@ -581,7 +568,6 @@ GCFEvent::TResult SWAPXYCommand::ack(GCFEvent& e)
 
 			if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr, "Error: RSP_GETSWAPXY command failed.");
-			    rspctl_exit_code = EXIT_FAILURE;
 				break;
 			}
 
@@ -611,7 +597,6 @@ GCFEvent::TResult SWAPXYCommand::ack(GCFEvent& e)
 
 			if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr, "Error: RSP_SETSWAPXY command failed.");
-			    rspctl_exit_code = EXIT_FAILURE;
 			}
 		}
 		break;
@@ -626,7 +611,7 @@ GCFEvent::TResult SWAPXYCommand::ack(GCFEvent& e)
 	return status;
 }
 
-// Set bitmode
+// Swap X Y on RCU
 BitmodeCommand::BitmodeCommand(GCFPortInterface& port) : Command(port)
 {
 }
@@ -666,7 +651,6 @@ GCFEvent::TResult BitmodeCommand::ack(GCFEvent& e)
 
 			if (ack.status != RSP_SUCCESS) {
 				logMessage(cerr, "Error: RSP_GETBitMode command failed.");
-			    rspctl_exit_code = EXIT_FAILURE;
 				break;
 			}
 
@@ -684,7 +668,7 @@ GCFEvent::TResult BitmodeCommand::ack(GCFEvent& e)
 				    case 2:
 				        cout << formatString("RSP[%02u]: 16/8/4 : %2d\n", rsp, ack.bits_per_sample[rsp]);
 				        break;
-				    default: break;
+				    default: break;    
 					}
 				}
 			}
@@ -700,7 +684,6 @@ GCFEvent::TResult BitmodeCommand::ack(GCFEvent& e)
 
 			if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr, "Error: RSP_SETBitMode command failed.");
-			    rspctl_exit_code = EXIT_FAILURE;
 			}
 		}
 		break;
@@ -715,238 +698,6 @@ GCFEvent::TResult BitmodeCommand::ack(GCFEvent& e)
 	return status;
 }
 
-// set subbands 
-SDOCommand::SDOCommand(GCFPortInterface& port) :
-	Command		    (port),
-	itsBitsPerSample(0)
-{
-}
-
-void SDOCommand::send()
-{
-	if (getMode()) {
-		// GET
-		RSPGetsdoEvent getsdo;
-
-		getsdo.timestamp = Timestamp(0,0);
-		getsdo.rcumask   = getRCUMask();
-		getsdo.cache     = true;
-
-		m_rspport.send(getsdo);
-	}
-	else {
-        if (itsBitsPerSample == 0) {
-            RSPGetsdomodeEvent   getsdomode;
-            getsdomode.timestamp = Timestamp(0,0);
-            getsdomode.cache     = true;
-
-            m_rspport.send(getsdomode);
-        }
-        else{
-            // SET
-            RSPSetsdoEvent   setsdo;
-            setsdo.timestamp = Timestamp(0,0);
-            setsdo.rcumask   = getRCUMask();
-
-            logMessage(cerr,formatString("rcumask.count()=%d",setsdo.rcumask.count()));
-            
-            int MAX_SDO_SUBBANDS_PER_PLANE = 36;
-            int MAX_SDO_PLANES             = 4;
-            int MAX_SDO_SUBBANDS           = MAX_SDO_SUBBANDS_PER_PLANE * MAX_SDO_PLANES;
-            
-            if (static_cast<int>(itsSubbandlist.size()) > MAX_SDO_SUBBANDS) {
-                logMessage(cerr,formatString("Error: too many subbands selected max=%d", MAX_SDO_SUBBANDS));
-			    rspctl_exit_code = EXIT_FAILURE;
-                exit(EXIT_FAILURE);
-            }
-
-            setsdo.subbands.subbands().resize(1, MAX_SDO_PLANES, MAX_SDO_SUBBANDS_PER_PLANE);
-            setsdo.subbands.subbands() = 0;
-            // if only 1 subband selected, apply selection to all
-            if (1 == itsSubbandlist.size()) {
-                std::list<int>::iterator it = itsSubbandlist.begin();
-                setsdo.subbands.subbands() = (*it);
-            } else {
-                int i = 0;
-                std::list<int>::iterator it;
-                for (it = itsSubbandlist.begin(); it != itsSubbandlist.end(); it++, i++) {
-                    if (i >= MAX_SDO_SUBBANDS) {
-                        break;
-                    }
-                    int plane = i / MAX_SDO_SUBBANDS_PER_PLANE;
-                    int subbandnr = i % MAX_SDO_SUBBANDS_PER_PLANE;
-                    setsdo.subbands.subbands()(0, plane, subbandnr) = (*it);
-                }
-    #if 0
-                for (; i < MAX_SDO_SUBBANDS; i++) {
-                    setsdo.subbands.subbands()(0, Range::all(), i) = 0;
-                }
-    #endif
-            }
-            m_rspport.send(setsdo);
-        }
-    }
-}
-
-GCFEvent::TResult SDOCommand::ack(GCFEvent& e)
-{
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-
-	switch (e.signal) {
-        case RSP_GETSDOMODEACK: {
-            RSPGetsdomodeackEvent ack(e);
-            int n_bits_per_sample = MIN_BITS_PER_SAMPLE;
-            for (int i = 0; i < (get_ndevices() / 8); i++) {
-                n_bits_per_sample = (ack.bits_per_sample[i] > n_bits_per_sample) ? ack.bits_per_sample[i] : n_bits_per_sample;
-            }
-            logMessage(cout,formatString("bits per sample=%d",  n_bits_per_sample));
-            itsBitsPerSample = n_bits_per_sample;
-            send(); // bits per sample received get selected subbands.
-        } break;
-		
-        case RSP_GETSDOACK: {
-			RSPGetsdoackEvent ack(e);
-			bitset<MAX_RCUS> mask = getRCUMask();
-
-			std::ostringstream msg;
-			msg << "getsdoack.timestamp=" << ack.timestamp;
-			logMessage(cout, msg.str());
-
-			if (RSP_SUCCESS == ack.status) {
-				int rcuin = 0;
-				for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
-					if (mask[rcuout]) {
-						std::ostringstream logStream;
-                        logStream << ack.subbands.subbands()(rcuin++, Range::all(), Range::all());
-                        logMessage(cout,formatString("RCU[%2d].subbands=%s", rcuout,logStream.str().c_str()));
-					}
-				}
-			}
-			else {
-				logMessage(cerr,"Error: RSP_GETSDO command failed.");
-			    rspctl_exit_code = EXIT_FAILURE;
-			}
-		}
-		break;
-
-		case RSP_SETSDOACK: {
-			RSPSetsdoackEvent ack(e);
-
-			std::ostringstream msg;
-			msg << "setsdoack.timestamp=" << ack.timestamp;
-			logMessage(cout, msg.str());
-
-			if (RSP_SUCCESS != ack.status) {
-				logMessage(cerr,"Error: RSP_SETSDO command failed.");
-			    rspctl_exit_code = EXIT_FAILURE;
-			}
-		}
-		break;
-
-		default:
-			status = GCFEvent::NOT_HANDLED;
-			break;
-	}
-    
-    if (e.signal != RSP_GETSDOMODEACK) {
-        GCFScheduler::instance()->stop();
-    }
-
-	return status;
-}
-
-// Set SDO bitmode
-SDOmodeCommand::SDOmodeCommand(GCFPortInterface& port) : Command(port)
-{
-}
-
-void SDOmodeCommand::send()
-{
-	if (getMode()) {
-		// GET
-		RSPGetsdomodeEvent   getsdomode;
-		getsdomode.timestamp = Timestamp(0,0);
-		getsdomode.cache     = true;
-
-		m_rspport.send(getsdomode);
-	}
-	else {
-		// SET
-		RSPSetsdomodeEvent   setsdomode;
-		setsdomode.timestamp       = Timestamp(0,0);
-		setsdomode.rspmask         = getRSPMask();
-		setsdomode.bits_per_sample = sdomode();
-		m_rspport.send(setsdomode);
-	}
-}
-
-GCFEvent::TResult SDOmodeCommand::ack(GCFEvent& e)
-{
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-
-	switch (e.signal) {
-		case RSP_GETSDOMODEACK: {
-			RSPGetsdomodeackEvent ack(e);
-
-			std::ostringstream msg;
-			msg << "setsdomodeack.timestamp=" << ack.timestamp;
-			logMessage(cout, msg.str());
-			msg.seekp(0);
-
-			if (ack.status != RSP_SUCCESS) {
-				logMessage(cerr, "Error: RSP_GETSDOMode command failed.");
-			    rspctl_exit_code = EXIT_FAILURE;
-				break;
-			}
-
-			// print sdomode settings
-			cout << "board  :version :mode\n";
-			for (int rsp = 0; rsp < get_ndevices(); rsp++) {
-				//cout << formatString("RSP=%d, mode=%d, bits=%d\n", rsp, ack.bitmode_version[rsp], ack.bits_per_sample[rsp]);
-                if (getRSPMask().test(rsp)) {
-					switch (ack.bitmode_version[rsp]) {
-				    case 0:
-				        cout << formatString("RSP[%02u]: 16       : %2d\n", rsp, ack.bits_per_sample[rsp]);
-				        break;
-				    case 1:
-				        cout << formatString("RSP[%02u]: 16/8     : %2d\n", rsp, ack.bits_per_sample[rsp]);
-				        break;
-				    case 2:
-				        cout << formatString("RSP[%02u]: 16/8/5   : %2d\n", rsp, ack.bits_per_sample[rsp]);
-				        break;
-                    case 3:
-				        cout << formatString("RSP[%02u]: 16/8/5/4 : %2d\n", rsp, ack.bits_per_sample[rsp]);
-				        break;    
-				    default: break;
-					}
-				}
-			}
-		}
-		break;
-
-		case RSP_SETSDOMODEACK: {
-			RSPSetsdomodeackEvent ack(e);
-
-			std::ostringstream msg;
-			msg << "setsdomodeack.timestamp=" << ack.timestamp;
-			logMessage(cout, msg.str());
-
-			if (RSP_SUCCESS != ack.status) {
-				logMessage(cerr, "Error: RSP_SETSDOMode command failed.");
-			    rspctl_exit_code = EXIT_FAILURE;
-			}
-		}
-		break;
-
-		default:
-			status = GCFEvent::NOT_HANDLED;
-		break;
-	}
-
-	GCFScheduler::instance()->stop();
-
-	return status;
-}
 
 HBACommand::HBACommand(GCFPortInterface& port) : Command(port)
 {
@@ -1032,7 +783,6 @@ GCFEvent::TResult HBACommand::ack(GCFEvent& e)
 		}
 		else {
 			logMessage(cerr,"Error: RSP_GETHBA command failed.");
-		    rspctl_exit_code = EXIT_FAILURE;
 		}
 	}
 	break;
@@ -1063,7 +813,6 @@ GCFEvent::TResult HBACommand::ack(GCFEvent& e)
 		}
 		else {
 			logMessage(cerr,"Error: RSP_READHBA command failed.");
-		    rspctl_exit_code = EXIT_FAILURE;
 		}
 	}
 	break;
@@ -1072,7 +821,6 @@ GCFEvent::TResult HBACommand::ack(GCFEvent& e)
 		RSPSethbaackEvent ack(e);
 		if (RSP_SUCCESS != ack.status) {
 			logMessage(cerr,"Error: RSP_SETHBA command failed.");
-		    rspctl_exit_code = EXIT_FAILURE;
 		}
 	}
 	break;
@@ -1095,7 +843,6 @@ void RSUCommand::send()
 	if (getMode()) {
 		// GET not supported
 		logMessage(cerr, "Error: RSUCommand GET not supported");
-		rspctl_exit_code = EXIT_FAILURE;
 		exit(EXIT_FAILURE);
 	}
 	else {
@@ -1134,23 +881,15 @@ GCFEvent::TResult RSUCommand::ack(GCFEvent& e)
 			}
 			else {
 				logMessage(cerr,"Error: RSP_GETRSU command failed.");
-				rspctl_exit_code = EXIT_FAILURE;
 			}
 		}
 		break;
 #endif
 		case RSP_SETRSUACK: {
 			RSPSetrsuackEvent ack(e);
+
 			if (RSP_SUCCESS != ack.status) {
-                if (ack.status == RSP_BUSY) {
-                    logMessage(cerr,"Error: rsu NOT set, driver busy.");
-					rspctl_exit_code = EXIT_FAILURE;
-                }
-                else {
-                    logMessage(cerr,"Error: RSP_SETRSU command failed.");
-					rspctl_exit_code = EXIT_FAILURE;
-                }
-            
+				logMessage(cerr,"Error: RSP_SETRSU command failed.");
 			}
 		}
 	}
@@ -1196,14 +935,7 @@ GCFEvent::TResult ClockCommand::ack(GCFEvent& e)
 	if (e.signal == RSP_GETCLOCKACK) {
 		RSPGetclockackEvent ack(e);
 		if (RSP_SUCCESS != ack.status) {
-			if (ack.status == RSP_BUSY) {
-                logMessage(cerr,"Error: driver busy.");
-			    rspctl_exit_code = EXIT_FAILURE;
-            }
-            else {
-                logMessage(cerr,"Error: RSP_GETCLOCK command failed.");
-                rspctl_exit_code = EXIT_FAILURE;
-            }
+			logMessage(cerr,"Error: RSP_GETCLOCK command failed.");
 		}
 		else {
 			gSampleFrequency = 1.0e6 * ack.clock;
@@ -1213,14 +945,7 @@ GCFEvent::TResult ClockCommand::ack(GCFEvent& e)
 	else if (e.signal == RSP_SETCLOCKACK) {
 		RSPSetclockackEvent ack(e);
 		if (RSP_SUCCESS != ack.status) {
-			if (ack.status == RSP_BUSY) {
-                logMessage(cerr,"Error: clock NOT set, driver busy.");
-			    rspctl_exit_code = EXIT_FAILURE;
-            }
-            else {
-                logMessage(cerr,"Error: RSP_SETCLOCK command failed.");
-			    rspctl_exit_code = EXIT_FAILURE;
-            }
+			logMessage(cerr,"Error: RSP_SETCLOCK command failed.");
 		}
 	}
 
@@ -1249,7 +974,6 @@ void SubClockCommand::send()
 	else {
 		// SET not supported
 		logMessage(cerr, "SubClockCommand: SET not supported");
-	    rspctl_exit_code = EXIT_FAILURE;
 		exit(EXIT_FAILURE);
 	}
 }
@@ -1277,7 +1001,6 @@ GCFEvent::TResult SubClockCommand::ack(GCFEvent& e)
 		}
 		else {
 			logMessage(cerr,"Error: RSP_GETCLOCK command failed.");
-	    	rspctl_exit_code = EXIT_FAILURE;
 		}
 	}
 	break;
@@ -1286,7 +1009,6 @@ GCFEvent::TResult SubClockCommand::ack(GCFEvent& e)
 		RSPSubclockackEvent ack(e);
 		if (RSP_SUCCESS != ack.status) {
 			logMessage(cerr,"Error: RSP_UPDCLOCK command failed.");
-	    	rspctl_exit_code = EXIT_FAILURE;
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -1300,7 +1022,6 @@ GCFEvent::TResult SubClockCommand::ack(GCFEvent& e)
 		}
 		else {
 			logMessage(cerr,"Error: RSP_UPDCLOCK command failed.");
-	    	rspctl_exit_code = EXIT_FAILURE;
 		}
 	}
 	break;
@@ -1430,7 +1151,6 @@ void TBBCommand::send()
 
 			default:
 				logMessage(cerr, "Error: invalid tbbmode type");
-	    		rspctl_exit_code = EXIT_FAILURE;
 				exit(EXIT_FAILURE);
 			break;
 		} // switch
@@ -1454,7 +1174,6 @@ GCFEvent::TResult TBBCommand::ack(GCFEvent& e)
 
 			if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr, "Error: RSP_GETTBB command failed.");
-	    		rspctl_exit_code = EXIT_FAILURE;
 				break;
 			}
 
@@ -1489,7 +1208,6 @@ GCFEvent::TResult TBBCommand::ack(GCFEvent& e)
 
 			if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr, "Error: RSP_SETTBB command failed.");
-	    		rspctl_exit_code = EXIT_FAILURE;
 			}
 		}
 		break;
@@ -1554,7 +1272,6 @@ GCFEvent::TResult SICommand::ack(GCFEvent& e)
 
 		if (ack.status != RSP_SUCCESS) {
 			logMessage(cerr, "Error: RSP_GETSI command failed.");
-	   		rspctl_exit_code = EXIT_FAILURE;
 			break;
 		}
 
@@ -1603,93 +1320,6 @@ GCFEvent::TResult SICommand::ack(GCFEvent& e)
 
 		if (ack.status != RSP_SUCCESS) {
 			logMessage(cerr, "Error: RSP_SETSI command failed.");
-	   		rspctl_exit_code = EXIT_FAILURE;
-		}
-	}
-	break;
-
-	default:
-		status = GCFEvent::NOT_HANDLED;
-		break;
-	}
-
-	GCFScheduler::instance()->stop();
-
-	return status;
-}
-
-//
-// SDOenableCommand
-//
-SDOenableCommand::SDOenableCommand(GCFPortInterface& port) : Command(port), m_sdoOn(false)
-{
-}
-
-void SDOenableCommand::send()
-{
-	if (getMode()) {
-		// GET
-		RSPGetbypassEvent request;
-
-		request.timestamp = Timestamp(0,0);
-		request.rcumask   = getRCUMask();
-		request.cache     = true;
-
-		m_rspport.send(request);
-	}
-	else {
-		// SET
-		RSPSetbypassEvent request;
-
-		request.timestamp = Timestamp(0,0);
-		request.rcumask   = getRCUMask();
-		request.settings().resize(1);
-		request.settings()(0).setSDO(m_sdoOn);
-
-		logMessage(cout,formatString("bypassSetting  =%02X", request.settings()(0).getAsUint16()));
-
-		m_rspport.send(request);
-	}
-}
-
-GCFEvent::TResult SDOenableCommand::ack(GCFEvent& e)
-{
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-
-	switch (e.signal) {
-	case RSP_GETBYPASSACK: {
-		RSPGetbypassackEvent ack(e);
-
-		std::ostringstream msg;
-		msg << "getSIack.timestamp=" << ack.timestamp;
-		logMessage(cout, msg.str());
-		msg.seekp(0);
-
-		if (ack.status != RSP_SUCCESS) {
-			logMessage(cerr, "Error: RSP_GETSDO command failed.");
-	   		rspctl_exit_code = EXIT_FAILURE;
-			break;
-		}
-
-		// no selection made. Show all settings in a nice matrix.
-		int rcusPerBoard = 8; // !!!
-		for (int rcu = 0; rcu < get_ndevices(); rcu += rcusPerBoard) {
-			cout << formatString("\nBoard[%02d].sdo=%s", rcu/rcusPerBoard, ack.settings()(rcu).getSDO() ? "on":"off");
-		}
-		cout << endl;
-	}
-	break;
-
-	case RSP_SETBYPASSACK: {
-		RSPSetbypassackEvent ack(e);
-
-		std::ostringstream msg;
-		msg << "setSIack.timestamp=" << ack.timestamp;
-		logMessage(cout, msg.str());
-
-		if (ack.status != RSP_SUCCESS) {
-			logMessage(cerr, "Error: RSP_SETSDOENABLE command failed.");
-	   		rspctl_exit_code = EXIT_FAILURE;
 		}
 	}
 	break;
@@ -1733,8 +1363,7 @@ void DataStreamCommand::send()
 		request.switch_on1 = gSplitterOn ? itsStream1On : false;
 
 		if (itsStream1On && !gSplitterOn) {
-			logMessage(cerr,"Error: Splitter is off, second datastream cannot be turned on!");
-	   		rspctl_exit_code = EXIT_FAILURE;
+			logMessage(cout,"Splitter is off, second datastream cannot be turned on!");
 		}
 		if (gHasSplitter) {
 			logMessage(cout,formatString("set datastream 0:%s 1:%s", request.switch_on0?"on":"off", request.switch_on1?"on":"off"));
@@ -1757,7 +1386,6 @@ GCFEvent::TResult DataStreamCommand::ack(GCFEvent& e)
 
 		if (ack.status != RSP_SUCCESS) {
 			logMessage(cerr, "Error: RSP_GETDATASTREAM command failed.");
-	   		rspctl_exit_code = EXIT_FAILURE;
 			break;
 		}
 		if (gHasSplitter) {
@@ -1774,7 +1402,6 @@ GCFEvent::TResult DataStreamCommand::ack(GCFEvent& e)
 
 		if (ack.status != RSP_SUCCESS) {
 			logMessage(cerr, "Error: RSP_SETDATASTREAM command failed.");
-	   		rspctl_exit_code = EXIT_FAILURE;
 		}
 	}
 	break;
@@ -1811,7 +1438,6 @@ void RegisterStateCommand::send()
 	else {
 		// SET not supported
 		logMessage(cerr, "Error: RegisterStateCommand: SET not supported");
-	   	rspctl_exit_code = EXIT_FAILURE;
 		exit(EXIT_FAILURE);
 	}
 }
@@ -1822,7 +1448,6 @@ GCFEvent::TResult RegisterStateCommand::ack(GCFEvent& e)
 		RSPSubregisterstateackEvent ack(e);
 		if (RSP_SUCCESS != ack.status) {
 			logMessage(cerr,"Error: RSP_UPDREGISTERSTATE command failed.");
-	   		rspctl_exit_code = EXIT_FAILURE;
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -1839,7 +1464,6 @@ GCFEvent::TResult RegisterStateCommand::ack(GCFEvent& e)
 	}
 	else {
 		logMessage(cerr, "Error: register state update failed.");
-	   	rspctl_exit_code = EXIT_FAILURE;
 	}
 
 	return GCFEvent::HANDLED;
@@ -1870,7 +1494,6 @@ void SPUStatusCommand::send()
 	// check mode
 	if (!getMode()) {
 		logMessage(cerr,"Setting SPUstatus is not possible");
-	   	rspctl_exit_code = EXIT_FAILURE;
 		return;
 	}
 
@@ -1891,7 +1514,6 @@ GCFEvent::TResult SPUStatusCommand::ack(GCFEvent& event)
 
 		if (ack.status != RSP_SUCCESS) {
 			logMessage(cerr,"Error: RSP_GETSPUSTATUS command failed.");
-	   		rspctl_exit_code = EXIT_FAILURE;
 		}
 		else {
 			logMessage(cout,"Subrack | RCU 5.0V | LBA 8.0V | HBA 48V | SPU 3.3V | Temperature");
@@ -2073,7 +1695,6 @@ GCFEvent::TResult SplitterCommand::ack(GCFEvent& event)
 			RSPSetsplitterackEvent ack(event);
 			if (ack.status != RSP_SUCCESS) {
 				logMessage(cerr,"Error: RSP_SETSPLITTER command failed.");
-	   			rspctl_exit_code = EXIT_FAILURE;
 			}
 			else {
 				logMessage(cerr, "Set splitter successful");
@@ -2085,7 +1706,6 @@ GCFEvent::TResult SplitterCommand::ack(GCFEvent& event)
 			RSPGetsplitterackEvent ack(event);
 			if (ack.status != RSP_SUCCESS) {
 				logMessage(cerr,"Error: RSP_GETSPLITTER command failed.");
-	   			rspctl_exit_code = EXIT_FAILURE;
 			}
 			else {
 				for (int rsp = 0; rsp < get_ndevices(); rsp++) {
@@ -2184,7 +1804,6 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
 			}
 			else {
 				logMessage(cerr,"Error: RSP_GETWG command failed.");
-	   			rspctl_exit_code = EXIT_FAILURE;
 			}
 		}
 		break;
@@ -2194,7 +1813,6 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
 
 			if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr,"Error: RSP_SETWG command failed.");
-	   			rspctl_exit_code = EXIT_FAILURE;
 			}
 		}
 		break;
@@ -2228,7 +1846,6 @@ void StatusCommand::send()
 	}
 	else { // SET
 		logMessage(cerr,"Setting status not yet allowed");
-	   	rspctl_exit_code = EXIT_FAILURE;
 	}
 }
 
@@ -2243,7 +1860,6 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 
 		if (ack.status != RSP_SUCCESS) {
 			logMessage(cerr,"Error: RSP_GETSTATUS command failed.");
-	   		rspctl_exit_code = EXIT_FAILURE;
 			break;
 		}
 
@@ -2387,18 +2003,7 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 							(rs->brc == 0 ? "OK" : "ERROR"),
 							rs->cnt ));
 			}
-            if (gHasAartfaac) {
-                for (int ap = 0; ap < 4; ap++) {
-                    RADStatus* rs = &(board.lane0_subband)+ap;
-                    logMessage(cout, formatString("RSP[%2d] lane%d %9s:  %5s   %5s   %5s     %9d",
-                                boardout, ap,
-                                "subbands",
-                                (rs->align == 0 ? "OK" : "ERROR"),
-                                (rs->sync == 1 ? "OK" : "ERROR"),
-                                (rs->brc == 0 ? "OK" : "ERROR"),
-                                rs->cnt ));
-                }
-            }
+
 			BOARD_ITERATOR_NEXT;
 		} BOARD_ITERATOR_END;
 
@@ -2452,7 +2057,6 @@ void StatisticsCommand::send()
 	else {
 		// SET
 		logMessage(cerr,"Error: set mode not support for option '--statistics'");
-	   	rspctl_exit_code = EXIT_FAILURE;
 		GCFScheduler::instance()->stop();
 	}
 }
@@ -2485,7 +2089,6 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
 	else {
 		if ( sum(stats.shape()) != sum(m_stats.shape()) ) {
 			logMessage(cerr, "Error: statistics shape mismatch");
-	   		rspctl_exit_code = EXIT_FAILURE;
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -2503,9 +2106,9 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
 		}
 
 		LOG_DEBUG_STR("statistics update at " << timestamp);
-
+        
 		if (m_duration == 0) {
-			//cout << m_stats << endl;
+			//cout << m_stats << endl; 
 			plot_statistics(m_stats, timestamp);
 		}
 		else {
@@ -2513,7 +2116,6 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
 
 			Timestamp timeNow;
 			timeNow.setNow();
-
 			if(m_nseconds >= m_duration) {
 				logMessage(cout,"Statistics capturing successfully ended.");
 				stop();
@@ -2551,7 +2153,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 		gClockChanged = false;
 	}
 #endif
-
+    
 	if (!handle) {
 		handle = gnuplot_init();
 		if (!handle) return;
@@ -2627,7 +2229,6 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 					break;
 				default:
 					logMessage(cerr,"Error: invalid m_type");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 					break;
 			}
@@ -2657,11 +2258,11 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
     		if (!handle2) {
     			handle2 = gnuplot_init();
     			if (!handle2) return;
-
+    
     			gnuplot_cmd(handle2, "set grid x y\n");
     			gnuplot_cmd(handle2, "set ylabel \"dB\"\n");
     			gnuplot_cmd(handle2, "set yrange [0:160]\n");
-
+    
     			switch (m_type) {
     				case Statistics::SUBBAND_POWER:
     					gnuplot_cmd(handle2, "set xlabel \"Frequency (Hz)\"\n");
@@ -2673,35 +2274,35 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
     					break;
     			}
     		}
-
+    
     		time_t seconds = timestamp.sec();
     		strftime(plotcmd, 255, "set title \"Ring 1 %s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
-
+    
     		// Redefine xrange when clock changed.
     		if (gClockChanged && (m_type == Statistics::SUBBAND_POWER)) {
     			gnuplot_cmd(handle2, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
     		}
-
+    
     		// Redefine xrange when bitmode changed.
     		if (gBitmodeChanged && (m_type == Statistics::BEAMLET_POWER)) {
     			gnuplot_cmd(handle2, "set xrange [0:%d]\n", x_range);
     		}
-
+    
     		gnuplot_cmd(handle2, plotcmd);
-
+    
     		gnuplot_cmd(handle2, "plot ");
     		// splot devices
     		int count = 0;
-
+            
     		startrcu = get_ndevices() / 2;
     		stoprcu = get_ndevices();
-
+    
     		for (int rcuout = startrcu; rcuout < stoprcu; rcuout++) {
     			if (mask[rcuout]) {
     				if (count > 0)
     					gnuplot_cmd(handle2, ",");
     				count++;
-
+    
     				switch (m_type) {
     					case Statistics::SUBBAND_POWER:
     						gnuplot_cmd(handle2, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
@@ -2713,7 +2314,6 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
     						break;
     					default:
     						logMessage(cerr,"Error: invalid m_type");
-	   						rspctl_exit_code = EXIT_FAILURE;
     						exit(EXIT_FAILURE);
     						break;
     				}
@@ -2749,7 +2349,6 @@ void StatisticsCommand::dump_statistics(Array<double, 2>& stats, const Timestamp
 
 				default:
 					logMessage(cerr,"Error: invalid m_type");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 					break;
 			}
@@ -2760,7 +2359,6 @@ void StatisticsCommand::dump_statistics(Array<double, 2>& stats, const Timestamp
 			if (stats.extent(secondDim)
 					!= (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double), stats.extent(secondDim), file)) {
 				logMessage(cerr,formatString("Error: unable to write to file %s",fileName));
-	   			rspctl_exit_code = EXIT_FAILURE;
 				exit(EXIT_FAILURE);
 			}
 			result_device++;
@@ -2775,7 +2373,6 @@ GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
 
 		if (RSP_SUCCESS != ack.status) {
 			logMessage(cerr,"Error: failed to subscribe to statistics");
-	   		rspctl_exit_code = EXIT_FAILURE;
 			exit(EXIT_FAILURE);
 		}
 
@@ -2792,7 +2389,6 @@ GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
 	}
 	else {
 		logMessage(cerr,"Error: statistics update failed.");
-	   	rspctl_exit_code = EXIT_FAILURE;
 	}
 
 	return GCFEvent::HANDLED;
@@ -2828,7 +2424,6 @@ void XCStatisticsCommand::send()
 	else {
 		// SET
 		logMessage(cerr,"Error: set mode not support for option '--xcstatistics'");
-	   	rspctl_exit_code = EXIT_FAILURE;
 		GCFScheduler::instance()->stop();
 	}
 }
@@ -2853,7 +2448,6 @@ void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats,
 	else {
 		if ( sum(stats.shape()) != sum(m_stats.shape()) ) {
 			logMessage(cerr, "Error: xcstatistics shape mismatch");
-	   		rspctl_exit_code = EXIT_FAILURE;
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -2933,15 +2527,14 @@ void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, 
 	gnuplot_cmd(handle, plotcmd);
 
 	gnuplot_cmd(handle, "plot \"-\" binary array=%dx%d format='%%double' with image\n", n_ant, n_ant);
-
+    
     // already log taken in convert_to_amplphase function
 	//if (!m_xcangle) {
 	//	thestats = 10.0*log(thestats)/log(10.0);
 	//}
 
-	if (thestats.size() != fwrite(thestats.data(), sizeof(double), thestats.size(), handle->gnucmd)) {
+	if ((size_t)thestats.size() != fwrite(thestats.data(), sizeof(double), (size_t)thestats.size(), handle->gnucmd)) {
 		logMessage(cerr, "Failed to write to gnuplot.");
-	   	rspctl_exit_code = EXIT_FAILURE;
 	}
 }
 
@@ -2966,10 +2559,9 @@ void XCStatisticsCommand::dump_xcstatistics(Array<complex<double>, 4>& stats, co
 	FILE* file = getFile(0,fileName);
 
 	if (thestats.size()
-			!= fwrite(thestats.data(), sizeof(complex<double>),
+			!= (int)fwrite(thestats.data(), sizeof(complex<double>),
 					thestats.size(), file)) {
 		logMessage(cerr,formatString("Error: unable to write to file %s",fileName));
-	   	rspctl_exit_code = EXIT_FAILURE;
 		exit(EXIT_FAILURE);
 	}
 }
@@ -2981,7 +2573,6 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
 
 		if (RSP_SUCCESS != ack.status) {
 			logMessage(cerr,"Error: failed to subscribe to xcstatistics");
-	   		rspctl_exit_code = EXIT_FAILURE;
 			exit(EXIT_FAILURE);
 		}
 		else {
@@ -3001,7 +2592,6 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
 		Range r1, r2;
 		if (!getRSPRange2(r1, r2)) {
 			logMessage(cerr, "Error: RSP range selection must have exactly 4 numbers");
-	   		rspctl_exit_code = EXIT_FAILURE;
 			exit(EXIT_FAILURE);
 		}
 		Array<complex<double>, 4> selection = upd.stats()(Range::all(), Range::all(), r1, r2).copy();
@@ -3045,7 +2635,6 @@ GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
 	}
 	else {
 		logMessage(cerr,"Error: RSP_GETVERSION command failed.");
-	   	rspctl_exit_code = EXIT_FAILURE;
 	}
 	GCFScheduler::instance()->stop();
 
@@ -3089,7 +2678,6 @@ GCFEvent::TResult LatencyCommand::ack(GCFEvent& e)
 	}
 	else {
 		logMessage(cerr,"Error: RSP_GETLATENCY command failed.");
-	   	rspctl_exit_code = EXIT_FAILURE;
 	}
 	GCFScheduler::instance()->stop();
 
@@ -3175,7 +2763,6 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 		m_nrspboards   = ack.n_rspboards;
 		m_maxrspboards = ack.max_rspboards;
 		gHasSplitter   = ack.hasSplitter;
-		gHasAartfaac   = ack.hasAartfaac;
 		LOG_DEBUG_STR(formatString("n_rcus     =%d",m_nrcus));
 		LOG_DEBUG_STR(formatString("n_rspboards=%d of %d",  m_nrspboards, m_maxrspboards));
 		RSPGetbitmodeEvent	getBitmode;
@@ -3196,7 +2783,6 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 		// connected to RSPDriver, parse the arguments
 		if (!(itsCommand = parse_options(m_argc, m_argv))) {
 			logMessage(cerr,"Warning: no command specified.");
-	   		rspctl_exit_code = EXIT_FAILURE;
 			exit(EXIT_FAILURE);
 		}
 		if (itsNeedClockOnce) {
@@ -3243,7 +2829,6 @@ GCFEvent::TResult RSPCtl::getClock(GCFEvent& e, GCFPortInterface& port)
 		RSPGetclockackEvent  answer(e);
 		if (answer.status != RSP_SUCCESS) {
 			logMessage(cerr, "Getting the clock failed.");
-	   		rspctl_exit_code = EXIT_FAILURE;
 			exit(EXIT_FAILURE);
 		}
 		logMessage(cerr, formatString("Current clockvalue is %d Mhz", answer.clock));
@@ -3264,7 +2849,6 @@ GCFEvent::TResult RSPCtl::getClock(GCFEvent& e, GCFPortInterface& port)
 	case F_DISCONNECTED: {
 		port.close();
 		logMessage(cerr,formatString("Error: port '%s' disconnected.",port.getName().c_str()));
-	   	rspctl_exit_code = EXIT_FAILURE;
 		exit(EXIT_FAILURE);
 	}
 	break;
@@ -3302,7 +2886,6 @@ GCFEvent::TResult RSPCtl::sub2Clock(GCFEvent& e, GCFPortInterface& port)
 		RSPSubclockackEvent  answer(e);
 		if (answer.status != RSP_SUCCESS) {
 			logMessage(cerr, "Subscription on the clock failed.");
-	   		rspctl_exit_code = EXIT_FAILURE;
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -3328,7 +2911,6 @@ GCFEvent::TResult RSPCtl::sub2Clock(GCFEvent& e, GCFPortInterface& port)
 	case F_DISCONNECTED: {
 		port.close();
 		logMessage(cerr,formatString("Error: port '%s' disconnected.",port.getName().c_str()));
-	   	rspctl_exit_code = EXIT_FAILURE;
 		exit(EXIT_FAILURE);
 	}
 	break;
@@ -3364,7 +2946,6 @@ GCFEvent::TResult RSPCtl::sub2Splitter(GCFEvent& e, GCFPortInterface& port)
 		RSPSubsplitterackEvent answer(e);
 		if (answer.status != RSP_SUCCESS) {
 			logMessage(cerr, "Subscription on the splitter-state failed.");
-	   		rspctl_exit_code = EXIT_FAILURE;
 			exit(EXIT_FAILURE);
 		}
 		// wait for update event
@@ -3387,7 +2968,6 @@ GCFEvent::TResult RSPCtl::sub2Splitter(GCFEvent& e, GCFPortInterface& port)
 	case F_DISCONNECTED: {
 		port.close();
 		logMessage(cerr,formatString("Error: port '%s' disconnected.",port.getName().c_str()));
-	   	rspctl_exit_code = EXIT_FAILURE;
 		exit(EXIT_FAILURE);
 	}
 	break;
@@ -3423,7 +3003,6 @@ GCFEvent::TResult RSPCtl::sub2Bitmode(GCFEvent& e, GCFPortInterface& port)
 		RSPSubbitmodeackEvent answer(e);
 		if (answer.status != RSP_SUCCESS) {
 			logMessage(cerr, "Subscription on the bitmode failed.");
-	   		rspctl_exit_code = EXIT_FAILURE;
 			exit(EXIT_FAILURE);
 		}
 		// wait for update event
@@ -3434,7 +3013,7 @@ GCFEvent::TResult RSPCtl::sub2Bitmode(GCFEvent& e, GCFPortInterface& port)
 		RSPUpdbitmodeEvent  update(e);
 		itsNbitsPerSample = MIN_BITS_PER_SAMPLE;
 		for (int i = 0; i < m_nrspboards; i++) {
-			itsNbitsPerSample = (update.bits_per_sample[i] > itsNbitsPerSample) ?
+			itsNbitsPerSample = (update.bits_per_sample[i] > itsNbitsPerSample) ? 
 								 update.bits_per_sample[i] : itsNbitsPerSample;
 		}
 		logMessage(cerr, formatString("The bitmode is currently %d", itsNbitsPerSample));
@@ -3445,7 +3024,6 @@ GCFEvent::TResult RSPCtl::sub2Bitmode(GCFEvent& e, GCFPortInterface& port)
 	case F_DISCONNECTED: {
 		port.close();
 		logMessage(cerr,formatString("Error: port '%s' disconnected.",port.getName().c_str()));
-	   	rspctl_exit_code = EXIT_FAILURE;
 		exit(EXIT_FAILURE);
 	}
 	break;
@@ -3476,7 +3054,6 @@ GCFEvent::TResult RSPCtl::doCommand(GCFEvent& e, GCFPortInterface& port)
 	case F_DISCONNECTED: {
 		port.close();
 		logMessage(cerr,formatString("Error: port '%s' disconnected.",port.getName().c_str()));
-	   	rspctl_exit_code = EXIT_FAILURE;
 		exit(EXIT_FAILURE);
 	}
 	break;
@@ -3521,11 +3098,7 @@ GCFEvent::TResult RSPCtl::doCommand(GCFEvent& e, GCFPortInterface& port)
 	case RSP_GETSWAPXYACK:
 	case RSP_SETBITMODEACK:
 	case RSP_GETBITMODEACK:
-    case RSP_SETSDOMODEACK:
-	case RSP_GETSDOMODEACK:
-    case RSP_SETSDOACK:
-	case RSP_GETSDOACK:
-    
+
 		status = itsCommand->ack(e); // handle the acknowledgement
 		gClockChanged = false;
 		gBitmodeChanged = false;
@@ -3552,7 +3125,7 @@ GCFEvent::TResult RSPCtl::doCommand(GCFEvent& e, GCFPortInterface& port)
 		RSPUpdbitmodeEvent  update(e);
 		itsNbitsPerSample = MIN_BITS_PER_SAMPLE;
 		for (int i = 0; i < m_nrspboards; i++) {
-			itsNbitsPerSample = (update.bits_per_sample[i] > itsNbitsPerSample) ?
+			itsNbitsPerSample = (update.bits_per_sample[i] > itsNbitsPerSample) ? 
 								 update.bits_per_sample[i] : itsNbitsPerSample;
 		}
 		gBitmodeChanged = true;
@@ -3562,7 +3135,6 @@ GCFEvent::TResult RSPCtl::doCommand(GCFEvent& e, GCFPortInterface& port)
 
 	default:
 		logMessage(cerr,formatString("Error: unhandled event %s.", eventName(e).c_str()));
-	   	rspctl_exit_code = EXIT_FAILURE;
 		GCFScheduler::instance()->stop();
 		break;
 	}
@@ -3683,14 +3255,7 @@ static void usage(bool exportMode)
 	cout << "rspctl --datastream[=0|1|2|3]                  # set or get the status of data stream to cep" << endl;
 	cout << "rspctl --swapxy[=0|1] [--select=<set>]         # set or get the status of xy swap, 0=normal, 1=swapped" << endl;
 	cout << "rspctl --bitmode[=4|8|16]                      # set or get the number of bits per sample" << endl;
-	cout << endl;
-    cout << "--- Subband Data Output (SDO) --------------------------------------------------------------------------------" << endl;
-    cout << "rspctl --sdoenable[=0|1]                       # enable (or disable) sdo output" << endl;
-    cout << "rspctl --sdomode[=4|5|8|16]                    # set or get the number of bits per sample" << endl;
-    cout << "rspctl --sdo                 [--select=<set>]  # get sdo selection" << endl;
-    cout << "rspctl --sdo=<set>           [--select=<set>]  # set sdo selection" << endl;
-
-    if (exportMode) {
+	if (exportMode) {
 	cout << endl;
 	cout << "--- Raw register control -------------------------------------------------------------------------------------" << endl;
 	cout << " ### WARNING: to following commands may crash the RSPboard when used wrong! ###" << endl;
@@ -3740,9 +3305,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{ "wg",             optional_argument, 0, 'g' },
 		{ "help",           no_argument,       0, 'h' },
 		{ "integration",    required_argument, 0, 'i' },
-		{ "sdo",            optional_argument, 0, 'j' },
-		{ "sdomode",        optional_argument, 0, 'k' },
-        { "select",         required_argument, 0, 'l' },
+		{ "select",         required_argument, 0, 'l' },
 		{ "rcumode",        required_argument, 0, 'm' },
 		{ "rcuattenuation", required_argument, 0, 'n' },
 		{ "swapxy",         optional_argument, 0, 'o' },
@@ -3765,7 +3328,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{ "wgmode",         required_argument, 0, 'G' },
 		{ "hbadelays",      optional_argument, 0, 'H' },
 		{ "specinv",        optional_argument, 0, 'I' },
-		{ "sdoenable",      optional_argument, 0, 'J' },
 		{ "bitmode",        optional_argument, 0, 'K' },
 		{ "latency",        no_argument,       0, 'L' },
 		{ "phase",          required_argument, 0, 'P' },
@@ -3779,13 +3341,15 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{ "splitter",       optional_argument, 0, 'Z' },
 		{ "readblock",      required_argument, 0, '1' },
 		{ "writeblock",     required_argument, 0, '2' },
+
+
 		{ 0, 0, 0, 0 },
 	};
 
 	realDelays = false;
 	while (1) {
 		int option_index = 0;
-		int c = getopt_long(argc, argv, "a::b:c::d:e::g::hi:j::k::l:m:n:o::p::qr::s::t::vw::xy:z::A:BC::D:E::G:H::I::J::K::LP:QR::ST::VXY::Z::1:2:", long_options, &option_index);
+		int c = getopt_long(argc, argv, "a::b:c::d:e::g::hi:l:m:n:p::qr::s::t::vw::xy:z::A:BC::D:E::G:H::I::K::LP:QR::ST::VXY::Z::1:2:", long_options, &option_index);
 
 		if (c == -1) // end of argument list reached?
 			break;
@@ -3795,19 +3359,16 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			if (optarg) {
 				if (!command || 0 == command->get_ndevices()) {
 					logMessage(cerr,"Error: 'command' argument should come before --select argument");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 				select = strtolist(optarg, command->get_ndevices());
 				if (select.empty()) {
 					logMessage(cerr,"Error: invalid or missing '--select' option");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 			}
 			else {
 				logMessage(cerr,"Error: option '--select' requires an argument");
-	   			rspctl_exit_code = EXIT_FAILURE;
 			}
 		break;
 
@@ -3815,19 +3376,16 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			if (optarg) {
 				if (!command || 0 == command->get_ndevices()) {
 					logMessage(cerr,"Error: 'command' argument should come before --beamlets argument");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 				beamlets = strtolist(optarg, maxBeamlets(itsNbitsPerSample));
 				if (beamlets.empty()) {
 					logMessage(cerr,"Error: invalid or missing '--beamlets' option");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 			}
 			else {
 				logMessage(cerr,"Error: option '--beamlets' requires an argument");
-	   			rspctl_exit_code = EXIT_FAILURE;
 			}
 		break;
 
@@ -3848,7 +3406,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				if (numitems == 0 || numitems == EOF) {
 					logMessage(cerr,"Error: invalid weights value. Should be of the format "
 					"'--weights=value.re[,value.im]' where value is a floating point value in the range (-1,1].");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 				weightscommand->setValue(complex<double>(re,im));
@@ -3873,13 +3430,11 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				if (numitems == 0 || numitems == EOF) {
 					logMessage(cerr,"Error: invalid aweights value. Should be of the format "
 					"'--weights=amplitude[,angle]' where angle is in degrees.");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 
 				if (angle < -180.0 || angle > 180.0) {
 					logMessage(cerr, "Error: invalid angle, should be between -180 < angle < 180.0.");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 
@@ -3896,7 +3451,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			SubbandsCommand* subbandscommand = new SubbandsCommand(*itsRSPDriver, itsNbitsPerSample);
 			subbandscommand->setType(SubbandSelection::BEAMLET);
 			command = subbandscommand;
-
+			
 			command->set_ndevices(m_nrcus);
 
 			if (optarg) {
@@ -3904,7 +3459,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				list<int> subbandlist = strtolist(optarg, MAX_SUBBANDS);
 				if (subbandlist.empty()) {
 					logMessage(cerr,"Error: invalid or empty '--subbands' option");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 				subbandscommand->setSubbandList(subbandlist);
@@ -3926,7 +3480,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				unsigned long controlopt = strtoul(optarg, 0, 0);
 				if (controlopt > 0xFFFFFFFF) {
 					logMessage(cerr,"Error: option '--rcu' parameter must be < 0xFFFFFFFF");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					delete command;
 					return 0;
 				}
@@ -3956,7 +3509,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			if ('m' == c || 'n' == c || 'y' == c) {
 				if (!optarg) {
 					logMessage(cerr,"Error: option requires an argument");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					delete command;
 					return 0;
 				}
@@ -3970,7 +3522,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				controlopt = strtoul(optarg, 0, 0);
 				if (controlopt >= 8) {
 					logMessage(cerr,"Error: --rcumode value should be < 8");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					delete command;
 					return 0;
 				}
@@ -3997,7 +3548,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				controlopt = strtoul(optarg, 0, 0);
 				if (controlopt > 31) {
 					logMessage(cerr,"Error: --rcuattenuation value should be <= 31");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					delete command;
 					return 0;
 				}
@@ -4008,7 +3558,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				controlopt = strtoul(optarg, 0, 0);
 				if (controlopt > 127) {
 					logMessage(cerr,"Error: --rcudelay value should be <= 127");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					delete command;
 					return 0;
 				}
@@ -4064,7 +3613,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				double frequency = atof(optarg);
 				if ( frequency < 0 ) {
 					logMessage(cerr,"Error: option '--wg' parameter must be > 0");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					delete command;
 					return 0;
 				}
@@ -4081,7 +3629,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				int mode = atoi(optarg);
 				if (mode != 0 && mode != 1 && mode != 3 && mode != 5) {
 					logMessage(cerr,"Error: option '--wgmode' parameter must be 0,1,3 or 5");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					delete command;
 					return 0;
 				}
@@ -4097,7 +3644,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				double phase = atof(optarg);
 				if (phase < 0 || phase > (M_PI * 2.0)) {
 					logMessage(cerr,"Error: option '--phase' parameter must be between 0 and 2 pi");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					delete command;
 					return 0;
 				}
@@ -4113,7 +3659,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				double amplitude = atof(optarg);
 				if (amplitude > 2.0 || amplitude < 0.0) {
 					logMessage(cerr, "Error: option '--amplitude' paramter must be >= 0 and <= 1.0");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					delete command;
 					return 0;
 				}
@@ -4169,7 +3714,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		}
 		break;
 
-		case 'K': // --bitmode
+		case 'K': // bitmode
 		{
 			if (command)
 				delete command;
@@ -4187,57 +3732,11 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				unsigned long bitmode = strtoul(optarg, 0, 0);
 				if (bitmode != 4 && bitmode != 8 && bitmode != 16) {
 					logMessage(cerr, formatString("Error: bitmode value can only be 4, 8 or 16, not %ld", bitmode));
-	   				rspctl_exit_code = EXIT_FAILURE;
 				}
 				bitmodecommand->bitmode(bitmode);
 			}
 		} break;
-        
-        case 'j': // --sdo
-		{
-			if (command)
-				delete command;
-			SDOCommand* sdocommand = new SDOCommand(*itsRSPDriver);
-			command = sdocommand;
 
-			command->set_ndevices(m_nrcus);
-
-			if (optarg) {
-				sdocommand->setMode(false);
-				list<int> subbandlist = strtolist(optarg, MAX_SUBBANDS);
-				if (subbandlist.empty()) {
-					logMessage(cerr,"Error: invalid or empty '--sdo' option");
-	   				rspctl_exit_code = EXIT_FAILURE;
-					exit(EXIT_FAILURE);
-				}
-				sdocommand->setSubbandList(subbandlist);
-			}
-		}
-		break;
-        
-        case 'k': // --sdomode
-		{
-			if (command)
-				delete command;
-			SDOmodeCommand* sdomodecommand = new SDOmodeCommand(*itsRSPDriver);
-			command = sdomodecommand;
-
-			command->set_ndevices(m_nrspboards);
-			select.clear();
-			for (int i = 0; i < m_nrspboards; ++i) {
-				select.push_back(i);
-			}
-
-			if (optarg) {
-				sdomodecommand->setMode(false);
-				unsigned long sdomode = strtoul(optarg, 0, 0);
-				if (sdomode != 4 && sdomode != 5 && sdomode != 8 && sdomode != 16) {
-					logMessage(cerr, formatString("Error: sdomode value can only be 4, 5, 8 or 16, not %ld", sdomode));
-	   				rspctl_exit_code = EXIT_FAILURE;
-				}
-				sdomodecommand->sdomode(sdomode);
-			}
-		} break;
 		case 't': // --statistics
 		{
 			if (command)
@@ -4246,9 +3745,9 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			command = statscommand;
 
 			command->set_ndevices(m_nrcus);
-
+            
             itsNeedSplitter = true;
-
+            
 			if (optarg) {
 				if (!strcmp(optarg, "subband")) {
 					statscommand->setType(Statistics::SUBBAND_POWER);
@@ -4259,7 +3758,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 					itsNeedBitmode  = true;
 				} else {
 					logMessage(cerr, formatString("Error: invalid statistics type %s", optarg));
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 			}
@@ -4301,7 +3799,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 				if (subband < 0 || subband >= MAX_SUBBANDS) {
 					logMessage(cerr,formatString("Error: argument to --xcsubband out of range, value must be >= 0 and < %d",MAX_SUBBANDS));
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 
@@ -4328,7 +3825,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				double clock = atof(optarg);
 				if ( 0 != (uint32)clock && 160 != (uint32)clock && 200 != (uint32)clock) {
 					logMessage(cerr,"Error: option '--clocks' parameter must be 0 (off), 160 (MHz) or 200 (MHz)");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					delete command;
 					return 0;
 				}
@@ -4412,17 +3908,14 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 						list<int> subbandlist = strtolist(liststring, MAX_SUBBANDS);
 						if (subbandlist.empty()) {
 							logMessage(cerr,"Error: missing or invalid subband set '--tbbmode=subbands' option");
-	   						rspctl_exit_code = EXIT_FAILURE;
 							exit(EXIT_FAILURE);
 						}
 						tbbcommand->setSubbandSet(subbandlist);
 					} else {
 						logMessage(cerr,"Error: missing or invalid subband set '--tbbmode=subbands' option");
-	   					rspctl_exit_code = EXIT_FAILURE;
 					}
 				} else {
 					logMessage(cerr, formatString("Error: invalid statistics type %s", optarg));
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 			}
@@ -4456,22 +3949,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		}
 		break;
 
-        case 'J': // --sdoenable 
-		{
-			if (command)
-				delete command;
-			SDOenableCommand* sdoEnableCmd = new SDOenableCommand(*itsRSPDriver);
-			command = sdoEnableCmd;
-
-			command->set_ndevices(m_nrcus);
-
-			if (optarg) {
-				sdoEnableCmd->setMode(false);
-				sdoEnableCmd->setEnable(strncmp(optarg, "0", 1));
-			}
-		}
-		break;
-        
 		case 'Y': // --datastream
 		{
 			if (command)
@@ -4504,20 +3981,17 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			if (optarg) {
 				if (!command || 0 == command->get_ndevices()) {
 					logMessage(cerr,"Error: 'command' argument should come before --duration argument");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 				StatisticsBaseCommand* statisticsBaseCommand = dynamic_cast<StatisticsBaseCommand*>(command);
 				if (statisticsBaseCommand == 0) {
 					logMessage(cerr,"Error: 'duration' argument can not be used in conjunction with the specified command");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 				statisticsBaseCommand->setDuration(atoi(optarg));
 			}
 			else {
 				logMessage(cerr,"Error: option '--duration' requires an argument");
-	   			rspctl_exit_code = EXIT_FAILURE;
 			}
 		break;
 
@@ -4525,20 +3999,17 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			if (optarg) {
 				if (!command || 0 == command->get_ndevices()) {
 					logMessage(cerr,"Error: 'command' argument should come before --integration argument");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 				StatisticsBaseCommand* statisticsBaseCommand = dynamic_cast<StatisticsBaseCommand*>(command);
 				if (statisticsBaseCommand == 0) {
 					logMessage(cerr,"Error: 'integration' argument can not be used in conjunction with the specified command");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 				statisticsBaseCommand->setIntegration(atoi(optarg));
 			}
 			else {
 				logMessage(cerr,"Error: option '--integration' requires an argument");
-	   			rspctl_exit_code = EXIT_FAILURE;
 			}
 		break;
 
@@ -4546,20 +4017,17 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			if (optarg) {
 				if (!command || 0 == command->get_ndevices()) {
 					logMessage(cerr,"Error: 'command' argument should come before --directory argument");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 				StatisticsBaseCommand* statisticsBaseCommand = dynamic_cast<StatisticsBaseCommand*>(command);
 				if (statisticsBaseCommand == 0) {
 					logMessage(cerr,"Error: 'directory' argument can not be used in conjunction with the specified command");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 				statisticsBaseCommand->setDirectory(optarg);
 			}
 			else {
 				logMessage(cerr,"Error: option '--directory' requires an argument");
-	   			rspctl_exit_code = EXIT_FAILURE;
 			}
 		break;
 
@@ -4577,7 +4045,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			if (!optarg) {
 				usage(false);
 				logMessage(cerr, "Need arguments for dataBlock");
-	   			rspctl_exit_code = EXIT_FAILURE;
 				exit(EXIT_FAILURE);
 			}
 
@@ -4592,7 +4059,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				int numItems = sscanf(optarg, "%u,%[0-9A-Fa-f],%u,%u", &rspBoard, &addrStr[0], &offset, &dataLen);
 				if (numItems != 4) {
 					logMessage(cerr, "Need 4 arguments: rspBoardNr, hexAddress, offset, datalen");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 			}
@@ -4600,12 +4066,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				int numItems = sscanf(optarg, "%u,%[0-9A-Fa-f],%u,%s", &rspBoard, &addrStr[0], &offset, &dataStr[0]);
 				if (numItems != 4) {
 					logMessage(cerr, "Need 4 arguments: rspBoardNr, hexAddress, offset, hexData");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 				if (strlen(dataStr) % 1) {
 					logMessage(cerr, "Datastring must have an even number of characters");
-	   				rspctl_exit_code = EXIT_FAILURE;
 					exit(EXIT_FAILURE);
 				}
 				dataLen = strlen(dataStr) / 2;
@@ -4622,7 +4086,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			// convert addrString to address value (reverse order on intel)
 			if (strlen(addrStr) != 8) {
 				logMessage(cerr, "Address string must have 8 characters");
-	   			rspctl_exit_code = EXIT_FAILURE;
 				exit(EXIT_FAILURE);
 			}
 			address = 0;
@@ -4650,7 +4113,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		case '?':
 		default:
 			logMessage(cerr, "Error: invalid option");
-	   		rspctl_exit_code = EXIT_FAILURE;
 			exit(EXIT_FAILURE);
 		break;
 		}
@@ -4680,7 +4142,6 @@ std::list<int> RSPCtl::strtolist(const char* str, int max)
 		start = (end ? (*end ? end + 1 : 0) : 0); // advance
 		if (val >= max || val < 0) {
 			logMessage(cerr,formatString("Error: value %ld out of range",val));
-	   		rspctl_exit_code = EXIT_FAILURE;
 			resultset.clear();
 			return resultset;
 		}
@@ -4695,7 +4156,6 @@ std::list<int> RSPCtl::strtolist(const char* str, int max)
 					}
 					if (val < prevval) {
 						logMessage(cerr,"Error: invalid range specification");
-	   					rspctl_exit_code = EXIT_FAILURE;
 						resultset.clear();
 						return resultset;
 					}
@@ -4715,7 +4175,6 @@ std::list<int> RSPCtl::strtolist(const char* str, int max)
 
 			default:
 				logMessage(cerr,formatString("Error: invalid character %c",*end));
-	   			rspctl_exit_code = EXIT_FAILURE;
 				resultset.clear();
 				return resultset;
 				break;
@@ -4740,7 +4199,7 @@ void RSPCtl::logMessage(ostream& stream, const string& message)
 	} // namespace rspctl
 } // namespace LOFAR
 
-//)
+//
 // MAIN
 //
 
@@ -4766,5 +4225,5 @@ int main(int argc, char** argv)
 
 	LOG_INFO("Normal termination of program");
 
-	return (rspctl_exit_code);
+	return (0);
 }

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ namespace LOFAR {
 //
 // TBBTrigger(...)
 //
-	  TBBTrigger::TBBTrigger (uint32	rcuNr, 		uint32	time, 		uint32	sampleNr, NsTimestamp nsTimestamp,
+	  TBBTrigger::TBBTrigger (uint32	rcuNr, 		uint32	time, 		uint32	sampleNr, RTC::NsTimestamp nsTimestamp,
 						uint32	sum, 	uint32	nrSamples,	uint32	peakValue,	uint32	missed) :
 	itsRcuNr	(rcuNr),
 	itsTime 	(time),

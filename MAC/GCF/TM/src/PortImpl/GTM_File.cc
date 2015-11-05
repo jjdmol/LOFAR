@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -53,8 +53,10 @@ GTMFile::GTMFile(GCFRawPort& port) :
 GTMFile::~GTMFile()
 {
 	close();
+
 	GTMFileHandler::release();
 	_pHandler = 0;
+
 	itsScheduler = 0;
 }
 
@@ -63,17 +65,20 @@ bool GTMFile::close()
 	bool result(true);
 
 	if (_fd > -1) { 
-		ASSERT(_pHandler);
 		_pHandler->deregisterFile(*this);
+
 		result = (::close(_fd) == 0);
+
 		if (!result) {
 			LOG_ERROR(formatString ( "::close, error: %s", strerror(errno)));
+
 			// there is nothing we can do at this point, since we cannot know
 			// whether the fd is still valid.
 		}
 
 		_fd = -1;
 	}
+
 	return result;
 }
 
@@ -119,18 +124,16 @@ void GTMFile::doWork()
 
 void GTMFile::setBlocking(bool	blocking) const
 {
-	if (_fd <= -1)
+	if (_fd < -1)
 		return;
 
 	int flags = fcntl(_fd, F_GETFL);
 
-	if (blocking) {
-		fcntl(_fd, F_SETFL, flags & ~O_NONBLOCK);
-	} else {
+    if (blocking) {
 		fcntl(_fd, F_SETFL, flags | O_NONBLOCK);
+	} else {
+		fcntl(_fd, F_SETFL, flags & ~O_NONBLOCK);
 	}
-
-	LOG_DEBUG_STR("FD " << _fd << " set to " << (blocking ? "blocking" : "non blocking"));
 }
 
 //

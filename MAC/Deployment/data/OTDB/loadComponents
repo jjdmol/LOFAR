@@ -4,7 +4,7 @@
 #
 # Copyright (C) 2006-2012
 # ASTRON (Netherlands Foundation for Research in Astronomy)
-# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,35 +35,16 @@ SyntaxError()
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
 	echo ""
 	echo "Syntax: $(basename $0) -D databasename [-v versionnr] [-q qualifier]" 
-	echo "                       [-H hostname] [-d execdir] [-c compdir] "
-	echo "                       [-o logfile ] [-l]"
-	echo "  - if database name is empty, only tmp files are created (for comparison)"
-	echo "  - versionnumber is svn revision number (max 6 digits) [Current]"
-	echo "  - qualifier can be development|test|operational|example []"
-	echo "  - hostname is the hostname of the database server [localhost]" 
-	echo "  - execdir is the path to the executable load_OTDB_comps  (searches in PATH)"
-	echo "  - compdir is the directory of the component files [./]"
-	echo "  - logfile is logfile name with path [/opt/lofar/var/log/loadComponents.log]" 
-        echo "  - Option -l says this is run locally in your workspace (checked out SVN tree)"
+	echo "                       [-H hostname] [-d directory] [-l]"
+	echo "        - databasename is always needed"
+	echo "        - versionnumber is svn revision number (max 6 digits) [Current]"
+	echo "        - qualifier can be development|test|operational|example []"
+	echo "        - hostname is the hostname of the database server [sas001]" 
+	echo "        - directory is the path to the executable load_OTDB_comps [/opt/lofar/bin]"
+        echo "        - Option -l says this is run locally in a checked out SVN tree"
 	echo ""
 }
-# Replace the placeholder @VERSION@ in file Version.comp.tmpl by the version
-# provided on commandline
 
-createVersionFile()
-{
-if [ -e Version.comp.tmpl ]; then 
-   sed s/@VERSION@/$1/ Version.comp.tmpl > Version.comp     
-   if [ $? -ne 0 ]; then 
-     echo "Could not create Version.comp, will not continue!"
-     exit 1
-   fi
-else
-   echo "Could not find Version.comp.tmpl, will not continue!"
-   exit 1
-fi
-}
-  
 #
 # Construct a file that contains node-childnode relations and the file it is mentioned in
 # Syntax: componentname file | componentname.childname file
@@ -149,13 +130,11 @@ makeOrderFile()
 DATABASE=
 VERSION=
 QUAL=
-HOST="localhost"
-DIR=
+HOST=`hostname -s`
+DIR="/opt/lofar/bin"
 localUse=0
-DB_Update=1
-wdir="." # default location of comp, gcomp files
-logfile="/opt/lofar/var/log/loadComponents.log"
-while getopts "hD:v:q:H:d:c:o:l" OPTION
+wdir="/opt/lofar/etc/otdb" # default location of comp, gcomp files 
+while getopts "hD:v:q:H:d:l" OPTION
 do
      case $OPTION in
 
@@ -175,18 +154,12 @@ do
 	 H)
 	     HOST=$OPTARG
 	     ;;
-	 d)  
-	     DIR=$OPTARG    
+	 d)
+	     DIR=$OPTARG      
 	     ;;
-         c)
-	     wdir=$OPTARG
+         l)  localUse=1
+             wdir="." 
 	     ;;
-         l)  
-	     localUse=1
-	     ;;
-         o)
-             logfile=$OPTARG
-             ;;
 	 ?)
              SyntaxError
              exit 1
@@ -195,7 +168,9 @@ do
 done
 
 if [[ -z $DATABASE ]]; then 
-  DB_Update=0
+  echo "Please provide a database name!"
+  SyntaxError
+  exit
 fi
 
 # Determine SVN version of build or check out, needed for versioning comp.
@@ -209,6 +184,7 @@ if [[ -z $VERSION ]]; then
   fi
 fi 
 
+if [ -e $DIR/load_OTDB_comps ]; then 
   cd $wdir
 
   # We use a lot of tmpfile to make life easier.
@@ -217,10 +193,6 @@ fi
   ORDERFILE=/tmp/fileOrder
   UNUSEDFILES=/tmp/unusedFiles
   WORKFILE=/tmp/tmpFile4load_components
-
-  # First create Version.comp to contain version number of the components
-  echo "Creating Version.comp file with versionnumber "$VERSION
-  createVersionFile $VERSION
 
   # First construct gcompfile using .base-files.
   if [ $localUse = 1 ]; then 
@@ -249,47 +221,36 @@ fi
   makeOrderFile
   rm -f ${RELATIONSFILE} ${LEVELFILE}
 
-if [ $DB_Update -eq 1 ]; then
-  if [ "$DIR" != "" ]; then
-    prog=$DIR/load_OTDB_comps
-    if [ ! -e $prog ]; then 
-      echo "Cannot find $prog"
-      exit
-    fi
-  else
-    prog=`which load_OTDB_comps 2>/dev/null`
-    if [ $? != 0 ]; then
-      echo "Cannot find load_OTDB_comps in PATH"
-      exit    
-    fi
+  # Construct commandline for load_OTDB_comps
+  arguments=$DATABASE
+  arguments=$arguments" "${ORDERFILE}
+  arguments=$arguments" -v "$VERSION 
+  arguments=$arguments" -h "$HOST
+  if [ "$QUAL" != "" ]; then 
+    arguments=$arguments" -q "$QUAL 
   fi
-  if [ -x $prog ]; then 
-    # Construct commandline for load_OTDB_comps
-    arguments=$DATABASE
-    arguments=$arguments" "${ORDERFILE}
-    arguments=$arguments" -v "$VERSION 
-    arguments=$arguments" -h "$HOST
-    if [ "$QUAL" != "" ]; then 
-      arguments=$arguments" -q "$QUAL 
-    fi
+  if [ $localUse = 0 ]; then
+    logfile="/opt/lofar/var/log/loadComponents.log"
+  else
+    logfile="./loadComponents.log"
+  fi
 
-    echo "Executing: $prog $arguments 2>&1 1>$logfile"
-    $prog $arguments 2>&1 1>$logfile
-    # when there are files we didn't use report that to the user
-    if [ -s ${UNUSEDFILES} ]; then
+  echo "Executing: load_OTDB_comps $arguments 2>&1 1>$logfile"
+  load_OTDB_comps $arguments 2>&1 1>$logfile
+  # when there are files we didn't use report that to the user
+  if [ -s ${UNUSEDFILES} ]; then
 	echo
 	echo "  The following files are NOT LOADED into the database because they are NOT part of the current defined LOFAR tree:"
 	cat ${UNUSEDFILES}
-    fi
-    echo "Done; Logfile is $logfile"
-
-    # Cleanup
-    rm -f ${UNUSEDFILES} ${ORDERFILE}
-  else
-    echo "Cannot execute $prog (not executable)"
   fi
+  echo "Done; Logfile is $logfile"
+
+  # Cleanup
+  rm -f ${UNUSEDFILES} ${ORDERFILE}
 else
-  echo "All component files created; no database upload requested. See ${ORDERFILE} for used and ${UNUSEDFILES} for unused component files"
+  echo "Cannot execute load_OTDB_comps (not there, or not executable)"
 fi
 
 exit
+
+

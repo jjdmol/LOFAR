@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -187,12 +187,12 @@ int main (int	argc, char*	argv[]) {
 		treeInfo = conn.getTreeInfo(VHtreeID);
 		LOG_INFO_STR(treeInfo);
 
-		LOG_INFO("Exporting whole tree to 'tVHtree_tmp.treeExport'");
-		ASSERTSTR(tm.exportTree(VHtreeID, topNode.nodeID(), "tVHtree_tmp.treeExport"),
+		LOG_INFO("Exporting whole tree to 'treeExport'");
+		ASSERTSTR(tm.exportTree(VHtreeID, topNode.nodeID(), "treeExport"),
 										"Error during export of whole tree");
 
-		LOG_INFO("Exporting subtree to 'tVHtree_tmp.subtreeExport'");
-		ASSERTSTR(tm.exportTree(VHtreeID, subTreeNodeID, "tVHtree_tmp.subtreeExport"),
+		LOG_INFO("Exporting subtree to 'subtreeExport'");
+		ASSERTSTR(tm.exportTree(VHtreeID, subTreeNodeID, "subtreeExport"),
 										"Error during export of subtree");
 
 		LOG_INFO("Trying to apply a processType to a VIC tree which is not allowed");

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -58,7 +58,6 @@ enum
 	CT_RESULT_NO_PARSET,
 	CT_RESULT_UNKNOWN_OBSERVATION,
 	CT_RESULT_PIPELINE_FAILED,			// QUICK FIX #3633
-	CT_RESULT_EMERGENCY_TIMEOUT,
     CT_RESULT_UNSPECIFIED
 };
 
@@ -72,14 +71,14 @@ enum	{
 	CNTLRTYPE_OBSERVATIONCTRL,			// ObservationControl
 	CNTLRTYPE_ONLINECTRL,				// OnlineControl
 	CNTLRTYPE_OFFLINECTRL,				// OfflineControl
-	CNTLRTYPE_BEAMDIRECTIONCTRL,		// BeamDirectionControl		// not used
-	CNTLRTYPE_GROUPCTRL,				// RingControl				// not used
+	CNTLRTYPE_BEAMDIRECTIONCTRL,		// BeamDirectionControl
+	CNTLRTYPE_GROUPCTRL,				// RingControl
 	CNTLRTYPE_STATIONCTRL,				// StationControl
 	CNTLRTYPE_CLOCKCTRL,				// ClockControl
 	CNTLRTYPE_BEAMCTRL,					// BeamControl
 	CNTLRTYPE_CALIBRATIONCTRL,			// CalibrationControl
 	CNTLRTYPE_TBBCTRL,					// TBBControl
-	CNTLRTYPE_STATIONINFRACTRL,			// StationInfraControl		// not used
+	CNTLRTYPE_STATIONINFRACTRL,			// StationInfraControl
 	CNTLRTYPE_TESTCTRL,					// StationControl
 	
 	CNTLRTYPE_NR_TYPES					// should always be the last
@@ -106,6 +105,12 @@ string	getExecutable (uint16		cntlrType);
 // return 'shared' bit of controllertype
 bool	isSharedController(uint16		cntrlType) ;
 
+// Get the ObservationNr from the controllername.
+uint32	getObservationNr (const string&	ObservationName);
+
+// Get the instanceNr from the controllername.
+uint16	getInstanceNr (const string&	ObservationName);
+
 // Get the controllerType from the controllername.
 int32	getControllerType	(const string&	ObservationName);
 
@@ -114,6 +119,11 @@ string 	observationName(int	obsID);
 
 // Get the name of the parset of the observation.
 string 	observationParset(int	obsID);
+
+// Construct PS name solving markers line @observation@, @ring@, etc.
+string	createPropertySetName(const string&		propSetMask,
+							  const string&		controllerName,
+							  const string&		realDPname = "REALDPNAME");
 
 // Construct a message the matches the given CTState and send it on the port.
 bool sendControlResult(GCF::TM::GCFPortInterface&	port,

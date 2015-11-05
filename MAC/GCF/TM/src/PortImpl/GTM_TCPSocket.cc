@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include <sys/ioctl.h>
 #include <sys/select.h>
 #include <fcntl.h>
 #include <netdb.h>
@@ -44,36 +43,10 @@ namespace LOFAR {
  namespace GCF {
   namespace TM {
 
-GTMTCPSocket::GTMTCPSocket(GCFTCPPort& port, bool useUDP) :
-  GTMFile      (port),
-  itsUseUDP    (useUDP),
-  itsConnecting(false)
+GTMTCPSocket::GTMTCPSocket(GCFTCPPort& port) :
+  GTMFile(port),
+  _connecting(false)
 {
-}
-
-void GTMTCPSocket::doWork()
-{
-	LOG_TRACE_FLOW("GTMTCPSocket::doWork()");
-	unsigned long bytesRead = 0;
-
-	if (ioctl(_fd, FIONREAD, &bytesRead) > -1) {
-		if (bytesRead == 0 && !itsUseUDP) {             // We need the test on UDP :-(
-			GCFEvent discoEvent(F_DISCONNECTED);
-			itsScheduler->queueEvent(0, discoEvent, &_port);
-		}
-		else {
-			GCFEvent dataEvent(F_DATAIN);
-			itsScheduler->queueEvent(0, dataEvent, &_port);
-		}
-	}
-	else {
-		ASSERT(_port.getTask());
-		LOG_FATAL(LOFAR::formatString ("%s(%s): Error in 'ioctl' on socket fd %d: %s",
-					_port.getTask()->getName().c_str(),
-					_port.getName().c_str(),
-					_fd,
-					strerror(errno)));
-	}
 }
 
 //
@@ -89,13 +62,7 @@ ssize_t GTMTCPSocket::send(void* buf, size_t count)
 	ssize_t countLeft(count);
 	ssize_t written(0);
 	do {
-		if (itsUseUDP) {
-			written = sendto(_fd, ((char*)buf) + (count - countLeft), countLeft, 0,
-							(struct sockaddr*) &itsTCPaddr, sizeof(itsTCPaddr));
-		}
-		else {
-			written = ::write(_fd, ((char*)buf) + (count - countLeft), countLeft);
-		}
+		written = ::write(_fd, ((char*)buf) + (count - countLeft), countLeft);
 		if (written == 0) {		// is it a disconnect?
 			return (0);
 		}
@@ -104,8 +71,8 @@ ssize_t GTMTCPSocket::send(void* buf, size_t count)
 			if (errno == ECONNRESET) {
 				return (0);
 			}
-			if (errno != EINTR && errno != EAGAIN) {
-				LOG_WARN(LOFAR::formatString ( "send, error(%d): %s", errno, strerror(errno)));
+			if (errno != EINTR) {
+				LOG_WARN(LOFAR::formatString ( "send, error: %s", strerror(errno)));
 				return -1;
 			}
 		}
@@ -129,20 +96,15 @@ ssize_t GTMTCPSocket::recv(void* buf, size_t count, bool raw)
 
 	ssize_t countLeft(count);
 	ssize_t received(0);
-	socklen_t   addrLen = sizeof(itsTCPaddr);
 	do {
-		if (itsUseUDP) {
-			return (recvfrom(_fd, (char*)buf, count, 0, (struct sockaddr*) &itsTCPaddr, &addrLen));
-		}
-
 		received = ::read(_fd, ((char*)buf) + (count - countLeft), countLeft);
 		if (received == 0) {	// is it a disconnect?
 			return(0);
 		}
 
 		if (received == -1) {
-			if (errno != EINTR && errno != EAGAIN) {
-				LOG_WARN(formatString ( "recv, error(%d): %s", errno, strerror(errno)));
+			if (errno != EINTR) {
+				LOG_WARN(formatString ( "recv, error: %s", strerror(errno)));
 				return -1;
 			}
 		}
@@ -165,13 +127,13 @@ bool GTMTCPSocket::open(unsigned int /*portNumber*/)
 		return (true);
 	}
 
-	_fd = ::socket(AF_INET, itsUseUDP ? SOCK_DGRAM : SOCK_STREAM, 0);
+	_fd = ::socket(AF_INET, SOCK_STREAM, 0);
 	if (_fd < 0) {
 		LOG_WARN(formatString ( "::socket, error: %s", strerror(errno)));
 		close();
 	}
 
-  // close socket on execve
+    // close socket on execve
 	if (::fcntl(_fd, F_SETFD, FD_CLOEXEC) != 0) {
 		close();
 	}
@@ -189,21 +151,22 @@ int GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 	LOG_TRACE_COND_STR(_port.getName() << ":connect(" << portNumber << "," << host << "),fd=" << _fd);
 
 	// try to resolve hostaddress/name
+	struct sockaddr_in serverAddr;
 	struct hostent *hostinfo;
 	hostinfo = gethostbyname(host.c_str());
 	ASSERTSTR(hostinfo, _port.getName() << ":hostname " << host << " could not be resolved, error = " << errno);
 
 	// try to connect
-	itsTCPaddr.sin_family = AF_INET;
-	itsTCPaddr.sin_addr = *(struct in_addr *) *hostinfo->h_addr_list;
-	itsTCPaddr.sin_port = htons(portNumber);
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_addr = *(struct in_addr *) *hostinfo->h_addr_list;
+	serverAddr.sin_port = htons(portNumber);
 	errno = 0;
 
-	if (!itsConnecting) {
+        if (!_connecting) {
 		// create a new connection
-		if ((::connect(_fd, (struct sockaddr *)&itsTCPaddr, sizeof(struct sockaddr_in)) == 0)) {
+		if ((::connect(_fd, (struct sockaddr *)&serverAddr, sizeof(struct sockaddr_in)) == 0)) {
 			// connect succesfull, register filedescriptor
-			setFD(_fd);
+      setFD(_fd);
 			return (1);
 		}
 
@@ -211,12 +174,12 @@ int GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 		if (errno != EINPROGRESS) {
 			// serious error
 			LOG_WARN_STR(_port.getName() << ":connect(" << host << "," << portNumber << "), error: " << strerror(errno));
-			close();
+                        close();
 			return (-1);	
 		}
 
-    // socket is non-blocking, and still connecting
-		itsConnecting = true;
+		_connecting = true;
+
 	} else {
 		// poll an existing connection
 		fd_set fds;
@@ -229,7 +192,7 @@ int GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 		switch(::select(_fd + 1, NULL, &fds, NULL, &timeout)) {
 			case 0:
 				// no data available
-				break;
+	                        break;
 
 			case -1:
 				// serious error
@@ -238,31 +201,31 @@ int GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 				return (-1);	
 
 			default:
-				// data available OR connection error
-				int so_error;
-				socklen_t slen = sizeof so_error;
-				if (getsockopt(_fd, SOL_SOCKET, SO_ERROR, &so_error, &slen) < 0) {
-					// serious error
-					LOG_WARN_STR(_port.getName() << ":getsockopt(" << host << "," << portNumber << "), error: " << strerror(errno));
-					close();
-					return (-1);	
-				}
-				
-				if (so_error == 0) {
-					// connect succesfull, register filedescriptor
-					setFD(_fd);
-					return 1;
-				}
+                                // data available OR connection error
+                                int so_error;
+                                socklen_t slen = sizeof so_error;
+                                if (getsockopt(_fd, SOL_SOCKET, SO_ERROR, &so_error, &slen) < 0) {
+                                    // serious error
+                                    LOG_WARN_STR(_port.getName() << ":getsockopt(" << host << "," << portNumber << "), error: " << strerror(errno));
+                                    close();
+                                    return (-1);	
+                                }
 
-				// connection failure
-				LOG_WARN_STR(_port.getName() << ":connect(" << host << "," << portNumber << "), error: " << strerror(errno));
-				close();
-				return (-1);	
-		} // switch
-	} // case
+                                if (so_error == 0) {
+                                    // connect succesfull, register filedescriptor
+                                    setFD(_fd);
+                                    return 1;
+                                }
+
+                                // connection failure
+                                LOG_WARN_STR(_port.getName() << ":connect(" << host << "," << portNumber << "), error: " << strerror(errno));
+                                close();
+                                return (-1);	
+		}
+	}
 
 	LOG_DEBUG_STR(_port.getName() << ": still waiting for connection");
-	return (0);
+	return(0);
 } 
 
   } // namespace TM

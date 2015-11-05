@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -32,18 +32,16 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
 #include <ApplCommon/StationConfig.h>
-#include <ApplCommon/StationInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <APL/APLCommon/ChildControl.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include "PVSSDatapointDefs.h"
 #include "ActiveObs.h"
 
 namespace LOFAR {
-	using namespace Controller_Protocol;
-	using namespace DP_Protocol;
 	using namespace APLCommon;
 	using namespace MACIO;
 	using namespace GCF::TM;

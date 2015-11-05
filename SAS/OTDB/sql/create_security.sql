@@ -3,7 +3,7 @@
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
---  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -27,9 +27,9 @@
 --		 Possibly introduce usergroups as well.
 --
 
-DROP TABLE IF EXISTS OTDBaccess CASCADE;
-DROP TABLE IF EXISTS OTDBuser   CASCADE;
-DROP SEQUENCE IF EXISTS	OTDBuserID;
+DROP TABLE OTDBaccess CASCADE;
+DROP TABLE OTDBuser   CASCADE;
+DROP SEQUENCE	OTDBuserID;
 
 --
 -- The OTDBuser table contains some admistrative info about the user.
