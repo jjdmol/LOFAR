@@ -30,7 +30,9 @@ install(CODE "EXECUTE_PROCESS(
   )"
 )
 
-lofar_add_bin_scripts(taqlflagger)
+install(PROGRAMS
+  taqlflagger
+  DESTINATION bin)
 
 # Python modules.
 python_install(
