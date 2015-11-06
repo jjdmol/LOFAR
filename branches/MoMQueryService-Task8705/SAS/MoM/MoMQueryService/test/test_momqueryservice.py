@@ -33,14 +33,20 @@ try:
     busname = "momqueryservice-test-%s" % (uuid.uuid1())
     broker.addExchange('topic', busname)
 
-    # do not commit passwd in svn
-    passwd = ''
+    testid = '1234'
 
-    with momqueryservice.createService(busname, passwd):
+    # create a mock for the MoMDatabaseWrapper
+    # so we don't need the actual momdb for this test
+    # and we don't need the momdb passwd
+    class MockMoMDatabaseWrapper:
+        def getProjectDetails(self, mom_ids_str):
+            return [{'project_mom2id': '4567', 'project_name': 'foo', 'project_description': 'bar', 'object_mom2id': testid}]
+
+    # inject the mock into the service
+    with momqueryservice.createService(busname, '', MockMoMDatabaseWrapper()):
 
         class TestLTAStorageDb(unittest.TestCase):
             def testProjectDetailsQuery(self):
-                testid = '598612'
                 result = momprojectdetailsquery.getProjectDetails(testid, busname)
                 self.assertEquals(1, len(result.keys()))
                 self.assertEquals(testid, result.keys()[0])
@@ -49,9 +55,8 @@ try:
                 self.assertTrue('project_description' in result[testid])
 
             def testSqlInjection(self):
-                testid = '598612; select * from lofar_mom3.mom2object;'
-                result = momprojectdetailsquery.getProjectDetails(testid, busname)
-                print result
+                inj_testid = testid + '; select * from lofar_mom3.mom2object;'
+                result = momprojectdetailsquery.getProjectDetails(inj_testid, busname)
 
                 self.assertTrue('errmsg' in result)
                 self.assertTrue('KeyError' in result['errmsg'])

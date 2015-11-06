@@ -13,7 +13,7 @@ from lofar.messaging import Service
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 logger=logging.getLogger("momqueryservice")
 
-class ProjectDetailsQueryHandler:
+class MoMDatabaseWrapper:
     '''handler class for details query in mom db'''
     def __init__(self, passwd):
         self.conn = connector.connect(host="mysql1.control.lofar",
@@ -21,20 +21,7 @@ class ProjectDetailsQueryHandler:
                                         passwd=passwd,
                                         database="lofar_mom3")
 
-    def __call__(self, text):
-        # parse text
-        # it should contain a list of ints
-        # filter out everything else to prevent sql injection
-        mom_ids = [x.strip() for x in text.split(',')]
-        mom_ids = [x for x in mom_ids if x.isdigit()]
-        mom_ids_str = ', '.join(mom_ids)
-
-        if not mom_ids_str:
-            logger.error("Could not find proper ids in: " + text)
-            raise KeyError("Could not find proper ids in: " + text)
-
-        logger.info("Query for mom id%s: %s" % ('\'s' if len(mom_ids) > 1 else '', mom_ids_str))
-
+    def getProjectDetails(self, mom_ids_str):
         cursor = self.conn.cursor(dictionary=True)
         # TODO: make a view for this query in momdb!
         query = '''SELECT project.mom2id as project_mom2id, project.name as project_name, project.description as project_description,
@@ -46,8 +33,31 @@ class ProjectDetailsQueryHandler:
         ''' % (mom_ids_str)
         cursor.execute(query)
 
+        return cursor.fetchall()
+
+
+class ProjectDetailsQueryHandler:
+    '''handler class for details query in mom db
+    :param MoMDatabaseWrapper momdb inject database access via wrapper
+    '''
+    def __init__(self, passwd, momdb):
+        self.momdb = momdb
+
+    def __call__(self, text):
+        # parse text
+        # it should contain a list of ints
+        # filter out everything else to prevent sql injection
+        mom_ids = [x.strip() for x in text.split(',')]
+        mom_ids = [x for x in mom_ids if x.isdigit()]
+        mom_ids_str = ', '.join(mom_ids)
+
+        if not mom_ids_str:
+            raise KeyError("Could not find proper ids in: " + text)
+
+        logger.info("Query for mom id%s: %s" % ('\'s' if len(mom_ids) > 1 else '', mom_ids_str))
+
         result = {}
-        rows = cursor.fetchall()
+        rows = self.momdb.getProjectDetails(mom_ids_str)
         for row in rows:
             object_mom2id = row['object_mom2id']
             result[str(object_mom2id)] = row
@@ -56,12 +66,15 @@ class ProjectDetailsQueryHandler:
         return result
 
 
-def createService(busname='momqueryservice', momreadonly_passwd=''):
+def createService(busname='momqueryservice', momreadonly_passwd='', momdb = None):
     '''create the GetProjectDetails on given busname
     :param string busname: name of the bus on which this service listens
     :param string momreadonly_passwd: the momreadonly passwd.
     :rtype: lofar.messaging.Service'''
-    handler = ProjectDetailsQueryHandler(momreadonly_passwd)
+    if not momdb:
+        momdb = MoMDatabaseWrapper(momreadonly_passwd)
+
+    handler = ProjectDetailsQueryHandler(momreadonly_passwd, momdb)
     return Service(busname,
                    'GetProjectDetails',
                    handler,
