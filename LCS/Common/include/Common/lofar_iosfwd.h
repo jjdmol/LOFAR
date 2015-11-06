@@ -39,7 +39,6 @@ namespace LOFAR
   using std::ofstream;
   using std::fstream;
   using std::streampos;
-  using std::streamoff;
 }
 
 #endif
