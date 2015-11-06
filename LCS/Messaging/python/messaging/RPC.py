@@ -41,7 +41,7 @@ class RPC():
     As a side-effect the sender and session are destroyed.
 
     """
-    def __init__(self, service, busname=None, timeout=None, ForwardExceptions=None, Verbose=None):
+    def __init__(self, service, **kwargs ): #busname=None, timeout=None, ForwardExceptions=None, Verbose=None):
 	"""
 	Initialize an Remote procedure call using:
 	    service= <str>    Service Name
@@ -52,19 +52,17 @@ class RPC():
         Use with extra care: ForwardExceptions= <bool>
 	    This enables forwarding exceptions from the server side tobe raised at the client side durting RPC invocation.
 	"""
-        self.timeout = timeout
-        self.ForwardExceptions = False
-        self.Verbose = False
-        if ForwardExceptions is True:
-            self.ForwardExceptions = True
-        if Verbose is True:
-            self.Verbose = True
-        self.BusName = busname
+        self.timeout           = kwargs.pop("timeout",None)
+        self.ForwardExceptions = kwargs.pop("ForwardExceptions",False)
+        self.Verbose           = kwargs.pop("Verbose",False)
+        self.BusName           = kwargs.pop("busname",None)
         self.ServiceName = service
         if self.BusName is None:
             self.Request = ToBus(self.ServiceName)
         else:
             self.Request = ToBus(self.BusName + "/" + self.ServiceName)
+        if len(kwargs):
+            raise AttributeError("Unexpected argument passed to RPC class: %s", kwargs)
 
     def __enter__(self):
 	"""
@@ -79,7 +77,7 @@ class RPC():
 	"""
         self.Request.close()
 
-    def __call__(self, msg, timeout=None):
+    def __call__(self, *msg, **kwargs):
 	"""
 	Enable the use of the object to directly invoke the RPC.
 
@@ -89,8 +87,27 @@ class RPC():
                 result=myrpc(request)
  
 	"""
-        if timeout is None:
-            timeout = self.timeout
+        timeout= kwargs.pop("timeout",self.timeout)
+        
+        
+        Content=list(msg)
+        HasKwArgs=(len(kwargs)>0)
+        # more than one argument given? 
+        HasArgs=(len(msg)> 1 ) or (( len(kwargs)>0 ) and (len(msg)>0))
+        if HasArgs:
+            # convert arguments to list
+            Content = list(msg)
+            if HasKwArgs:
+                # if both positional and named arguments then
+                # we add the kwargs dictionary as the last item in the list
+                Content.append(kwargs)
+        else:
+            if HasKwArgs:
+                # we have only one named argument
+                Content=kwargs
+            else:
+                # we have only one positional argument
+                Content=Content[0]
         # create unique reply address for this rpc call
         options={'create':'always','delete':'receiver'}
         ReplyAddress= "reply." + str(uuid.uuid4())
@@ -99,7 +116,7 @@ class RPC():
         else:
             Reply = FromBus(self.BusName + "/" + ReplyAddress)
         with Reply:
-            MyMsg = ServiceMessage(msg, ReplyAddress)
+            MyMsg = ServiceMessage(Content, ReplyAddress , has_args=HasArgs, has_kwargs=HasKwArgs)
             MyMsg.ttl = timeout
             self.Request.send(MyMsg)
             answer = Reply.receive(timeout)
