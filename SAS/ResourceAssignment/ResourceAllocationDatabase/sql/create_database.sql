@@ -112,6 +112,8 @@ ALTER TABLE task_type
 
 CREATE TABLE specification (
   id serial NOT NULL,
+  starttime timestamp,
+  endtime timestamp,
   content text,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
