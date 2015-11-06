@@ -12,3 +12,4 @@ set(_py_files
 
 python_install(${_py_files} DESTINATION lofar/mom/momqueryservice)
 
+add_subdirectory(test)
