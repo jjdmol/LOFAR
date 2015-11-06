@@ -108,7 +108,7 @@ class Service(object):
         self.service_name     = servicename
         self.service_handler  = servicehandler
         self.connected        = False
-        self.running          = False
+        self.running          = [False]
         self.link_uuid        = str(uuid.uuid4())
         self.busname          = kwargs.pop("busname", None)
         self.exclusive        = kwargs.pop("exclusive", True)
@@ -124,7 +124,7 @@ class Service(object):
             raise AttributeError("Unexpected argument passed to Service class: %s", kwargs)
 
         # Set appropriate flags for exclusive binding
-        if self.exclusive is True:
+        if self.exclusive == True:
             self.options["link"] = '{name:"' + self.link_uuid + \
                                    '", x-bindings:[{key:' + self.service_name + \
                                    ', arguments: {"qpid.exclusive-binding":True}}]}'
@@ -138,18 +138,18 @@ class Service(object):
         """
         Internal use only.
         """
-        if self.verbose is True:
+        if self.verbose == True:
             logger.debug("[Service: %s]", txt)
 
     def start_listening(self, numthreads=None):
         """
         Start the background threads and process incoming messages.
         """ 
-        if self.listening is True:
+        if self.listening == True:
             return
 
         # Usually a service will be listening on a 'bus' implemented by a topic exchange
-        if self.busname is not None:
+        if self.busname != None:
             self.listener  = FromBus(self.busname+"/"+self.service_name, options=self.options)
             self.reply_bus = ToBus(self.busname)
             self.listener.open()
@@ -163,7 +163,7 @@ class Service(object):
 
         self.connected = True
 
-        if numthreads is not None:
+        if numthreads != None:
             self._numthreads = numthreads
 
         # use a list to ensure that threads always 'see' changes in the running state.
@@ -187,13 +187,14 @@ class Service(object):
             self.reccounter.append(0)
             self.okcounter.append(0)
             self._tr[i].start()
+        self.listening = True
 
     def stop_listening(self):
         """
         Stop the background threads that listen to incoming messages.
         """
         # stop all running threads
-        if self.running[0] is True:
+        if self.running[0] == True:
             self.running[0] = False
             for i in range(self._numthreads):
                 self._tr[i].join()
@@ -201,7 +202,7 @@ class Service(object):
                 logger.info("           %d messages received and %d processed OK." % (self.reccounter[i], self.okcounter[i]))
         self.listening = False
         # close the listeners
-        if self.connected is True:
+        if self.connected == True:
             if isinstance(self.listener, FromBus):
                 self.listener.close()
             if isinstance(self.reply_bus, ToBus):
