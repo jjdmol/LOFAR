@@ -137,7 +137,7 @@ if __name__ == "__main__":
                 else:
                     for (treeid, state, modtime, creation) in record_list:
                         content = { "treeID" : treeid, "state" : state, "time_of_change" : modtime }
-                        msg = EventMessage("otdb.treestatus", content)
+                        msg = EventMessage(context="otdb.treestatus", content=content)
                         print treeid, state, modtime, creation
                         send_bus.send(msg)
                         open('time_save.txt', 'wb').write(creation)
