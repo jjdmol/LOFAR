@@ -21,7 +21,7 @@
 
 #  RPC invocation with possible timeout
 from lofar.messaging.messagebus import ToBus, FromBus
-from lofar.messaging.messages import ServiceMessage, ReplyMessage
+from lofar.messaging.messages import ServiceMessage, ReplyMessage, analyze_args, args_as_content 
 import uuid
 
 class RPCException(Exception):
@@ -77,7 +77,7 @@ class RPC():
 	"""
         self.Request.close()
 
-    def __call__(self, *msg, **kwargs):
+    def __call__(self, *args, **kwargs):
 	"""
 	Enable the use of the object to directly invoke the RPC.
 
@@ -90,24 +90,8 @@ class RPC():
         timeout= kwargs.pop("timeout",self.timeout)
         
         
-        Content=list(msg)
-        HasKwArgs=(len(kwargs)>0)
-        # more than one argument given? 
-        HasArgs=(len(msg)> 1 ) or (( len(kwargs)>0 ) and (len(msg)>0))
-        if HasArgs:
-            # convert arguments to list
-            Content = list(msg)
-            if HasKwArgs:
-                # if both positional and named arguments then
-                # we add the kwargs dictionary as the last item in the list
-                Content.append(kwargs)
-        else:
-            if HasKwArgs:
-                # we have only one named argument
-                Content=kwargs
-            else:
-                # we have only one positional argument
-                Content=Content[0]
+        Content=args_as_content(*args,**kwargs)
+        HasArgs,HasKwArgs = analyze_args(args,kwargs)
         # create unique reply address for this rpc call
         options={'create':'always','delete':'receiver'}
         ReplyAddress= "reply." + str(uuid.uuid4())
