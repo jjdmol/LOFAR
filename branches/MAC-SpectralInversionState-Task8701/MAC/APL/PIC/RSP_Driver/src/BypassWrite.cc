@@ -69,15 +69,14 @@ void BypassWrite::sendrequest()
     }
     
     uint16 dst = 0;     
-    if (Cache::getInstance().getBack().getBypassSettings()()(globalBP).isSDOset()) {
-        Cache::getInstance().getBack().getBypassSettings()()(globalBP).resetSDOset();
-        dst |= MEPHeader::DST_RSP;
-    }
     if (Cache::getInstance().getBack().getBypassSettings()()(globalBP).isSIset()) {
         Cache::getInstance().getBack().getBypassSettings()()(globalBP).resetSIset();
         dst |= (1 << getCurrentIndex());
     }
-    
+    if (Cache::getInstance().getBack().getBypassSettings()()(globalBP).isSDOset()) {
+        Cache::getInstance().getBack().getBypassSettings()()(globalBP).resetSDOset();
+        dst |= MEPHeader::DST_RSP;
+    }
     request.hdr.set(MEPHeader::DIAG_BYPASS_HDR, dst, MEPHeader::WRITE);
     
     // read values from cache
@@ -85,7 +84,7 @@ void BypassWrite::sendrequest()
     request.bypass = s()(globalBP).getRaw();        // one element
 
     m_hdr = request.hdr;
-    LOG_DEBUG(formatString("BypassWrite: sendrequest: sending it(%04X)", request.bypass));
+    LOG_DEBUG(formatString("BypassWrite: sendrequest: sending it(%04X) to (%04x)", request.bypass, dst));
     getBoardPort().send(request);
 }
 
