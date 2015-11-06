@@ -117,10 +117,11 @@ class Service(object):
         self.options          = {"capacity": self._numthreads*20}
         options               = kwargs.pop("options", None)
         self.parsefullmessage = kwargs.pop("parsefullmessage", False)
-        self.startonwith      = kwargs.pop("startonwith", False)
+        self.startonwith      = kwargs.pop("startonwith", None)
         self.handler_args     = kwargs.pop("handler_args", None)
+        self.listening        = False
         if len(kwargs):
-            raise AttributeError("Unexpected argument passed to Serice class: %s", kwargs)
+            raise AttributeError("Unexpected argument passed to Service class: %s", kwargs)
 
         # Set appropriate flags for exclusive binding
         if self.exclusive is True:
@@ -144,12 +145,29 @@ class Service(object):
         """
         Start the background threads and process incoming messages.
         """ 
+        if self.listening is True:
+            return
+
+        # Usually a service will be listening on a 'bus' implemented by a topic exchange
+        if self.busname is not None:
+            self.listener  = FromBus(self.busname+"/"+self.service_name, options=self.options)
+            self.reply_bus = ToBus(self.busname)
+            self.listener.open()
+            self.reply_bus.open()
+        # Handle case when queues are used
+        else:
+            # assume that we are listening on a queue and therefore we cannot use a generic ToBus() for replies.
+            self.listener = FromBus(self.service_name, options=self.options)
+            self.listener.open()
+            self.reply_bus=None
+
+        self.connected = True
+
         if numthreads is not None:
             self._numthreads = numthreads
-        if self.connected is False:
-            raise Exception("start_listening Called on closed connections")
 
-        self.running = True
+        # use a list to ensure that threads always 'see' changes in the running state.
+        self.running = [ True ]
         self._tr = []
         self.reccounter = []
         self.okcounter =[]
@@ -175,12 +193,21 @@ class Service(object):
         Stop the background threads that listen to incoming messages.
         """
         # stop all running threads
-        if self.running is True:
-            self.running = False
+        if self.running[0] is True:
+            self.running[0] = False
             for i in range(self._numthreads):
                 self._tr[i].join()
                 logger.info("Thread %2d: STOPPED Listening for messages on Bus %s and service name %s." % (i, self.busname, self.service_name))
                 logger.info("           %d messages received and %d processed OK." % (self.reccounter[i], self.okcounter[i]))
+        self.listening = False
+        # close the listeners
+        if self.connected is True:
+            if isinstance(self.listener, FromBus):
+                self.listener.close()
+            if isinstance(self.reply_bus, ToBus):
+                self.reply_bus.close()
+            self.connected = False
+
 
     def wait_for_interrupt(self):
         """
@@ -199,24 +226,7 @@ class Service(object):
         """
         Internal use only. Handles scope with keyword 'with'
         """
-        # Usually a service will be listening on a 'bus' implemented by a topic exchange
-        if self.busname is not None:
-            self.listener  = FromBus(self.busname+"/"+self.service_name, options=self.options)
-            self.reply_bus = ToBus(self.busname)
-            self.listener.open()
-            self.reply_bus.open()
-        # Handle case when queues are used
-        else:
-            # assume that we are listening on a queue and therefore we cannot use a generic ToBus() for replies.
-            self.listener = FromBus(self.service_name, options=self.options)
-            self.listener.open()
-            self.reply_bus=None
-
-        self.connected = True
-
-        # If required start listening on 'with'
-        if self.startonwith is True:
-            self.start_listening()
+        self.start_listening()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -224,13 +234,6 @@ class Service(object):
 	Internal use only. Handles scope with keyword 'with'
 	"""
         self.stop_listening()
-        # close the listeners
-        if self.connected is True:
-            self.connected = False
-            if isinstance(self.listener, FromBus):
-                self.listener.close()
-            if isinstance(self.reply_bus, ToBus):
-                self.reply_bus.close()
 
     def _send_reply(self, replymessage, status, reply_to, errtxt="",backtrace=""):
 	"""
@@ -285,7 +288,7 @@ class Service(object):
         except Exception as e:
             logger.error("prepare_loop() failed with %s", e)
 
-        while self.running:
+        while self.running[0]:
             try:
                 service_handler.prepare_receive()
             except Exception as e:
@@ -314,7 +317,26 @@ class Service(object):
                     if self.parsefullmessage is True:
                         replymessage = service_handler.handle_message(msg)
                     else:
-                        replymessage = service_handler.handle_message(msg.content)
+                        # check for positional arguments and named arguments
+                        if msg.has_args=="True":
+                            rpcargs=msg.content
+                            if msg.has_kwargs=="True":
+                                # both positional and named arguments
+                                rpckwargs=rpcargs[-1]
+                                del rpcargs[-1]
+                                rpcargs=tuple(rpcargs)
+                                replymessage = service_handler.handle_message(*rpcargs,**rpckwargs)
+                            else:
+                                # only positional arguments
+                                rpcargs=tuple(rpcargs)
+                                replymessage = service_handler.handle_message(*rpcargs)
+                        else:
+                            if msg.has_kwargs=="True":
+                                # only named arguments
+                                replymessage = service_handler.handle_message(**(msg.content))
+                            else:
+                                replymessage = service_handler.handle_message(msg.content)
+
                     self._debug("finished handler")
                     self._send_reply(replymessage,"OK",msg.reply_to)
                     self.okcounter[thread_idx] += 1

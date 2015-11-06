@@ -281,11 +281,15 @@ class ServiceMessage(LofarMessage):
     subsystem. A service message must contain a valid ``ReplyTo`` property.
     """
 
-    def __init__(self, content=None, reply_to=None):
+    def __init__(self, content=None, reply_to=None,**kwargs): #reply_to=None, has_args=None, has_kwargs=None):
         super(ServiceMessage, self).__init__(content)
         if (reply_to!=None):
-          self.reply_to = reply_to
-
+            #if (len(kwargs)>0):
+            #reply_to = kwargs.pop("reply_to",None)
+            #if (reply_to!=None):
+            self.reply_to = reply_to
+            self.has_args   = str(kwargs.pop("has_args",False))
+            self.has_kwargs = str(kwargs.pop("has_kwargs",False))
 
 class ReplyMessage(LofarMessage):
     """
