@@ -23,13 +23,18 @@
 --
 
 --
--- getTreeGroup (groupType, periodInMinutes)
+-- getTreeGroup (groupType, periodInMinutes, cluster)
 -- 
 -- groupType = 0: get all trees that have to be scheduled
 --             1: get all trees that are scheduled to start in the period: now till now+period
 --             2: get all trees with starttime <=now and stoptime > now ; period param is ignored
 --             3: get all trees with stoptime in the period: now-period till now
 --             4: get all trees with stoptime < now and have state >= APPROVED
+--
+-- cluster : '' Does not include limitation to the selection.
+--           'CEP2' Returns all PIPELINES that belong to the groupType and that are assigned to CEP2
+--           '!CEP2' Returns all trees that belongs to the groupType EXCEPT the PIPELINES that are assigned to CEP2
+--      Other values are also allowed like CEP4 en !CEP4
 --
 -- With this function we can get the planned, active or finished trees from the database.
 --
@@ -106,8 +111,6 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT, VARCHAR(20))
            vQuery := vExcept || vCluster || chr(39);
            vExcept := '';
         END IF;
-        raise warning 'query  = >>%<<', vQuery;
-        raise warning 'except = >>%<<', vExcept;
       END IF;
 
 	  -- do selection
