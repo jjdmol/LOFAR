@@ -8,7 +8,7 @@ import traceback
 import os
 import numpy as np
 import time
-import datetime
+#import datetime
 import logging
 
 mainPath = r'/opt/stationtest'
@@ -241,8 +241,8 @@ class CSV:
         return
     @staticmethod
     def writeSpectra(data, rcu, check):
-        dumpTime = time.gmtime(CSV.record_timestamp)
-        date_str = time.strftime("%Y%m%d", dumpTime)
+        #dumpTime = time.gmtime(CSV.record_timestamp)
+        #date_str = time.strftime("%Y%m%d", dumpTime)
 
         full_filename = os.path.join(rtsmPath, CSV.filename)
 
@@ -536,10 +536,10 @@ class cDayInfo:
 
         
 def getObsId():
-    obs_start_str  = ""
-    obs_stop_str   = ""
-    obs_start_time = 0.0
-    obs_stop_time  = 0.0
+    #obs_start_str  = ""
+    #obs_stop_str   = ""
+    #obs_start_time = 0.0
+    #obs_stop_time  = 0.0
     obsids = ""
     answer = sendCmd('swlevel')
     if answer.find("ObsID") > -1:
@@ -596,10 +596,10 @@ class RecordBeamletStatistics(Thread):
     def kill_recording(self):
         if self.running:
             logger.debug("kill recording beamlet statistics")
-            response = sendCmd(cmd='killall', args='rspctl')
+            sendCmd(cmd='pkill', args='rspctl')
             logger.debug("recording killed")
-            self.running = False
-            self.make_plots()
+            #self.running = False
+            #self.make_plots()
     
     def make_plots(self):
         if self.obsid:
@@ -624,7 +624,7 @@ def main():
     obs_id   = ""
     active_obs_id  = ""
     rcumode  = 0
-    station  = getHostName()
+    #station  = getHostName()
     DI       = cDayInfo()
 
     args = getArguments()
@@ -638,7 +638,7 @@ def main():
 
     conf = cConfiguration()
 
-    StID = getHostName()
+    #StID = getHostName()
 
     logger.info('== Start rtsm (Real Time Station Monitor) ==')
 
@@ -704,7 +704,7 @@ def main():
             # start recording beamlets
             if not beamlet_recording:
                 if obs_start_time > 0.0 and time.time() >= obs_start_time:
-                    duration = obs_stop_time - time.time() - 5
+                    duration = obs_stop_time - time.time() - 10
                     if duration > 2:
                         beamlet_recording = RecordBeamletStatistics()
                         beamlet_recording.set_obsid(active_obs_id)
