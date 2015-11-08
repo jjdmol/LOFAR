@@ -1,5 +1,5 @@
-//# Mmap.cc: class wrap the mmap(2) system call and friends
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Mmap.cc: class to wrap the mmap and munmap system calls
+//# Copyright (C) 2013, 2015  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -22,8 +22,6 @@
 #include <lofar_config.h>
 
 #include <Common/Mmap.h>
-
-#include <cerrno>
 
 #include <Common/SystemCallException.h>
 #include <Common/LofarLogger.h>

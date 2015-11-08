@@ -1,8 +1,3 @@
 # $Id$
 
-include(PythonInstall)
-
-python_install(
-  QToPipeline.py
-
-  DESTINATION LAPS/QToPipeline)
+lofar_add_bin_scripts(QToPipeline.py)

@@ -90,7 +90,8 @@ class setupparmdb(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # generate a temp dir
         pdbdir = tempfile.mkdtemp(
-            dir=self.config.get("layout", "job_directory")
+            dir=self.config.get("layout", "job_directory"),
+            suffix=".%s" % (os.path.basename(__file__),)
         )
         pdbfile = os.path.join(pdbdir, self.inputs['suffix'])
 

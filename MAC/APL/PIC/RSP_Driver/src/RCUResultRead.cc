@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -111,7 +111,7 @@ GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
 
 	uint8	global_rcu 			= (getBoardId() * NR_RCUS_PER_RSPBOARD) + getCurrentIndex();
 	bool	handlingWriteResult = (Cache::getInstance().getState().rcuprotocol().get(global_rcu) == RTC::RegisterState::READ);
-	int		resultOffset		= handlingWriteResult ? 1 : 0;
+	int		resultOffset		= handlingWriteResult ? 2 : 0;
 
 	EPARcuResultEvent ack(event);
 	if (!ack.hdr.isValidAck(m_hdr)) {

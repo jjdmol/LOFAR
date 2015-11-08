@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -71,7 +71,7 @@ void RCUWrite::sendrequest()
   rcusettings.hdr.set(MEPHeader::RCU_SETTINGS_HDR, 1 << getCurrentIndex()); // also sets payload_length
   rcusettings.ap = EPA_Protocol::RCUHandler();
   rcusettings.ap.input_delay_x = x.getDelay();
-  rcusettings.ap.enable_x      = y.getEnable();
+  rcusettings.ap.enable_x      = x.getEnable();
   rcusettings.ap.input_delay_y = y.getDelay();
   rcusettings.ap.enable_y      = y.getEnable();
 

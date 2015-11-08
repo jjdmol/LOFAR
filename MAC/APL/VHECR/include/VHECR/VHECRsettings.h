@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -33,7 +33,9 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_bitset.h>
 #include <Common/LofarConstants.h>
+#include <ApplCommon/AntennaSets.h>
 #include <APL/APLCommon/AntennaField.h>
+#include <blitz/array.h>
 
 namespace LOFAR {
   namespace VHECR {
@@ -67,7 +69,8 @@ public:
 	\param ParamExtension - String with "keyword=value;" pairs for additional parameters during development.
     */
     string        antennaSet;
-	AntennaField*  antennaField;
+	string        antennaField;
+    blitz::Array<double, 2> rcuPosITRF;
 	int           clockFreq;
 	
 	int           noCoincChann;

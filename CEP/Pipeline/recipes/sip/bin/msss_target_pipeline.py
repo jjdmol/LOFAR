@@ -38,7 +38,7 @@ class msss_target_pipeline(control):
     5. Run BBS using the instrument file from the target observation, to
        correct for instrumental effects
     6. Copy the MS's to their final output destination.
-    7. Create feedback file for further processing by the LOFAR framework (MAC)
+    7. Create feedback for further processing by the LOFAR framework
 
     **Per subband-group, the following output products will be delivered:**
 
@@ -48,18 +48,8 @@ class msss_target_pipeline(control):
 
     def __init__(self):
         control.__init__(self)
-        self.parset = parameterset()
         self.input_data = {}
         self.output_data = {}
-        self.parset_feedback_file = None
-
-
-    def usage(self):
-        """
-        Display usage information
-        """
-        print >> sys.stderr, "Usage: %s [options] <parset-file>" % sys.argv[0]
-        return 1
 
 
     def _get_io_product_specs(self):
@@ -169,29 +159,6 @@ class msss_target_pipeline(control):
             data.skip = inst.skip = outp.skip = (
                 data.skip or inst.skip or outp.skip
             )
-
-
-    def go(self):
-        """
-        Read the parset-file that was given as input argument, and set the
-        jobname before calling the base-class's `go()` method.
-        """
-        try:
-            parset_file = os.path.abspath(self.inputs['args'][0])
-        except IndexError:
-            return self.usage()
-        self.parset.adoptFile(parset_file)
-        self.parset_feedback_file = parset_file + "_feedback"
-        
-        # Set job-name to basename of parset-file w/o extension, if it's not
-        # set on the command-line with '-j' or '--job-name'
-        if not self.inputs.has_key('job_name'):
-            self.inputs['job_name'] = (
-                os.path.splitext(os.path.basename(parset_file))[0]
-            )
-
-        # Call the base-class's `go()` method.
-        return super(msss_target_pipeline, self).go()
 
 
     @mail_log_on_exception
@@ -345,17 +312,19 @@ class msss_target_pipeline(control):
             )
 
         # *********************************************************************
-        # 7. Create feedback file for further processing by the LOFAR framework
-        # (MAC)
-        # Create a parset-file containing the metadata for MAC/SAS
+        # 7. Create feedback for further processing by the LOFAR framework
+        metadata_file = "%s_feedback_Correlated" % (self.parset_file,)
         with duration(self, "get_metadata"):
             self.run_task("get_metadata", corrected_mapfile,
-                parset_file=self.parset_feedback_file,
                 parset_prefix=(
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')
                 ),
-                product_type="Correlated")
+                product_type="Correlated",
+                metadata_file=metadata_file)
+
+        self.send_feedback_processing(parameterset())
+        self.send_feedback_dataproducts(parameterset(metadata_file))
 
         return 0
 

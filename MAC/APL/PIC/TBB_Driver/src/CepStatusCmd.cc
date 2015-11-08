@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -86,7 +86,11 @@ void CepStatusCmd::saveTpAckEvent(GCFEvent& event)
 		setStatus(getBoardNr(), TBB_TIME_OUT);
 	}	else {
 		TPCepStatusAckEvent tp_ack(event);
-		LOG_DEBUG_STR(formatString("Received CepStatusAck from boardnr[%d]", getBoardNr()));
+		// TODO: set back to DEBUG
+        LOG_INFO_STR(formatString("Received CepStatusAck from boardnr[%d], status=%ld, pages_left=%ld ", 
+                                    getBoardNr(),
+                                    tp_ack.status,
+                                    tp_ack.pages_left));
 		
 		if (tp_ack.status != 0) {
 			setStatus(getBoardNr(), (tp_ack.status << 24));

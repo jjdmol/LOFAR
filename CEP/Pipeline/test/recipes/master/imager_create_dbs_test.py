@@ -35,10 +35,10 @@ class imager_create_dbsTest(unittest.TestCase):
         super(imager_create_dbsTest, self).__init__(arg)
 
     def setUp(self):
-        self.test_path = temp_path = tempfile.mkdtemp()
+        self.test_path = temp_path = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
 
     def tearDown(self):
-        #shutil.rmtree(self.test_path)
+        shutil.rmtree(self.test_path)
         pass
 
     def test_validate_input_data(self):

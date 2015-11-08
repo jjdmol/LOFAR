@@ -2,7 +2,7 @@
 //
 //  Copyright (C) 2002-2004  // TabChanoged: The Tab has changed, so a new panel needs to be initialized and put in place
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -36,6 +36,19 @@
 // navCtrl_handleHeadLinesEvent              : handles headLines
 // navCtrl_handleAlertEvent                  : handles alert
 // navCtrl_handleFastJumperEvent             : handles fastJumper
+
+// defined possible events:
+//
+//       ChangeTab         :         This is used when a point on one tab refers to a point that belaongs to another tab. 
+//       ChangePanel       :         The currentDataPoint has been changed and we have to see if we need to load another panel
+//       Reload            :         A reload of all current active panels is requested 
+//       Update            :         An update of all current active panels is requested
+//       Initialized       :         The Navigator base is initialized, all other wondeows can initialize now also
+//       EventClick        :         An EventClick event has been done
+//       EventDoubleClick  :         An EventDoubleClick event has been done
+//       EventRightClick   :         An EventRightClick event has been done
+//       ChangeSelection   :         The selectionBox has changed its main selection
+//
 
 #uses "navigator.ctl"
 
@@ -93,13 +106,18 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
   // depending on the event received, actions need to be taken
   
  
-  // TabChanged: The Tab has changed, so a new panel needs to be initialized and put in place
-    // Check for top tab and change when needed, also set the new active DP panel if available 
+  // ChangeTab: This is used when a point on one tab refers to a point that belaongs to another tab. 
+  // Obviously we dont want a restore  a previously saved panel in this caes
+  // Check for top tab and change when needed, also set the new active DP panel if available 
   if (anEvent == "ChangeTab") {
     if (ACTIVE_TAB != aSelection) {
+      navFunct_clearGlobalLists();
+      // if on the other Tab a dp was saved restore it, and also
+      navTabCtrl_removeView();
       navTabCtrl_setSelectedTab(aSelection);
       ACTIVE_TAB = aSelection;
     }
+
     if (navTabCtrl_showView()) {
       
       navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangeTab wait navTabCtrl_showView");
@@ -905,9 +923,13 @@ void navCtrl_handleAlertsEvent(string dp,string value){
  	navCtrl_handleNavigatorEvent(aSelection,anEvent,aShape); 
         
        
-  // Check for top tab and change when needed, also set the new active DP panel if available 
-  if (anEvent == "ChangeTab") {
+ // ChangeTab: This is used when a point on one tab refers to a point that belaongs to another tab. 
+ // Obviously we dont want a restore  a previously saved panel in this caes
+ // Check for top tab and change when needed, also set the new active DP panel if available 
+ if (anEvent == "ChangeTab") {
     if (ACTIVE_TAB != aSelection) {
+      navTabCtrl_setSelectedTab(aSelection);
+      navTabCtrl_removeView();
       navTabCtrl_setSelectedTab(aSelection);
       ACTIVE_TAB = aSelection;
     }

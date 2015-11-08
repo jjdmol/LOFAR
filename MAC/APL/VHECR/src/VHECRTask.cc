@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -41,11 +41,9 @@ namespace LOFAR {
 VHECRTask::VHECRTask() :
 itsInitialized (false)
 {
+    LOG_INFO_STR("Starting VHECRTask()");
     // set default parameters for coincidence
     itsNrTriggers =0;
-    itsLogfile = NULL;
-    itsAntennaSelection = "";
-    itsAntennaPositionsFile = "";
     itsForcedDeadTime = 10.0;
     totalCoincidences = 0;
     badFits = 0;
@@ -54,67 +52,27 @@ itsInitialized (false)
     itsSettings = new VHECRsettings(); // empty Settings-object
 
     setup();
-
-    if ((itsLogfile != NULL) && (itsLogfile != stdout)) {
-        fprintf(itsLogfile, "Output file: %s\n", itsOutputFilename.c_str());
-        fprintf(itsLogfile, "Sampling rate in Hz: %d\n", itsSamplingRate);
-        fprintf(itsLogfile, "Coincidence channels required: %d\n", itsSettings->noCoincChann);
-        fprintf(itsLogfile, "Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
-        fprintf(itsLogfile, "Antenna selection: %s\n", itsAntennaSelection.c_str());
-        fprintf(itsLogfile, "Coincidence time window: %3.10e\n", itsSettings->coincidenceTime);
-        fprintf(itsLogfile, "do Direction fit: %d\n", itsSettings->doDirectionFit);
-        fprintf(itsLogfile, "Minimum elevation: %3.4f\n", itsSettings->minElevation);
-        fprintf(itsLogfile, "Maximum fit-variance: %3.4f\n", itsSettings->maxFitVariance);
-        fflush(itsLogfile);
-    }
+    LOG_INFO_STR("VHECR settings" << *itsSettings);
     LOG_DEBUG ("VHECR constructed with default/dummy values");
 }
 
 VHECRTask::VHECRTask(const string& cntlrName) :
 itsInitialized (false)
 {
-    // set default parameters for coincidence
-    itsNrTriggers =0;
-    itsSamplingRate = 200000000; // NB. Sampling rate 200 MHz assumed. Overwritten in setup() function
-    itsLogfile = NULL;
-    itsAntennaSelection = "";
-    itsAntennaPositionsFile = "";
-    itsForcedDeadTime = 10.0;
-    totalCoincidences = 0;
-    badFits = 0;
-
-    //LOFAR::ConfigLocator cl;
-    //LOG_DEBUG_STR("Reading parset file:" << cl.locate(cntlrName));
-    //itsParameterSet = new ParameterSet(cl.locate(cntlrName));
-    //itsSettings = new VHECRsettings(itsParameterSet);  // does all nasty conversions
-
+    LOG_INFO_STR("Starting VHECRTask(const string& cntlrName)");
     // First readin our observation related config file.
     LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);
     globalParameterSet()->adoptFile(string(LOFAR_SHARE_LOCATION)+"/"+cntlrName);
     itsSettings = new VHECRsettings(globalParameterSet());    // does all nasty conversions
+    
+    // set default parameters for coincidence
+    itsNrTriggers = 0;
+    itsForcedDeadTime = 10.0;
+    totalCoincidences = 0;
+    badFits = 0;
 
-
-    itsConfigurationFile    = string(LOFAR_CONFIG_LOCATION)+"/VHECRtask.conf"; // /opt/lofar/etc/
-    itsOutputFilename       = string(LOFAR_LOG_LOCATION)+"/VHECRtaskLogTest.dat";
-    itsAntennaPositionsFile = string(LOFAR_CONFIG_LOCATION)+"/AntennaField.conf"; // hardcoded but can be overridden by VHECRtask.conf config file
-    // which is read in only now:
-    //readConfigFile(itsConfigurationFile.c_str());
     setup();
-    //  string infile = "/Users/acorstanje/usg/data/calibration/AntennaPos/CS021-AntennaArrays.conf";
-    //  string itsAntennaSelection = "LBA_INNER";
-    //  readAntennaPositions(infile, itsAntennaSelection);
-    if ((itsLogfile != NULL) && (itsLogfile != stdout)) {
-        fprintf(itsLogfile, "Output file: %s\n", itsOutputFilename.c_str());
-        fprintf(itsLogfile, "Sampling rate in Hz: %d\n", itsSamplingRate);
-        fprintf(itsLogfile, "Coincidence channels required: %d\n", itsSettings->noCoincChann);
-        fprintf(itsLogfile, "Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
-        fprintf(itsLogfile, "Antenna selection: %s\n", itsSettings->antennaSet.c_str());
-        fprintf(itsLogfile, "Coincidence time window: %3.6e\n", itsSettings->coincidenceTime);
-        fprintf(itsLogfile, "do Direction fit: %d\n", itsSettings->doDirectionFit);
-        fprintf(itsLogfile, "Minimum elevation: %3.4f\n", itsSettings->minElevation);
-        fprintf(itsLogfile, "Maximum fit-variance: %3.4f\n", itsSettings->maxFitVariance);
-        fflush(itsLogfile);
-    }
+    LOG_INFO_STR("VHECR settings: " << *itsSettings);
     LOG_DEBUG ("VHECR construction complete");
 }
 
@@ -124,36 +82,14 @@ itsInitialized (false)
 //
 VHECRTask::~VHECRTask()
 {
-fclose(itsLogfile);
-LOG_DEBUG ("VHECR destruction");
+    LOG_DEBUG ("VHECR destruction");
 }
 
 bool VHECRTask::setup()
 {
-    readConfigFile();
-    if ((itsSettings->antennaSet != "")&&(itsAntennaPositionsFile != "")) {
-        // cout << itsSettings->antennaSet << " reading in positions." << endl;
-        
-        // to use old AntennaArray.conf do simple conversion
-        // in future AntennaField.conf is the one to use,
-        // the globalAntennaField() class holds all positions from AntennaField.conf
-        
-        string antennaFieldName = "";
-        if (itsSettings->antennaSet.find("LBA") == 0)  {
-            antennaFieldName = "LBA";
-        }
-        else if (itsSettings->antennaSet.find("HBA") == 0)  {
-            antennaFieldName = "HBA";
-        }
-    
-        readAntennaPositions(itsAntennaPositionsFile, antennaFieldName);
-    } else {
-        itsSettings->doDirectionFit = 0;
-    }
-
     // Set internal values from VHECRsettings object
-    itsSamplingRate = itsSettings->clockFreq*1000000;
-
+    itsSamplingRate = itsSettings->clockFreq * 1000000; 
+    
     // Initialize the trigger messages buffer
     for (uint32 i=0; i<VHECR_TASK_BUFFER_LENGTH; i++) {
         trigBuffer[i].next = i+1;
@@ -166,61 +102,12 @@ bool VHECRTask::setup()
     last = VHECR_TASK_BUFFER_LENGTH-1;
     trigBuffer[first].prev = VHECR_TASK_BUFFER_LENGTH; //This means "not there"
 
-    // string infile = "/Users/acorstanje/usg/data/calibration/AntennaPos/CS021-AntennaArrays.conf";
-    // string itsSettings->antennaSet = "LBA_INNER";
-    // readAntennaPositions(infile, itsSettings->antennaSet);
     LOG_DEBUG ("VHECR construction complete");
     return true;
 }
 
 
-void VHECRTask::readConfigFile()
-{
-    //      cout << "Reading in config file..." << endl;
-    std::ifstream configFile(itsConfigurationFile.c_str());
-    if (configFile.is_open() != true) {
-        LOG_INFO("VHECR config file not found, use default values");
-        // cerr << "VHECRTask: Failed to open config file!" << endl;
-        itsLogfile = stdout;
-        fprintf(itsLogfile, "VHECRTask logfile\n"); // first line in file has to contain 'VHECR' for Python script to understand it.
-        return;
-    }
-    
-    string temp;
-
-    while (configFile.eof() != true) {
-        configFile >> temp;
-        // switch / case won't work unfortunately...
-        if (temp == "outputFilename:") {
-            configFile >> itsOutputFilename;
-            itsLogfile = fopen(itsOutputFilename.c_str(), "w"); // overwrites existing file...
-            fprintf(itsLogfile, "VHECRTask logfile\n"); // first line in file has to contain 'VHECR' for Python script to understand it.
-            fprintf(itsLogfile, "Successfully opened log file!\n");
-            fflush(itsLogfile);
-            // cout << "Filename set to: " << itsOutputFilename << endl;
-        } 
-        else if (temp == "coincidenceChannels:") {
-            configFile >> itsSettings->noCoincChann;
-            // cout << "No channels set to: " << itsSettings->noCoincChann << endl;
-        } 
-        else if (temp == "antennaPositionsFile:") {
-            configFile >> itsAntennaPositionsFile;
-        } 
-        else if (temp == "antennaSelection:") {
-            configFile >> itsSettings->antennaSet;
-        } 
-        else if (temp == "coincidenceTime:") {
-            configFile >> itsSettings->coincidenceTime;
-        } else if (temp == "doDirectionFit:") {
-            configFile >> itsSettings->doDirectionFit;
-        } 
-        else {
-            LOG_DEBUG("Error reading config file!");
-        }
-    }
-}
-
-void VHECRTask::setParameters(string AntennaSet, string AntennaPositionsFile, int Clock,
+void VHECRTask::setParameters(string AntennaSet, int Clock,
       int NoCoincChann, float CoincidenceTime, int DoDirectionFit,
       float MinElevation, float MaxFitVariance, string ParamExtension,
       float forcedDeadTime)
@@ -233,36 +120,11 @@ void VHECRTask::setParameters(string AntennaSet, string AntennaPositionsFile, in
     itsSettings->clockFreq = Clock;
     itsParamExtension = ParamExtension;
     itsSettings->antennaSet = AntennaSet;
-    itsAntennaPositionsFile = AntennaPositionsFile;
     itsForcedDeadTime = forcedDeadTime;
 
     setup();
-
-    if ((itsLogfile != NULL) ) {
-        fprintf(itsLogfile, "New setup after call to \"setParameters()\"\n");
-        fprintf(itsLogfile, "Sampling rate in Hz: %d\n", itsSamplingRate);
-        fprintf(itsLogfile, "Output file: %s\n", itsOutputFilename.c_str());
-        fprintf(itsLogfile, "Coincidence channels required: %d\n", itsSettings->noCoincChann);
-        fprintf(itsLogfile, "Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
-        fprintf(itsLogfile, "Antenna selection: %s\n", itsSettings->antennaSet.c_str());
-        fprintf(itsLogfile, "Coincidence time window: %3.6e\n", itsSettings->coincidenceTime);
-        fprintf(itsLogfile, "do Direction fit: %d\n", itsSettings->doDirectionFit);
-        fprintf(itsLogfile, "Minimum elevation: %3.4f\n", itsSettings->minElevation);
-        fprintf(itsLogfile, "Maximum fit-variance: %3.4f\n", itsSettings->maxFitVariance);
-        fflush(itsLogfile);
-    } 
-    else {
-        printf("New setup after call to \"setParameters()\"\n");
-        printf("Sampling rate in Hz: %d\n", itsSamplingRate);
-        printf("Output file: %s\n", itsOutputFilename.c_str());
-        printf("Coincidence channels required: %d\n", itsSettings->noCoincChann);
-        printf("Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
-        printf("Antenna selection: %s\n", itsSettings->antennaSet.c_str());
-        printf("Coincidence time window: %3.6e\n", itsSettings->coincidenceTime);
-        printf("do Direction fit: %d\n", itsSettings->doDirectionFit);
-        printf("Minimum elevation: %3.4f\n", itsSettings->minElevation);
-        printf("Maximum fit-variance: %3.4f\n", itsSettings->maxFitVariance);
-    }
+    
+    LOG_INFO_STR("VHECR settings" << *itsSettings);
 }
 
 
@@ -304,12 +166,12 @@ string VHECRTask::readableTime(const uint64 date)
 
 void VHECRTask::printCoincidence(int coincidenceIndex)
 {
-    cout << " --- This coincidence: --- " << endl;
-    cout << "Showing time offsets w.r.t. latest timestamp" << endl;
+    LOG_INFO_STR(" --- This coincidence: --- ");
+    LOG_INFO_STR("Showing time offsets w.r.t. latest timestamp");
     int runningIndex = coincidenceIndex;
     int64 refdate = trigBuffer[runningIndex].date;
     for (int k=0; k<itsSettings->noCoincChann; k++) {
-        cout << "RCU " << trigBuffer[runningIndex].RcuNr << ": " << (int64)trigBuffer[runningIndex].date - refdate << endl;
+        LOG_INFO_STR("RCU " << trigBuffer[runningIndex].RcuNr << ": " << (int64)trigBuffer[runningIndex].date - refdate << endl);
         runningIndex = trigBuffer[runningIndex].next;
     }
 }
@@ -380,12 +242,11 @@ int VHECRTask::getReadCmd(std::vector<TBBReadCmd> &readCmd)
         //          cout.flush();
         }
         // log to file
-        fprintf(itsLogfile, "TimingLog: %s %d %s %d\n", 
+        LOG_DEBUG_STR(formatString("TimingLog: %s %d %s %d\n", 
                             readableTime(pcTimeInSamples).c_str(),
                             trigBuffer[coincidenceIndex].no,
                             readableTime(trigBuffer[coincidenceIndex].date).c_str(),
-                            trigBuffer[coincidenceIndex].RcuNr);
-        fflush(itsLogfile);
+                            trigBuffer[coincidenceIndex].RcuNr));
 
         latestCoincidenceTime = trigBuffer[coincidenceIndex].date;
         bool dumpData = false;
@@ -394,14 +255,14 @@ int VHECRTask::getReadCmd(std::vector<TBBReadCmd> &readCmd)
             if (itsSettings->doDirectionFit > 0) {
                 if (directionFitResult.mse > itsSettings->maxFitVariance) {
                     // be verbose about dump decisions for now... testing.
-                    fprintf(itsLogfile, "Not dumping data, variance too high: %f\n", directionFitResult.mse);
+                    LOG_DEBUG_STR(formatString("Not dumping data, variance too high: %f\n", directionFitResult.mse));
                 } 
                 else if ( (directionFitResult.theta* (360.0 / TWOPI)) < itsSettings->minElevation) {
-                    fprintf(itsLogfile, "Not dumping data, elevation too low: %f\n", directionFitResult.theta*(360./TWOPI));
+                    LOG_DEBUG_STR(formatString("Not dumping data, elevation too low: %f\n", directionFitResult.theta*(360./TWOPI)));
                 } 
                 else {
-                    fprintf(itsLogfile,"directionFitResult good: theta= %f mse= %f\n",
-                    directionFitResult.theta* (360.0 / TWOPI), directionFitResult.mse);
+                    LOG_INFO_STR(formatString("directionFitResult good: theta= %f mse= %f\n",
+                    directionFitResult.theta* (360.0 / TWOPI), directionFitResult.mse));
                     dumpData = true;
                 }
             } 
@@ -426,7 +287,7 @@ int VHECRTask::getReadCmd(std::vector<TBBReadCmd> &readCmd)
                 readCmd.push_back(TBBReadCmd(RcuNr, Time, sampleTime, prePages, postPages));
             }
             itsNrTriggers++;
-            fprintf(itsLogfile, "Dump data\n");
+            LOG_INFO_STR("Dump data");
         }
     } // end: if ( (coincidenceIndex >= 0) ...
 
@@ -435,7 +296,6 @@ int VHECRTask::getReadCmd(std::vector<TBBReadCmd> &readCmd)
 //       readTBBdata(itsCommandVector);         // report that we want everything
 //       itsCommandVector.clear();              // clear buffer
 //       }
-    fflush(itsLogfile);
     return noOfRCUs;
 }
 
@@ -527,13 +387,13 @@ uint32 VHECRTask::add2buffer(const TBBTrigger& trigger)
     return (newindex);
 }
 
-VHECRTask::fitResultStruct VHECRTask::fitDirectionToCoincidence(int coincidenceIndex, uint32 nofChannels)
+VHECRTask::fitResultStruct VHECRTask::fitDirectionToCoincidence(int coincidenceIndex, int nofChannels)
 {
     double theta, phi;
     double c = 2.9979e8;
 
-    const uint32 thetaSteps = 30;
-    const uint32 phiSteps = 120; // move to somewhere else! Parameters...
+    const int thetaSteps = 30;
+    const int phiSteps = 120; // move to somewhere else! Parameters...
 
     double timeDelays[NOFANTENNAS];
 
@@ -545,9 +405,9 @@ VHECRTask::fitResultStruct VHECRTask::fitDirectionToCoincidence(int coincidenceI
     int64 refdate = trigBuffer[coincidenceIndex].date; // coincidence reference timestamp to subtract from all other timestamps.
 
     positionStruct a;
-    for (uint32 i=0; i<thetaSteps; i++) {
-        for (uint32 j=0; j<phiSteps; j++) {
-            theta = TWOPI / 4 - TWOPI/4 * (double)i / thetaSteps;
+    for (int i=0; i<thetaSteps; i++) {
+        for (int j=0; j<phiSteps; j++) {
+            theta = TWOPI / 4 - TWOPI / 4 * (double)i / thetaSteps;
             phi = TWOPI * (double)j / phiSteps;
 
             a.x = - sin(theta) * cos(phi); // + sign when relating to a point in the sky! - sign when doing spherical vector
@@ -555,8 +415,9 @@ VHECRTask::fitResultStruct VHECRTask::fitDirectionToCoincidence(int coincidenceI
             a.z = - cos(theta);
 
             // do inner product with antenna pos vector
-            for (uint32 rcu=0; rcu<NOFANTENNAS; rcu++) {
-                double prod = a.x * antennaPositions[rcu].x + a.y * antennaPositions[rcu].y + a.z * antennaPositions[rcu].z;
+            for (int rcu=0; rcu<NOFANTENNAS; rcu++) {
+                // double prod = a.x * antennaPositions[rcu].x + a.y * antennaPositions[rcu].y + a.z * antennaPositions[rcu].z;
+                double prod = a.x * itsSettings->rcuPosITRF(rcu, 0) + a.y * itsSettings->rcuPosITRF(rcu, 1) + a.z * itsSettings->rcuPosITRF(rcu, 2);
                 timeDelays[rcu] = prod * (double)itsSamplingRate / c; // in samples
             }
             // calculate fit result, which is standard deviation of timing residues
@@ -569,7 +430,7 @@ VHECRTask::fitResultStruct VHECRTask::fitDirectionToCoincidence(int coincidenceI
             mu = 0; //average = 0; sig2 = 0; sigma = 0;
             sig2=0;
 
-            for (uint32 k=0; k<nofChannels; k++) { // loop through all RCUs that are there in this coincidence
+            for (int k=0; k<nofChannels; k++) { // loop through all RCUs that are there in this coincidence
                 //            if (runningIndex != outlierIndex)
                 //            {
                 uint32 rcu = trigBuffer[runningIndex].RcuNr;
@@ -599,7 +460,7 @@ VHECRTask::fitResultStruct VHECRTask::fitDirectionToCoincidence(int coincidenceI
     totalCoincidences++;
 //      cout << "Fit result: theta = " << minTh * (360.0 / TWOPI) << "; phi = " << minPh * (360.0/TWOPI) << "; variance = " << minSig2 << endl;
     if (minSig2 < 50.0) {
-        fprintf(itsLogfile, "FitResult: %lld %f %f %f\n", refdate, minTh * (360.0 / TWOPI), minPh * (360.0 / TWOPI), minSig2);
+        LOG_INFO_STR(formatString("FitResult: %lld %f %f %f\n", refdate, minTh * (360.0 / TWOPI), minPh * (360.0 / TWOPI), minSig2));
         // debug
         //       uint32 runningIndex = coincidenceIndex;
         //        for (uint32 k=0; k<nofChannels; k++)
@@ -611,9 +472,9 @@ VHECRTask::fitResultStruct VHECRTask::fitDirectionToCoincidence(int coincidenceI
     } 
     else {
         badFits++;
-        fprintf(itsLogfile, "FitResult: %lld %f %f %f BadFit!\n", refdate, minTh * (360.0 / TWOPI), minPh * (360.0 / TWOPI), minSig2);
+        LOG_DEBUG_STR(formatString("FitResult: %lld %f %f %f BadFit!\n", refdate, minTh * (360.0 / TWOPI), minPh * (360.0 / TWOPI), minSig2));
     
-        cout << "Bad fit!" << endl;
+        // cout << "Bad fit!" << endl;
         // debug
     
         //        uint32 runningIndex = coincidenceIndex;
@@ -631,15 +492,15 @@ VHECRTask::fitResultStruct VHECRTask::fitDirectionToCoincidence(int coincidenceI
     return (theResult);
 }
 
-void VHECRTask::fitDirectionAndDistanceToCoincidence(int coincidenceIndex, uint32 nofChannels)
+void VHECRTask::fitDirectionAndDistanceToCoincidence(int coincidenceIndex, int nofChannels)
 { // number of channels known from requirement
     //     cout << "Do smart stuff... (well, we hope)" << endl;
     double theta, phi, R;
     double c = 2.9979e8;
 
-    const uint32 thetaSteps = 30;
-    const uint32 phiSteps = 120; // move to somewhere else! Parameters...
-    const uint32 Rsteps = 40;
+    const int thetaSteps = 30;
+    const int phiSteps = 120; // move to somewhere else! Parameters...
+    const int Rsteps = 40;
 
     double timeDelays[NOFANTENNAS]; // get rid of that constant
 
@@ -647,7 +508,7 @@ void VHECRTask::fitDirectionAndDistanceToCoincidence(int coincidenceIndex, uint3
     R = 5.0;
     double minR = 1.0e12;
     double overallMinSig2 = 1.0e12;
-    for (uint32 stepR=0; stepR < Rsteps; stepR++) {
+    for (int stepR=0; stepR < Rsteps; stepR++) {
         R *= 1.2;
     
         double minTh = 1.0e9;
@@ -657,8 +518,8 @@ void VHECRTask::fitDirectionAndDistanceToCoincidence(int coincidenceIndex, uint3
         int64 refdate = trigBuffer[coincidenceIndex].date; // coincidence reference timestamp to subtract from all other timestamps.
     
         positionStruct a;
-        for (uint32 i=0; i<thetaSteps; i++) {
-            for (uint32 j=0; j<phiSteps; j++) {
+        for (int i=0; i<thetaSteps; i++) {
+            for (int j=0; j<phiSteps; j++) {
                 theta = TWOPI / 4 - TWOPI/4 * (double)i / thetaSteps;
                 phi = TWOPI * (double)j / phiSteps;
         
@@ -666,10 +527,13 @@ void VHECRTask::fitDirectionAndDistanceToCoincidence(int coincidenceIndex, uint3
                 a.y = R * sin(theta) * sin(phi); // minus 90 degrees to relate to antenna coord system, phi=0: east, phi=90: north...
                 a.z = R * cos(theta);
         
-                for (uint32 rcu=0; rcu < NOFANTENNAS; rcu++) {
-                    double distX = a.x - antennaPositions[rcu].x;
-                    double distY = a.y - antennaPositions[rcu].y;
-                    double distZ = a.z - antennaPositions[rcu].z;
+                for (int rcu=0; rcu < NOFANTENNAS; rcu++) {
+                    // double distX = a.x - antennaPositions[rcu].x;
+                    double distX = a.x - itsSettings->rcuPosITRF(rcu, 0);
+                    // double distY = a.y - antennaPositions[rcu].y;
+                    double distY = a.y - itsSettings->rcuPosITRF(rcu, 1);
+                    // double distZ = a.z - antennaPositions[rcu].z;
+                    double distZ = a.z - itsSettings->rcuPosITRF(rcu, 2);
                     double dist = sqrt(distX * distX + distY * distY + distZ * distZ);
                     timeDelays[rcu] = (double)itsSamplingRate * (dist - R) / c;
                 }
@@ -725,7 +589,7 @@ void VHECRTask::fitDirectionAndDistanceToCoincidence(int coincidenceIndex, uint3
                 mu = 0; //average = 0; sig2 = 0; sigma = 0;
                 sig2=0;
         
-                for (uint32 k=0; k<nofChannels; k++) { // loop through all RCUs that are there in this coincidence
+                for (int k=0; k<nofChannels; k++) { // loop through all RCUs that are there in this coincidence
                     //            if (runningIndex != outlierIndex)
                     //            {
                     uint32 rcu = trigBuffer[runningIndex].RcuNr;
@@ -755,7 +619,7 @@ void VHECRTask::fitDirectionAndDistanceToCoincidence(int coincidenceIndex, uint3
                         overallMinSig2 = minSig2;
                         minR = R;
                     }
-                    for (uint32 k=0; k<nofChannels; k++) {
+                    for (int k=0; k<nofChannels; k++) {
                         minDebugTimeOffsets[k] = debugTimeOffsets[k] - mu/nofChannels;
                     }
                 }
@@ -763,14 +627,13 @@ void VHECRTask::fitDirectionAndDistanceToCoincidence(int coincidenceIndex, uint3
                 // cout << "theta = " << 360.0/TWOPI * (TWOPI/4 - theta) << ", phi = " << (double)j / phiSteps * 360 << ": fitResult = " << fitResult[i][j] << endl;
             }
         }
-        cout << "Fit result: theta = " << minTh * (360.0 / TWOPI) << "; phi = " << minPh * (360.0/TWOPI) << "; R = " << R << "; height = " << R * sin(minTh) << "; variance = " << minSig2 << endl;
+        //cout << "Fit result: theta = " << minTh * (360.0 / TWOPI) << "; phi = " << minPh * (360.0/TWOPI) << "; R = " << R << "; height = " << R * sin(minTh) << "; variance = " << minSig2 << endl;
     
         //      } // for stepR
         totalCoincidences++;
         //     cout << "Best fit result: theta = " << minTh * (360.0 / TWOPI) << "; phi = " << minPh * (360.0/TWOPI) << "; R = " << minR << "; height = " << R * sin(minTh) << "; variance = " << minSig2 << endl;
         if ((minSig2 < 50.0) && (stepR == Rsteps - 1)) { // hack to ensure we only call this at the end of the loop...
-            cout << "WRITING FILE" << endl;
-            fprintf(itsLogfile, "FitResult: %lld %f %f %f %F\n", refdate, minTh * (360.0 / TWOPI), minPh * (360.0 / TWOPI), minSig2, minR);
+            LOG_DEBUG_STR(formatString("FitResult: %lld theta=%f phi=%f variance=%f minR=%F\n", refdate, minTh * (360.0 / TWOPI), minPh * (360.0 / TWOPI), minSig2, minR));
         //       for (uint32 k=0; k<nofChannels; k++)
         //        {
         //          cout << k << ": " << minDebugTimeOffsets[k] << endl;
@@ -785,58 +648,6 @@ void VHECRTask::fitDirectionAndDistanceToCoincidence(int coincidenceIndex, uint3
         //        }
         }
     } // {for stepR}
-}
-
-void VHECRTask::readAntennaPositions(string fileName, string antennaSelection)
-{
-    //      cout << "Reading in antenna positions..." << endl;
-    std::ifstream antennaFile(fileName.c_str());
-    if (antennaFile.is_open() != true) {
-        LOG_FATAL("Failed to open Antenna Positions file!");
-        //cerr << "VHECRTask: Failed to open Antenna Positions file!" << endl;
-        itsSettings->doDirectionFit = 0;
-        return;
-    }
-    string temp;
-    int nrAntennas, nrPolarizations, nrDirections;
-    //casa::Vector<MVPosition> all_positions;
-    //casa::Vector<MVPosition> selected_positions;
-    
-    do {
-        antennaFile >> temp;
-    } while((temp != antennaSelection) && !antennaFile.eof());
-    
-    if (antennaFile.eof()) {
-        LOG_FATAL("Failed to find antennaSelection!");
-        //cerr << "VHECRTask: Failed to open Antenna Positions file!" << endl;
-        itsSettings->doDirectionFit = 0;
-        return;
-    }
-    
-    antennaFile >> temp; antennaFile >> temp; antennaFile >> temp; antennaFile >> temp; antennaFile >> temp;
-    antennaFile >> temp; antennaFile >> nrAntennas; cout << " nr. antennas: " << nrAntennas << endl;
-    antennaFile >> temp; antennaFile >> nrPolarizations; cout << " nr. polarizations: " << nrPolarizations << endl;
-    antennaFile >> temp; antennaFile >> nrDirections; cout << " nr. directions: " << nrDirections << endl;
-    antennaFile >> temp;
-
-//      all_positions.resize(nrantennas);
-    int nrRCUs = nrAntennas * nrPolarizations;
-//      cout << "nr. RCUs: " << nrRCUs << endl;
-
-    double posx;
-    double posy;
-    double posz;
-    for (int rcu=0; rcu < nrRCUs; rcu++) {
-        antennaFile >> posx; antennaFile >> posy; antennaFile >> posz;
-     // antennaFile >> temp; antennaFile >> temp; antennaFile >> temp;
-        antennaPositions[rcu].x = posx; antennaPositions[rcu].y = posy; antennaPositions[rcu].z = posz;
-     // all_positions(ant)=MVPosition(posx,posy,posz);
-    }
-    
-    for (int rcu=0; rcu < nrRCUs; rcu++) {
-        cout << "RCU " << rcu << ": " << antennaPositions[rcu].x << "  " << antennaPositions[rcu].y << "  " << antennaPositions[rcu].z << endl;
-    }
-//      return antennaPositions;
 }
 
     }; // StationCU

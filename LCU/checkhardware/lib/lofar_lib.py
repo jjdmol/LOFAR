@@ -26,7 +26,7 @@ StationType = dict( CS=1, RS=2, IS=3 )
 
 logger           = None
 rcumode          = -1
-active_delay_str = ('2,'*16)[:-1]
+active_delay_str = ('555,'*16)[:-1]
 
 
 def init_lofar_lib():
@@ -167,7 +167,6 @@ def readStationConfig():
 # ---
 
 def swlevel(level=None):
-    global logger
     _level = level
     board_errors = list()
     if (level != None):
@@ -193,7 +192,6 @@ def swlevel(level=None):
     return (current_level, board_errors)
 
 def reset48V():
-    global logger
     logger.info("Try to reset 48V power")
     ec_name = socket.gethostname()[:-1]+"ec"
     ec_ip = socket.gethostbyname(ec_name)
@@ -227,7 +225,6 @@ def reset48V():
 
 # Run rspctl command with given args and return response
 def rspctl(args='', wait=0.0):
-    global logger
     if args != '':
         logger.debug("rspctl %s" %(args))
         response = sendCmd('rspctl', args)
@@ -239,7 +236,6 @@ def rspctl(args='', wait=0.0):
 
 # Run tbbctl command with given args and return response
 def tbbctl(args=''):
-    global logger
     if args != '':
         logger.debug("tbbctl %s" %(args))
         return (sendCmd('tbbctl', args))
@@ -256,7 +252,6 @@ def checkActiveTBBDriver():
 # wait until all boards have a working image loaded
 # returns 1 if ready or 0 if timed_out
 def waitTBBready(n_boards=6):
-    global logger
     timeout = 90
     logger.info("wait for working TBB boards ")
     sys.stdout.flush()
@@ -306,7 +301,6 @@ def checkActiveRSPDriver():
 # RSP[11] RSP version = 0, BP version = 0.0, AP version = 0.0
 
 def waitRSPready():
-    global logger
     timeout = 60
     logger.info("wait for working RSP boards ")
     sys.stdout.flush()
@@ -350,16 +344,18 @@ def selectStr(sel_list):
 
     # convert select-string to sel_list
 def extractSelectStr(selectStr):
-    selectStr += '.'
+    selectStr = selectStr.strip() + '.'
+    if selectStr.strip() == '.':
+        return([])
     sel_list = list()
     num_str = ''
-    num = 0
+    num = -1
     set_num = -1
     for ch in selectStr:
         if ch.isalnum():
             num_str += ch
             continue
-        
+        num_str = num_str.strip()    
         num = int(num_str)
         num_str = ''
             
@@ -375,7 +371,8 @@ def extractSelectStr(selectStr):
         if ch == ':':
             set_num = num
              
-    sel_list.append(num)        
+    if num > -1:
+        sel_list.append(num)        
     return (sorted(sel_list))
 
 def getClock():
@@ -385,8 +382,7 @@ def getClock():
     return (clock)
     
 # function used for antenna testing        
-def swapXY(state):
-    global logger
+def swap_xy(state):
     if state in (0,1):
         if state == 1:
             logger.info("XY-output swapped")
@@ -395,7 +391,6 @@ def swapXY(state):
         rspctl('--swapxy=%d' %(state))
 
 def resetRSPsettings():
-    global logger
     if rspctl       ('--clock').find('200MHz') < 0:
         rspctl      ('--clock=200')
         logger.info ("Changed Clock to 200MHz")
@@ -411,25 +406,30 @@ def resetRSPsettings():
     #rspctl         ('--hbadelays=%s' %(('128,'*16)[:-1]), wait=8.0)
     
 def turnonRCUs(mode, rcus):
-    global logger
-    global rcumode
-    start_mode = rcumode
+    #global rcumode
+    #start_mode = rcumode
     select = selectStr(rcus)
     logger.info("turn RCU's on, mode %d" %(mode))
     logger.info("enable rcus")
     rspctl('--rcuenable=1 --select=%s' %(select), wait=0.0)
     logger.info("setweights")
     rspctl('--aweights=8000,0', wait=0.0)
+    
     if mode == 5:
         rspctl('--specinv=1', wait=0.0)
     else:
         rspctl('--specinv=0', wait=0.0)
+    
+    if mode < 3:
+        swap_xy(state=1)
+    else:
+        swap_xy(state=0)
     logger.info("set rcu mode")
     rsp_rcu_mode(mode, rcus)
-    rcumode = mode
+    #rcumode = mode
+    return
     
 def turnoffRCUs():
-    global logger
     global rcumode
     logger.info("RCU's off, mode 0")
     rspctl('--rcumode=0', wait=0.0)
@@ -440,12 +440,13 @@ def turnoffRCUs():
 # set rcu mode, if mode > 4(hba) turn on hba's in steps to avoid power dips
 def rsp_rcu_mode(mode, rcus):
     global rcumode
-    rcumode = mode
     if mode > 0 and mode < 5: # lba modes
+        rcumode = mode
         select = selectStr(rcus)
         rspctl('--rcumode=%d --select=%s' %(mode, select), wait=6.0)
         return (0)
     elif mode < 8: # hba modes
+        rcumode = mode
         # maximum 12 power RCUs each step
         steps = int(round(len(rcus) / 24.))
         for step in range(0,(steps*2),2):
@@ -459,12 +460,11 @@ def rsp_rcu_mode(mode, rcus):
         
 # set hba_delays in steps to avoid power dips, and discharge if needed
 def rsp_hba_delay(delay, rcus, discharge=True):
-    global logger
     global active_delay_str
     
     if delay == active_delay_str:
         logger.debug("requested delay already active, skip hbadelay command")
-        return (0)
+        return (1)
     
     if discharge == True:
         # count number of elements off in last command

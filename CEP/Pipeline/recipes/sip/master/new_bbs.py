@@ -355,7 +355,7 @@ class new_bbs(BaseRecipe):
         code.
         """
         self.logger.info("Running BBS GlobalControl")
-        working_dir = tempfile.mkdtemp()
+        working_dir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
         with CatchLog4CPlus(
             working_dir,
             self.logger.name + ".GlobalControl",

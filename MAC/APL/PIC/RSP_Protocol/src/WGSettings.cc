@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -105,19 +105,13 @@ size_t WGSettings::getSize() const
 size_t WGSettings::pack  (char* buffer) const
 {
   size_t offset = 0;
-  
-  MSH_pack(buffer, offset, m_registers);
-
-  return offset;
+  return MSH_pack(buffer, offset, m_registers);
 }
 
 size_t WGSettings::unpack(const char *buffer)
 {
   size_t offset = 0;
-
-  MSH_unpack(buffer, offset, m_registers);
-
-  return offset;
+  return MSH_unpack(buffer, offset, m_registers);
 }
 
 Array<int32, 1> WGSettings::preset(int index)

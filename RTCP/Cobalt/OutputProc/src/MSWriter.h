@@ -51,6 +51,7 @@ namespace LOFAR
       size_t itsNrBlocksWritten;
       size_t itsNrExpectedBlocks;
       ParameterSet itsConfiguration;
+      string itsConfigurationPrefix;
     };
 
 

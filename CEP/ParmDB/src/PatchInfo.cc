@@ -31,6 +31,9 @@
 #include <Blob/BlobOStream.h>
 #include <Common/LofarLogger.h>
 
+#include <casa/Quanta/MVAngle.h>
+
+using namespace casa;
 
 namespace LOFAR {
 namespace BBS {
@@ -48,9 +51,12 @@ namespace BBS {
 
   std::ostream& operator<< (std::ostream& os, const PatchInfo& info)
   {
-    os << "patch=" << info.getName() << " cat=" << info.getCategory()
-       << " ra=" << info.getRa() << " dec=" << info.getDec()
-       << " flux=" << info.apparentBrightness();
+    os << "patch=" << info.getName() << " cat=" << info.getCategory();
+    os << " ra=";
+    MVAngle(info.getRa()).print(os, MVAngle::Format(MVAngle::TIME, 9));
+    os << " dec=";
+    MVAngle(info.getDec()).print (os, MVAngle::Format(MVAngle::ANGLE, 9));
+    os << " flux=" << info.apparentBrightness();
     return os;
   }
 

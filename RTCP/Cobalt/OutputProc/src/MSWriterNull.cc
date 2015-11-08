@@ -57,7 +57,7 @@ namespace LOFAR
       itsConfiguration.replace("size", str(format("%u") % getDataSize()));
       itsConfiguration.replace("duration", 
           str(format("%f") % ((data->sequenceNumber() + 1) *
-            itsParset.IONintegrationTime())));
+            itsParset.settings.correlator.integrationTime())));
     }
 
   } // namespace Cobalt

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "Sequencer.h"
 #include "StationSettings.h"
 #include "GetSplitterCmd.h"
 #include "UpdSplitterCmd.h"
@@ -80,7 +81,10 @@ void UpdSplitterCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 //
 void UpdSplitterCmd::complete(CacheBuffer& cache)
 {
-	// check if we need to continue
+	if (Sequencer::getInstance().isActive()) {
+        return;
+    }
+    // check if we need to continue
 //	LOG_INFO_STR("itsSplitterOn=" << itsSplitterOn << ", cache.isSplitterActive=" << (cache.isSplitterActive() ? 1 : 0));
 	if (itsSplitterOn == (cache.isSplitterActive() ? 1 : 0)) {	// state didn't change?
 		return;

@@ -40,9 +40,16 @@
 #include <measures/Measures/MCPosition.h>
 #include <measures/Measures/MCDirection.h>
 
+#if defined(casacore)
+#include <python/Converters/PycExcp.h>
+#include <python/Converters/PycBasicData.h>
+#include <python/Converters/PycValueHolder.h>
+#define pyrap python
+#else
 #include <pyrap/Converters/PycExcp.h>
 #include <pyrap/Converters/PycBasicData.h>
 #include <pyrap/Converters/PycValueHolder.h>
+#endif
 
 #include <boost/python.hpp>
 #include <boost/python/args.hpp>
@@ -50,7 +57,6 @@
 #include "Package__Version.cc"
 
 using namespace casa;
-using namespace casa::pyrap;
 using namespace boost::python;
 using namespace LOFAR::StationResponse;
 
@@ -179,6 +185,7 @@ namespace BBS
     ValueHolder evaluate0(double time);
     ValueHolder evaluate1(double time, int station);
     ValueHolder evaluate2(double time, int station, int channel);
+    ValueHolder evaluate3(double time, int station, double freq);
 
   private:
     Matrix<DComplex> evaluate(const Station::ConstPtr &station, double time,
@@ -339,6 +346,21 @@ namespace BBS
     }
 
     double freq0 = itsRefFreq(channel);
+    return ValueHolder(evaluate(itsStations(station), time, freq, freq0));
+  }
+
+  ValueHolder PyStationResponse::evaluate3(double time, int station,
+    double freq)
+  {
+    ASSERTSTR(station >= 0 && static_cast<size_t>(station)
+      < itsStations.size(), "invalid station number: " << station);
+
+    if(itsUseChanFreq)
+    {
+      return ValueHolder(evaluate(itsStations(station), time, freq, freq));
+    }
+
+    double freq0 = itsRefFreq(0);
     return ValueHolder(evaluate(itsStations(station), time, freq, freq0));
   }
 
@@ -537,6 +559,9 @@ namespace BBS
       .def ("evaluate2", &PyStationResponse::evaluate2,
       (boost::python::arg("time"), boost::python::arg("station"),
          boost::python::arg("channel")))
+      .def ("evaluate3", &PyStationResponse::evaluate3,
+      (boost::python::arg("time"), boost::python::arg("station"),
+         boost::python::arg("freq")))
       ;
   }
 

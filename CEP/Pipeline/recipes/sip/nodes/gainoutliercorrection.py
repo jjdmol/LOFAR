@@ -77,7 +77,7 @@ class gainoutliercorrection(LOFARnodeTCP):
         self.logger.info(
             "Using the gainoutlier correction based on parmexportcal")
         try:
-            temp_dir = tempfile.mkdtemp()
+            temp_dir = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
             with CatchLog4CPlus(
                 temp_dir,
                 self.logger.name + '.' + os.path.basename(infile),

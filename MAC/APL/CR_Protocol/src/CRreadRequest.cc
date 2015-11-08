@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -47,9 +47,9 @@ size_t CRreadRequest::getSize()
 
 size_t CRreadRequest::pack  (char* buffer) const
 {
-	uint32 offset = 0;
-	MSH_pack(buffer, offset, stationList);	
-	MSH_pack(buffer, offset, rcuList);	
+	size_t offset = 0;
+	offset = MSH_pack(buffer, offset, stationList);	
+	offset = MSH_pack(buffer, offset, rcuList);	
 	offset += readTime.pack((char*)(buffer)+offset);
 	offset += timeBefore.pack((char*)(buffer)+offset);
 	offset += timeAfter.pack((char*)(buffer)+offset);
@@ -58,9 +58,9 @@ size_t CRreadRequest::pack  (char* buffer) const
 
 size_t CRreadRequest::unpack(const char *buffer)
 {
-	uint32 offset = 0;
-	MSH_unpack(buffer, offset, stationList);	
-	MSH_unpack(buffer, offset, rcuList);	
+	size_t offset = 0;
+	offset = MSH_unpack(buffer, offset, stationList);	
+	offset = MSH_unpack(buffer, offset, rcuList);	
 	offset += readTime.unpack((char*)(buffer)+offset);
 	offset += timeBefore.unpack((char*)(buffer)+offset);
 	offset += timeAfter.unpack((char*)(buffer)+offset);

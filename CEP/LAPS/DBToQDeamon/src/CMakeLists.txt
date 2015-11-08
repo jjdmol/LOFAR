@@ -1,8 +1,3 @@
 # $Id$
 
-include(PythonInstall)
-
-python_install(
-  DBToQDeamon.py
-
-  DESTINATION LAPS/DBToQDeamon)
+lofar_add_bin_scripts(DBToQDeamon.py)

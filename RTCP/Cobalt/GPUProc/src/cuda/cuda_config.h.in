@@ -28,7 +28,7 @@
 #define CUDA_VERSION_STRING    "@CUDA_VERSION_STRING@"
 #define CUDA_TOOLKIT_ROOT_DIR  "@CUDA_TOOLKIT_ROOT_DIR@"
 
-// CUDA_SDK_ROOT_DIR is set to set to "CUDA_SDK_ROOT_DIR-NOTFOUND" if N/A.
+// CUDA_SDK_ROOT_DIR is set to "CUDA_SDK_ROOT_DIR-NOTFOUND" if N/A.
 // But you probably do not want to use this symbol anyway, see FindCUDA.cmake
 #define CUDA_SDK_ROOT_DIR      "@CUDA_SDK_ROOT_DIR@"
 

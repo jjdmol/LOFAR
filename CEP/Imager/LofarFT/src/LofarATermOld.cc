@@ -35,7 +35,13 @@
 #include <measures/Measures/MCPosition.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSAntenna.h>
+#if defined(casacore)
+#include <ms/MSSel/MSAntennaParse.h>
+#include <ms/MSSel/MSSelection.h>
+#else
 #include <ms/MeasurementSets/MSAntennaParse.h>
+#include <ms/MeasurementSets/MSSelection.h>
+#endif
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSDataDescription.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
@@ -47,7 +53,6 @@
 #include <ms/MeasurementSets/MSPolColumns.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
-#include <ms/MeasurementSets/MSSelection.h>
 #include <synthesis/MeasurementComponents/SynthesisError.h>
 
 // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG

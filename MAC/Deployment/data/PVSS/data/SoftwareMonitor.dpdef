@@ -12,5 +12,5 @@ SWLevel		int
 
 !# DpValue
 !ElementName	TypeName	_original.._value
-!_dt_SoftwareMonitor.Leaf	_DynamicDatapoints	"_mp_SoftwareMonitor.logMsg:_archive", "_mp_SoftwareMonitor.SWLevel:_archive"
-!_dt_SoftwareMonitor.DynamicAttribute	_DynamicDatapoints	"_da_none", "_da_none"
+!_dt_SoftwareMonitor.Leaf	_DynamicDatapoints	"_mp_SoftwareMonitor.SWLevel:_archive"
+!_dt_SoftwareMonitor.DynamicAttribute	_DynamicDatapoints	"_da_none"

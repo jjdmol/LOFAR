@@ -27,34 +27,16 @@
 #include <CoInterface/Parset.h>
 #include <Stream/Stream.h>
 
-
 namespace LOFAR
 {
   namespace Cobalt
   {
 
-    // Create a stream from a descriptor
-    Stream *createStream(const std::string &descriptor, bool asReader, time_t deadline = 0);
-
-    struct StreamSpecification {
-      enum Protocol {
-        UNKNOWN_STREAM = 0, UDP_STREAM, TCP_STREAM, FILE_STREAM, NULL_STREAM,
-        PIPE_STREAM, UDPKEY_STREAM, TCPKEY_STREAM, TCPBROKER_STREAM, FACTORY_STREAM
-      };
-
-      Protocol protocol;
-      std::string hostname;
-      std::string port;
-    };
-
-    // Returns a supported protocol constant if recognized and updates *str.
-    // Throws without changing *str iff no protocol was recognized.
-    enum StreamSpecification::Protocol readProtocol(char **str);
-
     uint16 storageBrokerPort(int observationID);
     std::string getStorageControlDescription(int observationID, int rank);
 
-    std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr);
+    // The returned descriptor can be supplied to LCS/Stream StreamFactory.h
+    std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr, const std::string &bind_local_iface = "");
 
   } // namespace Cobalt
 } // namespace LOFAR

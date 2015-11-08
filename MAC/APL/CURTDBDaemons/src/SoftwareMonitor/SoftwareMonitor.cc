@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -64,6 +64,8 @@ const int	MAX_PROCMAP_ERRORS = 3;
 
 using namespace boost::posix_time;
 namespace LOFAR {
+	using namespace DP_Protocol;
+	using namespace CM_Protocol;
 	using namespace APLCommon;
 	using namespace APL::RTDBCommon;
 	using namespace GCF::TM;
@@ -596,6 +598,14 @@ void SoftwareMonitor::_buildProcessMap()
 		snprintf(statFile, sizeof statFile, "/proc/%s/cmdline", dirPtr->d_name);
 		if ((fd = open(statFile, O_RDONLY)) != -1) {
 			if (read(fd, statBuffer, STAT_BUFFER_SIZE-1)) {
+				if (basename(statBuffer) == "python") {
+					// skip python name and try to find real program
+					// note: between python and its argument in a \0 in the cmdline file,
+					//       use lseek to skip the 'python' part of the commandline.
+					if (lseek(fd, strlen(statBuffer)+1, 0) >= 0) {
+						read(fd, statBuffer, STAT_BUFFER_SIZE-1);
+					}
+				}
 				itsProcessMap.insert(pair<string,int>(basename(statBuffer), atoi(dirPtr->d_name)));
 			}
 			close(fd);

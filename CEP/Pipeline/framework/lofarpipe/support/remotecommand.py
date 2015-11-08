@@ -92,8 +92,23 @@ def run_remote_command(config, logger, host, command, env, arguments = None):
         return run_via_mpiexec(logger, command, arguments, host)
     elif method == "cep_mpi":
         return run_via_mpiexec_cep(logger, command, arguments, host)
+    elif method == "slurm_srun_cep3":
+        return run_via_slurm_srun_cep3(logger, command, arguments, host)
     else:
         return run_via_ssh(logger, host, command, env, arguments)
+
+def run_via_slurm_srun_cep3(logger, command, arguments, host):
+    for arg in arguments:
+        command = command + " " + str(arg)
+    commandstring = ["srun","-N 1","-n 1","-w",host, "/bin/sh", "-c", "hostname && " + command]
+    # we have a bug that crashes jobs when too many get startet at the same time
+    # temporary NOT 100% reliable workaround
+    #from random import randint
+    #time.sleep(randint(0,10))
+    ##########################
+    process = spawn_process(commandstring, logger)
+    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
+    return process
 
 def run_via_mpirun(logger, host, command, environment, arguments):
     """
@@ -222,7 +237,9 @@ class ComputeJob(object):
         self.arguments = arguments
         self.results = {}
         self.results['returncode'] = 123456  # Default to obscure code to allow
-        # test of failing ssh connections
+        # test of failing ssh connections 
+        # TODO: This could be done nicer!!! THis error is shown in the logfile
+        # and tends to confuse users
 
     def dispatch(self, logger, config, limiter, id, jobhost, jobport,
                   error, killswitch):
@@ -233,10 +250,10 @@ class ComputeJob(object):
         Note that error is an instance of threading.Event, which will be set
         if the remote job fails for some reason.
         """
-        # time the duration of this node
-        time_info_start = time.time()
         self.id = id
         limiter[self.host].acquire()
+        # Start the time after we aquire the lock!
+        time_info_start = time.time()
         try:
             if killswitch.isSet():
                 logger.debug("Shutdown in progress: not starting remote job")
@@ -252,7 +269,8 @@ class ComputeJob(object):
                     "PATH": os.environ.get('PATH'),
                     "PYTHONPATH": os.environ.get('PYTHONPATH'),
                     "LD_LIBRARY_PATH": os.environ.get('LD_LIBRARY_PATH'),
-                    "LOFARROOT" : os.environ.get('LOFARROOT')
+                    "LOFARROOT" : os.environ.get('LOFARROOT'),
+                    "QUEUE_PREFIX" : os.environ.get('QUEUE_PREFIX','')
                 },
                 arguments = [id, jobhost, jobport]
             )
@@ -275,6 +293,7 @@ class ComputeJob(object):
             return 1
         finally:
             limiter[self.host].release()
+
         if process.returncode != 0:
             logger.error(
                 "Remote process %s %s failed on %s (status: %d)" % \
@@ -288,8 +307,10 @@ class ComputeJob(object):
         self.results["job_duration"] = str(time_info_end - time_info_start)
         self.results['returncode'] = process.returncode
 
-        logger.debug("compute.dispatch results job {0}: {1}".format(
-                    self.id, self.results))
+        logger.debug(
+            "compute.dispatch results job {0}: {1}: {2}, {3}: {4} ".format(
+              self.id, "job_duration", self.results["job_duration"],
+                     "returncode", self.results["returncode"] ))
         return process.returncode
 
 
@@ -376,18 +397,28 @@ class RemoteCommandRecipeMixIn(object):
         node_durations = local_document.createElement("nodes")
         for job_id, job in enumerate(jobs):
             # Test if the duration is there
+            # fixme the name of node_durations is not logical
             if "job_duration" in job.results:
                 child_node_duration = add_child(node_durations, "job")
                 child_node_duration.setAttribute("job_id", str(job_id))
+                child_node_duration.setAttribute("job_host", str(job.host))
                 child_node_duration.setAttribute("duration",
                      str(job.results["job_duration"]))
-                # return code if present (Not there on error
+
+                # return code if present (Not there on error)
                 if "returncode" in job.results:
                     child_node_duration.setAttribute(
                         "returncode", str(job.results['returncode']))
                 else:
                     child_node_duration.setAttribute(
                         "returncode", str(-1))
+
+                ## If there is 'node level' resource logging available
+                if "monitor_stats" in job.results:
+                      return_node = xml.parseString(
+                          job.results['monitor_stats']).documentElement
+
+                      child_node_duration.appendChild(return_node)
 
 
         # manually add the result xml as an ingredient output.

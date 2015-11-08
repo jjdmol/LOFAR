@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -46,97 +46,83 @@ using namespace EPA_Protocol;
 namespace LOFAR {
   namespace RSP {
 
+    static uint8 tds_pll[
+                    TDS_INIT_SIZE
+                    + TDS_PROGRAMPLLS_SIZE] = {
+
+                        // program pll
+                        TDS_INIT,
+                        TDS_PROGRAMPLLS,
+                    };
+
+    uint8 tds_pll_result[
+                    TDS_INIT_RESULT_SIZE
+                    + TDS_PROGRAMPLLS_RESULT_SIZE] = {
+
+                        TDS_INIT_RESULT,
+                        TDS_PROGRAMPLLS_RESULT,
+                    };
+
+
     static uint8 tds_160MHz[
-#ifndef DISABLE_PROGRAMPLL
-			      TDS_INIT_SIZE 
-			    + TDS_PROGRAMPLLS_SIZE
-#endif
-			    + TDS_160MHZ_SIZE
-			    + TDS_C_END_SIZE] = {
+                    TDS_160MHZ_SIZE
+                    + TDS_C_END_SIZE] = {
 
-			      // switch to 160MHz to backplane (using 10MHz reference at the front)
-#ifndef DISABLE_PROGRAMPLL
-			      TDS_INIT,
-			      TDS_PROGRAMPLLS,
-#endif
-			      TDS_160MHZ,
-			      TDS_C_END,
+                  // switch to 160MHz to backplane (using 10MHz reference at the front)
+                  TDS_160MHZ,
+                  TDS_C_END,
 
-			    };
-      
+                };
+
 
     uint8 tds_160MHz_result[
-#ifndef DISABLE_PROGRAMPLL
-			      TDS_INIT_RESULT_SIZE
-			    + TDS_PROGRAMPLLS_RESULT_SIZE
-#endif
-			    + TDS_160MHZ_RESULT_SIZE
-			    + TDS_C_END_RESULT_SIZE] = {
+                  TDS_160MHZ_RESULT_SIZE
+                + TDS_C_END_RESULT_SIZE] = {
 
-#ifndef DISABLE_PROGRAMPLL
-			      TDS_INIT_RESULT,
-			      TDS_PROGRAMPLLS_RESULT,
-#endif
-			      TDS_160MHZ_RESULT,
-			      TDS_C_END_RESULT,
+                  TDS_160MHZ_RESULT,
+                  TDS_C_END_RESULT,
 
-			    };
+                };
 
-    static uint8 tds_200MHz[ 
-#ifndef DISABLE_PROGRAMPLL
-			      TDS_INIT_SIZE
-			    + TDS_PROGRAMPLLS_SIZE
-#endif
-			    + TDS_200MHZ_SIZE
-			    + TDS_C_END_SIZE] = {
+    static uint8 tds_200MHz[
+                  TDS_200MHZ_SIZE
+                + TDS_C_END_SIZE] = {
 
-			      // switch to 200MHz to backplane (using 10MHz reference at the front)
-#ifndef DISABLE_PROGRAMPLL
-			      TDS_INIT,
-			      TDS_PROGRAMPLLS,
-#endif
-			      TDS_200MHZ,
-			      TDS_C_END,
+                  // switch to 200MHz to backplane (using 10MHz reference at the front)
+                  TDS_200MHZ,
+                  TDS_C_END,
 
-			    };
+                };
 
     uint8 tds_200MHz_result[
-#ifndef DISABLE_PROGRAMPLL
-			      TDS_INIT_RESULT_SIZE
-			    + TDS_PROGRAMPLLS_RESULT_SIZE
-#endif
-			    + TDS_200MHZ_RESULT_SIZE
-			    + TDS_C_END_RESULT_SIZE] = {
+                + TDS_200MHZ_RESULT_SIZE
+                + TDS_C_END_RESULT_SIZE] = {
 
-#ifndef DISABLE_PROGRAMPLL
-			      TDS_INIT_RESULT,
-			      TDS_PROGRAMPLLS_RESULT,
-#endif
-			      TDS_200MHZ_RESULT,
-			      TDS_C_END_RESULT,
+                  TDS_200MHZ_RESULT,
+                  TDS_C_END_RESULT,
 
-			    };
+                };
 
     static uint8 tds_off[  TDS_VCXO_OFF_SIZE
-			 + TDS_OFF_SIZE
-			 + TDS_C_END_SIZE] = {
+             + TDS_OFF_SIZE
+             + TDS_C_END_SIZE] = {
 
-			   // switch off clock to backplane, RSP should switch to 125MHz
-			   TDS_VCXO_OFF,
-			   TDS_OFF,
-			   TDS_C_END,
+               // switch off clock to backplane, RSP should switch to 125MHz
+               TDS_VCXO_OFF,
+               TDS_OFF,
+               TDS_C_END,
 
-			 };
+             };
 
     uint8 tds_off_result[  TDS_VCXO_OFF_RESULT_SIZE
-			 + TDS_OFF_RESULT_SIZE
-			 + TDS_C_END_RESULT_SIZE] = {
+             + TDS_OFF_RESULT_SIZE
+             + TDS_C_END_RESULT_SIZE] = {
 
-			   TDS_VCXO_OFF_RESULT,
-			   TDS_OFF_RESULT,
-			   TDS_C_END_RESULT,
+               TDS_VCXO_OFF_RESULT,
+               TDS_OFF_RESULT,
+               TDS_C_END_RESULT,
 
-			 };
+             };
   };
 };
 
@@ -180,6 +166,11 @@ void TDSProtocolWrite::sendrequest()
 
   size_t size = 0;
 
+  // select clock
+  // 160 or 200 [MHz] (extern td clock)
+  // 125        [MHz] (intern board clock)
+  // 0          programm pll
+
   switch (Cache::getInstance().getBack().getClock()) {
   case 160:
     buf = (char*)tds_160MHz;
@@ -201,10 +192,20 @@ void TDSProtocolWrite::sendrequest()
     tdsprotocol.hdr.set(MEPHeader::TDS_PROTOCOL_HDR, MEPHeader::DST_RSP, MEPHeader::WRITE, size, m_offset);
     break;
 
-  default:
+  case 125:
     buf = (char*)tds_off;
     if (0 == getCurrentIndex()) {
       m_remaining = sizeof(tds_off);
+      m_offset    = 0;
+    }
+    size = MIN(TDS_CHUNK_SIZE, m_remaining);
+    tdsprotocol.hdr.set(MEPHeader::TDS_PROTOCOL_HDR, MEPHeader::DST_RSP, MEPHeader::WRITE, size, m_offset);
+    break;
+
+  default:
+    buf = (char*)tds_pll;
+    if (0 == getCurrentIndex()) {
+      m_remaining = sizeof(tds_pll);
       m_offset    = 0;
     }
     size = MIN(TDS_CHUNK_SIZE, m_remaining);
@@ -216,7 +217,7 @@ void TDSProtocolWrite::sendrequest()
 
   // indicate that we're initialising the hardware
   LOG_INFO_STR(formatString("Sending clock setting (offset=%d) via RSP board %d: %d MHz",
-			    m_offset, getBoardId(), Cache::getInstance().getBack().getClock()));
+                m_offset, getBoardId(), Cache::getInstance().getBack().getClock()));
 
   // advance
   m_remaining -= size;
@@ -239,7 +240,7 @@ GCFEvent::TResult TDSProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
     LOG_WARN("TDSProtocolWrite::handleack:: unexpected ack");
     return GCFEvent::NOT_HANDLED;
   }
-  
+
   EPAWriteackEvent ack(event);
 
   if (!ack.hdr.isValidAck(m_hdr))

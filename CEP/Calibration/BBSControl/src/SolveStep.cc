@@ -58,7 +58,7 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Get the relevant parameters from the Parameter Set \a parset.
-      read(parset.makeSubset("Step." + name + "."));
+      read(parset, "Step." + name + ".");
     }
 
 
@@ -227,70 +227,71 @@ namespace LOFAR
     }
 
 
-    void SolveStep::read(const ParameterSet& ps)
+    void SolveStep::read(const ParameterSet& ps, const string prefix)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      SingleStep::read(ps);
-      ParameterSet pss(ps.makeSubset("Solve."));
+      SingleStep::read(ps,prefix);
+      string sp=prefix+"Solve.";
+      //ParameterSet pss(ps.makeSubset("Solve."));
 
-      itsMode = pss.getString("Mode", "COMPLEX");
-      itsAlgorithm = pss.getString("Algorithm", "L2");
+      itsMode = ps.getString(sp+"Mode", "COMPLEX");
+      itsAlgorithm = ps.getString(sp+"Algorithm", "L2");
       double defEpsilon[3] = {1e-4, 1e-5, 1e-6};
-      itsEpsilonL1 = pss.getDoubleVector("EpsilonL1",
+      itsEpsilonL1 = ps.getDoubleVector(sp+"EpsilonL1",
         vector<double>(defEpsilon, defEpsilon + 3));
 
-      itsParms = pss.getStringVector("Parms");
+      itsParms = ps.getStringVector(sp+"Parms");
       if (itsParms.empty()) {
         THROW(BBSControlException, "Key Solve.Parms contains no solvable "
               "parameters for step \"" << name() << "\"");
       }
-      itsExclParms = pss.getStringVector("ExclParms", vector<string>());
-      itsCalibrationGroups = pss.getUint32Vector("CalibrationGroups",
+      itsExclParms = ps.getStringVector(sp+"ExclParms", vector<string>());
+      itsCalibrationGroups = ps.getUint32Vector(sp+"CalibrationGroups",
         vector<uint32>());
-      itsCellSize.freq = pss.getUint32("CellSize.Freq");
-      itsCellSize.time = pss.getUint32("CellSize.Time");
-      itsCellChunkSize = pss.getUint32("CellChunkSize");
-      itsPropagateFlag = pss.getBool("PropagateSolutions", false);
-      itsLogName = pss.getString("Log.Name", "solver_log");
-      itsLogLevel = pss.getString("Log.Level", "NONE");
+      itsCellSize.freq = ps.getUint32(sp+"CellSize.Freq");
+      itsCellSize.time = ps.getUint32(sp+"CellSize.Time");
+      itsCellChunkSize = ps.getUint32(sp+"CellChunkSize");
+      itsPropagateFlag = ps.getBool(sp+"PropagateSolutions", false);
+      itsLogName = ps.getString(sp+"Log.Name", "solver_log");
+      itsLogLevel = ps.getString(sp+"Log.Level", "NONE");
 
-      setUVRange(pss);
+      setUVRange(ps, sp);
 
-      itsRejectFlag = pss.getBool("OutlierRejection.Enable", false);
+      itsRejectFlag = ps.getBool(sp+"OutlierRejection.Enable", false);
       if(itsRejectFlag) {
         // Default RMS thresholds taken from the AIPS CALIB help text.
         double defThreshold[10] = {7.0, 5.0, 4.0, 3.5, 3.0, 2.8, 2.6, 2.4, 2.2,
           2.5};
-        itsRMSThreshold = pss.getDoubleVector("OutlierRejection.Threshold",
+        itsRMSThreshold = ps.getDoubleVector(sp+"OutlierRejection.Threshold",
           vector<double>(defThreshold, defThreshold + 10));
       }
 
       itsDirection = casa::MDirection();
       itsDirectionASCII = vector<string>();
-      itsShiftFlag = pss.getBool("PhaseShift.Enable", false);
+      itsShiftFlag = ps.getBool(sp+"PhaseShift.Enable", false);
       if(itsShiftFlag) {
-        setDirection(pss);
+        setDirection(ps, sp);
       }
 
       itsResampleCellSize = CellSize(1, 1);
-      itsResampleFlag = pss.getBool("Resample.Enable", false);
+      itsResampleFlag = ps.getBool(sp+"Resample.Enable", false);
       if(itsResampleFlag) {
-        setResampleCellSize(pss);
-        itsDensityThreshold = pss.getDouble("Resample.DensityThreshold", 1.0);
+        setResampleCellSize(ps,sp);
+        itsDensityThreshold = ps.getDouble(sp+"Resample.DensityThreshold", 1.0);
       }
 
-      itsMaxIter = pss.getUint32("Options.MaxIter", 0);
-      itsEpsValue = pss.getDouble("Options.EpsValue", 1e-8);
-      itsEpsDerivative = pss.getDouble("Options.EpsDerivative", 1e-8);
-      itsColFactor = pss.getDouble("Options.ColFactor", 1e-6);
-      itsLMFactor = pss.getDouble("Options.LMFactor", 1e-3);
-      itsBalancedEq = pss.getBool("Options.BalancedEqs", false);
-      itsUseSVD = pss.getBool("Options.UseSVD", false);
+      itsMaxIter = ps.getUint32(sp+"Options.MaxIter", 0);
+      itsEpsValue = ps.getDouble(sp+"Options.EpsValue", 1e-8);
+      itsEpsDerivative = ps.getDouble(sp+"Options.EpsDerivative", 1e-8);
+      itsColFactor = ps.getDouble(sp+"Options.ColFactor", 1e-6);
+      itsLMFactor = ps.getDouble(sp+"Options.LMFactor", 1e-3);
+      itsBalancedEq = ps.getBool(sp+"Options.BalancedEqs", false);
+      itsUseSVD = ps.getBool(sp+"Options.UseSVD", false);
     }
 
-    void SolveStep::setUVRange(const ParameterSet& ps)
+    void SolveStep::setUVRange(const ParameterSet& ps, const string prefix)
     {
-      itsUVFlag = ps.isDefined("UVRange");
+      itsUVFlag = ps.isDefined(prefix+"UVRange");
 
       if(!itsUVFlag)
       {
@@ -298,7 +299,7 @@ namespace LOFAR
         return;
       }
 
-      vector<double> range = ps.getDoubleVector("UVRange");
+      vector<double> range = ps.getDoubleVector(prefix+"UVRange");
       if(range.size() > 2)
       {
         THROW(BBSControlException, "UVRange should be given as either [min]"
@@ -316,10 +317,10 @@ namespace LOFAR
       }
     }
 
-    void SolveStep::setResampleCellSize(const ParameterSet& ps)
+    void SolveStep::setResampleCellSize(const ParameterSet& ps, const string prefix)
     {
-      itsResampleCellSize.freq = ps.getUint32("Resample.CellSize.Freq");
-      itsResampleCellSize.time = ps.getUint32("Resample.CellSize.Time");
+      itsResampleCellSize.freq = ps.getUint32(prefix+"Resample.CellSize.Freq");
+      itsResampleCellSize.time = ps.getUint32(prefix+"Resample.CellSize.Time");
 
       if(itsResampleCellSize.freq == 0 || itsResampleCellSize.time == 0)
       {
@@ -328,10 +329,10 @@ namespace LOFAR
       }
     }
 
-    void SolveStep::setDirection(const ParameterSet& ps)
+    void SolveStep::setDirection(const ParameterSet& ps, const string prefix)
     {
       // Parse PhaseShift.Direction value and convert to casa::MDirection.
-      itsDirectionASCII = ps.getStringVector("PhaseShift.Direction");
+      itsDirectionASCII = ps.getStringVector(prefix+"PhaseShift.Direction");
       if(itsDirectionASCII.size() != 3)
       {
         THROW(BBSControlException, "Parse error in key PhaseShift of step: "

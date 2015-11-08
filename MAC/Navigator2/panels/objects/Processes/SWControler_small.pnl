@@ -84,24 +84,22 @@ private void observationChanged(string dp1, dyn_string observations,
   // We also have to check if the swleve;l is higher then 6 for the obs dependant ctrl'ers
   if (dynlen(observations) >= 1) {
     for (int i = 1; i <= dynlen(observations); i++)  {
-      if ($name != \"PythonControl\" && navFunct_isObservation(observations[i])) {
+      if ($name != \"PythonControl\" && navFunct_isObservation(observations[i]) && firstObservation == \"\") {
         firstObservation = observations[i];
-        break;
-      } else if ($name == \"PythonControl\" && !navFunct_isObservation(observations[i])) {
+      } else if ($name == \"PythonControl\" && !navFunct_isObservation(observations[i]) && firstPipeline == \"\") {
         firstPipeline = observations[i];
       }
-      if ($name != \"PythonControl\" && firstObservation == \"\") {
-        setValue(\"process\", \"backCol\", \"Lofar_off\");
-        return;
-      }
+    }
+    
+    
+    if ($name != \"PythonControl\" && firstObservation == \"\") {
+      setValue(\"process\", \"backCol\", \"Lofar_off\");
+      return;
+    }
       
-      if ($name == \"PythonControl\" && firstPipeline == \"\") {
-        setValue(\"process\", \"backCol\", \"Lofar_off\");
-        return;
-      } else if ($name == \"PythonControl\") {
-//        firstObservation=firstPipeline;
-      }
-      
+    if ($name == \"PythonControl\" && firstPipeline == \"\") {
+      setValue(\"process\", \"backCol\", \"Lofar_off\");
+      return;
     }
   }
   if (firstObservation == \"\") {
@@ -140,8 +138,13 @@ updateSWController(string dp1, int status,
   
   
   int lvl = 0;
-  dpGet(\"LOFAR_PermSW_Daemons_SoftwareMonitor.SWLevel:_online.._value\",lvl);
-
+  if (navFunct_dpReachable(\"LOFAR_PermSW_Daemons_SoftwareMonitor.SWLevel:_online.._value\")) {
+    dpGet(\"LOFAR_PermSW_Daemons_SoftwareMonitor.SWLevel:_online.._value\",lvl);
+  } else {
+    setValue(\"process\", \"backCol\", \"Lofar_dpOffline\");
+    return;
+  }
+    
   if (invalid) {
     setValue(\"process\", \"backCol\", \"Lofar_invalid\");
     return;

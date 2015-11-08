@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -58,18 +58,16 @@ size_t Beamlet2SubbandMap::pack  (char* buffer) const
 		maparray(i+1) = iter->second;
 	}
 
-	MSH_pack(buffer, offset, maparray);
-
-	return offset;
+	return MSH_pack(buffer, offset, maparray);
 }
 
 size_t Beamlet2SubbandMap::unpack(const char *buffer)
 {
 	// the map is received as a blitz array
 	blitz::Array<uint16, 1> maparray;
-	size_t offset = 0;
 
-	MSH_unpack(buffer, offset, maparray);
+	size_t offset = 0;
+	offset = MSH_unpack(buffer, offset, maparray);
 	ASSERT(maparray.extent(firstDim) % 2 == 0);
 
 	// convert Blitz array to map

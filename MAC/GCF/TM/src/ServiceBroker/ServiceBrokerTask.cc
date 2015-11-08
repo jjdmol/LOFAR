@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -31,9 +31,10 @@
 #include <unistd.h>
 
 namespace LOFAR {
- namespace GCF {
-  using namespace TM;
-  namespace SB {
+  using namespace SB_Protocol;
+  namespace GCF {
+    using namespace TM;
+    namespace SB {
 
 //
 // Initialize static elements

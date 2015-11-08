@@ -29,16 +29,23 @@
 #include <casa/Utilities/CountedPtr.h>
 #include <scimath/Fitting/LSQFit.h>
 
+#if defined(casacore)
+#include <python/Converters/PycExcp.h>
+#include <python/Converters/PycBasicData.h>
+#include <python/Converters/PycValueHolder.h>
+#include <python/Converters/PycRecord.h>
+#define pyrap python
+#else
 #include <pyrap/Converters/PycExcp.h>
 #include <pyrap/Converters/PycBasicData.h>
 #include <pyrap/Converters/PycValueHolder.h>
 #include <pyrap/Converters/PycRecord.h>
+#endif
 
 #include <boost/python.hpp>
 #include <boost/python/args.hpp>
 
 using namespace casa;
-using namespace casa::pyrap;
 using namespace boost::python;
 
 namespace LOFAR
@@ -104,7 +111,7 @@ ValueHolder fit(const ValueHolder &phases_vh, const ValueHolder &A_vh, const Val
     for(int i=0; i<N_parm; ++i) cEq[i] = 0.0;
     
     int N_thread = OpenMP::maxThreads();
-    LSQFit lnl[N_thread];
+    std::vector<LSQFit> lnl(N_thread);
     
     uInt nr = 0;
     
@@ -142,6 +149,9 @@ ValueHolder fit(const ValueHolder &phases_vh, const ValueHolder &A_vh, const Val
                                 phase_ij_model += (sol[i + l*N_station] - sol[j + l*N_station]) * coeff ;
                             }
                             Float sin_dphase, cos_dphase;
+#if defined(_LIBCPP_VERSION)
+#define sincosf __sincosf
+#endif
                             sincosf(phase_ij_obs - phase_ij_model, &sin_dphase, &cos_dphase);
                             Float residual_re = cos_dphase - 1.0;
                             Float residual_im = sin_dphase;

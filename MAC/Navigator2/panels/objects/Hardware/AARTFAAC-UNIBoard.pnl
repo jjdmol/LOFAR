@@ -1,6 +1,6 @@
 V 11
 1
-LANG:1 8 UriBoard
+LANG:1 8 UniBoard
 PANEL,-1 -1 740 670 N "_3DFace" 0
 "main()
 {
@@ -28,7 +28,7 @@ PANEL,-1 -1 740 670 N "_3DFace" 0
 	                	           baseDP + \".ethTemp\",
                              baseDP + \".current\",
                              baseDP + \".voltage\",
-                             baseDP + \".e2cError\",
+                             baseDP + \".i2cError\",
                              baseDP + \".power:_online.._invalid\");
   } else {
     UNIDetails(\"\",false,\"\",0.0,\"\",0.0,\"\",0.0,\"\",0.0,\"\",true);
@@ -39,7 +39,7 @@ void UNIDetails(string dp1, bool power,
                 string dp2, float ethT,
                 string dp3, float bVoltage,
                 string dp4, float bCurrent,
-                string dp5, float e2cE,
+                string dp5, float i2cE,
                 string dp6, bool  invalid)
 {
   
@@ -51,14 +51,14 @@ void UNIDetails(string dp1, bool power,
     ethTemp.text  = ethT;
     boardVoltage.text = bVoltage;
     boardCurrent.text = bCurrent;
-    e2cError.text = e2cE;
+    i2cError.text = i2cE;
   } else {
     setValue(\"power\",\"backCol\",pColor);
     setValue(\"power\",\"foreCol\",pColor);
     ethTemp.text  = \"\";
     boardVoltage.text = \"\";
     boardCurrent.text = \"\";
-    e2cError.text = \"\";
+    i2cError.text = \"\";
   }
 }" 0
  E "main()
@@ -244,12 +244,12 @@ E "main()
 {
   click();
 }" 0
- 0 1 1 2 1 E U  0 E 452 125 506 139
+ 0 1 1 2 1 E U  0 E 452 125 501 139
 0 2 2 "0s" 0 0 0 192 0 0  452 125 1
 1
 LANG:1 34 MS Shell Dlg 2,9,-1,5,50,0,0,0,0,0
 0 1
-LANG:1 10 e2c Error:
+LANG:1 10 i2c Error:
 2 40
 "PRIMITIVE_TEXT7"
 ""
@@ -515,7 +515,7 @@ E "main()
 }" 0
  0 1 1 0 1 E 1 0 1 366 6 1 E 148 114 211 134
 2 62
-"e2cError"
+"i2cError"
 ""
 1 537 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  "main()

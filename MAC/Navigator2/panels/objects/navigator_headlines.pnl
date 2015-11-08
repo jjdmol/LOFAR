@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 8 (NoName)
 PANEL,-1 -1 733 56 N "_3DFace" 1
@@ -70,7 +70,24 @@ void doAction(string aDP, string anAction) {
 void changeInfo(string aSelection) {
   LOG_TRACE(\"navigator_headLines.pnl:changeInfo| entered :\" + aSelection);
   string header = \"\";
-
+  
+  // check if aSelection contains a TempObs part, if so change the selection to contain the observationname
+  if (strpos(aSelection,\"TempObs\") >= 0) {
+    string newSelection = \"\";
+    dyn_string aS = strsplit(aSelection,\"_\");
+    dyn_string temp = dynPatternMatch(\"TempObs*\",aS);
+    int index = dynContains(aS,temp[1]);
+    string name = strsplit(claimManager_realNameToName(\"LOFAR_ObsSW_\"+aS[index]),\"_\")[3];    
+    for (int i = 1; i <= dynlen(aS); i++ ) {
+      if (i > 1) newSelection += \"_\";
+      if (i == index) {
+        newSelection += name;
+      } else {
+        newSelection += aS[i];
+      }
+    }
+    aSelection = newSelection;
+  }
   // Tab level is important
   if (ACTIVE_TAB == \"Observations\") {
     header += \"Observations\";
@@ -164,9 +181,8 @@ LANG:1 0
 E E 0 1 1 0 1 E U  0 E 12 12 708 28
 1 2 0 "0s" 0 0 0 64 0 0  12 12 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 0 
 0
 LAYER, 1 

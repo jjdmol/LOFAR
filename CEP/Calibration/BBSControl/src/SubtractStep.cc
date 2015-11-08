@@ -35,7 +35,7 @@ namespace LOFAR
                                const Step* parent) :
       SingleStep(name, parent)
     {
-      read(parSet.makeSubset("Step." + name + "."));
+      read(parSet, "Step." + name + ".");
     }
 
 

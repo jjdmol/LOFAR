@@ -25,6 +25,7 @@
 
 #include <string>
 #include <Stream/Stream.h>
+#include <CoInterface/Parset.h>
 
 namespace LOFAR
 {
