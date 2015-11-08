@@ -87,14 +87,14 @@ Observation::Observation(const ParameterSet*		aParSet,
 	// Start and stop times
 	try {
 		if (aParSet->isDefined(prefix+"startTime")) {
-			startTime = to_time_t(time_from_string(aParSet->getString(prefix+"startTime")));
+			startTime = LOFAR::to_time_t(time_from_string(aParSet->getString(prefix+"startTime")));
 		}
 	} catch( boost::bad_lexical_cast ) {
 		THROW( Exception, prefix << "startTime cannot be parsed as a valid time string. Please use YYYY-MM-DD HH:MM:SS[.hhh]." );
 	}
 	try {
 		if (aParSet->isDefined(prefix+"stopTime")) {
-			stopTime = to_time_t(time_from_string(aParSet->getString(prefix+"stopTime")));
+			stopTime = LOFAR::to_time_t(time_from_string(aParSet->getString(prefix+"stopTime")));
 		}
 	} catch( boost::bad_lexical_cast ) {
 		THROW( Exception, prefix << "stopTime cannot be parsed as a valid time string. Please use YYYY-MM-DD HH:MM:SS[.hhh]." );
@@ -215,7 +215,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 		try {
 			string	timeStr = aParSet->getString(beamPrefix+"startTime","");
 			if (!timeStr.empty() && timeStr != "0") {
-				newPt.startTime = to_time_t(time_from_string(timeStr));
+				newPt.startTime = LOFAR::to_time_t(time_from_string(timeStr));
 			}
 		} catch (boost::bad_lexical_cast) {
 			LOG_ERROR_STR("Starttime of pointing of beam " << beamIdx << " not valid, using starttime of observation");
@@ -300,7 +300,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 		try {
 			string	timeStr = aParSet->getString(beamPrefix+"startTime","");
 			if (!timeStr.empty() && timeStr != "0") {
-				newPt.startTime = to_time_t(time_from_string(timeStr));
+				newPt.startTime = LOFAR::to_time_t(time_from_string(timeStr));
 			}
 		} catch (boost::bad_lexical_cast) {
 			LOG_ERROR_STR("Starttime of pointing of analogue beam " << beamIdx << " not valid, using starttime of observation");

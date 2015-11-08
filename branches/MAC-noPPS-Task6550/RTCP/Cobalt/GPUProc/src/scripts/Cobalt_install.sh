@@ -19,7 +19,7 @@ if [ "${RELEASE_NAME}" = "" ]; then
   exit 1
 fi
 
-for HOST in ${HOSTS:-cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008}; do
+for HOST in ${HOSTS:-cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008 cbm009 cbm010}; do
   echo "ssh-ing to node $HOST"
 
   # Escape double quotes below the following line!
@@ -37,14 +37,22 @@ for HOST in ${HOSTS:-cbm001 cbm002 cbm003 cbm004 cbm005 cbm006 cbm007 cbm008}; d
   # -m: don't warn on timestamping /localhome
   cd / && tar -zxvmf \"/localhome/lofarbuild/incoming/${RELEASE_NAME}.ztar\" || exit 1
 
+  # Remove tarball
+  rm \"/localhome/lofarbuild/incoming/${RELEASE_NAME}.ztar\"
+
   # Sym link installed var/ to common location.
   cd \"/localhome/lofar/lofar_versions/${RELEASE_NAME}\" &&
     ln -sfT /localhome/lofarsystem/lofar/var var
 
   # Set capabilities so our soft real-time programs can elevate prios.
-  COBALT_CAPABILITIES='cap_sys_admin,cap_sys_nice,cap_ipc_lock'
-#disabled until we've updated /etc/sudoers to allow lofarbuild to do this
-#also, we don't need cap_sys_admin and should drop it, idem on CEP2
-  #sudo /sbin/setcap \"${COBALT_CAPABILITIES}\"=ep bin/rtcp bin/outputProc
+  #
+  # cap_sys_nice: allow real-time priority for threads
+  # cap_ipc_lock: allow app to lock in memory (prevent swap)
+  # cap_net_raw:  allow binding sockets to NICs
+  OUTPUTPROC_CAPABILITIES='cap_sys_nice,cap_ipc_lock'
+  sudo /sbin/setcap \"${OUTPUTPROC_CAPABILITIES}\"=ep bin/outputProc || true
+  RTCP_CAPABILITIES='cap_net_raw,cap_sys_nice,cap_ipc_lock'
+  sudo /sbin/setcap \"${RTCP_CAPABILITIES}\"=ep bin/rtcp || true
   " || exit 1
 done
+

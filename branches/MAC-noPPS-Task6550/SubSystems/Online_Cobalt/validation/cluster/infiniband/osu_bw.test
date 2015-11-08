@@ -29,7 +29,7 @@ MPIRUN=$OPENMPI_DIR/bin/mpirun
 HOSTS=$(for i in $(seq 1 9); do printf "cbt%03d " "$i"; done)
 
 # Set absolute and relative thresholds for throughput comparison.
-ABS_THRESHOLD=10
+ABS_THRESHOLD=800
 REL_THRESHOLD=0.9
 
 # File containing reference performance figures

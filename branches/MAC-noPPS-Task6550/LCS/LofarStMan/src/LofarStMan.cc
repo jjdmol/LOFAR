@@ -339,19 +339,18 @@ void LofarStMan::init()
     itsBlockSize = itsSampStart + (nrbl*itsNChan*itsNrBytesPerNrValidSamples +
                                    alignment-1) / alignment * alignment;
   }
-  if (itsDoSwap) {
-    switch (itsNrBytesPerNrValidSamples) {
-    case 1:
-      break;
-    case 2:
-      itsNSampleBuf2.resize (itsNChan * 2);
-      break;
-    case 4:
-      itsNSampleBuf4.resize (itsNChan * 2);
-      break;
-    default:
-      throw DataManError ("LofarStMan invalid nrbytesPerNrValidSamples");
-    }
+  switch (itsNrBytesPerNrValidSamples) {
+  case 1:
+    itsNSampleBuf1.resize (itsNChan * 2);
+    break;
+  case 2:
+    itsNSampleBuf2.resize (itsNChan * 2);
+    break;
+  case 4:
+    itsNSampleBuf4.resize (itsNChan * 2);
+    break;
+  default:
+    throw DataManError ("LofarStMan invalid nrbytesPerNrValidSamples");
   }
   // Fill the specification record (only used for reporting purposes).
   itsSpec.define ("version", itsVersion);
@@ -460,53 +459,69 @@ void LofarStMan::putData (uInt rownr, const Complex* buf)
   writeData (blocknr, offset, itsBLDataSize);
 }
 
+  // NOTE: Nr of samples in observations taken by Cobalt
+  //       between 2013-03-28 and 2014-10-28 can erroneously
+  //       be > nominal_nsamples (they were set to -1, thus max_unsigned_int).
+  //       We fix that setting them to 0.
+
 const uChar* LofarStMan::getNSample1 (uInt rownr, Bool)
 {
   uInt blocknr = rownr / itsAnt1.size();
   uInt baseline = rownr - blocknr*itsAnt1.size();
   uInt offset  = itsSampStart + baseline * itsNChan*itsNrBytesPerNrValidSamples;
   const void* ptr = getReadPointer (blocknr, offset, itsNChan*itsNrBytesPerNrValidSamples);
-
-  const uChar* from = (const uChar*)ptr;
-  return from;
-}
-
-const uShort* LofarStMan::getNSample2 (uInt rownr, Bool swapIfNeeded)
-{
-  uInt blocknr = rownr / itsAnt1.size();
-  uInt baseline = rownr - blocknr*itsAnt1.size();
-  uInt offset  = itsSampStart + baseline * itsNChan*itsNrBytesPerNrValidSamples;
-  const void* ptr = getReadPointer (blocknr, offset, itsNChan*itsNrBytesPerNrValidSamples);
-
-  const uShort* from = (const uShort*)ptr;
-
-  if (!swapIfNeeded || !itsDoSwap) {
-    return from;
-  }
-
-  uShort* to = itsNSampleBuf2.storage();
-  for (uInt i=0; i<itsNChan; ++i) {
-    CanonicalConversion::reverse2 (to+i, from+i);
+  uChar* to = itsNSampleBuf1.storage();
+  memcpy (to, ptr, itsNChan);
+  for (uInt i=0; i<itsNChan; ++ i) {
+    if (to[i] > itsMaxNrSample) {
+      to[i] = 0;
+    }
   }
   return to;
 }
 
-const uInt* LofarStMan::getNSample4 (uInt rownr, Bool swapIfNeeded)
+const uShort* LofarStMan::getNSample2 (uInt rownr, Bool)
 {
   uInt blocknr = rownr / itsAnt1.size();
   uInt baseline = rownr - blocknr*itsAnt1.size();
   uInt offset  = itsSampStart + baseline * itsNChan*itsNrBytesPerNrValidSamples;
   const void* ptr = getReadPointer (blocknr, offset, itsNChan*itsNrBytesPerNrValidSamples);
-
-  const uInt* from = (const uInt*)ptr;
-
-  if (!swapIfNeeded || !itsDoSwap) {
-    return from;
+  const uShort* from = (const uShort*)ptr;
+  uShort* to = itsNSampleBuf2.storage();
+  if (!itsDoSwap) {
+    for (uInt i=0; i<itsNChan; ++i) {
+      to[i] = (from[i] > itsMaxNrSample  ?  0 : from[i]);
+    }
+  } else {
+    for (uInt i=0; i<itsNChan; ++i) {
+      CanonicalConversion::reverse2 (to+i, from+i);
+      if (to[i] > itsMaxNrSample) {
+        to[i] = 0;
+      }
+    }
   }
+  return to;
+}
 
+const uInt* LofarStMan::getNSample4 (uInt rownr, Bool)
+{
+  uInt blocknr = rownr / itsAnt1.size();
+  uInt baseline = rownr - blocknr*itsAnt1.size();
+  uInt offset  = itsSampStart + baseline * itsNChan*itsNrBytesPerNrValidSamples;
+  const void* ptr = getReadPointer (blocknr, offset, itsNChan*itsNrBytesPerNrValidSamples);
+  const uInt* from = (const uInt*)ptr;
   uInt* to = itsNSampleBuf4.storage();
-  for (uInt i=0; i<itsNChan; ++i) {
-    CanonicalConversion::reverse4 (to+i, from+i);
+  if (!itsDoSwap) {
+    for (uInt i=0; i<itsNChan; ++i) {
+      to[i] = (from[i] > itsMaxNrSample  ?  0 : from[i]);
+    }
+  } else {
+    for (uInt i=0; i<itsNChan; ++i) {
+      CanonicalConversion::reverse4 (to+i, from+i);
+      if (to[i] > itsMaxNrSample) {
+        to[i] = 0;
+      }
+    }
   }
   return to;
 }

@@ -1,8 +1,3 @@
 # $Id$
 
-include(PythonInstall)
-
-python_install(
-  pcombine.py
-
-  DESTINATION LAPS/ParsetCombiner)
+lofar_add_bin_scripts(pcombine.py)

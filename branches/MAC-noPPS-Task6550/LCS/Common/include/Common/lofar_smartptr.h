@@ -26,10 +26,6 @@
 // \file
 // namespace wrapper for Boost Smart Pointers
 
-#if !defined(HAVE_BOOST)
-#error Boost Smart Pointer classes are required.
-#endif
-
 #include <boost/smart_ptr.hpp>
 
 namespace LOFAR

@@ -12,6 +12,7 @@ from lofarpipe.support.utilities import create_directory                        
 from lofarpipe.recipes.nodes.imager_prepare import imager_prepare \
      as imager_prepare_node
 from logger import logger
+from lofarpipe.support.data_map import DataMap
 
 class ImagerPrepareTestWrapper(imager_prepare_node):
     """
@@ -29,6 +30,9 @@ class ImagerPrepareTestWrapper(imager_prepare_node):
     def _dppp_call(self, working_dir, ndppp, cmd, environment):
         self.dppp_call_vars = (working_dir, ndppp, cmd, environment)
 
+    def _get_nchan_from_ms(self, file):
+        return 4
+
 
 class ImagerPrepareTest(unittest.TestCase):
     """
@@ -40,9 +44,10 @@ class ImagerPrepareTest(unittest.TestCase):
 
     def setUp(self):
         self.ImagerPrepareTestWrapper = ImagerPrepareTestWrapper()
-        self.test_path = tempfile.mkdtemp()
+        self.test_path = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
 
     def tearDown(self):
+        shutil.rmtree(self.test_path)
         pass
 
     def test__copy_input_files_multi_file(self):
@@ -97,12 +102,17 @@ class ImagerPrepareTest(unittest.TestCase):
         """
         working_dir = ""
 
-        time_slice_dir_path = tempfile.mkdtemp()
+        time_slice_dir_path = tempfile.mkdtemp(suffix=".%s" % (os.path.basename(__file__),))
         slices_per_image = 2
         input_map = [("lce072", "test_file_path1"),
                          ("lce072", "test_file_path2"),
                          ("lce072", "test_file_path3"),
                          ("lce072", "test_file_path4")]
+
+        input_datamap = DataMap()
+        for entry in input_map:
+            input_datamap.append(entry)
+
         subbands_per_image = 2
         collected_ms_dir_name = ""
         fp = open(os.path.join(self.test_path, "parset"), 'w')
@@ -114,7 +124,7 @@ class ImagerPrepareTest(unittest.TestCase):
 
         sut = ImagerPrepareTestWrapper()
         output = sut._run_dppp(working_dir, time_slice_dir_path, slices_per_image,
-                  input_map, subbands_per_image, collected_ms_dir_name, parset,
+                  input_datamap, subbands_per_image, collected_ms_dir_name, parset,
                   ndppp)
 
         # The output should contain two timeslices ms prepended with the time_slice_dir_path
@@ -126,6 +136,7 @@ class ImagerPrepareTest(unittest.TestCase):
 
         # Two parset should be written in the time_slice_dir_path
         parset_1_content_expected = [('replace', 'uselogger', 'True'),
+                                     ('replace', 'avg1.freqstep', '4'),
                  ('replace', 'msin', "['test_file_path1', 'test_file_path2']"),
                  ('replace', 'msout', '{0}'.format(
                     os.path.join(time_slice_dir_path, "time_slice_0.dppp.ms")))]
@@ -137,6 +148,7 @@ class ImagerPrepareTest(unittest.TestCase):
 
         # Two parset should be written in the time_slice_dir_path
         parset_2_content_expected = [('replace', 'uselogger', 'True'),
+                                     ('replace', 'avg1.freqstep', '4'),
                  ('replace', 'msin', "['test_file_path3', 'test_file_path4']"),
                  ('replace', 'msout', '{0}'.format(
                     os.path.join(time_slice_dir_path, "time_slice_1.dppp.ms")))]
@@ -145,6 +157,8 @@ class ImagerPrepareTest(unittest.TestCase):
                 "time_slice_1.dppp.ms.ndppp.par")).read())
         self.assertTrue(parset_2_output == parset_2_content_expected,
                 "\n{0} != \n{1}".format(parset_2_output, parset_2_content_expected))
+        
+        shutil.rmtree(time_slice_dir_path)
 
 
 if __name__ == "__main__":

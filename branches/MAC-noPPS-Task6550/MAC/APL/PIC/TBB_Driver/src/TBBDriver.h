@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -133,10 +133,11 @@ private:
 	std::deque<TbbEvent*> *itsTbbQueue;
 	
 	GCFTCPPort     itsAcceptor;    // listen for clients on this port
+    GCFTCPPort     itsRSPDriver;   // port for clock subscription
 	GCFETHRawPort* itsBoard;       // array of ports, one for each TBB board
-    GCFTCPPort*    itsRSPDriver;   // port for clock subscription
 	GCFTimerPort*  itsAliveTimer;  // used to check precence and reset of the boards
 	GCFTimerPort*  itsSetupTimer;  // used in the setup state
+	GCFTimerPort*  itsInitTimer;   // used in the init state
 	GCFTimerPort*  itsCmdTimer;    // used by CommandHandler
 	GCFTimerPort*  itsQueueTimer;  // used to handle events in queue
 	GCFTimerPort*  itsTriggerTimer;// used to maximize triggers

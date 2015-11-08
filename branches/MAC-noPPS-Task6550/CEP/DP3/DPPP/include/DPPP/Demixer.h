@@ -124,6 +124,7 @@ namespace LOFAR {
       //# Data members.
       DPInput*                              itsInput;
       string                                itsName;
+      DPBuffer                              itsBufTmp;
       string                                itsSkyName;
       string                                itsInstrumentName;
       double                                itsDefaultGain;
@@ -192,12 +193,14 @@ namespace LOFAR {
       PatchList                             itsPatchList;
       Position                              itsPhaseRef;
       vector<Baseline>                      itsBaselines;
+      vector<int>                           itsUVWSplitIndex;
       casa::Vector<double>                  itsFreqDemix;
       casa::Vector<double>                  itsFreqSubtr;
       vector<double>                        itsUnknowns;
       vector<double>                        itsPrevSolution;
       uint                                  itsTimeIndex;
       uint                                  itsNConverged;
+      FlagCounter                           itsFlagCounter;
 
       //# Timers.
       NSTimer                               itsTimer;

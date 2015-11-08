@@ -4,7 +4,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -48,7 +48,8 @@ public:
 		DONE,
 		FAIL,
 		WAIT_1,
-		WAIT_2
+		WAIT_2,
+		WAIT_3
 	};
 	static const int MAX_REGISTER_ERROR = 3;
 
@@ -110,6 +111,7 @@ public:
 	void schedule_read	   (int i = -1) { tran(WRITE, READ,		   i); clearError(i);}
 	void schedule_wait1read(int i = -1) { tran(WRITE, WAIT_1,	   i); clearError(i);}
 	void schedule_wait2read(int i = -1) { tran(WRITE, WAIT_2,	   i); clearError(i);}
+	void schedule_wait3read(int i = -1) { tran(WRITE, WAIT_3,	   i); clearError(i);}
 	void read_ack   	   (int i = -1) { tran(READ,  DONE,		   i); clearError(i);}
 	void write_ack  	   (int i = -1) { tran(WRITE, DONE,		   i); clearError(i);}
 	void read_error 	   (int i = -1) { tran(READ,  READ_ERROR,  i); addError(i); }
@@ -135,14 +137,12 @@ public:
 
 	size_t pack(char* buffer) const {
 		size_t offset = 0;
-		MSH_pack(buffer, offset, m_state);
-		return offset;
+		return MSH_pack(buffer, offset, m_state);
 	}
 
 	size_t unpack(const char* buffer) {
 		size_t offset = 0;
-		MSH_unpack(buffer, offset, m_state);
-		return offset;
+		return MSH_unpack(buffer, offset, m_state);
 	}
 
 private:

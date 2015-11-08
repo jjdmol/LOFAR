@@ -27,9 +27,16 @@
 #include <iostream>
 #include <cuda.h>
 
-#ifndef PTX_FILE_CSTR
-#define PTX_FILE_CSTR "tcuda-driver-api.ptx"
+#ifndef PTX_FILENAME
+#define PTX_FILENAME tcuda-driver-api.ptx  // ease manual compilation
 #endif
+
+// Using automatic CMAKE/make compilation, we pass -DPTX_FILENAME=xxx.
+// But xxx must be a C-string and nvcc 6.5 gobbles (shell escaped) double quotes in -D opts.
+// Work around it by stringifying the result of macro expansion.
+// This requires two levels of macros.
+#define xstr(s) str(s)
+#define str(s) #s
 
 extern "C" {
 __global__ void kfunc(float* data) {
@@ -87,9 +94,9 @@ int main() {
   r = cuStreamSynchronize(stream);
   if (r != CUDA_SUCCESS) { cerr << "cuStreamSynchronize failed (HtoD): " << r << endl; rv = 1; }
 
-  cout << "Trying to load module file " << PTX_FILE_CSTR << endl;
+  cout << "Trying to load module file " << xstr(PTX_FILENAME) << endl;
   CUmodule kmodule;
-  r = cuModuleLoad(&kmodule, PTX_FILE_CSTR); // should have been precompiled externally
+  r = cuModuleLoad(&kmodule, xstr(PTX_FILENAME)); // should have been precompiled externally
   if (r != CUDA_SUCCESS) { cerr << "cuModuleLoad failed: " << r << endl; exit(1); }
   cout << "Module load succeeded" << endl;
 

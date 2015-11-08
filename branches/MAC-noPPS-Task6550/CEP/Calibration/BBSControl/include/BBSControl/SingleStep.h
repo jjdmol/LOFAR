@@ -77,7 +77,7 @@ namespace LOFAR
       // Read the contents from the ParameterSet \a ps into \c *this,
       // overriding the default values, "inherited" from the parent step
       // object.
-      virtual void read(const ParameterSet& ps);
+      virtual void read(const ParameterSet& ps, const std::string prefix);
 
       // Name of the column to write data to.
       string          itsOutputColumn;

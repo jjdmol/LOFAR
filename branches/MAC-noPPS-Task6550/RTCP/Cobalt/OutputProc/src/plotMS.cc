@@ -1,5 +1,5 @@
 //# plotMS.cc
-//# Copyright (C) 2011-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2011-2015  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -81,15 +81,7 @@ static void usage(char *progname, int exitcode)
 
 int main(int argc, char *argv[])
 {
-#if defined HAVE_LOG4CPLUS
-  INIT_LOGGER(string(getenv("LOFARROOT") ? : ".") + "/etc/Storage.log_prop");
-#elif defined HAVE_LOG4CXX
-  #error LOG4CXX support is broken (nonsensical?) -- please fix this code if you want to use it
-  Context::initialize();
-  setLevel("Global",8);
-#else
-  INIT_LOGGER_WITH_SYSINFO(str(boost::format("Storage@%02d") % (argc > 1 ? atoi(argv[1]) : -1)));
-#endif
+  INIT_LOGGER(string(getenv("LOFARROOT") ? : ".") + "/etc/outputProc.log_prop");
 
   try {
     int opt;
@@ -131,14 +123,16 @@ int main(int argc, char *argv[])
       usage(argv[0], 1);
 
     Parset parset(parset_filename);
+    ASSERT( parset.settings.correlator.enabled );
+
     FileStream datafile(table_filename);
-    CorrelatedData *data = new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), heapAllocator, 512);
+    CorrelatedData *data = new CorrelatedData(parset.nrMergedStations(), parset.settings.correlator.nrChannels, parset.settings.correlator.nrSamplesPerIntegration(), heapAllocator, 512);
 
     if (channel == -1)
-      channel = parset.nrChannelsPerSubband() == 1 ? 0 : 1;  // default to first useful channel
+      channel = parset.settings.correlator.nrChannels == 1 ? 0 : 1;  // default to first useful channel
 
     ASSERT( data );
-    ASSERT( channel >= 0 && (unsigned)channel < parset.nrChannelsPerSubband() );
+    ASSERT( channel >= 0 && (unsigned)channel < parset.settings.correlator.nrChannels );
 
     // determine base line from string
     casa::Block<int32> itsAnt1;
@@ -184,7 +178,7 @@ int main(int argc, char *argv[])
     std::string secondStation = stationNames[itsAnt2[baseline]];
 
     printf( "# baseline %s - %s channel %d\n", firstStation.c_str(), secondStation.c_str(), channel);
-    printf( "# observation %u\n", parset.observationID());
+    printf( "# observation %u\n", parset.settings.observationID);
     if (realimag)
       printf( "# blocknr real(XX) imag(XX) real(XY) imag(XY) real(YX) imag(YX) real(YY) imag(YY)\n");
     else
@@ -193,7 +187,7 @@ int main(int argc, char *argv[])
     for(;; ) {
       try {
         data->read(&datafile, true, 512);
-      } catch (Stream::EndOfStreamException &) {
+      } catch (EndOfStreamException &) {
         break;
       }
       //data->peerMagicNumber = 0xda7a0000; // fake wrong endianness to circumvent bug

@@ -198,7 +198,8 @@ namespace LOFAR
         case 1:
         case 2:  maxBlocksPerMultiProc =  8; break;
         case 3:  maxBlocksPerMultiProc = 16; break;
-        default: maxBlocksPerMultiProc = 16; break; // guess; unknown for future hardware
+        case 5:  maxBlocksPerMultiProc = 32; break;
+        default: maxBlocksPerMultiProc = 32; break; // guess; unknown for future hardware
       }
       factor = maxBlocksPerMultiProc;
 
@@ -224,8 +225,10 @@ namespace LOFAR
           unsigned nrRegsPerWarp = nrRegsPerThread * warpSize;
           unsigned regsGranularity;
           switch (computeCapMajor) {
-            case 2:  regsGranularity = 128; break;
-            case 3:  regsGranularity = 256; break;
+            // case 1 is dealt with above under the 'if'
+            case 2:  regsGranularity = 64;  break;
+            case 3:
+            case 5:  regsGranularity = 256; break;
             default: regsGranularity = 256; break; // guess; unknown for future hardware
           }
           nrRegsPerWarp = (nrRegsPerWarp + regsGranularity - 1) & ~(regsGranularity - 1); // assumes regsGranularity is a pow of 2
@@ -245,7 +248,8 @@ namespace LOFAR
         switch (computeCapMajor) {
           case 1:  shMemGranularity = 512; break;
           case 2:  shMemGranularity = 128; break;
-          case 3:  shMemGranularity = 256; break;
+          case 3:
+          case 5:  shMemGranularity = 256; break;
           default: shMemGranularity = 256; break; // guess; unknown for future hardware
         }
         shMem = (shMem + shMemGranularity - 1) & ~(shMemGranularity - 1); // assumes shMemGranularity is a pow of 2

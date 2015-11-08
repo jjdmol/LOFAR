@@ -26,10 +26,6 @@
 // \file
 // namespace wrapper for Boost.Thread
 
-#if !defined(HAVE_BOOST)
-#error Boost.Thread classes are required.
-#endif
-
 #ifndef USE_THREADS
 #error Threading support unavailable: it should be explicitly enabled \
 with USE_THREADS

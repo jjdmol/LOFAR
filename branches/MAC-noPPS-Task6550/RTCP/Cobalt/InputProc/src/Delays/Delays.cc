@@ -69,7 +69,7 @@ namespace LOFAR
             const struct ObservationSettings::BeamFormer::SAP &bfSap = parset.settings.beamFormer.SAPs[sap];
 
             // Reserve room for coherent TABs only
-            SAPs[sap].TABs.resize(bfSap.nrCoherentTAB());
+            SAPs[sap].TABs.resize(bfSap.nrCoherent);
           }
         }
     }
@@ -135,11 +135,11 @@ namespace LOFAR
       frame.set(MEpoch(toUTC(from), MEpoch::UTC));
 
       // Set the position for the frame.
-      const MVPosition phaseCenter(parset.settings.antennaFields[stationIdx].phaseCenter);
+      const MVPosition phaseCenter(casa::Vector<Double>(parset.settings.antennaFields[stationIdx].phaseCenter));
       frame.set(MPosition(phaseCenter, MPosition::ITRF));
 
       // Cache the difference with CS002LBA
-      const MVPosition pRef(parset.settings.delayCompensation.referencePhaseCenter);
+      const MVPosition pRef(casa::Vector<Double>(parset.settings.delayCompensation.referencePhaseCenter));
       phasePositionDiff = phaseCenter - pRef;
 
       // Set-up the direction cache and conversion engines, using reference direction ITRF.
@@ -284,8 +284,8 @@ namespace LOFAR
 
         // The coarse delay compensation is based on the average delay
         // between begin and end.
-        coarseDelaysSamples[sap] = static_cast<ssize_t>(round(0.5 * (delayAtBegin + delayAfterEnd) * parset.subbandBandwidth()));
-        coarseDelaysSeconds[sap] = coarseDelaysSamples[sap] / parset.subbandBandwidth();
+        coarseDelaysSamples[sap] = static_cast<ssize_t>(round(0.5 * (delayAtBegin + delayAfterEnd) * parset.settings.subbandWidth()));
+        coarseDelaysSeconds[sap] = coarseDelaysSamples[sap] / parset.settings.subbandWidth();
       }
 
       // Compute the offsets at which each subband is read

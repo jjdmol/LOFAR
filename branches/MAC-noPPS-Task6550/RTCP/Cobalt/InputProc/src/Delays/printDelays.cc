@@ -60,10 +60,10 @@ int main( int argc, char **argv )
   }
 
   /* Determine start/stop/blocksize parameters */
-  const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
-  const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
+  const TimeStamp from(ps.settings.startTime * ps.settings.subbandWidth(), ps.settings.clockHz());
+  const TimeStamp to(ps.settings.stopTime * ps.settings.subbandWidth(), ps.settings.clockHz());
   ssize_t block = -1;
-  size_t blockSize = ps.nrSamplesPerSubband();
+  size_t blockSize = ps.settings.blockSize;
 
   /* Print header */
   cout << "# Parset:           " << argv[1] << endl;

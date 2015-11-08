@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
+#include "Sequencer.h"
 #include "StationSettings.h"
 #include "UpdBitModeCmd.h"
 
@@ -63,6 +64,9 @@ void UpdBitModeCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 
 void UpdBitModeCmd::complete(CacheBuffer& cache)
 {
+  if (Sequencer::getInstance().isActive()) {
+    return;
+  }
   if (cache.getBitsPerSample() != itsCurrentBitsPerSample) {
 
     RSPUpdbitmodeEvent ack;

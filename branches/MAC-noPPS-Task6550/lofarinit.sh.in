@@ -38,7 +38,8 @@ fi
 lfr_libdir=`basename $lfr_libdir`
 
 # Get directory for Python extensions
-lfr_pylibdir=`python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(plat_specific=True, prefix='')"`
+lfr_pylibdir=`python -c "from distutils.sysconfig import get_python_lib; from os.path import join; print join(get_python_lib(plat_specific=True, standard_lib=True, prefix=''), 'site-packages')"`
+
 
 # First strip the current LOFARROOT from PATH, LD_LIBRARY_PATH, and PYTHONPATH.
 # Take care that a possible . is preceeded by a backslash (for the later sed).

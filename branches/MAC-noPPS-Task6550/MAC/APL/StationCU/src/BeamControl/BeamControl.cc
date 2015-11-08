@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -55,6 +55,9 @@ using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
+	using namespace DP_Protocol;
+	using namespace Controller_Protocol;
+	using namespace IBS_Protocol;
 	namespace StationCU {
 
 #define MAX2(a,b)	((a)>(b)?(a):(b))
@@ -624,6 +627,9 @@ GCFEvent::TResult BeamControl::sendPointings_state(GCFEvent& event, GCFPortInter
 		LOG_DEBUG_STR(ptEvent);
 	}
 	break;
+
+	case F_EXIT:
+		break;
 
 	case IBS_POINTTOACK: {
 		IBSPointtoackEvent ack(event);

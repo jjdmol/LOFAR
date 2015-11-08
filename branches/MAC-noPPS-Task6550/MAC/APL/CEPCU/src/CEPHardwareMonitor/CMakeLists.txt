@@ -8,6 +8,4 @@ install(FILES
   CEPHardwareMonitor.conf
   DESTINATION etc)
 
-install(PROGRAMS
-  zabbix_get
-  DESTINATION sbin)
+lofar_add_sbin_scripts(zabbix_get)

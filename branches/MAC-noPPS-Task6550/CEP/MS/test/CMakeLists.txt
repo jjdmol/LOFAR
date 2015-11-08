@@ -22,5 +22,4 @@ lofar_add_test(tMSSplit tMSSplit.cc)
 lofar_add_test(tBaselineSelect tBaselineSelect.cc)
 lofar_add_test(tVdsMaker tVdsMaker.cc DEPENDS combinevds)
 lofar_add_test(tcombinevds DEPENDS combinevds)
-lofar_add_test(tmakems 
-  DEPENDS makems getparsetvalue finddproc startdistproc socketrun)
+lofar_add_test(tmakems DEPENDS makems getparsetvalue finddproc)

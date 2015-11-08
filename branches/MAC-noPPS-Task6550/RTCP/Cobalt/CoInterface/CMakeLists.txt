@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(CoInterface 1.0 DEPENDS ApplCommon Common Stream MACIO)
+lofar_package(CoInterface 1.0 DEPENDS ApplCommon Common Stream)
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED COMPONENTS date_time)

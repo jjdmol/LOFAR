@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -141,6 +141,7 @@ private:
 	int32					itsBitmode;
 
 	map<string, ActiveObs*>	itsObsMap;			// current running observations
+  map<string, bool> itsClaimedMap; // whether resources for the Obs are being or have been claimed
 	ObsIter					itsStartingObs;		// the Obs that is being started is this moment.
 
 	// Availability information of Antenna's and circuit boards.
@@ -156,9 +157,9 @@ private:
 	uint32									itsNrTBBs;
 	bool									itsHasSplitters;
 	bitset<MAX_RSPBOARDS>					itsSplitters;	// On or Off.
-	vector<int>								itsLBAmapping;
-	vector<int>								itsHBAmapping;
-    unsigned                                itsSetupSequence;
+
+    	unsigned                                itsClaimSequence;
+	GCFTimerPort*				itsClaimTimerPort;
 };
 
   };//StationCU

@@ -2,7 +2,7 @@
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, softwaresupport@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
 //#  it under the terms of the GNU General Public License as published by
@@ -61,6 +61,11 @@ using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {
+    using namespace Controller_Protocol;
+    using namespace CR_Protocol;
+    using namespace TBB_Protocol;
+    using namespace RSP_Protocol;
+    using namespace DP_Protocol;
     using namespace GCF::TM;
     using namespace GCF::PVSS;
     using namespace GCF::RTDB;
