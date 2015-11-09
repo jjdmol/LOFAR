@@ -301,7 +301,7 @@ class ProgressMessage(LofarMessage):
         super(ProgressMessage, self).__init__(content)
 
 
-class ServiceMessage(LofarMessage):
+class RequestMessage(LofarMessage):
     """
     Message class used for service messages. Service messages are
     request-reply type of messages. They are typically used to query a
@@ -309,7 +309,7 @@ class ServiceMessage(LofarMessage):
     """
 
     def __init__(self, content=None, reply_to=None,**kwargs): #reply_to=None, has_args=None, has_kwargs=None):
-        super(ServiceMessage, self).__init__(content)
+        super(RequestMessage, self).__init__(content)
         if (reply_to!=None):
             #if (len(kwargs)>0):
             #reply_to = kwargs.pop("reply_to",None)
@@ -335,8 +335,8 @@ class ReplyMessage(LofarMessage):
 MESSAGE_FACTORY.register("EventMessage", EventMessage)
 MESSAGE_FACTORY.register("MonitoringMessage", MonitoringMessage)
 MESSAGE_FACTORY.register("ProgressMessage", ProgressMessage)
-MESSAGE_FACTORY.register("ServiceMessage", ServiceMessage)
+MESSAGE_FACTORY.register("RequestMessage", RequestMessage)
 MESSAGE_FACTORY.register("ReplyMessage", ReplyMessage)
 
 __all__ = ["EventMessage", "MonitoringMessage", "ProgressMessage",
-	   "ServiceMessage", "ReplyMessage"]
+	   "RequestMessage", "ReplyMessage"]

@@ -21,7 +21,7 @@
 #
 
 from lofar.messaging.messagebus import ToBus,FromBus
-from lofar.messaging.messages import ReplyMessage,ServiceMessage
+from lofar.messaging.messages import ReplyMessage,RequestMessage
 import threading
 import time
 import uuid
@@ -304,8 +304,8 @@ class Service(object):
                     continue
 
                 # report if messages are not Service Messages
-                if isinstance(msg, ServiceMessage) is not True:
-                    logger.error( "Received wrong messagetype %s, ServiceMessage expected." %(str(type(msg))))
+                if isinstance(msg, RequestMessage) is not True:
+                    logger.error( "Received wrong messagetype %s, RequestMessage expected." %(str(type(msg))))
                     self.listener.ack(msg)
                     continue
 
