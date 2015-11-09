@@ -558,11 +558,11 @@ void RSPDriver::addAllSyncActions()
 		}
         
 		// read Spectral Invertion and SDOenable information
-		if (GET_CONFIG("RSPDriver.READ_SI", i)) {
-		    BypassRead* bypassread = new BypassRead(m_boardPorts[boardid], boardid);
-		    ASSERT(bypassread);
-		    m_scheduler.addSyncAction(bypassread);
-		}
+		// if (GET_CONFIG("RSPDriver.READ_SI", i)) {
+		//     BypassRead* bypassread = new BypassRead(m_boardPorts[boardid], boardid);
+		//     ASSERT(bypassread);
+		//     m_scheduler.addSyncAction(bypassread);
+		// }
 
 		for (int action = 0; action < 2; action++) {
 			if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i)) {
