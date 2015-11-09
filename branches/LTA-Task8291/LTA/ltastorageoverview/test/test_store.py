@@ -111,13 +111,18 @@ class TestLTAStorageDb(unittest.TestCase):
             self.db.updateDirectoryLastVisitTime(dir_id, datetime.datetime.utcnow())
             time.sleep(0.002)
 
-        lvr_dir_id = self.db.leastRecentlyVisitedDirectory()
+        visitStats = self.db.visitStats()
+        self.assertTrue('siteA' in visitStats)
+        self.assertTrue('least_recent_visited_dir_id' in visitStats['siteA'])
+
+        lvr_dir_id = visitStats['siteA']['least_recent_visited_dir_id']
         self.assertEquals(dir_ids[0], lvr_dir_id)
 
         self.db.updateDirectoryLastVisitTime(dir_ids[0], datetime.datetime.utcnow())
         self.db.updateDirectoryLastVisitTime(dir_ids[1], datetime.datetime.utcnow())
 
-        lvr_dir_id = self.db.leastRecentlyVisitedDirectory()
+        visitStats = self.db.visitStats()
+        lvr_dir_id = visitStats['siteA']['least_recent_visited_dir_id']
         self.assertEquals(dir_ids[2], lvr_dir_id)
 
 
