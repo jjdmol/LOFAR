@@ -68,7 +68,6 @@ def tearDownModule():
 
 class TestLTAStorageWebService(FlaskLiveTestCase):
     def create_app(self):
-        webservice.app.debug = True
         return webservice.app
 
     def testSites(self):
@@ -99,7 +98,6 @@ class TestLTAStorageWebService(FlaskLiveTestCase):
             self.assertTrue('url' in content)
 
     def testRootDirectories(self):
-        time.sleep(1000)
         response = urllib2.urlopen('http://localhost:5000/rest/rootdirectories/')
         self.assertEqual(200, response.code)
         self.assertEqual('application/json', response.info()['Content-Type'])
