@@ -27,9 +27,11 @@ from qpid.messaging import Connection
 from qpidtoollibs import BrokerAgent
 
 try:
+    # setup broker connection
     connection = Connection.establish('127.0.0.1')
     broker = BrokerAgent(connection)
 
+    # add test service busname
     busname = "momqueryservice-test-%s" % (uuid.uuid1())
     broker.addExchange('topic', busname)
 
@@ -43,7 +45,8 @@ try:
             return [{'project_mom2id': '4567', 'project_name': 'foo', 'project_description': 'bar', 'object_mom2id': testid}]
 
     # inject the mock into the service
-    with momqueryservice.createService(busname, '', MockMoMDatabaseWrapper()):
+    mock_momdb=MockMoMDatabaseWrapper()
+    with momqueryservice.createService(busname, momdb=mock_momdb):
 
         class TestLTAStorageDb(unittest.TestCase):
             def testProjectDetailsQuery(self):
@@ -62,6 +65,8 @@ try:
                 self.assertTrue('KeyError' in result['errmsg'])
 
         unittest.main(verbosity=2)
+
 finally:
+    # cleanup test bus and exit
     broker.delExchange(busname)
     connection.close()

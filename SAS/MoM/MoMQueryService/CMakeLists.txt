@@ -6,6 +6,7 @@ include(PythonInstall)
 
 set(_py_files
   __init__.py
+  config.py
   momqueryservice.py
   momprojectdetailsquery.py
 )
