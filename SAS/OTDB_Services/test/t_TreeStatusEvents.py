@@ -43,20 +43,20 @@ if __name__ == "__main__":
                       help="Name of the database")
     parser.add_option("-H", "--hostname", dest="dbHost", type="string", default="sasdb",
                       help="Hostname of database server")
-    parser.add_option("-B", "--busname", dest="busname", type="string", default="", 
+    parser.add_option("-B", "--busname", dest="busname", type="string", default="",
                       help="Busname or queue-name the status changes are published on")
     (options, args) = parser.parse_args()
-    
+
     if not options.dbName:
         print "Missing database name"
         parser.print_help()
         sys.exit(1)
-    
+
     if not options.dbHost:
         print "Missing database server name"
         parser.print_help()
         sys.exit(1)
-    
+
     if not options.busname:
         print "Missing busname"
         parser.print_help()
@@ -88,4 +88,4 @@ if __name__ == "__main__":
         except IndexError:
             ok = False
 
-    sys.exit(not(ok))   # 0 = success
+    sys.exit(not ok)   # 0 = success

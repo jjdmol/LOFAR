@@ -21,6 +21,8 @@
 #
 # $Id: Backtrace.cc 31468 2015-04-13 23:26:52Z amesfoort $
 """
+Daemon that sets-up a set of servicess for the OTDB database.
+
 RPC functions that allow access to (VIC) trees in OTDB.
 
 TaskSpecificationRequest: get the specification(parset) of a tree as dict.
@@ -28,7 +30,7 @@ KeyUpdateCommand        : function to update the value of multiple (existing) ke
 StatusUpdateCommand     : finction to update the status of a tree.
 """
 
-import os,sys,time,pg
+import sys, time, pg
 import logging
 from optparse import OptionParser
 from lofar.messaging.Service import *
@@ -56,7 +58,7 @@ def TaskSpecificationRequest(input_dict, db_connection):
 
     Exceptions:
     AttributeError: There is something wrong with the given input values.
-    FunctionError: An error occurred during the execution of the function. 
+    FunctionError: An error occurred during the execution of the function.
                    The text of the exception explains what is wrong.
     """
     # Check the input
@@ -86,7 +88,7 @@ def TaskSpecificationRequest(input_dict, db_connection):
             answer_dict[key] = value
         except ValueError:
             answer_list.append(line)
-    if len(answer_list)>1:		# there is always one empty line, ignore that one...
+    if len(answer_list) > 1:		# there is always one empty line, ignore that one...
         answer_dict["tree"] = answer_list
     return answer_dict
 
@@ -97,7 +99,7 @@ def StatusUpdateCommand(input_dict, db_connection):
 
     Input : OtdbID    (integer) - ID of the tree to change the status of.
             NewStatus (string)  - The new status of the tree. The following values are allowed:
-              described, prepared, approved, on_hold, conflict, prescheduled, scheduled, queued, 
+              described, prepared, approved, on_hold, conflict, prescheduled, scheduled, queued,
               active, completing, finished, aborted, error, obsolete
             UpdateTimestamps (boolean) - Optional parameter to also update the timestamp of the metadata of the
               tree when the status of the tree is changed into 'active', 'finished' or 'aborted'. Resp. starttime
@@ -125,19 +127,19 @@ def StatusUpdateCommand(input_dict, db_connection):
     # Get list of allowed tree states
     allowed_states = {}
     try:
-        for (id,name) in db_connection.query("select id,name from treestate").getresult():
-            allowed_states[name] = id
+        for (state_nr, name) in db_connection.query("select id,name from treestate").getresult():
+            allowed_states[name] = state_nr
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("Error while getting allowed states of tree %d: %s" % (tree_id, exc_info))
 
     # Check value of new_status argument
     if not new_status in allowed_states:
-        raise FunctionError("The newstatus(=%s) for tree %d must have one of the following values:%s" % 
+        raise FunctionError("The newstatus(=%s) for tree %d must have one of the following values:%s" %
                             (new_status, tree_id, allowed_states.keys()))
 
     # Finally try to change the status
     try:
-        success = (db_connection.query("select setTreeState(1, %d, %d::INT2,%s)" % 
+        success = (db_connection.query("select setTreeState(1, %d, %d::INT2,%s)" %
             (tree_id, allowed_states[new_status], str(update_times))).getresult()[0][0] == 't')
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("Error while setting the status of tree %d: %s" % (tree_id, exc_info))
@@ -156,7 +158,7 @@ def KeyUpdateCommand(input_dict, db_connection):
                                Field is empty if all fields could be updated.
     Exceptions:
     AttributeError: There is something wrong with the given input values.
-    FunctionError: An error occurred during the execution of the function. 
+    FunctionError: An error occurred during the execution of the function.
                    The text of the exception explains what is wrong.
     """
     # Check input
@@ -175,9 +177,9 @@ def KeyUpdateCommand(input_dict, db_connection):
 
     # Finally try to update all keys
     errors = {}
-    for (key,value) in update_list.iteritems():
+    for (key, value) in update_list.iteritems():
         try:
-            record_list = (db_connection.query("select nodeid,instances,limits from getvhitemlist (%d, '%s')" % 
+            record_list = (db_connection.query("select nodeid,instances,limits from getvhitemlist (%d, '%s')" %
                            (tree_id, key))).getresult()
             if len(record_list) == 0:
                 errors[key] = "Not found for tree %d" % tree_id
@@ -188,8 +190,7 @@ def KeyUpdateCommand(input_dict, db_connection):
             # When one record was found record_list is a list with a single tuple (nodeid, instances, current_value)
             node_id   = record_list[0][0]
             instances = record_list[0][1]
-            result = ((db_connection.query("select updateVTnode(1,%d,%d,%d::INT2,'%s')" % 
-                       (tree_id, node_id, instances, value))).getresult()[0][0] == 't')
+            db_connection.query("select updateVTnode(1,%d,%d,%d::INT2,'%s')" % (tree_id, node_id, instances, value))
             print "%s: %s ==> %s" % (key, record_list[0][2], value)
         except QUERY_EXCEPTIONS, exc:
             errors[key] = str(exc)
@@ -227,7 +228,7 @@ class PostgressMessageHandlerInterface(MessageHandlerInterface):
                 logger.info("Connected to database %s on host %s" % (self.database, self.db_host))
             except (TypeError, SyntaxError, pg.InternalError):
                 self.connected = False
-                logger.error("Not connected to database %s on host %s (anymore), retry in 5 seconds" 
+                logger.error("Not connected to database %s on host %s (anymore), retry in 5 seconds"
                              % (self.database, self.db_host))
                 time.sleep(5)
 
@@ -239,6 +240,7 @@ class PostgressTaskSpecificationRequest(PostgressMessageHandlerInterface):
         super(PostgressTaskSpecificationRequest, self).__init__(**kwargs)
 
     def handle_message(self, msg):
+        " Connect to the right function"
         return TaskSpecificationRequest(msg, self.connection)
 
 
@@ -250,6 +252,7 @@ class PostgressStatusUpdateCommand(PostgressMessageHandlerInterface):
         super(PostgressStatusUpdateCommand, self).__init__(**kwargs)
 
     def handle_message(self, msg):
+        " Connect to the right function"
         return StatusUpdateCommand(msg, self.connection)
 
 
@@ -261,18 +264,16 @@ class PostgressKeyUpdateCommand(PostgressMessageHandlerInterface):
         super(PostgressKeyUpdateCommand, self).__init__(**kwargs)
 
     def handle_message(self, msg):
+        " Connect to the right function"
         return KeyUpdateCommand(msg, self.connection)
 
 
 if __name__ == "__main__":
-    """
-    Daemon that sets-up a set of servicess for the OTDB database.
-    """
     # Check the invocation arguments
     parser = OptionParser("%prog [options]")
-    parser.add_option("-D", "--database", dest="dbName", type="string", default="", 
+    parser.add_option("-D", "--database", dest="dbName", type="string", default="",
                       help="Name of the database")
-    parser.add_option("-H", "--hostname", dest="dbHost", type="string", default="sasdb", 
+    parser.add_option("-H", "--hostname", dest="dbHost", type="string", default="sasdb",
                       help="Hostname of database server")
     (options, args) = parser.parse_args()
 
@@ -288,7 +289,7 @@ if __name__ == "__main__":
 
     busname = sys.argv[1] if len(sys.argv) > 1 else "simpletest"
 
-    serv1 = Service("TaskSpecification", PostgressTaskSpecificationRequest, 
+    serv1 = Service("TaskSpecification", PostgressTaskSpecificationRequest,
                     busname=busname, numthreads=1, startonwith=True,
                     handler_args = {"database" : options.dbName, "db_host" : options.dbHost})
     serv2 = Service("StatusUpdateCmd",   PostgressStatusUpdateCommand,
@@ -298,7 +299,7 @@ if __name__ == "__main__":
                     busname=busname, numthreads=1, startonwith=True,
                     handler_args = {"database" : options.dbName, "db_host" : options.dbHost})
 
-    with serv1,serv2,serv3:
+    with serv1, serv2, serv3:
         logger.info("Started the OTDB services")
         serv3.wait_for_interrupt()
 

@@ -24,12 +24,12 @@
 Daemon that watches the OTDB database for status changes of trees and publishes those on the messagebus.
 """
 
-import os,sys,time,pg, signal
+import os, sys, time, pg, signal
 from optparse import OptionParser
-from lofar.messaging import EventMessage,ToBus
+from lofar.messaging import EventMessage, ToBus
 
 QUERY_EXCEPTIONS = (TypeError, ValueError, MemoryError, pg.ProgrammingError, pg.InternalError)
-Alive = False
+alive = False
 
 # Define our own exceptions
 class FunctionError(Exception):
@@ -54,13 +54,13 @@ def PollForStatusChanges(start_time, end_time, otdb_connection):
 
     Exceptions:
     ArgumentError: There is something wrong with the given input values.
-    FunctionError: An error occurred during the execution of the function. 
+    FunctionError: An error occurred during the execution of the function.
                    The text of the exception explains what is wrong.
     """
     # Try to get the specification information
     record_list = []
     try:
-        record_list = otdb_connection.query("select treeid,state,modtime,creation from getStateChanges('%s','%s')" % 
+        record_list = otdb_connection.query("select treeid,state,modtime,creation from getStateChanges('%s','%s')" %
                       (start_time, end_time)).getresult()
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("Error while polling for state changes: %s"% exc_info)
@@ -69,21 +69,18 @@ def PollForStatusChanges(start_time, end_time, otdb_connection):
 def signal_handler(signum, frame):
     "Signal redirection to stop the daemon in a neat way."
     print "Stopping program"
-    global Alive
-    Alive = False
+    global alive
+    alive = False
 
 
 if __name__ == "__main__":
-    """
-    Daemon that sets-up a set of servicess for the OTDB database.
-    """
     # Check the invocation arguments
     parser = OptionParser("%prog [options]")
-    parser.add_option("-D", "--database", dest="dbName", type="string", default="", 
+    parser.add_option("-D", "--database", dest="dbName", type="string", default="",
                       help="Name of the database")
-    parser.add_option("-H", "--hostname", dest="dbHost", type="string", default="sasdb", 
+    parser.add_option("-H", "--hostname", dest="dbHost", type="string", default="sasdb",
                       help="Hostname of database server")
-    parser.add_option("-B", "--busname", dest="busname", type="string", default="", 
+    parser.add_option("-B", "--busname", dest="busname", type="string", default="",
                       help="Busname or queue-name the status changes are published on")
     (options, args) = parser.parse_args()
 
@@ -105,12 +102,12 @@ if __name__ == "__main__":
     # Set signalhandler to stop the program in a neat way.
     signal.signal(signal.SIGINT, signal_handler)
 
-    Alive = True
+    alive = True
     connected = False
     otdb_connection = None
     with ToBus(options.busname) as send_bus:
-        while Alive:
-            while Alive and not connected:
+        while alive:
+            while alive and not connected:
                 # Connect to the database
                 try:
                     otdb_connection = pg.connect(user="postgres", host=options.dbHost, dbname=options.dbName)
@@ -119,7 +116,7 @@ if __name__ == "__main__":
                     connected = False
                     print "DatabaseError: Connection to database could not be made, reconnect attempt in 5 seconds"
                     time.sleep(5)
-                 
+
             # When we are connected we can poll the database
             if connected:
                 # Get start_time (= creation time of last retrieved record if any)
@@ -129,7 +126,7 @@ if __name__ == "__main__":
                 except IOError:
                     start_time = "2015-01-01 00:00:00.00"
                 print "start_time=", start_time
-    
+ 
                 try:
                     record_list = PollForStatusChanges(start_time, "now", otdb_connection)
                 except FunctionError, exc_info:
