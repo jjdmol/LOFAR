@@ -47,7 +47,6 @@ namespace LOFAR
     BandPassCorrectionKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters("bandpassCorrection"),
       nrStations(ps.settings.antennaFields.size()),
-      nrBitsPerSample(ps.settings.nrBitsPerSample),
 
       nrDelayCompensationChannels(ps.settings.beamFormer.nrDelayCompensationChannels),
       nrHighResolutionChannels(ps.settings.beamFormer.nrHighResolutionChannels),
@@ -127,8 +126,6 @@ namespace LOFAR
         KernelFactoryBase::compileDefinitions(itsParameters);
 
       defs["NR_STATIONS"] = lexical_cast<string>(itsParameters.nrStations);
-      defs["NR_BITS_PER_SAMPLE"] =
-        lexical_cast<string>(itsParameters.nrBitsPerSample);
 
       defs["NR_CHANNELS_1"] =
         lexical_cast<string>(itsParameters.nrDelayCompensationChannels);
