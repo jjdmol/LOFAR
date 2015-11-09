@@ -277,12 +277,12 @@ class SendReceiveMessage(unittest.TestCase):
         content = {"Progress": "Message"}
         self._test_sendrecv(ProgressMessage(content))
 
-    def test_sendrecv_service_message(self):
+    def test_sendrecv_request_message(self):
         """
-        Test send/receive of an ServiceMessage, containing a byte array.
+        Test send/receive of an RequestMessage, containing a byte array.
         """
         content = {"request": "Do Something", "argument": "Very Often"}
-        self._test_sendrecv(ServiceMessage(content, reply_to=QUEUE))
+        self._test_sendrecv(RequestMessage(content, reply_to=QUEUE))
 
 
 if __name__ == '__main__':

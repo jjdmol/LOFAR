@@ -21,7 +21,7 @@
 
 #  RPC invocation with possible timeout
 from lofar.messaging.messagebus import ToBus, FromBus
-from lofar.messaging.messages import ServiceMessage, ReplyMessage, analyze_args, args_as_content 
+from lofar.messaging.messages import RequestMessage, ReplyMessage, analyze_args, args_as_content 
 import uuid
 
 class RPCException(Exception):
@@ -100,7 +100,7 @@ class RPC():
         else:
             Reply = FromBus(self.BusName + "/" + ReplyAddress)
         with Reply:
-            MyMsg = ServiceMessage(Content, ReplyAddress , has_args=HasArgs, has_kwargs=HasKwArgs)
+            MyMsg = RequestMessage(Content, ReplyAddress , has_args=HasArgs, has_kwargs=HasKwArgs)
             MyMsg.ttl = timeout
             self.Request.send(MyMsg)
             answer = Reply.receive(timeout)
