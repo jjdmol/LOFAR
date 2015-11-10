@@ -2,8 +2,6 @@
 
 include(LofarPackageVersion)
 
-# link_libraries(${BOOST_LIBRARIES})
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -DNDEBUG -funroll-loops")
 
 include(CheckCXXCompilerFlag)
