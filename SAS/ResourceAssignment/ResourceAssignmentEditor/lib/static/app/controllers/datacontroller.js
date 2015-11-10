@@ -5,6 +5,8 @@ angular.module('raeApp').factory("dataService", function(){
     self.tasks = [];
     self.resources = [];
     self.resourceclaims = [];
+    self.tasktypes = [];
+    self.taskstatustypes = [];
 
     self.taskDict = {};
     self.resourceDict = {};
@@ -57,6 +59,18 @@ dataControllerMod.controller('DataController',
         });
     };
 
+    function getTaskTypes() {
+        $http.get('/rest/tasktypes').success(function(result) {
+            self.dataService.tasktypes = result.tasktypes;
+        });
+    };
+
+    function getTaskStatusTypes() {
+        $http.get('/rest/taskstatustypes').success(function(result) {
+            self.dataService.taskstatustypes = result.taskstatustypes;
+        });
+    };
+
     function groupResourceClaims() {
         var grouped = {};
         var resources = self.dataService.resources;
@@ -94,6 +108,8 @@ dataControllerMod.controller('DataController',
     };
 
     getTasks();
+    getTaskTypes();
+    getTaskStatusTypes();
     getResources();
     getResourceClaims();
 }

@@ -17,14 +17,16 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     { field: 'name' },
     { field: 'from' },
     { field: 'to' },
-    { field: 'status' },
+    { field: 'status',
+        filter: {
+            type: uiGridConstants.filter.SELECT,
+            selectOptions: []
+        }
+    },
     { field: 'type',
         filter: {
             type: uiGridConstants.filter.SELECT,
-            selectOptions: [
-            { value: '', label: 'All' },
-            { value: 'Observation', label: 'Observation' },
-            { value: 'Pipeline', label: 'Pipeline' } ]
+            selectOptions: []
         }
     }];
     $scope.gridOptions = {
@@ -33,5 +35,26 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         columnDefs: $scope.columns,
         data: []
     };
+
+    function fillColumFilterSelectOptions(options, columnDef) {
+        var columnSelectOptions = [];
+
+        for(var i = options.length-1; i >=0; i--)
+        {
+            var option = options[i];
+            columnSelectOptions.push({ value: option, label: option })
+        }
+
+        columnDef.filter.selectOptions = columnSelectOptions;
+    };
+
+
+    $scope.$watch('dataService.taskstatustypes', function() {
+        fillColumFilterSelectOptions($scope.dataService.taskstatustypes, $scope.columns[3]);
+    });
+
+    $scope.$watch('dataService.tasktypes', function() {
+        fillColumFilterSelectOptions($scope.dataService.tasktypes, $scope.columns[4]);
+    });
 }
 ]);
