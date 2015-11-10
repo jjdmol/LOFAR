@@ -1,6 +1,6 @@
 # $Id$
 
-#lofar_package(PyMessaging 1.0 DEPENDS PyCommon)
+lofar_package(PyMessaging 1.0 DEPENDS PyCommon)
 
 include(PythonInstall)
 
