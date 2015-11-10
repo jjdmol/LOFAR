@@ -22,6 +22,15 @@
 from datetime import datetime
 from datetime import timedelta
 
+numProjects = 3
+numObsPerProject = 2
+numPipelinesPerObs = 2
+numCoreStations = 20
+numRemoteStations = 10
+numCobaltNodes = 8
+numComputeNodes = 40
+numIngestNodes = 4
+
 _taskIdCntr = 0
 
 def _genTask(name, startTime, duration, status = 'scheduled', type = 'Observation'):
@@ -40,28 +49,61 @@ def _genTask(name, startTime, duration, status = 'scheduled', type = 'Observatio
 allTasks = []
 now = datetime.utcnow()
 
-for p in range(1, 4):
-    for i in range(20):
-        task = _genTask('LC4_%03d Obs %d'% (p, i), now + timedelta(hours=p*i*4), timedelta(hours=4))
+for p in range(numProjects):
+    for i in range(numObsPerProject):
+        task = _genTask('LC4_%03d Obs %02d'% (p+1, i+1), now + timedelta(hours=(p+1)*(i+1)*4.05), timedelta(hours=4))
         allTasks.append(task)
 
-    for i in range(5):
-        task = _genTask('LC4_%03d Pipeline %d'% (p, i), now + timedelta(hours=p*i*4), timedelta(hours=4), type='Pipeline')
+        for j in range(numPipelinesPerObs):
+            task = _genTask('LC4_%03d Pipeline %02d'% (p+1, j+1), now + timedelta(hours=(p+1)*(i+1)*4.05 + 4.05 + (j)*4.05), timedelta(hours=4), type='Pipeline')
+            allTasks.append(task)
+
+        task = _genTask('LC4_%03d Ingest %02d'% (p+1, j+1), now + timedelta(hours=(p+1)*(i+1)*4.05 + 4.05 + (numPipelinesPerObs)*4.05), timedelta(hours=2), type='Ingest')
         allTasks.append(task)
 
-resourceItems = [{'id': 0, 'name': 'CS001', 'typeId': 0, 'type': 'station', 'group': False},
-                 {'id': 1, 'name': 'CS002', 'typeId': 0, 'type': 'station', 'group': False},
-                 {'id': 2, 'name': 'CS003', 'typeId': 0, 'type': 'station', 'group': False},
-                 {'id': 3, 'name': 'CS004', 'typeId': 0, 'type': 'station', 'group': False},
-                 {'id': 4, 'name': 'Core', 'typeId': 1, 'type': 'stationset', 'group': True},
-                 {'id': 5, 'name': 'Node1', 'typeId': 2, 'type': 'node', 'group': False},
-                 {'id': 6, 'name': 'Node2', 'typeId': 2, 'type': 'node', 'group': False}
-                 ]
+resourceItems = []
 
-resourceClaims = [{'id': 0, 'resourceId': 0, 'taskId': 1, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
-                  {'id': 1, 'resourceId': 1, 'taskId': 1, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
-                  {'id': 2, 'resourceId': 2, 'taskId': 1, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
-                  {'id': 3, 'resourceId': 3, 'taskId': 1, 'startTime': '2015-10-28T14:14:00Z', 'endTime': '2015-10-28T17:00:00Z', 'status': 'allocated'},
-                  {'id': 4, 'resourceId': 4, 'taskId': 2, 'startTime': '2015-10-29T10:00:00Z', 'endTime': '2015-10-29T12:00:00Z', 'status': 'claimed'},
-                  {'id': 5, 'resourceId': 4, 'taskId': 3, 'startTime': '2015-10-29T12:15:00Z', 'endTime': '2015-10-29T18:00:00Z', 'status': 'claimed'},
-                  ]
+for i in range(1, numCoreStations+1):
+    station = {'id': len(resourceItems), 'name': 'CS%03d' % i, 'typeId': 0, 'type': 'station', 'group': False}
+    resourceItems.append(station)
+
+for i in range(1, numRemoteStations+1):
+    station = {'id': len(resourceItems), 'name': 'RS%03d' % i, 'typeId': 0, 'type': 'station', 'group': False}
+    resourceItems.append(station)
+
+for i in range(1, numCobaltNodes+1):
+    node = {'id': len(resourceItems), 'name': 'cobalt%03d' % i, 'typeId': 1, 'type': 'correlator', 'group': False}
+    resourceItems.append(node)
+
+for i in range(1, numComputeNodes+1):
+    node = {'id': len(resourceItems), 'name': 'locus%03d' % i, 'typeId': 2, 'type': 'computenode', 'group': False}
+    resourceItems.append(node)
+
+for i in range(1, numIngestNodes+1):
+    node = {'id': len(resourceItems), 'name': 'lexar%03d' % i, 'typeId': 3, 'type': 'ingestnode', 'group': False}
+    resourceItems.append(node)
+
+cep4storage = {'id': len(resourceItems), 'name': 'CEP4 Storage', 'typeId': 4, 'type': 'cep4storage', 'group': False}
+resourceItems.append(cep4storage)
+
+stations = [r for r in resourceItems if r['typeId'] == 0]
+correlators = [r for r in resourceItems if r['typeId'] == 1]
+computenodes = [r for r in resourceItems if r['typeId'] == 2]
+ingestnodes = [r for r in resourceItems if r['typeId'] == 3]
+
+resourceClaims = []
+for task in allTasks:
+    taskResources = []
+    if task['type'] == 'Observation':
+        taskResources = stations + correlators
+    elif task['type'] == 'Pipeline':
+        taskResources = computenodes
+    elif task['type'] == 'Ingest':
+        taskResources = ingestnodes
+
+    for resource in taskResources:
+        claim = {'id': len(resourceClaims), 'resourceId': resource['id'], 'taskId': task['id'], 'startTime': task['from'], 'endTime': task['to'], 'status': 'allocated'}
+        resourceClaims.append(claim)
+
+    claim = {'id': len(resourceClaims), 'resourceId': cep4storage['id'], 'taskId': task['id'], 'startTime': task['from'], 'endTime': task['from'] + timedelta(days=3), 'status': 'allocated'}
+    resourceClaims.append(claim)
