@@ -39,7 +39,7 @@ CREATE TABLE virtual_instrument.unit (
   units text NOT NULL,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE unit
+ALTER TABLE virtual_instrument.unit
   OWNER TO renting;
 
 CREATE TABLE virtual_instrument.resource_type (
@@ -48,7 +48,7 @@ CREATE TABLE virtual_instrument.resource_type (
   unit_id integer NOT NULL REFERENCES virtual_instrument.unit DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE resource_type
+ALTER TABLE virtual_instrument.resource_type
   OWNER TO renting;
 
 CREATE TABLE virtual_instrument.resource (
@@ -57,7 +57,7 @@ CREATE TABLE virtual_instrument.resource (
   type_id integer NOT NULL REFERENCES virtual_instrument.resource_type DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE resource
+ALTER TABLE virtual_instrument.resource
   OWNER TO renting;
 
 CREATE TABLE virtual_instrument.resource_group_type (
@@ -65,7 +65,7 @@ CREATE TABLE virtual_instrument.resource_group_type (
   name text NOT NULL,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE resource_group_type
+ALTER TABLE virtual_instrument.resource_group_type
   OWNER TO renting;
 
 CREATE TABLE virtual_instrument.resource_group (
@@ -74,7 +74,7 @@ CREATE TABLE virtual_instrument.resource_group (
   type_id integer NOT NULL REFERENCES virtual_instrument.resource_group_type DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE resource_group
+ALTER TABLE virtual_instrument.resource_group
   OWNER TO renting;
 
 CREATE TABLE virtual_instrument.resource_to_resource_group (
@@ -83,7 +83,7 @@ CREATE TABLE virtual_instrument.resource_to_resource_group (
   parent_id integer NOT NULL REFERENCES virtual_instrument.resource_group DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE resource_to_resource_group
+ALTER TABLE virtual_instrument.resource_to_resource_group
   OWNER TO renting;
 
 CREATE TABLE virtual_instrument.resource_group_to_resource_group (
@@ -92,7 +92,7 @@ CREATE TABLE virtual_instrument.resource_group_to_resource_group (
   parent_id integer REFERENCES virtual_instrument.resource_group DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE resource_group_to_resource_group
+ALTER TABLE virtual_instrument.resource_group_to_resource_group
   OWNER TO renting;
 
 CREATE TABLE resource_allocation.task_status (
@@ -100,7 +100,7 @@ CREATE TABLE resource_allocation.task_status (
   name text NOT NULL,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE task_status
+ALTER TABLE resource_allocation.task_status
   OWNER TO renting;
 
 CREATE TABLE resource_allocation.task_type (
@@ -108,7 +108,7 @@ CREATE TABLE resource_allocation.task_type (
   name text NOT NULL,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE task_type
+ALTER TABLE resource_allocation.task_type
   OWNER TO renting;
 
 CREATE TABLE resource_allocation.specification (
@@ -118,7 +118,7 @@ CREATE TABLE resource_allocation.specification (
   content text,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE specification
+ALTER TABLE resource_allocation.specification
   OWNER TO renting;
 
 CREATE TABLE resource_allocation.task (
@@ -130,7 +130,7 @@ CREATE TABLE resource_allocation.task (
   specification_id integer NOT NULL REFERENCES resource_allocation.specification DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE task
+ALTER TABLE resource_allocation.task
   OWNER TO renting;
 
 CREATE TABLE resource_allocation.resource_claim_status (
@@ -138,7 +138,7 @@ CREATE TABLE resource_allocation.resource_claim_status (
   name text NOT NULL,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE resource_claim_status
+ALTER TABLE resource_allocation.resource_claim_status
   OWNER TO renting;
 
 CREATE TABLE resource_allocation.resource_claim (
@@ -154,7 +154,7 @@ CREATE TABLE resource_allocation.resource_claim (
   user_id integer,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE resource_claim
+ALTER TABLE resource_allocation.resource_claim
   OWNER TO renting;
 
 CREATE TABLE resource_monitoring.resource_capacity (
@@ -164,7 +164,7 @@ CREATE TABLE resource_monitoring.resource_capacity (
   total bigint NOT NULL,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE resource_capacity
+ALTER TABLE resource_monitoring.resource_capacity
   OWNER TO renting;
 
 CREATE TABLE resource_monitoring.resource_availability (
@@ -173,7 +173,7 @@ CREATE TABLE resource_monitoring.resource_availability (
   available bool NOt NULL,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE resource_availability
+ALTER TABLE resource_monitoring.resource_availability
   OWNER TO renting;
 
 CREATE TABLE resource_monitoring.resource_group_availability (
@@ -182,7 +182,7 @@ CREATE TABLE resource_monitoring.resource_group_availability (
   available bool NOt NULL,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
-ALTER TABLE resource_group_availability
+ALTER TABLE resource_monitoring.resource_group_availability
   OWNER TO renting;
 
 COMMIT;
