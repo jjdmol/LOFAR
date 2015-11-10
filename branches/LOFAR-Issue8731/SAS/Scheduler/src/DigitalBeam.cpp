@@ -16,7 +16,7 @@
 #include <math.h>
 
 const char * BEAM_DIRECTION_TYPES[_END_DIRECTION_TYPES] = {"J2000", "B1950", "ITRF", "HADEC","AZELGEO", "TOPO", "ICRS", "APP","GALACTIC",
-		"ECLIPTIC", "COMET", "MERCURY", "VENUS", "MARS", "JUPITER", "SATURN", "URANUS", "NEPTUNE", "PLUTO", "SUN", "MOON", "UNDEFINED"};
+		"ECLIPTIC", "COMET", "MERCURY", "VENUS", "MARS", "JUPITER", "SATURN", "URANUS", "NEPTUNE", "PLUTO", "SUN", "MOON", "AZEL", "UNDEFINED"};
 
 beamDirectionType stringToBeamDirectionType(const std::string &str) {
 	if (!str.empty()) {
