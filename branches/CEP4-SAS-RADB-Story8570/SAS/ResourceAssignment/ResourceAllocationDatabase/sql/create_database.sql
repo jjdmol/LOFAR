@@ -144,7 +144,7 @@ ALTER TABLE resource_claim_status
 CREATE TABLE resource_allocation.resource_claim (
   id serial NOT NULL,
   resource_id integer NOT NULL REFERENCES virtual_instrument.resource DEFERRABLE INITIALLY IMMEDIATE,
-  task_id integer NOT NULL REFERENCES resource_allocation.task DEFERRABLE INITIALLY IMMEDIATE ON DELETE CASCADE,
+  task_id integer NOT NULL REFERENCES resource_allocation.task ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
   starttime timestamp NOT NULL,
   endtime timestamp NOT NULL,
   status_id integer NOT NULL REFERENCES resource_allocation.resource_claim_status DEFERRABLE INITIALLY IMMEDIATE,
