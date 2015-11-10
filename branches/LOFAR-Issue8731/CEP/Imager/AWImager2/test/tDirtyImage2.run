@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if test ! -f ${srcdir}/tAWImager2.in_MS.tgz; then
+  return 3   # untested
+fi
+
+mkdir -p tDirtyImage2_tmp 
+tar zxf ${srcdir}/tAWImager2.in_MS.tgz -C tDirtyImage2_tmp
+
+../src/awimager2 data.ms=tDirtyImage2_tmp/tAWImager2.MS operation=image output.imagename=tDirtyImage2_tmp image.cellsize=40arcsec image.npix=128
