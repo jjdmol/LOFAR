@@ -45,7 +45,7 @@ ALTER TABLE unit
 CREATE TABLE virtual_instrument.resource_type (
   id serial NOT NULL,
   name text NOT NULL,
-  unit_id integer NOT NULL REFERENCES unit DEFERRABLE INITIALLY IMMEDIATE,
+  unit_id integer NOT NULL REFERENCES virtual_instrument.unit DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_type
@@ -54,7 +54,7 @@ ALTER TABLE resource_type
 CREATE TABLE virtual_instrument.resource (
   id serial NOT NULL,
   name text NOT NULL,
-  type_id integer NOT NULL REFERENCES resource_type DEFERRABLE INITIALLY IMMEDIATE,
+  type_id integer NOT NULL REFERENCES virtual_instrument.resource_type DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource
@@ -71,7 +71,7 @@ ALTER TABLE resource_group_type
 CREATE TABLE virtual_instrument.resource_group (
   id serial NOT NULL,
   name text NOT NULL,
-  type_id integer NOT NULL REFERENCES resource_group_type DEFERRABLE INITIALLY IMMEDIATE,
+  type_id integer NOT NULL REFERENCES virtual_instrument.resource_group_type DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_group
@@ -79,8 +79,8 @@ ALTER TABLE resource_group
 
 CREATE TABLE virtual_instrument.resource_to_resource_group (
   id serial NOT NULL,
-  child_id integer NOT NULL REFERENCES resource DEFERRABLE INITIALLY IMMEDIATE,
-  parent_id integer NOT NULL REFERENCES resource_group DEFERRABLE INITIALLY IMMEDIATE,
+  child_id integer NOT NULL REFERENCES virtual_instrument.resource DEFERRABLE INITIALLY IMMEDIATE,
+  parent_id integer NOT NULL REFERENCES virtual_instrument.resource_group DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_to_resource_group
@@ -88,8 +88,8 @@ ALTER TABLE resource_to_resource_group
 
 CREATE TABLE virtual_instrument.resource_group_to_resource_group (
   id serial NOT NULL,
-  child_id integer NOT NULL REFERENCES resource_group DEFERRABLE INITIALLY IMMEDIATE,
-  parent_id integer REFERENCES resource_group DEFERRABLE INITIALLY IMMEDIATE,
+  child_id integer NOT NULL REFERENCES virtual_instrument.resource_group DEFERRABLE INITIALLY IMMEDIATE,
+  parent_id integer REFERENCES virtual_instrument.resource_group DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_group_to_resource_group
@@ -125,9 +125,9 @@ CREATE TABLE resource_allocation.task (
   id serial NOT NULL,
   mom_id integer,
   otdb_id integer,
-  status_id integer NOT NULL REFERENCES task_status DEFERRABLE INITIALLY IMMEDIATE,
-  type_id integer NOT NULL REFERENCES task_type DEFERRABLE INITIALLY IMMEDIATE,
-  specification_id integer NOT NULL REFERENCES specification DEFERRABLE INITIALLY IMMEDIATE,
+  status_id integer NOT NULL REFERENCES resource_allocation.task_status DEFERRABLE INITIALLY IMMEDIATE,
+  type_id integer NOT NULL REFERENCES resource_allocation.task_type DEFERRABLE INITIALLY IMMEDIATE,
+  specification_id integer NOT NULL REFERENCES resource_allocation.specification DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE task
@@ -143,11 +143,11 @@ ALTER TABLE resource_claim_status
 
 CREATE TABLE resource_allocation.resource_claim (
   id serial NOT NULL,
-  resource_id integer NOT NULL REFERENCES resource DEFERRABLE INITIALLY IMMEDIATE,
-  task_id integer NOT NULL REFERENCES task DEFERRABLE INITIALLY IMMEDIATE, -- ON DELETE CASCADE,
+  resource_id integer NOT NULL REFERENCES virtual_instrument.resource DEFERRABLE INITIALLY IMMEDIATE,
+  task_id integer NOT NULL REFERENCES resource_allocation.task DEFERRABLE INITIALLY IMMEDIATE ON DELETE CASCADE,
   starttime timestamp NOT NULL,
   endtime timestamp NOT NULL,
-  status_id integer NOT NULL REFERENCES resource_claim_status DEFERRABLE INITIALLY IMMEDIATE,
+  status_id integer NOT NULL REFERENCES resource_allocation.resource_claim_status DEFERRABLE INITIALLY IMMEDIATE,
   claim_endtime timestamp NOT NULL,
   claim_size bigint NOT NULL,
   username text,
@@ -159,7 +159,7 @@ ALTER TABLE resource_claim
 
 CREATE TABLE resource_monitoring.resource_capacity (
   id serial NOT NULL,
-  resource_id integer NOT NULL REFERENCES resource DEFERRABLE INITIALLY IMMEDIATE,
+  resource_id integer NOT NULL REFERENCES virtual_instrument.resource DEFERRABLE INITIALLY IMMEDIATE,
   available bigint NOT NULL,
   total bigint NOT NULL,
   PRIMARY KEY (id)
@@ -169,7 +169,7 @@ ALTER TABLE resource_capacity
 
 CREATE TABLE resource_monitoring.resource_availability (
   id serial NOT NULL,
-  resource_id integer NOT NULL REFERENCES resource DEFERRABLE INITIALLY IMMEDIATE,
+  resource_id integer NOT NULL REFERENCES virtual_instrument.resource DEFERRABLE INITIALLY IMMEDIATE,
   available bool NOt NULL,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
@@ -178,7 +178,7 @@ ALTER TABLE resource_availability
 
 CREATE TABLE resource_monitoring.resource_group_availability (
   id serial NOT NULL,
-  resource_group_id integer NOT NULL REFERENCES resource_group DEFERRABLE INITIALLY IMMEDIATE,
+  resource_group_id integer NOT NULL REFERENCES virtual_instrument.resource_group DEFERRABLE INITIALLY IMMEDIATE,
   available bool NOt NULL,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
