@@ -46,7 +46,7 @@ dataControllerMod.controller('DataController',
             self.dataService.resources = result.resourceitems;
             self.dataService.resourceDict = toIdBasedDict(self.dataService.resources);
 
-            groupResourceClaims();
+            setTimeout(groupResourceClaims(), 10);
         });
     };
 
@@ -55,7 +55,7 @@ dataControllerMod.controller('DataController',
             self.dataService.resourceclaims = result.resourceclaims;
             self.dataService.resourceclaimDict = toIdBasedDict(self.dataService.resourceclaims);
 
-            groupResourceClaims();
+            setTimeout(groupResourceClaims(), 10);
         });
     };
 
@@ -75,7 +75,7 @@ dataControllerMod.controller('DataController',
         var grouped = {};
         var resources = self.dataService.resources;
 
-        for(var i = self.dataService.resources.length-1; i >=0; i--)
+        for(var i = resources.length-1; i >=0; i--)
         {
             var resource = resources[i];
             grouped[resource.id] = {
@@ -85,26 +85,27 @@ dataControllerMod.controller('DataController',
             };
         }
 
-        var resourceclaims = self.dataService.resourceclaims;
-        for(var i = resourceclaims.length-1; i >=0; i--)
-        {
-            var claim = resourceclaims[i];
-            var task = self.dataService.taskDict[claim.taskId];
+        setTimeout(function() {
+            var resourceclaims = self.dataService.resourceclaims;
+            for(var i = resourceclaims.length-1; i >=0; i--)
+            {
+                var claim = resourceclaims[i];
+                var task = self.dataService.taskDict[claim.taskId];
 
-            var row = grouped[claim.resourceId];
-            row.tasks.push({
-                name: task ? task.name : '<unknown>',
-                'from': claim.startTime,
-                'to': claim.endTime
-            });
-        }
+                var row = grouped[claim.resourceId];
+                row.tasks.push({
+                     name: task ? task.name : '<unknown>',
+                    'from': claim.startTime,
+                    'to': claim.endTime
+                });
+            }
+            var groupedArray = [];
 
-        var groupedArray = [];
+            for (var groupId in grouped)
+                groupedArray.push(grouped[groupId]);
 
-        for (var groupId in grouped)
-            groupedArray.push(grouped[groupId]);
-
-        self.dataService.resourcesWithClaims = groupedArray;
+            self.dataService.resourcesWithClaims = groupedArray;
+        }, 10);
     };
 
     getTasks();
