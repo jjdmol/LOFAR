@@ -55,75 +55,7 @@ namespace LofarFT {
   
 // <summary>  An FTMachine for Gridded Fourier transforms </summary>
 
-// <use visibility=export>
 
-// <reviewed reviewer="" date="" tests="" demos="">
-
-// <prerequisite>
-//   <li> <linkto class=FTMachine>FTMachine</linkto> module
-//   <li> <linkto class=SkyEquation>SkyEquation</linkto> module
-//   <li> <linkto class=VisBuffer>VisBuffer</linkto> module
-// </prerequisite>
-//
-// <etymology>
-// FTMachine is a Machine for Fourier Transforms. LofarFTMachine does
-// Grid-based Fourier transforms.
-// </etymology>
-//
-// <synopsis>
-// The <linkto class=SkyEquation>SkyEquation</linkto> needs to be able
-// to perform Fourier transforms on visibility data. LofarFTMachine
-// allows efficient Fourier Transform processing using a
-// <linkto class=VisBuffer>VisBuffer</linkto> which encapsulates
-// a chunk of visibility (typically all baselines for one time)
-// together with all the information needed for processing
-// (e.g. UVW coordinates).
-//
-// Gridding and degridding in LofarFTMachine are performed using a
-// novel sort-less algorithm. In this approach, the gridded plane is
-// divided into small patches, a cache of which is maintained in memory
-// using a general-purpose <linkto class=LatticeCache>LatticeCache</linkto> class. As the (time-sorted)
-// visibility data move around slowly in the Fourier plane, patches are
-// swapped in and out as necessary. Thus, optimally, one would keep at
-// least one patch per baseline.
-//
-// A grid cache is defined on construction. If the gridded uv plane is smaller
-// than this, it is kept entirely in memory and all gridding and
-// degridding is done entirely in memory. Otherwise a cache of tiles is
-// kept an paged in and out as necessary. Optimally the cache should be
-// big enough to hold all polarizations and frequencies for all
-// baselines. The paging rate will then be small. As the cache size is
-// reduced below this critical value, paging increases. The algorithm will
-// work for only one patch but it will be very slow!
-//
-// This scheme works well for arrays having a moderate number of
-// antennas since the saving in space goes as the ratio of
-// baselines to image size. For the ATCA, VLBA and WSRT, this ratio is
-// quite favorable. For the VLA, one requires images of greater than
-// about 200 pixels on a side to make it worthwhile.
-//
-// The FFT step is done plane by plane for images having less than
-// 1024 * 1024 pixels on each plane, and line by line otherwise.
-//
-// The gridding and degridding steps are implemented in Fortran
-// for speed. In gridding, the visibilities are added onto the
-// grid points in the neighborhood using a weighting function.
-// In degridding, the value is derived by a weight summ of the
-// same points, using the same weighting function.
-// </synopsis>
-//
-// <example>
-// See the example for <linkto class=SkyModel>SkyModel</linkto>.
-// </example>
-//
-// <motivation>
-// Define an interface to allow efficient processing of chunks of
-// visibility data
-// </motivation>
-//
-// <todo asof="97/10/01">
-// <ul> Deal with large VLA spectral line case
-// </todo>
 
 class FTMachine : public casa::FTMachine {
 public:
@@ -176,11 +108,6 @@ public:
     casa::PtrBlock<casa::ImageInterface<casa::Float>* > &model_images, 
     casa::Bool normalize);
   
-  virtual void initializeToVis(casa::ImageInterface<casa::Complex>& image, const casa::VisBuffer& vb) {};
-  virtual void initializeToSky(casa::ImageInterface<casa::Complex>& image, casa::Matrix<casa::Float>& weight, const casa::VisBuffer& vb) {};
-
-
-  
   // Finalize transform to Visibility plane: flushes the image
   // cache and shows statistics if it is being used.
   void finalizeToVis();
@@ -221,7 +148,7 @@ public:
   virtual void residual(
     VisBuffer& vb, 
     casa::Int row = -1, 
-    casa::FTMachine::Type type = casa::FTMachine::OBSERVED) {}
+    casa::FTMachine::Type type = casa::FTMachine::OBSERVED);
   
   // Make the entire image
   using casa::FTMachine::makeImage;
@@ -233,10 +160,6 @@ public:
 
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
-  virtual casa::ImageInterface<casa::Complex>& getImage(
-    casa::Matrix<casa::Float>&, 
-    casa::Bool normalize = casa::True);
-
   virtual void getImages(
     casa::Matrix<casa::Float>& weights, 
     casa::Bool normalize);
@@ -285,13 +208,24 @@ public:
 
   virtual void setMiscInfo(const casa::Int qualifier){(void)qualifier;};
   
+  void getWeightImage(casa::ImageInterface<casa::Float>& weightImage, casa::Matrix<casa::Float>& weights);
+
+  
+  // pure virtual functions that we do not use, 
+  // implementation only throws a not implemented exception
+  
+  virtual void initializeToVis(casa::ImageInterface<casa::Complex>& image, const casa::VisBuffer& vb);
+  virtual void initializeToSky(casa::ImageInterface<casa::Complex>& image, casa::Matrix<casa::Float>& weight, const casa::VisBuffer& vb);
+  
+  virtual casa::ImageInterface<casa::Complex>& getImage(
+    casa::Matrix<casa::Float>&, 
+    casa::Bool normalize = casa::True);
+
   virtual void ComputeResiduals(
     casa::VisBuffer&vb, 
     casa::Bool useCorrected);
 
-  void getWeightImage(casa::ImageInterface<casa::Float>& weightImage, casa::Matrix<casa::Float>& weights);
-  
-  
+   
   
 protected:
   
