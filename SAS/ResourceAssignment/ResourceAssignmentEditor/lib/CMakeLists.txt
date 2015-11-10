@@ -11,6 +11,7 @@ file(GLOB_RECURSE jquery_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/jq
 file(GLOB_RECURSE angular_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular/*)
 file(GLOB_RECURSE angular_route_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-route/*)
 file(GLOB_RECURSE angular_touch_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-touch/*)
+file(GLOB_RECURSE angular_resource_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-resource/*)
 file(GLOB_RECURSE angular_ui_grid_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-ui-grid/*)
 file(GLOB_RECURSE angular_gantt_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-gantt/*)
 file(GLOB_RECURSE angular_moment_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-moment/*)
@@ -30,6 +31,7 @@ set(web_files
     ${angular_files}
     ${angular_route_files}
     ${angular_touch_files}
+    ${angular_resource_files} 
     ${angular_ui_grid_files}
     ${angular_gantt_files}
     ${angular_moment_files}
