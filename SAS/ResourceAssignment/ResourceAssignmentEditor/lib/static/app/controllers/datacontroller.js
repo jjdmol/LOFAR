@@ -17,27 +17,9 @@ angular.module('raeApp').factory("dataService", function(){
 
 var dataControllerMod = angular.module('DataControllerMod', ['ngResource']);
 
-dataControllerMod.factory('taskService', function($resource){
-    return $resource("/rest/tasks/:id", {}, {
-        query: { method: "GET", isArray: false }
-    });
-});
-
-dataControllerMod.factory('resourceService', function($resource){
-    return $resource("/rest/resourceitems/:id", {}, {
-        query: { method: "GET", isArray: false }
-    });
-});
-
-dataControllerMod.factory('resourceClaimsService', function($resource){
-    return $resource("/rest/resourceclaims/:id", {}, {
-        query: { method: "GET", isArray: false }
-    });
-});
-
 dataControllerMod.controller('DataController',
-                             ['$scope', 'dataService', 'taskService',  'resourceService',  'resourceClaimsService',
-                             function($scope, dataService, taskService, resourceService, resourceClaimsService) {
+                            ['$scope', '$http', 'dataService',
+                            function($scope, $http, dataService) {
     var self = this;
     self.dataService = dataService;
 
@@ -50,22 +32,30 @@ dataControllerMod.controller('DataController',
         return dict;
     };
 
-    taskService.query(function(results) {
-        self.dataService.tasks = results.tasks;
-        self.dataService.taskDict = toIdBasedDict(self.dataService.tasks);
-    });
+    function getTasks() {
+        $http.get('/rest/tasks').success(function(result) {
+            self.dataService.tasks = result.tasks;
+            self.dataService.taskDict = toIdBasedDict(self.dataService.tasks);
+        });
+    };
 
-    resourceService.query(function(results) {
-        self.dataService.resources = results.resourceitems;
-        self.dataService.resourceDict = toIdBasedDict(self.dataService.resources);
-        groupResourceClaims();
-    });
+    function getResources() {
+        $http.get('/rest/resourceitems').success(function(result) {
+            self.dataService.resources = result.resourceitems;
+            self.dataService.resourceDict = toIdBasedDict(self.dataService.resources);
 
-    resourceClaimsService.query(function(results) {
-        self.dataService.resourceclaims = results.resourceclaims;
-        self.dataService.resourceclaimDict = toIdBasedDict(self.dataService.resourceclaims);
-        groupResourceClaims();
-    });
+            groupResourceClaims();
+        });
+    };
+
+    function getResourceClaims() {
+        $http.get('/rest/resourceclaims').success(function(result) {
+            self.dataService.resourceclaims = result.resourceclaims;
+            self.dataService.resourceclaimDict = toIdBasedDict(self.dataService.resourceclaims);
+
+            groupResourceClaims();
+        });
+    };
 
     function groupResourceClaims() {
         var grouped = {};
@@ -103,8 +93,8 @@ dataControllerMod.controller('DataController',
         self.dataService.resourcesWithClaims = groupedArray;
     };
 
-//     getTasks();
-//     getResources();
-//     getResourceClaims();
-  }
+    getTasks();
+    getResources();
+    getResourceClaims();
+}
 ]);
