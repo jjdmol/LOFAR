@@ -1,0 +1,201 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 369 118 N "_3DFace" 0
+"main()
+{
+  
+  baseDP       = MainDBName+\"LOFAR_PIC_Remote\";
+  RemoteDP        = baseDP;
+  
+
+  setValue(\"\",\"toolTipText\",\"Remote\");
+  setValue(\"selfState.light\",\"toolTipText\",RemoteDP);
+  setValue(\"childStateBorder\",\"toolTipText\",\"Remote\");
+  setValue(\"station_highLight\",\"toolTipText\",\"Remote\");
+  setValue(\"selfState.light\",\"foreCol\",\"_Transparent\");
+  
+
+  // check if any remotestation exist allready
+  bool remoteExist=false;
+  for (int i = 1; i<= dynlen(remoteStations);i++) {
+    if (dpExists(remoteStations[i]+\":LOFAR\")) {
+      remoteExist=true;
+    }
+    if (remoteExist) break;
+  }
+  if (remoteExist) {
+    // connect for childUpdates
+    showChildState(RemoteDP);
+    // connect for selfUpdates
+    showSelfState(RemoteDP);
+  } else {
+    setValue(\"selfState.light\",\"backCol\",\"Lofar_dpdoesnotexist\");
+    setValue(\"childStateBorder\",\"foreCol\",\"Lofar_dpdoesnotexist\");
+  }
+}" 0
+ E "main(int x, int y)
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP          = \"\";
+string RemoteDP       = \"\";
+bool   bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+    // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"Remote\",\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"Remote_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    panelSelection=\"LOFAR_Remote.pnl\";
+    navPanel_setEvent(\"Remote\",\"ChangePanel\");
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_statePopup(RemoteDP);
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+7 2
+"Remote_highLight"
+""
+1 139.8188321154402 32.88817776378591 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"RemoteCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void RemoteCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"Remote_small.pnl:RemoteCallback| objectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"Remote_small.pnl:RemoteCallback|Found highlight : \" + highlight+ \" Looking for: Remote\");
+  bool bHighlight=false;
+  if (dynContains(highlight,\"Remote\")) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"Remote_small.pnl:RemoteCallback|Highlight request: \"+bHighlight);
+  Remote_highLight.visible = bHighlight;
+  
+}
+
+" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1.982094672877819 0 2.707566856730058 -259.1526721577947 -64.39988126794378 1 E 147 40 14 14
+1 3 1 "" 1
+0
+7 1
+"childStateBorder"
+""
+1 55.3014423076923 56.29792800023452 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 4 1 2 1 E 3.913663424553498 0 5.713188282868467 -199.4717504196643 -300.0117762749403 1 E 59 60 6 6
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 1 "selfState"
+"objects\\lofar_self_state.pnl" 118 28 T 4 3.133333333333332 0 4.6 -369.7333333333332 -131.8
+0
+0
