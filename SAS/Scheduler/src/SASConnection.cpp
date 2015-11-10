@@ -1365,6 +1365,7 @@ bool SASConnection::getDigitalBeams(int treeID, Observation &observation) {
 							digitalBeam.setUnits(ANGLE_PAIRS_HMS_DMS);
 							break;
 						case DIR_TYPE_AZELGEO:
+						case DIR_TYPE_AZEL:
 						case DIR_TYPE_SUN:
 						case DIR_TYPE_MOON:
 						case DIR_TYPE_PLUTO:

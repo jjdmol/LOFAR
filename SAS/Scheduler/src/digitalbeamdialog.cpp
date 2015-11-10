@@ -279,6 +279,7 @@ void DigitalBeamDialog::setAngleCoordinateSystem(const beamDirectionType &coordi
 		      << ANGLE_PAIRS[ANGLE_PAIRS_RADIANS];
 		break;
 	case DIR_TYPE_AZELGEO:
+	case DIR_TYPE_AZEL:
 		ui.labelAngle1->setText("Azimuth:");
 		ui.labelAngle2->setText("Elevation:");
 		items << ANGLE_PAIRS[ANGLE_PAIRS_DMS_DMS]
@@ -389,6 +390,7 @@ void DigitalBeamDialog::switchToNewCoordinates(int newCoordinates) {
 		itsBeam.setUnits(ANGLE_PAIRS_HMS_DMS);
 		break;
 	case DIR_TYPE_AZELGEO:
+	case DIR_TYPE_AZEL:
 		itsBeam.setUnits(ANGLE_PAIRS_DMS_DMS);
 		break;
 	case DIR_TYPE_SUN:

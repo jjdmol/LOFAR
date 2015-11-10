@@ -7188,6 +7188,7 @@ void TaskDialog::setAnalogBeamUnitsComboBox(void) {
 			      << ANGLE_PAIRS[ANGLE_PAIRS_RADIANS];
 			break;
 		case DIR_TYPE_AZELGEO:
+		case DIR_TYPE_AZEL:
 			ui.labelBeamAngle1->setText("Azimuth:");
 			ui.labelBeamAngle2->setText("Elevation:");
 			ui.labelAngleNotation->setText("Units (az,el):");
@@ -7368,6 +7369,7 @@ void TaskDialog::setComboBoxAnalogBeamUnits(void) const {
 		      << ANGLE_PAIRS[ANGLE_PAIRS_RADIANS];
 		break;
 	case DIR_TYPE_AZELGEO:
+	case DIR_TYPE_AZEL:
 		ui.labelBeamAngle1->setText("Azimuth:");
 		ui.labelBeamAngle2->setText("Elevation:");
 		ui.labelAngleNotation->setText("Units (az,el):");
