@@ -1,7 +1,7 @@
 -- Copied from JR's script, maybe we should do this?
--- DROP DATABASE IF EXISTS resourceallocation;
--- CREATE DATABASE resourceallocation
---   WITH OWNER = renting
+-- DROP DATABASE IF EXISTS resourceassignment;
+-- CREATE DATABASE resourceassignment
+--   WITH OWNER = resourceassignment
 --       ENCODING = 'UTF8'
 --       TABLESPACE = pg_default
 --       LC_COLLATE = 'en_US.UTF-8'
@@ -10,8 +10,6 @@
 CREATE SCHEMA virtual_instrument;
 CREATE SCHEMA resource_monitoring;
 CREATE SCHEMA resource_allocation;
-
--- USE resourceassignment;?
 
 BEGIN;
 
@@ -40,7 +38,7 @@ CREATE TABLE virtual_instrument.unit (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE virtual_instrument.unit
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 CREATE TABLE virtual_instrument.resource_type (
   id serial NOT NULL,
@@ -49,7 +47,7 @@ CREATE TABLE virtual_instrument.resource_type (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE virtual_instrument.resource_type
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 CREATE TABLE virtual_instrument.resource (
   id serial NOT NULL,
@@ -58,7 +56,7 @@ CREATE TABLE virtual_instrument.resource (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE virtual_instrument.resource
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 CREATE TABLE virtual_instrument.resource_group_type (
   id serial NOT NULL,
@@ -66,7 +64,7 @@ CREATE TABLE virtual_instrument.resource_group_type (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE virtual_instrument.resource_group_type
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 CREATE TABLE virtual_instrument.resource_group (
   id serial NOT NULL,
@@ -75,7 +73,7 @@ CREATE TABLE virtual_instrument.resource_group (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE virtual_instrument.resource_group
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 CREATE TABLE virtual_instrument.resource_to_resource_group (
   id serial NOT NULL,
@@ -84,7 +82,7 @@ CREATE TABLE virtual_instrument.resource_to_resource_group (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE virtual_instrument.resource_to_resource_group
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 CREATE TABLE virtual_instrument.resource_group_to_resource_group (
   id serial NOT NULL,
@@ -93,7 +91,7 @@ CREATE TABLE virtual_instrument.resource_group_to_resource_group (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE virtual_instrument.resource_group_to_resource_group
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 CREATE TABLE resource_allocation.task_status (
   id serial NOT NULL,
@@ -101,7 +99,7 @@ CREATE TABLE resource_allocation.task_status (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_allocation.task_status
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 CREATE TABLE resource_allocation.task_type (
   id serial NOT NULL,
@@ -109,7 +107,7 @@ CREATE TABLE resource_allocation.task_type (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_allocation.task_type
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 CREATE TABLE resource_allocation.specification (
   id serial NOT NULL,
@@ -119,7 +117,7 @@ CREATE TABLE resource_allocation.specification (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_allocation.specification
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 CREATE TABLE resource_allocation.task (
   id serial NOT NULL,
@@ -131,7 +129,7 @@ CREATE TABLE resource_allocation.task (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_allocation.task
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 CREATE TABLE resource_allocation.resource_claim_status (
   id serial NOT NULL,
@@ -139,7 +137,7 @@ CREATE TABLE resource_allocation.resource_claim_status (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_allocation.resource_claim_status
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 CREATE TABLE resource_allocation.resource_claim (
   id serial NOT NULL,
@@ -155,7 +153,7 @@ CREATE TABLE resource_allocation.resource_claim (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_allocation.resource_claim
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 CREATE TABLE resource_monitoring.resource_capacity (
   id serial NOT NULL,
@@ -165,7 +163,7 @@ CREATE TABLE resource_monitoring.resource_capacity (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_monitoring.resource_capacity
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 CREATE TABLE resource_monitoring.resource_availability (
   id serial NOT NULL,
@@ -174,7 +172,7 @@ CREATE TABLE resource_monitoring.resource_availability (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_monitoring.resource_availability
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 CREATE TABLE resource_monitoring.resource_group_availability (
   id serial NOT NULL,
@@ -183,6 +181,6 @@ CREATE TABLE resource_monitoring.resource_group_availability (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_monitoring.resource_group_availability
-  OWNER TO renting;
+  OWNER TO resourceassignment;
 
 COMMIT;
