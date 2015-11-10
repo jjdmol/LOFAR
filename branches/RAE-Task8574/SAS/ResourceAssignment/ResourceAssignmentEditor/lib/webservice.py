@@ -96,6 +96,15 @@ def task(task_id):
 def taskResourceClaims(task_id):
     return jsonify({'taskResourceClaims': [x for x in resourceClaims if x['taskId'] == task_id]})
 
+@app.route('/rest/tasktypes/')
+def tasktypes():
+    return jsonify({'tasktypes': ['Observation', 'Pipeline', 'Ingest']})
+
+@app.route('/rest/taskstatustypes/')
+def taskstatustypes():
+    return jsonify({'taskstatustypes': ['scheduled', 'approved', 'prescheduled', 'running', 'finished', 'aborted']})
+
+
 def main(argv=None, debug=False):
     '''Start the webserver'''
     app.run(debug=debug, threaded=True, port=5001)
