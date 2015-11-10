@@ -1,3 +1,4 @@
+-- resourceassignment password for testing on mcu005 is the same as the password on the president's luggage +6
 BEGIN;
 INSERT INTO virtual_instrument.unit VALUES (0, 'station'),(1, 'bytes');
 INSERT INTO virtual_instrument.resource_type VALUES (0, 'station', 0),(1, 'storage', 1);
