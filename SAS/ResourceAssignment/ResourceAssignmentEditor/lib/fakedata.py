@@ -61,29 +61,53 @@ for p in range(numProjects):
         task = _genTask('LC4_%03d Ingest %02d'% (p+1, j+1), now + timedelta(hours=(p+1)*(i+1)*4.05 + 4.05 + (numPipelinesPerObs)*4.05), timedelta(hours=2), type='Ingest')
         allTasks.append(task)
 
+resourceGroups = []
+coreStationsGroup = {'id': 0, 'name': 'Core Stations', 'childGroupIds': [], 'resourceIds': []}
+remoteStationsGroup = {'id': 1, 'name': 'Remote Stations', 'childGroupIds': [], 'resourceIds': []}
+stationsGroup = {'id': 2, 'name': 'Stations', 'childGroupIds': [coreStationsGroup['id'], remoteStationsGroup['id']], 'resourceIds': []}
+cobaltGroup = {'id': 3, 'name': 'CEP4 Nodes', 'childGroupIds': [], 'resourceIds': []}
+cep4NodeGroup = {'id': 4, 'name': 'CEP4 Nodes', 'childGroupIds': [], 'resourceIds': []}
+cep4StorageGroup = {'id': 5, 'name': 'CEP4 Storage', 'childGroupIds': [], 'resourceIds': []}
+ingestGroup = {'id': 6, 'name': 'Ingest Nodes', 'childGroupIds': [], 'resourceIds': []}
+resourceGroups.append(coreStationsGroup)
+resourceGroups.append(remoteStationsGroup)
+resourceGroups.append(stationsGroup)
+resourceGroups.append(cobaltGroup)
+resourceGroups.append(cep4NodeGroup)
+resourceGroups.append(cep4StorageGroup)
+resourceGroups.append(ingestGroup)
+
 resourceItems = []
 
 for i in range(1, numCoreStations+1):
-    station = {'id': len(resourceItems), 'name': 'CS%03d' % i, 'typeId': 0, 'type': 'station', 'group': False}
+    station = {'id': len(resourceItems), 'name': 'CS%03d' % i, 'typeId': 0, 'type': 'station'}
+    coreStationsGroup['resourceIds'].append(station['id'])
+    stationsGroup['resourceIds'].append(station['id'])
     resourceItems.append(station)
 
 for i in range(1, numRemoteStations+1):
-    station = {'id': len(resourceItems), 'name': 'RS%03d' % i, 'typeId': 0, 'type': 'station', 'group': False}
+    station = {'id': len(resourceItems), 'name': 'RS%03d' % i, 'typeId': 0, 'type': 'station'}
+    remoteStationsGroup['resourceIds'].append(station['id'])
+    stationsGroup['resourceIds'].append(station['id'])
     resourceItems.append(station)
 
 for i in range(1, numCobaltNodes+1):
-    node = {'id': len(resourceItems), 'name': 'cobalt%03d' % i, 'typeId': 1, 'type': 'correlator', 'group': False}
+    node = {'id': len(resourceItems), 'name': 'cobalt%03d' % i, 'typeId': 1, 'type': 'correlator'}
+    cobaltGroup['resourceIds'].append(node['id'])
     resourceItems.append(node)
 
 for i in range(1, numComputeNodes+1):
-    node = {'id': len(resourceItems), 'name': 'locus%03d' % i, 'typeId': 2, 'type': 'computenode', 'group': False}
+    node = {'id': len(resourceItems), 'name': 'cep4node_%03d' % i, 'typeId': 2, 'type': 'computenode'}
+    cep4NodeGroup['resourceIds'].append(node['id'])
     resourceItems.append(node)
 
 for i in range(1, numIngestNodes+1):
-    node = {'id': len(resourceItems), 'name': 'lexar%03d' % i, 'typeId': 3, 'type': 'ingestnode', 'group': False}
+    node = {'id': len(resourceItems), 'name': 'lexar%03d' % i, 'typeId': 3, 'type': 'ingestnode'}
+    ingestGroup['resourceIds'].append(node['id'])
     resourceItems.append(node)
 
-cep4storage = {'id': len(resourceItems), 'name': 'CEP4 Storage', 'typeId': 4, 'type': 'cep4storage', 'group': False}
+cep4storage = {'id': len(resourceItems), 'name': 'CEP4 Storage', 'typeId': 4, 'type': 'cep4storage'}
+cep4StorageGroup['resourceIds'].append(cep4storage['id'])
 resourceItems.append(cep4storage)
 
 stations = [r for r in resourceItems if r['typeId'] == 0]

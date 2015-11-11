@@ -63,6 +63,12 @@ def resourcesitems():
     data = {'resourceitems': resourceItems}
     return jsonify(data)
 
+@app.route('/rest/resourcegroups')
+@gzipped
+def resourcegroups():
+    data = {'resourcegroups': resourceGroups}
+    return jsonify(data)
+
 @app.route('/rest/resourceclaims')
 @gzipped
 def resourceclaims():
