@@ -8,9 +8,10 @@ lofar_add_bin_program(TBBControl
 lofar_add_bin_program(trigctl 
   trigctl.cc)
 
-lofar_add_sbin_scripts(
+install(PROGRAMS
   startTBB.sh
-  stopTBB.sh)
+  stopTBB.sh
+  DESTINATION sbin)
 
 install(FILES
   TBBControl.conf

@@ -3,17 +3,13 @@ general script
 """
 
 from subprocess import (Popen, PIPE)
-import traceback
 import time
 import os
-import sys
-import logging
 
 general_version = '0913'
-logger = logging.getLogger()
 
 def writeMessage(msg):
-    sendCmd('wall', msg)
+    res = sendCmd('wall', msg)
     return
 
 # Return date string in the following format YYYYMMDD
@@ -43,13 +39,10 @@ def sendCmd(cmd='', args=''):
             if len(so) != 0:
                 return (so)
             else:
-                return ('Error, %s' % se)
+                print se
+                return ('No Response')
         except:
-            logger.error('Caught %s', str(sys.exc_info()[0]))
-            logger.error(str(sys.exc_info()[1]))
-            logger.error('TRACEBACK:\n%s', traceback.format_exc())
             return ('Exception Error')
-            
     return ('')
 
 # Get Host name

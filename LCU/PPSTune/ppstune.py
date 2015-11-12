@@ -2810,7 +2810,7 @@ def pps_tune_main(argv):
             start_tbb_sh = os.path.join('/opt', 'lofar', 'sbin', 'startTBB.sh')
             if os.path.exists(start_tbb_sh):
                 logging.info('Starting TBBs...')
-                start_tbb_output = check_output([start_tbb_sh], timeout_s=60.0)
+                start_tbb_output = check_output(start_tbb_sh, timeout_s=60.0)
                 logging.debug('startTBB.sh output:\n%s', start_tbb_output)
             else:
                 logging.warn('''Will not start TBBs: %s not found.
