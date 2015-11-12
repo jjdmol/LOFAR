@@ -22,13 +22,13 @@
 from datetime import datetime
 from datetime import timedelta
 
-numProjects = 3
+numProjects = 5
 numObsPerProject = 2
-numPipelinesPerObs = 2
+numPipelinesPerObs = 3
 numCoreStations = 20
-numRemoteStations = 10
+numRemoteStations = 15
 numCobaltNodes = 8
-numComputeNodes = 40
+numComputeNodes = 50
 numIngestNodes = 4
 
 _taskIdCntr = 0
@@ -65,9 +65,9 @@ resourceGroups = []
 coreStationsGroup = {'id': 0, 'name': 'Core Stations', 'childGroupIds': [], 'resourceIds': []}
 remoteStationsGroup = {'id': 1, 'name': 'Remote Stations', 'childGroupIds': [], 'resourceIds': []}
 stationsGroup = {'id': 2, 'name': 'Stations', 'childGroupIds': [coreStationsGroup['id'], remoteStationsGroup['id']], 'resourceIds': []}
-cobaltGroup = {'id': 3, 'name': 'CEP4 Nodes', 'childGroupIds': [], 'resourceIds': []}
+cobaltGroup = {'id': 3, 'name': 'Cobalt', 'childGroupIds': [], 'resourceIds': []}
 cep4NodeGroup = {'id': 4, 'name': 'CEP4 Nodes', 'childGroupIds': [], 'resourceIds': []}
-cep4StorageGroup = {'id': 5, 'name': 'CEP4 Storage', 'childGroupIds': [], 'resourceIds': []}
+cep4StorageGroup = {'id': 5, 'name': 'Storage', 'childGroupIds': [], 'resourceIds': []}
 ingestGroup = {'id': 6, 'name': 'Ingest Nodes', 'childGroupIds': [], 'resourceIds': []}
 resourceGroups.append(coreStationsGroup)
 resourceGroups.append(remoteStationsGroup)
@@ -116,7 +116,9 @@ computenodes = [r for r in resourceItems if r['typeId'] == 2]
 ingestnodes = [r for r in resourceItems if r['typeId'] == 3]
 
 resourceClaims = []
+resourceGroupClaims = []
 for task in allTasks:
+    taskResourceGroupIds = set()
     taskResources = []
     if task['type'] == 'Observation':
         taskResources = stations + correlators
@@ -129,5 +131,12 @@ for task in allTasks:
         claim = {'id': len(resourceClaims), 'resourceId': resource['id'], 'taskId': task['id'], 'startTime': task['from'], 'endTime': task['to'], 'status': 'allocated'}
         resourceClaims.append(claim)
 
-    claim = {'id': len(resourceClaims), 'resourceId': cep4storage['id'], 'taskId': task['id'], 'startTime': task['from'], 'endTime': task['from'] + timedelta(days=3), 'status': 'allocated'}
+        groupIds = [rg['id'] for rg in resourceGroups if resource['id'] in rg['resourceIds']]
+        taskResourceGroupIds |= set(groupIds)
+
+    claim = {'id': len(resourceClaims), 'resourceId': cep4storage['id'], 'taskId': task['id'], 'startTime': task['from'], 'endTime': task['from'] + timedelta(days=1), 'status': 'allocated'}
     resourceClaims.append(claim)
+
+    for groupId in taskResourceGroupIds:
+        groupClaim = {'id': len(resourceGroupClaims), 'resourceGroupId': groupId, 'taskId': task['id'], 'startTime': task['from'], 'endTime': task['to'], 'status': 'allocated'}
+        resourceGroupClaims.append(groupClaim)
