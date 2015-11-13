@@ -33,7 +33,32 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         enableSorting: true,
         enableFiltering: true,
         columnDefs: $scope.columns,
-        data: []
+        data: [],
+        onRegisterApi: function(gridApi){
+            $scope.gridApi = gridApi;
+
+            $scope.gridApi.core.on.rowsRendered($scope, filterTasks);
+        }
+    };
+
+    function filterTasks() {
+        var taskDict = $scope.dataService.taskDict;
+        var filteredTasks = [];
+        var filteredTaskDict = {};
+        var rows = $scope.gridApi.grid.rows;
+        var numRows = rows.length;
+        for(var i = 0; i < numRows; i++) {
+            var row = rows[i];
+            if(row.visible)
+            {
+                var task = taskDict[row.entity.id];
+                filteredTasks.push(task);
+                filteredTaskDict[task.id] = task;
+            }
+        }
+
+        $scope.dataService.filteredTasks = filteredTasks;
+        $scope.dataService.filteredTaskDict = filteredTaskDict;
     };
 
     function fillColumFilterSelectOptions(options, columnDef) {
@@ -47,7 +72,6 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
 
         columnDef.filter.selectOptions = columnSelectOptions;
     };
-
 
     $scope.$watch('dataService.taskstatustypes', function() {
         fillColumFilterSelectOptions($scope.dataService.taskstatustypes, $scope.columns[3]);

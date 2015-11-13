@@ -119,7 +119,7 @@ def taskstatustypes():
 
 def main(argv=None, debug=False):
     '''Start the webserver'''
-    app.run(debug=debug, threaded=True, port=5001)
+    app.run(debug=debug, threaded=True, host='0.0.0.0', port=5001)
 
 if __name__ == '__main__':
     main(sys.argv[1:], True)
