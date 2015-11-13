@@ -176,9 +176,9 @@ if test "$wait" = 1; then
           rempid=`grep '^pid=' "$envfile.pid-$rank" | sed -e 's/pid=//'`
           echo "ssh -x $host kill -9 $rempid"
           if test "$logfile" = ""; then
-            ssh -x "$host" kill -9 "$rempid"
+            ssh -o NoHostAuthenticationForLocalhost=yes -o NumberOfPasswordPrompts=0 -x -n "$host" kill -9 "$rempid"
           else
-            ssh -x "$host" kill -9 "$rempid" >> "$logfile-$rank"
+            ssh -o NoHostAuthenticationForLocalhost=yes -o NumberOfPasswordPrompts=0 -x -n "$host" kill -9 "$rempid" >> "$logfile-$rank"
           fi
         fi
         rank=`expr $rank + 1`
