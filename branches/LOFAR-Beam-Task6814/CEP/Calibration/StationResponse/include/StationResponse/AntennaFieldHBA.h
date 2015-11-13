@@ -68,7 +68,7 @@ public:
     static std::pair<double,double> getAzEl(const vector3r_t &position,
                                             const vector3r_t &direction);
 
-    real_t getNormalization(real_t freq, const vector3r_t &direction) const;
+    diag22r_t getNormalization(real_t freq, const vector3r_t &direction) const;
 private:
     static std::map<string,double> readRotationMap();
     static casa::CountedPtr<wcsprm> readWCS(const string &filename);
@@ -78,7 +78,7 @@ private:
     double                      itsRotation;
     static std::map<string,double>    theirRotationMap;
     static casa::CountedPtr<wcsprm>   theirWCS_p;;
-    static casa::Array<casa::Float>   theirIntegrals;
+    static casa::Array<casa::Float>   theirIntegralsxx, theirIntegralsyy;
 };
 
 

@@ -76,10 +76,12 @@ raw_response_t AntennaFieldHBA::rawResponse(real_t time, real_t freq,
     raw_response_t result = itsAntennaModel->rawResponse(freq,
         itrf2field(direction), itrf2field(direction0));
 
-    real_t norm=sqrt(getNormalization(freq, direction));
+    diag22r_t norms=getNormalization(freq, direction);
+    real_t normxx=sqrt(norms[0]);
+    real_t normyy=sqrt(norms[1]);
     result.response = result.response * rotation(time, direction);
-    result.response[0][0]/=norm; result.response[1][0]/=norm;
-    result.response[0][1]/=norm; result.response[1][1]/=norm;
+    result.response[0][0]/=normxx; result.response[0][1]/=normxx;
+    result.response[1][0]/=normyy; result.response[1][1]/=normyy;
     return result;
 }
 
@@ -97,7 +99,7 @@ matrix22c_t AntennaFieldHBA::elementResponse(real_t time, real_t freq,
         * rotation(time, direction);
 }
 
-real_t AntennaFieldHBA::getNormalization(real_t freq,
+diag22r_t AntennaFieldHBA::getNormalization(real_t freq,
                                          const vector3r_t &direction) const
 {
   // Get indices for azimuth and elevation
@@ -123,15 +125,16 @@ real_t AntennaFieldHBA::getNormalization(real_t freq,
   // Get index for frequency
   const double freq_min=100.e6;
   const double freq_max=195.e6;
-  const uint numfreqs=theirIntegrals.shape()[2];
+  const uint numfreqs=theirIntegralsxx.shape()[2];
 
   // Round to int, so add 0.5 and then truncate
   freq_index=int((freq-freq_min)/(freq_max-freq_min)*(numfreqs-1)+0.5);
 
 
-  double norm=theirIntegrals(casa::IPosition(3,x_index,y_index,freq_index));
+  double normxx=theirIntegralsxx(casa::IPosition(3,x_index,y_index,freq_index));
+  double normyy=theirIntegralsyy(casa::IPosition(3,x_index,y_index,freq_index));
   //cout<<"Station: "<<name()<<", rot="<<itsRotation<<", (az,el)=("<<world[0]<<", "<<world[1]<<"), pix=("<<pixcrd[0]<<", "<<pixcrd[1]<<") 1-based, ("<<x_index<<","<<y_index<<") 0-based, freq="<<freq<<", freq_index="<<freq_index<<"  (0-based), norm="<<norm<<endl;
-  return norm;
+  return {normxx,normyy};
 }
 
 
@@ -332,9 +335,11 @@ casa::Array<casa::Float> AntennaFieldHBA::readFITS(const string &filename) {
 map<string,double> AntennaFieldHBA::theirRotationMap =
     AntennaFieldHBA::readRotationMap();
 casa::CountedPtr<wcsprm> AntennaFieldHBA::theirWCS_p =
-    AntennaFieldHBA::readWCS("beamcube.fits");
-casa::Array<casa::Float> AntennaFieldHBA::theirIntegrals =
-    AntennaFieldHBA::readFITS("beamcube.fits");
+    AntennaFieldHBA::readWCS("beamcube-xx.fits");
+casa::Array<casa::Float> AntennaFieldHBA::theirIntegralsxx =
+    AntennaFieldHBA::readFITS("beamcube-xx.fits");
+casa::Array<casa::Float> AntennaFieldHBA::theirIntegralsyy =
+    AntennaFieldHBA::readFITS("beamcube-yy.fits");
 
 
 } //# namespace StationResponse
