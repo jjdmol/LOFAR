@@ -76,7 +76,7 @@ raw_response_t AntennaFieldHBA::rawResponse(real_t time, real_t freq,
     raw_response_t result = itsAntennaModel->rawResponse(freq,
         itrf2field(direction), itrf2field(direction0));
 
-    real_t norm=getNormalization(freq, direction);
+    real_t norm=sqrt(getNormalization(freq, direction));
     result.response = result.response * rotation(time, direction);
     result.response[0][0]/=norm; result.response[1][0]/=norm;
     result.response[0][1]/=norm; result.response[1][1]/=norm;
@@ -332,9 +332,9 @@ casa::Array<casa::Float> AntennaFieldHBA::readFITS(const string &filename) {
 map<string,double> AntennaFieldHBA::theirRotationMap =
     AntennaFieldHBA::readRotationMap();
 casa::CountedPtr<wcsprm> AntennaFieldHBA::theirWCS_p =
-    AntennaFieldHBA::readWCS("beamintmapwcselabs-CS002HBA1-mode5-201x201.fits");
+    AntennaFieldHBA::readWCS("beamcube.fits");
 casa::Array<casa::Float> AntennaFieldHBA::theirIntegrals =
-    AntennaFieldHBA::readFITS("beamintmapwcselabs-CS002HBA1-mode5-201x201.fits");
+    AntennaFieldHBA::readFITS("beamcube.fits");
 
 
 } //# namespace StationResponse
