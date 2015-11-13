@@ -19,6 +19,9 @@ angular.module('raeApp').factory("dataService", function(){
 
     self.resourcesWithClaims = [];
 
+    self.filteredTasks = [];
+    self.filteredTaskDict = {};
+
     return self;
 });
 
@@ -66,6 +69,9 @@ dataControllerMod.controller('DataController',
         $http.get('/rest/tasks').success(function(result) {
             self.dataService.tasks = result.tasks;
             self.dataService.taskDict = toIdBasedDict(self.dataService.tasks);
+
+            self.dataService.filteredTasks = self.dataService.tasks;
+            self.dataService.filteredTaskDict = self.dataService.taskDict;
         });
     };
 

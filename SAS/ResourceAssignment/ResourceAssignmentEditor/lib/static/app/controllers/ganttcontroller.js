@@ -18,6 +18,9 @@ var ganttControllerMod = angular.module('GanttControllerMod', [
 
 ganttControllerMod.controller('GanttController', ['$scope', 'dataService', function($scope, dataService) {
 
+    var self = this;
+    self.doInitialCollapse = true;
+
     $scope.dataService = dataService;
     $scope.ganttData = []
 
@@ -61,7 +64,7 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
         var numResources = resources.length;
 
         var resourceGroupsDict = $scope.dataService.resourceGroupsDict;
-        var taskDict = $scope.dataService.taskDict;
+        var taskDict = $scope.dataService.filteredTaskDict;
 
         var resourceGroupClaims = $scope.dataService.resourceGroupClaims;
         var numResourceGroupClaims = resourceGroupClaims.length;
@@ -122,16 +125,19 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
             var groupClaim = resourceGroupClaims[i];
             var task = taskDict[groupClaim.taskId];
 
-            var groupClaimTask = {
-                name: task ? task.name : '<unknown>',
-                'from': groupClaim.startTime,
-                'to': groupClaim.endTime
-            };
+            if(task)
+            {
+                var groupClaimTask = {
+                    name: task ? task.name : '<unknown>',
+                    'from': groupClaim.startTime,
+                    'to': groupClaim.endTime
+                };
 
-            var groupRowId = 'group_' + groupClaim.resourceGroupId;
-            var ganntGroupRow = ganntRowsDict[groupRowId];
-            if(ganntGroupRow)
-                ganntGroupRow.tasks.push(groupClaimTask);
+                var groupRowId = 'group_' + groupClaim.resourceGroupId;
+                var ganntGroupRow = ganntRowsDict[groupRowId];
+                if(ganntGroupRow)
+                    ganntGroupRow.tasks.push(groupClaimTask);
+            }
         }
 
         //and assign each resourceclaim to its resource in each group
@@ -139,28 +145,41 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
             var claim = resourceClaims[i];
             var task = taskDict[claim.taskId];
 
-            var groupIds = resourceIdToGroupIdsDict[claim.resourceId];
-            var numGroups = groupIds.length;
+            if(task)
+            {
+                var groupIds = resourceIdToGroupIdsDict[claim.resourceId];
+                var numGroups = groupIds.length;
 
-            var claimTask = {
-                name: task ? task.name : '<unknown>',
-                'from': claim.startTime,
-                'to': claim.endTime
-            };
+                if(numGroups > 0) {
+                    for(var j = 0; j < numGroups; j++) {
+                        var resourceRowId = 'group_' + groupIds[j] + '_resource_' + claim.resourceId;
+                        var ganntRow = ganntRowsDict[resourceRowId];
+                        if(ganntRow)
+                        {
+                            var claimTask = {
+                                name: task ? task.name : '<unknown>',
+                                'from': claim.startTime,
+                                'to': claim.endTime
+                            };
 
-            if(numGroups > 0) {
-                for(var j = 0; j < numGroups; j++) {
-                    var resourceRowId = 'group_' + groupIds[j] + '_resource_' + claim.resourceId;
+                            ganntRow.tasks.push(claimTask);
+                        }
+                    }
+                }
+                else {
+                    var resourceRowId = 'resource_' + claim.resourceId;
                     var ganntRow = ganntRowsDict[resourceRowId];
                     if(ganntRow)
+                    {
+                        var claimTask = {
+                            name: task ? task.name : '<unknown>',
+                            'from': claim.startTime,
+                            'to': claim.endTime
+                        };
+
                         ganntRow.tasks.push(claimTask);
+                    }
                 }
-            }
-            else {
-                var resourceRowId = 'resource_' + claim.resourceId;
-                var ganntRow = ganntRowsDict[resourceRowId];
-                if(ganntRow)
-                    ganntRow.tasks.push(claimTask);
             }
         }
 
@@ -170,7 +189,12 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
             ganntRows.push(ganntRowsDict[groupId]);
 
         $scope.ganttData = ganntRows;
-        setTimeout($scope.api.tree.collapseAll(), 10)
+
+        if(self.doInitialCollapse)
+        {
+            doInitialCollapse = false;
+            setTimeout($scope.api.tree.collapseAll, 500)
+        }
     };
 
     $scope.$watch('dataService.tasks', updateGanttData);
@@ -178,5 +202,6 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
     $scope.$watch('dataService.resourceclaims', updateGanttData);
     $scope.$watch('dataService.resourceGroups', updateGanttData);
     $scope.$watch('dataService.resourceGroupClaims', updateGanttData);
+    $scope.$watch('dataService.filteredTaskDict', updateGanttData);
 }
 ]);

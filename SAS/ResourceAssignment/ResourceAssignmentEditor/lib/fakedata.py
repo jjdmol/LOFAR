@@ -23,13 +23,13 @@ from datetime import datetime
 from datetime import timedelta
 
 numProjects = 5
-numObsPerProject = 2
-numPipelinesPerObs = 3
+numObsPerProject = 3
+numPipelinesPerObs = 5
 numCoreStations = 20
-numRemoteStations = 15
+numRemoteStations = 25
 numCobaltNodes = 8
 numComputeNodes = 50
-numIngestNodes = 4
+numIngestNodes = 2
 
 _taskIdCntr = 0
 
