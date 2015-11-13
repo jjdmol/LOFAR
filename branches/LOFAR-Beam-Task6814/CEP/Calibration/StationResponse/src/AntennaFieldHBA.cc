@@ -134,7 +134,10 @@ diag22r_t AntennaFieldHBA::getNormalization(real_t freq,
   double normxx=theirIntegralsxx(casa::IPosition(3,x_index,y_index,freq_index));
   double normyy=theirIntegralsyy(casa::IPosition(3,x_index,y_index,freq_index));
   //cout<<"Station: "<<name()<<", rot="<<itsRotation<<", (az,el)=("<<world[0]<<", "<<world[1]<<"), pix=("<<pixcrd[0]<<", "<<pixcrd[1]<<") 1-based, ("<<x_index<<","<<y_index<<") 0-based, freq="<<freq<<", freq_index="<<freq_index<<"  (0-based), norm="<<norm<<endl;
-  return {normxx,normyy};
+  diag22r_t norms={{}};
+  norms[0]=normxx;
+  norms[1]=normyy;
+  return norms;
 }
 
 
