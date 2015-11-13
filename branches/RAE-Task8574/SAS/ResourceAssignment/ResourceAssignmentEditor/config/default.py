@@ -18,5 +18,6 @@
 '''default config for webservice'''
 
 DEBUG = False
+JSONIFY_PRETTYPRINT_REGULAR = False
 
 print 'default config loaded'
