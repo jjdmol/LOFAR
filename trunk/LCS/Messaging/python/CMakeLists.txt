@@ -2,8 +2,8 @@
 
 lofar_find_package(Python 2.7)
 if(PYTHON_FOUND)
-  add_subdirectory(common)
-  add_subdirectory(messaging)
+  lofar_add_package(PyCommon common)
+  lofar_add_package(PyMessaging messaging)
 else()
   message(WARNING "Python module lofar.messaging will NOT be built")
 endif()
