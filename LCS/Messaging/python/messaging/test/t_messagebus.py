@@ -289,4 +289,4 @@ class SendReceiveMessage(unittest.TestCase):
 if __name__ == '__main__':
     QUEUE = sys.argv[1] if len(sys.argv) > 1 else "testqueue"
     del sys.argv[1:]
-    unittest.main()
+    unittest.main(verbosity=2)
