@@ -421,11 +421,11 @@ void TbbSettings::clearRcuSettings(int32 boardnr)
 		itsChannelInfo[(boardnr * 16) + cn].DetectWindow = 0;
 		itsChannelInfo[(boardnr * 16) + cn].TriggerMode = 0;
 		itsChannelInfo[(boardnr * 16) + cn].OperatingMode = TBB_MODE_TRANSIENT;
-					 for (int f = 0; f < 2; f++) {
-						  for (int c = 0; c < 4; c++) {
-								itsChannelInfo[cn].Filter[f][c] = 0;
-						  }
-					 }
+        for (int f = 0; f < 2; f++) {
+            for (int c = 0; c < 4; c++) {
+                itsChannelInfo[cn].Filter[f][c] = 0;
+            }
+        }
 	}
 }
 

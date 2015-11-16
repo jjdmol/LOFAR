@@ -1218,8 +1218,10 @@ void TBBDriver::setClockState(GCFEvent& event)
 
 	else if ((int32)e.clock != TS->getClockFreq()) {
 		LOG_WARN_STR ("CLOCK WAS CHANGED TO " << e.clock << "MHz, RESET NEEDED (wait 80 secs for done)");
-		for (int bnr = 0; bnr < TS->maxBoards(); bnr++) {
+        
+        for (int bnr = 0; bnr < TS->maxBoards(); bnr++) {
 		    TS->setBoardState(bnr, setDefaultImage);
+            TS->resetActiveBoard(bnr);
 	    }
 		TS->setClockFreq((int32)e.clock);
 		
