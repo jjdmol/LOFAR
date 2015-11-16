@@ -3679,8 +3679,10 @@ static void usage(bool exportMode)
 	cout << "rspctl --rspclear           [--select=<set>]   # clear FPGA registers on RSPboard" << endl;
 	cout << "rspctl --hbadelays[=<list>] [--select=<set>]   # set or get the 16 delays of one or more HBA's" << endl;
 	cout << "rspctl --tbbmode[=transient | =subbands,<set>] # set or get TBB mode, 'transient' or 'subbands', if subbands then specify subband set" << endl;
-	cout << "rspctl --splitter[=0|1]                        # set or get the status of the Serdes splitter" << endl;
-	cout << "rspctl --datastream[=0|1|2|3]                  # set or get the status of data stream to cep" << endl;
+	if (gHasSplitter) {
+        cout << "rspctl --splitter[=0|1]                        # set or get the status of the Serdes splitter" << endl;
+    }
+    cout << "rspctl --datastream[=0|1|2|3]                  # set or get the status of data stream to cep" << endl;
 	cout << "rspctl --swapxy[=0|1] [--select=<set>]         # set or get the status of xy swap, 0=normal, 1=swapped" << endl;
 	cout << "rspctl --bitmode[=4|8|16]                      # set or get the number of bits per sample" << endl;
 	cout << endl;

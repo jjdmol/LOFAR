@@ -284,9 +284,9 @@ public:
 		out << "SerdesRead          "; itsSerdesReadState.print(out);
 		out << "Bitmode Status (w)  "; itsBitModeWriteState.print(out);
 		if (hasAartfaac) {
-            out << "DIAGBypassSettingsBP"; bypasssettings_bp_state.print(out);
-            out << "SDOMode Status (w)  "; itsSDOModeWriteState.print(out);
-            out << "SDOSelect Status (w)"; itsSDOSelectWriteState.print(out);
+            out << "SDOEnable Status    "; bypasssettings_bp_state.print(out);
+            out << "SDOMode Status      "; itsSDOModeWriteState.print(out);
+            out << "SDOSelect Status    "; itsSDOSelectWriteState.print(out);
         }
         out << "RawDataBlock(write) "; rawdatawrite_state.print(out);
 		out << "RawDataBlock(read)  "; rawdataread_state.print(out);
