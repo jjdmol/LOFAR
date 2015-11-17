@@ -76,17 +76,21 @@ def TaskSpecificationRequest(input_dict, db_connection):
         treeinfo = db_connection.query("select exportTree(1, '%s', '%s')" % (tree_id, top_node)).getresult()[0][0]
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("Error while requesting specs of tree %d: %s"% (tree_id, exc_info))
-    # convert the single string into the dict
+    # When the query was succesfull 'treeinfo' is now a string that contains many 'key = value' lines seperated
+    # with newlines. To make it more usable for the user we convert that into a dict...
+
     # Note: a PIC tree is a list of keys while a Template tree and a VIC tree is a list of key-values.
     #       Since we don't know what kind of tree was requested we assume a Template/VIC tree (most likely)
     #       but if this ends in exceptions we fall back to a PIC tree.
     answer_dict = {}
     answer_list = []
-    for line in treeinfo.split('\n'):
+    for line in treeinfo.split('\n'): # make seperate lines of it.
         try:
+            # assume a 'key = value' line
             (key, value) = line.split("=", 1)
             answer_dict[key] = value
         except ValueError:
+            # oops, no '=' on the line, must be a PIC tree that was queried: make a list iso a dict
             answer_list.append(line)
     if len(answer_list) > 1:		# there is always one empty line, ignore that one...
         answer_dict["tree"] = answer_list
