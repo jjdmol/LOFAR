@@ -56,7 +56,7 @@ namespace LOFAR {
         itsMinNPoint    (parset.getUint  (prefix+"minpoints", 1)),
         itsMakeAutoCorr (parset.getBool  (prefix+"autocorr", false)),
         itsSumAutoCorr  (parset.getBool  (prefix+"sumauto", true)),
-        itsDoAverage    (parset.getBool  (prefix+"average", false)),
+        itsDoAverage    (parset.getBool  (prefix+"average", true)),
         itsUseWeight    (parset.getBool  (prefix+"useweights", true))
     {
     }
@@ -330,6 +330,8 @@ namespace LOFAR {
       Double*  uvwPtr  = itsBuf.getUVW().data() + uvws.size();
       Bool*    frfPtr  = itsBuf.getFullResFlags().data() + frFlags.size();
       vector<uint> npoints(nrcc);
+      vector<Complex> dataFlg(nrcc);
+      vector<Float>  wghtFlg(nrcc);
       // Loop over all new baselines.
       for (uint i=0; i<itsBufRows.size(); ++i) {
         // Clear the data for the new baseline.
@@ -337,10 +339,18 @@ namespace LOFAR {
           dataPtr[k] = Complex();
           wghtPtr[k] = 0.;
           npoints[k] = 0;
+          dataFlg[k] = Complex();
+          wghtFlg[k] = 0.;
         }
         for (uint k=0; k<nrfr; ++k) {
           frfPtr[k] = true;
         }
+
+        for (uint k=0; k<3; ++k) {
+          uvwPtr[k] = 0.;
+        }
+        double uvwWghtSum = 0.;
+
         // Sum the baselines forming the new baselines.
         for (uint j=0; j<itsBufRows[i].size(); ++j) {
           // Get the baseline number to use.
@@ -351,7 +361,7 @@ namespace LOFAR {
             blnr = -blnr;
             useConj = true;
           }
-          blnr--;
+          blnr--;     // decrement because blnr+1 is stored in itsBufRows
           // Get pointers to the input baseline data.
           const Complex* inDataPtr = (itsBuf.getData().data() +
                                       blnr*nrcc);
@@ -361,41 +371,73 @@ namespace LOFAR {
                                       blnr*nrcc);
           const Bool*    inFrfPtr  = (itsBuf.getFullResFlags().data() +
                                       blnr*nrfr);
-          // Add the data and weights if not flagged.
+          const Double*  inUvwPtr  = (itsBuf.getUVW().data() +
+                                      blnr*3);
+          // Add the data, uvw, and weights if not flagged.
           // Write 4 loops to avoid having to test inside the loop.
+          // Count the flagged points separately, so it can be used
+          // if too many points are flagged.
           if (useConj) {
             if (itsUseWeight) {
               for (uint k=0; k<nrcc; ++k) {
-                if (!inFlagPtr[k]) {
+                if (inFlagPtr[k]) {
+                  dataFlg[k] += conj(inDataPtr[k]) * inWghtPtr[k];
+                  wghtFlg[k] += inWghtPtr[k];
+                } else {
                   npoints[k]++;
-                  dataPtr[k] += conj(inDataPtr[k]);
+                  dataPtr[k] += conj(inDataPtr[k]) * inWghtPtr[k];
                   wghtPtr[k] += inWghtPtr[k];
+                  for (int ui=0; ui<3; ++ui) {
+                    uvwPtr[ui] -= inUvwPtr[ui] * inWghtPtr[k];
+                  }
+                  uvwWghtSum += inWghtPtr[k];
                 }
               }
             } else {
               for (uint k=0; k<nrcc; ++k) {
-                if (!inFlagPtr[k]) {
+                if (inFlagPtr[k]) {
+                  dataFlg[k] += conj(inDataPtr[k]);
+                  wghtFlg[k] += 1.;
+                } else {
                   npoints[k]++;
                   dataPtr[k] += conj(inDataPtr[k]);
                   wghtPtr[k] += 1.;
+                  for (int ui=0; ui<3; ++ui) {
+                    uvwPtr[ui] -= inUvwPtr[ui];
+                  }
+                  uvwWghtSum += 1;
                 }
               }
             }
           } else {
             if (itsUseWeight) {
               for (uint k=0; k<nrcc; ++k) {
-                if (!inFlagPtr[k]) {
+                if (inFlagPtr[k]) {
+                  dataFlg[k] += inDataPtr[k] * inWghtPtr[k];
+                  wghtFlg[k] += inWghtPtr[k];
+                } else {
                   npoints[k]++;
-                  dataPtr[k] += inDataPtr[k];
+                  dataPtr[k] += inDataPtr[k] * inWghtPtr[k];
                   wghtPtr[k] += inWghtPtr[k];
+                  for (int ui=0; ui<3; ++ui) {
+                    uvwPtr[ui] += inUvwPtr[ui] * inWghtPtr[k];
+                  }
+                  uvwWghtSum += inWghtPtr[k];
                 }
               }
             } else {
               for (uint k=0; k<nrcc; ++k) {
-                if (!inFlagPtr[k]) {
+                if (inFlagPtr[k]) {
+                  dataFlg[k] += inDataPtr[k];
+                  wghtFlg[k] += 1.;
+                } else {
                   npoints[k]++;
                   dataPtr[k] += inDataPtr[k];
                   wghtPtr[k] += 1.;
+                  for (int ui=0; ui<3; ++ui) {
+                    uvwPtr[ui] += inUvwPtr[ui];
+                  }
+                  uvwWghtSum += 1;
                 }
               }
             }
@@ -407,24 +449,35 @@ namespace LOFAR {
           }
         }
         // Set the resulting flags. Average if needed.
+        // Set flag if too few unflagged data points; use flagged data too.
         for (uint k=0; k<nrcc; ++k) {
-          if (wghtPtr[k] == 0) {
+          if (wghtPtr[k] == 0  ||  npoints[k] < itsMinNPoint) {
             flagPtr[k] = true;
+            dataPtr[k] += dataFlg[k];
+            wghtPtr[k] += wghtFlg[k];
           } else {
-            flagPtr[k] = (npoints[k] < itsMinNPoint);
-            if (itsDoAverage) {
-              dataPtr[k] /= wghtPtr[k];
-            }
+            flagPtr[k] = false;
+          }
+          if (itsDoAverage) {
+            dataPtr[k] /= wghtPtr[k];
           }
         }
-        // Calculate the UVW coordinate of the new station.
-        uint blnr = nrOldBL + i;
-        Vector<Double> uvws = itsUVWCalc.getUVW (getInfo().getAnt1()[blnr],
-                                                 getInfo().getAnt2()[blnr],
-                                                 buf.getTime());
-        uvwPtr[0] = uvws[0];
-        uvwPtr[1] = uvws[1];
-        uvwPtr[2] = uvws[2];
+
+        // Average or calculate the UVW coordinate of the new station.
+        if (itsDoAverage  &&  uvwWghtSum != 0) {
+          for (int ui=0; ui<3; ++ui) {
+            uvwPtr[ui] /= uvwWghtSum;
+          }
+        } else {
+          uint blnr = nrOldBL + i;
+          Vector<Double> uvws = itsUVWCalc.getUVW (getInfo().getAnt1()[blnr],
+                                                   getInfo().getAnt2()[blnr],
+                                                   buf.getTime());
+          uvwPtr[0] = uvws[0];
+          uvwPtr[1] = uvws[1];
+          uvwPtr[2] = uvws[2];
+        }
+
         dataPtr += nrcc;
         flagPtr += nrcc;
         wghtPtr += nrcc;
@@ -446,6 +499,7 @@ namespace LOFAR {
 
     void StationAdder::addToMS (const string& msName)
     {
+      getPrevStep()->addToMS(msName);
       // Add the new stations to the ANTENNA subtable.
       Table antTab (msName + "/ANTENNA", Table::Update);
       ScalarColumn<String> nameCol   (antTab, "NAME");

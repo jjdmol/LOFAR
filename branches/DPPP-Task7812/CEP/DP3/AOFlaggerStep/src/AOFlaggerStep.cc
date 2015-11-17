@@ -254,6 +254,7 @@ namespace LOFAR {
         itsQualityTimer.stop();
       }
       itsTimer.stop();
+      getPrevStep()->addToMS (msName);
     }
 
     void AOFlaggerStep::flag (uint rightOverlap)

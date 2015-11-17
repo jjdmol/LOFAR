@@ -30,7 +30,11 @@ find_package(PythonInterp)
 if(PYTHON_EXECUTABLE)
   set(_cmd
     "from distutils.sysconfig import get_python_lib"
-    "print(get_python_lib(plat_specific=True, prefix=''))")
+    "from os.path import join"
+    "print(join(
+       get_python_lib(plat_specific=True, standard_lib=True, prefix=''), 
+       'site-packages'))"
+  )
   execute_process(
     COMMAND "${PYTHON_EXECUTABLE}" "-c" "${_cmd}"
     OUTPUT_VARIABLE _pydir
@@ -39,10 +43,20 @@ if(PYTHON_EXECUTABLE)
   if(_pyerr)
     message(FATAL_ERROR "Python command failed:\n${_pyerr}")
   endif(_pyerr)
+  
+  if(NOT DEFINED PYTHON_BUILD_DIR)
+    set(_PRINT_PYTHON_DIRS TRUE)
+  endif()
+  
   set(PYTHON_BUILD_DIR "${CMAKE_BINARY_DIR}/${_pydir}" CACHE PATH 
     "Build directory for Python extensions" FORCE)
   set(PYTHON_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${_pydir}" CACHE PATH 
     "Installation directory for Python extensions" FORCE)
+
+  if(_PRINT_PYTHON_DIRS)
+    message(STATUS "Build directory for Python extensions:        ${PYTHON_BUILD_DIR}")
+    message(STATUS "Installation directory for Python extensions: ${PYTHON_INSTALL_DIR}")
+  endif()
 endif(PYTHON_EXECUTABLE)
 
 
@@ -76,11 +90,19 @@ macro(python_install)
   foreach(_py ${_py_files})
     get_filename_component(_py_path ${_py} PATH)
     get_filename_component(_py_abs ${_py} ABSOLUTE)
+    
+    # check if _py is a path in CMAKE_BINARY_DIR. If so, then it is most likely a configured_file. 
+    # then strip the CMAKE_CURRENT_BINARY_DIR prefix.
+    if(${_py} MATCHES "^(${CMAKE_CURRENT_BINARY_DIR})")
+      string(REGEX REPLACE "^(${CMAKE_CURRENT_BINARY_DIR}/)" "" _py "${_py}")
+      get_filename_component(_py_path ${_py} PATH)
+    endif()
+
     # Create a symlink to each Python file; needed to mimic install tree.
     file(MAKE_DIRECTORY ${_build_dir}/${_py_path})
     execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
       ${_py_abs} ${_build_dir}/${_py})
-    install(FILES ${_py} DESTINATION ${_inst_dir}/${_py_path})
+    install(FILES ${_py_abs} DESTINATION ${_inst_dir}/${_py_path})
     if(USE_PYTHON_COMPILATION)
       set(_py_code
         "import py_compile, os"

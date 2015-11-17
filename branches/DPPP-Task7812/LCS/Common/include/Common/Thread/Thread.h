@@ -27,7 +27,6 @@
 
 #ifdef USE_THREADS
 
-#include <features.h>
 #include <pthread.h>
 #include <signal.h>
 #include <sched.h>
@@ -317,14 +316,6 @@ template <typename T> inline void Thread::stub(Args<T> *args)
   ThreadMap::ScopedRegistration sr(ThreadMap::instance(), args->name);
 
   try {
-#if defined(_GNU_SOURCE) && __GLIBC_PREREQ(2, 12)
-    int retval;
-
-    // Set name WITHIN the thread, to avoid race conditions
-    if ((retval = pthread_setname_np(pthread_self(), args->name.substr(0,15).c_str())) != 0)
-      throw SystemCallException("pthread_setname_np", retval, THROW_ARGS);
-#endif
-
     // allow cancellation from here, to guarantee finished.up()
     started.up();
 
