@@ -316,6 +316,15 @@ template <typename T> inline void Thread::stub(Args<T> *args)
   ThreadMap::ScopedRegistration sr(ThreadMap::instance(), args->name);
 
   try {
+#if !defined(__APPLE__)
+# if defined(_GNU_SOURCE) && __GLIBC_PREREQ(2, 12)
+    int retval;
+
+    // Set name WITHIN the thread, to avoid race conditions
+    if ((retval = pthread_setname_np(pthread_self(), args->name.substr(0,15).cstr())) != 0)
+      throw SystemCallException("pthread_setname_np", retval, THROW_ARGS);
+# endif
+#endif
     // allow cancellation from here, to guarantee finished.up()
     started.up();
 
