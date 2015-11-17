@@ -80,6 +80,8 @@ dataControllerMod.controller('DataController',
             self.dataService.resources = result.resourceitems;
             self.dataService.resourceDict = toIdBasedDict(self.dataService.resources);
             mapResourcesToGroups();
+
+            getResourceGroupClaims();
         });
     };
 
@@ -95,6 +97,8 @@ dataControllerMod.controller('DataController',
             self.dataService.resourceGroups = result.resourcegroups;
             self.dataService.resourceGroupsDict = toIdBasedDict(self.dataService.resourceGroups);
             mapResourcesToGroups();
+
+            getResources();
         });
     };
 
@@ -102,6 +106,8 @@ dataControllerMod.controller('DataController',
         $http.get('/rest/resourcegroupclaims').success(function(result) {
             self.dataService.resourceGroupClaims = result.resourcegroupclaims;
             self.dataService.resourceGroupClaimDict = toIdBasedDict(self.dataService.resourceGroupClaims);
+
+            setTimeout(function() { getResourceClaims() }, 100);
         });
     };
 
@@ -117,12 +123,9 @@ dataControllerMod.controller('DataController',
         });
     };
 
-    getTasks();
     getTaskTypes();
     getTaskStatusTypes();
+    getTasks();
     getResourceGroups();
-    getResourceGroupClaims();
-    getResources();
-    getResourceClaims();
 }
 ]);
