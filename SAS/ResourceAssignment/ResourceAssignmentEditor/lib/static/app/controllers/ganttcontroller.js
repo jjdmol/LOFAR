@@ -50,6 +50,24 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
         api: function(api) {
             // API Object is used to control methods and events from angular-gantt.
             $scope.api = api;
+
+            api.core.on.ready($scope, function () {
+                    api.tasks.on.moveEnd($scope, moveHandler);
+                }
+            );
+        }
+    };
+
+    function moveHandler(task, fromRow)
+    {
+        if(task.row.model.name.startsWith('group')) {
+        }
+        else {
+            var claimId = task.model.id;
+            var claim = $scope.dataService.resourceClaimDict[claimId];
+            var t = $scope.dataService.taskDict[claim.taskId];
+            t.from = task.model.from._d.toISOString();
+            t.to = task.model.to._d.toISOString();
         }
     };
 
@@ -127,14 +145,16 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
 
             if(task)
             {
+                var groupRowId = 'group_' + groupClaim.resourceGroupId;
+                var ganntGroupRow = ganntRowsDict[groupRowId];
+
                 var groupClaimTask = {
+                    id: groupClaim.id,
                     name: task ? task.name : '<unknown>',
                     'from': groupClaim.startTime,
                     'to': groupClaim.endTime
                 };
 
-                var groupRowId = 'group_' + groupClaim.resourceGroupId;
-                var ganntGroupRow = ganntRowsDict[groupRowId];
                 if(ganntGroupRow)
                     ganntGroupRow.tasks.push(groupClaimTask);
             }
@@ -157,6 +177,7 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
                         if(ganntRow)
                         {
                             var claimTask = {
+                                id: claim.id,
                                 name: task ? task.name : '<unknown>',
                                 'from': claim.startTime,
                                 'to': claim.endTime
@@ -190,16 +211,16 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
 
         $scope.ganttData = ganntRows;
 
-        if(self.doInitialCollapse)
+        if(self.doInitialCollapse && numResources && numResourceGroups)
         {
             doInitialCollapse = false;
-            setTimeout($scope.api.tree.collapseAll, 500)
+            setTimeout(function() { $scope.api.tree.collapseAll(); }, 50);
         }
     };
 
     $scope.$watch('dataService.tasks', updateGanttData);
     $scope.$watch('dataService.resources', updateGanttData);
-    $scope.$watch('dataService.resourceclaims', updateGanttData);
+    $scope.$watch('dataService.resourceClaims', updateGanttData);
     $scope.$watch('dataService.resourceGroups', updateGanttData);
     $scope.$watch('dataService.resourceGroupClaims', updateGanttData);
     $scope.$watch('dataService.filteredTaskDict', updateGanttData);
