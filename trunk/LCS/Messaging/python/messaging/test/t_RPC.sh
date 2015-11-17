@@ -1,4 +1,4 @@
-#!/bin/sh -l
+#!/bin/sh
 ./runctest.sh t_RPC
 
 
