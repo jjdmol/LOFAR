@@ -257,24 +257,37 @@ class Service(object):
         if '/' in reply_to:
             # sometimes clients (JAVA) setup the reply_to field as "exchange/key; {options}"
             # make sure we can deal with that.
-	    tmpaddress=reply_to.split('/')[1]
-            with ToBus(tmpaddress[0]) as dest:
-                subject = tmpaddress[1]
-                if ';' in subject:
-                    subject = subject.split(';')[0]
-                ToSend.subject=subject
-                dest.send(ToSend)
+            reply_address=reply_to.split('/')
+            num_parts=len(reply_address)
+            reply_busname=reply_address[num_parts-2]
+            subject=reply_address[num_parts-1]
+            try:
+                with ToBus(reply_busname) as dest:
+                    # remove any extra field if present
+                    if ';' in subject:
+                        subject = subject.split(';')[0]
+                    reply_msg.subject=subject
+                    dest.send(reply_msg)
+            except  MessageBusError as e:
+                logger.error("Failed to send reply message to reply address %s on messagebus %s." %(subject,reply_busname))
             return
 
         if isinstance(self.reply_bus,ToBus):
             reply_msg.subject = reply_to
-            self.reply_bus.send(reply_msg)
+            try:
+                self.reply_bus.send(reply_msg)
+            except MessageBusError as e:
+                logger.error("Failed to send reply message to reply address %s on messagebus %s." %(reply_to,self.busname))
+            return
         else:
+            # the reply address is not in a default known format
+            # and we do not have a default bus destination
+            # we will try to deliver the message anyway.
             try:
                 with ToBus(reply_to) as dest:
                     dest.send(reply_msg)
             except MessageBusError as e:
-                logger.error("Failed to send reply to reply address %s" %(reply_to))
+                logger.error("Failed to send reply messgage to reply address %s" %(reply_to))
 
 
     def _loop(self, **kwargs):
