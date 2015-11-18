@@ -5,7 +5,7 @@ import sys
 import urllib2
 from flask.ext.testing import TestCase as FlaskTestCase
 from flask.ext.testing import LiveServerTestCase as FlaskLiveTestCase
-from resourceassignementeditor import webservice
+from lofar.sas.resourceassignement.resourceassignementeditor import webservice
 
 
 def setUpModule():
