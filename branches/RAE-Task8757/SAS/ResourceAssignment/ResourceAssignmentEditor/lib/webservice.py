@@ -31,8 +31,8 @@ from flask import Flask
 from flask import render_template
 from flask import url_for
 from flask.json import jsonify
-from resourceassignementeditor.utils import gzipped
-from resourceassignementeditor.fakedata import *
+from lofar.sas.resourceassignement.resourceassignementeditor.utils import gzipped
+from lofar.sas.resourceassignement.resourceassignementeditor.fakedata import *
 
 __root_path = os.path.dirname(os.path.abspath(__file__))
 print '__root_path=%s' % __root_path
@@ -48,7 +48,7 @@ print 'app.template_folder= %s' % app.template_folder
 print 'app.static_folder= %s' % app.static_folder
 
 # Load the default configuration
-app.config.from_object('resourceassignementeditor.config.default')
+app.config.from_object('lofar.sas.resourceassignement.resourceassignementeditor.config.default')
 
 @app.route('/')
 @app.route('/index.htm')
