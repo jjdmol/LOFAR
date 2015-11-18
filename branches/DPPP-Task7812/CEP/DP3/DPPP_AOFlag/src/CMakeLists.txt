@@ -5,7 +5,7 @@ include(LofarPackageVersion)
 lofar_add_library(dppp_aoflag
   Package__Version.cc
   AOFlaggerStep.cc
-  SlidingFlagger.cc
+#  SlidingFlagger.cc
   Register.cc
 )
 
