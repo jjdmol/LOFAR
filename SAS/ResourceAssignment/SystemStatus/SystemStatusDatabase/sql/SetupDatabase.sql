@@ -209,7 +209,7 @@ CREATE TABLE export_jobs (
 -- ENGINE=MyISAM DEFAULT CHARSET=latin1;
 DROP TABLE IF EXISTS observations;
 CREATE TABLE observations (
-  id varchar(20) NOT NULL,
+  obsid varchar(40) NOT NULL,
   job_id bigint  NOT NULL,
   nr_files bigint  NOT NULL
 )WITH (
