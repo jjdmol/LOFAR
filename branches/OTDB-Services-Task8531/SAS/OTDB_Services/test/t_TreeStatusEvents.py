@@ -84,7 +84,7 @@ if __name__ == "__main__":
         frombus.ack(msg)
         msg.show()
         try:
-            ok = (msg.content['treeID'] == 1099266 and msg.content['state'] == 500)
+            ok = (msg.content['treeID'] == 1099266 and msg.content['state'] == 'queued')
         except IndexError:
             ok = False
 

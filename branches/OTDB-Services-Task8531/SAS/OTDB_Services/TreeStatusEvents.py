@@ -112,6 +112,10 @@ if __name__ == "__main__":
                 try:
                     otdb_connection = pg.connect(user="postgres", host=options.dbHost, dbname=options.dbName)
                     connected = True
+                    # Get list of allowed tree states
+                    allowed_states = {}
+                    for (state_nr, name) in otdb_connection.query("select id,name from treestate").getresult():
+                        allowed_states[state_nr] = name
                 except (TypeError, SyntaxError, pg.InternalError):
                     connected = False
                     print "DatabaseError: Connection to database could not be made, reconnect attempt in 5 seconds"
@@ -122,8 +126,8 @@ if __name__ == "__main__":
                 # Get start_time (= creation time of last retrieved record if any)
                 start_time = ''
                 try:
-                    start_time = open('time_save.txt', 'rb').read()
-                except IOError:
+                    start_time = otdb_connection.query("select treestatusevent from otdb_admin").getresult()[0][0]
+                except IndexError, QUERY_EXCEPTIONS:
                     start_time = "2015-01-01 00:00:00.00"
                 print "start_time=", start_time
  
@@ -133,11 +137,12 @@ if __name__ == "__main__":
                     print exc_info
                 else:
                     for (treeid, state, modtime, creation) in record_list:
-                        content = { "treeID" : treeid, "state" : state, "time_of_change" : modtime }
+                        content = { "treeID" : treeid, "state" : allowed_states.get(state, "unknwon_state"), 
+                                    "time_of_change" : modtime }
                         msg = EventMessage(context="otdb.treestatus", content=content)
-                        print treeid, state, modtime, creation
+                        print treeid, allowed_states.get(state, "unknwon_state"), modtime, creation
                         send_bus.send(msg)
-                        open('time_save.txt', 'wb').write(creation)
+                        otdb_connection.query("update otdb_admin set treestatusevent = '%s'" % start_time)
                         start_time = creation
                     print "==="
 
