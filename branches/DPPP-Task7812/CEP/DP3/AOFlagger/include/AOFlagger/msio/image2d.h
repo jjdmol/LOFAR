@@ -28,6 +28,8 @@
 #include "colormap.h"
 #include "types.h"
 
+#include <string.h>
+
 #include <boost/shared_ptr.hpp>
 
 #include <exception>

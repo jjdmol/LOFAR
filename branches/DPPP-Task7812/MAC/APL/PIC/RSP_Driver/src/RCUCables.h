@@ -45,7 +45,7 @@ namespace LOFAR {
 //# Forward Declarations
 //class forward;
 
-// The RCUCables class is an interface for the Attenuation.conf file.
+// The RCUCables class is an interface for the CableAttenuation.conf file.
 //It reads in the file and stores the values in its datamembers. Defines some
 //useful functions for accessing the data.
 

@@ -26,7 +26,7 @@ StationType = dict( CS=1, RS=2, IS=3 )
 
 logger           = None
 rcumode          = -1
-active_delay_str = ('2,'*16)[:-1]
+active_delay_str = ('555,'*16)[:-1]
 
 
 def init_lofar_lib():
@@ -382,7 +382,7 @@ def getClock():
     return (clock)
     
 # function used for antenna testing        
-def swapXY(state):
+def swap_xy(state):
     if state in (0,1):
         if state == 1:
             logger.info("XY-output swapped")
@@ -414,10 +414,16 @@ def turnonRCUs(mode, rcus):
     rspctl('--rcuenable=1 --select=%s' %(select), wait=0.0)
     logger.info("setweights")
     rspctl('--aweights=8000,0', wait=0.0)
+    
     if mode == 5:
         rspctl('--specinv=1', wait=0.0)
     else:
         rspctl('--specinv=0', wait=0.0)
+    
+    if mode < 3:
+        swap_xy(state=1)
+    else:
+        swap_xy(state=0)
     logger.info("set rcu mode")
     rsp_rcu_mode(mode, rcus)
     #rcumode = mode
@@ -458,7 +464,7 @@ def rsp_hba_delay(delay, rcus, discharge=True):
     
     if delay == active_delay_str:
         logger.debug("requested delay already active, skip hbadelay command")
-        return (0)
+        return (1)
     
     if discharge == True:
         # count number of elements off in last command

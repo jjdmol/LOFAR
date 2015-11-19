@@ -79,6 +79,9 @@ namespace LOFAR {
 	  // Returns the rcumode of this SPW
 	  int rcumode() const;
 
+      // Returns the rcumode of this SPW
+	  uint32 raw_rcumode() const;
+
 	  // Output function
 	  ostream& print (ostream& os) const;
 

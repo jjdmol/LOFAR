@@ -100,6 +100,7 @@ static void update_speed( struct speed *s, double *speedptr, const char **suffix
 
 static void *log_thread(void *arg)
 {
+  (void)arg; // suppress unused parameter warning
   struct speed speed;
   double speedval;
   const char *suffix;
@@ -190,7 +191,6 @@ static void init(int argc, char **argv)
 int main(int argc, char **argv)
 {
   char	   buffer[MAXBLOCKSIZE] __attribute__ ((aligned(16)));
-  size_t   read_size, write_size;
 
   init(argc, argv);
 
@@ -266,6 +266,7 @@ int main(int argc, char **argv)
     max_size = 8960;
   }
 
+  ssize_t read_size, write_size;
   while ((read_size = read(sk_in, buffer, max_size)) != 0) {
     if (read_size < 0) {
       perror("read");

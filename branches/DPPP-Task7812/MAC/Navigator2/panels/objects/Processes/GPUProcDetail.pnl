@@ -64,6 +64,7 @@ updateGPUProc(string dp1, string observationName,
   int gpu = (substr(dp1,strpos(dp1,\"CobaltGPUProc\")+13,2));
   CBTstr.text = cbt;
   GPUstr.text = gpu;
+  string refname = observationName+cbt+gpu;
 
   if (!invalid) {
     setValue(\"observationName\", \"text\", observationName);
@@ -79,7 +80,7 @@ updateGPUProc(string dp1, string observationName,
     setValue(\"dropping\", \"backCol\",\"Lofar_invalid\");
   }
   
-  addSubbands(subband, written, dropped, invalid);
+  addSubbands(refname, subband, written, dropped, invalid);
   
 }
 " 0
@@ -141,7 +142,7 @@ void rClick(string dp) {
 }
 
 // add subbandinformation
-void addSubbands(dyn_int subbands, dyn_float written, dyn_float dropped, bool invalid) {
+void addSubbands(string refname, dyn_int subbands, dyn_float written, dyn_float dropped, bool invalid) {
   LOG_DEBUG(\"GPUProcDetail.pnl:addSubbands\");
   
   dyn_string subbandRefNames;
@@ -153,7 +154,7 @@ void addSubbands(dyn_int subbands, dyn_float written, dyn_float dropped, bool in
   string addPanelName    = \"objects/Processes/GPUProcSubbandInfo.pnl\";
   //loop over list and prepare panel with all subband objects   
   for (int i=1; i<= dynlen(subbands); i++) {
-    subbandRefNames[ref]=\"subband\"+(subbands[i]);
+    subbandRefNames[ref]=refname+ref;
     
     // sometimes it is possible that the trigger for this function is faster then
     // cobalt has written all the buffers, so we will get an index out of range

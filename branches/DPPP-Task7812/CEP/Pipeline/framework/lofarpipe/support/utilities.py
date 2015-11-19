@@ -78,8 +78,8 @@ def create_directory(dirname):
 
 def delete_directory(dirname):
     """
-    Recursively delete a directory tree: Without failing if the dir does not 
-    exist    
+    Recursively delete a directory tree: Without failing if the dir does not
+    exist
     """
     try:
         shutil.rmtree(dirname)
@@ -268,6 +268,11 @@ def catch_segfaults(cmd, cwd, env, logger, max = 1, cleanup = lambda: None,
         if usageStats:
             usageStats.addPID(process.pid)
 
+        if 'casa' in cmd[0]:
+	    import time
+            while process.returncode is None:
+                process.poll()
+                time.sleep(1)
         sout, serr = process.communicate()
         log_process_output(cmd[0], sout, serr, logger)
         if process.returncode == 0:

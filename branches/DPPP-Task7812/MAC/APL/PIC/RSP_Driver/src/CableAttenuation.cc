@@ -59,8 +59,7 @@ CableAttenuation::CableAttenuation(const string&	filename)
 			// syntax: rcumode <serie of cable-lengths
 			vector<string>	column;
 			boost::replace_all(line, "\t", " ");
-			boost::replace_all(line, "  ", " ");
-			boost::split(column, line, boost::is_any_of(" "));
+			boost::split(column, line, boost::is_any_of(" "),boost::token_compress_on);
 
 			// First line (with rcumode 0) contains the cable lengths
 			if (prevRcuMode == -1) {
@@ -82,13 +81,13 @@ CableAttenuation::CableAttenuation(const string&	filename)
 			else {
 				// not the first line, do some sanity checks before storing the atts.
 				int rcuMode = strToInt(column[0]);
-				ASSERTSTR(rcuMode == prevRcuMode + 1, "Expected line with rcumode " << prevRcuMode + 1);
-				ASSERTSTR((int)column.size() == nrOfColumns, "Expected " << nrOfColumns << " fields on line: " << line);
+				ASSERTSTR(rcuMode == prevRcuMode + 1, "Expected line with rcumode " << prevRcuMode + 1 << " instead of " << rcuMode);
+				ASSERTSTR((int)column.size() == nrOfColumns, "Expected " << nrOfColumns << " fields on line: " << line << " ; found " << (int)column.size() << " fields");
 				ASSERTSTR(rcuMode <= MAX_RCU_MODE, 
 							"RCUmode " << rcuMode << " not in range [0.." << MAX_RCU_MODE << "]");
 
 				// copy values to internal array.
-				for (int	colNr = 1; colNr < nrOfColumns; colNr++) {
+				for (int colNr = 1; colNr < nrOfColumns; colNr++) {
 					itsAtts(prevRcuMode + 1, colNr - 1) = strToFloat(column[colNr]);
 				}
 			}
@@ -140,7 +139,13 @@ float	CableAttenuation::getAttenuation(int	cableLength, int	rcuMode) const
 {
 	ASSERTSTR(rcuMode >= 0 && rcuMode <= MAX_RCU_MODE, 
 							"RCUmode " << rcuMode << " not in range [0.." << MAX_RCU_MODE << "]");
-	return (itsAtts(rcuMode, cableLen2Index(cableLength)));
+	float Attenuation;
+	if (cableLength == 0){
+	  Attenuation = 0;
+	} else {
+	  Attenuation = itsAtts(rcuMode, cableLen2Index(cableLength));
+	}
+	return Attenuation;
 }
 
 } // namespace LOFAR

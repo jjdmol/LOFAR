@@ -35,8 +35,8 @@ do
   echo "Observation.DataProducts.Output_Beamformed.filenames=[500*/dev/null]" >> $PARSET
   echo "Observation.DataProducts.Output_Beamformed.locations=[500*:.]" >> $PARSET
 
-  # Run the observation
-  timeout 90s runObservation.sh -B -C -F -l 1 $PARSET
+  # Run the observation (do NOT throw alarms for running past observations)
+  timeout 300s runObservation.sh -B -C -F -l 1 -x COBALT_NO_ALARM=1 $PARSET
   OBSRESULT=$?
 
   if [ $OBSRESULT -gt 0 ]; then

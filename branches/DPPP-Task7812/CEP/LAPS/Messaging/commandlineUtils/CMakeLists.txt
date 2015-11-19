@@ -1,4 +1,6 @@
-install(PROGRAMS
+# $Id$
+
+lofar_add_bin_scripts(
   qls.sh
   listqueues.sh
   fed.sh
@@ -6,5 +8,4 @@ install(PROGRAMS
   delqueue.sh
   cleanupq.sh
   addtopic.sh
-  addqueue.sh
-  DESTINATION bin)
+  addqueue.sh)

@@ -815,10 +815,10 @@ void  ObservationControl::doHeartBeatTask()
 		time_t	now   = to_time_t(second_clock::universal_time());
 		time_t	stop  = to_time_t(itsStopTime);
 
-		if (!nrChilds || (now < stop && ((itsProcessType == "Observation" && !nrStations) || !centralControllerOk))) {
+		if (!nrChilds || (now < stop && !centralControllerOk)) {
             // while not yet in shutdown sequence this situation is wrong!
             if (itsState < CTState::RESUMED) {
-                LOG_FATAL("Too less stations left or no central controller, FORCING QUIT OF OBSERVATION");
+                LOG_FATAL("Too few stations left or no central controller, FORCING QUIT OF OBSERVATION");
                 itsQuitReason = CT_RESULT_LOST_CONNECTION;
             }
             else { // we are in the shutdown sequence

@@ -61,7 +61,7 @@ namespace LOFAR
 
 
     // The returned descriptor can be supplied to LCS/Stream StreamFactory.h
-    string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr)
+    string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr, const std::string &bind_local_iface)
     {
       string host = parset.getHostName(outputType, streamNr);
       uint16 port = storageBrokerPort(parset.settings.observationID);
@@ -69,7 +69,7 @@ namespace LOFAR
       if (host == "")
         return str(format("file:%s") % parset.getFileName(outputType, streamNr));
       else
-        return str(format("tcpbroker:%s:%u:ion-storage-obs-%u-type-%u-stream-%u") % host % port % parset.settings.observationID % outputType % streamNr);
+        return str(format("tcpbroker:%s:%u:ion-storage-obs-%u-type-%u-stream-%u:%s") % host % port % parset.settings.observationID % outputType % streamNr % bind_local_iface);
     }
 
   } // namespace Cobalt

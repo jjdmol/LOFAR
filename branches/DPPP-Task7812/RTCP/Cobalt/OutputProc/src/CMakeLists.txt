@@ -7,6 +7,8 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
 
+#add_definitions(-DTBB_DUMP_RAW_STATION_FRAMES)
+
 lofar_add_library(outputproc 
   Package__Version.cc
   FastFileStream.cc
@@ -18,14 +20,13 @@ lofar_add_library(outputproc
   MSWriterNull.cc
   MSWriterFile.cc
   MeasurementSetFormat.cc
+  CommonLofarAttributes.cc
   OutputThread.cc
   SubbandWriter.cc
   TBB_StaticMapping.cc
 )
 
-install(PROGRAMS
-  gnuplotMS.sh
-  DESTINATION sbin)
+lofar_add_sbin_scripts(gnuplotMS.sh)
 
 install(FILES
   outputProc.log_prop

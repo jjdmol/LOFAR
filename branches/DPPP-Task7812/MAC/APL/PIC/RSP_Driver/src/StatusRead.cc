@@ -110,6 +110,7 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
   // if cache value different from hardware reported value, make equal
   switch (ack.board.rsp.bp_clock) {
 
+  case 125:
   case 160:
   case 200:
     if (0 == getBoardId()) {

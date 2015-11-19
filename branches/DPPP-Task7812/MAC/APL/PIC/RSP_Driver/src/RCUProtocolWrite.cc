@@ -45,7 +45,12 @@ namespace LOFAR {
     const int RCUProtocolWrite::RESULT_WRITE_SIZE;
     const int RCUProtocolWrite::RESULT_READ_SIZE;
 
-    uint8 RCUProtocolWrite::i2c_protocol_write[] = { 
+    uint8 RCUProtocolWrite::i2c_protocol_write[] = {
+        0x12, // PROTOCOL_C_WAIT
+        0x00, // <<< replace with data, wait byte 0 >>>
+        0x00, // <<< replace with data, wait byte 1 >>>
+        0x00, // <<< replace with data, wait byte 2 >>>
+        0x00, // <<< replace with data, wait byte 3 >>> 
 		0x0F, // PROTOCOL_C_SEND_BLOCK
 		0x01, // I2C address for RCU
 		0x03, // size
@@ -66,7 +71,8 @@ namespace LOFAR {
     };
 
     uint8 RCUProtocolWrite::i2c_result_write[] = { 
-		0x00, // PROTOCOL_C_SEND_BLOCK OK
+		0x00, // PROTOCOL_C_WAIT OK
+        0x00, // PROTOCOL_C_SEND_BLOCK OK
 		0xAA, // <<< replace with expected data >>>
 		0xAA, // <<< replace with expected data >>>
 		0xAA, // <<< replace with expected data >>>
@@ -137,8 +143,21 @@ void RCUProtocolWrite::sendrequest()
 			if (writeCmdRequested) {
 				// reverse and copy control bytes into i2c_protocol_write
 				RCUSettings::Control& rcucontrol = Cache::getInstance().getBack().getRCUSettings()()((global_rcu));
+                
+                // add waits while turning on hbas to reduce power peaks.
+                // if RCU enable changed or rcumode changed
+                // if rcumode > 0
+                if (rcucontrol.isModeModified()) {
+                    // wait between two RCUs is set to maximum, so that an international station
+                    // running on 160MHz clock can finisch the job in 1 second.
+                    // in clock ticks, 1500000 = 7.5msec on 200MHz, 9.4msec on 160MHz
+                    uint32 wait = 660000 * global_rcu;
+                    LOG_DEBUG_STR(formatString("RCUProtocolWrite add wait rcu %d = %f sec", global_rcu, wait * (1./200e6)));
+                    memcpy(i2c_protocol_write+1, &wait, 4);
+                }
+                
 				uint32 control = htonl(rcucontrol.getRaw());
-				memcpy(i2c_protocol_write+3, &control, 3);
+				memcpy(i2c_protocol_write+8, &control, 3);
 
 				EPARcuProtocolEvent rcuprotocol;
 				rcuprotocol.hdr.set(hdr, 1 << (getCurrentIndex() / (N_POL * N_WRITES)), MEPHeader::WRITE, sizeof(i2c_protocol_write));

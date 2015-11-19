@@ -33,7 +33,6 @@
  * - @c NR_CHANNELS_1: a multiple of 16 
  * - @c NR_CHANNELS_2: > 0 
  * - @c NR_SAMPLES_PER_CHANNEL: > a multiple of 16
- * - @c NR_BITS_PER_SAMPLE: 8 or 16
  * - @c DO_BANDPASS_CORRECTION: if defined, perform bandpass correction
  */
 
@@ -58,11 +57,6 @@
 #if !(NR_SAMPLES_PER_CHANNEL > 0)
 #error Precondition violated: NR_SAMPLES_PER_CHANNEL > 0
 #endif
-
-#if !(NR_BITS_PER_SAMPLE == 16 || NR_BITS_PER_SAMPLE == 8)
-#error Precondition violated: NR_BITS_PER_SAMPLE == 16 || NR_BITS_PER_SAMPLE == 8
-#endif
-
 
 typedef  fcomplex (* OutputDataType)[NR_STATIONS][NR_CHANNELS_1 * NR_CHANNELS_2][NR_SAMPLES_PER_CHANNEL][NR_POLARIZATIONS];
 typedef  fcomplex (* InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS_1][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS_2];

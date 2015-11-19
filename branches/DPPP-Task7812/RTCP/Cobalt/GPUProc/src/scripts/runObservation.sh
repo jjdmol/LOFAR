@@ -43,7 +43,7 @@ function setkey {
 
 function usage {
   echo -e \
-    "\nUsage: $0 [-A] [-B] [-C] [-F] [-P pidfile] [-l nprocs] [-p] [-o KEY=VALUE] PARSET"\
+    "\nUsage: $0 [-A] [-B] [-C] [-F] [-P pidfile] [-l nprocs] [-p] [-o KEY=VALUE] [-x KEY=VALUE] PARSET"\
     "\n"\
     "\n  Run the observation specified by PARSET"\
     "\n"\
@@ -56,6 +56,7 @@ function usage {
     "\n    -l: run solely on localhost using 'nprocs' MPI processes (isolated test)"\
     "\n    -p: enable profiling" \
     "\n    -o: add option KEY=VALUE to the parset" \
+    "\n    -x: propagate environment variable KEY=VALUE"\
     "\n" >&2
   exit 1
 }
@@ -64,7 +65,7 @@ function usage {
 # It wait on the processes finish (using the PID) with a
 # succesfull return value
 # - On signals kill the child process
-# - On non zero return value of the command it will retry
+# - On ssh and bash errors it will retry
 #   with increasingly larger wait periods between tries
 function command_retry {
   COMMAND="$1"   
@@ -77,8 +78,22 @@ function command_retry {
     # Trap 'all' signals and forward to ssh process
     TRAP_COMMAND="kill $SSH_PID; break"
     trap "$TRAP_COMMAND" SIGTERM SIGINT SIGQUIT SIGHUP 2> /dev/null
-    wait $SSH_PID && break       # wait while the ssh command is up
-                                 # Break the loop if the command returned with exit value 0
+
+    # wait for ssh to finish
+    wait $SSH_PID
+
+    # Return codes:
+    #     255: SSH fails
+    #     127: BASH 'command not found'
+    #     126: BASH 'command not executable'
+    # smaller: outputProc fails
+    #       0: success
+
+    # Break the loop if the command was started -- there is no need
+    # to keep starting it if the command itself returned an error.
+    if [ "$?" -lt 126 ]; then
+      break
+    fi
 
     sleep $SLEEP_DURATION                  # Sleep if ssh failed
     SLEEP_DURATION=$((SLEEP_DURATION + 1)) # Increase duration   
@@ -144,7 +159,7 @@ RTCP_PARAMS=""
 # ******************************
 # Parse command-line options
 # ******************************
-while getopts ":ABCFP:l:o:p" opt; do
+while getopts ":ABCFP:l:o:px:" opt; do
   case $opt in
       A)  AUGMENT_PARSET=0
           ;;
@@ -162,6 +177,8 @@ while getopts ":ABCFP:l:o:p" opt; do
       o)  EXTRA_PARSET_KEYS="${EXTRA_PARSET_KEYS}${OPTARG}\n"
           ;;
       p)  RTCP_PARAMS="$RTCP_PARAMS -p"
+          ;;
+      x)  MPIRUN_PARAMS="-x $OPTARG"
           ;;
       \?) echo "Invalid option: -$OPTARG" >&2
           exit 1

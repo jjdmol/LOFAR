@@ -1,4 +1,4 @@
-//#  Message.cc: one_line_description
+//#  MessageContent.cc: one_line_description
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -35,36 +35,47 @@
 
 #include <time.h>
 
-
 namespace LOFAR {
   using namespace StringUtil;
 
+/*
+ * The template for the LOFAR message format.
+ */
 const string LOFAR_MSG_TEMPLATE = "\
+<?xml version=\"1.0\"?>\n\
 <message>\n\
    <header>\n\
-      <system>LOFAR</system>\n\
-      <version>1.0.0</version>\n\
+      <system></system>\n\
+      <version></version>\n\
       <protocol>\n\
-         <name>%s</name>\n\
-         <version>%s</version>\n\
+         <name></name>\n\
+         <version></version>\n\
       </protocol>\n\
       <source>\n\
-         <name>%s</name>\n\
-         <user>%s</user>\n\
-         <uuid>%s</uuid>\n\
-         <timestamp>%s</timestamp>\n\
-         <summary>%s</summary>\n\
+         <name></name>\n\
+         <user></user>\n\
+         <uuid></uuid>\n\
+         <timestamp></timestamp>\n\
+         <summary></summary>\n\
       </source>\n\
       <ids>\n\
-         <momid>%s</momid>\n\
-         <sasid>%s</sasid>\n\
+         <momid></momid>\n\
+         <sasid></sasid>\n\
       </ids>\n\
    </header>\n\
-   <payload>\n\
-%s\n\
-   </payload>\n\
-</message>";
+   <payload></payload>\n\
+</message>\n\
+";
 
+/*
+ * Default settings (for this release)
+ */
+const std::string MessageContent::Defaults::system = "LOFAR";
+const std::string MessageContent::Defaults::headerVersion = "1.0.0";
+
+/*
+ * Generated settings
+ */
 static string _timestamp() {
   // Get now (in seconds since epoch)
   time_t now = time(NULL);
@@ -86,110 +97,128 @@ static string _uuid() {
   return uuid.str();
 }
 
-Message::Message(const std::string &from,
-				 const std::string &forUser,
-				 const std::string &summary,
-				 const std::string &protocol,
-				 const std::string &protocolVersion,
-				 const std::string &momid,
-				 const std::string &sasid) 
-{	
-	itsQpidMsg.setContent(formatString(LOFAR_MSG_TEMPLATE.c_str(), protocol.c_str(), protocolVersion.c_str(),
-										from.c_str(), forUser.c_str(), _uuid().c_str(), _timestamp().c_str(), summary.c_str(), 
-										momid.c_str(), sasid.c_str(), "%s"));
-  itsQpidMsg.setContentType("text/plain");
-  itsQpidMsg.setDurable(true);
+MessageContent::MessageContent()
+:
+  itsContent(LOFAR_MSG_TEMPLATE)
+{
+  addProperties();
 }
 
-// Read a message from disk (header + payload)
-Message::Message(const std::string &rawContent)
+MessageContent::MessageContent(const std::string &from,
+                 const std::string &forUser,
+                 const std::string &summary,
+                 const std::string &protocol,
+                 const std::string &protocolVersion,
+                 const std::string &momid,
+                 const std::string &sasid)
+:
+  itsContent(LOFAR_MSG_TEMPLATE)
 {
-	itsQpidMsg.setContent(rawContent);
+  addProperties();
+
+  this->system          = Defaults::system;
+  this->headerVersion   = Defaults::headerVersion;
+
+  this->protocol        = protocol;
+  this->protocolVersion = protocolVersion;
+  this->name            = from;
+  this->user            = forUser;
+  this->uuid            = _uuid();
+  this->summary         = summary;
+  this->timestamp       = _timestamp();
+  this->momid           = momid;
+  this->sasid           = sasid;
 }
 
-Message::~Message()
-{}
-
-void Message::setXMLPayload (const std::string         &payload)
+MessageContent::MessageContent(const qpid::messaging::Message &qpidMsg)
+:
+  itsContent(qpidMsg.getContent())
 {
-	itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(), payload.c_str()));
+  addProperties();
 }
 
-void Message::setTXTPayload (const std::string         &payload)
+MessageContent::~MessageContent()
 {
-	itsQpidMsg.setContent(formatlString(itsQpidMsg.getContent().c_str(), payload.c_str()));
 }
 
-void Message::setMapPayload (const qpid::types::Variant::Map  &payload)
+MessageContent::MessageContent(const MessageContent &other)
+:
+  itsContent(other.itsContent)
 {
-
+  addProperties();
 }
 
-void Message::setListPayload(const qpid::types::Variant::List &payload)
+std::string MessageContent::getContent() const
 {
-
+  return itsContent.getContent();
 }
 
-std::string Message::short_desc() const
+void MessageContent::addProperties()
 {
-  return formatString("[%s] [sasid %s] %s", uuid().c_str(), sasid().c_str(), summary().c_str());
+  system         .attach(&itsContent, "message/header/system");
+  headerVersion  .attach(&itsContent, "message/header/version");
+
+  protocol       .attach(&itsContent, "message/header/protocol/name");
+  protocolVersion.attach(&itsContent, "message/header/protocol/version");
+
+  name           .attach(&itsContent, "message/header/source/name");
+  user           .attach(&itsContent, "message/header/source/user");
+  uuid           .attach(&itsContent, "message/header/source/uuid");
+
+  summary        .attach(&itsContent, "message/header/source/summary");
+  timestamp      .attach(&itsContent, "message/header/source/timestamp");
+
+  momid          .attach(&itsContent, "message/header/ids/momid");
+  sasid          .attach(&itsContent, "message/header/ids/sasid");
+
+  payload        .attach(&itsContent, "message/payload");
+  header         .attach(&itsContent, "message/header");
 }
 
-//
-// print
-//
-std::ostream& Message::print (std::ostream& os) const
-{
-	os << "system         : " << system() << endl;
-    os << "systemversion  : " << headerVersion() << endl;
-    os << "protocolName   : " << protocol() << endl;
-    os << "protocolVersion: " << protocolVersion() << endl;
-    os << "summary        : " << summary() << endl;
-    os << "timestamp      : " << timestamp() << endl;
-    os << "source         : " << from() << endl;
-    os << "user           : " << forUser() << endl;
-    os << "uuid           : " << uuid() << endl;
-    os << "momid          : " << momid() << endl;
-    os << "sasid          : " << sasid() << endl;
-    os << "payload        : " << payload() << endl;
-  os << "BEGIN FULL PACKET" << endl;
-  os << itsQpidMsg.getContent() << endl;
-  os << "END FULL PACKET" << endl;
-	return (os);
+qpid::messaging::Message MessageContent::qpidMsg() const {
+  qpid::messaging::Message qpidMsg;
+
+  qpidMsg.setContent(getContent());
+  qpidMsg.setContentType("text/plain"); // Don't use text/xml, to prevent QPID from nosing in our message and possibly complaining
+  qpidMsg.setDurable(true);
+
+  return qpidMsg;
 }
 
-//
-// getXMLvalue(tag)
-//
-string Message::getXMLvalue(const string& key) const
+void MessageContent::setXMLPayload (const std::string         &payload)
 {
-	// get copy of content
-	vector<string>	labels = split(key, '.');
-	string			content(itsQpidMsg.getContent());
+  itsContent.insertXML("message/payload", payload);
+}
 
-	// loop over subkeys
-	string::size_type	offset = 0;
-	string::size_type	begin = string::npos;
-	string::size_type	end = string::npos;
-	string				startTag;
-	for (size_t i = 0; i <  labels.size(); ++i) {
-		// define tags to find
-		startTag = string("<"+labels[i]+">");
-		// search begin tag
-		begin  = content.find(startTag, offset);
-		if (begin == string::npos) {
-			return ("???");
-		}
-		offset = begin;
-	}
-	// search end tag
-	string stopTag ("</"+labels[labels.size()-1]+">");
-	begin+=startTag.size();
-	end = content.find(stopTag, begin);
-	if (end == string::npos) {
-		return ("???");
-	}
-	return (content.substr(begin, end - begin));
+void MessageContent::setTXTPayload (const std::string         &payload)
+{
+  itsContent.setXMLvalue("message/payload", payload);
+}
+
+std::string MessageContent::short_desc() const
+{
+  return formatString("[%s] [sasid %s] %s", uuid.get().c_str(), sasid.get().c_str(), summary.get().c_str());
+}
+
+std::ostream& MessageContent::print (std::ostream& os) const
+{
+    os << "system         : " << system << " " << headerVersion << endl;
+    os << "protocol       : " << protocol << " " << protocolVersion << endl;
+    os << "summary        : " << summary << endl;
+    os << "timestamp      : " << timestamp << endl;
+    os << "source (name)  : " << name << endl;
+    os << "user           : " << user << endl;
+    os << "uuid           : " << uuid << endl;
+    os << "momid          : " << momid << endl;
+    os << "sasid          : " << sasid << endl;
+    os << "payload        : " << payload << endl;
+    return (os);
+}
+
+Message::Message(const MessageContent &content)
+:
+  itsQpidMsg(content.qpidMsg())
+{
 }
 
 
