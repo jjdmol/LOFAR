@@ -139,6 +139,21 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
         });
     };
 
+    self.subscribeToUpdates = function() {
+        $http.get('/rest/updates', {timeout:300000}).success(function(result) {
+            //as demo, get updated tasks
+            //we should however parse the results for changes
+            self.getTasks();
+
+            //and update again
+            //TODO: implement update since previous update timestamp so we don't get any gaps.
+            self.subscribeToUpdates();
+        }).error(function() {
+            console.log("update timeout!");
+            self.subscribeToUpdates();
+        });
+    };
+
     return self;
 }]);
 
@@ -150,9 +165,12 @@ dataControllerMod.controller('DataController',
     var self = this;
     self.dataService = dataService;
 
+
     dataService.getTaskTypes();
     dataService.getTaskStatusTypes();
     dataService.getTasks();
     dataService.getResourceGroups();
+
+    dataService.subscribeToUpdates();
 }
 ]);

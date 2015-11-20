@@ -137,6 +137,19 @@ def tasktypes():
 def taskstatustypes():
     return jsonify({'taskstatustypes': ['scheduled', 'approved', 'prescheduled', 'running', 'finished', 'aborted']})
 
+import random
+
+@app.route('/rest/updates')
+def getUpdateEvents():
+    # fake blocking while waiting for an event
+    time.sleep(random.randint(50, 5000)/1000.0)
+
+    # fake a changed event
+    # TODO: locking
+    # TODO: events should be stored in a buffer so we can give updates since a given timestamp
+    tasks[1]['from'] = datetime.utcnow()
+
+    return "There are updates!"
 
 def main(argv=None, debug=False):
     '''Start the webserver'''
