@@ -64,6 +64,8 @@ void GetBypassCmd::ack(CacheBuffer& cache)
 				// Note: although a bypassSetting is per BP we create a bypassSetting
 				// for every rcu. This simplifies the interpretation for the client.
 				ack.settings()(result_rcu) = cache.getBypassSettings()()(cache_rcu / 2);
+                // sdo setting are for RSP fpga
+                ack.settings()(result_rcu).setSDO(cache.getBypassSettingsBP()()(cache_rcu / 8).getSDO());
 			}
 			else {
 				LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's", 
