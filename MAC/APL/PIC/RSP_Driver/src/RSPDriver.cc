@@ -138,6 +138,8 @@
 #include "TBBBandselWrite.h"
 #include "BypassRead.h"
 #include "BypassWrite.h"
+#include "BypassReadBP.h"
+#include "BypassWriteBP.h"
 #include "RADWrite.h"
 #include "SerdesWrite.h"
 #include "SerdesRead.h"
@@ -540,13 +542,6 @@ void RSPDriver::addAllSyncActions()
 			}
 		}
 
-		// write Spectral Invertion and SDOenable information
-		if (GET_CONFIG("RSPDriver.WRITE_SI", i)) {
-            BypassWrite* bypasswrite = new BypassWrite(m_boardPorts[boardid], boardid);
-            ASSERT(bypasswrite);
-            m_scheduler.addSyncAction(bypasswrite);
-		}
-
 		if (GET_CONFIG("RSPDriver.WRITE_TBB", i)) {
 			TBBSettingsWrite* tbbsettingswrite = new TBBSettingsWrite(m_boardPorts[boardid], boardid);
 			ASSERT(tbbsettingswrite);
@@ -556,8 +551,22 @@ void RSPDriver::addAllSyncActions()
 			ASSERT(tbbbandselwrite);
 			m_scheduler.addSyncAction(tbbbandselwrite);
 		}
+        
+        // write Spectral Invertion and SDOenable information
+		if (GET_CONFIG("RSPDriver.WRITE_SI", i)) {
+            BypassWrite* bypasswrite = new BypassWrite(m_boardPorts[boardid], boardid);
+            ASSERT(bypasswrite);
+            m_scheduler.addSyncAction(bypasswrite);
+		}
+        
+		// read Spectral Invertion and SDOenable information
+		if (GET_CONFIG("RSPDriver.READ_SI", i)) {
+		    BypassRead* bypassread = new BypassRead(m_boardPorts[boardid], boardid);
+		    ASSERT(bypassread);
+		    m_scheduler.addSyncAction(bypassread);
+		}
 
-		for (int action = 0; action < 2; action++) {
+        for (int action = 0; action < 2; action++) {
 			if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i)) {
 				if (GET_CONFIG("RSPDriver.WRITE_SS", i)) {
 					SSWrite* sswrite = new SSWrite(m_boardPorts[boardid], boardid);
@@ -591,7 +600,23 @@ void RSPDriver::addAllSyncActions()
                     }
                 }
             }
+            // write Spectral Invertion and SDOenable information
+            if (GET_CONFIG("RSPDriver.WRITE_SDO", i)) {
+                BypassWriteBP* bypasswrite = new BypassWriteBP(m_boardPorts[boardid], boardid);
+                ASSERT(bypasswrite);
+                m_scheduler.addSyncAction(bypasswrite);
+            }
+            
+            // read Spectral Invertion and SDOenable information
+            if (GET_CONFIG("RSPDriver.READ_SDO", i)) {
+                BypassReadBP* bypassread = new BypassReadBP(m_boardPorts[boardid], boardid);
+                ASSERT(bypassread);
+                m_scheduler.addSyncAction(bypassread);
+            }
         }
+        
+        
+        
 		//
 		// Depending on the value of RSPDriver.LOOPBACK_MODE either the
 		// WRITE is done first or the READ is done first.
@@ -726,13 +751,6 @@ void RSPDriver::addAllSyncActions()
 			ASSERT(hbaresultread);
 			m_scheduler.addSyncAction(hbaresultread);
 		}
-
-		// read Spectral Invertion information
-		//    if (GET_CONFIG("RSPDriver.READ_SI", i)) {
-		//        BypassRead* bypassread = new BypassRead(m_boardPorts[boardid], boardid);
-		//        ASSERT(bypassread);
-		//        m_scheduler.addSyncAction(bypassread);
-		//    }
 
 		if (GET_CONFIG("RSPDriver.SPLITTER", i) == 1) {
 			SerdesWrite* serdesWrite = new SerdesWrite(m_boardPorts[boardid], boardid, SERDES_BUFFER_SIZE);
