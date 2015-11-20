@@ -67,6 +67,13 @@ dataControllerMod.controller('DataController',
 
     function getTasks() {
         $http.get('/rest/tasks').success(function(result) {
+            //convert datetime strings to Date objects
+            for(var i = result.tasks.length-1; i >=0; i--) {
+                var task = result.tasks[i];
+                task.from = new Date(task.from);
+                task.to = new Date(task.to);
+            }
+
             self.dataService.tasks = result.tasks;
             self.dataService.taskDict = toIdBasedDict(self.dataService.tasks);
 
@@ -87,6 +94,13 @@ dataControllerMod.controller('DataController',
 
     function getResourceClaims() {
         $http.get('/rest/resourceclaims').success(function(result) {
+            //convert datetime strings to Date objects
+            for(var i = result.resourceclaims.length-1; i >=0; i--) {
+                var resourceclaim = result.resourceclaims[i];
+                resourceclaim.startTime = new Date(resourceclaim.startTime);
+                resourceclaim.endTime = new Date(resourceclaim.endTime);
+            }
+
             self.dataService.resourceClaims = result.resourceclaims;
             self.dataService.resourceClaimDict = toIdBasedDict(self.dataService.resourceClaims);
         });
@@ -104,6 +118,13 @@ dataControllerMod.controller('DataController',
 
     function getResourceGroupClaims() {
         $http.get('/rest/resourcegroupclaims').success(function(result) {
+            //convert datetime strings to Date objects
+            for(var i = result.resourcegroupclaims.length-1; i >=0; i--) {
+                var resourcegroupclaim = result.resourcegroupclaims[i];
+                resourcegroupclaim.startTime = new Date(resourcegroupclaim.startTime);
+                resourcegroupclaim.endTime = new Date(resourcegroupclaim.endTime);
+            }
+
             self.dataService.resourceGroupClaims = result.resourcegroupclaims;
             self.dataService.resourceGroupClaimDict = toIdBasedDict(self.dataService.resourceGroupClaims);
 
