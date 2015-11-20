@@ -1,6 +1,6 @@
 // $Id: controller.js 32761 2015-11-02 11:50:21Z schaap $
 
-var gridControllerMod = angular.module('GridControllerMod', ['ui.grid']);
+var gridControllerMod = angular.module('GridControllerMod', ['ui.grid', 'ui.grid.edit']);
 
 gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGridConstants', function($scope, dataService, uiGridConstants) {
 
@@ -14,9 +14,9 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     }, true);
 
     $scope.columns = [
-    { field: 'name' },
-    { field: 'from' },
-    { field: 'to' },
+    { field: 'name', enableCellEdit: true },
+    { field: 'from', enableCellEdit: true },
+    { field: 'to', enableCellEdit: true },
     { field: 'status',
         filter: {
             type: uiGridConstants.filter.SELECT,
@@ -38,8 +38,13 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
             $scope.gridApi = gridApi;
 
             $scope.gridApi.core.on.rowsRendered($scope, filterTasks);
+
+            gridApi.edit.on.afterCellEdit($scope,function(rowEntity, colDef, newValue, oldValue){
+                console.log('edited row id:' + rowEntity.id + ' Column:' + colDef.name + ' newValue:' + newValue + ' oldValue:' + oldValue);
+            });
         }
     };
+
 
     function filterTasks() {
         var taskDict = $scope.dataService.taskDict;
