@@ -1,0 +1,7 @@
+import xmlrpclib
+url = "http://192.168.210.188:2013"
+client = xmlrpclib.ServerProxy(url)
+client.makeDirectory("srm://srm.target.rug.nl:8444/lofar/user/disk/ingest/Upload1234")
+url2 = "http://192.168.210.188:2015"
+client2 = xmlrpclib.ServerProxy(url2)
+client2.newJobs("256789", "renting@astron.nl", "LC0_001", ['197777','197777'], ['file1.tar','file2.tar'], ['123','124'], ['j034', 'j035'])
