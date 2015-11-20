@@ -24,11 +24,14 @@ viewing and editing lofar resources.'''
 
 import sys
 import os
+import json
 import time
 from datetime import datetime
-from datetime import timedelta
+from dateutil import parser
 from flask import Flask
 from flask import render_template
+from flask import request
+from flask import abort
 from flask import url_for
 from flask.json import jsonify
 from lofar.sas.resourceassignement.resourceassignementeditor.utils import gzipped
@@ -84,25 +87,43 @@ def resourcegroupclaims():
 
 @app.route('/rest/tasks')
 @gzipped
-def tasks():
-    data = {'tasks': allTasks}
+def getTasks():
+    data = {'tasks': tasks.values()}
 
     return jsonify(data)
 
-def _task(task_id):
-    for task in allTasks:
-        if task['id'] == task_id:
-            return task
-
-    return None
-
-@app.route('/rest/tasks/<int:task_id>')
-def task(task_id):
-    for task in allTasks:
-        if task['id'] == task_id:
-            return jsonify({'task': task})
+@app.route('/rest/tasks/<int:task_id>', methods=['GET'])
+def getTask(task_id):
+    try:
+        task = tasks[task_id]
+        return jsonify({'task': task})
+    except KeyError:
+        abort(404)
 
     return jsonify({'task': None})
+
+@app.route('/rest/tasks/<int:task_id>', methods=['PUT'])
+def putTask(task_id):
+    if 'Content-Type' in request.headers and \
+            request.headers['Content-Type'].startswith('application/json'):
+        updatedTask = json.loads(request.data)
+
+        try:
+            if task_id != updatedTask['id']:
+                abort(404)
+
+            task = tasks[task_id]
+
+            if 'from' in updatedTask:
+                task['from'] = parser.parse(updatedTask['from'])
+
+            if 'to' in updatedTask:
+                task['to'] = parser.parse(updatedTask['to'])
+
+            return "", 204
+        except KeyError:
+            abort(404)
+    abort(406)
 
 @app.route('/rest/tasks/<int:task_id>/resourceclaims')
 def taskResourceClaims(task_id):

@@ -22,13 +22,13 @@
 from datetime import datetime
 from datetime import timedelta
 
-numProjects = 5
-numObsPerProject = 3
-numPipelinesPerObs = 5
-numCoreStations = 20
-numRemoteStations = 25
-numCobaltNodes = 8
-numComputeNodes = 50
+numProjects = 3
+numObsPerProject = 2
+numPipelinesPerObs = 2
+numCoreStations = 10
+numRemoteStations = 5
+numCobaltNodes = 2
+numComputeNodes = 2
 numIngestNodes = 2
 
 _taskIdCntr = 0
@@ -46,20 +46,20 @@ def _genTask(name, startTime, duration, status = 'scheduled', type = 'Observatio
             'type': type}
 
 
-allTasks = []
+tasks = {}
 now = datetime.utcnow()
 
 for p in range(numProjects):
     for i in range(numObsPerProject):
         task = _genTask('LC4_%03d Obs %02d'% (p+1, i+1), now + timedelta(hours=(p+1)*(i+1)*4.05), timedelta(hours=4))
-        allTasks.append(task)
+        tasks[task['id']] = task
 
         for j in range(numPipelinesPerObs):
             task = _genTask('LC4_%03d Pipeline %02d'% (p+1, j+1), now + timedelta(hours=(p+1)*(i+1)*4.05 + 4.05 + (j)*4.05), timedelta(hours=4), type='Pipeline')
-            allTasks.append(task)
+            tasks[task['id']] = task
 
         task = _genTask('LC4_%03d Ingest %02d'% (p+1, j+1), now + timedelta(hours=(p+1)*(i+1)*4.05 + 4.05 + (numPipelinesPerObs)*4.05), timedelta(hours=2), type='Ingest')
-        allTasks.append(task)
+        tasks[task['id']] = task
 
 resourceGroups = []
 coreStationsGroup = {'id': 0, 'name': 'Core Stations', 'childGroupIds': [], 'resourceIds': []}
@@ -117,7 +117,7 @@ ingestnodes = [r for r in resourceItems if r['typeId'] == 3]
 
 resourceClaims = []
 resourceGroupClaims = []
-for task in allTasks:
+for task in tasks.values():
     taskResourceGroupIds = set()
     taskResources = []
     if task['type'] == 'Observation':
