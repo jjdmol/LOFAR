@@ -41,6 +41,9 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
 
             gridApi.edit.on.afterCellEdit($scope,function(rowEntity, colDef, newValue, oldValue){
                 console.log('edited row id:' + rowEntity.id + ' Column:' + colDef.name + ' newValue:' + newValue + ' oldValue:' + oldValue);
+
+                var task = $scope.dataService.taskDict[rowEntity.id];
+                $scope.dataService.putTask(task);
             });
         }
     };

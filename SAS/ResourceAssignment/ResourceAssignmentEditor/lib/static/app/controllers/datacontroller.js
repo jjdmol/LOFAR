@@ -71,6 +71,12 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
         });
     };
 
+    self.putTask = function(task) {
+        $http.put('/rest/tasks/' + task.id, task).error(function(result) {
+            console.log("Error. Could not update task. " + result);
+        })
+    };
+
     self.getResources = function() {
         $http.get('/rest/resourceitems').success(function(result) {
             self.resources = result.resourceitems;
