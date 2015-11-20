@@ -30,7 +30,9 @@
     <div ng-controller="DataController as dataCtrl">
         <div ng-controller="GridController as gridCtrl">
             <strong>Tasks:</strong>
-            <div id="grid1" ui-grid="gridOptions" ui-grid-move-columns class="myGrid"></div>
+            <div id="grid1" ui-grid="gridOptions" ui-grid-move-columns class="myGrid">
+                <ui-grid-edit></ui-grid-edit>
+            </div>
         </div>
         <br/>
         <br/>
