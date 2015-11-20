@@ -161,6 +161,7 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   LOG_DEBUG_STR("m_spustatus.subrack().size()         =" << m_spustatus.subrack().size()  * sizeof(EPA_Protocol::SPUBoardStatus));
   LOG_DEBUG_STR("m_tbbsettings().size()               =" << m_tbbsettings().size()        * sizeof(bitset<MEPHeader::N_SUBBANDS>));
   LOG_DEBUG_STR("m_bypasssettings().size()            =" << m_bypasssettings().size()     * sizeof(EPA_Protocol::DIAGBypass));
+  LOG_DEBUG_STR("m_bypasssettings_bp().size()         =" << m_bypasssettings_bp().size()  * sizeof(EPA_Protocol::DIAGBypass));
   LOG_DEBUG_STR("m_rawDataBlock.size()                =" << ETH_DATA_LEN + sizeof (uint16));
   LOG_DEBUG_STR("m_SdsWriteBuffer.size()              =" << sizeof(itsSdsWriteBuffer));
   LOG_DEBUG_STR("m_SdsReadBuffer.size()               =" << sizeof(itsSdsReadBuffer));
@@ -193,6 +194,7 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 	       + m_spustatus.subrack().size()    
 	       + m_tbbsettings().size()
 	       + m_bypasssettings().size()
+	       + m_bypasssettings_bp().size()
 		   + ETH_DATA_LEN + sizeof(uint16)
 		   + sizeof(itsSdsWriteBuffer)
 		   + sizeof(itsSdsReadBuffer)
@@ -229,6 +231,7 @@ CacheBuffer::~CacheBuffer()
   m_spustatus.subrack().free();
   m_tbbsettings().free();
   m_bypasssettings().free();
+  m_bypasssettings_bp().free();
   itsLatencys().free();
   itsBitModeInfo().free();
   itsSDOModeInfo().free();
@@ -374,14 +377,18 @@ void CacheBuffer::reset(void)
 	bandsel = 0;
 	m_tbbsettings() = bandsel;
 
-	// BypassSettings (BP and AP's)
+	// BypassSettings (AP's)
 	LOG_INFO_STR("Resizing bypass array to: " << StationSettings::instance()->nrBlps());
     m_bypasssettings().resize(StationSettings::instance()->nrBlps());
 	BypassSettings::Control	control;
 	m_bypasssettings() = control;
-    for (int blp_nr = 0; blp_nr < StationSettings::instance()->nrBlps(); blp_nr += 4) {
-        m_bypasssettings()(blp_nr).setSDO(1);
-    }
+    
+    // BypassSettings (BP)
+	LOG_INFO_STR("Resizing bypass array to: " << StationSettings::instance()->maxRspBoards());
+    m_bypasssettings_bp().resize(StationSettings::instance()->maxRspBoards());
+	BypassSettings::Control	controlbp;
+    controlbp.setSDO(1);
+	m_bypasssettings_bp() = controlbp;
     
 	// clear rawdatablock
 	itsRawDataBlock.address = 0;

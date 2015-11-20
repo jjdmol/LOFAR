@@ -1,4 +1,4 @@
-//#  BypassWrite.cc: implementation of the BypassWrite class
+//#  BypassWriteBP.cc: implementation of the BypassWriteBP class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: BypassWriteBP.cc 32819 2015-11-06 11:31:35Z donker $
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
@@ -32,7 +32,7 @@
 #include <blitz/array.h>
 
 #include "StationSettings.h"
-#include "BypassWrite.h"
+#include "BypassWriteBP.h"
 #include "Cache.h"
 
 using namespace blitz;
@@ -42,68 +42,62 @@ using namespace EPA_Protocol;
 using namespace RTC;
 
 
-BypassWrite::BypassWrite(GCFPortInterface& board_port, int board_id)
-    : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD)
+BypassWriteBP::BypassWriteBP(GCFPortInterface& board_port, int board_id)
+    : SyncAction(board_port, board_id, 1)
 {
     memset(&m_hdr, 0, sizeof(MEPHeader));
-    doAtInit();
 }
 
-BypassWrite::~BypassWrite()
+BypassWriteBP::~BypassWriteBP()
 {
 }
 
-void BypassWrite::sendrequest()
+void BypassWriteBP::sendrequest()
 {
-    // use first blp for rsp settings
-    uint16  globalBP = getBoardId() * NR_BLPS_PER_RSPBOARD + getCurrentIndex();
-    
     EPADiagBypassEvent request;
     // cache modified, or initialising
-    if ((Cache::getInstance().getState().bypasssettings().get(globalBP) != RTC::RegisterState::WRITE) ||
-         (Cache::getInstance().getBack().getBypassSettings()()(globalBP).isSIset() == false)) {
-        Cache::getInstance().getState().bypasssettings().unmodified(globalBP);
+    if ((Cache::getInstance().getState().bypasssettings_bp().get(getBoardId()) != RTC::RegisterState::WRITE) ||
+        (Cache::getInstance().getBack().getBypassSettingsBP()()(getBoardId()).isSDOset() == false)) {
+        Cache::getInstance().getState().bypasssettings_bp().unmodified(getBoardId());
         setContinue(true);
         return;
     }
     
-    if (Cache::getInstance().getBack().getBypassSettings()()(globalBP).isSIset()) {
-        Cache::getInstance().getBack().getBypassSettings()()(globalBP).resetSIset();
+    if (Cache::getInstance().getBack().getBypassSettingsBP()()(getBoardId()).isSDOset()) {
+        Cache::getInstance().getBack().getBypassSettingsBP()()(getBoardId()).resetSDOset();
     }
-    request.hdr.set(MEPHeader::DIAG_BYPASS_HDR, (1 << getCurrentIndex()), MEPHeader::WRITE);
+    request.hdr.set(MEPHeader::DIAG_BYPASS_HDR, MEPHeader::DST_RSP, MEPHeader::WRITE);
     
     // read values from cache
-    BypassSettings& s = Cache::getInstance().getBack().getBypassSettings(); // whole array
-    request.bypass = s()(globalBP).getRaw();        // one element
+    BypassSettings& s = Cache::getInstance().getBack().getBypassSettingsBP(); // whole array
+    request.bypass = s()(getBoardId()).getRaw();        // one element
 
     m_hdr = request.hdr;
-    LOG_DEBUG(formatString("BypassWrite: sendrequest: sending it(%04X)", request.bypass));
+    LOG_DEBUG(formatString("BypassWriteBP: sendrequest: sending it(%04X)", request.bypass));
     getBoardPort().send(request);
 }
 
-void BypassWrite::sendrequest_status()
+void BypassWriteBP::sendrequest_status()
 {
 // intentionally left empty
 }
 
-GCFEvent::TResult BypassWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+GCFEvent::TResult BypassWriteBP::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-    uint16  globalBP = getBoardId() * NR_BLPS_PER_RSPBOARD + getCurrentIndex();
-    
     if (event.signal != EPA_WRITEACK) {
-        LOG_WARN("BypassWrite::handleack: unexpected ack");
+        LOG_WARN("BypassWriteBP::handleack: unexpected ack");
         return GCFEvent::NOT_HANDLED;
     }
 
     EPAWriteackEvent ack(event);
 
     if (!ack.hdr.isValidAck(m_hdr)) {
-        LOG_ERROR("BypassWrite::handleack: invalid ack");
-        Cache::getInstance().getState().bypasssettings().write_error(globalBP);
+        LOG_ERROR("BypassWriteBP::handleack: invalid ack");
+        Cache::getInstance().getState().bypasssettings_bp().write_error(getBoardId());
         return GCFEvent::NOT_HANDLED;
     }
-    LOG_DEBUG_STR("BypassWrite: handleack: bp= " << globalBP);
-    Cache::getInstance().getState().bypasssettings().write_ack(globalBP); // mark finished
+    LOG_DEBUG_STR("BypassWriteBP: handleack: board= " << getBoardId());
+    Cache::getInstance().getState().bypasssettings_bp().write_ack(getBoardId()); // mark finished
     return GCFEvent::HANDLED;
 }
 
