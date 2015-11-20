@@ -62,7 +62,7 @@ class MessageHandlerInterface(object):
 
     def handle_message(self, msg):
         "Function the should handle the received message and return a result."
-        raise Exception("OOPS! YOU ENDED UP IN THE MESSAGE HANDLER OF THE ABSTRACT BASE CLASS!")
+        raise NotImplementedError("OOPS! YOU ENDED UP IN THE MESSAGE HANDLER OF THE ABSTRACT BASE CLASS!")
 
     def finalize_handling(self, successful):
         "Called in the main loop after the result was send back to the requester."
@@ -250,7 +250,7 @@ class Service(object):
         reply_msg.backtrace = backtrace
 
         # show the message content if required by the verbose flag.
-        if self.verbose is True:
+        if self.verbose == True:
             reply_msg.show()
 
         # send the result to the RPC client
