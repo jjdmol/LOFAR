@@ -1,6 +1,6 @@
 // $Id$
 
-angular.module('raeApp').factory("dataService", function(){
+angular.module('raeApp').factory("dataService", ['$http', function($http){
     var self = this;
     self.tasks = [];
     self.resources = [];
@@ -22,18 +22,7 @@ angular.module('raeApp').factory("dataService", function(){
     self.filteredTasks = [];
     self.filteredTaskDict = {};
 
-    return self;
-});
-
-var dataControllerMod = angular.module('DataControllerMod', ['ngResource']);
-
-dataControllerMod.controller('DataController',
-                            ['$scope', '$http', 'dataService',
-                            function($scope, $http, dataService) {
-    var self = this;
-    self.dataService = dataService;
-
-    function toIdBasedDict(list) {
+    self.toIdBasedDict = function(list) {
         var dict = {}
         for(var i = list.length-1; i >=0; i--) {
             var item = list[i];
@@ -42,30 +31,30 @@ dataControllerMod.controller('DataController',
         return dict;
     };
 
-    function mapResourcesToGroups() {
+    self.mapResourcesToGroups = function () {
         var dict = {}
-        var resources = self.dataService.resources;
-        var resourceGroups = self.dataService.resourceGroups;
+        var resources = self.resources;
+        var resourceGroups = self.resourceGroups;
 
         if(resources.length > 0) {
             for(var i = resources.length-1; i >=0; i--)
                 dict[resources[i].id] = []
 
-            for(var i = resourceGroups.length-1; i >=0; i--) {
-                var group = resourceGroups[i];
-                var childResourceIds = group.resourceIds;
+                for(var i = resourceGroups.length-1; i >=0; i--) {
+                    var group = resourceGroups[i];
+                    var childResourceIds = group.resourceIds;
 
-                for(var j = childResourceIds.length-1; j >=0; j--) {
-                    var childResourceId = childResourceIds[j];
-                    dict[childResourceId].push(group.id);
+                    for(var j = childResourceIds.length-1; j >=0; j--) {
+                        var childResourceId = childResourceIds[j];
+                        dict[childResourceId].push(group.id);
+                    }
                 }
-            }
         }
 
-        self.dataService.resourceIdToGroupIdsDict = dict;
+        self.resourceIdToGroupIdsDict = dict;
     };
 
-    function getTasks() {
+    self.getTasks = function() {
         $http.get('/rest/tasks').success(function(result) {
             //convert datetime strings to Date objects
             for(var i = result.tasks.length-1; i >=0; i--) {
@@ -74,25 +63,25 @@ dataControllerMod.controller('DataController',
                 task.to = new Date(task.to);
             }
 
-            self.dataService.tasks = result.tasks;
-            self.dataService.taskDict = toIdBasedDict(self.dataService.tasks);
+            self.tasks = result.tasks;
+            self.taskDict = self.toIdBasedDict(self.tasks);
 
-            self.dataService.filteredTasks = self.dataService.tasks;
-            self.dataService.filteredTaskDict = self.dataService.taskDict;
+            self.filteredTasks = self.tasks;
+            self.filteredTaskDict = self.taskDict;
         });
     };
 
-    function getResources() {
+    self.getResources = function() {
         $http.get('/rest/resourceitems').success(function(result) {
-            self.dataService.resources = result.resourceitems;
-            self.dataService.resourceDict = toIdBasedDict(self.dataService.resources);
-            mapResourcesToGroups();
+            self.resources = result.resourceitems;
+            self.resourceDict = self.toIdBasedDict(self.resources);
+            self.mapResourcesToGroups();
 
-            getResourceGroupClaims();
+            self.getResourceGroupClaims();
         });
     };
 
-    function getResourceClaims() {
+    self.getResourceClaims = function() {
         $http.get('/rest/resourceclaims').success(function(result) {
             //convert datetime strings to Date objects
             for(var i = result.resourceclaims.length-1; i >=0; i--) {
@@ -101,22 +90,22 @@ dataControllerMod.controller('DataController',
                 resourceclaim.endTime = new Date(resourceclaim.endTime);
             }
 
-            self.dataService.resourceClaims = result.resourceclaims;
-            self.dataService.resourceClaimDict = toIdBasedDict(self.dataService.resourceClaims);
+            self.resourceClaims = result.resourceclaims;
+            self.resourceClaimDict = self.toIdBasedDict(self.resourceClaims);
         });
     };
 
-    function getResourceGroups() {
+    self.getResourceGroups = function() {
         $http.get('/rest/resourcegroups').success(function(result) {
-            self.dataService.resourceGroups = result.resourcegroups;
-            self.dataService.resourceGroupsDict = toIdBasedDict(self.dataService.resourceGroups);
-            mapResourcesToGroups();
+            self.resourceGroups = result.resourcegroups;
+            self.resourceGroupsDict = self.toIdBasedDict(self.resourceGroups);
+            self.mapResourcesToGroups();
 
-            getResources();
+            self.getResources();
         });
     };
 
-    function getResourceGroupClaims() {
+    self.getResourceGroupClaims = function() {
         $http.get('/rest/resourcegroupclaims').success(function(result) {
             //convert datetime strings to Date objects
             for(var i = result.resourcegroupclaims.length-1; i >=0; i--) {
@@ -125,28 +114,39 @@ dataControllerMod.controller('DataController',
                 resourcegroupclaim.endTime = new Date(resourcegroupclaim.endTime);
             }
 
-            self.dataService.resourceGroupClaims = result.resourcegroupclaims;
-            self.dataService.resourceGroupClaimDict = toIdBasedDict(self.dataService.resourceGroupClaims);
+            self.resourceGroupClaims = result.resourcegroupclaims;
+            self.resourceGroupClaimDict = self.toIdBasedDict(self.resourceGroupClaims);
 
-            setTimeout(function() { getResourceClaims() }, 100);
+            setTimeout(function() { self.getResourceClaims() }, 100);
         });
     };
 
-    function getTaskTypes() {
+    self.getTaskTypes = function() {
         $http.get('/rest/tasktypes').success(function(result) {
-            self.dataService.tasktypes = result.tasktypes;
+            self.tasktypes = result.tasktypes;
         });
     };
 
-    function getTaskStatusTypes() {
+    self.getTaskStatusTypes = function() {
         $http.get('/rest/taskstatustypes').success(function(result) {
-            self.dataService.taskstatustypes = result.taskstatustypes;
+            self.taskstatustypes = result.taskstatustypes;
         });
     };
 
-    getTaskTypes();
-    getTaskStatusTypes();
-    getTasks();
-    getResourceGroups();
+    return self;
+}]);
+
+var dataControllerMod = angular.module('DataControllerMod', ['ngResource']);
+
+dataControllerMod.controller('DataController',
+                            ['$scope', 'dataService',
+                            function($scope, dataService) {
+    var self = this;
+    self.dataService = dataService;
+
+    dataService.getTaskTypes();
+    dataService.getTaskStatusTypes();
+    dataService.getTasks();
+    dataService.getResourceGroups();
 }
 ]);
