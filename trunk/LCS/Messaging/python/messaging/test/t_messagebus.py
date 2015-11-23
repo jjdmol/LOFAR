@@ -33,7 +33,7 @@ from lofar.messaging.messages import *
 from lofar.messaging.messagebus import *
 from lofar.messaging.exceptions import MessageBusError, InvalidMessage
 
-TIMEOUT = 0.1
+TIMEOUT = 1.0
 
 
 # ========  FromBus unit tests  ======== #
@@ -245,9 +245,8 @@ class SendReceiveMessage(unittest.TestCase):
         Helper class that implements the send/receive logic and message checks.
         :param send_msg: Message to send
         """
-        with self.tobus:
+        with self.tobus, self.frombus:
             self.tobus.send(send_msg)
-        with self.frombus:
             recv_msg = self.frombus.receive(timeout=TIMEOUT)
             self.frombus.ack(recv_msg)
         self.assertEqual(
@@ -278,12 +277,12 @@ class SendReceiveMessage(unittest.TestCase):
         content = {"Progress": "Message"}
         self._test_sendrecv(ProgressMessage(content))
 
-    def test_sendrecv_service_message(self):
+    def test_sendrecv_request_message(self):
         """
-        Test send/receive of an ServiceMessage, containing a byte array.
+        Test send/receive of an RequestMessage, containing a byte array.
         """
-        content = struct.pack("17B", *(ord(c)+32 for c in "A service message"))
-        self._test_sendrecv(ServiceMessage(content, reply_to=QUEUE))
+        content = {"request": "Do Something", "argument": "Very Often"}
+        self._test_sendrecv(RequestMessage(content, reply_to=QUEUE))
 
 
 if __name__ == '__main__':

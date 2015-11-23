@@ -298,6 +298,17 @@ INSERT INTO operator VALUES (1, 'eucalypta', '0612345678');
 INSERT INTO operator VALUES (2, 'gargamel', '0123456789');
 
 --
+-- otdb_admin table
+--
+-- Internal administration. Tables always has 1 record!
+-- NEVER DROP THIS TABLE!
+--
+CREATE TABLE otdb_admin (
+    treestatusevent timestamp(6)
+) WITHOUT OIDS;
+INSERT INTO otdb_admin VALUES(now());
+
+--
 -- ProcessType table
 --
 -- All allowed combinations of processType, processSubtype and strategy

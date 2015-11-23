@@ -21,8 +21,12 @@
 
 #  RPC invocation with possible timeout
 from lofar.messaging.messagebus import ToBus, FromBus
-from lofar.messaging.messages import ServiceMessage, ReplyMessage
+from lofar.messaging.messages import RequestMessage, ReplyMessage, analyze_args, args_as_content 
 import uuid
+
+class RPCException(Exception):
+    "Exception occured in the RPC code itself, like time-out, invalid message received, etc."
+    pass
 
 class RPC():
     """
@@ -37,65 +41,64 @@ class RPC():
     As a side-effect the sender and session are destroyed.
 
     """
-    def __init__(self, bus, service, timeout=None, ForwardExceptions=None, Verbose=None):
-	"""
-	Initialize an Remote procedure call using:
-	    bus=     <str>    Bus Name
-	    service= <str>    Service Name
+    def __init__(self, service, **kwargs ):
+        """
+        Initialize an Remote procedure call using:
+            service= <str>    Service Name
+            busname= <str>    Bus Name
             timeout= <float>  Time to wait in seconds before the call is considered a failure.
             Verbose= <bool>   If True output extra logging to stdout.
 
         Use with extra care: ForwardExceptions= <bool>
-	    This enables forwarding exceptions from the server side tobe raised at the client side durting RPC invocation.
-	"""
-        self.timeout = timeout
-        self.ForwardExceptions = False
-        self.Verbose = False
-        if ForwardExceptions is True:
-            self.ForwardExceptions = True
-        if Verbose is True:
-            self.Verbose = True
-        self.BusName = bus
+            This enables forwarding exceptions from the server side tobe raised at the client side durting RPC invocation.
+        """
+        self.timeout           = kwargs.pop("timeout", None)
+        self.ForwardExceptions = kwargs.pop("ForwardExceptions", False)
+        self.Verbose           = kwargs.pop("Verbose", False)
+        self.BusName           = kwargs.pop("busname", None)
         self.ServiceName = service
         if self.BusName is None:
             self.Request = ToBus(self.ServiceName)
         else:
-            self.Request = ToBus(self.BusName + "/" + self.ServiceName)
+            self.Request = ToBus("%s/%s" % (self.BusName, self.ServiceName))
+        if len(kwargs):
+            raise AttributeError("Unexpected argument passed to RPC class: %s" %( kwargs ))
 
     def __enter__(self):
-	"""
-	Internal use only. (handles scope 'with')
-	"""
+        """
+        Internal use only. (handles scope 'with')
+        """
         self.Request.open()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-	"""
-	Internal use only. (handles scope 'with')
-	"""
+        """
+        Internal use only. (handles scope 'with')
+        """
         self.Request.close()
 
-    def __call__(self, msg, timeout=None):
-	"""
-	Enable the use of the object to directly invoke the RPC.
+    def __call__(self, *args, **kwargs):
+        """
+        Enable the use of the object to directly invoke the RPC.
 
         example:
 
-	    with RPC(bus,service) as myrpc:
+            with RPC(bus,service) as myrpc:
                 result=myrpc(request)
- 
-	"""
-        if timeout is None:
-            timeout = self.timeout
+
+        """
+        timeout = kwargs.pop("timeout", self.timeout)
+        Content = args_as_content(*args, **kwargs)
+        HasArgs, HasKwArgs = analyze_args(args, kwargs)
         # create unique reply address for this rpc call
-        options={'create':'always','delete':'receiver'}
-        ReplyAddress= "reply." + str(uuid.uuid4())
+        options = {'create':'always','delete':'receiver'}
+        ReplyAddress = "reply.%s" % (str(uuid.uuid4()))
         if self.BusName is None:
-            Reply = FromBus(ReplyAddress+" ; "+str(options))
+            Reply = FromBus("%s ; %s" %(ReplyAddress,str(options)))
         else:
-            Reply = FromBus(self.BusName + "/" + ReplyAddress)
+            Reply = FromBus("%s/%s" % (self.BusName, ReplyAddress))
         with Reply:
-            MyMsg = ServiceMessage(msg, ReplyAddress)
+            MyMsg = RequestMessage(Content, ReplyAddress , has_args=HasArgs, has_kwargs=HasKwArgs)
             MyMsg.ttl = timeout
             self.Request.send(MyMsg)
             answer = Reply.receive(timeout)
@@ -106,15 +109,15 @@ class RPC():
             status["state"] = "TIMEOUT"
             status["errmsg"] = "RPC Timed out"
             status["backtrace"] = ""
-            return (None, status)
+            raise RPCException(status)
 
         # Check for illegal message type
         if isinstance(answer, ReplyMessage) is False:
             # if we come here we had a Time-Out
             status["state"] = "ERROR"
-            status["errmsg"] = "Incorrect messagetype (" + str(type(answer)) + ") received."
+            status["errmsg"] = "Incorrect messagetype (%s) received." % (str(type(answer)))
             status["backtrace"] = ""
-            return (None, status)
+            raise RPCException(status)
 
         # return content and status if status is 'OK'
         if (answer.status == "OK"):
@@ -129,7 +132,7 @@ class RPC():
             status["state"] = "ERROR"
             status["errmsg"] = "Return state in message not found"
             status["backtrace"] = ""
-            return (Null, status)
+            raise RPCException(status)
 
         # Does the client expect us to throw the exception?
         if self.ForwardExceptions is True:
@@ -139,5 +142,7 @@ class RPC():
                 instance = excep_class_(answer.backtrace)
                 raise (instance)
             else:
-                raise (Exception(answer.errmsg))
-        return (None,status)
+                raise RPCException(answer.errmsg)
+        return (None, status)
+
+__all__ = ["RPC", "RPCException"]
