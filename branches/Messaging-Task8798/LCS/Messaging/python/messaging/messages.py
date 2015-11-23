@@ -37,7 +37,7 @@ _QPID_MESSAGE_FIELDS = set([
     'priority', 'properties', 'reply_to', 'subject', 'ttl', 'user_id'])
 
 
-def validate_qpid_message(qmsg):
+def _validate_qpid_message(qmsg):
     """
     Validate Qpid message `qmsg`. A Qpid message is required to contain the
     following properties in order to be considered valid:
@@ -139,7 +139,7 @@ class MessageFactory(Factory):
         message `qmsg` contains a type name that is not registered with the
         factory.
         """
-        validate_qpid_message(qmsg)
+        _validate_qpid_message(qmsg)
         clsid = qmsg.properties['MessageType']
         msg = super(MessageFactory, self).create(clsid, qmsg)
         if msg is None:
@@ -181,7 +181,7 @@ class LofarMessage(object):
         raised.
         """
         if isinstance(content, qpid.messaging.Message):
-            validate_qpid_message(content)
+            _validate_qpid_message(content)
             self.__dict__['_qpid_msg'] = content
         else:
             try:
