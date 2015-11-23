@@ -278,7 +278,7 @@ class LTAStorageDb:
 
             args = (base_directory_id,)
 
-            query, args = self._date_bounded(query, args, from_date, to_date)
+            query, args = self._date_bounded(query, args, 'fileinfo.creation_date', from_date, to_date)
 
             return conn.execute(query, args).fetchall()
 
@@ -373,7 +373,7 @@ class LTAStorageDb:
                 ''').fetchone()
 
             if result:
-                format = '%Y-%m-%d %H:%M:%S %Z'
+                format = '%Y-%m-%d %H:%M:%S.%f %Z'
                 return datetime.datetime.strptime(result[0]+' UTC', format)
 
             return datetime.datetime(2011, 1, 1)
