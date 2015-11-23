@@ -14,11 +14,13 @@ CREATE SCHEMA resource_allocation;
 BEGIN;
 
 -- This is insanity, but works, order needs to be the reverse of the CREATE TABLE statements
+DROP TABLE IF EXISTS resource_allocation.config;
 DROP TABLE IF EXISTS resource_monitoring.resource_group_availability;
 DROP TABLE IF EXISTS resource_monitoring.resource_availability;
 DROP TABLE IF EXISTS resource_monitoring.resource_capacity;
 DROP TABLE IF EXISTS resource_allocation.resource_claim;
 DROP TABLE IF EXISTS resource_allocation.resource_claim_status;
+DROP TABLE IF EXISTS resource_allocation.claim_session;
 DROP TABLE IF EXISTS resource_allocation.task;
 DROP TABLE IF EXISTS resource_allocation.specification;
 DROP TABLE IF EXISTS resource_allocation.task_type;
@@ -131,6 +133,17 @@ CREATE TABLE resource_allocation.task (
 ALTER TABLE resource_allocation.task
   OWNER TO resourceassignment;
 
+CREATE TABLE resource_allocation.claim_session (
+  id serial NOT NULL,
+  username text NOT NULL,
+  user_id integer NOT NULL,
+  starttime timestamp NOT NULL,
+  token text NOT NULL,
+  PRIMARY KEY (id)
+) WITH (OIDS=FALSE);
+ALTER TABLE resource_allocation.claim_session
+  OWNER TO resourceassignment;
+
 CREATE TABLE resource_allocation.resource_claim_status (
   id serial NOT NULL,
   name text NOT NULL,
@@ -146,7 +159,7 @@ CREATE TABLE resource_allocation.resource_claim (
   starttime timestamp NOT NULL,
   endtime timestamp NOT NULL,
   status_id integer NOT NULL REFERENCES resource_allocation.resource_claim_status DEFERRABLE INITIALLY IMMEDIATE,
-  claim_endtime timestamp NOT NULL,
+  session_id integer NOT NULL REFERENCES resource_allocation.claim_session DEFERRABLE INITIALLY IMMEDIATE,
   claim_size bigint NOT NULL,
   username text,
   user_id integer,
@@ -181,6 +194,15 @@ CREATE TABLE resource_monitoring.resource_group_availability (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_monitoring.resource_group_availability
+  OWNER TO resourceassignment;
+
+CREATE TABLE resource_allocation.config (
+  id serial NOT NULL,
+  name text NOT NULL,
+  value text,
+  PRIMARY KEY (id)
+) WITH (OIDS=FALSE);
+ALTER TABLE resource_allocation.config
   OWNER TO resourceassignment;
 
 COMMIT;

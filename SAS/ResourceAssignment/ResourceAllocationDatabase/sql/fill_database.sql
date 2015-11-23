@@ -12,10 +12,13 @@ INSERT INTO resource_allocation.task_type VALUES (0, 'OBSERVATION'),(1, 'PIPELIN
 INSERT INTO resource_allocation.specification VALUES (0, '2015-11-05 12:00:00', '2015-11-05 12:30:00', 'key=value'),
 (1, '2015-11-05 13:00:00', '2015-11-05 14:00:00', 'key=1');
 INSERT INTO resource_allocation.task VALUES (0, 654321, 12345, 0, 0, 0),(1, 765432, 2654321, 1, 1, 1);
+INSERT INTO resource_allocation.claim_session VALUES (0, 'renting', 0, '2015-11-05 12:00:00', 'renting-token'),
+(1, 'paulus', 1, '2015-11-05 14:00:00', 'paulus-token');
 INSERT INTO resource_allocation.resource_claim_status VALUES (0, 'CLAIMED'),(1, 'ALLOCATED');
-INSERT INTO resource_allocation.resource_claim VALUES (0, 0, 0, '2015-11-05 12:00:00', '2015-11-05 12:30:00', 0, '2015-11-06 12:00:00', 1),
-(1, 2, 1, '2015-11-05 13:00:00', '2015-11-05 14:00:00', 1, '2015-11-06 12:00:00', 1234);
+INSERT INTO resource_allocation.resource_claim VALUES (0, 0, 0, '2015-11-05 12:00:00', '2015-11-05 12:30:00', 0, 0, 1),
+(1, 2, 1, '2015-11-05 13:00:00', '2015-11-05 14:00:00', 1, 1, 1234);
 INSERT INTO resource_monitoring.resource_capacity VALUES (0, 0, 1, 1), (1, 1, 1,1 ), (2, 2, 15000, 100000);
 INSERT INTO resource_monitoring.resource_availability VALUES (0, 0, TRUE), (1, 1, TRUE), (2, 2, TRUE);
 INSERT INTO resource_monitoring.resource_group_availability VALUES (0, 0, TRUE), (1, 1, TRUE);
+INSERT INTO resource_monitoring.config VALUES (0, 'max_fill_percentage_cep4', '85.00'), (1, 'claim_timeout', '172800');
 COMMIT;
