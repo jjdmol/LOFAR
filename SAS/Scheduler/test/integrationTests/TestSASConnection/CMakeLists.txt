@@ -1,5 +1,5 @@
 # $Id$
 
-add_executable(TestSASConnection main.cpp)
-target_link_libraries(TestSASConnection lofar_scheduler)
-add_test(TestSASConnection TestSASConnection)
+include (LofarCTest)
+
+lofar_add_test(TestSASConnection main.cpp)

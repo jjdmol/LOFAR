@@ -1,4 +1,6 @@
 default via 10.151.255.254 dev eth0  metric 100 
+10.134.224.0/19 dev ib0  proto kernel  scope link  src 10.134.246.5 
+10.134.224.0/19 dev ib1  proto kernel  scope link  src 10.134.246.6 
 10.135.252.0/24 via 10.175.255.201 dev eth2 
 10.135.253.0/24 via 10.175.255.202 dev eth3 
 10.135.254.0/24 via 10.175.255.203 dev eth4 

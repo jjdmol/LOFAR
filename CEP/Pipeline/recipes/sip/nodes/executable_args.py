@@ -63,6 +63,13 @@ class executable_args(LOFARnodeTCP):
                         raise
 
             argsformat = args_format['args_format']
+            # deal with multiple input files for wsclean
+            if argsformat == 'wsclean':
+                for i in reversed(xrange(len(args))):
+                    if str(args[i]).startswith('[') and str(args[i]).endswith(']'):
+                        tmplist = args.pop(i).lstrip('[').rstrip(']').split(',')
+                        for val in reversed(tmplist):
+                            args.insert(i, val.strip(' \'\"'))
             if not parsetasfile:
                 if argsformat == 'gnu':
                     for k, v in kwargs.items():
@@ -75,7 +82,11 @@ class executable_args(LOFARnodeTCP):
                         args.append('--' + k + ' ' + v)
                 if argsformat == 'wsclean':
                     for k, v in kwargs.items():
-                        multargs = v.split(' ')
+                        if str(v).startswith('[') and str(v).endswith(']'):
+                            v = v.lstrip('[').rstrip(']').replace(' ', '')
+                            multargs = v.split(',')
+                        else:
+                            multargs = v.split(' ')
                         if multargs:
                             multargs.reverse()
                             for item in multargs:

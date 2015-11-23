@@ -71,8 +71,10 @@ if(HAVE_SHMEM)
     -DMORECORE=shmbrk
     -DMORECORE_CONTIGUOUS=0
     -DMORECORE_CANNOT_TRIM=1
-    -DSHMEM_ALLOC
-    -DHAVE_USR_INCLUDE_MALLOC_H)
+    -DSHMEM_ALLOC)
+  if(EXISTS "/usr/include/malloc.h")
+    set(shmem_COMPILE_FLAGS ${shmem_COMPILE_FLAGS} -DHAVE_USR_INCLUDE_MALLOC_H)
+  endif()
   lofar_join_arguments(shmem_COMPILE_FLAGS)
   set_source_files_properties(${shmem_LIB_SRCS} 
     PROPERTIES COMPILE_FLAGS ${shmem_COMPILE_FLAGS})

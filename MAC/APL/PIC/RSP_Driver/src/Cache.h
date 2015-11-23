@@ -104,15 +104,15 @@ public:
     bool isSwappedXY(int antenna){ return (itsSwappedXY.test(antenna)); }
     void setSwappedXY(bitset<MAX_ANTENNAS> antennamask) { itsSwappedXY = antennamask; }
     bitset<MAX_ANTENNAS> getSwappedXY() { return(itsSwappedXY); }
-    
-	I2Cuser getI2Cuser() { return (itsI2Cuser); }
-	void setI2Cuser(I2Cuser user) { itsI2Cuser = user; }
+  
+    I2Cuser getI2Cuser() { return (itsI2Cuser); }
+    void setI2Cuser(I2Cuser user) { itsI2Cuser = user; }
 	
-	int getBitsPerSample() { return itsBitsPerSample; }
-	void setBitsPerSample(int bits) { itsBitsPerSample = bits; }
+    int getBitsPerSample() { return itsBitsPerSample; }
+    void setBitsPerSample(int bits) { itsBitsPerSample = bits; }
     
     int getSDOBitsPerSample() { return itsSDOBitsPerSample; }
-	void setSDOBitsPerSample(int bits) { itsSDOBitsPerSample = bits; }
+    void setSDOBitsPerSample(int bits) { itsSDOBitsPerSample = bits; }
 	/*@}*/
     
     blitz::Array<int, 1> getPPSdelays() { return itsPPSsyncDelays; }
@@ -124,11 +124,11 @@ public:
     float getFixedAttenuation(int mode) { return itsFixedAttenuations(mode); }
     float getAttenuationStepSize() { return itsAttenuationStepSize; }
     
-	// update timestamp
-	void setTimestamp(const RTC::Timestamp& timestamp);
+    // update timestamp
+    void setTimestamp(const RTC::Timestamp& timestamp);
 
-	// Get const pointer to parent cache.
-	Cache& getCache() { return *m_cache; }
+    // Get const pointer to parent cache.
+    Cache& getCache() { return *m_cache; }
 
 private:
 	// NOTE [reo]: The relation between the RSPprotocol classes,
@@ -180,10 +180,10 @@ private:
 	RSP_Protocol::SDOModeInfo       itsSDOModeInfo;
 	RSP_Protocol::SDOSelection      itsSDOSelection;
 	int                             itsSDOBitsPerSample;
-    blitz::Array<int, 1>            itsPPSsyncDelays;  // one delay for each AP
-    bool                            itsSequencerRequest;
-    blitz::Array<float, 1>          itsFixedAttenuations;
-    float                           itsAttenuationStepSize;
+        blitz::Array<int, 1>            itsPPSsyncDelays;  // one delay for each AP
+        bool                            itsSequencerRequest;
+        blitz::Array<float, 1>          itsFixedAttenuations;
+        float                           itsAttenuationStepSize;
     
 	Cache* m_cache;		// pointer to container
 };

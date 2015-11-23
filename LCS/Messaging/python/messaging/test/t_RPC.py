@@ -6,7 +6,9 @@ that the functions are OK. Next the same tests are done with the RPC and
 Service classes in between. This should give the same results.
 """
 import sys
-from lofar.messaging import *
+from contextlib import nested
+
+from lofar.messaging import Service, RPC
 
 class UserException(Exception):
     "Always thrown in one of the functions"
@@ -117,7 +119,7 @@ if __name__ == '__main__':
     serv5 = Service("DictService",      DictFunc,      busname=busname, numthreads=1)
 
     # 'with' sets up the connection context and defines the scope of the service.
-    with serv1, serv2, serv3, serv4, serv5:
+    with nested(serv1, serv2, serv3, serv4, serv5):
         # Start listening in the background. This will start as many threads as defined by the instance
         serv1.start_listening()
         serv2.start_listening()
