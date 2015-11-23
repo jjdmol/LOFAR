@@ -158,7 +158,7 @@ class LofarMessage(object):
         else:
             try:
                 if isinstance(content,basestring):
-		    self.__dict__['_qpid_msg'] = qpid.messaging.Message(unicode(content))
+                    self.__dict__['_qpid_msg'] = qpid.messaging.Message(unicode(content))
                 else:
                     self.__dict__['_qpid_msg'] = qpid.messaging.Message(content)
 
@@ -300,7 +300,7 @@ class ReplyMessage(LofarMessage):
     def __init__(self, content=None, reply_to=None):
         super(ReplyMessage, self).__init__(content)
         if (reply_to!=None):
-          self.subject = reply_to
+            self.subject = reply_to
 
 
 
