@@ -27,5 +27,5 @@ Module initialization file.
 from exceptions import *
 from messages import *
 from messagebus import *
-from RPC import RPC
-from Service import Service
+from RPC import *
+from Service import *

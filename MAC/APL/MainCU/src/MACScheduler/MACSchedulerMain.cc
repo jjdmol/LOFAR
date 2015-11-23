@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 {
 	GCFScheduler::instance()->init(argc, argv, "MACScheduler");
 
-  MessageBus::init();
+    MessageBus::init();
 
 	ChildControl*	cc = ChildControl::instance();
 	cc->start();	// make initial transition

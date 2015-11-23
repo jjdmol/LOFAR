@@ -96,6 +96,33 @@ def to_qpid_message(msg):
         return msg.qpid_msg
     raise InvalidMessage("Invalid message type: %r" % type(msg))
 
+def analyze_args(args,kwargs):
+    HasKwArgs=(len(kwargs)>0)
+    # more than one argument given? 
+    HasMultipleArgs=(len(args)> 1 ) or (( len(kwargs)>0 ) and (len(args)>0))
+    return (HasMultipleArgs,HasKwArgs)
+
+def args_as_content(*args,**kwargs):
+    """
+    Convert positional args and named args into a message body.
+    :param msg: Message to be converted into a Qpid message.
+    :return: Qpid message
+    :raise InvalidMessage if `msg` cannot be converted into a Qpid message.
+    """
+    HasMultipleArgs,HasKwArgs = analyze_args(args, kwargs)
+    if HasMultipleArgs:
+        # convert arguments to list
+        Content = list(args)
+        if HasKwArgs:
+            # if both positional and named arguments then
+            # we add the kwargs dictionary as the last item in the list
+            Content.append(kwargs)
+        return Content
+    if HasKwArgs:
+        # we have only one named argument
+        return kwargs
+    # we have only one positional argument
+    return list(args)[0]
 
 class MessageFactory(Factory):
     """
@@ -158,7 +185,11 @@ class LofarMessage(object):
             self.__dict__['_qpid_msg'] = content
         else:
             try:
-                self.__dict__['_qpid_msg'] = qpid.messaging.Message(content)
+                if isinstance(content,basestring):
+		    self.__dict__['_qpid_msg'] = qpid.messaging.Message(unicode(content))
+                else:
+                    self.__dict__['_qpid_msg'] = qpid.messaging.Message(content)
+
             except KeyError:
                 raise InvalidMessage(
                     "Unsupported content type: %r" % type(content))
@@ -241,9 +272,11 @@ class EventMessage(LofarMessage):
     will be stored in a persistent queue for later delivery.
     """
 
-    def __init__(self, content=None):
+    def __init__(self, content=None, context=None):
         super(EventMessage, self).__init__(content)
-        self.durable = True
+        if (context!=None):
+            self.durable = True
+            self.subject = context
 
 
 class MonitoringMessage(LofarMessage):
@@ -268,18 +301,22 @@ class ProgressMessage(LofarMessage):
         super(ProgressMessage, self).__init__(content)
 
 
-class ServiceMessage(LofarMessage):
+class RequestMessage(LofarMessage):
     """
     Message class used for service messages. Service messages are
     request-reply type of messages. They are typically used to query a
     subsystem. A service message must contain a valid ``ReplyTo`` property.
     """
 
-    def __init__(self, content=None, reply_to=None):
-        super(ServiceMessage, self).__init__(content)
+    def __init__(self, content=None, reply_to=None,**kwargs): #reply_to=None, has_args=None, has_kwargs=None):
+        super(RequestMessage, self).__init__(content)
         if (reply_to!=None):
-          self.reply_to = reply_to
-
+            #if (len(kwargs)>0):
+            #reply_to = kwargs.pop("reply_to",None)
+            #if (reply_to!=None):
+            self.reply_to = reply_to
+            self.has_args   = str(kwargs.pop("has_args",False))
+            self.has_kwargs = str(kwargs.pop("has_kwargs",False))
 
 class ReplyMessage(LofarMessage):
     """
@@ -298,8 +335,8 @@ class ReplyMessage(LofarMessage):
 MESSAGE_FACTORY.register("EventMessage", EventMessage)
 MESSAGE_FACTORY.register("MonitoringMessage", MonitoringMessage)
 MESSAGE_FACTORY.register("ProgressMessage", ProgressMessage)
-MESSAGE_FACTORY.register("ServiceMessage", ServiceMessage)
+MESSAGE_FACTORY.register("RequestMessage", RequestMessage)
 MESSAGE_FACTORY.register("ReplyMessage", ReplyMessage)
 
 __all__ = ["EventMessage", "MonitoringMessage", "ProgressMessage",
-	   "ServiceMessage", "ReplyMessage"]
+	   "RequestMessage", "ReplyMessage"]
