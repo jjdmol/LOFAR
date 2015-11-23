@@ -57,6 +57,16 @@ class FileInfo:
     def __str__(self):
         return self.filename + " " + humanreadablesize(self.size) + " " + str(self.created_at)
 
+class SrmlsException(Exception):
+    def __init__(self, command, exitcode, stdout, stderr):
+        self.command = command
+        self.exitcode = exitcode
+        self.stdout = stdout
+        self.stderr = stderr
+
+    def __str__(self):
+        return "%s failed with code %d.\nstdout: %s\nstderr: %s" % \
+                (self.command, self.exitcode, self.stdout, self.stderr)
 
 class Location:
     '''A Location is a directory at a storage site which can be queried with getResult()'''
@@ -163,13 +173,15 @@ class Location:
                 else:
                     logger.error("Unknown type: %s" % entryType)
 
-        # recurse and ask for more files if we hit the 900 line limit
-        if len(entries) >= 900:
-            logger.debug('There are more than 900 lines in the results')
-            extraResult = self.getResult(offset + 900)
-            logger.debug('extraResult %s' % str(extraResult))
-            foundDirectories += extraResult.subDirectories
-            foundFiles += extraResult.files
+            # recurse and ask for more files if we hit the 900 line limit
+            if len(entries) >= 900:
+                logger.debug('There are more than 900 lines in the results')
+                extraResult = self.getResult(offset + 900)
+                logger.debug('extraResult %s' % str(extraResult))
+                foundDirectories += extraResult.subDirectories
+                foundFiles += extraResult.files
+        else:
+            raise SrmlsException(' '.join(cmd), p.returncode, logs[0], logs[1])
 
         return LocationResult(self, foundDirectories, foundFiles)
 
@@ -248,9 +260,23 @@ class ResultGetterThread(threading.Thread):
                 self.db.insertFileInfos([(file.filename, file.size, file.created_at, dir_id) for file in result.files])
 
                 for subDirLocation in result.subDirectories:
-                    if not ('nikhef' == subDirLocation.srmurl and 'generated' in subDirLocation.directory): # skip empty nikhef dirs
-                        subdir_id = self.db.insertSubDirectory(dir_id, subDirLocation.directory)
-                        self.db.updateDirectoryLastVisitTime(subdir_id, datetime.datetime.utcnow() - datetime.timedelta(days=1000))
+
+                    if ('nikhef' in subDirLocation.srmurl and 'generated' in subDirLocation.directory):
+                        # skip empty nikhef dirs
+                        continue
+
+                    #if ('lc3_007' in subDirLocation.directory):
+                        ## skip lobos dirs for now...
+                        #continue
+
+                    subdir_id = self.db.insertSubDirectory(dir_id, subDirLocation.directory)
+                    self.db.updateDirectoryLastVisitTime(subdir_id, datetime.datetime.utcnow() - datetime.timedelta(days=1000))
+
+        except SrmlsException as e:
+            logger.error(str(e))
+
+            logger.info('rescheduling dir %d for new visit.' % (self.dir_id))
+            self.db.updateDirectoryLastVisitTime(self.dir_id, datetime.datetime.utcnow() - datetime.timedelta(days=1000))
 
         except Exception as e:
             logger.error(str(e))
