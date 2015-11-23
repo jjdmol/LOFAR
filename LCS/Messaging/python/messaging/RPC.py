@@ -21,8 +21,36 @@
 
 #  RPC invocation with possible timeout
 from lofar.messaging.messagebus import ToBus, FromBus
-from lofar.messaging.messages import RequestMessage, ReplyMessage, analyze_args, args_as_content 
+from lofar.messaging.messages import RequestMessage, ReplyMessage
 import uuid
+
+def _analyze_args(args,kwargs):
+    HasKwArgs=(len(kwargs)>0)
+    # more than one argument given?
+    HasMultipleArgs=(len(args)> 1 ) or (( len(kwargs)>0 ) and (len(args)>0))
+    return (HasMultipleArgs,HasKwArgs)
+
+def _args_as_content(*args,**kwargs):
+    """
+    Convert positional args and named args into a message body.
+    :param msg: Message to be converted into a Qpid message.
+    :return: Qpid message
+    :raise InvalidMessage if `msg` cannot be converted into a Qpid message.
+    """
+    HasMultipleArgs,HasKwArgs = _analyze_args(args, kwargs)
+    if HasMultipleArgs:
+        # convert arguments to list
+        Content = list(args)
+        if HasKwArgs:
+            # if both positional and named arguments then
+            # we add the kwargs dictionary as the last item in the list
+            Content.append(kwargs)
+        return Content
+    if HasKwArgs:
+        # we have only one named argument
+        return kwargs
+    # we have only one positional argument
+    return list(args)[0]
 
 class RPCException(Exception):
     "Exception occured in the RPC code itself, like time-out, invalid message received, etc."
@@ -88,8 +116,8 @@ class RPC():
 
         """
         timeout = kwargs.pop("timeout", self.timeout)
-        Content = args_as_content(*args, **kwargs)
-        HasArgs, HasKwArgs = analyze_args(args, kwargs)
+        Content = _args_as_content(*args, **kwargs)
+        HasArgs, HasKwArgs = _analyze_args(args, kwargs)
         # create unique reply address for this rpc call
         options = {'create':'always','delete':'receiver'}
         ReplyAddress = "reply.%s" % (str(uuid.uuid4()))
