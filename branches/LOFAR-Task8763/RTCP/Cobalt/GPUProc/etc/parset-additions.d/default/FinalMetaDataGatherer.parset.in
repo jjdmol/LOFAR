@@ -1,0 +1,26 @@
+# $Id$
+
+# Whether we should obtain the broken-antenna information in the first place.
+# If disabled, empty sets will be forwarded to outputProc.
+Cobalt.FinalMetaDataGatherer.enabled = true
+
+# The database hostname to connect to:
+#   Production:  sasdb
+#   Development: sasdbtest (do not use here; prefer hostname redirection)
+# If empty (or missing), the default is used: sasdb
+Cobalt.FinalMetaDataGatherer.database.host = sasdb
+
+# The database port number to connect to.
+# If empty (or missing), the default used: 5432
+Cobalt.FinalMetaDataGatherer.database.port =
+
+# The database name to access.
+# If empty (or missing), the default is used: LOFAR_4
+Cobalt.FinalMetaDataGatherer.database.name =
+
+# The user with which to log in to the database named above.
+# If empty (or missing), the default user name and password are used.
+# If non-empty, the password is used:
+# NOTE: all of these key/vals may end up all over the place incl the data product!!!
+Cobalt.FinalMetaDataGatherer.database.username =
+

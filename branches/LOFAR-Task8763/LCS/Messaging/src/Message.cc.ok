@@ -1,0 +1,91 @@
+#include <lofar_config.h>
+#include <Messaging/Message.h>
+#include <qpid/messaging/Message.h>
+#include <qpid/types/Variant.h>
+#include <string>
+#include <iostream>
+
+using namespace std;
+
+namespace LOFAR
+{
+  namespace Messaging
+  {
+
+    //## ----  Initialization of static data  ---- ##//
+
+    const string Message::theirQpidPropertyName = "MessageType";
+
+
+    //## ----  Definition of public methods  ---- ##//
+
+    Message::~Message()
+    {
+      TRACE;
+    }
+
+
+    Message* Message::create(const qpid::messaging::Message& qmsg)
+    {
+      TRACE;
+      qpid::types::Variant prop(getProperty(theirQpidPropertyName, qmsg));
+      if (prop.isVoid()) {
+        THROW (MessageFactoryException, "Don't know what message to create, "
+               "because Qpid message property '" << theirQpidPropertyName 
+               << "' was not found");
+      }
+      string msgType(prop);
+      Message* msg = MessageFactory::instance().create(msgType, qmsg);
+      if (!msg) {
+        THROW (MessageFactoryException, 
+               "Don't know how to create an instance of '" << msgType 
+               << "'. Did you register the class with the factory?");
+      }
+      return msg;
+    }
+
+
+    //## ----  Definition of protected methods  ---- ##//
+
+    Message::Message()
+    {
+      TRACE;
+    }
+
+    Message::Message(const qpid::messaging::Message& msg) :
+      itsQpidMsg(new qpid::messaging::Message(msg))
+    {
+      TRACE;
+    }
+
+    boost::shared_ptr< qpid::messaging::Message > Message::getQpidMsg() const
+    {
+      TRACE;
+      return itsQpidMsg;
+    }
+
+    qpid::types::Variant Message::getProperty(const string& property) const
+    {
+      TRACE;
+      return Message::getProperty(property, *itsQpidMsg);
+    }
+
+
+    //## ----  Definition of private methods  ---- ##//
+
+    qpid::types::Variant 
+    Message::getProperty(const std::string& property,
+                         const qpid::messaging::Message& qmsg)
+    {
+      TRACE;
+      const qpid::types::Variant::Map& properties(qmsg.getProperties());
+      qpid::types::Variant::Map::const_iterator it;
+      it = properties.find(property);
+      if (it == properties.end()) return qpid::types::Variant();
+      else return it->second;
+      // if (it == properties.end()) THROW (MessagePropertyNotFound, property);
+      // return it->second;
+    }
+
+  }
+}
