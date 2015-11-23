@@ -7,6 +7,8 @@
 --       LC_COLLATE = 'en_US.UTF-8'
 --       LC_CTYPE = 'en_US.UTF-8'
 --       CONNECTION LIMIT = -1;
+
+-- psql resourceassignment -U resourceassignment -f create_database.sql -W
 CREATE SCHEMA virtual_instrument;
 CREATE SCHEMA resource_monitoring;
 CREATE SCHEMA resource_allocation;

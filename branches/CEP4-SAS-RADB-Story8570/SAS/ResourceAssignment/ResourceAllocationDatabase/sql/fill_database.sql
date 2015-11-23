@@ -1,4 +1,5 @@
 -- resourceassignment password for testing on mcu005 is the same as the password on the president's luggage +6
+-- psql resourceassignment -U resourceassignment -f fill_database.sql -W
 BEGIN;
 INSERT INTO virtual_instrument.unit VALUES (0, 'station'),(1, 'bytes');
 INSERT INTO virtual_instrument.resource_type VALUES (0, 'station', 0),(1, 'storage', 1);
@@ -20,5 +21,5 @@ INSERT INTO resource_allocation.resource_claim VALUES (0, 0, 0, '2015-11-05 12:0
 INSERT INTO resource_monitoring.resource_capacity VALUES (0, 0, 1, 1), (1, 1, 1,1 ), (2, 2, 15000, 100000);
 INSERT INTO resource_monitoring.resource_availability VALUES (0, 0, TRUE), (1, 1, TRUE), (2, 2, TRUE);
 INSERT INTO resource_monitoring.resource_group_availability VALUES (0, 0, TRUE), (1, 1, TRUE);
-INSERT INTO resource_monitoring.config VALUES (0, 'max_fill_percentage_cep4', '85.00'), (1, 'claim_timeout', '172800');
+INSERT INTO resource_allocation.config VALUES (0, 'max_fill_percentage_cep4', '85.00'), (1, 'claim_timeout', '172800');
 COMMIT;
