@@ -48,12 +48,24 @@ def main(argv):
             print "  %s #files=%d total_size=%s" % (root_dir[1], numFilesInTree, humanreadablesize(totalFileSizeInTree))
 
             subdirs = db.subDirectories(root_dir[0], 1, False)
+            subdirs = sorted(subdirs, key=lambda x: x[1])
 
             for subdir in subdirs:
                 numFilesInTree = db.numFilesInTree(subdir[0])
                 totalFileSizeInTree = db.totalFileSizeInTree(subdir[0])
 
                 print "    %s #files=%d total_size=%s" % (subdir[1], numFilesInTree, humanreadablesize(totalFileSizeInTree))
+
+                if subdir[1].endswith('projects/'):
+                    projectsSubDirs = db.subDirectories(subdir[0], 1, False)
+                    projectsSubDirs = sorted(projectsSubDirs, key=lambda x: x[1])
+
+                    for projectsSubDir in projectsSubDirs:
+                        numFilesInTree = db.numFilesInTree(projectsSubDir[0])
+                        totalFileSizeInTree = db.totalFileSizeInTree(projectsSubDir[0])
+
+                        print "      %s #files=%d total_size=%s" % (projectsSubDir[1], numFilesInTree, humanreadablesize(totalFileSizeInTree))
+
 
     utcnow = datetime.utcnow()
     monthbegin = datetime(utcnow.year, utcnow.month, 1)
