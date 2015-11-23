@@ -32,9 +32,9 @@ from lofar.messaging.exceptions import InvalidMessage, MessageFactoryError
 
 
 # Valid QPID message fields (from qpid.messaging.Message)
-_QPID_MESSAGE_FIELDS = {
+_QPID_MESSAGE_FIELDS = set([
     'content', 'content_type', 'correlation_id', 'durable', 'id',
-    'priority', 'properties', 'reply_to', 'subject', 'ttl', 'user_id'}
+    'priority', 'properties', 'reply_to', 'subject', 'ttl', 'user_id'])
 
 
 def validate_qpid_message(qmsg):
@@ -47,7 +47,7 @@ def validate_qpid_message(qmsg):
     :raises InvalidMessage: if any of the required properties are missing in
     the Qpid message
     """
-    required_props = {"SystemName", "MessageType", "MessageId"}
+    required_props = set(["SystemName", "MessageType", "MessageId"])
     if not isinstance(qmsg, qpid.messaging.Message):
         raise InvalidMessage(
             "Not a Qpid Message: %r" % type(qmsg)
@@ -239,7 +239,7 @@ class LofarMessage(object):
         """
         return list(
             _QPID_MESSAGE_FIELDS.union(self._qpid_msg.properties) -
-            {'properties'}
+            set(['properties'])
         )
 
     @property

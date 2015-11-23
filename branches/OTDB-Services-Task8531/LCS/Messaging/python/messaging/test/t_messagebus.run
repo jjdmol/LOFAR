@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash -e
 
 # Cleanup on normal exit and on SIGHUP, SIGINT, SIGQUIT, and SIGTERM
 trap 'qpid-config del queue --force $queue' 0 1 2 3 15

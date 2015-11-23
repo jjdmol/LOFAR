@@ -111,6 +111,9 @@ void TbbSettings::getTbbSettings()
 	setMaxBoards(n_tbboards);
 	//setMaxBoards(MAX_N_TBBOARDS);
 	
+    try { itsDefaultImageNr = globalParameterSet()->getInt32("TBBDriver.DEFAULT_IMAGE"); }
+	catch (APSException&) { LOG_INFO_STR(formatString("TBBDriver.DEFAULT_IMAGE not found")); }
+    
 	try { itsSaveTriggersToFile = globalParameterSet()->getInt32("TBBDriver.SAVE_TRIGGERS_TO_FILE"); }
 	catch (APSException&) { LOG_INFO_STR(formatString("TBBDriver.SAVE_TRIGGERS_TO_FILE not found")); }
 	

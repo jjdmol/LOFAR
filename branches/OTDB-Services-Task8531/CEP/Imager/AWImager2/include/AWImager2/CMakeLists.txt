@@ -7,6 +7,7 @@ set(inst_HEADERS
   FTMachine.h
   FTMachineSimple.h
   Imager.h
+  CubeSkyEquation.h
   ATerm.h
   WTerm.h
   CFStore.h

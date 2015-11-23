@@ -163,8 +163,8 @@ void SortedTimestepAccessor::Write(SortedTimestepAccessor::TimestepIndex &index,
 			{
 				for(unsigned p=0;p<_polarizationCount;++p)
 				{
-					(*dataIterator).real() = data.realData[p][valIndex];
-					(*dataIterator).imag() = data.imagData[p][valIndex];
+					(*dataIterator).real(data.realData[p][valIndex]);
+					(*dataIterator).imag(data.imagData[p][valIndex]);
 					++dataIterator;
 				}
 				++valIndex;

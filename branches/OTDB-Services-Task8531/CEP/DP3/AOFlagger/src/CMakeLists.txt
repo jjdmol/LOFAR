@@ -2,9 +2,7 @@
 
 include(LofarPackageVersion)
 
-link_libraries(${BOOST_LIBRARIES})
-
-set(CMAKE_CXX_FLAGS "-g -Wall -DNDEBUG -funroll-loops")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -DNDEBUG -funroll-loops")
 
 include(CheckCXXCompilerFlag)
 
@@ -24,7 +22,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
 
 include(CheckIncludeFileCXX)
 
-FIND_PATH(BOOST_ASIO_H_FOUND "boost/asio.hpp")
+FIND_PATH(BOOST_ASIO_H_FOUND "boost/asio.hpp HINTS ${BOOST_ROOT_DIR} PATH_SUFFIXES include")
 if(BOOST_ASIO_H_FOUND)
   message(STATUS "Boost ASIO library found.")
 else()

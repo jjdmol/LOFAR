@@ -122,7 +122,7 @@ casa::Double spheroidal(casa::Double nu)
     casa::CoordinateSystem csys;
     csys.addCoordinate(dir);
     csys.addCoordinate(casa::StokesCoordinate(stokes));
-    csys.addCoordinate(casa::SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
+    csys.addCoordinate(casa::SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 1.0, 0.0, 60e6));
     casa::PagedImage<T> im(casa::TiledShape(casa::IPosition(4, data.shape()(0), data.shape()(1), 1, 1)), csys, name);
     im.putSlice(data, casa::IPosition(4, 0, 0, 0, 0));
   }
@@ -156,7 +156,7 @@ casa::Double spheroidal(casa::Double nu)
     casa::CoordinateSystem csys;
     csys.addCoordinate(dir);
     csys.addCoordinate(casa::StokesCoordinate(stokes));
-    csys.addCoordinate(casa::SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
+    csys.addCoordinate(casa::SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 1.0, 0.0, 60e6));
     casa::PagedImage<T>
       im(casa::TiledShape(casa::IPosition(4, data.shape()(0), data.shape()(1), 4, 1)),
          csys, name);
@@ -165,3 +165,4 @@ casa::Double spheroidal(casa::Double nu)
   
 } // end namespace LofarFT
 } // end namespace LOFAR
+
