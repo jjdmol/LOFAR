@@ -23,6 +23,9 @@
 import lofar.messagebus.messagebus as messagebus
 import lofar.messagebus.message as message
 
+import logging
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+
 import threading
 from ConfigParser import SafeConfigParser
 import os.path
