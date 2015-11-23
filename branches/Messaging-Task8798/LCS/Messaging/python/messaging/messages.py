@@ -287,6 +287,7 @@ class RequestMessage(LofarMessage):
     subsystem. A service message must contain a valid ``ReplyTo`` property.
     """
 
+    #TODO: refactor args kwargs quirks
     def __init__(self, content=None, reply_to=None,**kwargs): #reply_to=None, has_args=None, has_kwargs=None):
         super(RequestMessage, self).__init__(content)
         if (reply_to!=None):
