@@ -226,15 +226,22 @@ class LofarMessage(object):
         Print all the properties of the current message. Make a distinction
         between user-defined properties and standard Qpid properties.
         """
+        print str(self)
+
+    def __str__(self):
+        result = ''
         for (key, value) in \
                 self.__dict__['_qpid_msg'].__dict__['properties'].iteritems():
-            print key, ":", value
-        print "---"
+            result += "%s: %s\n" % (key, value)
+
+        result += "---\n"
+
         for key in _QPID_MESSAGE_FIELDS:
             if (key != 'properties' and
-                        self.__dict__['_qpid_msg'].__dict__[key] is not None):
-                print key, ":", self.__dict__['_qpid_msg'].__dict__[key]
-        print "==="
+                    self.__dict__['_qpid_msg'].__dict__[key] is not None):
+                result += "%s:%s\n" % (key, self.__dict__['_qpid_msg'].__dict__[key])
+        result += "===\n"
+        return result
 
 
 class EventMessage(LofarMessage):
