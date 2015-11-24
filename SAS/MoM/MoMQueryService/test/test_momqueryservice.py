@@ -21,7 +21,8 @@
 
 import unittest
 import uuid
-from lofar.mom.momqueryservice import momqueryservice
+from lofar.mom.momqueryservice.momqueryservice import createService
+from lofar.mom.momqueryservice.momqueryservice import ProjectDetailsQueryHandler
 from lofar.mom.momqueryservice import momprojectdetailsquery
 from qpid.messaging import Connection
 from qpidtoollibs import BrokerAgent
@@ -44,9 +45,12 @@ try:
         def getProjectDetails(self, mom_ids_str):
             return [{'project_mom2id': '4567', 'project_name': 'foo', 'project_description': 'bar', 'object_mom2id': testid}]
 
+    class MockProjectDetailsQueryHandler(ProjectDetailsQueryHandler):
+        def prepare_loop(self):
+            self.momdb = MockMoMDatabaseWrapper()
+
     # inject the mock into the service
-    mock_momdb=MockMoMDatabaseWrapper()
-    with momqueryservice.createService(busname, momdb=mock_momdb):
+    with createService(busname, handler=MockProjectDetailsQueryHandler):
 
         class TestLTAStorageDb(unittest.TestCase):
             def testProjectDetailsQuery(self):

@@ -294,13 +294,13 @@ if __name__ == "__main__":
     busname = sys.argv[1] if len(sys.argv) > 1 else "simpletest"
 
     serv1 = Service("TaskSpecification", PostgressTaskSpecificationRequest,
-                    busname=busname, numthreads=1, startonwith=True,
+                    busname=busname, numthreads=1,
                     handler_args = {"database" : options.dbName, "db_host" : options.dbHost})
     serv2 = Service("StatusUpdateCmd",   PostgressStatusUpdateCommand,
-                    busname=busname, numthreads=1, startonwith=True,
+                    busname=busname, numthreads=1,
                     handler_args = {"database" : options.dbName, "db_host" : options.dbHost})
     serv3 = Service("KeyUpdateCmd",      PostgressKeyUpdateCommand,
-                    busname=busname, numthreads=1, startonwith=True,
+                    busname=busname, numthreads=1,
                     handler_args = {"database" : options.dbName, "db_host" : options.dbHost})
 
     with serv1, serv2, serv3:

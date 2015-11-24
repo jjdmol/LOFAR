@@ -86,12 +86,12 @@ if __name__ == '__main__':
     busname = sys.argv[1] if len(sys.argv) > 1 else "simpletest"
 
     # Register functs as a service handler listening at busname and ServiceName
-    serv1_plain         = Service("String1Service", StringFunc,             busname=busname, numthreads=1, startonwith=True)
-    serv1_minimal_class = Service("String2Service", OnlyMessageHandling,    busname=busname, numthreads=1, startonwith=True, 
+    serv1_plain         = Service("String1Service", StringFunc,             busname=busname, numthreads=1)
+    serv1_minimal_class = Service("String2Service", OnlyMessageHandling,    busname=busname, numthreads=1,
                                   handler_args={"function" : StringFunc})
-    serv1_full_class    = Service("String3Service", FullMessageHandling,    busname=busname, numthreads=1, startonwith=True, 
+    serv1_full_class    = Service("String3Service", FullMessageHandling,    busname=busname, numthreads=1,
                                   handler_args={"function" : StringFunc})
-    serv1_failing_class = Service("String4Service", FailingMessageHandling, busname=busname, numthreads=1, startonwith=True, 
+    serv1_failing_class = Service("String4Service", FailingMessageHandling, busname=busname, numthreads=1,
                                   handler_args={"function" : StringFunc})
 
     # 'with' sets up the connection context and defines the scope of the service.
@@ -122,12 +122,12 @@ if __name__ == '__main__':
             print "string4Service is OK"
 
     # Register functs as a service handler listening at busname and ServiceName
-    serv2_plain         = Service("Error1Service", ErrorFunc,              busname=busname, numthreads=1, startonwith=True)
-    serv2_minimal_class = Service("Error2Service", OnlyMessageHandling,    busname=busname, numthreads=1, startonwith=True, 
+    serv2_plain         = Service("Error1Service", ErrorFunc,              busname=busname, numthreads=1)
+    serv2_minimal_class = Service("Error2Service", OnlyMessageHandling,    busname=busname, numthreads=1,
                                   handler_args={"function" : ErrorFunc})
-    serv2_full_class    = Service("Error3Service", FullMessageHandling,    busname=busname, numthreads=1, startonwith=True, 
+    serv2_full_class    = Service("Error3Service", FullMessageHandling,    busname=busname, numthreads=1,
                                   handler_args={"function" : ErrorFunc})
-    serv2_failing_class = Service("Error4Service", FailingMessageHandling, busname=busname, numthreads=1, startonwith=True, 
+    serv2_failing_class = Service("Error4Service", FailingMessageHandling, busname=busname, numthreads=1,
                                   handler_args={"function" : ErrorFunc})
 
     # 'with' sets up the connection context and defines the scope of the service.
@@ -158,12 +158,12 @@ if __name__ == '__main__':
                 print "Error4Service is OK"
 
     # Register functs as a service handler listening at busname and ServiceName
-    serv3_plain         = Service("Except1Service", ExceptionFunc,          busname=busname, numthreads=1, startonwith=True)
-    serv3_minimal_class = Service("Except2Service", OnlyMessageHandling,    busname=busname, numthreads=1, startonwith=True, 
+    serv3_plain         = Service("Except1Service", ExceptionFunc,          busname=busname, numthreads=1)
+    serv3_minimal_class = Service("Except2Service", OnlyMessageHandling,    busname=busname, numthreads=1,
                                   handler_args={"function" : ExceptionFunc})
-    serv3_full_class    = Service("Except3Service", FullMessageHandling,    busname=busname, numthreads=1, startonwith=True, 
+    serv3_full_class    = Service("Except3Service", FullMessageHandling,    busname=busname, numthreads=1,
                                   handler_args={"function" : ExceptionFunc})
-    serv3_failing_class = Service("Except4Service", FailingMessageHandling, busname=busname, numthreads=1, startonwith=True, 
+    serv3_failing_class = Service("Except4Service", FailingMessageHandling, busname=busname, numthreads=1,
                                   handler_args={"function" : ExceptionFunc})
 
     # 'with' sets up the connection context and defines the scope of the service.
