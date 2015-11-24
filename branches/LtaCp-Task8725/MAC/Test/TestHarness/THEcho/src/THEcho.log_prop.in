@@ -1,0 +1,21 @@
+# add your custom loggers and appenders here
+#
+
+log4cplus.rootLogger=ERROR, STDOUT
+log4cplus.additivity.ASTRON=FALSE
+
+log4cplus.appender.STDOUT=log4cplus::ConsoleAppender
+log4cplus.appender.STDOUT.layout=log4cplus::PatternLayout
+log4cplus.appender.STDOUT.layout.ConversionPattern=%D{%d-%m-%y %H:%M:%S} %-5p %c{3} - %m [%.25l]%n
+
+log4cplus.appender.FILE=log4cplus::RollingFileAppender
+log4cplus.appender.FILE.File=output_${ENV_VAR}.log
+log4cplus.appender.FILE.MaxFileSize=5MB
+log4cplus.appender.FILE.MaxBackupIndex=5
+log4cplus.appender.FILE.layout=log4cplus::PatternLayout
+log4cplus.appender.FILE.layout.ConversionPattern=%D{%d-%m-%y %H:%M:%S} %-5p %c{3} - %m [%.25l]%n
+
+log4cplus.additivity.MAC=FALSE
+log4cplus.logger.MAC=ERROR, STDOUT
+log4cplus.additivity.MAC.Test.TestHarness=FALSE
+log4cplus.logger.MAC.Test.TestHarness.THEcho=INFO, STDOUT, FILE
