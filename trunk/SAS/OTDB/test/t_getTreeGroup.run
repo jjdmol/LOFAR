@@ -2,6 +2,16 @@
 # constants
 DBHOST=sas099.control.lofar
 
+# This test requires Python 2.7+
+python -c 'import sys, os; sys.exit(1 - int(sys.version >= "2.7"))' || exit 3
+
+# This test requires access to DBHOST
+ping -w 1 -c 1 $DBHOST || exit 3
+
+# This test requires PostGres tooling
+which dropdb || exit 3
+which psql   || exit 3
+
 # Setup a clean database with predefined content
 dropdb -U postgres -h ${DBHOST} unittest_db
 gzip -dc $srcdir/unittest_db.dump.gz | psql -U postgres -h ${DBHOST} -f -
