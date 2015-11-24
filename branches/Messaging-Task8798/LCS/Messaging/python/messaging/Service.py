@@ -117,8 +117,8 @@ class Service(object):
         self.options          = {"capacity": self._numthreads*20}
         options               = kwargs.pop("options", None)
         self.parsefullmessage = kwargs.pop("parsefullmessage", False)
-        self.startonwith      = kwargs.pop("startonwith", None)
-        self.handler_args     = kwargs.pop("handler_args", None)
+        self.startonwith      = kwargs.pop("startonwith", True)
+        self.handler_args     = kwargs.pop("handler_args", {})
         self.listening        = False
         if len(kwargs):
             raise AttributeError("Unexpected argument passed to Service class: %s", kwargs)
