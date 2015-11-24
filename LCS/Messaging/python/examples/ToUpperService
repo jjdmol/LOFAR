@@ -28,7 +28,7 @@ ServiceName="ToUpper"
 BusName="simpletest"
 
 # Register function as a service handler listeneing at Bus BusName and ServiceName
-myserv = Service(BusName,ServiceName,ToUpper,numthreads=4,startonwith=True)
+myserv = Service(BusName,ServiceName,ToUpper,numthreads=4)
 
 # 'with' sets up the connection context and defines the scope of the service.
 with myserv:
