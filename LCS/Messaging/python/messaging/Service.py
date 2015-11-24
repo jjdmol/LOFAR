@@ -210,19 +210,6 @@ class Service(object):
             self.connected = False
 
 
-    def wait_for_interrupt(self):
-        """
-        Useful (low cpu load) loop that waits for keyboard interrupt.
-        """
-        looping = True
-        while looping:
-            try:
-                time.sleep(10)
-            except KeyboardInterrupt:
-                looping = False
-                logger.info("Keyboard interrupt received.")
-
-
     def __enter__(self):
         """
         Internal use only. Handles scope with keyword 'with'
