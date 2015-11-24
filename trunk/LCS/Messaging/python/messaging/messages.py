@@ -37,7 +37,7 @@ _QPID_MESSAGE_FIELDS = set([
     'priority', 'properties', 'reply_to', 'subject', 'ttl', 'user_id'])
 
 
-def validate_qpid_message(qmsg):
+def _validate_qpid_message(qmsg):
     """
     Validate Qpid message `qmsg`. A Qpid message is required to contain the
     following properties in order to be considered valid:
@@ -96,34 +96,6 @@ def to_qpid_message(msg):
         return msg.qpid_msg
     raise InvalidMessage("Invalid message type: %r" % type(msg))
 
-def analyze_args(args,kwargs):
-    HasKwArgs=(len(kwargs)>0)
-    # more than one argument given? 
-    HasMultipleArgs=(len(args)> 1 ) or (( len(kwargs)>0 ) and (len(args)>0))
-    return (HasMultipleArgs,HasKwArgs)
-
-def args_as_content(*args,**kwargs):
-    """
-    Convert positional args and named args into a message body.
-    :param msg: Message to be converted into a Qpid message.
-    :return: Qpid message
-    :raise InvalidMessage if `msg` cannot be converted into a Qpid message.
-    """
-    HasMultipleArgs,HasKwArgs = analyze_args(args, kwargs)
-    if HasMultipleArgs:
-        # convert arguments to list
-        Content = list(args)
-        if HasKwArgs:
-            # if both positional and named arguments then
-            # we add the kwargs dictionary as the last item in the list
-            Content.append(kwargs)
-        return Content
-    if HasKwArgs:
-        # we have only one named argument
-        return kwargs
-    # we have only one positional argument
-    return list(args)[0]
-
 class MessageFactory(Factory):
     """
     Factory to produce LofarMessage objects.
@@ -139,7 +111,7 @@ class MessageFactory(Factory):
         message `qmsg` contains a type name that is not registered with the
         factory.
         """
-        validate_qpid_message(qmsg)
+        _validate_qpid_message(qmsg)
         clsid = qmsg.properties['MessageType']
         msg = super(MessageFactory, self).create(clsid, qmsg)
         if msg is None:
@@ -181,12 +153,12 @@ class LofarMessage(object):
         raised.
         """
         if isinstance(content, qpid.messaging.Message):
-            validate_qpid_message(content)
+            _validate_qpid_message(content)
             self.__dict__['_qpid_msg'] = content
         else:
             try:
                 if isinstance(content,basestring):
-		    self.__dict__['_qpid_msg'] = qpid.messaging.Message(unicode(content))
+                    self.__dict__['_qpid_msg'] = qpid.messaging.Message(unicode(content))
                 else:
                     self.__dict__['_qpid_msg'] = qpid.messaging.Message(content)
 
@@ -254,15 +226,22 @@ class LofarMessage(object):
         Print all the properties of the current message. Make a distinction
         between user-defined properties and standard Qpid properties.
         """
+        print str(self)
+
+    def __str__(self):
+        result = ''
         for (key, value) in \
                 self.__dict__['_qpid_msg'].__dict__['properties'].iteritems():
-            print key, ":", value
-        print "---"
+            result += "%s: %s\n" % (key, value)
+
+        result += "---\n"
+
         for key in _QPID_MESSAGE_FIELDS:
             if (key != 'properties' and
-                        self.__dict__['_qpid_msg'].__dict__[key] is not None):
-                print key, ":", self.__dict__['_qpid_msg'].__dict__[key]
-        print "==="
+                    self.__dict__['_qpid_msg'].__dict__[key] is not None):
+                result += "%s:%s\n" % (key, self.__dict__['_qpid_msg'].__dict__[key])
+        result += "===\n"
+        return result
 
 
 class EventMessage(LofarMessage):
@@ -308,6 +287,7 @@ class RequestMessage(LofarMessage):
     subsystem. A service message must contain a valid ``ReplyTo`` property.
     """
 
+    #TODO: refactor args kwargs quirks
     def __init__(self, content=None, reply_to=None,**kwargs): #reply_to=None, has_args=None, has_kwargs=None):
         super(RequestMessage, self).__init__(content)
         if (reply_to!=None):
@@ -328,7 +308,7 @@ class ReplyMessage(LofarMessage):
     def __init__(self, content=None, reply_to=None):
         super(ReplyMessage, self).__init__(content)
         if (reply_to!=None):
-          self.subject = reply_to
+            self.subject = reply_to
 
 
 
