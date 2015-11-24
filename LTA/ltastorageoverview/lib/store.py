@@ -104,6 +104,26 @@ class LTAStorageDb:
 
             return dir_id
 
+    def insertSubDirectories(self, subDirectoryNames, parentDirId, directoryLastVisitTime = None):
+        with sqlite3.connect(self.db_filename) as conn:
+            cursor = conn.cursor()
+
+            cursor.executemany('insert into directory (name, parent_directory_id) values (?, ?)',
+                             [(name, parentDirId) for name in subDirectoryNames])
+
+            if directoryLastVisitTime:
+                subDirIds = cursor.execute('''select id from directory
+                    where parent_directory_id = %s
+                    and name in (%s)''' % (parentDirId, ', '.join(["'%s'" % x for x in subDirectoryNames]))).fetchall()
+
+                subDirIds = [x[0] for x in subDirIds]
+
+                for subDirId in subDirIds:
+                    cursor.execute('''insert into scraper_last_directory_visit (visit_date, directory_id)
+                    values (?, ?)''', (directoryLastVisitTime, subDirId))
+
+            conn.commit()
+
     def insertFileInfo(self, name, size, creation_date, parent_directory_id):
         with sqlite3.connect(self.db_filename) as conn:
             cursor = conn.cursor()

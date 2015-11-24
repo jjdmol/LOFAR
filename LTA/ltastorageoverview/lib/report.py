@@ -30,7 +30,10 @@ from ltastorageoverview.utils import humanreadablesize
 from ltastorageoverview.utils import monthRanges
 
 def main(argv):
-    db = store.LTAStorageDb('ltastorageoverview.sqlite')
+    dbpath = argv[0] if argv else 'ltastorageoverview.sqlite'
+    print 'Report for ' + dbpath
+
+    db = store.LTAStorageDb(dbpath)
 
     sites = db.sites()
 
