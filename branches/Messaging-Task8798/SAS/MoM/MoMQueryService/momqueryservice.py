@@ -116,7 +116,6 @@ def createService(busname='momqueryservice',
     return Service('GetProjectDetails',
                    handler,
                    busname=busname,
-                   startonwith=True,
                    numthreads=1,
                    handler_args={'momreadonly_passwd':momreadonly_passwd})
 

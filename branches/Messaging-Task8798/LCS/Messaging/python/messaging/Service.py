@@ -89,7 +89,6 @@ class Service(object):
        exclusive <bool>        To create eclusive access to this messagebus. Default:True
        numthreads <int>        Amount of threads processing messages. Default:1
        parsefullmessage <bool> Pass full message of only message content to the service handler. Default:False.
-       startonwith <bool>      Automatically start listening when in scope using 'with'
        verbose <bool>          Show debug text. Default:False
        handler_args <dict>     Arguments that are passed to the constructor of the servicehandler is case the servicehandler
                                is a class in stead of a function.
@@ -117,7 +116,6 @@ class Service(object):
         self.options          = {"capacity": self._numthreads*20}
         options               = kwargs.pop("options", None)
         self.parsefullmessage = kwargs.pop("parsefullmessage", False)
-        self.startonwith      = kwargs.pop("startonwith", True)
         self.handler_args     = kwargs.pop("handler_args", {})
         self.listening        = False
         if len(kwargs):
