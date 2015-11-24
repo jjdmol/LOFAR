@@ -68,6 +68,14 @@ class SrmlsException(Exception):
         return "%s failed with code %d.\nstdout: %s\nstderr: %s" % \
                 (self.command, self.exitcode, self.stdout, self.stderr)
 
+class ParseException(Exception):
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return self.message
+
+
 class Location:
     '''A Location is a directory at a storage site which can be queried with getResult()'''
     def __init__(self, srmurl, directory):
@@ -125,7 +133,7 @@ class Location:
         loglines = logs[0].split('\n')
 
         # parse logs from succesfull command
-        if p.returncode == 0 and len(loglines) > 1 and "FAILURE" not in logs[0]:
+        if p.returncode == 0 and len(loglines) > 1:
             entries = []
             entry = []
 
@@ -144,16 +152,19 @@ class Location:
                 entryType = lines[-1].strip().split('Type:')[-1].strip()
 
                 if len(pathLineItems) < 2:
-                    logger.error("path line shorter than expected: %s" % pathLine)
-                    continue
+                    raise ParseException("path line shorter than expected: %s" % pathLine)
 
                 if entryType.lower() == 'directory':
                     dirname = pathLineItems[1]
                     if dirname.rstrip('/') == self.directory.rstrip('/'):
                         # skip current directory
                         continue
-                    else:
-                        foundDirectories.append(Location(self.srmurl, dirname))
+
+                    if len(dirname) < 1 or not dirname[0] == '/':
+                        raise ParseException("Could not parse dirname from line: %s\nloglines:\n%s"
+                            % (pathLineItems[1], logs[0]))
+
+                    foundDirectories.append(Location(self.srmurl, dirname))
                 elif entryType.lower() == 'file':
                     try:
                         filesize = int(pathLineItems[0])
@@ -169,7 +180,8 @@ class Location:
                         timestamp = datetime.datetime.strptime(timestamppart + ' UTC', '%Y/%m/%d %H:%M:%S %Z')
                         foundFiles.append(FileInfo(filename, filesize, timestamp))
                     except Exception as e:
-                        logger.exception(str(e))
+                        raise ParseException("Could not parse fileproperies:\n%s\nloglines:\n%s"
+                            % (str(e), logs[0]))
                 else:
                     logger.error("Unknown type: %s" % entryType)
 
@@ -252,39 +264,43 @@ class ResultGetterThread(threading.Thread):
 
             location = Location(srm_url, dir_name)
 
-            # get results... long blocking
-            result = location.getResult()
-            logger.info(result)
+            try:
+                # get results... long blocking
+                result = location.getResult()
+                logger.info(result)
 
-            with lock:
-                self.db.insertFileInfos([(file.filename, file.size, file.created_at, dir_id) for file in result.files])
+                with lock:
+                    self.db.insertFileInfos([(file.filename, file.size, file.created_at, dir_id) for file in result.files])
 
-                for subDirLocation in result.subDirectories:
+                    # skip empty nikhef dirs
+                    filteredSubDirectories = [loc for loc in result.subDirectories
+                                            if not ('nikhef' in loc.srmurl and 'generated' in loc.directory) ]
 
-                    if ('nikhef' in subDirLocation.srmurl and 'generated' in subDirLocation.directory):
-                        # skip empty nikhef dirs
-                        continue
+                    # filteredSubDirectories = [loc for loc in filteredSubDirectories
+                    #                        if not 'lc3_007' in loc.directory ]
 
-                    #if ('lc3_007' in subDirLocation.directory):
-                        ## skip lobos dirs for now...
-                        #continue
+                    subDirectoryNames = [loc.directory for loc in filteredSubDirectories]
 
-                    subdir_id = self.db.insertSubDirectory(dir_id, subDirLocation.directory)
-                    self.db.updateDirectoryLastVisitTime(subdir_id, datetime.datetime.utcnow() - datetime.timedelta(days=1000))
+                    if subDirectoryNames:
+                        self.db.insertSubDirectories(subDirectoryNames, dir_id,
+                                                    datetime.datetime.utcnow() - datetime.timedelta(days=1000))
 
-        except SrmlsException as e:
-            logger.error(str(e))
+            except (SrmlsException, ParseException) as e:
+                logger.error('Error while scanning %s\n%s' % (location.path(), str(e)))
 
-            logger.info('rescheduling dir %d for new visit.' % (self.dir_id))
-            self.db.updateDirectoryLastVisitTime(self.dir_id, datetime.datetime.utcnow() - datetime.timedelta(days=1000))
+                logger.info('Rescheduling %s for new visit.' % (location.path(),))
+                self.db.updateDirectoryLastVisitTime(self.dir_id, datetime.datetime.utcnow() - datetime.timedelta(days=1000))
 
         except Exception as e:
             logger.error(str(e))
 
+            logger.info('Rescheduling dir_id %d for new visit.' % (self.dir_id,))
+            self.db.updateDirectoryLastVisitTime(self.dir_id, datetime.datetime.utcnow() - datetime.timedelta(days=1000))
+
 def main(argv):
     '''the main function scanning all locations and gathering the results'''
 
-    db = store.LTAStorageDb('ltastorageoverview.sqlite')
+    db = store.LTAStorageDb('/data2/ltastorageoverview.sqlite')
 
     if not db.sites():
         db.insertSite('target', 'srm://srm.target.rug.nl:8444')
@@ -337,7 +353,7 @@ def main(argv):
             # do not overload this host system
             while numLocationsInQueues() > 0 and (totalNumGetters() <= 4 or
                                                   (os.getloadavg()[0] < 3*multiprocessing.cpu_count() and
-                                                  totalNumGetters() < 2*multiprocessing.cpu_count())):
+                                                  totalNumGetters() < 2.5*multiprocessing.cpu_count())):
 
                 with lock:
                     sitesStats = db.visitStats(datetime.datetime.utcnow() - datetime.timedelta(days=1))
