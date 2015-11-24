@@ -23,6 +23,8 @@ import sys
 import logging
 from mysql import connector
 from lofar.messaging import Service
+from lofar.messaging.Service import MessageHandlerInterface
+from lofar.common.util import waitForInterrupt
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 logger=logging.getLogger("momqueryservice")
@@ -56,14 +58,19 @@ class MoMDatabaseWrapper:
         return cursor.fetchall()
 
 
-class ProjectDetailsQueryHandler:
+class ProjectDetailsQueryHandler(MessageHandlerInterface):
     '''handler class for details query in mom db
     :param MoMDatabaseWrapper momdb inject database access via wrapper
     '''
-    def __init__(self, momdb):
-        self.momdb = momdb
+    def __init__(self, **kwargs):
+        MessageHandlerInterface.__init__(self, **kwargs)
+        self.momreadonly_passwd = kwargs.pop("momreadonly_passwd", '')
+        self.kwargs = kwargs
 
-    def __call__(self, text):
+    def prepare_loop(self):
+        self.momdb = MoMDatabaseWrapper(self.momreadonly_passwd)
+
+    def handle_message(self, text):
         '''The actual handler function.
         Parses the message text, converts it to csv id string,
         looks up the project(s) details via the momdb wrapper
@@ -96,23 +103,22 @@ class ProjectDetailsQueryHandler:
 
 def createService(busname='momqueryservice',
                   momreadonly_passwd='',
-                  momdb=None):
+                  handler=None):
     '''create the GetProjectDetails on given busname
     :param string busname: name of the bus on which this service listens
     :param string momreadonly_passwd: the momreadonly passwd.
-    :param MoMDatabaseWrapper momdb: a MoM db wrapper like object which can do
-    the actual query. If None provide, the default MoMDatabaseWrapper is created.
+    :param ProjectDetailsQueryHandler handler: ProjectDetailsQueryHandler class Type, or mock like type
     :rtype: lofar.messaging.Service'''
 
-    if not momdb:
-        momdb = MoMDatabaseWrapper(momreadonly_passwd)
+    if not handler:
+        handler = ProjectDetailsQueryHandler
 
-    handler = ProjectDetailsQueryHandler(momdb)
-    return Service(busname,
-                   'GetProjectDetails',
+    return Service('GetProjectDetails',
                    handler,
+                   busname=busname,
                    startonwith=True,
-                   numthreads=1)
+                   numthreads=1,
+                   handler_args={'momreadonly_passwd':momreadonly_passwd})
 
 
 def main():
@@ -127,8 +133,8 @@ def main():
     from lofar.mom.momqueryservice.config import momreadonly_passwd
 
     # start the service and listen.
-    with createService('momqueryservice', momreadonly_passwd) as service:
-        service.WaitForInterrupt()
+    with createService('momqueryservice', momreadonly_passwd):
+        waitForInterrupt()
 
 if __name__ == '__main__':
     main()

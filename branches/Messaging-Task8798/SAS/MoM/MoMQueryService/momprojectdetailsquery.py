@@ -21,7 +21,7 @@ def getProjectDetails(ids, busname='momqueryservice'):
     ids = [str(x) for x in ids]
     ids_string = ', '.join(ids)
 
-    with RPC(busname, 'GetProjectDetails', timeout=10) as getProjectDetails:
+    with RPC('GetProjectDetails', busname=busname, timeout=10) as getProjectDetails:
         res, status = getProjectDetails(ids_string)
 
         if status != 'OK':
