@@ -19,6 +19,7 @@ file(GLOB_RECURSE angular_moment_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} stat
 file(GLOB_RECURSE moment_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/moment/*)
 file(GLOB_RECURSE bootstrap_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/css/bootstrap.min.css)
 file(GLOB_RECURSE fonts_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/fonts/*)
+file(GLOB_RECURSE utils_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/utils/*)
 
 set(app_files
     static/favicon.ico
@@ -42,6 +43,7 @@ set(web_files
     ${moment_files}
     ${bootstrap_files}
     ${fonts_files}
+    ${utils_files}
     ${app_files})
 
 install(FILES ${web_files}
