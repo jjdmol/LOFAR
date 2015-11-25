@@ -13,6 +13,12 @@
 <body>
     <script type="text/javascript">
         $(function () {
+            Highcharts.setOptions({
+                global: {
+                    useUTC: true
+                }
+            });
+
             $('#usage_piechart_container').highcharts({
                 chart: {
                 plotBackgroundColor: null,
@@ -76,7 +82,7 @@
 
                         $.each(this.points, function () {
                             s += '<br/><b>' + this.series.name + '</b>: ' +
-                                Highcharts.numberFormat(this.y / 1e15, 1, '.') + ' PB';
+                                Highcharts.numberFormat(this.y / 1e15, 2, '.') + ' PB';
                         });
 
                         return s;
@@ -130,7 +136,7 @@
 
                         $.each(this.points, function () {
                             s += '<br/><b>' + this.series.name + '</b>: ' +
-                                Highcharts.numberFormat(this.y / 1e12, 1, '.') + ' TB';
+                                Highcharts.numberFormat(this.y / 1e12, 2, '.') + ' TB';
                         });
 
                         return s;
@@ -140,8 +146,9 @@
                 plotOptions: {
                     column: {
                         stacking:'normal',
-                        pointPadding: 0.025,
-                        groupPadding: 0.05,
+                        pointPadding: 0.01,
+                        groupPadding: 0.0,
+                        pointPlacement: -0.48
                       }
                 },
                 series: {{deltas_per_month_series|safe}}
