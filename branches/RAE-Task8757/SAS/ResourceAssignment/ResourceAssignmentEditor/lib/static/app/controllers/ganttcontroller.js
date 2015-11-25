@@ -53,21 +53,30 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
 
             api.core.on.ready($scope, function () {
                     api.tasks.on.moveEnd($scope, moveHandler);
+                    api.tasks.on.resizeEnd($scope, moveHandler);
                 }
             );
         }
     };
 
-    function moveHandler(task, fromRow)
+    function moveHandler(item)
     {
-        if(task.row.model.name.startsWith('group')) {
+        var taskId = undefined;
+        if(item.row.model.id.startsWith('group')) {
+            var claimGroupId = item.model.id;
+            var claimGroup = $scope.dataService.resourceGroupClaimDict[claimGroupId];
+            taskId = claimGroup.taskId;
         }
         else {
-            var claimId = task.model.id;
+            var claimId = item.model.id;
             var claim = $scope.dataService.resourceClaimDict[claimId];
-            var t = $scope.dataService.taskDict[claim.taskId];
-            t.from = task.model.from._d.toISOString();
-            t.to = task.model.to._d.toISOString();
+            taskId = claim.taskId;
+        }
+        if(taskId) {
+            var task = $scope.dataService.taskDict[taskId];
+            task.from = item.model.from._d.toISOString();
+            task.to = item.model.to._d.toISOString();
+            $scope.dataService.putTask(task);
         }
     };
 
@@ -115,7 +124,7 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
             if(numGroups > 0) {
                 for(var j = 0; j < numGroups; j++) {
                     var parentRowId = 'group_' + groupIds[j];
-                    var resourceRowId = 'group_' + groupIds[j] + '_resource_' + resource.id;
+                    var resourceRowId = 'resource_' + resource.id + '_group_' + groupIds[j];
                     //make resource row child of group row
                     ganntRowsDict[resourceRowId] = {
                         'id': resourceRowId,
@@ -172,7 +181,7 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
 
                 if(numGroups > 0) {
                     for(var j = 0; j < numGroups; j++) {
-                        var resourceRowId = 'group_' + groupIds[j] + '_resource_' + claim.resourceId;
+                        var resourceRowId = 'resource_' + claim.resourceId + '_group_' + groupIds[j];
                         var ganntRow = ganntRowsDict[resourceRowId];
                         if(ganntRow)
                         {
@@ -214,15 +223,15 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
         if(self.doInitialCollapse && numResources && numResourceGroups)
         {
             doInitialCollapse = false;
-            setTimeout(function() { $scope.api.tree.collapseAll(); }, 50);
+//             setTimeout(function() { $scope.api.tree.collapseAll(); }, 50);
         }
     };
 
-    $scope.$watch('dataService.tasks', updateGanttData);
+    $scope.$watch('dataService.tasks', updateGanttData, true);
     $scope.$watch('dataService.resources', updateGanttData);
-    $scope.$watch('dataService.resourceClaims', updateGanttData);
+    $scope.$watch('dataService.resourceClaims', updateGanttData, true);
     $scope.$watch('dataService.resourceGroups', updateGanttData);
-    $scope.$watch('dataService.resourceGroupClaims', updateGanttData);
+    $scope.$watch('dataService.resourceGroupClaims', updateGanttData, true);
     $scope.$watch('dataService.filteredTaskDict', updateGanttData);
 }
 ]);
