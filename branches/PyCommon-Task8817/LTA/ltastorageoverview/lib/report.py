@@ -26,7 +26,7 @@ import sys
 import os
 import os.path
 from ltastorageoverview import store
-from ltastorageoverview.utils import humanreadablesize
+from lofar.common.util import humanreadablesize
 from ltastorageoverview.utils import monthRanges
 
 def main(argv):
