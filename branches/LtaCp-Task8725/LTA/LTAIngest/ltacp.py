@@ -210,6 +210,10 @@ def execute(cmd, return_output=False):
 def srmrm(surl):
     return execute(['srmrm', surl])
 
+# remove (empty) directory from srm
+def srmrmdir(surl):
+    return execute(['srmrmdir', surl])
+
 # remove file from srm
 def srmls_l(surl):
     return execute(['srmls', '-l', surl], return_output=True)
