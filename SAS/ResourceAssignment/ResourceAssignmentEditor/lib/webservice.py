@@ -26,6 +26,8 @@ import sys
 import os
 import json
 import time
+from collections import deque
+from threading import Condition
 from datetime import datetime
 from dateutil import parser
 from flask import Flask
@@ -102,6 +104,9 @@ def getTask(task_id):
 
     return jsonify({'task': None})
 
+_changes = []
+changedCondition = Condition()
+
 @app.route('/rest/tasks/<int:task_id>', methods=['PUT'])
 def putTask(task_id):
     if 'Content-Type' in request.headers and \
@@ -120,6 +125,42 @@ def putTask(task_id):
             if 'to' in updatedTask:
                 task['to'] = parser.parse(updatedTask['to'])
 
+            taskResourceClaims = [rc for rc in resourceClaims if rc['taskId'] == task_id]
+
+            for rc in taskResourceClaims:
+                rc['startTime'] = task['from']
+                rc['endTime'] = task['to']
+
+            taskResourceGroupClaims = [rgc for rgc in resourceGroupClaims if rgc['taskId'] == task_id]
+
+            for rgc in taskResourceGroupClaims:
+                rgc['startTime'] = task['from']
+                rgc['endTime'] = task['to']
+
+
+            with changedCondition:
+                _changes.append({'changeType': 'update',
+                                'timestamp': datetime.utcnow().isoformat(),
+                                'objectType': 'task',
+                                'value': task
+                                })
+
+                for rc in taskResourceClaims:
+                    _changes.append({'changeType': 'update',
+                                    'timestamp': datetime.utcnow().isoformat(),
+                                    'objectType': 'resourceClaim',
+                                    'value': rc
+                                    })
+
+                for rgc in taskResourceGroupClaims:
+                    _changes.append({'changeType': 'update',
+                                    'timestamp': datetime.utcnow().isoformat(),
+                                    'objectType': 'resourceGroupClaim',
+                                    'value': rgc
+                                    })
+
+                changedCondition.notifyAll()
+
             return "", 204
         except KeyError:
             abort(404)
@@ -137,19 +178,23 @@ def tasktypes():
 def taskstatustypes():
     return jsonify({'taskstatustypes': ['scheduled', 'approved', 'prescheduled', 'running', 'finished', 'aborted']})
 
-import random
+
+@app.route('/rest/updates/<since>')
+def getUpdateEventsSince(since):
+    with changedCondition:
+        while True:
+            changesSince = [c for c in _changes if c['timestamp'] > since]
+
+            if changesSince:
+                return jsonify({'changes': changesSince})
+
+            changedCondition.wait()
+
+    return jsonify({'changes': []})
 
 @app.route('/rest/updates')
 def getUpdateEvents():
-    # fake blocking while waiting for an event
-    time.sleep(random.randint(50, 5000)/1000.0)
-
-    # fake a changed event
-    # TODO: locking
-    # TODO: events should be stored in a buffer so we can give updates since a given timestamp
-    tasks[1]['from'] = datetime.utcnow()
-
-    return "There are updates!"
+    return getUpdateEventsSince(datetime.utcnow().isoformat())
 
 def main(argv=None, debug=False):
     '''Start the webserver'''
