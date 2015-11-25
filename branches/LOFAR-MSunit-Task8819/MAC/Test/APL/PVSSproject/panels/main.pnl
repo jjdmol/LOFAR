@@ -1,0 +1,1993 @@
+V 10
+1
+LANG:1 0 
+PANEL,403 106 994 514 N "_3DFace" 0
+"main()
+{
+  startThread( \"Simulation\" );
+}
+
+float GetRandomValue(
+  float fOffset,
+  float fSwing
+)
+{
+  float fRandom;
+  float fValue;
+  
+  fRandom = rand();
+  
+//  DebugN( \"fRand1=\" + fRandom );
+  fRandom = fRandom / 32767.0;
+//  DebugN( \"fRand2=\" + fRandom );
+  fRandom *= fSwing;
+//  DebugN( \"fRand3=\" + fRandom );
+  fRandom -= (fSwing / 2.0);
+//  DebugN( \"fRand4=\" + fRandom );
+      
+  fValue = fOffset + fRandom;
+//  DebugN( \"fValue=\" + fValue);
+
+  return fValue;
+}
+void Simulation()
+{
+  float fRandom;
+  
+  srand();
+  
+  while(1 ){
+    delay( 3, 0 );
+  
+  
+    dpSet(  \"System1:Simulation.Arm1\", GetRandomValue( 60, 10 ));
+    dpSet(  \"System1:Simulation.Arm2\", GetRandomValue( 2, 2 ));
+    dpSet(  \"System1:Simulation.Arm3\", GetRandomValue( 30, 8 ));
+    dpSet(  \"System1:Simulation.Arm4\", GetRandomValue( 80, 6 ));
+    dpSet(  \"System1:Simulation.Arm5\", GetRandomValue( 60, 10 ));
+    dpSet(  \"System1:Simulation.Arm6\", GetRandomValue( 70, 10 ));
+
+    dpSet(  \"System1:Simulation.DSP\", GetRandomValue( 60, 10 ));
+    dpSet(  \"System1:Simulation.DISK\", GetRandomValue( 90, 8 ));
+    dpSet(  \"System1:Simulation.CPU\", GetRandomValue( 20, 6 ));
+    
+  }
+}" 0
+EE E E 1 -1 -1 0  470 496
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 199
+"Border6"
+""
+1 390 498 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+90 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 3 "pictures/kaart_LOFAR_main_ZW.bmp" 13434828 E 390 0 990 514
+1 119 30 "" 0
+0
+1 120 30 "" 4
+0
+1 121 30 "" 1
+0
+1 122 31 "" 0
+0
+1 123 31 "" 4
+0
+1 124 31 "" 1
+0
+1 125 32 "" 0
+0
+1 126 32 "" 4
+0
+1 127 32 "" 1
+0
+1 128 33 "" 0
+0
+1 129 33 "" 4
+0
+1 130 33 "" 1
+0
+1 131 34 "" 0
+0
+1 132 34 "" 4
+0
+1 133 34 "" 1
+0
+2 134
+"Text1"
+""
+1 30 190 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+35 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 192 76 211
+0 2 0 "s" 0 0 0 192 0 0  32 192
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Arm1:
+30 135
+"Frame1"
+""
+1 20 348 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+36 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 20 160 380 350
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Network status
+2 136
+"Text2"
+""
+1 30 216 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+37 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 218 76 237
+0 2 0 "s" 0 0 0 192 0 0  32 218
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Arm2:
+2 137
+"Text3"
+""
+1 30 242 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+38 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 244 76 263
+0 2 0 "s" 0 0 0 192 0 0  32 244
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Arm3:
+2 138
+"Text4"
+""
+1 30 268 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+39 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 270 76 289
+0 2 0 "s" 0 0 0 192 0 0  32 270
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Arm4:
+2 139
+"Text5"
+""
+1 30 294 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+40 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 296 76 315
+0 2 0 "s" 0 0 0 192 0 0  32 296
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Arm5:
+2 140
+"Text6"
+""
+1 30 320 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+41 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 322 76 341
+0 2 0 "s" 0 0 0 192 0 0  32 322
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Arm6:
+1 141 35 "" 0
+0
+1 142 35 "" 4
+0
+1 143 35 "" 1
+0
+30 144
+"Frame2"
+""
+1 20 179 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+43 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 20 160 380 180
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 15 Network status:
+30 145
+"Frame3"
+""
+1 20 478 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+44 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 20 370 380 480
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 25 Central processor status:
+1 146 36 "" 0
+0
+1 147 36 "" 4
+0
+1 148 36 "" 1
+0
+2 149
+"Text7"
+""
+1 30 450 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+46 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 452 71 471
+0 2 0 "s" 0 0 0 192 0 0  32 452
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 CPU:
+2 150
+"Text8"
+""
+1 30 430 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+47 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 432 76 451
+0 2 0 "s" 0 0 0 192 0 0  32 432
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 DISK:
+2 151
+"Text9"
+""
+1 30 410 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+48 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 412 71 431
+0 2 0 "s" 0 0 0 192 0 0  32 412
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 DSP:
+1 152 37 "" 0
+0
+1 153 37 "" 4
+0
+1 154 37 "" 1
+0
+1 155 38 "" 0
+0
+1 156 38 "" 4
+0
+1 157 38 "" 1
+0
+30 158
+"Frame4"
+""
+1 20 389 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+51 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 20 370 380 390
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 25 Central processor status:
+30 159
+"Frame5"
+""
+1 20 146 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+52 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 20 20 380 150
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 Acquisition status:
+2 160
+"Text10"
+""
+1 30 50 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+53 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 52 161 71
+0 2 0 "s" 0 0 0 192 0 0  32 52
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 Available stations:
+2 161
+"Text11"
+""
+1 30 80 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+54 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 82 194 101
+0 2 0 "s" 0 0 0 192 0 0  32 82
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 23 Non-available stations:
+2 162
+"Text12"
+""
+1 30 110 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+55 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 112 197 131
+0 2 0 "s" 0 0 0 192 0 0  32 112
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 22 Disconnected stations:
+6 193
+"Border8"
+""
+1 406 107 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+84 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 1 "pictures/kompas.gif" 16777215 E 406 21 494 108
+2 194
+"Text26"
+""
+1 445 10 E E E 1 E 1 E N {255,255,255} E N {153,153,153} E E
+ E E
+85 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 447 12 455 24
+0 2 0 "s" 0 0 0 192 0 0  447 12
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 N
+2 195
+"Text27"
+""
+1 490 57 E E E 1 E 1 E N {255,255,255} E N {153,153,153} E E
+ E E
+86 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 492 59 500 71
+0 2 0 "s" 0 0 0 192 0 0  492 59
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 E
+2 196
+"Text28"
+""
+1 400 57 E E E 1 E 1 E N {255,255,255} E N {153,153,153} E E
+ E E
+87 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 402 59 410 71
+0 2 0 "s" 0 0 0 192 0 0  402 59
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 W
+2 197
+"Text29"
+""
+1 447 102 E E E 1 E 1 E N {255,255,255} E N {153,153,153} E E
+ E E
+88 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 449 104 457 116
+0 2 0 "s" 0 0 0 192 0 0  449 104
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 S
+7 241
+"Ellipse14"
+""
+1 658 212 E E E 1 E 1 E N "_WindowText" E N {102,102,102} E E
+ E E
+132 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_childPanelOn();
+}
+
+EP_childPanelOn()
+{
+  RootPanelOn(\"main_Drenthe.pnl\",
+      \"Drenthe\",
+      makeDynString(\"\"));
+}
+
+// SimpleCtrlScript {EP_childPanelOn}
+// Function {RootPanelOn}
+// File {main_Drenthe.pnl}
+// Panel {Drenthe}
+// Parent {}
+// Module {}
+// OffsetX {0}
+// OffsetY {0}
+// SimpleCtrlScriptEnd {EP_childPanelOn}
+" 0
+ 0 1 1 0 1 E U  3 0 8 1E 658 212 15 20
+10 242
+"Polyline12"
+""
+1 670 227 E E E 1 E 1 E N "STD_infoType_state_txt" E N "_Transparent" E E
+ E E
+133 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E U  0 E 191 670 227
+671 228
+671 231
+672 231
+672 233
+674 233
+674 236
+675 236
+675 238
+676 238
+676 239
+677 240
+677 241
+678 241
+678 243
+679 243
+679 245
+680 245
+680 246
+681 247
+681 248
+682 248
+682 249
+683 249
+683 250
+684 250
+684 253
+685 253
+685 254
+686 254
+686 256
+687 256
+687 257
+688 257
+688 258
+689 259
+689 261
+690 261
+690 262
+691 262
+691 265
+693 265
+693 266
+694 266
+694 268
+695 268
+695 269
+696 270
+696 271
+697 271
+697 272
+699 272
+699 274
+700 275
+701 275
+701 277
+703 277
+703 280
+705 280
+705 281
+706 281
+706 282
+707 282
+707 283
+708 283
+708 285
+709 285
+709 286
+710 286
+711 287
+712 287
+715 290
+716 290
+716 292
+718 292
+718 293
+719 293
+721 295
+722 295
+722 296
+723 296
+723 298
+725 298
+725 299
+726 299
+726 300
+727 300
+727 301
+728 301
+728 302
+729 302
+729 303
+730 303
+732 305
+733 305
+733 307
+734 307
+734 308
+735 308
+735 309
+737 309
+737 310
+738 310
+738 311
+739 312
+740 312
+740 314
+743 314
+743 316
+744 316
+745 317
+746 317
+747 318
+748 318
+748 319
+750 319
+750 320
+751 320
+751 321
+753 321
+753 322
+755 322
+755 323
+756 323
+757 324
+759 324
+759 325
+760 325
+760 326
+762 326
+762 327
+763 327
+763 328
+765 328
+765 329
+767 329
+767 330
+768 331
+773 331
+773 332
+776 332
+776 333
+777 333
+777 334
+781 334
+781 335
+783 335
+783 336
+785 336
+786 337
+787 337
+787 338
+788 338
+788 339
+791 339
+791 340
+793 340
+793 341
+796 341
+796 342
+799 342
+799 343
+800 343
+800 344
+805 344
+805 345
+807 345
+808 346
+814 346
+815 347
+816 347
+816 348
+823 348
+824 349
+830 349
+830 350
+832 350
+832 351
+839 351
+839 352
+842 352
+842 353
+846 353
+846 354
+901 354
+901 353
+903 353
+903 352
+904 352
+905 351
+923 351
+0
+10 243
+"Polyline13"
+""
+1 645 224 E E E 1 E 1 E N "STD_infoType_state_txt" E N "_Transparent" E E
+ E E
+134 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E U  0 E 182 645 224
+645 225
+642 225
+642 226
+641 227
+641 228
+640 228
+640 230
+639 230
+638 231
+638 232
+637 232
+637 233
+636 233
+636 234
+635 234
+635 235
+634 235
+634 236
+633 236
+633 237
+631 237
+631 238
+630 238
+630 240
+628 240
+628 241
+627 241
+627 242
+625 242
+625 244
+624 244
+624 245
+623 245
+623 247
+622 248
+622 249
+621 249
+621 250
+620 250
+620 252
+619 252
+619 253
+618 253
+618 256
+617 256
+617 257
+616 257
+616 258
+615 258
+615 260
+614 260
+614 261
+613 261
+613 262
+612 262
+612 264
+611 264
+611 265
+610 265
+610 267
+609 267
+609 268
+608 268
+608 270
+607 270
+607 272
+606 272
+606 273
+605 274
+605 275
+604 275
+604 277
+603 277
+603 279
+602 279
+602 281
+601 282
+601 284
+600 284
+600 285
+599 285
+598 286
+598 288
+597 288
+597 289
+596 289
+596 294
+595 294
+595 295
+594 295
+594 296
+593 296
+593 299
+592 299
+592 301
+591 301
+591 304
+590 304
+590 308
+589 308
+589 310
+588 311
+588 316
+587 316
+587 319
+586 320
+586 323
+585 324
+585 325
+584 325
+584 328
+583 328
+583 334
+582 335
+582 336
+581 337
+581 345
+580 345
+580 348
+579 348
+579 351
+578 351
+578 412
+579 413
+579 415
+580 415
+580 416
+581 416
+581 427
+582 427
+582 429
+583 429
+583 437
+584 437
+584 440
+585 440
+585 442
+586 442
+586 447
+587 447
+587 448
+588 448
+588 451
+589 451
+589 453
+590 453
+590 454
+591 454
+591 457
+592 457
+592 459
+593 460
+593 463
+594 463
+594 465
+595 465
+595 467
+596 467
+596 470
+597 470
+597 472
+598 472
+598 476
+599 476
+599 477
+600 478
+600 479
+601 479
+601 482
+602 482
+602 484
+603 484
+603 487
+604 487
+604 488
+605 489
+605 490
+606 490
+606 491
+608 491
+608 492
+0
+10 244
+"Polyline4"
+""
+1 645 203 E E E 1 E 1 E N "STD_infoType_state_txt" E N "_Transparent" E E
+ E E
+135 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E U  0 E 52 645 203
+643 203
+643 202
+640 202
+640 201
+637 201
+637 200
+634 200
+633 199
+627 199
+627 198
+625 198
+625 197
+615 197
+614 196
+612 196
+611 195
+604 195
+603 194
+600 194
+600 193
+581 193
+580 192
+569 192
+569 193
+566 193
+566 194
+563 194
+563 195
+546 195
+546 196
+543 196
+543 197
+538 197
+538 198
+534 198
+533 199
+529 199
+528 200
+528 201
+525 201
+525 202
+515 202
+515 203
+514 203
+514 204
+512 204
+511 205
+510 205
+509 206
+509 207
+506 207
+0
+10 245
+"Polyline6"
+""
+1 675 212 E E E 1 E 1 E N "AESfgPending" E N "_Transparent" E E
+ E E
+136 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E U  0 E 218 675 212
+689 212
+689 211
+696 211
+696 210
+697 210
+697 209
+702 209
+702 208
+706 208
+706 207
+709 207
+709 206
+715 206
+716 205
+718 205
+719 204
+724 204
+725 203
+726 203
+726 202
+731 202
+732 201
+734 201
+734 200
+736 200
+736 199
+740 199
+740 198
+741 198
+741 197
+744 197
+744 196
+746 196
+746 195
+748 195
+748 194
+751 194
+751 193
+753 193
+753 192
+757 192
+758 191
+760 191
+760 190
+761 190
+762 189
+763 189
+764 188
+765 188
+765 187
+768 187
+768 186
+769 185
+770 185
+770 184
+772 184
+772 183
+773 183
+773 182
+775 182
+775 181
+777 181
+777 180
+778 180
+778 179
+780 179
+780 177
+782 177
+782 176
+783 176
+783 174
+788 174
+788 173
+789 173
+789 172
+791 172
+791 171
+792 171
+792 170
+794 170
+794 169
+795 169
+795 168
+796 168
+796 167
+798 167
+798 166
+799 165
+800 165
+800 164
+801 164
+802 163
+802 162
+803 162
+803 160
+805 160
+805 158
+806 158
+806 157
+807 157
+807 156
+809 156
+809 155
+810 155
+810 154
+811 154
+811 153
+812 153
+812 152
+815 152
+815 151
+816 150
+817 150
+817 149
+818 149
+818 148
+819 148
+819 147
+820 147
+820 145
+822 145
+822 144
+823 144
+823 143
+825 141
+825 139
+827 137
+827 135
+828 135
+829 134
+829 133
+830 133
+830 132
+831 131
+831 130
+832 130
+833 129
+833 128
+835 128
+835 127
+836 126
+836 125
+837 125
+837 124
+838 123
+839 123
+839 121
+840 121
+840 120
+842 120
+842 118
+843 118
+843 117
+844 117
+844 116
+845 115
+846 115
+846 113
+847 113
+848 112
+848 110
+849 110
+849 109
+850 109
+850 108
+851 108
+851 107
+852 107
+852 105
+853 105
+853 103
+854 103
+854 101
+855 101
+855 100
+856 99
+856 98
+857 98
+857 96
+858 96
+858 95
+859 95
+859 92
+860 91
+860 89
+861 89
+861 88
+862 87
+862 83
+863 83
+863 81
+864 81
+864 78
+865 77
+865 76
+866 76
+866 73
+867 73
+867 70
+868 70
+868 68
+869 68
+869 62
+870 61
+870 58
+871 58
+871 47
+872 47
+872 46
+873 46
+873 44
+874 43
+874 30
+875 30
+875 28
+876 28
+876 22
+0
+10 246
+"Polyline8"
+""
+1 657 192 E E E 1 E 1 E N "STD_infoType_state_txt" E N "_Transparent" E E
+ E E
+137 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E U  0 E 28 657 192
+657 182
+656 182
+656 173
+655 172
+655 170
+654 170
+654 168
+653 168
+653 161
+652 160
+652 157
+651 157
+651 153
+650 153
+650 151
+649 151
+649 146
+648 146
+648 143
+647 143
+647 141
+646 140
+646 136
+645 136
+645 135
+644 135
+644 131
+0
+7 252
+"Ellipse2"
+""
+1 631 199 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+139 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 631 199 5 5
+7 253
+"Ellipse3"
+""
+1 605 194 E E E 1 E 1 E N "_WindowText" E N "alarmKamGingUnq" E E
+ E E
+140 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 605 194 5 5
+7 254
+"Ellipse4"
+""
+1 509 206 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+141 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 509 206 5 5
+7 255
+"Ellipse5"
+""
+1 568 193 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+142 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 568 193 5 5
+7 256
+"Ellipse6"
+""
+1 657 184 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+143 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 657 184 5 5
+7 257
+"Ellipse7"
+""
+1 656 167 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+144 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 656 167 5 5
+7 258
+"Ellipse8"
+""
+1 644 133 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+145 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 644 133 5 5
+7 259
+"Ellipse9"
+""
+1 687 211 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+146 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 687 211 5 5
+7 260
+"Ellipse10"
+""
+1 716 204 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+147 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 716 204 5 5
+7 261
+"Ellipse11"
+""
+1 754 192 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+148 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 754 192 5 5
+7 262
+"Ellipse12"
+""
+1 799 162 E E E 1 E 1 E N "_WindowText" E N "Lofar_maintenance" E E
+ E E
+149 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 799 162 5 5
+7 263
+"Ellipse13"
+""
+1 875 17 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+150 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 875 17 5 5
+7 264
+"Ellipse15"
+""
+1 854 99 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+151 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 854 99 5 5
+7 265
+"Ellipse16"
+""
+1 636 233 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+152 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 636 233 5 5
+7 266
+"Ellipse17"
+""
+1 617 254 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+153 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 617 254 5 5
+7 267
+"Ellipse18"
+""
+1 598 285 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+154 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 598 285 5 5
+7 268
+"Ellipse19"
+""
+1 675 240 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+155 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 675 240 5 5
+7 269
+"Ellipse20"
+""
+1 693 263 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+156 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 693 263 5 5
+7 270
+"Ellipse21"
+""
+1 724 297 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+157 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 724 297 5 5
+7 271
+"Ellipse1"
+""
+1 604 488 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+158 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 604 488 5 5
+7 272
+"Ellipse22"
+""
+1 582 333 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+159 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 582 333 5 5
+7 273
+"Ellipse23"
+""
+1 579 404 E E E 1 E 1 E N "_WindowText" E N "Lofar_maintenance" E E
+ E E
+160 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 579 404 5 5
+7 274
+"Ellipse24"
+""
+1 771 331 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+161 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 771 331 5 5
+7 275
+"Ellipse25"
+""
+1 842 351 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+162 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 842 351 5 5
+7 277
+"Ellipse27"
+""
+1 924 350 E E E 1 E 1 E N "_WindowText" E N "alarmKamGingUnq" E E
+ E E
+164 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 924 350 5 5
+2 279
+"Text25"
+""
+1 560 490 E E E 1 E 1 E N {255,255,255} E N "Lofar_background_dark" E E
+ E E
+165 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 562 492 588 506
+0 2 0 "s" 0 0 0 192 0 0  562 492
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Arm4
+2 280
+"Text13"
+""
+1 470 199 E E E 1 E 1 E N {255,255,255} E N "Lofar_background_dark" E E
+ E E
+166 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 472 201 498 215
+0 2 0 "s" 0 0 0 192 0 0  472 201
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Arm5
+2 281
+"Text14"
+""
+1 607 108 E E E 1 E 1 E N {255,255,255} E N "Lofar_background_dark" E E
+ E E
+167 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 609 110 635 124
+0 2 0 "s" 0 0 0 192 0 0  609 110
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Arm1
+2 282
+"Text15"
+""
+1 837 10 E E E 1 E 1 E N {255,255,255} E N "Lofar_background_dark" E E
+ E E
+168 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 839 12 865 26
+0 2 0 "s" 0 0 0 192 0 0  839 12
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Arm2
+2 283
+"Text16"
+""
+1 920 360 E E E 1 E 1 E N {255,255,255} E N "Lofar_background_dark" E E
+ E E
+169 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 922 362 948 376
+0 2 0 "s" 0 0 0 192 0 0  922 362
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Arm4
+14 163
+"TextField2"
+""
+1 210 40 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+56 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+208 38 362 68
+3 "s" 0 0 0 0 0 0 
+E
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+
+  if( dpSubStr( \"System1:Simulation.STATIONS_AVAILABLE:_online.._value\", DPSUB_DP_EL ) == \"\" )
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            \"System1:Simulation.STATIONS_AVAILABLE:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_textFieldInCB(string dp, int iNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, iNewValue, TRUE) );
+}
+
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {System1:Simulation.STATIONS_AVAILABLE}
+// DPConfig {:_online.._value}
+// DPType {int}
+// UseDPUnit {TRUE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+
+E
+14 164
+"TextField3"
+""
+1 210 70 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+57 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+208 68 362 98
+3 "s" 0 0 0 0 0 0 
+E
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+
+  if( dpSubStr( \"System1:Simulation.STATIONS_NON_AVAILABLE:_online.._value\", DPSUB_DP_EL ) == \"\" )
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            \"System1:Simulation.STATIONS_NON_AVAILABLE:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+EP_textFieldInCB(string dp, int iNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, iNewValue, TRUE) );
+}
+
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {System1:Simulation.STATIONS_NON_AVAILABLE}
+// DPConfig {:_online.._value}
+// DPType {int}
+// UseDPUnit {TRUE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+
+E
+14 278
+"TextField4"
+""
+1 210 100 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+165 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+208 98 362 128
+3 "s" 0 0 0 0 0 0 
+E
+"// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+
+  if( dpSubStr( \"System1:Simulation.STATIIONS_DISCONNECTED:_online.._value\", DPSUB_DP_EL ) == \"\" )
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            \"System1:Simulation.STATIIONS_DISCONNECTED:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+EP_textFieldInCB(string dp, int iNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, iNewValue, TRUE) );
+}
+
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {System1:Simulation.STATIIONS_DISCONNECTED}
+// DPConfig {:_online.._value}
+// DPType {int}
+// UseDPUnit {TRUE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+
+E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 30 "Group28"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 70 135 T 30 1 0 1  40 119  
+2
+"$DP""Simulation.Arm2"
+"$LIMIT""20"
+3 31 "Group30"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 70 160 T 31 1 0 1  40 121  
+2
+"$DP""Simulation.Arm3"
+"$LIMIT""20"
+3 32 "Group32"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 70 190 T 32 1 0 1  40 117  
+2
+"$DP""Simulation.Arm4"
+"$LIMIT""20"
+3 33 "Group34"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 70 220 T 33 1 0 1  40 113  
+2
+"$DP""Simulation.Arm5"
+"$LIMIT""20"
+3 34 "Group36"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 70 250 T 34 1 0 1  40 111  
+2
+"$DP""Simulation.Arm6"
+"$LIMIT""20"
+3 35 "Group38"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 100 358 T 42 1 0 1  10 -129  
+2
+"$DP""Simulation.Arm1"
+"$LIMIT""20"
+3 36 "Group40"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 100 267 T 45 1 0 1  10 219  
+2
+"$DP""Simulation.CPU"
+"$LIMIT""20"
+3 37 "Group42"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 100 440 T 49 1 0 1  10 26  
+2
+"$DP""Simulation.DISK"
+"$LIMIT""20"
+3 38 "Group44"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 100 420 T 50 1 0 1  10 26  
+2
+"$DP""Simulation.DSP"
+"$LIMIT""20"
+2 "Group32" 400 10 502 118
+5 197 196 195 194 193
+0
