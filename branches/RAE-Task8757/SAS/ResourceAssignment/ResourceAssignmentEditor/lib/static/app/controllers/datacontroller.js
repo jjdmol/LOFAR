@@ -141,9 +141,30 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
 
     self.subscribeToUpdates = function() {
         $http.get('/rest/updates', {timeout:300000}).success(function(result) {
-            //as demo, get updated tasks
-            //we should however parse the results for changes
-            self.getTasks();
+            for(var i = result.changes.length-1; i >=0; i--) {
+                var change = result.changes[i];
+
+                if(change.objectType == 'task') {
+                    var changedTask = change.value;
+                    var task = self.taskDict[changedTask.id];
+                    task.from = new Date(changedTask.from);
+                    task.to = new Date(changedTask.to);
+                }
+
+                if(change.objectType == 'resourceClaim') {
+                    var changedClaim = change.value;
+                    var claim = self.resourceClaimDict[changedClaim.id];
+                    claim.startTime = new Date(changedClaim.startTime);
+                    claim.endTime = new Date(changedClaim.endTime);
+                }
+
+                if(change.objectType == 'resourceGroupClaim') {
+                    var changedGroupClaim = change.value;
+                    var claim = self.resourceGroupClaimDict[changedGroupClaim.id];
+                    claim.startTime = new Date(changedGroupClaim.startTime);
+                    claim.endTime = new Date(changedGroupClaim.endTime);
+                }
+            }
 
             //and update again
             //TODO: implement update since previous update timestamp so we don't get any gaps.
