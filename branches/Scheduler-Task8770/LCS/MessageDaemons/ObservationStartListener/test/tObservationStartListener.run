@@ -1,0 +1,42 @@
+#!/bin/bash -e
+
+trap 'kill -9 $pid 2>/dev/null|| :' EXIT  # '|| :' avoids this kill from influencing exit status (i.e. test Passed/Failed)
+
+source MessageFuncs.sh  # generate and echo a unique QUEUE_PREFIX, create_queue (auto-del, but keeps our trap), send_msg
+
+QUEUE=tObservationStartListener  # NOTE: actual qpid queue name will be ${QUEUE_PREFIX}tObservationStartListener
+MSGDIR=tObservationStartListener-msgsavedir-$QUEUE_PREFIX  # avoid relative path if --daemon (-d) would be used
+EXEC=tObservationStartListener.in.execmock.sh              # idem on path
+LOGFILE=tObservationStartListener-${QUEUE_PREFIX}log       # idem on path
+
+create_queue $QUEUE  # NOTE: actual qpid queue name will be ${QUEUE_PREFIX}tObservationStartListener
+
+python tObservationStartListener.py --broker localhost --address "$QUEUE" --match-prefix 'node,yike' --msg-save-dir "$MSGDIR" --exec "$EXEC" --logfile "$LOGFILE" &
+pid=$!
+
+# Msg 1: Send incorrect message: ignore and continue
+send_msg $QUEUE "`cat tObservationStartListener.parset.incorrect.msg.xml`"
+
+# Msg 2: Send correct message that has no match: ignore and continue
+send_msg $QUEUE "`cat tObservationStartListener.parset.correct.nomatch.msg.xml`"
+
+# Msg 3: Send correct message that has some match: --exec script must be run (and continue)
+send_msg $QUEUE "`cat tObservationStartListener.parset.correct.match.msg.xml`"
+
+# Msg 4: Redo Msg 3
+send_msg $QUEUE "`cat tObservationStartListener.parset.correct.match.msg.xml`"
+
+sleep 0.5  # wait for executed program triggered by Msg 3 & 4 to finish
+kill -s SIGTERM $pid 2>/dev/null
+wait $pid || :  # mask exit status for bash -e
+echo
+
+echo 'Verifying output...'
+EXPECTED_SUBSTRING='L301010.parset.xml node000 node001 yikes002 yikes003.xxx.yyy.lofar'
+NR_CORRECT_MATCHES=`grep '[tObservationStartListener.in.execmock.sh]' "$LOGFILE" | grep "$EXPECTED_SUBSTRING" | wc -l`
+if [ $NR_CORRECT_MATCHES -eq 2 ]; then
+  echo "Found 2 entries from --exec passed script in $LOGFILE"
+else
+  echo "ERROR: Found $NR_CORRECT_MATCHES entries from --exec passed script, but expected 2 in $LOGFILE"
+  exit 1
+fi
