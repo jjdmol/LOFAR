@@ -20,6 +20,9 @@
 """Very basic messagebus router that routs the messages according to the settings in Router.conf
 """
 
+import logging
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+
 import lofar.messagebus.messagebus as messagebus
 import lofar.messagebus.message as message
 

@@ -10,6 +10,9 @@
 from lofar.messagebus.messagebus import FromBus, ToBus, MESSAGING_ENABLED
 from lofar.messagebus.message import Message, MessageContent
 
+import logging
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
+
 # Send a message (send MessageContent)
 tbus = ToBus("test")
 tmsg = MessageContent()
