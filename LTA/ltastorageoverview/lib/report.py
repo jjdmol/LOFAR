@@ -37,10 +37,19 @@ def main(argv):
 
     sites = db.sites()
 
-    print '\n*** TOTALS ***'
+    numFilesTotal = sum([db.numFilesInSite(s[0]) for s in sites])
+    totalFileSize = sum([db.totalFileSizeInSite(s[0]) for s in sites])
+
+    print '\n*** TOTALS *** #files=%s total_size=%s' % (humanreadablesize(numFilesTotal, ''),
+                                                        humanreadablesize(totalFileSize))
 
     for site in sites:
-        print '\n--- %s ---' % site[1]
+        numFilesInSite = db.numFilesInSite(site[0])
+        totalFileSizeInSite = db.totalFileSizeInSite(site[0])
+
+        print '\n--- %s ---  #files=%s total_size=%s' % (site[1],
+                                                         humanreadablesize(numFilesInSite, ''),
+                                                         humanreadablesize(totalFileSizeInSite))
 
         root_dirs = db.rootDirectoriesForSite(site[0])
 
@@ -76,23 +85,40 @@ def main(argv):
     print '\n\n*** CHANGES THIS MONTH %s ***' % monthbegin.strftime('%Y/%m')
 
     for site in sites:
-        print '\n--- %s ---' % site[1]
-
         root_dirs = db.rootDirectoriesForSite(site[0])
 
-        for root_dir in root_dirs:
+        numChangedFilesInSite = db.numFilesInSite(site[0],
+                                                  monthbegin,
+                                                  monthend)
 
+        if numChangedFilesInSite == 0:
+            print '\n--- %s --- None' % (site[1],)
+            continue
+
+        totalChangedFileSizeInSite = db.totalFileSizeInSite(site[0],
+                                                            monthbegin,
+                                                            monthend)
+
+        print '\n--- %s --- #files=%d total_size=%s' % (site[1],
+                                                        numChangedFilesInSite,
+                                                        humanreadablesize(totalChangedFileSizeInSite))
+
+        for root_dir in root_dirs:
             changedFiles = db.filesInTree(root_dir[0], monthbegin, monthend)
 
-            if len(changedFiles) == 0:
-                print "  %s None" % (root_dir[1])
-            else:
-                numFilesInTree = db.numFilesInTree(root_dir[0], monthbegin, monthend)
-                totalFileSizeInTree = db.totalFileSizeInTree(root_dir[0], monthbegin, monthend)
+            if len(changedFiles) > 0:
+                numFilesInTree = db.numFilesInTree(root_dir[0],
+                                                   monthbegin,
+                                                   monthend)
+                totalFileSizeInTree = db.totalFileSizeInTree(root_dir[0],
+                                                             monthbegin,
+                                                             monthend)
 
-                print "  %s #files=%d total_size=%s" % (root_dir[1], numFilesInTree, humanreadablesize(totalFileSizeInTree))
+                print "  %s #files=%d total_size=%s" % (root_dir[1],
+                                                        numFilesInTree,
+                                                        humanreadablesize(totalFileSizeInTree))
 
-                # filter unique dirs
+                # filter unique dirs containing changed files
                 dirsWithChangedFiles = set([(x[0], x[1]) for x in changedFiles])
 
                 # sort by name
