@@ -34,9 +34,6 @@ import atexit
 broker="127.0.0.1" 
 options="create:never"
 
-# Define logging. Until we have a python loging framework, we'll have
-# to do any initialising here
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 logger=logging.getLogger("MessageBus")
 
 class BusException(Exception):
