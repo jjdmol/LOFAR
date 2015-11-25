@@ -3,7 +3,8 @@
 var app = angular.module('raeApp',
                          ['DataControllerMod',
                          'GanttControllerMod',
-                         'GridControllerMod']);
+                         'GridControllerMod',
+                         'ui.layout']);
 
 app.config(['$compileProvider', function ($compileProvider) {
     $compileProvider.debugInfoEnabled(false);
