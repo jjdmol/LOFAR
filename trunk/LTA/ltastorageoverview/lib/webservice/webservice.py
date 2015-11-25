@@ -36,7 +36,7 @@ from ltastorageoverview.utils import monthRanges
 
 app = Flask('LTA storage overview')
 app.config.root_path = os.path.dirname(__file__)
-db = store.LTAStorageDb('../ltastorageoverview.sqlite')
+db = None
 
 @app.route('/')
 @app.route('/index.html')
@@ -62,8 +62,9 @@ def index():
     min_date = datetime(2012, 1, 1)
     month_ranges = monthRanges(min_date, max_date)
 
-    format = '%Y,%m,%d,%H,%M,%S'
-    datestamps=['Date.UTC(%s)' % datetime.strftime(x[1], format) for x in month_ranges]
+    # convert end-of-month timestamps to milliseconds since epoch
+    epoch = datetime.utcfromtimestamp(0)
+    datestamps=[('%d' % ((x[1] - epoch).total_seconds()*1000,)) for x in month_ranges]
 
     usage_per_month_series='['
     deltas_per_month_series='['
@@ -92,7 +93,7 @@ def index():
                            storagesitedata=storagesitedata,
                            usage_per_month_series=usage_per_month_series,
                            deltas_per_month_series=deltas_per_month_series,
-                           data_gathered_timestamp=str(db.mostRecentVisitDate()))
+                           data_gathered_timestamp=db.mostRecentVisitDate().strftime('%Y/%m/%d %H:%M:%S'))
 
 @app.route('/rest/sites/')
 def get_sites():
@@ -139,7 +140,18 @@ def get_filesInDirectory(dir_id):
 
 
 def main(argv):
-    app.run(debug=False,host='0.0.0.0')
+    dbpath = argv[0] if argv else 'ltastorageoverview.sqlite'
+
+    if not os.path.exists(dbpath):
+        print 'No database file found at \'%s\'' % (dbpath,)
+        sys.exit(-1)
+
+    print 'Using database at \'%s\'' % (dbpath,)
+
+    global db
+    db = store.LTAStorageDb(dbpath)
+
+    app.run(debug=True,host='0.0.0.0')
 
 if __name__ == '__main__':
     main(sys.argv[1:])
