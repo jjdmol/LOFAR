@@ -32,7 +32,7 @@ from flask import render_template
 from flask import json
 from ltastorageoverview import store
 from lofar.common.util import humanreadablesize
-from ltastorageoverview.utils import monthRanges
+from lofar.common.datetimeutils import monthRanges
 
 app = Flask('LTA storage overview')
 app.config.root_path = os.path.dirname(__file__)
