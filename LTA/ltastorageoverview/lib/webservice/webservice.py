@@ -31,7 +31,7 @@ from flask import Flask
 from flask import render_template
 from flask import json
 from ltastorageoverview import store
-from ltastorageoverview.utils import humanreadablesize
+from lofar.common.util import humanreadablesize
 from ltastorageoverview.utils import monthRanges
 
 app = Flask('LTA storage overview')
