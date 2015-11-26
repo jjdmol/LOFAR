@@ -49,6 +49,12 @@ void checkAntennaField()
   ASSERT (afcol.name()(0) == "HBA0");
   ASSERT (allEQ(afcol.position()(0), Vector<Double>(3, 2.5)));
   ASSERT (allEQ(afcol.coordinateAxes()(0), Matrix<Double>(3,3, 3.5)));
+  {
+    Vector<String> coordUnits = afcol.coordinateaxesQuant().getUnits();
+    ASSERT (coordUnits.size() == 3);
+    ASSERT (coordUnits(0)=="m" && coordUnits(1)=="m" && coordUnits(2)=="m");
+  }
+
   ASSERT (allEQ(afcol.elementOffset()(0), Matrix<Double>(3,24, 5.)));
   ASSERT (allEQ(afcol.elementRCU()(0), Matrix<Int>(2,24, 10)));
   ASSERT (allEQ(afcol.elementFlag()(0), Matrix<Bool>(2,24, False)));
