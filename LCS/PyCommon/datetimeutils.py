@@ -23,17 +23,6 @@ from datetime import datetime, timedelta
 import sys
 import os
 
-def humanreadablesize(num, suffix='B', base=1000):
-    """ converts the given size (number) to a human readable string in powers of 'base'"""
-    try:
-        for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
-            if abs(num) < float(base):
-                return "%3.1f%s%s" % (num, unit, suffix)
-            num /= float(base)
-        return "%.2f%s%s" % (num, 'Y', suffix)
-    except TypeError:
-        return str(num)
-
 
 def monthRanges(min_date, max_date):
     ranges = []
