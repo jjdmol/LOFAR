@@ -26,8 +26,8 @@ import sys
 import os
 import os.path
 from ltastorageoverview import store
-from ltastorageoverview.utils import humanreadablesize
-from ltastorageoverview.utils import monthRanges
+from lofar.common.util import humanreadablesize
+from lofar.common.datetimeutils import monthRanges
 
 def main(argv):
     dbpath = argv[0] if argv else 'ltastorageoverview.sqlite'
