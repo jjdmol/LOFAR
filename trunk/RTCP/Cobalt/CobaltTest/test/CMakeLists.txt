@@ -3,9 +3,8 @@
 include(LofarCTest)
 
 # Create symbolic link to the outputProc executable used by the tests below.
-get_target_property(_loc outputProc LOCATION)
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-  ${_loc}
+lofar_create_target_symlink(
+  outputProc
   ${CMAKE_CURRENT_BINARY_DIR}/outputProc)
 
 foreach(_test tMultiPartTABOutput tManyPartTABOutput)
@@ -15,4 +14,3 @@ foreach(_test tMultiPartTABOutput tManyPartTABOutput)
       PROPERTIES ENVIRONMENT "LOFARROOT=${GPUProc_SOURCE_DIR}")
   endif(BUILD_TESTING)
 endforeach()
-
