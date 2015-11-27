@@ -170,7 +170,6 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
             //TODO: implement update since previous update timestamp so we don't get any gaps.
             self.subscribeToUpdates();
         }).error(function() {
-            console.log("update timeout!");
             self.subscribeToUpdates();
         });
     };
