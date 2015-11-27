@@ -82,10 +82,11 @@ namespace LOFAR {
                               const string& prefix,
                               const DemixInfo& mixInfo,
                               const DPInfo& info,
-			      int workerNr)
+                              int workerNr)
       : itsWorkerNr    (workerNr),
         itsMix         (&mixInfo),
         itsFilter      (input, mixInfo.selBL()),
+        itsDumbDemix   (true),
         itsNrSolves    (0),
         itsNrConverged (0),
         itsNrIter      (0),
@@ -279,6 +280,8 @@ namespace LOFAR {
       itsMeasFrame.set (MEpoch(MVEpoch(info.startTime()/86400), MEpoch::UTC));
       itsMeasConverter.set (MDirection::J2000,
                             MDirection::Ref(MDirection::ITRF, itsMeasFrame));
+      itsMeasConverterAzEl.set (MDirection::J2000,
+                            MDirection::Ref(MDirection::AZEL, itsMeasFrame));
       // Do a dummy conversion, because Measure initialization does not
       // seem to be thread-safe.
       dir2Itrf(itsDelayCenter);
@@ -486,63 +489,79 @@ namespace LOFAR {
     {
       itsAteamAmplSel = false;
       itsSolveStation = false;
-      for (uint dr=0; dr<patchList.size(); ++dr) {
-        itsAteamAmpl[dr] = 0;
-        MatrixIterator<float> miter(itsAteamAmpl[dr]);
-        MatrixIterator<double> uvwiter(itsStationUVW);
-        double t = time;
-        for (uint j=0; j<ntime; ++j) {
-          itsPredictVis = dcomplex();
-          Simulator simulator(itsMix->phaseRef(),
-                              itsMix->nstation(),
-                              itsMix->nbl(),
-                              itsMix->freqDemix().size(),
-                              itsMix->baselines(),
-                              itsMix->freqDemix(),
-                              uvwiter.matrix(),
-                              itsPredictVis);
-          for(size_t i = 0; i < patchList[dr]->nComponents(); ++i)
-          {
-            simulator.simulate(patchList[dr]->component(i));
+      if (!itsDumbDemix) {
+        for (uint dr=0; dr<patchList.size(); ++dr) {
+          itsAteamAmpl[dr] = 0;
+          MatrixIterator<float> miter(itsAteamAmpl[dr]);
+          MatrixIterator<double> uvwiter(itsStationUVW);
+          double t = time;
+          for (uint j=0; j<ntime; ++j) {
+            itsPredictVis = dcomplex();
+            Simulator simulator(itsMix->phaseRef(),
+                                itsMix->nstation(),
+                                itsMix->nbl(),
+                                itsMix->freqDemix().size(),
+                                itsMix->baselines(),
+                                itsMix->freqDemix(),
+                                uvwiter.matrix(),
+                                itsPredictVis);
+            for(size_t i = 0; i < patchList[dr]->nComponents(); ++i)
+            {
+              simulator.simulate(patchList[dr]->component(i));
+            }
+            // Get and apply beam.
+            applyBeam (t, patchList[dr]->position(), True);
+            // Keep the StokesI ampl ((XX+YY)/2).
+            addStokesI (miter.matrix());
+            miter.next();
+            uvwiter.next();
+            t += timeStep;
           }
-          // Get and apply beam.
-          applyBeam (t, patchList[dr]->position(), True);
-          // Keep the StokesI ampl ((XX+YY)/2).
-          addStokesI (miter.matrix());
-          miter.next();
-          uvwiter.next();
-          t += timeStep;
         }
       }
       // Determine per A-source which stations to use.
       itsSrcSet.resize (0);
       vector<uint> antCount (itsMix->nstation());
       for (uint i=0; i<patchList.size(); ++i) {
-        // Count the stations of baselines with sufficient amplitude.
-        std::fill (antCount.begin(), antCount.end(), 0);
-        MatrixIterator<float> miter(itsAteamAmpl[i], 0, 2);
-        for (uint j=0; j<itsMix->nbl(); ++j, miter.next()) {
-          if (itsMix->verbose() > 11) {
-            cout<<"source "<<i<<", baseline "<<itsMix->getAnt1()[j]
-                <<' '<<itsMix->getAnt2()[j]
-                <<" has max ampl " << max(miter.matrix())<<endl;
-          }
-          if (max(miter.matrix()) >= itsMix->ateamAmplThreshold()) {
-            antCount[itsMix->getAnt1()[j]]++;
-            antCount[itsMix->getAnt2()[j]]++;
-            itsAteamAmplSel(j,i) = true;
-          }
-        }
-        // Determine which stations have sufficient occurrence.
         itsStationsToUse[i].resize (0);
-        for (uint j=0; j<antCount.size(); ++j) {
-          if (antCount[j] >= itsMix->minNBaseline()) {
-            itsStationsToUse[i].push_back (j);
-          } else {
-            if (itsMix->verbose() > 10) {
-              cout << "ignore station " << j << " for source "
-                   << patchList[i]->name()
-                   << "  (occurs in " << antCount[j] << " baselines)" << endl;
+        if (itsDumbDemix) {
+          Position pos=patchList[i]->position();
+          for (uint j=0; j<1; ++j) {//itsMix->antennaNames().size(); ++j) {
+            if (itsMix->verbose() > 11) {
+              itsMeasFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
+              MDirection dir (MVDirection(pos[0], pos[1]), MDirection::J2000);
+              const MDirection& azelDir = itsMeasConverterAzEl(dir);
+
+              itsMeasConverter(dir);
+              cout<<"source "<<i<<", station "<<j<<" has elevation "<<azelDir<<endl;
+            }
+          }
+        } else {
+          // Count the stations of baselines with sufficient amplitude.
+          std::fill (antCount.begin(), antCount.end(), 0);
+          MatrixIterator<float> miter(itsAteamAmpl[i], 0, 2);
+          for (uint j=0; j<itsMix->nbl(); ++j, miter.next()) {
+            if (itsMix->verbose() > 11) {
+              cout<<"source "<<i<<", baseline "<<itsMix->getAnt1()[j]
+                  <<' '<<itsMix->getAnt2()[j]
+                  <<" has max ampl " << max(miter.matrix())<<endl;
+            }
+            if (max(miter.matrix()) >= itsMix->ateamAmplThreshold()) {
+              antCount[itsMix->getAnt1()[j]]++;
+              antCount[itsMix->getAnt2()[j]]++;
+              itsAteamAmplSel(j,i) = true;
+            }
+          }
+          // Determine which stations have sufficient occurrence.
+          for (uint j=0; j<antCount.size(); ++j) {
+            if (antCount[j] >= itsMix->minNBaseline()) {
+              itsStationsToUse[i].push_back (j);
+            } else {
+              if (itsMix->verbose() > 10) {
+                cout << "ignore station " << j << " for source "
+                     << patchList[i]->name()
+                     << "  (occurs in " << antCount[j] << " baselines)" << endl;
+              }
             }
           }
         }
