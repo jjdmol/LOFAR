@@ -260,8 +260,8 @@ def processingCluster(cluster, number_of_tasks):
 
   if cluster == "CEP4":
     result = CEP4 % (number_of_tasks,)
-  else
-    result = CEP2 % (number_of_tasks,)
+  else:
+    result = "" #CEP2 % (number_of_tasks,)
   return result
 
 def dataProductCluster(cluster):
@@ -276,8 +276,8 @@ def dataProductCluster(cluster):
 
   if cluster == "CEP4":
     result = CEP4
-  else
-    result = CEP2
+  else:
+    result = "" #CEP2
   return result
 
 def writeXMLObs(ofile, name, descr, topo, predecessor_topo, attrname, projname, TBBpiggyBack, aartfaacPiggyBack, cordata, cohdata, incohdata, antenna, clock, instrfilt, interval, channels,
@@ -404,7 +404,8 @@ def writeTABXML(TAB):
 
 def writeXMLTargetPipeline(ofile, topo, pred_topo, name, descr, defaulttemplate, flagging, duration, avfstep, avtstep, demixfstep, demixtstep,
                     demixalways, demixifneeded, ignoretarget, baselines, correlations, beamenable, solveparms, solveuvrange, strategybaselines, strategytimerange,
-                    uvintopo, uvinname, instrintopo, instrinname, uvoutname, uvouttopo) :
+                    uvintopo, uvinname, instrintopo, instrinname, uvoutname, uvouttopo, storageCluster) :
+  cluster = dataProductCluster(storageCluster)
   print >> ofile, r"""<item index="0">
                   <lofar:pipeline xsi:type="lofar:CalibrationPipelineType">
                     <topology>%s</topology>
@@ -452,13 +453,14 @@ def writeXMLTargetPipeline(ofile, topo, pred_topo, name, descr, defaulttemplate,
                             <name>%s</name>
                             <topology>%s</topology>
                             <status>no_data</status>
+                            %s
                           </lofar:uvDataProduct>
                         </item> 
                     </resultDataProducts>               
                     </lofar:pipeline>
                   </item>""" % (topo, pred_topo, name, name, descr, defaulttemplate, flagging, duration, avfstep, avtstep, demixfstep, demixtstep,
                     demixalways, demixifneeded, ignoretarget, baselines, correlations, beamenable, solveparms, solveuvrange, strategybaselines, strategytimerange,
-                    uvintopo, uvinname, instrintopo, instrinname, uvoutname, uvouttopo)                
+                    uvintopo, uvinname, instrintopo, instrinname, uvoutname, uvouttopo, cluster)                
 
 def writeXMLCalPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, flagging, duration, skymodel, avfstep, avtstep, demixfstep, demixtstep,
                     demixalways, demixifneeded, ignoretarget, baselines, correlations, beamenable, solveparms, solveuvrange, strategybaselines, strategytimerange,
@@ -524,7 +526,7 @@ def writeXMLCalPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, flaggi
                     uvintopo, instroutname, instrouttopo, cluster, uvouttopo, uvouttopo, cluster)
 
 def writeXMLAvgPipeline(ofile, topo, pred_topo, name, descr, defaulttemplate, flagging, duration, avfstep, avtstep, demixfstep, demixtstep,
-                    demixalways, demixifneeded, ignoretarget, uvintopo, uvouttopo) :
+                    demixalways, demixifneeded, ignoretarget, uvintopo, uvouttopo, storageCluster) :
   cluster = dataProductCluster(storageCluster)
   print >> ofile, r"""        <item index="0">
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
@@ -566,7 +568,7 @@ def writeXMLAvgPipeline(ofile, topo, pred_topo, name, descr, defaulttemplate, fl
             </item>""" % (topo, pred_topo, name, name, descr, defaulttemplate, flagging, duration, avfstep, avtstep, demixfstep, demixtstep,
                     demixalways, demixifneeded, ignoretarget, uvintopo, uvouttopo, uvouttopo, cluster)
                    
-def writeXMLPulsarPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, duration, bfintopo, pouttopo, _2bf2fitsExtraOpts, _8bitConversionSigma, 
+def writeXMLPulsarPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, duration, bfintopo, pouttopo, storageCluster, _2bf2fitsExtraOpts, _8bitConversionSigma, 
             decodeNblocks, decodeSigma, digifilExtraOpts, dspsrExtraOpts, dynamicSpectrumTimeAverage, nofold, nopdmp, norfi, 
             prepdataExtraOpts, prepfoldExtraOpts, prepsubbandExtraOpts, pulsar, rawTo8bit, rfifindExtraOpts, rrats, singlePulse, 
             skipDsps, skipDynamicSpectrum, skipPrepfold, tsubint) :
@@ -627,7 +629,7 @@ def writeXMLPulsarPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, dur
             bfintopo, pouttopo, pouttopo, cluster)
 
 #nv 13okt2014: #6716 - Implement Long Baseline Pipeline     
-def writeXMLLongBaselinePipe(ofile, topo, pred_topo, name, descr, defaulttemplate, duration, subbands_per_subbandgroup, subbandgroups_per_ms, uvintopo, uvouttopo) :
+def writeXMLLongBaselinePipe(ofile, topo, pred_topo, name, descr, defaulttemplate, duration, subbands_per_subbandgroup, subbandgroups_per_ms, uvintopo, uvouttopo, storageCluster) :
   cluster = dataProductCluster(storageCluster)
   print >> ofile, r"""        <item index="0">
               <lofar:pipeline xsi:type="lofar:LongBaselinePipelineType">
@@ -1882,12 +1884,12 @@ def writeBlock(ofile, settings, projectName, blockNr):
         flaggingStrategy, calibratorBeam[8], calibratorBBS[0], calibratorDemix[0], calibratorDemix[1], calibratorDemix[2], calibratorDemix[3], 
         calibratorDemix[4], calibratorDemix[5], calibratorDemix[6], 
         calibratorBBS[1], calibratorBBS[2], calibratorBBS[3], calibratorBBS[4], calibratorBBS[5], calibratorBBS[6], calibratorBBS[7], 
-        cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_output_INST_data_topo, cal_pipe_calibrator_output_INST_data_topo, cal_pipe_calibrator_output_MS_data_topo )
+        cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_output_INST_data_topo, cal_pipe_calibrator_output_INST_data_topo, cal_pipe_calibrator_output_MS_data_topo, cluster)
 
       elif processing == 'Preprocessing':
         writeXMLAvgPipeline(ofile, cal_pipe_calibrator_topology, cal_obs_topology, cal_pipe_name, cal_pipe_calibrator_description, 
         cal_obs_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorDemix[0], calibratorDemix[1], calibratorDemix[2], calibratorDemix[3],
-        calibratorDemix[4], calibratorDemix[5], writeBoolean(calibratorDemix[6]), cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_output_MS_data_topo)
+        calibratorDemix[4], calibratorDemix[5], writeBoolean(calibratorDemix[6]), cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_output_MS_data_topo, cluster)
 
       elif processing == 'Calibration':
         
@@ -1898,7 +1900,7 @@ def writeBlock(ofile, settings, projectName, blockNr):
         cal_obs_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorBBS[0], calibratorDemix[0], 
         calibratorDemix[1], calibratorDemix[2], calibratorDemix[3], calibratorDemix[4], calibratorDemix[5], calibratorDemix[6], 
         '', '', '', '', '', '', '', cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_output_INST_data_topo, 
-        cal_pipe_calibrator_output_INST_data_topo, cal_pipe_calibrator_output_MS_data_topo)
+        cal_pipe_calibrator_output_INST_data_topo, cal_pipe_calibrator_output_MS_data_topo, cluster)
      
     if not split_targets:  
       if writePackageTag:
@@ -1962,12 +1964,12 @@ def writeBlock(ofile, settings, projectName, blockNr):
             cal_tar_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorBBS[0], calibratorDemix[0], calibratorDemix[1], calibratorDemix[2],
             calibratorDemix[3], calibratorDemix[4], calibratorDemix[5], calibratorDemix[6], calibratorBBS[1], calibratorBBS[2], calibratorBBS[3], 
             calibratorBBS[4], calibratorBBS[5], calibratorBBS[6], calibratorBBS[7], tar_obs_uv_data_topologies[nr_beams], cal_pipe_target_output_INST_topo,
-            cal_pipe_target_output_INST_topo, cal_pipe_target_output_MS_topo)
+            cal_pipe_target_output_INST_topo, cal_pipe_target_output_MS_topo, cluster)
           
           elif processing == 'Preprocessing':
             writeXMLAvgPipeline(ofile, cal_pipe_target_topology, tar_obs_topology, cal_pipe_target_name, cal_pipe_target_description,
             cal_tar_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorDemix[0], calibratorDemix[1], calibratorDemix[2], calibratorDemix[3],
-            calibratorDemix[4], calibratorDemix[5], writeBoolean(calibratorDemix[6]), tar_obs_uv_data_topologies[nr_beams], cal_pipe_target_output_MS_topo)
+            calibratorDemix[4], calibratorDemix[5], writeBoolean(calibratorDemix[6]), tar_obs_uv_data_topologies[nr_beams], cal_pipe_target_output_MS_topo, cluster)
           
           elif processing == 'Calibration':
             
@@ -1978,7 +1980,7 @@ def writeBlock(ofile, settings, projectName, blockNr):
             cal_tar_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorBBS[0], calibratorDemix[0], calibratorDemix[1], calibratorDemix[2],
             calibratorDemix[3], calibratorDemix[4], calibratorDemix[5], calibratorDemix[6], calibratorBBS[1], calibratorBBS[2], calibratorBBS[3], 
             calibratorBBS[4], calibratorBBS[5], calibratorBBS[6], calibratorBBS[7], tar_obs_uv_data_topologies[nr_beams], cal_pipe_target_output_INST_topo,
-            cal_pipe_target_output_INST_topo, cal_pipe_target_output_MS_topo)
+            cal_pipe_target_output_INST_topo, cal_pipe_target_output_MS_topo, cluster)
       else:    
         writeXMLObsEnd(ofile)
         
@@ -2045,7 +2047,7 @@ def writeBlock(ofile, settings, projectName, blockNr):
           writeBoolean(targetBBS[beamNr][0][3]), targetBBS[beamNr][0][4],
           targetBBS[beamNr][0][5],targetBBS[beamNr][0][6],targetBBS[beamNr][0][7], tar_obs_uv_data_topologies[beamNr], 
           tar_obs_uv_data_topologies[beamNr], tar_pipe_input_INST_topo, tar_pipe_input_INST_topo, 
-          tar_pipe_output_MS_topologies[beamNr], tar_pipe_output_MS_topologies[beamNr])
+          tar_pipe_output_MS_topologies[beamNr], tar_pipe_output_MS_topologies[beamNr], cluster)
               
         elif processing == 'Preprocessing':
           for i in range(0,len(targetDemix[beamNr])):
@@ -2062,7 +2064,7 @@ def writeBlock(ofile, settings, projectName, blockNr):
             tar_pipe_description, tar_pipe_default_template,
             flaggingStrategy, targetBeams[beamNr][8], targetDemix[beamNr][i][0], targetDemix[beamNr][i][1], 
             targetDemix[beamNr][i][2], targetDemix[beamNr][i][3], targetDemix[beamNr][i][4], targetDemix[beamNr][i][5], 
-            targetDemix[beamNr][i][6], tar_obs_uv_data_topologies[beamNr], tar_pipe_output_MS_topologies[beamNr])
+            targetDemix[beamNr][i][6], tar_obs_uv_data_topologies[beamNr], tar_pipe_output_MS_topologies[beamNr], cluster)
 
         elif processing == 'Calibration': #TODO currently doesn't work according to Alwin's wiki, why?
           if targetBBS[beamNr][0][0] == '':
@@ -2075,14 +2077,14 @@ def writeBlock(ofile, settings, projectName, blockNr):
           targetDemix[beamNr][0][4], targetDemix[beamNr][0][5], targetDemix[beamNr][0][6], targetBBS[beamNr][0][1], 
           targetBBS[beamNr][0][2], targetBBS[beamNr][0][3], targetBBS[beamNr][0][4], targetBBS[beamNr][0][5], 
           targetBBS[beamNr][0][6], targetBBS[beamNr][0][7], tar_obs_uv_data_topologies[beamNr], 
-          tar_pipe_output_INST_topologies[beamNr], tar_pipe_output_INST_topologies[beamNr], tar_pipe_output_MS_topologies[beamNr])
+          tar_pipe_output_INST_topologies[beamNr], tar_pipe_output_INST_topologies[beamNr], tar_pipe_output_MS_topologies[beamNr], cluster)
         elif processing == 'Pulsar':
           #tar_obs_topology_MultiObs = tar_obs_topology + '.' + str(beamNr)
           tar_pipe_predecessor = tar_obs_topology
           
           writeXMLPulsarPipe(ofile, tar_pipe_topologies[beamNr], tar_obs_topology, tar_pipe_name, 
           tar_pipe_description, tar_pipe_default_template, targetBeams[beamNr][8],
-          tar_obs_bf_data_topologies[beamNr], pulsar_pipe_output_topologies[beamNr],
+          tar_obs_bf_data_topologies[beamNr], pulsar_pipe_output_topologies[beamNr], cluster,
               pulsar                  = targetPulsar[beamNr][0][0],
               singlePulse             = targetPulsar[beamNr][0][1], 
               rawTo8bit               = targetPulsar[beamNr][0][2], 
@@ -2125,12 +2127,12 @@ def writeBlock(ofile, settings, projectName, blockNr):
         writeXMLAvgPipeline(ofile, LB_preproc_pipe_topologies[beamNr], LB_preproc_pipe_predecessor[beamNr], LB_preproc_pipe_name,
         LB_preproc_pipe_description, LB_preproc_pipe_template, flaggingStrategy, targetBeams[beamNr][8], targetDemix[beamNr][0][0],
         targetDemix[beamNr][0][1], targetDemix[beamNr][0][2], targetDemix[beamNr][0][3], targetDemix[beamNr][0][4], targetDemix[beamNr][0][5],
-        targetDemix[beamNr][0][6], tar_pipe_output_MS_topologies[beamNr], LB_preproc_pipe_output_MS_topologies[beamNr])
+        targetDemix[beamNr][0][6], tar_pipe_output_MS_topologies[beamNr], LB_preproc_pipe_output_MS_topologies[beamNr], cluster)
 
         #nv 13okt2014: #6716 - Implement Long Baseline Pipeline     
         writeXMLLongBaselinePipe(ofile, LB_pipeline_topologies[beamNr], LB_pipeline_predecessor[beamNr], LB_pipeline_name,
         LB_pipeline_description, LB_pipeline_default_template, targetBeams[beamNr][8], subbandsPerSubbandGroup, subbandGroupsPerMS,
-        LB_pipeline_input_uv_topologies[beamNr], LB_pipeline_output_uv_topologies[beamNr])
+        LB_pipeline_input_uv_topologies[beamNr], LB_pipeline_output_uv_topologies[beamNr], cluster)
 
   if do_imaging:
     for beamNr in range (0, nr_beams):
