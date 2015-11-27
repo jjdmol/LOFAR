@@ -35,7 +35,7 @@ def main():
       results.append((infile, xmlgen, -1, False))
       continue
     else:
-      cmd  = ["diff", "-w", "xml/%s.xml" % name, "test.xml"] ## -w ignores differences in whitespace
+      cmd  = ["diff", "-w -B", "xml/%s.xml" % name, "test.xml"] ## -w ignores differences in whitespace and blank lines
       p    = subprocess.Popen(cmd, stdin=open('/dev/null'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       logs = p.communicate()[0].splitlines() #stdout
       print "diff reply was %i lines long" % len(logs)
