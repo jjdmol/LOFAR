@@ -1,6 +1,10 @@
 // $Id: controller.js 32761 2015-11-02 11:50:21Z schaap $
 
-var gridControllerMod = angular.module('GridControllerMod', ['ui.grid', 'ui.grid.edit']);
+var gridControllerMod = angular.module('GridControllerMod', ['ui.grid',
+                                                             'ui.grid.edit',
+                                                             'ui.grid.cellNav',
+                                                             'ui.grid.resizeColumns'/*,
+                                                             'ui.grid.datepicker'*/]);
 
 gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGridConstants', function($scope, dataService, uiGridConstants) {
 
@@ -14,24 +18,43 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     }, true);
 
     $scope.columns = [
-    { field: 'name', enableCellEdit: true },
-    { field: 'from', enableCellEdit: true },
-    { field: 'to', enableCellEdit: true },
+    { field: 'name',
+        enableCellEdit: false,
+        width: '*'
+    },
+    { field: 'from',
+        width: '*',
+        enableCellEditOnFocus: true,
+        cellTemplate:'<div style=\'text-align:right\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
+//         editableCellTemplate: '<div><form name="inputForm"><div ui-grid-edit-datepicker row-field="MODEL_COL_FIELD" ng-class="\'colt\' + col.uid"></div></form></div>'
+    },
+    { field: 'to', enableCellEdit: true,
+        width: '*',
+        enableCellEditOnFocus: true,
+        cellTemplate:'<div style=\'text-align:right\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
+    },
     { field: 'status',
+        enableCellEdit: false,
+        width: '*',
         filter: {
             type: uiGridConstants.filter.SELECT,
             selectOptions: []
         }
     },
     { field: 'type',
+        enableCellEdit: false,
+        width: '*',
         filter: {
             type: uiGridConstants.filter.SELECT,
             selectOptions: []
         }
     }];
     $scope.gridOptions = {
+        enableGridMenu: false,
         enableSorting: true,
         enableFiltering: true,
+        enableColumnResize: true,
+        gridMenuShowHideColumns: false,
         columnDefs: $scope.columns,
         data: [],
         onRegisterApi: function(gridApi){
