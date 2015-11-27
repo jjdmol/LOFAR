@@ -2,7 +2,7 @@
 
 # XML generator prototype
 
-VERSION = "2.12.0"
+VERSION = "2.14.0"
     
 import sys, getopt, time
 from xml.sax.saxutils import escape as XMLescape
@@ -234,6 +234,52 @@ def hasCoherentTab(TAB):
       return True
   return False
 
+##FIXME we will need to fill in actual values. Might need to depend on variables
+def processingCluster(cluster, number_of_tasks):
+  CEP2 = r"""  <processingCluster>
+    <name>CEP4</name>
+    <partition>/data</partition>
+    <numberOfTasks>%i</numberOfTasks>
+    <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
+    <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
+    <maxDurationPerTask>PT600S</maxDurationPerTask>
+    <numberOfCoresPerTask>20</numberOfCoresPerTask>
+    <runSimultaneous>true</runSimultaneous>
+    </processingCluster>"""
+
+  CEP4 = r"""  <processingCluster>
+    <name>CEP4</name>
+    <partition>/data</partition>
+    <numberOfTasks>%i</numberOfTasks>
+    <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
+    <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
+    <maxDurationPerTask>PT600S</maxDurationPerTask>
+    <numberOfCoresPerTask>20</numberOfCoresPerTask>
+    <runSimultaneous>true</runSimultaneous>
+    </processingCluster>"""
+
+  if cluster == "CEP4":
+    result = CEP4 % (number_of_tasks,)
+  else
+    result = CEP2 % (number_of_tasks,)
+  return result
+
+def dataProductCluster(cluster):
+  CEP2 = r"""  <storageCluster>
+        <name>CEP2</name>
+        <partition>/data</partition>
+    </storageCluster>"""
+  CEP4 = r"""<storageCluster>
+        <name>CEP4</name>
+        <partition>/data</partition>
+    </storageCluster>"""
+
+  if cluster == "CEP4":
+    result = CEP4
+  else
+    result = CEP2
+  return result
+
 def writeXMLObs(ofile, name, descr, topo, predecessor_topo, attrname, projname, TBBpiggyBack, aartfaacPiggyBack, cordata, cohdata, incohdata, antenna, clock, instrfilt, interval, channels,
   cohdedisp, flysEye, subsperfileCS, colapseCS, downstepsCS, whichCS, subsperfileIS, colapseIS, downstepsIS, whichIS, stations, start, stop, duration, bitspersample):
   print >>ofile, r"""          <item index="0">
@@ -416,7 +462,8 @@ def writeXMLTargetPipeline(ofile, topo, pred_topo, name, descr, defaulttemplate,
 
 def writeXMLCalPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, flagging, duration, skymodel, avfstep, avtstep, demixfstep, demixtstep,
                     demixalways, demixifneeded, ignoretarget, baselines, correlations, beamenable, solveparms, solveuvrange, strategybaselines, strategytimerange,
-                    uvintopo, instroutname, instrouttopo, uvouttopo) :
+                    uvintopo, instroutname, instrouttopo, uvouttopo, storageCluster) :
+  cluster = dataProductCluster(storageCluster)
   print >> ofile, r"""        <item index="0">
               <lofar:pipeline xsi:type="lofar:CalibrationPipelineType">
                 <topology>%s</topology>
@@ -459,6 +506,7 @@ def writeXMLCalPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, flaggi
                       <name>%s</name>
                       <topology>%s</topology>
                       <status>no_data</status>
+                      %s
                     </lofar:instrumentModelDataProduct>
                   </item>
                   <item>
@@ -466,16 +514,18 @@ def writeXMLCalPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, flaggi
                       <name>%s</name>
                       <topology>%s</topology>
                       <status>no_data</status>
+                      %s
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
               </lofar:pipeline>
             </item>""" % (topo, pred_topo, name, name, descr, defaulttemplate, flagging, duration, skymodel, avfstep, avtstep, demixfstep, demixtstep,
                     demixalways, demixifneeded, writeBoolean(ignoretarget), baselines, correlations, writeBoolean(beamenable), solveparms, solveuvrange, strategybaselines, strategytimerange,
-                    uvintopo, instroutname, instrouttopo, uvouttopo, uvouttopo)
+                    uvintopo, instroutname, instrouttopo, cluster, uvouttopo, uvouttopo, cluster)
 
 def writeXMLAvgPipeline(ofile, topo, pred_topo, name, descr, defaulttemplate, flagging, duration, avfstep, avtstep, demixfstep, demixtstep,
                     demixalways, demixifneeded, ignoretarget, uvintopo, uvouttopo) :
+  cluster = dataProductCluster(storageCluster)
   print >> ofile, r"""        <item index="0">
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>%s</topology>
@@ -508,17 +558,19 @@ def writeXMLAvgPipeline(ofile, topo, pred_topo, name, descr, defaulttemplate, fl
                       <name>%s</name>
                       <topology>%s</topology>
                       <status>no_data</status>
+                      %s
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
               </lofar:pipeline>
             </item>""" % (topo, pred_topo, name, name, descr, defaulttemplate, flagging, duration, avfstep, avtstep, demixfstep, demixtstep,
-                    demixalways, demixifneeded, ignoretarget, uvintopo, uvouttopo, uvouttopo)
+                    demixalways, demixifneeded, ignoretarget, uvintopo, uvouttopo, uvouttopo, cluster)
                    
 def writeXMLPulsarPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, duration, bfintopo, pouttopo, _2bf2fitsExtraOpts, _8bitConversionSigma, 
             decodeNblocks, decodeSigma, digifilExtraOpts, dspsrExtraOpts, dynamicSpectrumTimeAverage, nofold, nopdmp, norfi, 
             prepdataExtraOpts, prepfoldExtraOpts, prepsubbandExtraOpts, pulsar, rawTo8bit, rfifindExtraOpts, rrats, singlePulse, 
             skipDsps, skipDynamicSpectrum, skipPrepfold, tsubint) :
+  cluster = dataProductCluster(storageCluster)
   print >> ofile, r"""        <item index="0">
               <lofar:pipeline xsi:type="lofar:PulsarPipelineType">
                 <topology>%s</topology>
@@ -563,6 +615,7 @@ def writeXMLPulsarPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, dur
                       <name>%s</name>
                       <topology>%s</topology>
                       <status>no_data</status>
+                      %s
                     </lofar:pulsarDataProduct>
                   </item>
                 </resultDataProducts>
@@ -571,10 +624,11 @@ def writeXMLPulsarPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, dur
             decodeNblocks, decodeSigma, digifilExtraOpts, dspsrExtraOpts, dynamicSpectrumTimeAverage, writeBoolean(nofold), writeBoolean(nopdmp), writeBoolean(norfi), 
             prepdataExtraOpts, prepfoldExtraOpts, prepsubbandExtraOpts, pulsar, writeBoolean(rawTo8bit), rfifindExtraOpts, writeBoolean(rrats), writeBoolean(singlePulse), 
             writeBoolean(skipDsps), writeBoolean(skipDynamicSpectrum), writeBoolean(skipPrepfold), tsubint, 
-            bfintopo, pouttopo, pouttopo)
+            bfintopo, pouttopo, pouttopo, cluster)
 
 #nv 13okt2014: #6716 - Implement Long Baseline Pipeline     
 def writeXMLLongBaselinePipe(ofile, topo, pred_topo, name, descr, defaulttemplate, duration, subbands_per_subbandgroup, subbandgroups_per_ms, uvintopo, uvouttopo) :
+  cluster = dataProductCluster(storageCluster)
   print >> ofile, r"""        <item index="0">
               <lofar:pipeline xsi:type="lofar:LongBaselinePipelineType">
                 <topology>%s</topology>
@@ -599,13 +653,14 @@ def writeXMLLongBaselinePipe(ofile, topo, pred_topo, name, descr, defaulttemplat
                       <name>%s</name>
                       <topology>%s</topology>
                       <status>no_data</status>
+                      %s
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
               </lofar:pipeline>
-            </item>""" % (topo, pred_topo, name, name, descr, defaulttemplate, duration, subbands_per_subbandgroup, subbandgroups_per_ms, uvintopo, uvouttopo, uvouttopo)  
+            </item>""" % (topo, pred_topo, name, name, descr, defaulttemplate, duration, subbands_per_subbandgroup, subbandgroups_per_ms, uvintopo, uvouttopo, uvouttopo, cluster)  
 
-def writeDataProducts(dataTopo, correlatedData, coherentStokesData, incoherentStokesData):
+def writeDataProducts(dataTopo, correlatedData, coherentStokesData, incoherentStokesData, storageCluster):
   strVal = ""
   if correlatedData:
     dataTopoStr = dataTopo + '.uv.dps'
@@ -614,9 +669,10 @@ def writeDataProducts(dataTopo, correlatedData, coherentStokesData, incoherentSt
                     <name>%s</name>
                     <topology>%s</topology>
                     <status>no_data</status>
+                    %s
                     </lofar:uvDataProduct>
                   </item>
-                  """ % (dataTopoStr, dataTopoStr)
+                  """ % (dataTopoStr, dataTopoStr, dataProductCluster(storageCluster))
   if coherentStokesData | incoherentStokesData:
     if coherentStokesData & ~incoherentStokesData:
       dataTopoStr = dataTopo + '.cs'
@@ -629,9 +685,10 @@ def writeDataProducts(dataTopo, correlatedData, coherentStokesData, incoherentSt
                     <name>%s</name>
                     <topology>%s</topology>
                     <status>no_data</status>
+                    %s
                     </lofar:bfDataProduct>
                   </item>
-                  """ % (dataTopoStr, dataTopoStr)               
+                  """ % (dataTopoStr, dataTopoStr, dataProductCluster(storageCluster))               
   strVal = strVal.rstrip() # strip off the last newline
   return strVal
 
@@ -1523,6 +1580,8 @@ def readBlock(lines, projectName, blockNr):
           print "number of repeats = %s" % s["nrRepeats"]
         except:
           raise GenException("the repeat parameter is not valid for BLOCK: %i" % blockNr)
+      elif key == "cluster":
+        s["cluster"] = readStringKey("cluster", value)
       else:
         raise GenException("unknown key:'%s' in BLOCK: %i" % (key, blockNr))
   return s ##settings
@@ -1625,7 +1684,8 @@ def writeBlock(ofile, settings, projectName, blockNr):
   "stokesDownsamplingStepsIS": '',
   "whichIS": '',
   "tbbPiggybackAllowed":True,
-  "aartfaacPiggybackAllowed":True}
+  "aartfaacPiggybackAllowed":True,
+  "cluster":'CEP2'}
   defaults.update(settings) #TODO somewhat dirty hack, to be solved better later.
   settings = defaults
   for key,val in settings.items(): #TODO somewhat dirty hack, to be solved better later.
@@ -1794,7 +1854,7 @@ def writeBlock(ofile, settings, projectName, blockNr):
         startTimeStr, endTimeStr, calibratorDuration_s, numberOfBitsPerSample)
       writeXMLBeam(ofile, calibratorBeam[2], calibratorBeam[2], cal_obs_beam0_topology, 'Calibration', calibratorBeam[2], calibratorBeam[0], calibratorBeam[1],
         calibratorBeam[3], flysEye, str(calibratorBeam[5]), str(calibratorBeam[6]), writeTABXML(calibratorTAB),
-        writeDataProducts(cal_obs_beam0_topology, correlatedData, coherentStokesData, incoherentStokesData) )
+        writeDataProducts(cal_obs_beam0_topology, correlatedData, coherentStokesData, incoherentStokesData, cluster) )
       writeXMLObsEnd(ofile)
         
     # target start and end time:
@@ -1864,14 +1924,14 @@ def writeBlock(ofile, settings, projectName, blockNr):
         writeXMLBeam(ofile, targetBeams[beamNr][2], targetBeams[beamNr][2], tar_obs_beam_topologies[beamNr], 'Target', targetBeams[beamNr][2],
           targetBeams[beamNr][0], targetBeams[beamNr][1], targetBeams[beamNr][3], flysEye, targetBeams[beamNr][5],
           targetBeams[beamNr][6], writeTABXML(targetTAB[beamNr]), 
-          writeDataProducts(tar_obs_beam_topologies[beamNr], correlatedData, coherentStokesData, incoherentStokesData) )
+          writeDataProducts(tar_obs_beam_topologies[beamNr], correlatedData, coherentStokesData, incoherentStokesData, cluster) )
 
       # create the extra polarization beam?
       if "create_extra_ncp_beam" in settings and settings["create_extra_ncp_beam"]:
         polBeamTopo = tar_obs_topology + ".SAP" + str(beamNr+1).rjust(3,'0')
         writeXMLBeam(ofile, targetBeams[0][2], targetBeams[0][2], targetBeams[0][2], 'Target', targetBeams[0][0], flysEye,
         targetBeams[0][5], targetBeams[0][6], writeTABXML(targetTAB[0]),
-        writeDataProducts(polBeamTopo, correlatedData, coherentStokesData, incoherentStokesData) )
+        writeDataProducts(polBeamTopo, correlatedData, coherentStokesData, incoherentStokesData, cluster) )
 
       # create a calibrator beam in the target observation?
       if create_target_cal_beam:
@@ -1883,7 +1943,7 @@ def writeBlock(ofile, settings, projectName, blockNr):
         writeXMLBeam(ofile, calibratorBeam[2], calibratorBeam[2], calBeamTopo, 'Calibration', calibratorBeam[2],
                 calibratorBeam[0], calibratorBeam[1], calibratorBeam[3], flysEye, calibratorBeam[5],
                 calibratorBeam[6], writeTABXML(calibratorTAB),
-                writeDataProducts(tar_obs_beam_topologies[nr_beams], correlatedData, coherentStokesData, incoherentStokesData) )
+                writeDataProducts(tar_obs_beam_topologies[nr_beams], correlatedData, coherentStokesData, incoherentStokesData, cluster) )
         
         writeXMLObsEnd(ofile)
                 
@@ -1940,7 +2000,7 @@ def writeBlock(ofile, settings, projectName, blockNr):
         writeXMLBeam(ofile, targetBeams[beamNr][2], targetBeams[beamNr][2], tar_obs_beam_topologies[beamNr], 'Target', targetBeams[beamNr][2],
           targetBeams[beamNr][0], targetBeams[beamNr][1], targetBeams[beamNr][3], flysEye, targetBeams[beamNr][5],
           targetBeams[beamNr][6], writeTABXML(targetTAB[beamNr]), 
-          writeDataProducts(tar_obs_beam_topologies[beamNr], correlatedData, coherentStokesData, incoherentStokesData) )
+          writeDataProducts(tar_obs_beam_topologies[beamNr], correlatedData, coherentStokesData, incoherentStokesData, cluster) )
             
         writeXMLObsEnd(ofile)
         
