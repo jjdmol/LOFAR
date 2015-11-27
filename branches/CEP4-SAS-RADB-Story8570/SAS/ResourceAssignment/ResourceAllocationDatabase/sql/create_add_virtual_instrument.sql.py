@@ -1,5 +1,5 @@
 #!/usr/bin/python
-with open("add_virtual_instrument.sql", 'w') as output:
+with open("add_virtual_instrument.sql", 'w+') as output:
 
   output.write("-- resourceassignment password for testing on mcu005 is the same as the password on the president's luggage +6\n")
   output.write("-- psql resourceassignment -U resourceassignment -f add_virtual_instrument.sql -W\n")
