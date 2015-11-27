@@ -69,7 +69,7 @@ namespace LOFAR {
                    const string& prefix,
                    const DemixInfo& info,
                    const DPInfo& dpinfo,
-		   int workernr);
+                   int workernr);
 
 
       // Process the data in the input buffers and store the result in the
@@ -267,6 +267,7 @@ namespace LOFAR {
       //# Variables for conversion of directions to ITRF.
       casa::MeasFrame                       itsMeasFrame;
       casa::MDirection::Convert             itsMeasConverter;
+      casa::MDirection::Convert             itsMeasConverterAzEl;
       vector<StationResponse::matrix22c_t>  itsBeamValues;  //# [nst,nch]
 
       //# Indices telling which Ateam sources to use.
@@ -283,6 +284,8 @@ namespace LOFAR {
       casa::Cube<float>                     itsTargetAmpl;
       //# Temporary buffer to determine medians.
       vector<float>                         itsTmpAmpl;
+      //# Toggle for 'Dumb smart demix'
+      bool                                  itsDumbDemix;
       //# Per A-source and for target the min and max amplitude.
       vector<double>                        itsAteamMinAmpl;
       vector<double>                        itsAteamMaxAmpl;
