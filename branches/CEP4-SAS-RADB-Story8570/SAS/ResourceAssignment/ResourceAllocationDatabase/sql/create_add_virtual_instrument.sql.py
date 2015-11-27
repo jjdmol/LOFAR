@@ -63,7 +63,7 @@ with open("add_virtual_instrument.sql", 'w') as output:
   ## stations
   for station in stationnumbers:
     resources += "(%i, 'rsp', %i), " % (resource_count, rsp_index)
-    resource_to_resource_group += "(DEFUALT, %i, %i), " % (resource_count, station)
+    resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, station)
     resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 61*16*4, 61*16*4) ##magic numbers FIXME
     resource_available += "(DEFAULT, %i, TRUE), " % (resource_count,)
     resource_count += 1
