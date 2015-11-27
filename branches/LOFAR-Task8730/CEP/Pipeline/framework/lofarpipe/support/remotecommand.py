@@ -94,6 +94,8 @@ def run_remote_command(config, logger, host, command, env, arguments = None):
         return run_via_mpiexec_cep(logger, command, arguments, host)
     elif method == "slurm_srun_cep3":
         return run_via_slurm_srun_cep3(logger, command, arguments, host)
+    elif method == "custom_cmdline":
+        return run_via_custom_cmdline(logger, host, command, env, arguments, config)
     else:
         return run_via_ssh(logger, host, command, env, arguments)
 
@@ -176,6 +178,42 @@ def run_via_ssh(logger, host, command, environment, arguments):
     commandstring.extend(re.escape(str(arg)) for arg in arguments)
     ssh_cmd.append('"' + " ".join(commandstring) + '"')
     process = spawn_process(ssh_cmd, logger)
+    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
+    return process
+
+def run_via_custom_cmdline(logger, host, command, environment, arguments, config):
+    """
+    Dispatch a remote command via a customisable command line
+
+    We return a Popen object pointing at the running executable, to which we add a
+    kill method for shutting down the connection if required.
+    """
+    commandArray = ["%s=%s" % (key, value) for key, value in environment.items()]
+    commandArray.append(command)
+    commandArray.extend(re.escape(str(arg)) for arg in arguments)
+    commandStr = " ".join(commandArray)
+
+    try:
+        image = config.get('docker', 'image')
+    except:
+        image = "lofar"
+
+    # Construct the full command line, except for {command}, as that itself
+    # can contain spaces which we don't want to split on.
+    full_command_line = config.get('remote', 'cmdline').format(
+      uid          = os.geteuid(),
+      slurm_job_id = os.environ.get("SLURM_JOB_ID"),
+      docker_image = image,
+      host         = host,
+      command      = "{command}"
+    ).split(' ')
+
+    # Fill in {command} somewhere
+    full_command_line = [x.format(command = commandStr) for x in full_command_line]
+
+    logger.debug("Dispatching command to %s with custom command line: %s" % (host, ' '.join(full_command_line)))
+
+    process = spawn_process(full_command_line, logger)
     process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
     return process
 
