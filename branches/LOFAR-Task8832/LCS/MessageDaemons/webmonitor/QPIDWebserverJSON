@@ -1,0 +1,183 @@
+#!/usr/bin/python
+import time
+import os
+#import json
+from qmf.console import Session as QMFSession
+from BaseHTTPServer import BaseHTTPRequestHandler
+import urlparse
+from mimetypes import MimeTypes
+from threading import Timer,Thread,Event
+import platform
+import datetime
+
+mime=MimeTypes()
+
+MyHostname=platform.node()
+
+class perpetualTimer:
+
+   def __init__(self,t,hFunction):
+      self.t=t
+      self.hFunction = hFunction
+      self.thread = Timer(self.t,self.handle_function)
+
+   def handle_function(self):
+      self.hFunction()
+      self.thread = Timer(self.t,self.handle_function)
+      self.thread.start()
+
+   def start(self):
+      self.thread.start()
+
+   def cancel(self):
+      self.thread.cancel()
+
+
+#cbt009  lcs028  locus102 locus098 locus099 mcu099  SAS099 ccu099
+
+brokerlist= []
+
+if MyHostname.lower() != 'ccu099' :
+   brokerlist = [ "amqp://CCU001","amqp://sas001","amqp://lcs023","amqp://cbm001","amqp://cbm002","amqp://cbm003","amqp://cbm004","amqp://cbm005","amqp://cbm006","amqp://cbm007","amqp://cbm008","amqp://mcu001","amqp://lhn001.cep2.lofar","amqp://lhn002.cep2.lofar"]
+   for i in range(1,95):
+      nodename = 'amqp://locus%(#)03d.cep2.lofar' % {"#": i}
+      brokerlist.append(nodename)
+else:
+    brokerlist = [ "amqp://ccu099","amqp://SAS099","amqp://lcs028","amqp://cbt009","amqp://locus098","amqp://locus099","amqp://locus102","amqp://mcu099"]
+
+# hosted files
+filelist=[
+  "/index.html",
+  "/lib/draggable.js","/lib/svg.clock.min.js","/lib/svg.draggable.min.js","/lib/svg.easing.min.js","/lib/svg.import.min.js","/lib/svg.js","/lib/svg.parser.min.js",
+  "/list.html"]
+# hosted files with a different name on disk
+redirect_filelist = {
+  "/Schema.svg": "/Schema.svg.%s" % (MyHostname.lower(),),
+}
+
+
+if "LOFARROOT" in os.environ:
+    path = os.path.expandvars("$LOFARROOT/srv/www")
+else:
+    path = "."
+
+
+mimedict={}
+filedict={}
+def retrieve_file(myfile):
+        f = open(path + '/' + myfile,'rb')
+        m = f.read();
+        f.close()
+        return m
+
+def add_file_to_list(url,filename):
+    mimedict[url]=mime.guess_type(filename)[0]
+    filedict[url]=retrieve_file(filename)
+
+#cache all listed files
+for filename in filelist:
+    add_file_to_list(filename,filename)
+for url,filename in redirect_filelist.items():
+    add_file_to_list(url,filename)
+
+last_status="NOTCONNECTED"
+
+class GetHandler(BaseHTTPRequestHandler):
+
+    def do_GET(self):
+	if self.path == '/':
+	    self.path = '/index.html'
+
+	if self.path == '/qpid':
+            self.send_response(200)
+            message = last_status
+            self.send_header('Content-type','application/json')
+            self.end_headers()
+            self.wfile.write(message)
+	elif self.path in filedict:
+            self.send_response(200)
+            self.send_header('Content-type',mimedict[self.path])
+	    message = filedict[self.path]
+            self.end_headers()
+            self.wfile.write(message)
+	else:
+	    self.send_error(404)
+	    return
+
+        return
+
+    def log_message(self, format, *args):
+        return
+
+
+broker = {}
+sess = {}
+
+#class EventConsole(Console):
+#   def brokerConnected(self, broker):
+#     print "brokerConnected:", broker
+#   def brokerDisconnected(self, broker):
+#     print "brokerDisconnected:", broker
+   #def event(self, broker, event):
+   #  print "event:", event
+
+#myConsole = EventConsole()
+
+def connect_to_brokers():
+    global sess
+    global broker
+    global brokerlist
+    print " Connecting to brokers .."
+    for brokername in brokerlist:
+        print "   %s ... " %(brokername)
+        sess[brokername]=QMFSession(manageConnections=True)
+        broker[brokername]=sess[brokername].addBroker(brokername)
+        print " connected "
+
+def retrieve_status():
+    global brokerlist
+    global sess
+
+    queues = {}
+    queuestat = {}
+
+    # get current local time
+    ts = time.time()
+    datestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+    queuestat['datestamp']=datestamp
+    for brokername in brokerlist:
+        queues[brokername] = sess[brokername].getObjects(_class="queue", _package="org.apache.qpid.broker")
+        queuestat[brokername]={}
+
+    for brokername,qlist in queues.iteritems():
+      for q in qlist:
+        queuestat[brokername][q.name]=(q.msgDepth,q.msgTotalDequeues,q.consumerCount)
+    stest=str(queuestat).replace("'",'"',1000000).replace('(','[',10000000).replace(')',']',1000000).replace('L','',1000000)
+    return stest 
+
+retrievebusy=False
+
+def periodic_retrieve( ):
+    global last_status
+    global retrievebusy
+    if (last_status=="NOTCONNECTED"):
+        connect_to_brokers()
+        last_status="CONNECTION setup"
+    else:
+        if (retrievebusy==False):
+           retrievebusy=True
+           last_status=retrieve_status()
+           retrievebusy=False
+
+if __name__ == '__main__':
+    from BaseHTTPServer import HTTPServer
+    server = HTTPServer(('%s.control.lofar' %(MyHostname), 8082), GetHandler)
+    print 'Starting server, use <Ctrl-C> to stop'
+    t = perpetualTimer(5,periodic_retrieve)
+    t.start()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    server.socket.close()
+
