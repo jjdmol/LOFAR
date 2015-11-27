@@ -139,8 +139,18 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
         });
     };
 
+    self.lastUpdateTimestamp = undefined;
+
     self.subscribeToUpdates = function() {
-        $http.get('/rest/updates', {timeout:300000}).success(function(result) {
+        var url = '/rest/updates';
+        if(self.lastUpdateTimestamp) {
+            url += '/' + self.lastUpdateTimestamp;
+        }
+        $http.get(url, {timeout:300000}).success(function(result) {
+
+            var changeTimestamps = result.changes.map(function(item) { return item.timestamp; });
+            self.lastUpdateTimestamp = changeTimestamps.reduce(function(a, b, idx, arr) { return a > b ? a : b; }, undefined);
+
             for(var i = result.changes.length-1; i >=0; i--) {
                 var change = result.changes[i];
 
@@ -167,7 +177,6 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
             }
 
             //and update again
-            //TODO: implement update since previous update timestamp so we don't get any gaps.
             self.subscribeToUpdates();
         }).error(function() {
             self.subscribeToUpdates();

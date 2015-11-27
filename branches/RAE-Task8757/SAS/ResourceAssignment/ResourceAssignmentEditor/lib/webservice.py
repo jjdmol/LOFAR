@@ -139,22 +139,31 @@ def putTask(task_id):
 
 
             with changedCondition:
+                now = datetime.utcnow()
+
+                # remove old obsolete changes
+                threshold = (now - timedelta(seconds=10)).isoformat()
+                global _changes
+                _changes = [c for c in _changes if c['timestamp'] >= threshold]
+
+                now = now.isoformat()
+
                 _changes.append({'changeType': 'update',
-                                'timestamp': datetime.utcnow().isoformat(),
+                                'timestamp': now,
                                 'objectType': 'task',
                                 'value': task
                                 })
 
                 for rc in taskResourceClaims:
                     _changes.append({'changeType': 'update',
-                                    'timestamp': datetime.utcnow().isoformat(),
+                                    'timestamp': now,
                                     'objectType': 'resourceClaim',
                                     'value': rc
                                     })
 
                 for rgc in taskResourceGroupClaims:
                     _changes.append({'changeType': 'update',
-                                    'timestamp': datetime.utcnow().isoformat(),
+                                    'timestamp': now,
                                     'objectType': 'resourceGroupClaim',
                                     'value': rgc
                                     })
