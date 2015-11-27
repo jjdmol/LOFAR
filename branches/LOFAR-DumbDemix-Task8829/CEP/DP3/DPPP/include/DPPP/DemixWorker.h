@@ -266,6 +266,7 @@ namespace LOFAR {
 
       //# Variables for conversion of directions to ITRF.
       casa::MeasFrame                       itsMeasFrame;
+      casa::MeasFrame                       itsMeasFrameAzEl;
       casa::MDirection::Convert             itsMeasConverter;
       casa::MDirection::Convert             itsMeasConverterAzEl;
       vector<StationResponse::matrix22c_t>  itsBeamValues;  //# [nst,nch]

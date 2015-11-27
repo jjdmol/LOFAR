@@ -280,11 +280,18 @@ namespace LOFAR {
       itsMeasFrame.set (MEpoch(MVEpoch(info.startTime()/86400), MEpoch::UTC));
       itsMeasConverter.set (MDirection::J2000,
                             MDirection::Ref(MDirection::ITRF, itsMeasFrame));
+      // Converter for getting elevation of sources.
+      // Fill in a dummy position, station positions will be filled in later
+      itsMeasFrameAzEl.set (itsArrayPos); 
+      itsMeasFrameAzEl.set (MEpoch(MVEpoch(info.startTime()/86400), MEpoch::UTC));
       itsMeasConverterAzEl.set (MDirection::J2000,
-                            MDirection::Ref(MDirection::AZEL, itsMeasFrame));
+                            MDirection::Ref(MDirection::AZEL, itsMeasFrameAzEl));
       // Do a dummy conversion, because Measure initialization does not
       // seem to be thread-safe.
       dir2Itrf(itsDelayCenter);
+      MDirection azelDir = itsMeasConverterAzEl(itsDelayCenter);
+      cout<<"phase center has elevation "<<azelDir.getAngle()<<endl;
+      cout<<"arraypos "<<itsArrayPos<<endl;
     }
 
     void DemixWorker::process (const DPBuffer* bufin, uint nbufin,
@@ -528,12 +535,11 @@ namespace LOFAR {
           Position pos=patchList[i]->position();
           for (uint j=0; j<1; ++j) {//itsMix->antennaNames().size(); ++j) {
             if (itsMix->verbose() > 11) {
-              itsMeasFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
+              itsMeasFrameAzEl.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
               MDirection dir (MVDirection(pos[0], pos[1]), MDirection::J2000);
-              const MDirection& azelDir = itsMeasConverterAzEl(dir);
+              MDirection azelDir = itsMeasConverterAzEl(dir);
 
-              itsMeasConverter(dir);
-              cout<<"source "<<i<<", station "<<j<<" has elevation "<<azelDir<<endl;
+              cout<<"source "<<i<<", station "<<j<<" has elevation "<<azelDir.getAngle()<<endl;
             }
           }
         } else {
