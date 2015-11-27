@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+          <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
+          <version>2.10.3</version>
+          <template version="2.10.3" author="Alwin de Jong" changedBy="Alwin de Jong">
+          <description>XML Template generator version 2.10.3</description>
+          </template>
+          <name>LC4_019</name>
+          <children>
+   <item index="0">
+              <lofar:folder topology_parent="false">
+              <name>20150513</name>
+              <description>HBA Coherent Stokes</description>
+              <children>
+   <item index="0">
+              <lofar:folder topology_parent="true">
+                <topology>0</topology>
+                <name>B0031-07</name>
+                <description> (Pulsar)</description>
+                <children>
+          <item index="0">
+                <lofar:observation>
+                  <name>PSR_B0031-07/1/TO</name>
+                  <description>PSR_B0031-07/1/TO (Target Observation)</description>
+                  <topology>B0.1.T</topology>
+                  <predecessor_topology></predecessor_topology>
+                  <currentStatus>
+                    <mom2:openedStatus/>
+                  </currentStatus>
+                  <lofar:observationAttributes>
+                    <observationId>
+                    </observationId>
+                    <name>PSR_B0031-07/1/TO</name>
+                    <projectName>LC4_019</projectName>
+                    <instrument>Beam Observation</instrument>
+                    <defaultTemplate>BeamObservation</defaultTemplate>
+                    <tbbPiggybackAllowed>true</tbbPiggybackAllowed>
+                    <aartfaacPiggybackAllowed>true</aartfaacPiggybackAllowed>
+                    <userSpecification>
+                      <correlatedData>false</correlatedData>
+                      <coherentStokesData>true</coherentStokesData>
+                      <incoherentStokesData>false</incoherentStokesData>
+                      <antenna>HBA Dual</antenna>
+                      <clock mode="200 MHz"/>
+                      <instrumentFilter>110-190 MHz</instrumentFilter>
+                      <integrationInterval>1.0</integrationInterval>
+                      <channelsPerSubband>32</channelsPerSubband>
+                      <coherentDedisperseChannels>false</coherentDedisperseChannels>
+                      <tiedArrayBeams>
+                        <flyseye>false</flyseye>
+                      </tiedArrayBeams>
+                      <stokes>
+                        <integrateChannels>false</integrateChannels>
+                        <subbandsPerFileCS>20</subbandsPerFileCS>
+                        <numberCollapsedChannelsCS>32</numberCollapsedChannelsCS>
+                        <stokesDownsamplingStepsCS>1</stokesDownsamplingStepsCS>
+                        <whichCS>XXYY</whichCS>
+                        <subbandsPerFileIS></subbandsPerFileIS>
+                        <numberCollapsedChannelsIS></numberCollapsedChannelsIS>
+                        <stokesDownsamplingStepsIS></stokesDownsamplingStepsIS>
+                        <whichIS></whichIS>
+                      </stokes>
+                      <stationSet>Custom</stationSet>
+                      <stations>CS001,CS002,CS003,CS004,CS005,CS006,CS007,CS011,CS013,CS017,CS021,CS024,CS026,CS028,CS030,CS031,CS032,CS101,CS103,CS201,CS301,CS302,CS401,CS501</stations>
+                      <timeFrame>UT</timeFrame>
+                      <startTime>2015-05-13T06:00:00</startTime>
+                      <endTime>2015-05-13T10:00:00</endTime>
+                      <duration>14400</duration>
+                      <bypassPff>false</bypassPff>
+                      <enableSuperterp>false</enableSuperterp>
+                      <numberOfBitsPerSample>8</numberOfBitsPerSample>
+                    </userSpecification>
+                  </lofar:observationAttributes>
+                  <children>
+<item index="0">
+                      <lofar:measurement xsi:type="lofar:BFMeasurementType">
+                        <name>PSR_B0031-07</name>
+                        <description>PSR_B0031-07</description>
+                        <topology>B0.1.T.SAP000</topology>
+                        <currentStatus>
+                          <mom2:openedStatus/>
+                        </currentStatus>
+                        <lofar:bfMeasurementAttributes>
+                          <measurementType>Target</measurementType>
+                          <specification>
+                            <targetName>PSR_B0031-07</targetName>
+                            <ra>8.53691666667</ra>
+                            <dec>-7.36472222222</dec>
+                            <equinox>J2000</equinox>
+                            <duration>0</duration>
+                            <subbandsSpecification>
+                              <subbands>51..450</subbands>
+                            </subbandsSpecification>
+                          <tiedArrayBeams>
+                            <flyseye>false</flyseye>
+                          <nrTabRings>0</nrTabRings>
+                          <tabRingSize></tabRingSize>
+                            <tiedArrayBeamList>
+                            <tiedArrayBeam>
+                <coherent>true</coherent>
+                <angle1>0.148997303802</angle1>
+                <angle2>-0.128538651273</angle2>
+                </tiedArrayBeam>
+                            </tiedArrayBeamList>
+                          </tiedArrayBeams>
+                          </specification>
+                        </lofar:bfMeasurementAttributes>
+                        <resultDataProducts>
+                        <item>
+                    <lofar:bfDataProduct>
+                    <name>B0.1.T.SAP000.cs</name>
+                    <topology>B0.1.T.SAP000.cs</topology>
+                    <status>no_data</status>
+                    </lofar:bfDataProduct>
+                  </item>
+                        </resultDataProducts>   
+                      </lofar:measurement>
+                    </item>
+</children>
+                </lofar:observation>
+                </item>
+        <item index="0">
+              <lofar:pipeline xsi:type="lofar:PulsarPipelineType">
+                <topology>B0.1.PT0</topology>
+                <predecessor_topology>B0.1.T</predecessor_topology>
+                <name>PSR_B0031-07/1.0/PP</name>
+                <description>PSR_B0031-07/1.0/PP (Pulsar Pipeline)</description>
+                <pipelineAttributes>
+                  <defaultTemplate>Pulsar Pipeline</defaultTemplate>
+                  <duration>28800</duration>
+                  <_2bf2fitsExtraOpts></_2bf2fitsExtraOpts>
+                  <_8bitConversionSigma></_8bitConversionSigma>
+                  <decodeNblocks></decodeNblocks>
+                  <decodeSigma></decodeSigma>
+                  <digifilExtraOpts></digifilExtraOpts>
+                  <dspsrExtraOpts>"-U minX1"</dspsrExtraOpts>
+                  <dynamicSpectrumTimeAverage></dynamicSpectrumTimeAverage>
+                  <nofold></nofold>
+                  <nopdmp></nopdmp>
+                  <norfi></norfi>
+                  <prepdataExtraOpts></prepdataExtraOpts>
+                  <prepfoldExtraOpts></prepfoldExtraOpts>
+                  <prepsubbandExtraOpts></prepsubbandExtraOpts>
+                  <pulsar>B0031-07</pulsar>
+                  <rawTo8bit></rawTo8bit>
+                  <rfifindExtraOpts></rfifindExtraOpts>
+                  <rrats></rrats>
+                  <singlePulse></singlePulse>
+                  <skipDsps></skipDsps>
+                  <skipDynamicSpectrum></skipDynamicSpectrum>
+                  <skipPrepfold></skipPrepfold>
+                  <tsubint></tsubint>
+                </pipelineAttributes>
+                <usedDataProducts>
+                  <item>
+                    <lofar:bfDataProduct topology="B0.1.T.SAP000.cs">
+                    </lofar:bfDataProduct>
+                  </item>
+                </usedDataProducts>
+                <resultDataProducts>
+                  <item>
+                    <lofar:pulsarDataProduct>
+                      <name>B0.1.PT0.pu.dps</name>
+                      <topology>B0.1.PT0.pu.dps</topology>
+                      <status>no_data</status>
+                    </lofar:pulsarDataProduct>
+                  </item>
+                </resultDataProducts>
+              </lofar:pipeline>
+            </item>
+</children>
+        </lofar:folder>
+        </item>
+</children>
+    </lofar:folder>
+    </item>
+          </children>
+  </lofar:project>
