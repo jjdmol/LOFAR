@@ -53,7 +53,7 @@ with open("add_virtual_instrument.sql", 'w') as output:
     output.write("(%i, 'cep4node', 5), " % (i,))
   output.write("\n")
   ##node_group
-  output.write("(64, 'cep4_gpu', 4)\n") ## unknown which nodes are in here?
+  output.write("(64, 'cep4_gpu', 4);\n") ## unknown which nodes are in here? Last entry for resource groups, to make the syntax work FIXME
   #----- resource & resource_to_resource_group & resource_capacity & resource_availability -----
   resource_count = 0
   resources = ""
