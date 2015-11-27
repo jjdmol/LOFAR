@@ -68,46 +68,46 @@ with open("add_virtual_instrument.sql", 'w') as output:
     resource_available += "(DEFAULT, %i, TRUE), " % (resource_count,)
     resource_count += 1
     resources += "(%i, 'tbb', %i), " % (resource_count, tbb_index)
-    resource_to_resource_group += "(DEFUALT, %i, %i), " % (resource_count, station)
+    resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, station)
     resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 96*8*1024*1024*1024, 96*8*1024*1024*1024) ##magic numbers FIXME
     resource_available += "(DEFAULT, %i, TRUE), " % (resource_count,)
     resource_count += 1
     resources += "(%i, 'rcu', %i), " % (resource_count, rcu_index)
-    resource_to_resource_group += "(DEFUALT, %i, %i), " % (resource_count, station)
+    resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, station)
     resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 96, 96) ##magic numbers FIXME, should be twice as high for INTERNATIONAL
     resource_available += "(DEFAULT, %i, TRUE), " % (resource_count,)
     resource_count += 1
     resources += "(%i, 'bandwidth', %i), " % (resource_count, bandwidth_index)
-    resource_to_resource_group += "(DEFUALT, %i, %i), " % (resource_count, station)
+    resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, station)
     resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 3*1024*1024*1024, 3*1024*1024*1024) ##magic numbers FIXME
     resource_available += "(DEFAULT, %i, TRUE), " % (resource_count,)
     resource_count += 1
   ## nodes
   for node in cep4numbers:
     resources += "(%i, 'bandwidth', %i), " % (resource_count, bandwidth_index)
-    resource_to_resource_group += "(DEFUALT, %i, %i), " % (resource_count, node)
+    resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, node)
     resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 50*1024*1024*1024, 50*1024*1024*1024) ##magic numbers FIXME
     resource_available += "(DEFAULT, %i, TRUE), " % (resource_count,)
     resource_count += 1
     resources += "(%i, 'processor', %i), " % (resource_count, processor_index)
-    resource_to_resource_group += "(DEFUALT, %i, %i), " % (resource_count, node)
+    resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, node)
     resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 24, 24) ##magic numbers FIXME
     resource_available += "(DEFAULT, %i, TRUE), " % (resource_count,)
     resource_count += 1
     resources += "(%i, 'storage', %i), " % (resource_count, storage_index)
-    resource_to_resource_group += "(DEFUALT, %i, %i), " % (resource_count, node)
+    resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, node)
     resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 0, 0) ##magic numbers FIXME
     resource_available += "(DEFAULT, %i, TRUE), " % (resource_count,)
     resource_count += 1
   ## CEP4 bandwidth
   resources += "(%i, 'cep4bandwidth', %i), " % (resource_count, bandwidth_index)
-  resource_to_resource_group += "(DEFUALT, %i, %i), " % (resource_count, 3) ##magic numbers FIXME
+  resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, 3) ##magic numbers FIXME
   resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 80*1024*1024*1024, 80*1024*1024*1024) ##magic numbers FIXME
   resource_available += "(DEFAULT, %i, TRUE), " % (resource_count,)
   resource_count += 1
   ## CEP4 storage
   resources += "(%i, 'cep4storage', %i), " % (resource_count, storage_index)
-  resource_to_resource_group += "(DEFUALT, %i, %i), " % (resource_count, 3) ##magic numbers FIXME
+  resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, 3) ##magic numbers FIXME
   resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 2100*1024*1024*1024, 2100*1024*1024*1024) ##magic numbers FIXME
   resource_available += "(DEFAULT, %i, TRUE), " % (resource_count,)
   resource_count += 1
