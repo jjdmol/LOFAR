@@ -97,7 +97,8 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         if(config.useTEC())
         {
             itsExpr[i] = compose(itsExpr[i],
-                makeTECExpr(itsScope, instrument->station(i)));
+                makeTECExpr(itsScope, instrument->station(i),
+                            config.getTECConfig()));
         }
 
         // Direction independent polarization rotation.
