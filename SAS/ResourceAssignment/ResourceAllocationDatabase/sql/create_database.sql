@@ -183,7 +183,7 @@ ALTER TABLE resource_monitoring.resource_capacity
 CREATE TABLE resource_monitoring.resource_availability (
   id serial NOT NULL,
   resource_id integer NOT NULL REFERENCES virtual_instrument.resource DEFERRABLE INITIALLY IMMEDIATE,
-  available bool NOt NULL,
+  available bool NOT NULL,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_monitoring.resource_availability
@@ -192,7 +192,7 @@ ALTER TABLE resource_monitoring.resource_availability
 CREATE TABLE resource_monitoring.resource_group_availability (
   id serial NOT NULL,
   resource_group_id integer NOT NULL REFERENCES virtual_instrument.resource_group DEFERRABLE INITIALLY IMMEDIATE,
-  available bool NOt NULL,
+  available bool NOT NULL,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_monitoring.resource_group_availability
