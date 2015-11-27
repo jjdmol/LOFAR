@@ -235,28 +235,28 @@ def hasCoherentTab(TAB):
   return False
 
 ##FIXME we will need to fill in actual values. Might need to depend on variables
-def processingCluster(cluster, number_of_tasks):
+def processingCluster(cluster, number_of_tasks=244):
   CEP2 = r"""  <processingCluster>
-    <name>CEP4</name>
-    <partition>/data</partition>
-    <numberOfTasks>%i</numberOfTasks>
-    <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
-    <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
-    <maxDurationPerTask>PT600S</maxDurationPerTask>
-    <numberOfCoresPerTask>20</numberOfCoresPerTask>
-    <runSimultaneous>true</runSimultaneous>
-    </processingCluster>"""
+                    <name>CEP4</name>
+                    <partition>/data</partition>
+                    <numberOfTasks>%i</numberOfTasks>
+                    <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
+                    <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
+                    <maxDurationPerTask>PT600S</maxDurationPerTask>
+                    <numberOfCoresPerTask>20</numberOfCoresPerTask>
+                    <runSimultaneous>true</runSimultaneous>
+                  </processingCluster>"""
 
   CEP4 = r"""  <processingCluster>
-    <name>CEP4</name>
-    <partition>/data</partition>
-    <numberOfTasks>%i</numberOfTasks>
-    <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
-    <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
-    <maxDurationPerTask>PT600S</maxDurationPerTask>
-    <numberOfCoresPerTask>20</numberOfCoresPerTask>
-    <runSimultaneous>true</runSimultaneous>
-    </processingCluster>"""
+                    <name>CEP4</name>
+                    <partition>/data</partition>
+                    <numberOfTasks>%i</numberOfTasks>
+                    <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
+                    <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
+                    <maxDurationPerTask>PT600S</maxDurationPerTask>
+                    <numberOfCoresPerTask>20</numberOfCoresPerTask>
+                    <runSimultaneous>true</runSimultaneous>
+                  </processingCluster>"""
 
   if cluster == "CEP4":
     result = CEP4 % (number_of_tasks,)
@@ -266,13 +266,13 @@ def processingCluster(cluster, number_of_tasks):
 
 def dataProductCluster(cluster):
   CEP2 = r"""  <storageCluster>
-        <name>CEP2</name>
-        <partition>/data</partition>
-    </storageCluster>"""
+                      <name>CEP2</name>
+                      <partition>/data</partition>
+                    </storageCluster>"""
   CEP4 = r"""<storageCluster>
-        <name>CEP4</name>
-        <partition>/data</partition>
-    </storageCluster>"""
+                      <name>CEP4</name>
+                      <partition>/data</partition>
+                    </storageCluster>"""
 
   if cluster == "CEP4":
     result = CEP4
@@ -405,7 +405,8 @@ def writeTABXML(TAB):
 def writeXMLTargetPipeline(ofile, topo, pred_topo, name, descr, defaulttemplate, flagging, duration, avfstep, avtstep, demixfstep, demixtstep,
                     demixalways, demixifneeded, ignoretarget, baselines, correlations, beamenable, solveparms, solveuvrange, strategybaselines, strategytimerange,
                     uvintopo, uvinname, instrintopo, instrinname, uvoutname, uvouttopo, storageCluster) :
-  cluster = dataProductCluster(storageCluster)
+  stor_cluster = dataProductCluster(storageCluster)
+  proc_cluster = processingCluster(storageCluster)
   print >> ofile, r"""<item index="0">
                   <lofar:pipeline xsi:type="lofar:CalibrationPipelineType">
                     <topology>%s</topology>
@@ -434,6 +435,7 @@ def writeXMLTargetPipeline(ofile, topo, pred_topo, name, descr, defaulttemplate,
                         <strategyBaselines>%s</strategyBaselines>
                         <strategyTimeRange>%s</strategyTimeRange>
                       </bbsParameters>
+                    %s
                     </pipelineAttributes>
                     <usedDataProducts>
                       <item>
@@ -460,12 +462,13 @@ def writeXMLTargetPipeline(ofile, topo, pred_topo, name, descr, defaulttemplate,
                     </lofar:pipeline>
                   </item>""" % (topo, pred_topo, name, name, descr, defaulttemplate, flagging, duration, avfstep, avtstep, demixfstep, demixtstep,
                     demixalways, demixifneeded, ignoretarget, baselines, correlations, beamenable, solveparms, solveuvrange, strategybaselines, strategytimerange,
-                    uvintopo, uvinname, instrintopo, instrinname, uvoutname, uvouttopo, cluster)                
+                    proc_cluster, uvintopo, uvinname, instrintopo, instrinname, uvoutname, uvouttopo, stor_cluster)                
 
 def writeXMLCalPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, flagging, duration, skymodel, avfstep, avtstep, demixfstep, demixtstep,
                     demixalways, demixifneeded, ignoretarget, baselines, correlations, beamenable, solveparms, solveuvrange, strategybaselines, strategytimerange,
                     uvintopo, instroutname, instrouttopo, uvouttopo, storageCluster) :
-  cluster = dataProductCluster(storageCluster)
+  stor_cluster = dataProductCluster(storageCluster)
+  proc_cluster = processingCluster(storageCluster)
   print >> ofile, r"""        <item index="0">
               <lofar:pipeline xsi:type="lofar:CalibrationPipelineType">
                 <topology>%s</topology>
@@ -495,6 +498,7 @@ def writeXMLCalPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, flaggi
                     <strategyBaselines>%s</strategyBaselines>
                     <strategyTimeRange>%s</strategyTimeRange>
                   </bbsParameters>
+                %s
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -523,11 +527,12 @@ def writeXMLCalPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, flaggi
               </lofar:pipeline>
             </item>""" % (topo, pred_topo, name, name, descr, defaulttemplate, flagging, duration, skymodel, avfstep, avtstep, demixfstep, demixtstep,
                     demixalways, demixifneeded, writeBoolean(ignoretarget), baselines, correlations, writeBoolean(beamenable), solveparms, solveuvrange, strategybaselines, strategytimerange,
-                    uvintopo, instroutname, instrouttopo, cluster, uvouttopo, uvouttopo, cluster)
+                    proc_cluster, uvintopo, instroutname, instrouttopo, stor_cluster, uvouttopo, uvouttopo, stor_cluster)
 
 def writeXMLAvgPipeline(ofile, topo, pred_topo, name, descr, defaulttemplate, flagging, duration, avfstep, avtstep, demixfstep, demixtstep,
                     demixalways, demixifneeded, ignoretarget, uvintopo, uvouttopo, storageCluster) :
-  cluster = dataProductCluster(storageCluster)
+  stor_cluster = dataProductCluster(storageCluster)
+  proc_cluster = processingCluster(storageCluster)
   print >> ofile, r"""        <item index="0">
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>%s</topology>
@@ -547,6 +552,7 @@ def writeXMLAvgPipeline(ofile, topo, pred_topo, name, descr, defaulttemplate, fl
                     <demixIfNeeded>%s</demixIfNeeded>
                     <ignoreTarget>%s</ignoreTarget>
                   </demixingParameters>
+                %s
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -566,13 +572,14 @@ def writeXMLAvgPipeline(ofile, topo, pred_topo, name, descr, defaulttemplate, fl
                 </resultDataProducts>
               </lofar:pipeline>
             </item>""" % (topo, pred_topo, name, name, descr, defaulttemplate, flagging, duration, avfstep, avtstep, demixfstep, demixtstep,
-                    demixalways, demixifneeded, ignoretarget, uvintopo, uvouttopo, uvouttopo, cluster)
+                    demixalways, demixifneeded, ignoretarget, proc_cluster, uvintopo, uvouttopo, uvouttopo, stor_cluster)
                    
 def writeXMLPulsarPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, duration, bfintopo, pouttopo, storageCluster, _2bf2fitsExtraOpts, _8bitConversionSigma, 
             decodeNblocks, decodeSigma, digifilExtraOpts, dspsrExtraOpts, dynamicSpectrumTimeAverage, nofold, nopdmp, norfi, 
             prepdataExtraOpts, prepfoldExtraOpts, prepsubbandExtraOpts, pulsar, rawTo8bit, rfifindExtraOpts, rrats, singlePulse, 
             skipDsps, skipDynamicSpectrum, skipPrepfold, tsubint) :
-  cluster = dataProductCluster(storageCluster)
+  stor_cluster = dataProductCluster(storageCluster)
+  proc_cluster = processingCluster(storageCluster)
   print >> ofile, r"""        <item index="0">
               <lofar:pipeline xsi:type="lofar:PulsarPipelineType">
                 <topology>%s</topology>
@@ -604,6 +611,7 @@ def writeXMLPulsarPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, dur
                   <skipDynamicSpectrum>%s</skipDynamicSpectrum>
                   <skipPrepfold>%s</skipPrepfold>
                   <tsubint>%s</tsubint>
+                %s
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -626,11 +634,12 @@ def writeXMLPulsarPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, dur
             decodeNblocks, decodeSigma, digifilExtraOpts, dspsrExtraOpts, dynamicSpectrumTimeAverage, writeBoolean(nofold), writeBoolean(nopdmp), writeBoolean(norfi), 
             prepdataExtraOpts, prepfoldExtraOpts, prepsubbandExtraOpts, pulsar, writeBoolean(rawTo8bit), rfifindExtraOpts, writeBoolean(rrats), writeBoolean(singlePulse), 
             writeBoolean(skipDsps), writeBoolean(skipDynamicSpectrum), writeBoolean(skipPrepfold), tsubint, 
-            bfintopo, pouttopo, pouttopo, cluster)
+            proc_cluster, bfintopo, pouttopo, pouttopo, stor_cluster)
 
 #nv 13okt2014: #6716 - Implement Long Baseline Pipeline     
 def writeXMLLongBaselinePipe(ofile, topo, pred_topo, name, descr, defaulttemplate, duration, subbands_per_subbandgroup, subbandgroups_per_ms, uvintopo, uvouttopo, storageCluster) :
-  cluster = dataProductCluster(storageCluster)
+  stor_cluster = dataProductCluster(storageCluster)
+  proc_cluster = processingCluster(storageCluster)
   print >> ofile, r"""        <item index="0">
               <lofar:pipeline xsi:type="lofar:LongBaselinePipelineType">
                 <topology>%s</topology>
@@ -642,6 +651,7 @@ def writeXMLLongBaselinePipe(ofile, topo, pred_topo, name, descr, defaulttemplat
                   <duration>%s</duration>
                   <subbandsPerSubbandGroup>%s</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>%s</subbandGroupsPerMS>
+                %s
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -660,7 +670,8 @@ def writeXMLLongBaselinePipe(ofile, topo, pred_topo, name, descr, defaulttemplat
                   </item>
                 </resultDataProducts>
               </lofar:pipeline>
-            </item>""" % (topo, pred_topo, name, name, descr, defaulttemplate, duration, subbands_per_subbandgroup, subbandgroups_per_ms, uvintopo, uvouttopo, uvouttopo, cluster)  
+            </item>""" % (topo, pred_topo, name, name, descr, defaulttemplate, duration, subbands_per_subbandgroup, subbandgroups_per_ms, 
+            proc_cluster, uvintopo, uvouttopo, uvouttopo, stor_cluster)  
 
 def writeDataProducts(dataTopo, correlatedData, coherentStokesData, incoherentStokesData, storageCluster):
   strVal = ""
