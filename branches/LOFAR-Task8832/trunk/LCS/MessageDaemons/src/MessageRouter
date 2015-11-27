@@ -1,0 +1,204 @@
+#!/usr/bin/python
+# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# id.. TDB
+"""Very basic messagebus router that routs the messages according to the settings in Router.conf
+"""
+
+import logging
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+
+import lofar.messagebus.messagebus as messagebus
+import lofar.messagebus.message as message
+
+import threading
+from ConfigParser import SafeConfigParser
+import os.path
+import sys
+from datetime import datetime
+
+def log(level, msg):
+  print "%s %-4s %s" % (str(datetime.now())[:-3], level, msg)
+
+class BusMulticast(threading.Thread):
+  """
+  Sets up the router from one inbus to several outbusses
+  """
+  def __init__(self, source, destlist):
+    threading.Thread.__init__(self)
+    self.source   = source
+    self.destlist = destlist
+    self.done     = False
+
+  def stop(self):
+    self.done     = True
+
+  def run(self):
+    try:
+      inbus = messagebus.FromBus(self.source)
+      outbusses = [messagebus.ToBus(dest) for dest in self.destlist]
+      outdump = messagebus.ToBus("dump.%s" % (self.source,), "create:always,delete:always,node:{type:topic}")
+
+      log("INFO","[%s] Forwarding to %s" % (self.source,self.destlist))
+
+      while not self.done:
+        # TODO: Use a transaction (not supported yet in qpid 0.30)
+        msg = inbus.get(1.0)
+        if msg is None:
+          # timeout
+          continue
+
+        try:
+          content = msg.content()
+          log("INFO","[%s] [%s] Message received" % (self.source, content))
+        except Exception, e:
+          content = "<unknown>"
+          log("WARN","[%s] Non-compliant message received" % (self.source,))
+
+
+        outdump.send(msg)
+        for outbus in outbusses:
+          outbus.send(msg)
+        inbus.ack(msg)
+
+        log("INFO", "[%s] [%s] Forwarded to %s" % (self.source, content, self.destlist))
+
+    except Exception, e:
+      log("FATAL", "[%s] Caught exception: %s" % (self.source, e))
+
+      # Abort everything, to avoid half-broken situations
+      cmdbus = messagebus.ToBus("messagerouter.command")
+      cmdbus.send("stop")
+
+    log("INFO", "[%s] Done" % (self.source,))
+
+class RouterConfig(SafeConfigParser):
+  """
+    Router configuration. Example:
+
+    [multicast]
+    source-queue-1: dest-queue-1, dest-queue2
+    source-queue-2: dest-queue-3
+
+    NOTE: Once we have python 2.6+ on ccu001 and ccu099, we could override the dict_type in the RawConfigParser
+    and allow multiple source: dest lines to accumulate.
+  """
+  def __init__(self, filename=None):
+    SafeConfigParser.__init__(self)
+
+    # set defaults
+    self.add_section('multicast')
+
+    # read configuration
+    if filename is not None:
+      self.read(filename)
+
+  def read(self, filename):
+    log("INFO","[RouterConfig] Considering reading %s" % (filename,))
+    if not os.path.isfile(filename):
+      return False
+
+    log("INFO","[RouterConfig] Reading %s" % (filename,))
+    SafeConfigParser.read(self, filename)
+    return True
+
+  def sources(self):
+    return self.options('multicast')
+
+  def destinations(self, source):
+    return [field.strip() for field in self.get('multicast', source).split(',')]
+
+
+def process_command_queue(command_queue):
+  """
+    Listen on the given queue, and process the received commands.
+
+    Supported commands:
+
+      stop             - Do a graceful shutdown of this service
+  """
+
+  log("INFO","[main] Listening for commands on %s" % (command_queue,))
+
+  cmdq = messagebus.FromBus(command_queue, "create: always, delete: always")
+  while True:
+    msg = cmdq.get(1.0)
+    if msg is None:
+      continue
+
+    command = msg.raw_content()
+    log("INFO","[main] Received command: %s" % (command,))
+
+    cmdq.ack(msg)
+
+    if command == "stop":
+      break
+
+if __name__ == "__main__":
+  """
+    Apply the routing specified in router.conf and router.conf.`hostname`;
+    both configration files are found in $LOFARROOT/etc, or . if $LOFARROOT is
+    not set.
+
+    Application runs forever, regardless of the number of routes. Also runs
+    forever if no routing is required, to keep behaviour consistent across
+    nodes.
+  """
+  import os
+  import platform
+  import time
+
+  if "LOFARROOT" in os.environ:
+    path = os.path.expandvars("$LOFARROOT/etc")
+  else:
+    path = "."
+
+  # read default config file
+  config = RouterConfig('%s/MessageRouter.conf' % path)
+
+  # read host-specific config file
+  my_configfile = '%s/MessageRouter.conf.%s' % (path, platform.node().lower()) # = hostname
+  config.read(my_configfile)
+
+  threadlist = []
+
+  # set up router
+  for source in config.sources():
+    destlist = config.destinations(source)
+
+    t = BusMulticast(source, destlist)
+    t.start()
+    threadlist.append(t)
+
+
+  log("INFO","[main] Running %s threads" % (len(threadlist),))
+
+  # Listen for commands on a special queue
+  process_command_queue("messagerouter.command")
+
+  log("INFO","[main] Shutting down")
+
+  # signal end of processing
+  for t in threadlist:
+    t.stop()
+
+  # wait for join (forever)
+  for t in threadlist:
+    t.join()
+
+  log("INFO","[main] Done")
