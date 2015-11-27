@@ -1,0 +1,68 @@
+
+projectName=test_lofar
+mainFolderName=
+mainFolderDescription=
+
+BLOCK
+
+setup_mode=MultiObs           # setup_mode can be one of Calobs, Calbeam, MultiObs
+processing=Pulsar             # can be one of Calibration, Preprocessing, Imaging, Pulsar, LongBaseline, none
+externalCalibrator=T          # internal or external (export of solutions) calibration
+imagingPipeline=none          # can be one of MSSS, standard, none
+number_of_slices=1
+
+packageName=FE test
+
+packageDescription=Fly's eye test including pulsar pipeline
+packageTag=
+
+antennaMode=HBA Dual Inner
+clock=200 MHz
+instrumentFilter=110-190 MHz
+numberOfBitsPerSample=8
+channelsPerSubband=16
+stationList=nl               # comma-separated list of station names and/or the following aliasses: core, superterp, remote, international, all, nl
+tbbPiggybackAllowed=true
+correlatedData=F
+coherentStokesData=T
+incoherentStokesData=F
+coherentDedisperseChannels=False
+flysEye=T
+subbandsPerFileCS=512
+numberCollapsedChannelsCS=16
+stokesDownsamplingStepsCS=128
+whichCS=I
+#subbandsPerFileIS=16
+#numberCollapsedChannelsIS=4
+#stokesDownsamplingStepsIS=12
+#whichIS=IQUV
+flaggingStrategy=
+targetDuration_s=300
+
+Global_TAB=
+c;03:32:59.36;+54:34:43.5
+c;53.2473333333deg;54.57875deg
+c;0.929341284574;0.952578889123
+#Global_Pulsar=B0329+54;T;T;DSPSR EXTRA OPTIONS;PREPDATA;5.1;-2;F;F;F;F;F;2BF2FITS;4;101;RFI FIND EXTRA OPTIONS;PREPFOLD EXTRA;PREPSUBBAND Extra; 0.6;T;T
+
+
+# startTimeUTC, the start time of the first observation. format: yyyy-MM-dd hh:mm:ss
+# un-comment the startTimeUTC to have the observation start times generated
+#startTimeUTC=2014-04-16 12:00:10
+# timeStep's in seconds
+timeStep1=60
+timeStep2=60
+
+# target beams and target pipelines
+# ra ;dec; targetname; subbandList; nrSubbands; nrTABrings; TABringSize; create_pipeline [;pipeline duration seconds]
+# optionally followed by BBS and/or demixing settings
+# BBS:SkyModel;BBS_baselines;BBS_correlations;BBS_beamModelEnable;BBS_solveParms;BBS_solveUVRange;BBS_strategyBaselines;BBS_strategyTimeRange
+# Demixer:avg freq step; avg time step; demix freq step; demix time step; demix_always; demix_if_needed; ignore_target
+# Pulsar: pulsar; single-pulse; raw-to-8bit; dspsr-extra-opts; prepdata-extra-opts; 8bit-conversion-sigma; tsubint; norfi; nofold; nopdmp; skip-dspsr; rrats; 2bf2fits-extra-opts; decode-sigma; decode-nblocks; rfifind-extra-opts; prepfold-extra-opts; prepsubband-extra-opts; dynamic-spectrum-time-average; skip-dynamic-spectrum; skip-prepfold
+
+targetBeams=
+03:32:59.36;+54:34:43.5;B0329+54;51..450;400;;;T;600
+#Pulsar:B0329+54;T;T;DSPSR EXTRA OPTIONS;PREPDATA;5.1;-2;F;F;F;F;F;2BF2FITS;4;101;RFI FIND EXTRA OPTIONS;PREPFOLD EXTRA;PREPSUBBAND Extra; 0.6;T;T
+
+
+BLOCK
