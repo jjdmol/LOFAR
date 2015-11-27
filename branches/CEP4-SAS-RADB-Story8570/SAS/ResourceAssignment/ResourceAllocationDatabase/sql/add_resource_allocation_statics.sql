@@ -1,5 +1,5 @@
 -- resourceassignment password for testing on mcu005 is the same as the password on the president's luggage +6
--- psql resourceassignment -U resourceassignment -f fill_database.sql -W
+-- psql resourceassignment -U resourceassignment -f add_resource_allocation_statics.sql -W
 BEGIN;
 
 INSERT INTO resource_allocation.task_status VALUES (200, 'prepared'), (300, 'approved'), (320, 'on_hold'), (335, 'conflict'),
