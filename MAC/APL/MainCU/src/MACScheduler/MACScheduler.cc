@@ -99,6 +99,14 @@ MACScheduler::MACScheduler() :
 	itsFinishedPeriod= globalParameterSet()->getTime("finishedPeriod", 86400) / 60; // in minutes
 	itsMaxPlanned    = globalParameterSet()->getTime("maxPlannedList",  30);
 	itsMaxFinished   = globalParameterSet()->getTime("maxFinishedList", 40);
+    itsExclPLcluster = globalParameterSet()->getString("excludePipelinesOnThisCluster", "");
+    if (itsExclPLcluster.length() > 0) {
+        LOG_INFO_STR("NOT running the pipelines on cluster: " << itsExclPLcluster);
+    	// We need to exclude this cluster for pipelines so make sure the name begins with the 'not'-sign.
+        if (itsExclPLcluster[0] != '!') {
+            itsExclPLcluster.insert(0, 1, '!');
+		}
+	}
 
 	ASSERTSTR(itsMaxPlanned + itsMaxFinished < MAX_CONCURRENT_OBSERVATIONS, 
 				"maxPlannedList + maxFinishedList should be less than " << MAX_CONCURRENT_OBSERVATIONS);
@@ -623,8 +631,8 @@ void MACScheduler::_updatePlannedList()
 	ptime	currentTime = from_time_t(now);
 	ASSERTSTR (currentTime != not_a_date_time, "Can't determine systemtime, bailing out");
 
-	// get new list (list is ordered on starttime)
-	vector<OTDBtree> plannedDBlist = itsOTDBconnection->getTreeGroup(1, itsPlannedPeriod);	// planned observations
+	// get new list (list is ordered on starttime) of planned observations
+	vector<OTDBtree> plannedDBlist = itsOTDBconnection->getTreeGroup(1, itsPlannedPeriod, itsExclPLcluster);	
 
 	if (!plannedDBlist.empty()) {
 		LOG_DEBUG(formatString("OTDBCheck:First planned observation (%d) is at %s (active over %d seconds)", 
@@ -754,7 +762,7 @@ void MACScheduler::_updateActiveList()
 	LOG_DEBUG("_updateActiveList()");
 
 	// get new list (list is ordered on starttime)
-	vector<OTDBtree> activeDBlist = itsOTDBconnection->getTreeGroup(2, 0);
+	vector<OTDBtree> activeDBlist = itsOTDBconnection->getTreeGroup(2, 0, itsExclPLcluster);
 	if (activeDBlist.empty()) {
 		LOG_DEBUG ("No active Observations");
 		// NOTE: do not exit routine on emptylist: we need to write an empty list to clear the DB
@@ -797,7 +805,7 @@ void MACScheduler::_updateFinishedList()
 	LOG_DEBUG("_updateFinishedList()");
 
 	// get new list (list is ordered on starttime)
-	vector<OTDBtree> finishedDBlist = itsOTDBconnection->getTreeGroup(3, itsFinishedPeriod);
+	vector<OTDBtree> finishedDBlist = itsOTDBconnection->getTreeGroup(3, itsFinishedPeriod, itsExclPLcluster);
 	if (finishedDBlist.empty()) {
 		LOG_DEBUG ("No finished Observations");
 		// NOTE: do not exit routine on emptylist: we need to write an empty list to clear the DB
