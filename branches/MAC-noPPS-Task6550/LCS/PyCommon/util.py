@@ -25,6 +25,7 @@ This package contains different utilities that are common for LOFAR software
 """
 
 import sys
+import time
 
 
 def check_bit(value, bit):
@@ -112,3 +113,27 @@ def isFloatList(lst):
     if not isinstance(lst, list):
         return False
     return all(isinstance(x, float) for x in lst)
+
+
+def waitForInterrupt():
+    """
+    Useful (low cpu load) loop that waits for keyboard interrupt.
+    """
+    while True:
+        try:
+            time.sleep(10)
+        except KeyboardInterrupt:
+            break
+
+
+def humanreadablesize(num, suffix='B', base=1000):
+    """ converts the given size (number) to a human readable string in powers of 'base'"""
+    try:
+        for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
+            if abs(num) < float(base):
+                return "%3.1f%s%s" % (num, unit, suffix)
+            num /= float(base)
+        return "%.2f%s%s" % (num, 'Y', suffix)
+    except TypeError:
+        return str(num)
+

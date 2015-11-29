@@ -1,4 +1,4 @@
-#!/bin/bash -le
+#!/bin/bash -e
 
 # Run the unit test
 # either with or without code coverage measurements,

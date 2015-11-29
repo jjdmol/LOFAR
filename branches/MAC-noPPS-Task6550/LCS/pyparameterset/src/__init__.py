@@ -149,7 +149,7 @@ class parameterset(PyParameterSet):
 
     def adoptDict(self, parms):
         for (k,v) in parms.iteritems():
-            self.replace (k, v)
+            self.replace (str(k), str(v))  # k, v always type string
 
     def get(self, key):
         """Get the parametervalue object of a parameter."""

@@ -319,7 +319,8 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
         if(config.useTEC())
         {
             exprDIE[i] = compose(exprDIE[i],
-                makeTECExpr(itsScope, instrument->station(i)));
+                makeTECExpr(itsScope, instrument->station(i),
+                            config.getTECConfig()));
         }
 
         // Direction independent polarization rotation.
@@ -439,7 +440,8 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
         if(config.useTEC())
         {
             stationExpr[i] = compose(stationExpr[i],
-                makeTECExpr(itsScope, instrument->station(i)));
+                makeTECExpr(itsScope, instrument->station(i),
+                            config.getTECConfig()));
         }
 
         // Direction independent polarization rotation.

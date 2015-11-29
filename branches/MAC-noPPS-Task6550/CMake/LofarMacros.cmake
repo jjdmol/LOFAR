@@ -8,6 +8,7 @@
 #   lofar_add_sbin_program(name)
 #   lofar_add_sbin_scripts([name1 [name2 ..]])
 #   lofar_add_test(name)
+#   lofar_create_target_symlink(target symlink)
 #   lofar_join_arguments(var)
 #   lofar_search_path(path package)
 #
@@ -198,6 +199,31 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
       add_dependencies(check ${_name})
     endif(BUILD_TESTING)
   endmacro(lofar_add_test)
+
+
+  # --------------------------------------------------------------------------
+  # lofar_create_target_symlink(target symlink)
+  #
+  # Create a symbolic link <symlink> to the location of the given <target>.
+  # This macro will create a custom target <target>_symlink that depends on
+  # <target>.
+  #
+  # The need for this macro arose when CMake policy CMP0026 was introduced. This
+  # policy disallows the use of the LOCATION target property, and promotes the
+  # use of the generator expression $<TARGET_FILE>.
+  # --------------------------------------------------------------------------
+  macro(lofar_create_target_symlink _target _symlink)
+    if(POLICY CMP0026)
+      set(_location $<TARGET_FILE:${_target}>)
+    else(POLICY CMP0026)
+      get_target_property(_location ${_target} LOCATION)
+    endif(POLICY CMP0026)
+    add_custom_target(${PACKAGE_NAME}_${_target}_symlink ALL
+      COMMAND ${CMAKE_COMMAND} -E create_symlink
+      ${_location}
+      ${_symlink})
+    add_dependencies(${PACKAGE_NAME}_${_target}_symlink ${_target})
+  endmacro(lofar_create_target_symlink _target _symlink)
 
 
   # --------------------------------------------------------------------------
