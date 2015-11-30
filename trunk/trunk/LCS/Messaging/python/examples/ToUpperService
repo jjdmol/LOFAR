@@ -1,0 +1,36 @@
+#!/usr/bin/python
+
+from lofar.messaging.Service import Service
+from lofar.common.util import waitForInterrupt
+
+# Simple RPC server 'ToUpper'
+
+# create service function:
+
+def ToUpper( Text ):
+    if (isinstance(Text,dict)):
+      ret={}
+      for name,value in Text.iteritems():
+        ret[name]=str(value).upper()
+      return ret
+    if (isinstance(Text,str)):
+      print "ToUpper : %s" %(Text)
+      return str(Text).upper()
+    ret="Failed to convert to upper"
+    try:
+      ret="Cannot conver to upper object:" + str(Text)
+    except Exception as e:
+      ret="Cannot conver to upper object:" + str(e)
+    return ret
+
+# Used settings
+ServiceName="ToUpper"
+BusName="simpletest"
+
+# Register function as a service handler listeneing at Bus BusName and ServiceName
+myserv = Service(BusName,ServiceName,ToUpper,numthreads=4)
+
+# 'with' sets up the connection context and defines the scope of the service.
+with myserv:
+    waitForInterrupt()
+    logger.info("Keyboard interrupt received.")
