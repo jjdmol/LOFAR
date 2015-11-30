@@ -38,6 +38,7 @@ from flask import url_for
 from flask.json import jsonify
 from lofar.sas.resourceassignment.resourceassignmenteditor.utils import gzipped
 from lofar.sas.resourceassignment.resourceassignmenteditor.fakedata import *
+from lofar.sas.resourceassignment.resourceassignmentservice import rpc
 
 __root_path = os.path.dirname(os.path.abspath(__file__))
 print '__root_path=%s' % __root_path
@@ -184,8 +185,11 @@ def tasktypes():
     return jsonify({'tasktypes': ['Observation', 'Pipeline', 'Ingest']})
 
 @app.route('/rest/taskstatustypes')
-def taskstatustypes():
-    return jsonify({'taskstatustypes': ['scheduled', 'approved', 'prescheduled', 'running', 'finished', 'aborted']})
+def getTaskStatusTypes():
+    result = rpc.getTaskStatuses()
+    result = sorted(result, key=lambda q: q['id'])
+    result = [x['name'] for x in result]
+    return jsonify({'taskstatustypes': result})
 
 
 @app.route('/rest/updates/<since>')
