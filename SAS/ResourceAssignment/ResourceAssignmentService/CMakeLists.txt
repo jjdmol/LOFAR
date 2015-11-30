@@ -9,7 +9,9 @@ set(_py_files
   __init__.py
   config.py
   radb.py
-) 
+  rpc.py
+  service.py
+)
 
 python_install(${_py_files} DESTINATION lofar/sas/resourceassignment/resourceassignmentservice)
 
