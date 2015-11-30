@@ -1,0 +1,11 @@
+# new setup
+prefix	=	Observation0
+
+Observation0.instanceNr = 0
+Observation0.starttime	= 0
+Observation0.stoptime	= 1
+
+# next parameters are optional, defaultvalues are shown
+#ChildControl.StartupRetryInterval = 10s
+#ChildControl.MaxStartupRetry	   = 5
+

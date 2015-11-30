@@ -1,0 +1,222 @@
+#!/bin/bash
+#
+# This test aims to determine the bandwith available from the cobalt cluster to
+# the locus cluster using iperf. Traffic will be distributed in a way that is
+# similar to that being used in operations. The cobalt nodes are pair-wise
+# connected to one of four router PC's, which in turn are connected to
+# twenty-five locus nodes. So, cbt001..002 and locus001..025 are connected to
+# the first router PC; cbt003..004 and locus025..050 to the second; etc.
+#
+# $Id$
+
+# Change directory to the location of this script
+cd $(dirname $0)
+
+# Source useful functions.
+. ../funcs.sh
+
+# Setup cleanup handler.
+trap cleanup 0 1 2 3 15
+
+### ================  Global variables  ================ ###
+
+# Array of cobalt nodes used in this test
+declare -a CBT_NODES=($(for i in $(seq 1 8); do printf "cbt%03d " $i; done))
+
+# Array of locus nodes reachable from lhn001 as returned by init_iperf_servers()
+declare -a LOCUS_NODES
+
+# Array of ethernet devices. Each element contains a list of locus nodes that
+# are connected to any of the cobalt nodes on the given ethernet device.
+declare -a ETH_DEV
+
+# Associative array. The key is the name of the cobalt node that will start a
+# number of iperf clients, one to each locus node listed in the value.
+declare -A IPERF_NODES
+
+# Temporary directory for output files
+declare TMPDIR
+
+# Number of ethernet devices per cobalt node
+N_ETH=4
+
+# Number of connection to be created per ethernet device
+N_CONN=3
+
+# Number of seconds the iperf client should run
+IPERF_TIME=20
+
+### ================  Functions  ================ ###
+
+# Stop the iperf server deamon process on every locus node
+cleanup()
+{
+  local status=$?
+  run_command -q "ssh lhn001 cexec locus: pkill -KILL -u $USER iperf"
+  rm -rf "$TMPDIR"
+  return $status
+}
+
+# Start a iperf server daemon process on every locus node
+# Return a list of locus nodes that actually run the iperf server
+init_iperf_servers()
+{
+  # The daemonize option (-D) of iperf is utterly broken; do it another way
+  run_command "ssh lhn001 cexec locus: iperf -s > /dev/null 2>&1 & sleep 1"
+
+  # Check on which nodes iperf actually runs.
+  nodes=$(run_command "ssh lhn001 cexec -p locus: pgrep -u $USER iperf") || exit
+
+  # Sometimes, more than one iperf instance appears to be running (a glitch?),
+  # so remove duplicates.
+  LOCUS_NODES=($(echo "$nodes" | \
+                 sed -n 's,^locus \(locus[0-9]\+\): [0-9]\+$,\1,p' | uniq))
+}
+
+# Initialize array ETH_DEV. Each element will contain a list of locus nodes that
+# are connected to the given ethernet device on _any_ cobalt node.
+init_eth_dev()
+{
+  for ((eth = 0; eth < $N_ETH; eth++))
+  do
+    first=$(printf "locus%03d" $(expr 25 '*' $eth + 1))
+    last=$(printf "locus%03d" $(expr 25 '*' $eth + 25))
+    for node in ${LOCUS_NODES[*]}
+    do
+      [[ "$node" < "$first" ]] || [[ "$node" > "$last" ]] && continue;
+      ETH_DEV[$eth]+="$node "
+    done
+  done
+}
+
+# Initialize the associative array IPERF_NODES. Key is the name of the cobalt
+# node that will start a number of iperf clients; one client for each locus node
+# listed in the value.
+init_iperf_nodes()
+{
+  for eth in ${!ETH_DEV[*]}
+  do
+    eth_nodes=(${ETH_DEV[$eth]})
+    # Are there enough locus nodes available for the current ethernet device?
+    [[ ${#eth_nodes[*]} -ge $(expr 2 '*' $N_ETH '*' $N_CONN) ]] || \
+      error "Too few locus nodes available to run test"
+    for cbt in ${!CBT_NODES[*]}
+    do
+      for ((conn = 0; conn < $N_CONN; conn++))
+      do
+        idx=$(expr $N_CONN '*' $cbt + $conn)
+        IPERF_NODES[${CBT_NODES[$cbt]}]+="${eth_nodes[$idx]} "
+      done
+    done
+  done
+}
+
+# Run a whole shebang of iperf clients on _all_ the cobalt nodes. Which iperf
+# client will connect to which locus node is described in the associative array
+# IPERF_NODES.
+run_iperf_clients()
+{
+  for host in ${CBT_NODES[*]}
+  do
+    # ssh command: clean up first; next, for each target, start an iperf client
+    # in the background
+    ssh_cmd=" \
+      rm -f /tmp/iperf-$host-*.log; \
+      for target in ${IPERF_NODES[$host]}; \
+      do \
+        iperf -N -t $IPERF_TIME -yc -c \${target} \
+          > /tmp/iperf-$host-\${target}.log & \
+      done"
+    run_command "ssh $host \$(eval $ssh_cmd)" || exit
+  done
+}
+
+# Wait for the results of the iperf runs on the different cobalt nodes. Since
+# there's no easy way to determine if all clients have finished, we will simply
+# assume they're done after the alotted time, $IPERF_TIME, has passed. We will
+# wait for one extra second.
+wait_for_results()
+{
+  sleep 1
+  echo "Waiting $IPERF_TIME seconds for results ..." >&2
+  sleep $IPERF_TIME
+}
+
+# Fetch the iperf client log files from the different cobalt nodes, do a sanity
+# check on the results, and aggregate the througput data into one file for easy
+# processing. Each line in this file will contain the name of the test (as
+# derived from the name of the original log file) and the measured network
+# bandwidth in bits per second (the ninth field in the CSV-data produced by the
+# iperf client).
+aggregate_logs()
+{
+  # Retrieve the log files
+  for host in ${CBT_NODES[*]}
+  do
+    run_command "scp $host:/tmp/iperf-$host-*.log $TMPDIR" || exit
+  done
+
+  # Aggregate results. We're only interested in the ninth field; it contains the
+  # measured network throughput in bits/s. Prefix that data name of the test.
+  for file in $TMPDIR/iperf-*.log
+  do
+    match=$(grep '^[-.,0-9]\+$' $file)
+    # Sanity check: file should contain exactly one line of CSV data.
+    [[ $(echo "$match" | wc -w) -eq 1 ]] || exit
+    echo -e "$(basename $file | sed -e 's,^iperf-\(.*\)\.log$,\1,')\t" \
+            "$(echo $match | cut -d, -f9)"
+  done > $TMPDIR/iperf.log
+}
+
+# Check the results. For *every* locus node, the measured bandwidth must be at
+# least the minimum specified in the file iperf-cobalt2locus.bw-req.
+check_results()
+{
+  local status=0
+
+  # Minimal bandwidth that is required (read from file)
+  local bw_req=$(cat iperf-cobalt2locus.bw-req) || exit
+
+  awk -v bw_req=$bw_req 'BEGIN { printf "Test results:\n-------------\n" }
+  {
+    if (min=="") min = max = $2;
+    if ($2 < min) min = $2;
+    if ($2 > max) max = $2;
+    sum += $2;
+    count += 1
+    printf "%s:\t%.2f Gb/s\t\t", $1, $2 / 1e9;
+    if ($2 < bw_req) {
+      printf "TOO LOW (expected at least %.2f Gb/s)\n", bw_req / 1e9;
+      error = 1;
+    } else {
+      printf "OK\n";
+    }
+  }
+  END {
+    printf "\nmin = %.2f Gb/s,\tmax = %.2f Gb/s," \
+           "\tavg = %.2f Gb/s,\ttot = %.0f Gb/s\n\n",
+           min / 1e9, max / 1e9, sum / (count * 1e9), sum / 1e9;
+    exit error; 
+  }' < $TMPDIR/iperf.log || status=1
+
+  return $status
+}
+
+
+### ================  Main body  ================ ###
+
+# Create temporary directory for output files
+TMPDIR=$(mktemp -dt "$(basename $0).XXXXXX") || exit
+
+# Initialize test setup
+init_iperf_servers
+init_eth_dev
+init_iperf_nodes
+
+# Run test and wait for results
+run_iperf_clients
+wait_for_results
+
+# Check and report results
+aggregate_logs
+check_results
