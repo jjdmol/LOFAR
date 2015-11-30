@@ -1,6 +1,6 @@
 /* $Id: app.js 32724 2015-10-28 13:24:49Z schaap $ */
 
-.myGrid {
+.grid {
     min-height: 400px;
     min-width: 500px;
     height: auto;
@@ -9,4 +9,16 @@
 
 .gantt {
     min-height: 100px;
+}
+
+.dropdown-menu {
+    z-index: 10000;
+}
+
+.ui-grid-cell {
+    overflow: visible;
+}
+
+.datepicker-wrapper ul {
+/*     visibility: hidden; */
 }

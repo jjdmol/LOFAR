@@ -6,16 +6,25 @@
     <title>{{title}}</title>
     <link rel='shortcut icon' href='{{ url_for('static', filename='favicon.ico') }}'>
     <link href="/static/css/bootstrap.min.css" rel="stylesheet" type="text/css">
-    <link href="/static/css/main.css" rel="stylesheet" type="text/css">
     <link href="/static/js/angular-ui-grid/ui-grid.min.css" rel="stylesheet" type="text/css">
+    <link href="/static/js/angular-ui-layout/angular-ui-layout.css" rel="stylesheet" type="text/css">
+    <link href="/static/js/utils/datetimepicker.css" rel="stylesheet" type="text/css">
+    <link href="/static/css/main.css" rel="stylesheet" type="text/css">
+    <script src="/static/js/utils/startswith.js"></script>
+    <script src="/static/js/moment/moment.js"></script>
+    <script src="/static/js/jquery/jquery.min.js"></script>
+    <script src="/static/js/utils/bootstrap.min.js"></script>
     <script src="/static/js/angular/angular.js"></script>
+    <script src="/static/js/utils/ui-bootstrap-tpls.min.js"></script>
     <script src="/static/js/angular-route/angular-route.min.js"></script>
     <script src="/static/js/angular-touch/angular-touch.js"></script>
     <script src="/static/js/angular-resource/angular-resource.min.js"></script>
+    <script src="/static/js/utils/ui-grid-edit-datepicker.js"></script>
     <script src="/static/js/angular-ui-grid/ui-grid.js"></script>
     <script src="/static/js/angular-ui-tree/angular-ui-tree.js"></script>
-    <script src="/static/js/moment/moment.js"></script>
+    <script src="/static/js/angular-ui-layout/angular-ui-layout.min.js"></script>
     <script src="/static/js/angular-moment/angular-moment.js"></script>
+    <script src="/static/js/utils/datetimepicker.js"></script>
     <link href="/static/js/angular-gantt/angular-gantt.min.css" rel="stylesheet" type="text/css">
     <link href="/static/js/angular-gantt/angular-gantt-plugins.min.css" rel="stylesheet" type="text/css">
     <script src="/static/js/angular-gantt/angular-gantt.js"></script>
@@ -28,25 +37,28 @@
     <body>
     {% raw %}
     <div ng-controller="DataController as dataCtrl">
-        <div ng-controller="GridController as gridCtrl">
-            <strong>Tasks:</strong>
-            <div id="grid1" ui-grid="gridOptions" ui-grid-move-columns class="myGrid"></div>
-        </div>
-        <br/>
-        <br/>
-        <br/>
-        <div ng-controller="GanttController as ganttCtrl">
-            <div gantt data=ganttData
-                 api=options.api
-                 show-side='true'>
-                <gantt-tree enabled="true"></gantt-tree>
-<!--                 <gantt-table></gantt-table> -->
-                <gantt-movable enabled="true"
-                   allow-moving="true"
-                   allow-resizing="true"
-                   allow-row-switching="false"></gantt-movable>
-                <gantt-tooltips></gantt-tooltips>
-            </div>
+        <div ui-layout>
+            <header>
+                <div ng-controller="GridController as gridCtrl">
+                    <strong>Tasks:</strong>
+                    <div id="grid" ui-grid="gridOptions" ui-grid-edit ui-grid-cellnav ui-grid-resize-columns class="grid">
+                    </div>
+                </div>
+            </header>
+            <header>
+                <div ng-controller="GanttController as ganttCtrl">
+                    <div gantt data=ganttData
+                        api=options.api
+                        show-side='true'>
+                        <gantt-tree enabled="true"></gantt-tree>
+                        <gantt-movable enabled="true"
+                        allow-moving="true"
+                        allow-resizing="true"
+                        allow-row-switching="false"></gantt-movable>
+                        <gantt-tooltips></gantt-tooltips>
+                    </div>
+                </div>
+            <header>
         </div>
     </div>
     {% endraw %}
