@@ -8,7 +8,7 @@ from threading import Thread
 from datetime import datetime
 from flask.ext.testing import TestCase as FlaskTestCase
 from flask.ext.testing import LiveServerTestCase as FlaskLiveTestCase
-from lofar.sas.resourceassignement.resourceassignementeditor import webservice
+from lofar.sas.resourceassignment.resourceassignmenteditor import webservice
 
 
 def setUpModule():
@@ -21,8 +21,8 @@ def tearDownModule():
     pass
 
 
-class TestResourceAssignementEditor(FlaskTestCase):
-    '''Test the logic in the ResourceAssignementEditor web service'''
+class TestResourceAssignmentEditor(FlaskTestCase):
+    '''Test the logic in the ResourceAssignmentEditor web service'''
 
     def create_app(self):
         # override create_app method from FlaskTestCase
@@ -42,8 +42,8 @@ class TestResourceAssignementEditor(FlaskTestCase):
         self.assertEqual(404, self.client.get(baseurl + '/hdaHJSK/fsfaAFdsaf.gwg').status_code)
 
 
-class TestLiveResourceAssignementEditor(FlaskLiveTestCase):
-    '''Test the live ResourceAssignementEditor web service'''
+class TestLiveResourceAssignmentEditor(FlaskLiveTestCase):
+    '''Test the live ResourceAssignmentEditor web service'''
 
     def create_app(self):
         # override create_app method from FlaskLiveTestCase
