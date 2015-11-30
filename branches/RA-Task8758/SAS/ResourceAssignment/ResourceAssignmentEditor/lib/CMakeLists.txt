@@ -5,7 +5,7 @@ python_install(
     webservice.py
     utils.py
     fakedata.py
-    DESTINATION lofar/sas/resourceassignement/resourceassignementeditor)
+    DESTINATION lofar/sas/resourceassignment/resourceassignmenteditor)
 
 file(GLOB_RECURSE jquery_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/jquery/*)
 file(GLOB_RECURSE angular_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular/*)
@@ -49,7 +49,7 @@ set(web_files
     ${app_files})
 
 install(FILES ${web_files}
-  DESTINATION ${PYTHON_INSTALL_DIR}/lofar/sas/resourceassignement/resourceassignementeditor)
+  DESTINATION ${PYTHON_INSTALL_DIR}/lofar/sas/resourceassignment/resourceassignmenteditor)
 
 foreach(web_file ${web_files})
     get_filename_component(web_file_path ${web_file} PATH)

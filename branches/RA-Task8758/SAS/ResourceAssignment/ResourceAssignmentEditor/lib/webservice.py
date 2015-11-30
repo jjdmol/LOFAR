@@ -19,7 +19,7 @@
 
 # $Id$
 
-'''ResourceAssignementEditor webservice serves a interactive html5 website for
+'''ResourceAssignmentEditor webservice serves a interactive html5 website for
 viewing and editing lofar resources.'''
 
 import sys
@@ -36,14 +36,14 @@ from flask import request
 from flask import abort
 from flask import url_for
 from flask.json import jsonify
-from lofar.sas.resourceassignement.resourceassignementeditor.utils import gzipped
-from lofar.sas.resourceassignement.resourceassignementeditor.fakedata import *
+from lofar.sas.resourceassignment.resourceassignmenteditor.utils import gzipped
+from lofar.sas.resourceassignment.resourceassignmenteditor.fakedata import *
 
 __root_path = os.path.dirname(os.path.abspath(__file__))
 print '__root_path=%s' % __root_path
 
 '''The flask webservice app'''
-app = Flask('ResourceAssignementEditor',
+app = Flask('ResourceAssignmentEditor',
             instance_path=__root_path,
             template_folder=os.path.join(__root_path, 'templates'),
             static_folder=os.path.join(__root_path, 'static'),
@@ -53,14 +53,14 @@ print 'app.template_folder= %s' % app.template_folder
 print 'app.static_folder= %s' % app.static_folder
 
 # Load the default configuration
-app.config.from_object('lofar.sas.resourceassignement.resourceassignementeditor.config.default')
+app.config.from_object('lofar.sas.resourceassignment.resourceassignmenteditor.config.default')
 
 @app.route('/')
 @app.route('/index.htm')
 @app.route('/index.html')
 def index():
-    '''Serves the ResourceAssignementEditor's index page'''
-    return render_template('index.html', title='Resource Assignement Editor')
+    '''Serves the ResourceAssignmentEditor's index page'''
+    return render_template('index.html', title='Resource Assignment Editor')
 
 @app.route('/rest/resourceitems')
 @gzipped
