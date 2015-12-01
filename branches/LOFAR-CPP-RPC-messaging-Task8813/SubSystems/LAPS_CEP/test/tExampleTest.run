@@ -1,0 +1,5 @@
+#!/bin/bash
+
+. ./testFuncs.sh
+
+exit 0

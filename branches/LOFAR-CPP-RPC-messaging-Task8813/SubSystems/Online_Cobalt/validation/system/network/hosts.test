@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Our own hostname must be resolvable
+
+fgrep `hostname` /etc/hosts || exit 1
+
+# Check for specific /etc/hosts entries
+
+fgrep ccu001 /etc/hosts || exit 1
+fgrep sasdb  /etc/hosts || exit 1
+fgrep kis001 /etc/hosts || exit 1
+fgrep lhn001 /etc/hosts || exit 1
+fgrep sasdb /etc/hosts || exit 1
+
+fgrep lcs015 /etc/hosts || exit 1
+
+for i in `seq -w 1 102`
+do
+  fgrep "locus$i" /etc/hosts || exit 1
+done
+
+for i in `seq -w 1 8`
+do
+  fgrep "cbm00$i" /etc/hosts || exit 1
+  fgrep "cbt00$i" /etc/hosts || exit 1
+  fgrep "cbt00$i-10GB01" /etc/hosts || exit 1
+  fgrep "cbt00$i-10GB02" /etc/hosts || exit 1
+  fgrep "cbt00$i-10GB03" /etc/hosts || exit 1
+  fgrep "cbt00$i-10GB04" /etc/hosts || exit 1
+done
