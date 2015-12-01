@@ -64,7 +64,7 @@ class MessageHandlerInterface(object):
         "Called in main processing loop just before a blocking wait for messages is done."
         pass
 
-    def handle_message(self, msg, content, *args, **kwargs):
+    def handle_message(self, msg):
         "Function the should handle the received message and return a result."
         raise NotImplementedError("OOPS! YOU ENDED UP IN THE MESSAGE HANDLER OF THE ABSTRACT BASE CLASS!")
 
