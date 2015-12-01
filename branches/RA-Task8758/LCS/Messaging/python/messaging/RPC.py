@@ -20,8 +20,8 @@
 #
 
 #  RPC invocation with possible timeout
-from lofar.messaging.messagebus import ToBus, FromBus
-from lofar.messaging.messages import RequestMessage, ReplyMessage
+from .messagebus import ToBus, FromBus
+from .messages import RequestMessage, ReplyMessage
 import uuid
 
 def _analyze_args(args,kwargs):
@@ -129,7 +129,7 @@ class RPC():
         else:
             Reply = FromBus("%s/%s" % (self.BusName, ReplyAddress))
         with Reply:
-            MyMsg = RequestMessage(Content, ReplyAddress , has_args=HasArgs, has_kwargs=HasKwArgs)
+            MyMsg = RequestMessage(content=Content, reply_to=ReplyAddress, has_args=HasArgs, has_kwargs=HasKwArgs)
             MyMsg.ttl = timeout
             self.Request.send(MyMsg)
             answer = Reply.receive(timeout)
