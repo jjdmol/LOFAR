@@ -20,8 +20,8 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 
-from lofar.messaging.messagebus import ToBus,FromBus
-from lofar.messaging.messages import ReplyMessage,RequestMessage
+from .messagebus import ToBus,FromBus
+from .messages import ReplyMessage,RequestMessage
 import threading
 import time
 import uuid
