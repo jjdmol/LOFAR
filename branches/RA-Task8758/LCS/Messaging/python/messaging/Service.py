@@ -304,9 +304,6 @@ class Service(object):
                 if lofar_msg is None:
                     continue
 
-                print lofar_msg
-                print lofar_msg.content
-
                 # report if messages are not Service Messages
                 if not isinstance(lofar_msg, RequestMessage):
                     logger.error( "Received wrong messagetype %s, RequestMessage expected." %(str(type(lofar_msg))))
@@ -333,7 +330,7 @@ class Service(object):
                         # check for positional arguments and named arguments
                         # depending on presence of args and kwargs,
                         # the signature of the handler method should vary as well
-                        if lofar_msg.has_args == "True" and lofar_msg.has_kwargs == "True":
+                        if lofar_msg.has_args and lofar_msg.has_kwargs:
                             # both positional and named arguments
                             # rpcargs and rpckwargs are packed in the content
                             rpcargs = lofar_msg.content
@@ -344,12 +341,12 @@ class Service(object):
                             del rpcargs[-1]
                             rpcargs = tuple(rpcargs)
                             replymessage = serviceHandlerMethod(*rpcargs, **rpckwargs)
-                        elif lofar_msg.has_args == "True":
+                        elif lofar_msg.has_args:
                             # only positional arguments
                             # msg.content should be a list
                             rpcargs = tuple(lofar_msg.content)
                             replymessage = serviceHandlerMethod(*rpcargs)
-                        elif lofar_msg.has_kwargs == "True":
+                        elif lofar_msg.has_kwargs:
                             # only named arguments
                             # msg.content should be a dict
                             rpckwargs = lofar_msg.content

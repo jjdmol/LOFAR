@@ -295,8 +295,8 @@ class RequestMessage(LofarMessage):
             #reply_to = kwargs.pop("reply_to",None)
             #if (reply_to!=None):
             self.reply_to = reply_to
-            self.has_args   = str(kwargs.pop("has_args",False))
-            self.has_kwargs = str(kwargs.pop("has_kwargs",False))
+            self.has_args   = kwargs.pop("has_args",False)
+            self.has_kwargs = kwargs.pop("has_kwargs",False)
 
 class ReplyMessage(LofarMessage):
     """
