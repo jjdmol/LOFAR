@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 class RADatabase:
     def __init__(self, password='',
                  username='resourceassignment',
-                 host='mcu005.control.lofar',
+                 host='10.149.96.6', #mcu005.control.lofar
                  database='resourceassignment'):
         self.conn = psycopg2.connect(host=host,
                                      user=username,
@@ -47,7 +47,7 @@ class RADatabase:
         self.cursor.execute(query)
 
         result = self.cursor.fetchall()
-        return result
+        return list(result)
 
     def getTaskStatusNames(self):
         return [x['name'] for x in self.getTaskStatuses()]
@@ -57,7 +57,7 @@ class RADatabase:
         self.cursor.execute(query)
 
         result = self.cursor.fetchall()
-        return result
+        return list(result)
 
     def getTaskTypeNames(self):
         return [x['name'] for x in self.getTaskTypes()]
@@ -67,21 +67,43 @@ class RADatabase:
         self.cursor.execute(query)
 
         result = self.cursor.fetchall()
-        return result
+        return list(result)
 
     def getResourceClaimStatusNames(self):
         return [x['name'] for x in self.getResourceClaimStatuses()]
 
     def getTasks(self):
-        query = '''SELECT t.*, ts.name as status, tt.name as type
+        query = '''SELECT t.*, ts.name as status,
+        tt.name as type,
+        s.starttime as starttime,
+        s.endtime as endtime
         from resource_allocation.task t
         inner join resource_allocation.task_status ts on ts.id = t.status_id
-        inner join resource_allocation.task_type tt on tt.id = t.type_id;
+        inner join resource_allocation.task_type tt on tt.id = t.type_id
+        inner join resource_allocation.specification s on s.id = t.specification_id;
         '''
         self.cursor.execute(query)
 
         result = self.cursor.fetchall()
-        return result
+        for task in result:
+            print type(task['starttime']), task['starttime']
+        return list(result)
+
+    def getTask(self, id):
+        query = '''SELECT t.*, ts.name as status,
+        tt.name as type,
+        s.starttime as starttime,
+        s.endtime as endtime
+        from resource_allocation.task t
+        inner join resource_allocation.task_status ts on ts.id = t.status_id
+        inner join resource_allocation.task_type tt on tt.id = t.type_id
+        inner join resource_allocation.specification s on s.id = t.specification_id
+        where t.id = (%s)
+        '''
+        self.cursor.execute(query, (id,))
+
+        result = self.cursor.fetchone()
+        return dict(result) if result else None
 
     def getResourceTypes(self):
         query = '''SELECT rt.*, rtu.units as unit
@@ -91,7 +113,7 @@ class RADatabase:
         self.cursor.execute(query)
 
         result = self.cursor.fetchall()
-        return result
+        return list(result)
 
     def getResourceTypeNames(self):
         return [x['name'] for x in self.getResourceTypes()]
@@ -101,7 +123,7 @@ class RADatabase:
         self.cursor.execute(query)
 
         result = self.cursor.fetchall()
-        return result
+        return list(result)
 
     def getResourceGroupTypeNames(self):
         return [x['name'] for x in self.getResourceGroupTypes()]
@@ -111,7 +133,7 @@ class RADatabase:
         self.cursor.execute(query)
 
         result = self.cursor.fetchall()
-        return result
+        return list(result)
 
     def getUnitNames(self):
         return [x['units'] for x in self.getUnits()]
@@ -125,7 +147,7 @@ class RADatabase:
         self.cursor.execute(query)
 
         result = self.cursor.fetchall()
-        return result
+        return list(result)
 
     def getResourceGroups(self):
         query = '''SELECT rg.*, rgt.name as type
@@ -135,7 +157,7 @@ class RADatabase:
         self.cursor.execute(query)
 
         result = self.cursor.fetchall()
-        return result
+        return list(result)
 
     def getResourceClaims(self):
         query = '''SELECT rc.*, rcs.name as status
@@ -145,7 +167,7 @@ class RADatabase:
         self.cursor.execute(query)
 
         result = self.cursor.fetchall()
-        return result
+        return list(result)
 
 if __name__ == '__main__':
     db = RADatabase(host='10.149.96.6', password='123456')
@@ -170,3 +192,4 @@ if __name__ == '__main__':
     resultPrint(db.getResourceGroups)
     resultPrint(db.getTasks)
     resultPrint(db.getResourceClaims)
+
