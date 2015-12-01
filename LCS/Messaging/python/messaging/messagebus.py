@@ -176,8 +176,8 @@ class FromBus(object):
             raise_exception(MessageBusError,
                             "[FromBus] Failed to fetch message from queue: "
                             "%s" % self.address) 
-        logger.info("[FromBus] Message received on queue: %s", self.address)
-        logger.debug("[FromBus] %s", msg)
+        logger.info("[FromBus] Message received on queue: %s subject: %s" % (self.address, msg.subject))
+        logger.debug("[FromBus] %s" % msg)
         try:
             amsg = MESSAGE_FACTORY.create(msg)
         except MessageFactoryError:
@@ -399,7 +399,7 @@ class ToBus(object):
             raise_exception(MessageBusError,
                             "[ToBus] Failed to send message to queue: %s" %
                             sender.target)
-        logger.info("[ToBus] Message sent to queue: %s", sender.target)
+        logger.info("[ToBus] Message sent to queue: %s subject: %s" % (sender.target, message.subject))
 
 
 __all__ = ["FromBus", "ToBus"]
