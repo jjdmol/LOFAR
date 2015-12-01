@@ -50,7 +50,11 @@ class MessageHandlerInterface(object):
         handler.finalize_loop()
     """
     def __init__(self, **kwargs):
-        pass
+        # if you want your subclass to handle multiple services
+        # then you can specify for each service which method has to be called
+        # In case this map is empty, or the called service is not in this map,
+        # then the default handle_message is called
+        self.service2MethodMap = {}
 
     def prepare_loop(self):
         "Called before main processing loop is entered."
@@ -73,7 +77,6 @@ class MessageHandlerInterface(object):
         "Called after main processing loop is finished."
         pass
 
-    
 
 # create service:
 class Service(object):
@@ -296,15 +299,15 @@ class Service(object):
 
             try:
                 # get the next message
-                msg = self.listener.receive(1)
+                lofar_msg = self.listener.receive(1)
                 # retry if timed-out
-                if msg is None:
+                if lofar_msg is None:
                     continue
 
                 # report if messages are not Service Messages
-                if isinstance(msg, RequestMessage) is not True:
-                    logger.error( "Received wrong messagetype %s, RequestMessage expected." %(str(type(msg))))
-                    self.listener.ack(msg)
+                if not isinstance(lofar_msg, RequestMessage):
+                    logger.error( "Received wrong messagetype %s, RequestMessage expected." %(str(type(lofar_msg))))
+                    self.listener.ack(lofar_msg)
                     continue
 
                 # Keep track of number of received messages
@@ -313,33 +316,51 @@ class Service(object):
                 # Execute the service handler function and send reply back to client
                 try:
                     self._debug("Running handler")
+
+                    # determine which handler method has to be called
+                    if hasattr(service_handler, 'service2MethodMap') and lofar_msg.subject in service_handler.service2MethodMap:
+                        # pass the handling of this message on to the specific method for this service
+                        serviceHandlerMethod = service_handler.service2MethodMap[lofar_msg.subject]
+                    else:
+                        serviceHandlerMethod = service_handler.handle_message
+
                     if self.parsefullmessage is True:
-                        replymessage = service_handler.handle_message(msg)
+                        replymessage = serviceHandlerMethod(lofar_msg)
                     else:
                         # check for positional arguments and named arguments
-                        if msg.has_args=="True":
-                            rpcargs=msg.content
-                            if msg.has_kwargs=="True":
-                                # both positional and named arguments
-                                rpckwargs=rpcargs[-1]
-                                del rpcargs[-1]
-                                rpcargs=tuple(rpcargs)
-                                replymessage = service_handler.handle_message(*rpcargs,**rpckwargs)
-                            else:
-                                # only positional arguments
-                                rpcargs=tuple(rpcargs)
-                                replymessage = service_handler.handle_message(*rpcargs)
+                        # depending on presence of args and kwargs,
+                        # the signature of the handler method should vary as well
+                        if lofar_msg.has_args and lofar_msg.has_kwargs:
+                            # both positional and named arguments
+                            # rpcargs and rpckwargs are packed in the content
+                            rpcargs = lofar_msg.content
+
+                            # rpckwargs is the last argument in the content
+                            # rpcargs is the rest in front
+                            rpckwargs = rpcargs[-1]
+                            del rpcargs[-1]
+                            rpcargs = tuple(rpcargs)
+                            replymessage = serviceHandlerMethod(*rpcargs, **rpckwargs)
+                        elif lofar_msg.has_args:
+                            # only positional arguments
+                            # msg.content should be a list
+                            rpcargs = tuple(lofar_msg.content)
+                            replymessage = serviceHandlerMethod(*rpcargs)
+                        elif lofar_msg.has_kwargs:
+                            # only named arguments
+                            # msg.content should be a dict
+                            rpckwargs = lofar_msg.content
+                            replymessage = serviceHandlerMethod(**rpckwargs)
+                        elif lofar_msg.content:
+                            rpccontent = lofar_msg.content
+                            replymessage = serviceHandlerMethod(rpccontent)
                         else:
-                            if msg.has_kwargs=="True":
-                                # only named arguments
-                                replymessage = service_handler.handle_message(**(msg.content))
-                            else:
-                                replymessage = service_handler.handle_message(msg.content)
+                            replymessage = serviceHandlerMethod()
 
                     self._debug("finished handler")
-                    self._send_reply(replymessage,"OK",msg.reply_to)
+                    self._send_reply(replymessage,"OK",lofar_msg.reply_to)
                     self.okcounter[thread_idx] += 1
-                    self.listener.ack(msg)
+                    self.listener.ack(lofar_msg)
                     try:
                         service_handler.finalize_handling(True)
                     except Exception as e:
@@ -365,7 +386,7 @@ class Service(object):
                         logger.info("[Service:] Status: %s", str(status))
                         logger.info("[Service:] ERRTXT: %s", str(errtxt))
                         logger.info("[Service:] BackTrace: %s", str( backtrace ))
-                    self._send_reply(None, status, msg.reply_to, errtxt=errtxt, backtrace=backtrace)
+                    self._send_reply(None, status, lofar_msg.reply_to, errtxt=errtxt, backtrace=backtrace)
                     try:
                         service_handler.finalize_handling(False)
                     except Exception as e:
