@@ -24,8 +24,6 @@ CREATE TABLE datapaths (
 )WITH (
   OIDS=FALSE
 );
--- ALTER TABLE datapaths
---  OWNER TO peterzon;
 
 CREATE TABLE dataproducts (
   id serial NOT NULL ,
@@ -38,56 +36,18 @@ CREATE TABLE dataproducts (
 )WITH (
   OIDS=FALSE
 );
--- ALTER TABLE dataproducts
---  OWNER TO peterzon;
 
 ALTER SEQUENCE dataproducts_id_seq RESTART WITH 323351;
--- AUTO_INCREMENT=323351 DEFAULT CHARSET=latin1;
 
-
---
--- Dumping data for table 'datapaths'
---
-
--- LOCK TABLES datapaths WRITE;
-
-
---
--- Table structure for table 'dataproducts'
---
-
---
--- Table structure for table 'gatherer'
---
 
 DROP TABLE IF EXISTS gatherer;
--- SET @saved_cs_client     = @@character_set_client;
--- SET character_set_client = utf8;
 CREATE TABLE gatherer (
   timestamp bigint  default NULL
 )WITH (
   OIDS=FALSE
 );
--- ALTER TABLE gatherer
---  OWNER TO peterzon;
-
--- 
--- ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table 'gatherer'
---
-
--- LOCK TABLES gatherer WRITE;
 INSERT INTO gatherer VALUES (0);
--- UNLOCK TABLES;
 
---
--- Table structure for table 'hosts'
---
-
--- SET @saved_cs_client     = @@character_set_client;
--- SET character_set_client = utf8;
 CREATE TABLE hosts (
   id bigint  NOT NULL,
   hostname varchar(255) NOT NULL,
@@ -97,23 +57,8 @@ CREATE TABLE hosts (
 )WITH (
   OIDS=FALSE
 );
--- ALTER TABLE hosts
---  OWNER TO peterzon;
--- 
--- ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table 'hosts'
---
-
-
---
--- Table structure for table 'projects'
---
 
 DROP TABLE IF EXISTS projects;
---SET @saved_cs_client     = @@character_set_client;
---SET character_set_client = utf8;
 CREATE TABLE projects (
   id serial,
   name varchar(255) NOT NULL,
@@ -121,17 +66,7 @@ CREATE TABLE projects (
 )WITH (
   OIDS=FALSE
 );
--- ALTER TABLE projects
---  OWNER TO peterzon;
--- ENGINE=MyISAM AUTO_INCREMENT=314 DEFAULT CHARSET=latin1;
 
---
--- Table structure for table 'servergroups'
---
-
--- DROP TABLE IF EXISTS 'servergroups';
--- SET @saved_cs_client     = @@character_set_client;
--- SET character_set_client = utf8;
 DROP TABLE IF EXISTS servergroups;
 DROP TYPE IF EXISTS yesno;
 CREATE TYPE yesno AS ENUM('y','n');
@@ -144,28 +79,13 @@ CREATE TABLE servergroups (
 )WITH (
   OIDS=FALSE
 );
--- ALTER TABLE servergroups
---  OWNER TO peterzon;
--- ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table 'servergroups'
---
-
--- wqLOCK TABLES servergroups WRITE;
 INSERT INTO servergroups VALUES (0,'storagenodes','y'),
     (1,'computenodes','y'),
     (2,'archivenodes','y'),
-    (3,'locusnodes','y');
--- UNLOCK TABLES;
-
---
--- Table structure for table 'states'
---
+    (3,'locusnodes','y'),
+    (4,'cep4','y');
 
 DROP TABLE IF EXISTS states;
--- SET @saved_cs_client     = @@character_set_client;
--- SET character_set_client = utf8;
 CREATE TABLE states (
   id bigint  NOT NULL,
   statename varchar(255) NOT NULL,
@@ -173,20 +93,12 @@ CREATE TABLE states (
 )WITH (
   OIDS=FALSE
 );
--- ALTER TABLE states
---  OWNER TO peterzon;
--- ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table 'states'
---
-
--- wqLOCK TABLES states WRITE;
 INSERT INTO states VALUES (0,'Inactive'),
     (1,'Active');
--- UNLOCK TABLES;
+
 DROP TABLE IF EXISTS export_jobs;
 DROP TYPE IF EXISTS status_type;
+
 CREATE TYPE status_type AS ENUM('unknown','scheduled','running','done');
 
 CREATE TABLE export_jobs (
@@ -204,9 +116,7 @@ CREATE TABLE export_jobs (
 )WITH (
   OIDS=FALSE
 );
--- ALTER TABLE export_jobs
---  OWNER TO peterzon;
--- ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
 DROP TABLE IF EXISTS observations;
 CREATE TABLE observations (
   obsid varchar(40) NOT NULL,
@@ -215,9 +125,7 @@ CREATE TABLE observations (
 )WITH (
   OIDS=FALSE
 );
--- ALTER TABLE observations
---  OWNER TO peterzon; 
--- ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
 DROP TABLE IF EXISTS archiving_queues;
 CREATE TABLE archiving_queues (
   name varchar(20) NOT NULL,
@@ -225,9 +133,7 @@ CREATE TABLE archiving_queues (
 )WITH (
   OIDS=FALSE
 );
--- ALTER TABLE archiving_queues
---  OWNER TO peterzon;
--- ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
 INSERT INTO archiving_queues VALUES('main',0);;
 
 INSERT INTO datapaths VALUES (1,1,'/data1',0,0,0),
@@ -499,9 +405,9 @@ INSERT INTO datapaths VALUES (1,1,'/data1',0,0,0),
     (267,195,'/data',1,1,0),
     (268,196,'/data',1,1,0),
     (269,197,'/data',1,1,0),
-    (270,198,'/data',1,1,0);
--- UNLOCK TABLES;
--- wqLOCK TABLES hosts WRITE;
+    (270,198,'/data',1,1,0),
+    (271,199,'/lustre',1,1,0);
+
 INSERT INTO hosts VALUES (1,'lse001',0,1),
     (2,'lse002',0,0),
     (3,'lse003',0,1),
@@ -699,7 +605,7 @@ INSERT INTO hosts VALUES (1,'lse001',0,1),
     (195,'locus097',3,0),
     (196,'locus098',3,0),
     (197,'locus099',3,0),
-    (198,'locus100',3,0);
--- UNLOCK TABLES;
+    (198,'locus100',3,0),
+    (199,'mcu005',4,0);
 commit;
 
