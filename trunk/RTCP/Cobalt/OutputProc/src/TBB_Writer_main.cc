@@ -309,8 +309,8 @@ static int isAccessibleDirname(const string& dirname)
 
 static void printUsage(const char* progname)
 {
-  cout << "LOFAR TBB_Writer version: " << LOFAR::OutputProcVersion::getVersion() << endl;
-  cout << "Write incoming LOFAR TBB data with meta data to storage in HDF5 format." << endl;
+  cout << "TBB_Writer version: " << LOFAR::OutputProcVersion::getVersion() << " r" << LOFAR::OutputProcVersion::getRevision() << endl;
+  cout << "Write incoming LOFAR Transient Buffer Board (TBB) data with meta data to storage in HDF5 format." << endl;
   cout << "Usage: " << progname << " -p parsets/L12345.parset [OPTION]..." << endl;
   cout << endl;
   cout << "Options:" << endl;
@@ -499,6 +499,8 @@ int main(int argc, char* argv[])
   }
 
   INIT_LOGGER("TBB_Writer");
+  LOG_INFO_STR("TBB_Writer version " << LOFAR::OutputProcVersion::getVersion() <<
+               " r" << LOFAR::OutputProcVersion::getRevision());
 
   setTermSigsHandler();
 
