@@ -38,7 +38,7 @@ from flask import url_for
 from flask.json import jsonify
 from lofar.sas.resourceassignment.resourceassignmenteditor.utils import gzipped
 from lofar.sas.resourceassignment.resourceassignmenteditor.fakedata import *
-from lofar.sas.resourceassignment.resourceassignmentservice import rpc
+from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC
 
 __root_path = os.path.dirname(os.path.abspath(__file__))
 print '__root_path=%s' % __root_path
@@ -56,6 +56,8 @@ print 'app.static_folder= %s' % app.static_folder
 # Load the default configuration
 app.config.from_object('lofar.sas.resourceassignment.resourceassignmenteditor.config.default')
 
+rpc = RARPC('lofarbus')
+
 @app.route('/')
 @app.route('/index.htm')
 @app.route('/index.html')
@@ -66,20 +68,20 @@ def index():
 @app.route('/rest/resourceitems')
 @gzipped
 def resourcesitems():
-    data = {'resourceitems': resourceItems}
-    return jsonify(data)
+    result = rpc.getResources()
+    return jsonify({'resourceitems': result})
 
 @app.route('/rest/resourcegroups')
 @gzipped
 def resourcegroups():
-    data = {'resourcegroups': resourceGroups}
-    return jsonify(data)
+    result = rpc.getResourceGroups()
+    return jsonify({'resourcegroups': result})
 
 @app.route('/rest/resourceclaims')
 @gzipped
 def resourceclaims():
-    data = {'resourceclaims': resourceClaims}
-    return jsonify(data)
+    result = rpc.getResourceClaims()
+    return jsonify({'resourceclaims': result})
 
 @app.route('/rest/resourcegroupclaims')
 @gzipped
@@ -91,16 +93,27 @@ def resourcegroupclaims():
 @app.route('/rest/tasks')
 @gzipped
 def getTasks():
-    data = {'tasks': tasks.values()}
+    tasks = rpc.getTasks()
 
-    return jsonify(data)
+    # there are no task names in the database yet.
+    # will they come from spec/MoM?
+    # add Task <id> as name for now
+    for task in tasks:
+        task['name'] = 'Task %d' % task['id']
+
+    return jsonify({'tasks': tasks})
 
 @app.route('/rest/tasks/<int:task_id>', methods=['GET'])
 def getTask(task_id):
     try:
-        task = tasks[task_id]
+        task = rpc.getTask(task_id)
+
+        if not task:
+            abort(404)
+
+        task['name'] = 'Task %d' % task['id']
         return jsonify({'task': task})
-    except KeyError:
+    except Exception as e:
         abort(404)
 
     return jsonify({'task': None})
@@ -182,7 +195,9 @@ def taskResourceClaims(task_id):
 
 @app.route('/rest/tasktypes')
 def tasktypes():
-    return jsonify({'tasktypes': ['Observation', 'Pipeline', 'Ingest']})
+    result = rpc.getTaskTypes()
+    result = [x['name'] for x in result]
+    return jsonify({'tasktypes': result})
 
 @app.route('/rest/taskstatustypes')
 def getTaskStatusTypes():

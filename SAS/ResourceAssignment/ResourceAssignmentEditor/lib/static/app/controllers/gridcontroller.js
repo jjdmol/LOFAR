@@ -22,13 +22,13 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         enableCellEdit: false,
         width: '*'
     },
-    { field: 'from',
+    { field: 'starttime',
         width: '*',
         enableCellEditOnFocus: true,
         cellTemplate:'<div style=\'text-align:right\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
 //         editableCellTemplate: '<div><form name="inputForm"><div ui-grid-edit-datepicker row-field="MODEL_COL_FIELD" ng-class="\'colt\' + col.uid"></div></form></div>'
     },
-    { field: 'to', enableCellEdit: true,
+    { field: 'endtime', enableCellEdit: true,
         width: '*',
         enableCellEditOnFocus: true,
         cellTemplate:'<div style=\'text-align:right\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
