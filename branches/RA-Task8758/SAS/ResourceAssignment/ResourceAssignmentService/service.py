@@ -31,16 +31,15 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
 logger = logging.getLogger(__name__)
 
 
-class _RADBHandler(MessageHandlerInterface):
+class RADBHandler(MessageHandlerInterface):
     def __init__(self, **kwargs):
-        super(_RADBHandler, self).__init__(**kwargs)
+        super(RADBHandler, self).__init__(**kwargs)
         self.username = kwargs.pop("username", 'resourceassignment')
         self.password = kwargs.pop("password", '')
 
         self.service2MethodMap = {
             'RAS.GetResourceClaimStatuses': self._getResourceClaimStatuses,
             'RAS.GetResourceClaims': self._getResourceClaims,
-            'RAS.GetResourceGroupTypes': self._getResourceGroupTypes,
             'RAS.GetResourceGroupTypes': self._getResourceGroupTypes,
             'RAS.GetResourceGroups': self._getResourceGroups,
             'RAS.GetResourceTypes': self._getResourceTypes,
@@ -81,19 +80,20 @@ class _RADBHandler(MessageHandlerInterface):
         return self.radb.getResources()
 
     def _getTasks(self):
-        result = self.radb.getTasks()
-        for task in result:
-            print type(task['starttime']), task['starttime']
-        return result
+        return self.radb.getTasks()
 
     def _getTask(self, **kwargs):
         task = self.radb.getTask(kwargs['id'])
-        print type(task), task
         return task
 
     def _getUnits(self):
         return self.radb.getUnits()
 
+def createService(busname='lofarbus', radb_password=''):
+    return Service('RAS.*',
+                   RADBHandler,
+                   busname=busname,
+                   handler_args={'password': radb_password})
 
 def main():
     # make sure config.py is mode 600 to hide passwords
@@ -104,12 +104,7 @@ def main():
     # safely import radb_password
     from lofar.sas.resourceassignment.resourceassignmentservice.config import radb_password
 
-    service = Service('RAS.*',
-                      _RADBHandler,
-                      busname='raservice',
-                      handler_args={'password': radb_password})
-
-    with service:
+    with createService(busname='lofarbus', radb_password=radb_password):
         waitForInterrupt()
 
 if __name__ == '__main__':
