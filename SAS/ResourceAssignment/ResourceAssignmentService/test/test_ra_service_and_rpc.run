@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if type "coverage" > /dev/null; then
+    #run test using python coverage tool
+
+    #erase previous results
+    coverage erase
+
+    #setup coverage config file
+    printf "[report]\nexclude_lines = \n  if __name__ == .__main__.\n  def main\n" > .coveragerc
+
+    coverage run --branch --include=*service*,*rpc* --omit=test* test_ra_service_and_rpc.py
+    RESULT=$?
+    if [ $RESULT -eq 0 ]; then
+        echo " *** Code coverage results *** "
+        coverage report -m
+        echo " *** End coverage results *** "
+    fi
+    exit $RESULT
+else
+    #coverage not available
+    echo "Please run: 'pip install coverage' to enable code coverage reporting of the unit tests"
+    #run plain test script
+    python test_ra_service_and_rpc.py
+    exit $?
+fi
