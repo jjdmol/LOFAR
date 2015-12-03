@@ -59,8 +59,8 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
             //convert datetime strings to Date objects
             for(var i = result.tasks.length-1; i >=0; i--) {
                 var task = result.tasks[i];
-                task.from = new Date(task.from);
-                task.to = new Date(task.to);
+                task.starttime = new Date(task.starttime);
+                task.endtime = new Date(task.endtime);
             }
 
             self.tasks = result.tasks;

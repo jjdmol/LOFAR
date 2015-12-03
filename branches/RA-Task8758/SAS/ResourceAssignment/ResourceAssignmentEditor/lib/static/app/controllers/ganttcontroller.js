@@ -28,23 +28,23 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
         mode: 'custom',
         scale: 'day',
         sideMode: 'Tree',
-        columns: ['model.name', 'from', 'to'],
-        treeTableColumns: ['from', 'to'],
-        columnsHeaders: {'model.name' : 'Name', 'from': 'From', 'to': 'To'},
-        columnsClasses: {'model.name' : 'gantt-column-name', 'from': 'gantt-column-from', 'to': 'gantt-column-to'},
+        columns: ['model.name', 'starttime', 'endtime'],
+        treeTableColumns: ['starttime', 'endtime'],
+        columnsHeaders: {'model.name' : 'Name', 'starttime': 'From', 'endtime': 'To'},
+        columnsClasses: {'model.name' : 'gantt-column-name', 'starttime': 'gantt-column-from', 'endtime': 'gantt-column-to'},
         columnsFormatters: {
-            'from': function(from) {
-                return from !== undefined ? from.format('lll') : undefined;
+            'starttime': function(starttime) {
+                return starttime !== undefined ? starttime.format('lll') : undefined;
             },
-            'to': function(to) {
-                return to !== undefined ? to.format('lll') : undefined;
+            'endtime': function(endtime) {
+                return endtime !== undefined ? endtime.format('lll') : undefined;
             }
         },
         treeHeaderContent: '<i class="fa fa-align-justify"></i> {{getHeader()}}',
                               columnsHeaderContents: {
                                   'model.name': '<i class="fa fa-align-justify"></i> {{getHeader()}}',
-                              'from': '<i class="fa fa-calendar"></i> {{getHeader()}}',
-                              'to': '<i class="fa fa-calendar"></i> {{getHeader()}}'
+                              'starttime': '<i class="fa fa-calendar"></i> {{getHeader()}}',
+                              'endtime': '<i class="fa fa-calendar"></i> {{getHeader()}}'
                               },
         autoExpand: 'both',
         api: function(api) {
@@ -74,8 +74,8 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
         }
         if(taskId) {
             var task = $scope.dataService.taskDict[taskId];
-            task.from = item.model.from._d.toISOString();
-            task.to = item.model.to._d.toISOString();
+            task.starttime = item.model.starttime._d.toISOString();
+            task.endtime = item.model.endtime._d.toISOString();
             $scope.dataService.putTask(task);
         }
     };
@@ -160,8 +160,8 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
                 var groupClaimTask = {
                     id: groupClaim.id,
                     name: task ? task.name : '<unknown>',
-                    'from': groupClaim.startTime,
-                    'to': groupClaim.endTime
+                    'starttime': groupClaim.startTime,
+                    'endtime': groupClaim.endTime
                 };
 
                 if(ganntGroupRow)
@@ -188,8 +188,8 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
                             var claimTask = {
                                 id: claim.id,
                                 name: task ? task.name : '<unknown>',
-                                'from': claim.startTime,
-                                'to': claim.endTime
+                                'starttime': claim.startTime,
+                                'endtime': claim.endTime
                             };
 
                             ganntRow.tasks.push(claimTask);
@@ -203,8 +203,8 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
                     {
                         var claimTask = {
                             name: task ? task.name : '<unknown>',
-                            'from': claim.startTime,
-                            'to': claim.endTime
+                            'starttime': claim.startTime,
+                            'endtime': claim.endTime
                         };
 
                         ganntRow.tasks.push(claimTask);
