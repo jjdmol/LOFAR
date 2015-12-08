@@ -2,7 +2,7 @@
 
 # XML generator prototype
 
-VERSION = "2.14.0"
+VERSION = "2.14.1"
     
 import sys, getopt, time
 from xml.sax.saxutils import escape as XMLescape
@@ -473,7 +473,7 @@ def writeXMLCalPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, flaggi
               <lofar:pipeline xsi:type="lofar:CalibrationPipelineType">
                 <topology>%s</topology>
                 <predecessor_topology>%s</predecessor_topology>
-                <name>%s</name>children
+                <name>%s</name>
                 <description>%s (%s)</description>
                 <pipelineAttributes>
                   <defaultTemplate>%s</defaultTemplate>
@@ -644,7 +644,7 @@ def writeXMLLongBaselinePipe(ofile, topo, pred_topo, name, descr, defaulttemplat
               <lofar:pipeline xsi:type="lofar:LongBaselinePipelineType">
                 <topology>%s</topology>
                 <predecessor_topology>%s</predecessor_topology>
-                <name>%s</name>children
+                <name>%s</name>
                 <description>%s (%s)</description>
                 <pipelineAttributes>
                   <defaultTemplate>%s</defaultTemplate>
@@ -1232,30 +1232,37 @@ def readCalibratorBeam(startLine, lines, globalSubbands, globalTABrings, globalB
     print ("right ascenscion:" + str(calibratorBeam[0]) + " declination:" + str(calibratorBeam[1]) + " target:" + calibratorBeam[2] + " subbands:" + calibratorBeam[3] + " nrSubbands:" + calibratorBeam[4] + " create pipeline:" + str(calibratorBeam[7]))
     
     if create_calibrator_pipeline:
-      calibratorBBS = ['','','','true','','','','']
-      calBBS = readExtraParms("BBS", pipelines)
-      if len(calBBS) > 0:
-        for i in range(0,len(calBBS)):
-          calibratorBBS[i] = calBBS[i]
-        calibratorBBS[3] = toBool(calibratorBBS[3])
-      elif globalBBS != []:
-        printInfo('Using global BBS settings for Calibrator beam pipeline')
-        for i in range(0,len(globalBBS)):
-          calibratorBBS[i] = globalBBS[i]
+      BBSDefault      = ['','','','true','','','','']
+      DemixDefault    = ['','','','','','','']
+      calibratorBBS   = [] #Can now be a list of pipelines per beam
+      calibratorDemix = []
+      for pipeline in pipelines:
+        if pipeline.startswith("BBS"):
+          calibratorBBS.append(BBSDefault)
+          calBBS = readExtraParms("BBS", [pipeline])
+          if len(calBBS) > 0:
+            for i in range(0,len(calBBS)):
+              calibratorBBS[-1][i] = calBBS[i]
+            calibratorBBS[-1][3] = toBool(calibratorBBS[-1][3])
+          elif globalBBS != []:
+            printInfo('Using global BBS settings for Calibrator beam pipeline')
+            for i in range(0,len(globalBBS)):
+              calibratorBBS[-1][i] = globalBBS[i]
       
-      calibratorDemix = ['','','','','','','']
-      calDemix = readExtraParms("Demix", pipelines)
-      if len(calDemix) > 0:
-        for i in range(0,len(calDemix)):
-          calibratorDemix[i] = calDemix[i]
-        if (calibratorDemix[0] != '') and (calibratorDemix[2] != ''):
-          if int(calibratorDemix[2]) % int(calibratorDemix[0]) <> 0:
-            raise GenException("demixFreqStep (" + calibratorDemix[2] + ") should be integer multiple of averagingFreqStep (" + calibratorDemix[0] + ") for calibrator beam pipeline")
-        calibratorDemix[6] = toBool(calibratorDemix[6])
-      elif globalDemix != []:
-          printInfo('Using global demix settings for Calibrator beam pipeline')
-          for i in range(0,len(globalDemix)):
-            calibratorDemix[i] = globalDemix[i]
+        if pipeline.startswith("Demix"):
+          calibratorDemix.append(DemixDefault)
+          calDemix = readExtraParms("Demix", [pipeline])
+          if len(calDemix) > 0:
+            for i in range(0,len(calDemix)):
+              calibratorDemix[-1][i] = calDemix[i]
+            if (calibratorDemix[-1][0] != '') and (calibratorDemix[-1][2] != ''):
+              if int(calibratorDemix[-1][2]) % int(calibratorDemix[-1][0]) <> 0:
+                raise GenException("demixFreqStep (" + calibratorDemix[-1][2] + ") should be integer multiple of averagingFreqStep (" + calibratorDemix[-1][0] + ") for calibrator beam pipeline")
+            calibratorDemix[-1][6] = toBool(calibratorDemix[-1][6])
+          elif globalDemix != []:
+              printInfo('Using global demix settings for Calibrator beam pipeline')
+              for i in range(0,len(globalDemix)):
+                calibratorDemix[-1][i] = globalDemix[i]
     
     calibratorTAB = readTiedArrayBeams(TABs)
     if not calibratorTAB:
@@ -1264,6 +1271,23 @@ def readCalibratorBeam(startLine, lines, globalSubbands, globalTABrings, globalB
         calibratorTAB = globalTAB #TODO check no possibility for globalTABrings?
     if coherentStokesData and not (hasCoherentTab(calibratorTAB) or flysEye):
       raise GenException("CalibratorBeam: no coherent TAB specified while coherent Stokes data requested")
+
+    if not calibratorBBS:
+      calibratorBBS.append(BBSDefault)
+      if globalBBS:
+        printInfo('Using global BBS settings for pipeline(s) coupled to Calibrator beam')
+        calibratorBBS.append(BBSDefault)
+        for i in range(0,len(globalBBS)):
+          calibratorBBS[-1][i] = globalBBS[i]
+
+    if not calibratorDemix:
+      calibratorDemix.append(DemixDefault)
+      if globalDemix:
+        printInfo('Using global demix settings for pipeline(s) coupled to Calibrator beam')
+        calibratorDemix.append(DemixDefault)
+        for i in range(0,len(globalDemix)):
+          calibratorDemix[-1][i] = globalDemix[i]
+
   return calibratorBeam, calibratorBBS, calibratorDemix, calibratorTAB, create_calibrator_pipeline
 
 def readTargetBeams(startLine, lines, globalSubbands, globalBBS, globalDemix, globalPulsar, globalTAB, globalTABrings, coherentStokesData, flysEye, numberOfBitsPerSample):
@@ -1888,30 +1912,37 @@ def writeBlock(ofile, settings, projectName, blockNr):
         cal_pipe_name = calibratorBeam[2] + "/" + repeatStr + "/CPC"
         
       if processing == 'Imaging' or processing == 'LongBaseline':
-        if calibratorBBS[0] == '':
+        if not calibratorBBS:
           raise GenException("BBS SkyModel is not specified for pipeline coupled to calibrator beam")
 
+        print calibratorBBS, calibratorDemix
         writeXMLCalPipe(ofile, cal_pipe_calibrator_topology, cal_obs_topology, cal_pipe_name, cal_pipe_calibrator_description, cal_obs_pipe_default_template,
-        flaggingStrategy, calibratorBeam[8], calibratorBBS[0], calibratorDemix[0], calibratorDemix[1], calibratorDemix[2], calibratorDemix[3], 
-        calibratorDemix[4], calibratorDemix[5], calibratorDemix[6], 
-        calibratorBBS[1], calibratorBBS[2], calibratorBBS[3], calibratorBBS[4], calibratorBBS[5], calibratorBBS[6], calibratorBBS[7], 
-        cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_output_INST_data_topo, cal_pipe_calibrator_output_INST_data_topo, cal_pipe_calibrator_output_MS_data_topo, cluster)
+          flaggingStrategy, calibratorBeam[8], calibratorBBS[0][0], calibratorDemix[0][0], calibratorDemix[0][1], calibratorDemix[0][2], calibratorDemix[0][3], 
+          calibratorDemix[0][4], calibratorDemix[0][5], calibratorDemix[0][6], calibratorBBS[0][1], calibratorBBS[0][2], calibratorBBS[0][3], calibratorBBS[0][4],
+          calibratorBBS[0][5], calibratorBBS[0][6], calibratorBBS[0][7], cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_output_INST_data_topo,
+          cal_pipe_calibrator_output_INST_data_topo, cal_pipe_calibrator_output_MS_data_topo, cluster)
 
       elif processing == 'Preprocessing':
-        writeXMLAvgPipeline(ofile, cal_pipe_calibrator_topology, cal_obs_topology, cal_pipe_name, cal_pipe_calibrator_description, 
-        cal_obs_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorDemix[0], calibratorDemix[1], calibratorDemix[2], calibratorDemix[3],
-        calibratorDemix[4], calibratorDemix[5], writeBoolean(calibratorDemix[6]), cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_output_MS_data_topo, cluster)
+        for i in range(0,len(calibratorDemix)):
+          if len(calibratorDemix) > 1: #TODO a cludge right now, but want to refactor how to call the writeXML soon
+            cal_pipe_calibrator_topology = cal_pipe_calibrator_topology + ".%i" % i
+          else:
+            cal_pipe_calibrator_topology = cal_pipe_target_topology
+          writeXMLAvgPipeline(ofile, cal_pipe_calibrator_topology, cal_obs_topology, cal_pipe_name, cal_pipe_calibrator_description, 
+            cal_obs_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorDemix[i][0], calibratorDemix[i][1],
+            calibratorDemix[i][2], calibratorDemix[i][3], calibratorDemix[i][4], calibratorDemix[i][5], writeBoolean(calibratorDemix[i][6]),
+            cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_output_MS_data_topo, cluster)
 
       elif processing == 'Calibration':
         
-        if calibratorBBS[0] == '':
+        if not calibratorBBS:
           raise GenException("BBS SkyModel is not specified for pipeline coupled to calibrator beam")
         
         writeXMLCalPipe(ofile, cal_pipe_calibrator_topology, cal_obs_topology, cal_pipe_name, cal_pipe_calibrator_description, 
-        cal_obs_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorBBS[0], calibratorDemix[0], 
-        calibratorDemix[1], calibratorDemix[2], calibratorDemix[3], calibratorDemix[4], calibratorDemix[5], calibratorDemix[6], 
-        '', '', '', '', '', '', '', cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_output_INST_data_topo, 
-        cal_pipe_calibrator_output_INST_data_topo, cal_pipe_calibrator_output_MS_data_topo, cluster)
+          cal_obs_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorBBS[0][0], calibratorDemix[0][0], 
+          calibratorDemix[0][1], calibratorDemix[0][2], calibratorDemix[0][3], calibratorDemix[0][4], calibratorDemix[0][5], calibratorDemix[0][6], 
+          '', '', '', '', '', '', '', cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_output_INST_data_topo, 
+          cal_pipe_calibrator_output_INST_data_topo, cal_pipe_calibrator_output_MS_data_topo, cluster)
      
     if not split_targets:  
       if writePackageTag:
@@ -1968,30 +1999,36 @@ def writeBlock(ofile, settings, projectName, blockNr):
         create_pipeline = calibratorBeam[7]
         if create_pipeline:
           if processing == 'Imaging' or processing == 'LongBaseline':
-            if calibratorBBS[0] == '':
+            if not calibratorBBS:
               raise GenException("BBS SkyModel is not specified for pipeline coupled to calibration beam")
 
             writeXMLCalPipe(ofile, cal_pipe_target_topology, tar_obs_topology, cal_pipe_target_name, cal_pipe_target_description,
-            cal_tar_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorBBS[0], calibratorDemix[0], calibratorDemix[1], calibratorDemix[2],
-            calibratorDemix[3], calibratorDemix[4], calibratorDemix[5], calibratorDemix[6], calibratorBBS[1], calibratorBBS[2], calibratorBBS[3], 
-            calibratorBBS[4], calibratorBBS[5], calibratorBBS[6], calibratorBBS[7], tar_obs_uv_data_topologies[nr_beams], cal_pipe_target_output_INST_topo,
+            cal_tar_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorBBS[0][0], calibratorDemix[0][0], calibratorDemix[0][1], calibratorDemix[0][2],
+            calibratorDemix[0][3], calibratorDemix[0][4], calibratorDemix[0][5], calibratorDemix[0][6], calibratorBBS[0][1], calibratorBBS[0][2], calibratorBBS[0][3], 
+            calibratorBBS[0][4], calibratorBBS[0][5], calibratorBBS[0][6], calibratorBBS[0][7], tar_obs_uv_data_topologies[nr_beams], cal_pipe_target_output_INST_topo,
             cal_pipe_target_output_INST_topo, cal_pipe_target_output_MS_topo, cluster)
           
           elif processing == 'Preprocessing':
-            writeXMLAvgPipeline(ofile, cal_pipe_target_topology, tar_obs_topology, cal_pipe_target_name, cal_pipe_target_description,
-            cal_tar_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorDemix[0], calibratorDemix[1], calibratorDemix[2], calibratorDemix[3],
-            calibratorDemix[4], calibratorDemix[5], writeBoolean(calibratorDemix[6]), tar_obs_uv_data_topologies[nr_beams], cal_pipe_target_output_MS_topo, cluster)
+            for i in range(0, len(calibratorDemix)):
+              if len(calibratorDemix) > 1: #TODO a cludge right now, but want to refactor how to call the writeXML soon
+                cal_pipe_target_topology = cal_pipe_target_topology + ".%i" % i
+              else:
+                cal_pipe_target_topology = cal_pipe_target_topology
+              writeXMLAvgPipeline(ofile, cal_pipe_target_topology, tar_obs_topology, cal_pipe_target_name, cal_pipe_target_description,
+                cal_tar_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorDemix[i][0], calibratorDemix[i][1],
+                calibratorDemix[i][2], calibratorDemix[i][3], calibratorDemix[i][4], calibratorDemix[i][5], writeBoolean(calibratorDemix[i][6]),
+                tar_obs_uv_data_topologies[nr_beams], cal_pipe_target_output_MS_topo, cluster)
           
           elif processing == 'Calibration':
             
-            if calibratorBBS[0] == '':
+            if not calibratorBBS:
               raise GenException("BBS SkyModel is not specified for pipeline coupled to calibration beam")
 
             writeXMLCalPipe(ofile, cal_pipe_target_topology, tar_obs_topology, cal_pipe_target_name, cal_pipe_target_description,
-            cal_tar_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorBBS[0], calibratorDemix[0], calibratorDemix[1], calibratorDemix[2],
-            calibratorDemix[3], calibratorDemix[4], calibratorDemix[5], calibratorDemix[6], calibratorBBS[1], calibratorBBS[2], calibratorBBS[3], 
-            calibratorBBS[4], calibratorBBS[5], calibratorBBS[6], calibratorBBS[7], tar_obs_uv_data_topologies[nr_beams], cal_pipe_target_output_INST_topo,
-            cal_pipe_target_output_INST_topo, cal_pipe_target_output_MS_topo, cluster)
+              cal_tar_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorBBS[0][0], calibratorDemix[0][0], calibratorDemix[0][1], calibratorDemix[0][2],
+              calibratorDemix[0][3], calibratorDemix[0][4], calibratorDemix[0][5], calibratorDemix[0][6], calibratorBBS[0][1], calibratorBBS[0][2], calibratorBBS[0][3], 
+              calibratorBBS[0][4], calibratorBBS[0][5], calibratorBBS[0][6], calibratorBBS[0][7], tar_obs_uv_data_topologies[nr_beams], cal_pipe_target_output_INST_topo,
+              cal_pipe_target_output_INST_topo, cal_pipe_target_output_MS_topo, cluster)
       else:    
         writeXMLObsEnd(ofile)
         
