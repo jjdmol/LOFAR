@@ -134,11 +134,14 @@ class parameterset(PyParameterSet):
         """Get the list of all parameter names."""
         return self.keywords()
 
-    def dict(self):
+    def dict(self, removeQuotes=False):
         """Turn the parset into a dict"""
         d = {}
         for key in self.keys():
-            d[key] = self.get(key).get()
+            if removeQuotes:
+                d[key] = self.get(key).getString()
+            else:
+                d[key] = self.get(key).get()
         return d
 
     def adoptArgv(self, argv):
