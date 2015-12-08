@@ -124,7 +124,7 @@
               <lofar:pipeline xsi:type="lofar:CalibrationPipelineType">
                 <topology>B0.1.CPC</topology>
                 <predecessor_topology>B0.1.C</predecessor_topology>
-                <name>3C295/1/CPC</name>children
+                <name>3C295/1/CPC</name>
                 <description>3C295/1/CPC (Cal Pipe Calibrator)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Calibrator Pipeline (export)</defaultTemplate>
@@ -333,7 +333,7 @@
               <lofar:pipeline xsi:type="lofar:CalibrationPipelineType">
                 <topology>B0.1.CPT</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>3C295/1/CPT</name>children
+                <name>3C295/1/CPT</name>
                 <description>3C295/1/CPT (Cal Pipe Target)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Calibrator Pipeline (no export)</defaultTemplate>
@@ -476,7 +476,7 @@
               <lofar:pipeline xsi:type="lofar:LongBaselinePipelineType">
                 <topology>B0.1.LBP0</topology>
                 <predecessor_topology>B0.1.PTLB0</predecessor_topology>
-                <name>Crab test/1.0/LBP</name>children
+                <name>Crab test/1.0/LBP</name>
                 <description>Crab test/1.0/LBP (Long-Baseline Concat)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>

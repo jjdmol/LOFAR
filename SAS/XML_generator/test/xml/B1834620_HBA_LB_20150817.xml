@@ -118,7 +118,7 @@
               <lofar:pipeline xsi:type="lofar:CalibrationPipelineType">
                 <topology>B0.1.CPC</topology>
                 <predecessor_topology>B0.1.C</predecessor_topology>
-                <name>3C380/1/CPC</name>children
+                <name>3C380/1/CPC</name>
                 <description>3C380/1/CPC (Cal Pipe Calibrator)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Calibrator Pipeline (export)</defaultTemplate>
@@ -450,7 +450,7 @@
               <lofar:pipeline xsi:type="lofar:LongBaselinePipelineType">
                 <topology>B0.1.LBP0</topology>
                 <predecessor_topology>B0.1.PTLB0</predecessor_topology>
-                <name>B1834+620/1.0/LBP</name>children
+                <name>B1834+620/1.0/LBP</name>
                 <description>B1834+620/1.0/LBP (Long-Baseline Concat)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
@@ -516,7 +516,7 @@
               <lofar:pipeline xsi:type="lofar:LongBaselinePipelineType">
                 <topology>B0.1.LBP1</topology>
                 <predecessor_topology>B0.1.PTLB1</predecessor_topology>
-                <name>J183519+611939/1.1/LBP</name>children
+                <name>J183519+611939/1.1/LBP</name>
                 <description>J183519+611939/1.1/LBP (Long-Baseline Concat)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
@@ -642,7 +642,7 @@
               <lofar:pipeline xsi:type="lofar:CalibrationPipelineType">
                 <topology>B0.2.CPC</topology>
                 <predecessor_topology>B0.2.C</predecessor_topology>
-                <name>3C380/2/CPC</name>children
+                <name>3C380/2/CPC</name>
                 <description>3C380/2/CPC (Cal Pipe Calibrator)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Calibrator Pipeline (export)</defaultTemplate>
@@ -974,7 +974,7 @@
               <lofar:pipeline xsi:type="lofar:LongBaselinePipelineType">
                 <topology>B0.2.LBP0</topology>
                 <predecessor_topology>B0.2.PTLB0</predecessor_topology>
-                <name>B1834+620/2.0/LBP</name>children
+                <name>B1834+620/2.0/LBP</name>
                 <description>B1834+620/2.0/LBP (Long-Baseline Concat)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
@@ -1040,7 +1040,7 @@
               <lofar:pipeline xsi:type="lofar:LongBaselinePipelineType">
                 <topology>B0.2.LBP1</topology>
                 <predecessor_topology>B0.2.PTLB1</predecessor_topology>
-                <name>J183519+611939/2.1/LBP</name>children
+                <name>J183519+611939/2.1/LBP</name>
                 <description>J183519+611939/2.1/LBP (Long-Baseline Concat)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>

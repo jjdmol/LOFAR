@@ -158,7 +158,7 @@
               <lofar:pipeline xsi:type="lofar:CalibrationPipelineType">
                 <topology>B0.1.CPT</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>3C380/1/CPT</name>children
+                <name>3C380/1/CPT</name>
                 <description>3C380/1/CPT (Cal Pipe Target)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Calibrator Pipeline (no export)</defaultTemplate>
