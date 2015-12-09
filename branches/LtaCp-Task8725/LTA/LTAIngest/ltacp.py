@@ -13,15 +13,16 @@ from socket import getfqdn
 import os, sys, getpass
 import time
 
-log_handler = logging.StreamHandler()
-formatter = logging.Formatter('%(asctime)-15s %(levelname)s %(message)s')
-formatter.converter = time.gmtime
-log_handler.setFormatter(formatter)
 logger = logging.getLogger('Slave')
-logger.addHandler(log_handler)
-logger.setLevel(logging.INFO)
 
-logger = logging.getLogger('Slave')
+if __name__ == '__main__':
+    log_handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)-15s %(levelname)s %(message)s')
+    formatter.converter = time.gmtime
+    log_handler.setFormatter(formatter)
+    logger.addHandler(log_handler)
+    logger.setLevel(logging.INFO)
+
 
 class LtacpException(Exception):
      def __init__(self, value):
@@ -55,12 +56,17 @@ def removeRemoteFile(user, host, filepath):
 def transfer(src_host,
              src_path_data,
              dst_surl,
-             src_user=getpass.getuser(),
+             src_user=None,
              port_data='40000',
              port_md5='50000',
              local_data_fifo=None,
-             remote_data_fifo=None
-            ):
+             remote_data_fifo=None):
+
+    if not src_user:
+        src_user = getpass.getuser()
+
+    port_data = str(port_data)
+    port_md5 = str(port_md5)
 
     dst_turl = convert_surl_to_turl(dst_surl)
     logger.info('ltacp: initiating transfer of %s:%s to %s' % (src_host, src_path_data, dst_surl))
@@ -263,7 +269,7 @@ def transfer(src_host,
             logger.info('ltacp: terminated', p.pid)
 
     logger.info('ltacp: successfully completed transfer of %s:%s to %s' % (src_host, src_path_data, dst_surl))
-    return code
+    return (md5_checksum_local, a32_checksum_local)
 
 
 # execute command and optionally return exit code or output streams
