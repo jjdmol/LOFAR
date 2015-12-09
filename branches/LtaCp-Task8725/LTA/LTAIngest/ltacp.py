@@ -104,7 +104,7 @@ def transfer(src_host,
     while True:
         # start listen for checksums
         cmd_md5_receive = ['nc','-l', '-q','0', port_md5]
-        logger.info('ltacp %s: listening for checksums. executing: %s' % (src_filename, ' '.join(cmd_md5_receive)))
+        logger.info('ltacp %s: listening for md5 checksums. executing: %s' % (src_filename, ' '.join(cmd_md5_receive)))
         p_md5_receive = Popen(cmd_md5_receive, stdout=PIPE, stderr=PIPE)
 
         time.sleep(0.5)
@@ -210,7 +210,7 @@ def transfer(src_host,
         cmd_remote_checksum = ['ssh '+src_user+'@'+src_host+
                                ' \'cat '+remote_data_fifo+' | md5sum | nc --send-only '+getfqdn()+' '+port_md5+
                                '\'']
-        logger.info('ltacp %s: remote starting md5 checksum. executing: %s' % (src_filename, ' '.join(cmd_remote_checksum)))
+        logger.info('ltacp %s: remote starting computation of md5 checksum. executing: %s' % (src_filename, ' '.join(cmd_remote_checksum)))
         p_remote_checksum = Popen(cmd_remote_checksum, shell=True, stdout=PIPE, stderr=PIPE)
         started_procs.append(p_remote_checksum)
 
