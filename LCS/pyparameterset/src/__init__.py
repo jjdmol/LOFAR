@@ -138,10 +138,11 @@ class parameterset(PyParameterSet):
         """Turn the parset into a dict"""
         d = {}
         for key in self.keys():
+            s = self.get(key).get()
             if removeQuotes:
-                d[key] = self.get(key).getString()
-            else:
-                d[key] = self.get(key).get()
+                if len(s) >= 2  and  s[0] in ['"',"'"]  and  s[0] == s[-1]:
+                    s = s[1:-1]
+            d[key] = s
         return d
 
     def adoptArgv(self, argv):
