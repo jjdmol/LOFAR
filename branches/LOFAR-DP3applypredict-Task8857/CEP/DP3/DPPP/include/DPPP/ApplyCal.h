@@ -49,6 +49,8 @@ namespace LOFAR {
       // Parameters are obtained from the parset using the given prefix.
       ApplyCal (DPInput*, const ParameterSet&, const string& prefix);
 
+      ApplyCal();
+
       virtual ~ApplyCal();
 
       // Process the data.
@@ -67,6 +69,10 @@ namespace LOFAR {
 
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
+
+      bool invert() {
+        return itsInvert;
+      }
 
       // Invert a 2x2 matrix in place
       static void invert (casa::DComplex* v, double sigmaMMSE=0);

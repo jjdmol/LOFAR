@@ -66,7 +66,8 @@ namespace LOFAR {
                       const string& prefix)
       : itsInput         (input),
         itsName          (prefix),
-        itsSourceDBName (parset.getString (prefix + "sourcedb")),
+        itsSourceDBName  (parset.getString (prefix + "sourcedb")),
+        itsOperation     (parset.getString (prefix + "operation", "replace")),
         itsApplyBeam     (parset.getBool (prefix + "usebeammodel", false)),
         itsDebugLevel    (parset.getInt (prefix + "debuglevel", 0)),
         itsPatchList     ()
@@ -77,6 +78,9 @@ namespace LOFAR {
                                                            vector<string>());
       vector<string> patchNames=makePatchList(sourceDB, sourcePatterns);
       itsPatchList = makePatches (sourceDB, patchNames, patchNames.size());
+
+      ASSERT(itsOperation=="replace" || itsOperation=="add" ||
+             itsOperation=="subtract");
 
       if (itsApplyBeam) {
         itsUseChannelFreq=parset.getBool (prefix + "usechannelfreq", true);
@@ -98,6 +102,14 @@ namespace LOFAR {
         if (!itsOneBeamPerPatch) {
           itsPatchList = makeOnePatchPerComponent(itsPatchList);
         }
+      }
+
+      if (parset.isDefined(prefix + "correctiontype")) {
+        itsApplyCalStep=DPStep::ShPtr(new ApplyCal(input, parset, prefix));
+        ASSERT(!parset.getBool(prefix + "invert"));
+        ASSERT(!(itsOperation!="replace" && parset.getBool(prefix + "updateweights")));
+        itsResultStep=new ResultStep();
+        itsApplyCalStep->setNextStep(DPStep::ShPtr(itsResultStep));
       }
 
 
@@ -193,9 +205,8 @@ namespace LOFAR {
     bool Predict::process (const DPBuffer& bufin)
     {
       itsTimer.start();
-      itsBuffer.copy (bufin);
-      Complex* data=itsBuffer.getData().data();
-      itsInput->fetchUVW(bufin, itsBuffer, itsTimer);
+      itsTempBuffer.copy (bufin);
+      itsInput->fetchUVW(bufin, itsTempBuffer, itsTimer);
       ///??      itsInput->fetchWeights(bufin, itsBuffer, itsTimer);
       ///??itsInput->fetchFullResFlags(bufin, itsBuffer, itsTimer);
 
@@ -207,11 +218,11 @@ namespace LOFAR {
       const size_t nCr = 4;
       const size_t nSamples = nBl * nCh * nCr;
 
-      double time = itsBuffer.getTime();
+      double time = itsTempBuffer.getTime();
 
       itsTimerPredict.start();
 
-      nsplitUVW(itsUVWSplitIndex, itsBaselines, itsBuffer.getUVW(), itsUVW);
+      nsplitUVW(itsUVWSplitIndex, itsBaselines, itsTempBuffer.getUVW(), itsUVW);
 
       //Set up directions for beam evaluation
       StationResponse::vector3r_t refdir, tiledir;
@@ -243,6 +254,7 @@ namespace LOFAR {
       Patch::ConstPtr curPatch;
 #pragma omp for
       for (uint i=0;i<itsSourceList.size();++i) {
+        // Keep on predicting, only apply beam when an entire patch is done
         if (itsApplyBeam && curPatch!=itsSourceList[i].second && curPatch!=0) {
           addBeamToData (curPatch, time, refdir, tiledir, thread, nSamples,
                          itsModelVisPatch[thread].data());
@@ -251,17 +263,35 @@ namespace LOFAR {
         curPatch=itsSourceList[i].second;
       }
 
+      // Apply beam to the last patch
       if (itsApplyBeam && curPatch!=0) {
         addBeamToData (curPatch, time, refdir, tiledir, thread, nSamples,
                        itsModelVisPatch[thread].data());
       }
 }
 
-      //Add all thread model data to one buffer
-      itsBuffer.getData()=Complex();
+      // Add all thread model data to one buffer
+      itsTempBuffer.copy(bufin);
+      itsTempBuffer.getData()=Complex();
+      Complex* tdata=itsTempBuffer.getData().data();
       for (uint thread=0;thread<OpenMP::maxThreads();++thread) {
-        std::transform(data, data+nSamples, itsModelVis[thread].data(),
+        std::transform(tdata, tdata+nSamples, itsModelVis[thread].data(),
+                       tdata, std::plus<dcomplex>());
+      }
+
+      if (itsApplyCalStep) {
+        itsApplyCalStep->process(itsTempBuffer);
+        itsTempBuffer=itsResultStep->get();
+      }
+
+      itsBuffer.copy(itsTempBuffer);
+      Complex* data=itsBuffer.getData().data();
+      if (itsOperation=="add") {
+        std::transform(data, data+nSamples, tdata,
                        data, std::plus<dcomplex>());
+      } else if (itsOperation=="subtract") {
+        std::transform(data, data+nSamples, tdata,
+                       data, std::minus<dcomplex>());
       }
 
       itsTimerPredict.stop();
