@@ -6,7 +6,6 @@
 ## $Id$
 
 option(USE_LOG4CPLUS "Use Log4Cplus" ON)
-option(USE_OPENMP    "Use OpenMP"    ON)
 option(USE_MPI       "Use MPI"       ON)
 # To build Cobalt, you must also enable USE_CUDA or USE_OPENCL (not both).
 
