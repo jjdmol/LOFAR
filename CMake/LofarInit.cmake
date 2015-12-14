@@ -14,6 +14,8 @@
 #                                           derived from CMAKE_BINARY_DIR
 #  LOFAR_BUILD_VARIANT    internal  yes     Build variant (e.g., debug), 
 #                                           derived from CMAKE_BINARY_DIR
+#  LOFAR_LIBDIR           internal  yes     Directory where libraries will be
+#                                           installed, lib or lib64.
 #
 #  for backward compatibility:
 #  --------------------------
@@ -21,11 +23,6 @@
 #  lofar_sharedir         internal  yes     $lofar_top_srcdir/autoconf_share
 #  prefix                 internal  yes     Install prefix
 #
-#  Property                         Scope   Description
-#  ========                         =====   ===========
-#  FIND_LIBRARY_USE_LIB64_PATHS     global  Set to true if either ENABLE_LIB64
-#                                           is set or directory /lib64 exists,
-#                                           otherwise set to false.
 
 #  Copyright (C) 2008-2010
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -179,35 +176,14 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
   add_definitions(${${LOFAR_COMPILER_SUITE}_COMPILE_DEFINITIONS})
   add_definitions(${${LOFAR_COMPILER_SUITE}_COMPILE_DEFINITIONS_${LOFAR_BUILD_VARIANT}})
 
-  # Determine if lib64 has to be used. This is somewhat tricky for the default
-  # case, because: Debian puts 64-bit libs in /lib and 32-bit libs in /lib32,
-  # but SuSE and RedHat put 64-bit libs in /lib64 and 32-bit libs in /lib.
-  # We cannot use `uname -s`, since all distros return "Linux", hence we must
-  # test for the presence of these lib directories instead. To further
-  # complicate matters, Debian distros may create a symlink /lib64; therefore
-  # we should make sure that /lib64 is a "real" directory, not a symlink.
-  set(LOFAR_LIBDIR lib)
-  if(DEFINED ENABLE_LIB64)
-    if(ENABLE_LIB64)
-      set(LOFAR_LIBDIR lib64)
-    else(ENABLE_LIB64)
-      execute_process(COMMAND test -d /lib32 -a ! -L /lib32 RESULT_VARIABLE result)
-      if(NOT result)
-        set(LOFAR_LIBDIR lib32)
-      endif(NOT result)
-    endif(ENABLE_LIB64)
-  else(DEFINED ENABLE_LIB64)
-    execute_process(COMMAND test -d /lib64 -a ! -L /lib64 RESULT_VARIABLE result)
-    if(NOT result)
-      set(LOFAR_LIBDIR lib64)
-    endif(NOT result)
-  endif(DEFINED ENABLE_LIB64)
-
-  if(LOFAR_LIBDIR STREQUAL lib64)
-    set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS TRUE)
-  else(LOFAR_LIBDIR STREQUAL lib64)
-    set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS FALSE)
-  endif(LOFAR_LIBDIR STREQUAL lib64)
+  # Determine if libraries have to be put in lib or lib64. On Debian systems
+  # they have to be put in lib, on non-Debian 64-bit systems in lib64.
+  set(_libdir lib)
+  if(NOT EXISTS /etc/debian_version AND EXISTS /usr/lib64)
+    set(_libdir lib64)
+  endif(NOT EXISTS /etc/debian_version AND EXISTS /usr/lib64)
+  set(LOFAR_LIBDIR ${_libdir} CACHE INTERNAL
+    "Directory where libraries will be installed")
 
   # Create a directory structure in the build directory similar to that in the
   # install directory. Binaries should be put in bin or sbin, libraries in lib
