@@ -1,6 +1,0 @@
-
-#
-# Configuration to connect RSPTest to the RPSDriver
-#
-mac.ns.RSPTest.server.type=TCP
-mac.top.RSPTest.server.remoteservice=RSPDriver:acceptor_v2
