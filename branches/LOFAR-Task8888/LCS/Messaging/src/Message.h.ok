@@ -1,0 +1,76 @@
+#ifndef LOFAR_MESSAGING_MESSAGE_H
+#define LOFAR_MESSAGING_MESSAGE_H
+
+#include <Messaging/Exceptions.h>
+#include <Messaging/DefaultSettings.h> // for TRACE macro
+#include <Messaging/ForwardDeclarations.h>
+#include <Common/ObjectFactory.h>
+#include <Common/Singleton.h>
+#include <boost/shared_ptr.hpp>
+#include <map>
+#include <string>
+#include <iostream>
+
+
+
+
+namespace LOFAR
+{
+  namespace Messaging
+  {
+    // // Typedef copied from Qpid header file; avoids inclusion.
+    // typedef std::map<std::string, qpid::types::Variant> qpid_variant_map_t;
+
+    // Top-level message class.
+    // @todo: move outside of LOFAR source code tree.
+    class Message
+    {
+    public:
+      // Virtual destructor, because you can inherit from this class.
+      virtual ~Message();
+
+      // Create a message of the correct type. 
+      // This factory method uses the Qpid message property \a MessageType to
+      // determine the exact kind of Message object that must be constructed.
+      // @throw MessageFactoryError
+      static Message* create(const qpid::messaging::Message& qmsg);
+
+      // Name of the Qpid message property that contains the type name of a
+      // Message.
+      static const std::string theirQpidPropertyName;
+
+    protected:
+      // Default constructor. Creates an empty message object.
+      Message();
+
+      // Construct a Message object from a Qpid message.
+      Message(const qpid::messaging::Message& msg);
+
+      // Return a managed pointer to the stored Qpid message.
+      boost::shared_ptr< qpid::messaging::Message > getQpidMsg() const;
+
+      // Helper function to retrieve a single property.
+      // @throw MessagePropertyNotFound
+      qpid::types::Variant getProperty(const std::string& property) const;
+
+    private:
+      // Retrieve a single property directly from a Qpid message.
+      static qpid::types::Variant
+      getProperty(const std::string& property,
+                  const qpid::messaging::Message& qmsg);
+
+      // Store a (managed) pointer to the Qpid message. By using a pointer, we
+      // keep Qpid out of the interface.
+      boost::shared_ptr< qpid::messaging::Message > itsQpidMsg;
+    };
+
+    // Generic factory for Message objects.
+    typedef LOFAR::Singleton<
+      LOFAR::ObjectFactory< Message*(const qpid::messaging::Message& msg), 
+                            std::string >
+      > MessageFactory;
+
+  }
+}
+
+#endif
