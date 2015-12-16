@@ -172,6 +172,10 @@ namespace LOFAR {
           itsInput->fillBeamInfo (itsAntBeamInfo[thread], info().antennaNames());
         }
       }
+
+      if (itsApplyCalStep) {
+        itsApplyCalStep->updateInfo(info());
+      }
     }
 
     void Predict::show (std::ostream& os) const
