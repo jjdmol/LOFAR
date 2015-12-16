@@ -279,7 +279,7 @@ private:
     Cube<Complex> tmp=from.copy();
     Cube<Complex>::iterator tmpit=tmp.begin();
     Cube<Float>::const_iterator weightit=weights.begin();
-    for (; tmpit!=to.end() && weightit!=weights.end(); tmpit++, weightit++) {
+    for (; tmpit!=tmp.end() && weightit!=weights.end(); tmpit++, weightit++) {
       *tmpit *= *weightit;
     }
     to += tmp(IPosition(3,0,0,bl), IPosition(3,to.nrow()-1,to.ncolumn()-1,bl));
@@ -291,7 +291,7 @@ private:
     Cube<Complex> tmp=from.copy();
     Cube<Complex>::iterator tmpit=tmp.begin();
     Cube<Float>::const_iterator weightit=weights.begin();
-    for (; tmpit!=to.end() && weightit!=weights.end(); tmpit++, weightit++) {
+    for (; tmpit!=tmp.end() && weightit!=weights.end(); tmpit++, weightit++) {
       *tmpit *= *weightit;
     }
     to += conj(tmp(IPosition(3,0,0,bl), IPosition(3,to.nrow()-1,to.ncolumn()-1,bl)));
@@ -351,21 +351,23 @@ private:
     ASSERT (allEQ (buf.getFullResFlags(), false));
     // Now check data of new baselines.
     end[2] = itsNBl;
+    double tol = 1e-5;
     cout<< buf.getUVW()(IPosition(2,0,itsNBl-1), IPosition(2,2,itsNBl+4));
-    ASSERT (allNear (buf.getData()(IPosition(3,0,0,itsNBl), end), databl0, 1e-5));
-    ASSERT (allNear (buf.getWeights()(IPosition(3,0,0,itsNBl), end), weightbl0, 1e-5));
+    ASSERT (allNear (buf.getData()(IPosition(3,0,0,itsNBl), end), databl0, tol));
+    ASSERT (allNear (buf.getWeights()(IPosition(3,0,0,itsNBl), end), weightbl0, tol));
     end[2] = itsNBl+1;
-    ASSERT (allNear (buf.getData()(IPosition(3,0,0,itsNBl+1), end), databl1, 1e-5));
-    ASSERT (allNear (buf.getWeights()(IPosition(3,0,0,itsNBl+1), end), weightbl1, 1e-5));
+    ASSERT (allNear (buf.getData()(IPosition(3,0,0,itsNBl+1), end), databl1, tol));
+    ASSERT (allNear (buf.getWeights()(IPosition(3,0,0,itsNBl+1), end), weightbl1, tol));
     end[2] = itsNBl+2;
-    ASSERT (allNear (buf.getData()(IPosition(3,0,0,itsNBl+2), end), databl2, 1e-5));
-    ASSERT (allNear (buf.getWeights()(IPosition(3,0,0,itsNBl+2), end), weightbl2, 1e-5));
+    ASSERT (allNear (buf.getData()(IPosition(3,0,0,itsNBl+2), end), databl2, tol));
+    ASSERT (allNear (buf.getWeights()(IPosition(3,0,0,itsNBl+2), end), weightbl2, tol));
     end[2] = itsNBl+3;
-    ASSERT (allNear (buf.getData()(IPosition(3,0,0,itsNBl+3), end), databl3, 1e-5));
-    ASSERT (allNear (buf.getWeights()(IPosition(3,0,0,itsNBl+3), end), weightbl3, 1e-5));
+    ASSERT (allNear (buf.getData()(IPosition(3,0,0,itsNBl+3), end), databl3, tol));
+    ASSERT (allNear (buf.getWeights()(IPosition(3,0,0,itsNBl+3), end), weightbl3, tol));
     end[2] = itsNBl+4;
-    ASSERT (allNear (buf.getData()(IPosition(3,0,0,itsNBl+4), end), databl4, 1e-5));
-    ASSERT (allNear (buf.getWeights()(IPosition(3,0,0,itsNBl+4), end), weightbl4, 1e-5));
+    ASSERT (allNear (real(buf.getData()(IPosition(3,0,0,itsNBl+4), end)), real(databl4), tol));
+    ASSERT (allNear (imag(buf.getData()(IPosition(3,0,0,itsNBl+4), end)), imag(databl4), tol));
+    ASSERT (allNear (buf.getWeights()(IPosition(3,0,0,itsNBl+4), end), weightbl4, tol));
     itsCount++;
     return true;
     ///cout << buf.getFlags() << endl << result << endl;

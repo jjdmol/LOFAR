@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <DPPP/Package__Version.h>
 #include <DPPP/MSWriter.h>
-#include <DPPP/MSUpdater.h>
+#include <DPPP/MSReader.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
 #include <DPPP/DPLogger.h>
@@ -39,7 +39,6 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/StandardStMan.h>
-#include <tables/Tables/TiledStManAccessor.h>
 #include <measures/TableMeasures/ArrayMeasColumn.h>
 #include <measures/Measures/MCDirection.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -117,14 +116,6 @@ namespace LOFAR {
     {
       NSTimer::StartStop sstime(itsTimer);
       itsMS.flush();
-      ///ROTiledStManAccessor acc1(itsMS, "TiledData");
-      ///acc1.showCacheStatistics (cout);
-      ///ROTiledStManAccessor acc2(itsMS, "TiledFlag");
-      ///acc2.showCacheStatistics (cout);
-      ///ROTiledStManAccessor acc3(itsMS, "TiledUVW");
-      ///acc3.showCacheStatistics (cout);
-      ///ROTiledStManAccessor acc4(itsMS, "TiledFullResFlag");
-      ///acc4.showCacheStatistics (cout);
       // Create the VDS file.
       if (! itsClusterDesc.empty()) {
         string vdsName = itsMS.tableName() + ".vds";
@@ -181,6 +172,13 @@ namespace LOFAR {
       os << "  time interval:  " << itsInterval << std::endl;
       os << "  DATA column:    " << itsDataColName << std::endl;
       os << "  WEIGHT column:  " << itsWeightColName << std::endl;
+    }
+
+    void MSWriter::showIOStats (std::ostream& os) const
+    {
+      os << endl << "IO statistics of writer " << itsMS.tableName();
+      os << endl << "=======================" << endl;
+      MSReader::showTableStats (itsMS, os);
     }
 
     void MSWriter::showTimings (std::ostream& os, double duration) const

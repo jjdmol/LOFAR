@@ -103,17 +103,21 @@ namespace LOFAR {
       // The default implementation does nothing.
       virtual void showCounts (std::ostream&) const;
 
+      // Show the IO statistics.
+      // The default implementation does nothing.
+      virtual void showIOStats (std::ostream&) const;
+
       // Show the timings.
       // The default implementation does nothing.
       virtual void showTimings (std::ostream&, double duration) const;
 
       // Set the previous step.
       void setPrevStep (DPStep* prevStep)
-      { itsPrevStep = prevStep; }
+        { itsPrevStep = prevStep; }
 
       // Get the previous step.
       DPStep* getPrevStep () const
-      { return itsPrevStep; }
+        { return itsPrevStep; }
 
       // Set the next step.
       void setNextStep (DPStep::ShPtr nextStep)

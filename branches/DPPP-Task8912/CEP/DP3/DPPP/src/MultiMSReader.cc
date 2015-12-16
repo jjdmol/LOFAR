@@ -378,6 +378,15 @@ namespace LOFAR {
       }
     }
 
+    void MultiMSReader::showIOStats (std::ostream& os) const
+    {
+      for (uint i=0; i<itsReaders.size(); ++i) {
+        if (itsReaders[i]) {
+          itsReaders[i]->showIOStats (os);
+        }
+      }
+    }
+
     void MultiMSReader::showTimings (std::ostream& os, double duration) const
     {
       for (uint i=0; i<itsReaders.size(); ++i) {

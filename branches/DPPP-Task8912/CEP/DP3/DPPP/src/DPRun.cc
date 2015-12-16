@@ -110,6 +110,7 @@ namespace LOFAR {
       DPLogger::useLogger = parset.getBool ("uselogger", false);
       bool showProgress   = parset.getBool ("showprogress", true);
       bool showTimings    = parset.getBool ("showtimings", true);
+      bool showIOStats    = parset.getBool ("showiostats", false);
       // checkparset is an integer parameter now, but accept a bool as well
       // for backward compatibility.
       int checkparset = 0;
@@ -182,10 +183,20 @@ namespace LOFAR {
 
       // Show the counts where needed.
       if (showcounts) {
-      step = firstStep;
+        step = firstStep;
         while (step) {
           ostringstream os;
           step->showCounts (os);
+          DPLOG_INFO (os.str(), true);
+          step = step->getNextStep();
+        }
+      }
+      // Show the IO statistics.
+      if (showIOStats) {
+        step = firstStep;
+        while (step) {
+          ostringstream os;
+          step->showIOStats (os);
           DPLOG_INFO (os.str(), true);
           step = step->getNextStep();
         }

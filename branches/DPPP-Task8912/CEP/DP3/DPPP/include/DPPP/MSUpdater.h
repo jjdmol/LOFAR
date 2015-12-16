@@ -76,6 +76,9 @@ namespace LOFAR {
       // Show the step parameters.
       virtual void show (std::ostream&) const;
 
+      // Show the IO statistics.
+      virtual void showIOStats (std::ostream&) const;
+
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
 

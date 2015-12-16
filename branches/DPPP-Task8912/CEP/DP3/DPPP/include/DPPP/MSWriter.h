@@ -82,6 +82,9 @@ namespace LOFAR {
       // Update the general info.
       virtual void updateInfo (const DPInfo&);
 
+      // Show the IO statistics.
+      virtual void showIOStats (std::ostream&) const;
+
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
 
