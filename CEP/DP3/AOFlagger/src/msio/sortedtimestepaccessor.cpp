@@ -163,8 +163,9 @@ void SortedTimestepAccessor::Write(SortedTimestepAccessor::TimestepIndex &index,
 			{
 				for(unsigned p=0;p<_polarizationCount;++p)
 				{
-					(*dataIterator).real(data.realData[p][valIndex]);
-					(*dataIterator).imag(data.imagData[p][valIndex]);
+					*dataIterator = casa::Complex(
+					    data.realData[p][valIndex],
+					    data.imagData[p][valIndex]);
 					++dataIterator;
 				}
 				++valIndex;

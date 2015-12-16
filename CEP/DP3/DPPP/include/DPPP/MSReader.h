@@ -162,6 +162,9 @@ namespace LOFAR {
       // If needed, show the flag counts.
       virtual void showCounts (std::ostream&) const;
 
+      // Show the IO statistics.
+      virtual void showIOStats (std::ostream&) const;
+
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
 
@@ -260,6 +263,9 @@ namespace LOFAR {
       // Flags inf and NaN
       static void flagInfNaN(const casa::Cube<casa::Complex>& dataCube,
                        casa::Cube<bool>& flagsCube, FlagCounter& flagCounter);
+
+      // Show the Table IO statistics.
+      static void showTableStats (const casa::Table&, std::ostream&);
 
     private:
       // Prepare the access to the MS.

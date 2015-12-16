@@ -292,8 +292,9 @@ void TimestepAccessor::emptyWriteBuffer()
 			{
 				for(unsigned p=0;p<_polarizationCount;++p)
 				{
-					(*dataIterator).real(item.data.realData[p][currentIndex]);
-					(*dataIterator).imag(item.data.imagData[p][currentIndex]);
+					*dataIterator = casa::Complex(
+					    item.data.realData[p][currentIndex],
+					    item.data.imagData[p][currentIndex]);
 					++dataIterator;
 				}
 				++currentIndex;

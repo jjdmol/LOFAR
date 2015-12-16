@@ -52,6 +52,9 @@ namespace LOFAR {
     void DPStep::showCounts (std::ostream&) const
     {}
 
+    void DPStep::showIOStats (std::ostream&) const
+    {}
+
     void DPStep::showTimings (std::ostream&, double) const
     {}
 

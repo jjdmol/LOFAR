@@ -35,6 +35,7 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/RecordGram.h>
+#include <tables/DataMan/DataManAccessor.h>
 #include <measures/Measures/MeasTable.h>
 #include <measures/TableMeasures/ScalarMeasColumn.h>
 #include <measures/TableMeasures/ArrayMeasColumn.h>
@@ -409,6 +410,33 @@ namespace LOFAR {
       int64 nrtim = itsNrRead;
       itsFlagCounter.showCorrelation (os, nrtim);
       os << itsNrInserted << " missing time slots were inserted" << endl;
+    }
+
+    void MSReader::showIOStats (std::ostream& os) const
+    {
+      os << endl << "IO statistics of reader " << itsMSName;
+      os << endl << "=======================" << endl;
+      showTableStats (itsMS, os);
+    }
+
+    void MSReader::showTableStats (const Table& tab, ostream& os)
+    {
+      /// TODO: replace by DataManInfo::showDataManStats once available.
+      Record dmInfo = tab.dataManagerInfo();
+      // Loop through all data managers.
+      // Not all of them might have a name, so use the first column in
+      // each of them to construct the Accessor object.
+      for (uInt i=0; i<dmInfo.nfields(); ++i) {
+        String col = dmInfo.subRecord(i).asArrayString("COLUMNS").data()[0];
+        RODataManAccessor acc(tab, col, True);
+        os << "  Statistics for column " << col << " e.a.: ";
+        Int64 pos = os.tellp();
+        acc.showCacheStatistics (os);
+        if (os.tellp() == pos) {
+          // Nothing written, thus end the line.
+          os << endl;
+        }
+      }
     }
 
     void MSReader::showTimings (std::ostream& os, double duration) const

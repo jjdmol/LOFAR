@@ -164,7 +164,7 @@ namespace LOFAR {
       // but one might think it means a baseline [[ant1,ant2]].
       if (pairs.size() == 2  &&
           !(pairs[0].isVector()  ||  pairs[1].isVector())) {
-        LOG_WARN_STR ("PreFlagger baseline " << pvBL.get()
+        LOG_WARN_STR ("Baseline selection " << pvBL.get()
                       << " means two antennae, but is somewhat ambigious; "
                       << "it's more clear to use [[ant1],[ant2]]");
       }
@@ -186,11 +186,11 @@ namespace LOFAR {
             }
           }
           if (nmatch == 0) {
-            DPLOG_WARN_STR ("PreFlagger: no matches for antenna name pattern ["
+            DPLOG_WARN_STR ("Baseline selection: no matches for antenna name pattern ["
                             << bl[0] << "]");
           }
         } else {
-          ASSERTSTR (bl.size() == 2, "PreFlagger baseline " << bl <<
+          ASSERTSTR (bl.size() == 2, "Baseline selection " << bl <<
                      " should contain 1 or 2 antenna name patterns");
           // Turn the given antenna name pattern into a regex.
           Regex regex1(Regex::fromPattern (bl[0]));
@@ -210,7 +210,7 @@ namespace LOFAR {
             }
           }
           if (nmatch == 0) {
-            DPLOG_WARN_STR ("PreFlagger: no matches for baseline name pattern ["
+            DPLOG_WARN_STR ("Baseline selection: no matches for baseline name pattern ["
                             << bl[0] << ',' << bl[1] << "]");
           }
         }

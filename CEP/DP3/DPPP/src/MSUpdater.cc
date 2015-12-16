@@ -219,6 +219,13 @@ namespace LOFAR {
       os << "  flush:          " << itsNrTimesFlush << std::endl;
     }
 
+    void MSUpdater::showIOStats (std::ostream& os) const
+    {
+      os << endl << "IO statistics of updater " << itsMS.tableName();
+      os << endl << "========================" << endl;
+      MSReader::showTableStats (itsMS, os);
+    }
+
     void MSUpdater::showTimings (std::ostream& os, double duration) const
     {
       os << "  ";
