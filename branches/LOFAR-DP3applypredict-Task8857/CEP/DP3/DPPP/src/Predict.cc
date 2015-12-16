@@ -104,10 +104,10 @@ namespace LOFAR {
         }
       }
 
-      if (parset.isDefined(prefix + "correctiontype")) {
-        itsApplyCalStep=DPStep::ShPtr(new ApplyCal(input, parset, prefix));
-        ASSERT(!parset.getBool(prefix + "invert"));
-        ASSERT(!(itsOperation!="replace" && parset.getBool(prefix + "updateweights")));
+      if (parset.isDefined(prefix + "applycal.parmdb")) {
+        itsApplyCalStep=DPStep::ShPtr(new ApplyCal(input, parset, prefix + "applycal.", true));
+        ASSERT(!(itsOperation!="replace" &&
+                 parset.getBool(prefix + "applycal.updateweights", false)));
         itsResultStep=new ResultStep();
         itsApplyCalStep->setNextStep(DPStep::ShPtr(itsResultStep));
       }
@@ -192,7 +192,11 @@ namespace LOFAR {
         os << "   use channelfreq:   " << boolalpha << itsUseChannelFreq << endl;
         os << "   one beam per patch:" << boolalpha << itsOneBeamPerPatch << endl;
       }
+      os << "  operation:          "<<itsOperation << endl;
       os << "  threads:            "<<OpenMP::maxThreads()<<endl;
+      if (itsApplyCalStep) {
+        itsApplyCalStep->show(os);
+      }
     }
 
     void Predict::showTimings (std::ostream& os, double duration) const
@@ -271,7 +275,6 @@ namespace LOFAR {
 }
 
       // Add all thread model data to one buffer
-      itsTempBuffer.copy(bufin);
       itsTempBuffer.getData()=Complex();
       Complex* tdata=itsTempBuffer.getData().data();
       for (uint thread=0;thread<OpenMP::maxThreads();++thread) {
@@ -279,19 +282,25 @@ namespace LOFAR {
                        tdata, std::plus<dcomplex>());
       }
 
+      // Call ApplyCal step
       if (itsApplyCalStep) {
         itsApplyCalStep->process(itsTempBuffer);
         itsTempBuffer=itsResultStep->get();
       }
 
-      itsBuffer.copy(itsTempBuffer);
-      Complex* data=itsBuffer.getData().data();
-      if (itsOperation=="add") {
-        std::transform(data, data+nSamples, tdata,
-                       data, std::plus<dcomplex>());
-      } else if (itsOperation=="subtract") {
-        std::transform(data, data+nSamples, tdata,
-                       data, std::minus<dcomplex>());
+      // Put predict result from temp buffer into the 'real' buffer
+      if (itsOperation=="replace") {
+        itsBuffer=itsTempBuffer;
+      } else {
+        itsBuffer.copy(bufin);
+        Complex* data=itsBuffer.getData().data();
+        if (itsOperation=="add") {
+          std::transform(data, data+nSamples, tdata,
+                         data, std::plus<dcomplex>());
+        } else if (itsOperation=="subtract") {
+          std::transform(data, data+nSamples, tdata,
+                         data, std::minus<dcomplex>());
+        }
       }
 
       itsTimerPredict.stop();
