@@ -105,13 +105,15 @@ namespace LOFAR {
       }
 
       if (parset.isDefined(prefix + "applycal.parmdb")) {
-        itsApplyCalStep=DPStep::ShPtr(new ApplyCal(input, parset, prefix + "applycal.", true));
+        itsDoApplyCal=true;
+        itsApplyCalStep=ApplyCal(input, parset, prefix + "applycal.", true);
         ASSERT(!(itsOperation!="replace" &&
                  parset.getBool(prefix + "applycal.updateweights", false)));
         itsResultStep=new ResultStep();
-        itsApplyCalStep->setNextStep(DPStep::ShPtr(itsResultStep));
+        itsApplyCalStep.setNextStep(DPStep::ShPtr(itsResultStep));
+      } else {
+        itsDoApplyCal=false;
       }
-
 
       itsSourceList = makeSourceList(itsPatchList);
     }
@@ -173,8 +175,8 @@ namespace LOFAR {
         }
       }
 
-      if (itsApplyCalStep) {
-        itsApplyCalStep->updateInfo(info());
+      if (itsDoApplyCal) {
+        itsApplyCalStep.updateInfo(info());
       }
     }
 
@@ -198,8 +200,8 @@ namespace LOFAR {
       }
       os << "  operation:          "<<itsOperation << endl;
       os << "  threads:            "<<OpenMP::maxThreads()<<endl;
-      if (itsApplyCalStep) {
-        itsApplyCalStep->show(os);
+      if (itsDoApplyCal) {
+        itsApplyCalStep.show(os);
       }
     }
 
@@ -287,9 +289,10 @@ namespace LOFAR {
       }
 
       // Call ApplyCal step
-      if (itsApplyCalStep) {
-        itsApplyCalStep->process(itsTempBuffer);
+      if (itsDoApplyCal) {
+        itsApplyCalStep.process(itsTempBuffer);
         itsTempBuffer=itsResultStep->get();
+        tdata=itsTempBuffer.getData().data();
       }
 
       // Put predict result from temp buffer into the 'real' buffer

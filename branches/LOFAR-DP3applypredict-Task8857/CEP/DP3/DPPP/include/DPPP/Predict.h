@@ -99,7 +99,8 @@ namespace LOFAR {
       bool             itsOneBeamPerPatch;
       Position         itsPhaseRef;
 
-      DPStep::ShPtr    itsApplyCalStep;
+      bool             itsDoApplyCal;
+      ApplyCal         itsApplyCalStep;
       DPBuffer         itsTempBuffer;
       ResultStep*      itsResultStep; // For catching results from ApplyCal
 

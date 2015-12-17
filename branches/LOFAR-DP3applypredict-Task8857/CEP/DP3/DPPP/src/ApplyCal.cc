@@ -117,7 +117,7 @@ namespace LOFAR {
           // Defvalues with :Ampl present
           itsUseAP = true;
         } else {
-          THROW (Exception, "No gains found in parmdb");
+          THROW (Exception, "No gains found in parmdb "+itsParmDBName);
         }
       }
 
