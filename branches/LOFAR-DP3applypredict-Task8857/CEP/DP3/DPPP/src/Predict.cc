@@ -217,8 +217,7 @@ namespace LOFAR {
       itsTimer.start();
       itsTempBuffer.copy (bufin);
       itsInput->fetchUVW(bufin, itsTempBuffer, itsTimer);
-      ///??      itsInput->fetchWeights(bufin, itsBuffer, itsTimer);
-      ///??itsInput->fetchFullResFlags(bufin, itsBuffer, itsTimer);
+      itsInput->fetchWeights(bufin, itsTempBuffer, itsTimer);
 
       // Determine the various sizes.
       //const size_t nDr = itsPatchList.size();
