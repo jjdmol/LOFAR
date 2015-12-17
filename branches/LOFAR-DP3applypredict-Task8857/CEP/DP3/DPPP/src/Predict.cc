@@ -176,7 +176,7 @@ namespace LOFAR {
       }
 
       if (itsDoApplyCal) {
-        itsApplyCalStep.updateInfo(info());
+        info()=itsApplyCalStep.setInfo(info());
       }
     }
 
