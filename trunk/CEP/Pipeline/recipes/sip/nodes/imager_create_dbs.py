@@ -322,6 +322,11 @@ class imager_create_dbs(LOFARnodeTCP):
         row. All exceptions thrown are caught and logged, return None if reading
         failed
         """
+
+        table = None;
+        field = None;
+        ra_and_decl = None;
+
         try:
             # open the ms, get the phase direction
             table = pt.table(measurement_set)
