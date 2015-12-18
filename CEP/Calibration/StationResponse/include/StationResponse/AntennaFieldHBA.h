@@ -79,6 +79,7 @@ private:
     static std::map<string,double>    theirRotationMap;
     static casa::CountedPtr<wcsprm>   theirWCS_p;;
     static casa::Array<casa::Float>   theirIntegralsxx, theirIntegralsyy;
+    casa::Array<casa::Float>          itsIntegralsxx, itsIntegralsyy;
 };
 
 

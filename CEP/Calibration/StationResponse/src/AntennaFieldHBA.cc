@@ -50,6 +50,9 @@ AntennaFieldHBA::AntennaFieldHBA(const string &name,
         itsAntennaModel(model),
         itsRotation(theirRotationMap.find(name)->second)
 {
+    // TODO: add name to fits cube
+    itsIntegralsxx=readFITS("beamcube-xx.fits");
+    itsIntegralsyy=readFITS("beamcube-yy.fits");
 }
 
 matrix22c_t AntennaFieldHBA::response(real_t time, real_t freq,
@@ -108,12 +111,13 @@ diag22r_t AntennaFieldHBA::getNormalization(real_t freq,
   double el=azel.second;
 
   vector<double> world(2);
+  // TODO: remove rotation
   world[0]=az*180./casa::C::pi-itsRotation; // Azimuth in degrees, corrected for rotation
   world[1]=el*180./casa::C::pi; // Elevation in degrees
   vector<double> phi(2), theta(2), imgcrd(2), pixcrd(2);
   vector<int> status(1);
   wcss2p(theirWCS_p.get(), 1, 0, &(world[0]),
-		 &(phi[0]), &(theta[0]), &(imgcrd[0]), &(pixcrd[0]),
+         &(phi[0]), &(theta[0]), &(imgcrd[0]), &(pixcrd[0]),
          &(status[0]));
 
   // Round to int, so add 0.5 and then truncate
@@ -125,14 +129,14 @@ diag22r_t AntennaFieldHBA::getNormalization(real_t freq,
   // Get index for frequency
   const double freq_min=100.e6;
   const double freq_max=195.e6;
-  const uint numfreqs=theirIntegralsxx.shape()[2];
+  const uint numfreqs=itsIntegralsxx.shape()[2];
 
   // Round to int, so add 0.5 and then truncate
   freq_index=int((freq-freq_min)/(freq_max-freq_min)*(numfreqs-1)+0.5);
 
 
-  double normxx=theirIntegralsxx(casa::IPosition(3,x_index,y_index,freq_index));
-  double normyy=theirIntegralsyy(casa::IPosition(3,x_index,y_index,freq_index));
+  double normxx=itsIntegralsxx(casa::IPosition(3,x_index,y_index,freq_index));
+  double normyy=itsIntegralsyy(casa::IPosition(3,x_index,y_index,freq_index));
   //cout<<"Station: "<<name()<<", rot="<<itsRotation<<", (az,el)=("<<world[0]<<", "<<world[1]<<"), pix=("<<pixcrd[0]<<", "<<pixcrd[1]<<") 1-based, ("<<x_index<<","<<y_index<<") 0-based, freq="<<freq<<", freq_index="<<freq_index<<"  (0-based), norm="<<norm<<endl;
   diag22r_t norms={{}};
   norms[0]=normxx;
@@ -322,17 +326,17 @@ casa::CountedPtr<wcsprm> AntennaFieldHBA::readWCS(const string &filename)
 }
 
 casa::Array<casa::Float> AntennaFieldHBA::readFITS(const string &filename) {
-	casa::Bool ok=true;
-	casa::String message;
-	casa::Array<casa::Float> integrals;
+  casa::Bool ok=true;
+  casa::String message;
+  casa::Array<casa::Float> integrals;
 
-	FileLocator locator("$LOFARROOT/share/beamnorms");
-	string locatedFitsFile=locator.locate(filename);
-	integrals = casa::ReadFITS(locatedFitsFile.c_str(),ok,message);
-	if (!ok) {
-	  LOG_WARN_STR("Could not read beam normalization fits file: " << message);
-	}
-	return integrals;
+  FileLocator locator("$LOFARROOT/share/beamnorms");
+  string locatedFitsFile=locator.locate(filename);
+  integrals = casa::ReadFITS(locatedFitsFile.c_str(),ok,message);
+  if (!ok) {
+    LOG_WARN_STR("Could not read beam normalization fits file: " << message);
+  }
+  return integrals;
 }
 
 map<string,double> AntennaFieldHBA::theirRotationMap =
