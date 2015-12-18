@@ -1,0 +1,49 @@
+#!/bin/sh -x
+# constants
+DBHOST=sas099.control.lofar
+
+#cleanup on normal exit and on SIGHUP, SIGINT, SIGQUIT, and SIGTERM
+trap 'qpid-config del exchange --force $queue ; kill ${SERVER_PID}' 0 1 2 3 15
+
+# Generate randome queue name
+queue=$(< /dev/urandom tr -dc [:alnum:] | head -c16)
+
+# Create the queue
+qpid-config add exchange topic $queue
+
+# Setup a clean database with predefined content
+dropdb -U postgres -h ${DBHOST} unittest_db
+gzip -dc $srcdir/unittest_db.dump.gz | psql -U postgres -h ${DBHOST} -f -
+TreeService.py $queue -D unittest_db -H ${DBHOST} &
+SERVER_PID=$!
+# Starting up takes a while
+sleep 3
+
+# Run the unit test
+# either with or without code coverage measurements,
+# depending wheter coverage has been installed
+
+if type "coverage" > /dev/null; then
+    #run test using python coverage tool
+
+    #erase previous results
+    coverage erase
+
+    #setup coverage config file
+    printf "[report]\nexclude_lines = \n  if __name__ == .__main__.\n  def main\n" > .coveragerc
+
+    coverage run --branch --include=*Messaging/python* t_TreeService.py $queue
+    RESULT=$?
+    if [ $RESULT -eq 0 ]; then
+        echo " *** Code coverage results *** "
+        coverage report -m
+        echo " *** End coverage results *** "
+    fi
+    exit $RESULT
+else
+    #coverage not available
+    echo "Please run: 'pip install coverage' to enable code coverage reporting of the unit tests"
+    #run plain test script
+    python t_TreeService.py $queue 
+fi
+
