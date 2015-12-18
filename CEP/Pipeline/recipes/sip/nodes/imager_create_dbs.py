@@ -341,10 +341,14 @@ class imager_create_dbs(LOFARnodeTCP):
             raise exception
 
         finally:
-            field.close()
-            table.close()
+            if field is not None:
+                field.close()
+            if table is not None:
+                table.close()
 
         # Return the ra and decl
+        if ra_and_decl is None:
+            return None
         if len(ra_and_decl) != 2:
             self.logger.error(
                     "returned PHASE_DIR data did not contain two values")
