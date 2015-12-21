@@ -5,9 +5,10 @@ import psycopg2 as pg
 import psycopg2.extras as pgdefs
 from lofar.messaging import Service
 
-#import logging
-#import sys
-#logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+import logging
+import sys
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 SERVICENAME = "GetServerState"
 BUSNAME     = "simpletest"
@@ -19,6 +20,7 @@ class DBlistener:
     def __init__(self):
         global count
         self.conn= pg.connect("dbname=%s user=%s password=%s" % (DATABASE,USER,PASSWORD))
+	self.DBconnected = (self.conn and self.conn.status==1)
         self.query="select * from hosts inner join datapaths on hosts.id = datapaths.hostid;"
         self.Qgetstatenames="select statename,id from states;"
         self.Qgetactivegroupnames="select groupname,id from servergroups where active='y';"
@@ -32,6 +34,16 @@ class DBlistener:
                   and servergroups.id = GID \
                   and datapaths.hostid=hosts.id \
             order by hosts.hostname,datapaths.path;"
+
+    def ensure_connected(self):
+	self.DBconnected = (self.conn and self.conn.status==1)
+	if not self.DBconnected:
+	    try:
+		self.conn= pg.connect("dbname=%s user=%s password=%s" % (DATABASE,USER,PASSWORD))
+		self.DBconnected = (self.conn and self.conn.status==1)
+	    except Exception e:
+		logger.error("DB connection could not be restored.")
+	return self.DBconnected
 
     def doquery(self,q):
         cur = self.conn.cursor(cursor_factory = pgdefs.RealDictCursor)
@@ -75,6 +87,9 @@ class DBlistener:
         return self.run(text)
 
     def run(self,text):
+	if (ensure_connected==False):
+	    raise Exception ("Not connected to Database")
+
         # incoming string is processed as <command>[;<param>[;<param>..]]
         cmd=text.split(";")
         print cmd
