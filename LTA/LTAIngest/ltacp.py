@@ -78,6 +78,7 @@ class LtaCp:
         self.src_user = src_user if src_user else getpass.getuser()
         self.logId = os.path.basename(self.src_path_data)
         self.started_procs = {}
+        self.ssh_cmd = ['ssh', '-tt', '-n', '-x', '-q', '%s@%s' % (self.src_user, self.src_host)]
 
         # make sure that all subprocesses and fifo's are cleaned up when the program exits
         atexit.register(self.cleanup)
@@ -143,17 +144,17 @@ class LtaCp:
                     break
 
             # create fifo paths
-            self.local_data_fifo = '/tmp/ltacp_datapipe_%s_%s' % (self.src_host, port_data)
-            self.remote_data_fifo = '/tmp/ltacp_md5_receivepipe_%s' % (port_md5,)
+            self.local_fifo_basename = '/tmp/ltacp_datapipe_%s_%s' % (self.src_host, port_data)
 
             # create local fifo to stream data to globus-url-copy
+            self.local_data_fifo = '%s_globus_url_copy' % (self.local_fifo_basename,)
             logger.info('ltacp %s: creating data fifo for globus-url-copy: %s' % (self.logId, self.local_data_fifo))
             if os.path.exists(self.local_data_fifo):
                 os.remove(self.local_data_fifo)
             os.mkfifo(self.local_data_fifo)
 
             # create local fifo to stream data to adler32
-            self.local_adler32_fifo = '%s_adler32' % (self.local_data_fifo,)
+            self.local_adler32_fifo = '%s_adler32' % (self.local_fifo_basename,)
             logger.info('ltacp %s: creating data fifo for adler32: %s' % (self.logId, self.local_adler32_fifo))
             if os.path.exists(self.local_adler32_fifo):
                 os.remove(self.local_adler32_fifo)
@@ -208,8 +209,8 @@ class LtaCp:
             # 2) send tar stream of data/dir + tee to fifo for 3)
             # 3) simultaneously to 2), calculate checksum of fifo stream
             # 4) break fifo
-            self.ssh_cmd = ['ssh', '-tt', '-n', '-x', '-q', '%s@%s' % (self.src_user, self.src_host)]
 
+            self.remote_data_fifo = '/tmp/ltacp_md5_receivepipe_%s' % (port_md5,)
             cmd_remote_mkfifo = self.ssh_cmd + ['mkfifo %s' % (self.remote_data_fifo,)]
             logger.info('ltacp %s: remote creating fifo. executing: %s' % (self.logId, ' '.join(cmd_remote_mkfifo)))
             p_remote_mkfifo = Popen(cmd_remote_mkfifo, stdout=PIPE, stderr=PIPE)
