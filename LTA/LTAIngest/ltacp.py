@@ -265,11 +265,15 @@ class LtaCp:
             logger.debug('ltacp %s: computed local md5 checksum.' % self.logId)
 
             # compare remote and local md5 checksums
-            md5_checksum_remote = output_md5_receive[0].split(' ')[0]
-            md5_checksum_local = output_md5_local[0].split(' ')[0]
-            if(md5_checksum_remote != md5_checksum_local):
-                raise LtacpException('md5 checksum reported by client (%s) does not match local checksum of incoming data stream (%s)' % (self.logId, md5_checksum_remote, md5_checksum_local))
-            logger.info('ltacp %s: remote and local md5 checksums are equal: %s' % (self.logId, md5_checksum_local,))
+            try:
+                md5_checksum_remote = output_md5_receive[0].split(' ')[0]
+                md5_checksum_local = output_md5_local[0].split(' ')[0]
+                if(md5_checksum_remote != md5_checksum_local):
+                    raise LtacpException('md5 checksum reported by client (%s) does not match local checksum of incoming data stream (%s)' % (self.logId, md5_checksum_remote, md5_checksum_local))
+                logger.info('ltacp %s: remote and local md5 checksums are equal: %s' % (self.logId, md5_checksum_local,))
+            except Exception as e:
+                logger.error('ltacp %s: error while parsing md5 checksum outputs: local=%s received=%s' % (self.logId, output_md5_local[0], output_md5_receive[0]))
+                raise
 
             logger.debug('ltacp %s: waiting for transfer via globus-url-copy to LTA to finish...' % self.logId)
             output_data_out = p_data_out.communicate()
