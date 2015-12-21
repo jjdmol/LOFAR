@@ -80,6 +80,10 @@ class LtaCp:
         self.started_procs = {}
         self.ssh_cmd = ['ssh', '-tt', '-n', '-x', '-q', '%s@%s' % (self.src_user, self.src_host)]
 
+        self.localIPAddress = getLocalIPAddress()
+        self.localNetCatCmd = createNetCatCmd(getpass.getuser(), self.localIPAddress)
+        self.remoteNetCatCmd = createNetCatCmd(self.src_user, self.src_host)
+
         # make sure that all subprocesses and fifo's are cleaned up when the program exits
         atexit.register(self.cleanup)
 
@@ -93,11 +97,6 @@ class LtaCp:
             dst_turl = convert_surl_to_turl(self.dst_surl)
             logger.info('ltacp %s: initiating transfer of %s:%s to %s' % (self.logId, self.src_host, self.src_path_data, self.dst_surl))
 
-            localIPAddress = getLocalIPAddress()
-
-            localNetCatCmd = createNetCatCmd(getpass.getuser(), localIPAddress)
-            remoteNetCatCmd = createNetCatCmd(self.src_user, self.src_host)
-
             #---
             # Server part
             #---
@@ -106,42 +105,8 @@ class LtaCp:
             # to minimize initial collision, randomize based on path and time
             random.seed(hash(self.src_path_data) ^ hash(time.time()))
 
-            # pick initial random port for data receiver
-            port_data = str(random.randint(49152, 65535))
-            while True:
-                # start listen for data stream
-                cmd_data_in = localNetCatCmd.split(' ') + ['-l', port_data]
-                logger.info('ltacp %s: listening for data. executing: %s' % (self.logId, ' '.join(cmd_data_in)))
-                p_data_in = Popen(cmd_data_in, stdout=PIPE, stderr=PIPE)
-
-                time.sleep(0.5)
-                if p_data_in.poll() is not None:
-                    # nc returned prematurely, pick another port to listen to
-                    o, e = p_data_in.communicate()
-                    logger.info('ltacp %s: nc returned prematurely: %s' % (self.logId, e.strip()))
-                    port_data = str(random.randint(49152, 65535))
-                else:
-                    self.started_procs[p_data_in] = cmd_data_in
-                    break
-
-
-            # pick initial random port for md5 receiver
-            port_md5 = str(random.randint(49152, 65535))
-            while True:
-                # start listen for checksums
-                cmd_md5_receive = localNetCatCmd.split(' ') + ['-l', port_md5]
-                logger.info('ltacp %s: listening for md5 checksums. executing: %s' % (self.logId, ' '.join(cmd_md5_receive)))
-                p_md5_receive = Popen(cmd_md5_receive, stdout=PIPE, stderr=PIPE)
-
-                time.sleep(0.5)
-                if p_md5_receive.poll() is not None:
-                    # nc returned prematurely, pick another port to listen to
-                    o, e = p_md5_receive.communicate()
-                    logger.info('ltacp %s: nc returned prematurely: %s' % (self.logId, e.strip()))
-                    port_md5 = str(random.randint(49152, 65535))
-                else:
-                    self.started_procs[p_md5_receive] = cmd_md5_receive
-                    break
+            p_data_in , port_data = self._ncListen('data')
+            p_md5_receive , port_md5 = self._ncListen('md5 checksums')
 
             # create fifo paths
             self.local_fifo_basename = '/tmp/ltacp_datapipe_%s_%s' % (self.src_host, port_data)
@@ -226,14 +191,14 @@ class LtaCp:
             cmd_remote_data = self.ssh_cmd + ['cd %s; tar c -O %s | tee %s | %s %s %s' % (src_path_parent,
                                                                            src_path_child,
                                                                            self.remote_data_fifo,
-                                                                           remoteNetCatCmd,
-                                                                           localIPAddress,                                                                                       port_data)]
+                                                                           self.remoteNetCatCmd,
+                                                                           self.localIPAddress,                                                                                       port_data)]
             logger.info('ltacp %s: remote starting transfer. executing: %s' % (self.logId, ' '.join(cmd_remote_data)))
             p_remote_data = Popen(cmd_remote_data, stdout=PIPE, stderr=PIPE)
             self.started_procs[p_remote_data] = cmd_remote_data
 
             # start computation of checksum on remote fifo stream
-            cmd_remote_checksum = self.ssh_cmd + ['md5sum %s | %s %s %s' % (self.remote_data_fifo, remoteNetCatCmd, localIPAddress, port_md5)]
+            cmd_remote_checksum = self.ssh_cmd + ['md5sum %s | %s %s %s' % (self.remote_data_fifo, self.remoteNetCatCmd, self.localIPAddress, port_md5)]
             logger.info('ltacp %s: remote starting computation of md5 checksum. executing: %s' % (self.logId, ' '.join(cmd_remote_checksum)))
             p_remote_checksum = Popen(cmd_remote_checksum, stdout=PIPE, stderr=PIPE)
             self.started_procs[p_remote_checksum] = cmd_remote_checksum
@@ -313,6 +278,26 @@ class LtaCp:
 
         logger.info('ltacp %s: successfully completed transfer of %s:%s to %s' % (self.logId, self.src_host, self.src_path_data, self.dst_surl))
         return (md5_checksum_local, a32_checksum_local)
+
+    def _ncListen(self, log_name):
+        # pick initial random port for data receiver
+        port = str(random.randint(49152, 65535))
+        while True:
+            # start listen for data stream
+            cmd_listen = self.localNetCatCmd.split(' ') + ['-l', port]
+            logger.info('ltacp %s: listening for %s. executing: %s' % (self.logId, log_name, ' '.join(cmd_listen)))
+            p_listen = Popen(cmd_listen, stdout=PIPE, stderr=PIPE)
+
+            time.sleep(0.5)
+            if p_listen.poll() is not None:
+                # nc returned prematurely, pick another port to listen to
+                o, e = p_listen.communicate()
+                logger.info('ltacp %s: nc returned prematurely: %s' % (self.logId, e.strip()))
+                port = str(random.randint(49152, 65535))
+            else:
+                self.started_procs[p_listen] = cmd_listen
+                return (p_listen, port)
+
 
     def cleanup(self):
         logger.debug('ltacp %s: cleaning up' % (self.logId))
