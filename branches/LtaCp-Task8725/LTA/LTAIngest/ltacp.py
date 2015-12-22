@@ -78,6 +78,7 @@ class LtaCp:
         self.src_user = src_user if src_user else getpass.getuser()
         self.logId = os.path.basename(self.src_path_data)
         self.started_procs = {}
+        self.fifos = []
         self.ssh_cmd = ['ssh', '-tt', '-n', '-x', '-q', '%s@%s' % (self.src_user, self.src_host)]
 
         self.localIPAddress = getLocalIPAddress()
@@ -92,6 +93,7 @@ class LtaCp:
 
         # for cleanup
         self.started_procs = {}
+        self.fifos = []
 
         try:
             dst_turl = convert_surl_to_turl(self.dst_surl)
@@ -111,35 +113,44 @@ class LtaCp:
             # create fifo paths
             self.local_fifo_basename = '/tmp/ltacp_datapipe_%s_%s' % (self.src_host, port_data)
 
-            # create local fifo to stream data to globus-url-copy
-            self.local_data_fifo = '%s_globus_url_copy' % (self.local_fifo_basename,)
-            logger.info('ltacp %s: creating data fifo for globus-url-copy: %s' % (self.logId, self.local_data_fifo))
-            if os.path.exists(self.local_data_fifo):
-                os.remove(self.local_data_fifo)
-            os.mkfifo(self.local_data_fifo)
+            def createLocalFifo(fifo_postfix):
+                fifo_path = '%s_%s' % (self.local_fifo_basename, fifo_postfix)
+                logger.info('ltacp %s: creating data fifo: %s' % (self.logId, fifo_path))
+                if os.path.exists(fifo_path):
+                    os.remove(fifo_path)
+                os.mkfifo(fifo_path)
+                if not os.path.exists(fifo_path):
+                    raise LtacpException("ltacp %s: Could not create fifo: %s" % (self.logId, fifo_path))
+                self.fifos.append(fifo_path)
+                return fifo_path
 
-            # create local fifo to stream data to adler32
-            self.local_adler32_fifo = '%s_adler32' % (self.local_fifo_basename,)
-            logger.info('ltacp %s: creating data fifo for adler32: %s' % (self.logId, self.local_adler32_fifo))
-            if os.path.exists(self.local_adler32_fifo):
-                os.remove(self.local_adler32_fifo)
-            os.mkfifo(self.local_adler32_fifo)
+            self.local_data_fifo = createLocalFifo('globus_url_copy')
+            self.local_byte_count_fifo = createLocalFifo('local_byte_count')
+            self.local_adler32_fifo = createLocalFifo('local_adler32')
 
-            # start tee incoming data stream to fifo (pipe stream further for checksum)
-            cmd_tee_data = ['tee', self.local_data_fifo]
-            logger.info('ltacp %s: splitting datastream. executing on stdout of data listener: %s' % (self.logId, ' '.join(cmd_tee_data),))
-            p_tee_data = Popen(cmd_tee_data, stdin=p_data_in.stdout, stdout=PIPE, stderr=PIPE)
-            self.started_procs[p_tee_data] = cmd_tee_data
 
-            # start tee incoming data stream to fifo (pipe stream further for checksum)
-            cmd_tee_checksums = ['tee', self.local_adler32_fifo]
-            logger.info('ltacp %s: splitting datastream again. executing on stdout of 1st data tee: %s' % (self.logId, ' '.join(cmd_tee_checksums),))
-            p_tee_checksums = Popen(cmd_tee_checksums, stdin=p_tee_data.stdout, stdout=PIPE, stderr=PIPE)
-            self.started_procs[p_tee_checksums] = cmd_tee_checksums
+            # tee incoming data stream to fifo (and pipe stream in tee_proc.stdout)
+            def teeDataStreams(pipe_in, fifo_out):
+                cmd_tee = ['tee', fifo_out]
+                logger.info('ltacp %s: splitting datastream. executing: %s' % (self.logId, ' '.join(cmd_tee),))
+                tee_proc = Popen(cmd_tee, stdin=pipe_in, stdout=PIPE, stderr=PIPE)
+                self.started_procs[tee_proc] = cmd_tee
+                return tee_proc
+
+            p_tee_data = teeDataStreams(p_data_in.stdout, self.local_data_fifo)
+            p_tee_byte_count = teeDataStreams(p_tee_data.stdout, self.local_byte_count_fifo)
+            p_tee_checksums = teeDataStreams(p_tee_byte_count.stdout, self.local_adler32_fifo)
+
+
+            # start computing md5 checksum of incoming data stream
+            cmd_byte_count = ['wc', self.local_byte_count_fifo]
+            logger.info('ltacp %s: computing byte count. executing: %s' % (self.logId, ' '.join(cmd_byte_count)))
+            p_byte_count = Popen(cmd_byte_count, stdout=PIPE, stderr=PIPE)
+            self.started_procs[p_byte_count] = cmd_byte_count
 
             # start computing md5 checksum of incoming data stream
             cmd_md5_local = ['md5sum']
-            logger.info('ltacp %s: computing local md5 checksum. executing on stdout of 2nd data tee: %s' % (self.logId, ' '.join(cmd_md5_local)))
+            logger.info('ltacp %s: computing local md5 checksum. executing on data pipe: %s' % (self.logId, ' '.join(cmd_md5_local)))
             p_md5_local = Popen(cmd_md5_local, stdin=p_tee_checksums.stdout, stdout=PIPE, stderr=PIPE)
             self.started_procs[p_md5_local] = cmd_md5_local
 
@@ -162,8 +173,13 @@ class LtaCp:
             if len(finished_procs):
                 msg = ''
                 for p, cl in finished_procs.items():
-                    msg += "  process pid:%d exited prematurely with exit code %d. cmdline: %s\n" % (p.pid, ret, cl)
-                raise LtacpException("ltacp: %s %s local process(es) exited prematurely\n%s" % (self.logId, msg))
+                    o, e = p.communicate()
+                    msg += "  process pid:%d exited prematurely with exit code %d. cmdline: %s\nstdout: %s\nstderr: %s\n" % (p.pid,
+                                                                                                                             p.returncode,
+                                                                                                                             o,
+                                                                                                                             e,
+                                                                                                                             cl)
+                raise LtacpException("ltacp %s: %d local process(es) exited prematurely\n%s" % (self.logId, len(finished_procs), msg))
 
             #---
             # Client part
@@ -175,7 +191,7 @@ class LtaCp:
             # 3) simultaneously to 2), calculate checksum of fifo stream
             # 4) break fifo
 
-            self.remote_data_fifo = '/tmp/ltacp_md5_receivepipe_%s' % (port_md5,)
+            self.remote_data_fifo = '/tmp/ltacp_md5_pipe_%s_%s' % (self.logId, port_md5)
             cmd_remote_mkfifo = self.ssh_cmd + ['mkfifo %s' % (self.remote_data_fifo,)]
             logger.info('ltacp %s: remote creating fifo. executing: %s' % (self.logId, ' '.join(cmd_remote_mkfifo)))
             p_remote_mkfifo = Popen(cmd_remote_mkfifo, stdout=PIPE, stderr=PIPE)
@@ -240,6 +256,13 @@ class LtaCp:
                 logger.error('ltacp %s: error while parsing md5 checksum outputs: local=%s received=%s' % (self.logId, output_md5_local[0], output_md5_receive[0]))
                 raise
 
+            logger.debug('ltacp %s: waiting for local byte count on datastream...' % self.logId)
+            output_byte_count = p_byte_count.communicate()
+            if p_byte_count.returncode != 0:
+                raise LtacpException('ltacp %s: Error while receiving remote md5 checksum: %s' % (self.logId, output_byte_count[1]))
+            byte_count = int(output_byte_count[0].split()[2])
+            logger.info('ltacp %s: byte count of datastream is %d' % (self.logId, byte_count))
+
             logger.debug('ltacp %s: waiting for transfer via globus-url-copy to LTA to finish...' % self.logId)
             output_data_out = p_data_out.communicate()
             if p_data_out.returncode != 0:
@@ -277,7 +300,7 @@ class LtaCp:
             self.cleanup()
 
         logger.info('ltacp %s: successfully completed transfer of %s:%s to %s' % (self.logId, self.src_host, self.src_path_data, self.dst_surl))
-        return (md5_checksum_local, a32_checksum_local)
+        return (md5_checksum_local, a32_checksum_local, byte_count)
 
     def _ncListen(self, log_name):
         # pick initial random port for data receiver
@@ -312,22 +335,14 @@ class LtaCp:
                 logger.error("Could not remove remote fifo %s@%s:%s\n%s" % (self.src_user, self.src_host, self.remote_data_fifo, p_remote_rm.stderr))
             self.remote_data_fifo = None
 
-        # remove local data fifo
-        if hasattr(self, 'local_data_fifo') and os.path.exists(self.local_data_fifo):
-            logger.info('ltacp %s: removing local data fifo for globus-url-copy: %s' % (self.logId, self.local_data_fifo))
-            os.remove(self.local_data_fifo)
-
-        # remove local data fifo
-        if hasattr(self, 'local_adler32_fifo') and os.path.exists(self.local_adler32_fifo):
-            logger.info('ltacp %s: removing local data fifo for adler32: %s' % (self.logId, self.local_adler32_fifo))
-            os.remove(self.local_adler32_fifo)
+        # remove local fifos
+        for fifo in self.fifos:
+            if os.path.exists(fifo):
+                logger.info('ltacp %s: removing local fifo: %s' % (self.logId, fifo))
+                os.remove(fifo)
+        self.fifos = []
 
         # cancel any started running process, as they should all be finished by now
-        self.stopRunningProcesses()
-
-        logger.debug('ltacp %s: finished cleaning up' % (self.logId))
-
-    def stopRunningProcesses(self):
         running_procs = dict((p, cl) for (p, cl) in self.started_procs.items() if p.poll() == None)
 
         if len(running_procs):
@@ -338,6 +353,10 @@ class LtaCp:
                 logger.warning('ltacp %s: terminated running process pid=%d cmdline: %s' % (self.logId, p.pid, cl))
                 p.terminate()
             logger.info('ltacp %s: terminated %d running subprocesses...' % (self.logId, len(running_procs)))
+        self.started_procs = {}
+
+        logger.debug('ltacp %s: finished cleaning up' % (self.logId))
+
 
 
 # execute command and return (stdout, stderr, returncode) tuple
