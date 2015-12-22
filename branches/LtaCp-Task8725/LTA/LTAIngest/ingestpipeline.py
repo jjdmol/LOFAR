@@ -4,6 +4,7 @@ import socket
 from lxml import etree
 from cStringIO import StringIO
 from job_group import corr_type, bf_type, img_type, unspec_type, pulp_type
+import ltacp
 
 def humanreadablesize(num, suffix='B'):
   """ converts the given size (number) to a human readable string in powers of 1024
@@ -223,6 +224,35 @@ class IngestPipeline():
         raise PipelineError('Dataproduct for %s not found on %s'% (self.JobId, self.HostLocation), 'TransferFile', PipelineNoSourceError)
     self.logger.debug('Finished file transfer of %s' % self.JobId)
 
+  def TransferFileNew(self):
+    self.logger.debug('Starting new style file transfer for %s ' % self.JobId)
+
+    try:
+        start = time.time()
+
+        cp = ltacp.LtaCp(self.HostLocation,
+                         os.path.join(self.LocationDir, self.Source),
+                         self.PrimaryUri)
+
+        self.MD5Checksum, self.Adler32Checksum, self.FileSize = cp.transfer()
+
+        elapsed = time.time() - start
+        self.logger.debug("New style file transfer for %s took %d sec" % (self.JobId, elapsed))
+        self.logger.debug('Finished new style file transfer of %s' % self.JobId)
+
+        self.CheckChecksums()
+
+        try:
+            if int(self.FileSize) > 0:
+                avgSpeed = float(self.FileSize) / elapsed
+            self.logger.debug("New style file transfer for %s  took %d sec with an average speed of %s for %s including ltacp overhead" % (self.JobId, elapsed, humanreadablesize(avgSpeed, 'Bps'), humanreadablesize(float(self.FileSize), 'B')))
+        except Exception:
+            pass
+
+    except ltacp.LtacpException as exp:
+        raise Exception('New style file transfer failed of %s\n%s' % (self.JobId, str(exp)))
+
+
   def CheckChecksums(self):
     if self.MD5Checksum and self.Adler32Checksum and self.FileSize:
       try:
@@ -426,7 +456,12 @@ class IngestPipeline():
       self.logger.debug("Ingest Pipeline started for %s" % self.JobId)
       start = time.time()
       self.RetryRun(self.GetStorageTicket, self.ltaRetry, 'Getting storage ticket')
-      self.RetryRun(self.TransferFile, self.srmRetry , 'Transfering file')
+
+      if self.Type.lower() == "eor":
+        self.RetryRun(self.TransferFileNew, self.srmRetry , 'Transfering file')
+      else:
+        self.RetryRun(self.TransferFile, self.srmRetry , 'Transfering file')
+
       self.RetryRun(self.SendChecksums, self.ltaRetry, 'Sending Checksums')
 #      self.RenameFile()
       self.RetryRun(self.GetSIP, self.momRetry, 'Get SIP from MoM')
