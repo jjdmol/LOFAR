@@ -40,13 +40,13 @@ class PipelineError(Exception):
 #---------------------- IngestPipeline ------------------------------------------
 class IngestPipeline():
   def __init__(self, logdir, job, momClient, ltaClient, ltacphost, ltacpport, mailCommand, momRetry, ltaRetry, srmRetry, srmInit):
-    self.logdir    = logdir
-    self.job       = job
-    self.momClient = momClient
-    self.ltaClient = ltaClient
-    self.ltacphost = ltacphost
-    self.ltacpport = ltacpport
-    self.mailCommand = mailCommand
+    self.logdir          = logdir
+    self.job             = job
+    self.momClient       = momClient
+    self.ltaClient       = ltaClient
+    self.ltacphost       = ltacphost
+    self.ltacpport       = ltacpport
+    self.mailCommand     = mailCommand
 
     self.Project       = job['Project']
     self.DataProduct   = job['DataProduct']
@@ -144,23 +144,6 @@ class IngestPipeline():
         self.SecondaryUri  = result['secondary_uri_rnd']
     self.logger.debug('got tempURIs %s %s, random URIs %s %s and ticket %s' % (self.tempPrimary, self.tempSecondary, self.PrimaryUri, self.SecondaryUri, self.ticket))
 
-
-#(renting)lexar002> java -Xmx256m -jar /globalhome/ingest/ltacp/ltacp.jar lexar002 8803 srm://srm.grid.sara.nl:8443/pnfs/grid.sara.nl/data/lofartest/ops/projects/L6512_SAP002_SB079_uv.MS.tar L6512_SAP002_SB079_uv.MS
-#2012-04-10 14:18:17,974 DEBUG client.LtaCp:58 - Creating the socket
-#2012-04-10 14:18:17,984 DEBUG client.LtaCp:81 - Writing the request header
-#2012-04-10 14:18:17,985 DEBUG client.LtaCp:107 - Transfering data via lexar002:8803 to srm://srm.grid.sara.nl:8443/pnfs/grid.sara.nl/data/lofartest/ops/projects/L6512_SAP002_SB079_uv.MS.tar
-#2012-04-10 14:18:17,995 DEBUG client.LtaCp:122 - Starting to stream data
-#...
-#2012-04-10 14:18:38,352 INFO  client.LtaCp:156 - Transfered 100% of 346 MB at 105 MB/s
-#2012-04-10 14:18:38,353 DEBUG client.LtaCp:182 - Flushing the stream
-#2012-04-10 14:18:38,353 DEBUG client.LtaCp:237 - Transfered 346960383 bytes
-#2012-04-10 14:18:38,354 DEBUG client.LtaCp:242 - Closing the socket
-#2012-04-10 14:18:38,354 DEBUG client.LtaCp:256 - Retrieving the checksums
-#2012-04-10 14:18:51,161 INFO  client.LtaCp:270 - Adler32 checksum for lexar002: 6367d2e1
-#2012-04-10 14:18:51,161 INFO  client.LtaCp:272 - Checksums from server: <size>347074560</size><checksums><checksum><algorithm>MD5</algorithm><value>ae28093ed958e5aaf7f7cf5ff4188f37</value></checksum><checksum><algorithm>Adler32</algorithm><value>6367d2e1</value></checksum></checksums>
-#2012-04-10 14:18:51,162 INFO  client.LtaCp:276 - Transfered 346 MB in 20s at 17 MB/s average speed
-
-
   def ParseLTAcpLog(self, log):
     for l in log:
       if 'Checksums from server:' in l:
@@ -187,7 +170,7 @@ class IngestPipeline():
       javacmd = "/data/java7/jdk1.7.0_55/bin/java"
 
     ltacppath = "/globalhome/%s/ltacp" % ("ingesttest" if self.ltacpport == 8801 else "ingest")
-    
+
     if self.PrimaryUri:
       cmd = ["ssh",  "-T", "ingest@" +self.HostLocation, "cd %s;%s -Xmx256m -cp %s/qpid-properties/lexar001.offline.lofar:%s/ltacp.jar nl.astron.ltacp.client.LtaCp %s %s %s %s" % (self.LocationDir, javacmd, ltacppath, ltacppath, hostname, self.ltacpport, self.PrimaryUri, self.Source)]
     else:
@@ -224,6 +207,7 @@ class IngestPipeline():
         raise PipelineError('Dataproduct for %s not found on %s'% (self.JobId, self.HostLocation), 'TransferFile', PipelineNoSourceError)
     self.logger.debug('Finished file transfer of %s' % self.JobId)
 
+
   def TransferFileNew(self):
     self.logger.debug('Starting new style file transfer for %s ' % self.JobId)
 
@@ -250,6 +234,12 @@ class IngestPipeline():
             pass
 
     except ltacp.LtacpException as exp:
+        if '550 File not found' in exp.value:
+            self.logger.error('Destination directory does not exist. Creating %s in LTA for %s' % (self.PrimaryUri, self.JobId))
+
+            if ltacp.create_missing_directories(self.PrimaryUri) == 0:
+                self.logger.info('Created path %s in LTA for %s' % (self.PrimaryUri, self.JobId))
+
         raise Exception('New style file transfer failed of %s\n%s' % (self.JobId, str(exp)))
 
 
@@ -375,6 +365,11 @@ class IngestPipeline():
         self.logger.exception('Getting SIP from MoM failed')
         raise
       self.logger.debug('SIP received for %s from MoM with size %d (%s): %s' % (self.JobId, len(self.SIP), humanreadablesize(len(self.SIP)), self.SIP[0:256]))
+    elif self.Type.lower() == "eor":
+      # TODO: fetch SIP from EoR, fill in checksums
+      self.SIP = unspecifiedSIP.makeSIP(self.Project, self.ObsId, self.ArchiveId, self.ticket, self.FileName, self.FileSize, self.MD5Checksum, self.Adler32Checksum, self.Type)
+      self.logger.warning('Generated unspecified SIP for %s: %s' % (self.JobId, self.SIP))
+      self.FileType = unspec_type
     else:
       self.SIP = unspecifiedSIP.makeSIP(self.Project, self.ObsId, self.ArchiveId, self.ticket, self.FileName, self.FileSize, self.MD5Checksum, self.Adler32Checksum, self.Type)
       self.FileType = unspec_type
@@ -530,5 +525,32 @@ class IngestPipeline():
 
 #----------------------------------------------------------------- selfstarter -
 if __name__ == '__main__':
-    standalone = IngestPipeline()
-    standalone.main()
+    import sys
+    if len(sys.argv) != 2:
+        print 'usage: ingestpipeline.py <path_to_jobfile.xml>'
+
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger('Slave')
+
+    jobfile = sys.argv[1]
+    import job_parser
+    parser = job_parser.parser(logger)
+    job = parser.parse(jobfile)
+    job['filename'] = jobfile
+
+    logger.info(str(job))
+
+    import getpass
+    if getpass.getuser() == 'ingest':
+        import ingest_config as config
+    else:
+        import ingest_config_test as config
+
+    #create misc mock args
+    ltacphost = 'mock-ltacphost'
+    ltacpport = -1
+    mailCommand = ''
+    srmInit = ''
+
+    standalone = IngestPipeline(None, job, config.momClient, config.ltaClient, config.ipaddress, config.ltacpport, config.mailCommand, config.momRetry, config.ltaRetry, config.srmRetry, config.srmInit)
+    standalone.run()
