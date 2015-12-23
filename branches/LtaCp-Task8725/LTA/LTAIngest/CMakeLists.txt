@@ -257,6 +257,7 @@ python_install(
 	master.py
 	user_ingest.py
 	do_ltacp.py
+	ltacp.py
 	simple_server.py
 	__init__.py
 	doc/LTA-SIP.xsd #not a py file, but needed by ingest in python ingest lib dir
@@ -271,6 +272,12 @@ set(STARTUP_SCRIPTS
       startup_target_test.csh
       startup_test.csh)
 install(PROGRAMS ${STARTUP_SCRIPTS} DESTINATION ${PYTHON_INSTALL_DIR}/LTAIngest)
+
+#deploy CHECKSUM_PROGS in same python ingest lib dir
+set(CHECKSUM_PROGS
+    md5adler/a32
+    md5adler/md5a32)
+install(PROGRAMS ${CHECKSUM_PROGS} DESTINATION ${PYTHON_INSTALL_DIR}/LTAIngest/md5adler)
 
 #determine LTAINGEST_LOG_ROOT_DIR for various build hosts (used in ingest_config.py.in)
 if(NOT DEFINED LTAINGEST_LOG_ROOT_DIR)
