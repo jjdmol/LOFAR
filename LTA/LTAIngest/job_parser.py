@@ -92,10 +92,17 @@ class parser():
                 self.job['host'] = self.job['Location'].split(':')[0]
                 self.job['Status'] = JobScheduled
                 self.job['retry'] = 0
-                self.job['job_group'] = int(self.job['ExportID'].split('_')[1])
                 self.job['errors'] = []
                 if not "Type" in self.job:
                     self.job["Type"] = "MoM"
+
+                if not "JobId" in self.job:
+                    self.job["JobId"] = self.job['ExportID']
+
+                if self.job["Type"].lower() == "eor":
+                    self.job['job_group'] = self.job['IngestGroupId']
+                else:
+                    self.job['job_group'] = int(self.job['ExportID'].split('_')[1])
                 return self.job
         except:
             self.logger.exception('Failed importing job: ' + job)
