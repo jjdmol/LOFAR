@@ -17,6 +17,8 @@ import atexit
 
 logger = logging.getLogger('Slave')
 
+_ingest_init_script = '/globalhome/ingest/service/bin/init.sh'
+
 if __name__ == '__main__':
     log_handler = logging.StreamHandler()
     formatter = logging.Formatter('%(asctime)-15s %(levelname)s %(message)s')
@@ -33,11 +35,9 @@ class LtacpException(Exception):
          return str(self.value)
 
 def getLocalIPAddress():
-    return '10.178.1.2'
-    #s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    #s.connect(('8.8.8.8', 0))  # connecting to a UDP address doesn't send packets
-    #local_ip_address = s.getsockname()[0]
-    #return local_ip_address
+    host = socket.gethostname()
+    ipaddress = socket.gethostbyname(host)
+    return ipaddress
 
 # converts given srm url of an LTA site into a transport url as needed by gridftp. (Sring replacement based on arcane knowledge.)
 def convert_surl_to_turl(surl):
@@ -107,11 +107,11 @@ class LtaCp:
             # to minimize initial collision, randomize based on path and time
             random.seed(hash(self.src_path_data) ^ hash(time.time()))
 
-            p_data_in , port_data = self._ncListen('data')
-            p_md5_receive , port_md5 = self._ncListen('md5 checksums')
+            p_data_in, port_data = self._ncListen('data')
+            p_md5_receive, port_md5 = self._ncListen('md5 checksums')
 
             # create fifo paths
-            self.local_fifo_basename = '/tmp/ltacp_datapipe_%s_%s' % (self.src_host, port_data)
+            self.local_fifo_basename = '/tmp/ltacp_datapipe_%s_%s' % (self.src_host, self.logId)
 
             def createLocalFifo(fifo_postfix):
                 fifo_path = '%s_%s' % (self.local_fifo_basename, fifo_postfix)
@@ -128,7 +128,6 @@ class LtaCp:
             self.local_byte_count_fifo = createLocalFifo('local_byte_count')
             self.local_adler32_fifo = createLocalFifo('local_adler32')
 
-
             # tee incoming data stream to fifo (and pipe stream in tee_proc.stdout)
             def teeDataStreams(pipe_in, fifo_out):
                 cmd_tee = ['tee', fifo_out]
@@ -140,7 +139,6 @@ class LtaCp:
             p_tee_data = teeDataStreams(p_data_in.stdout, self.local_data_fifo)
             p_tee_byte_count = teeDataStreams(p_tee_data.stdout, self.local_byte_count_fifo)
             p_tee_checksums = teeDataStreams(p_tee_byte_count.stdout, self.local_adler32_fifo)
-
 
             # start computing md5 checksum of incoming data stream
             cmd_byte_count = ['wc', self.local_byte_count_fifo]
@@ -156,12 +154,13 @@ class LtaCp:
 
             # start computing adler checksum of incoming data stream
             cmd_a32_local = ['./md5adler/a32', self.local_adler32_fifo]
+            #cmd_a32_local = ['md5sum', self.local_adler32_fifo]
             logger.info('ltacp %s: computing local adler32 checksum. executing: %s' % (self.logId, ' '.join(cmd_a32_local)))
             p_a32_local = Popen(cmd_a32_local, stdout=PIPE, stderr=PIPE)
             self.started_procs[p_a32_local] = cmd_a32_local
 
             # start copy fifo stream to SRM
-            cmd_data_out = ['globus-url-copy', self.local_data_fifo, dst_turl]
+            cmd_data_out = ['/bin/bash', '-c', 'source %s; globus-url-copy %s %s' % (_ingest_init_script, self.local_data_fifo, dst_turl)]
             logger.info('ltacp %s: copying data stream into globus-url-copy. executing: %s' % (self.logId, ' '.join(cmd_data_out)))
             p_data_out = Popen(cmd_data_out, stdout=PIPE, stderr=PIPE)
             self.started_procs[p_data_out] = cmd_data_out
@@ -176,9 +175,9 @@ class LtaCp:
                     o, e = p.communicate()
                     msg += "  process pid:%d exited prematurely with exit code %d. cmdline: %s\nstdout: %s\nstderr: %s\n" % (p.pid,
                                                                                                                              p.returncode,
+                                                                                                                             cl,
                                                                                                                              o,
-                                                                                                                             e,
-                                                                                                                             cl)
+                                                                                                                             e)
                 raise LtacpException("ltacp %s: %d local process(es) exited prematurely\n%s" % (self.logId, len(finished_procs), msg))
 
             #---
@@ -266,7 +265,7 @@ class LtaCp:
             logger.debug('ltacp %s: waiting for transfer via globus-url-copy to LTA to finish...' % self.logId)
             output_data_out = p_data_out.communicate()
             if p_data_out.returncode != 0:
-                raise LtacpException('ltacp %s: transfer via globus-url-copy to LTA failed: %s' % (self.logId,output_data_out[1]))
+                raise LtacpException('ltacp %s: transfer via globus-url-copy to LTA failed: %s' % (self.logId, output_data_out[1]))
             logger.info('ltacp %s: data transfer via globus-url-copy to LTA complete.' % self.logId)
 
             logger.debug('ltacp %s: waiting for local adler32 checksum to complete...' % self.logId)
@@ -308,6 +307,7 @@ class LtaCp:
         while True:
             # start listen for data stream
             cmd_listen = self.localNetCatCmd.split(' ') + ['-l', port]
+
             logger.info('ltacp %s: listening for %s. executing: %s' % (self.logId, log_name, ' '.join(cmd_listen)))
             p_listen = Popen(cmd_listen, stdout=PIPE, stderr=PIPE)
 
@@ -369,17 +369,23 @@ def execute(cmd):
 
 # remove file from srm
 def srmrm(surl):
-    return execute(['srmrm', surl])[2]
-
+    return execute(['/bin/bash', '-c', 'source %s; srmrm %s' % (_ingest_init_script, surl)])
 
 # remove (empty) directory from srm
 def srmrmdir(surl):
-    return execute(['srmrmdir', surl])[2]
+    return execute(['/bin/bash', '-c', 'source %s; srmrmdir %s' % (_ingest_init_script, surl)])
 
+# create directory in srm
+def srmmkdir(surl):
+    return execute(['/bin/bash', '-c', 'source %s; srmmkdir -retry_num=0 %s' % (_ingest_init_script, surl)])
 
-# remove file from srm
+# detailed listing
+def srmls(surl):
+    return execute(['/bin/bash', '-c', 'source %s; srmls %s' % (_ingest_init_script, surl)])
+
+# detailed listing
 def srmll(surl):
-    return execute(['srmls', '-l', surl])
+    return execute(['/bin/bash', '-c', 'source %s; srmls -l %s' % (_ingest_init_script, surl)])
 
 # get checksum from srm via srmls
 def get_srm_a32_checksum(surl):
@@ -409,9 +415,10 @@ def create_missing_directories(surl):
 
     # determine missing dirs
     while parent:
-        code = execute(['srmls', parent])[2]
+        logger.info('checking path: %s' % parent)
+        o, e, code = srmls(parent)
         if code == 0:
-            logger.info('ltacp %s: srmls returned successfully, so this path apparently exists: %s' % parent)
+            logger.info('srmls returned successfully, so this path apparently exists: %s' % parent)
             break;
         else:
             parent, child = os.path.split(parent)
@@ -420,12 +427,12 @@ def create_missing_directories(surl):
     # recreate missing dirs
     while len(missing) > 0:
         parent = parent + '/' + missing.pop()
-        code = execute(['srmmkdir',"-retry_num=0",parent])[2]
+        code = srmmkdir(parent)[2]
         if code != 0:
-            logger.info('ltacp %s: failed to create missing directory: %s' % parent)
+            logger.info('failed to create missing directory: %s' % parent)
             return code
 
-    logger.info('ltacp %s: successfully created parent directory: %s' % parent)
+    logger.info('successfully created parent directory: %s' % parent)
     return 0
 
 
@@ -437,15 +444,7 @@ if __name__ == '__main__':
         print 'example: ./ltacp.py 10.196.232.11 /home/users/ingest/1M.txt srm://lofar-srm.fz-juelich.de:8443/pnfs/fz-juelich.de/data/lofar/ops/test/eor/1M.txt'
         sys.exit()
 
-# transfer test:
+    # transfer test:
     cp = LtaCp(sys.argv[1], sys.argv[2], sys.argv[3], 'ingest')
     cp.transfer()
-
-# srmls/srmrm test:
-    #print get_srm_a32_checksum(sys.argv[3])
-#    print srmrm(sys.argv[3])
-#    print get_srm_a32_checksum(sys.argv[3])
-
-# srmmkdir test:
-#   print create_missing_directories(sys.argv[3])
 
