@@ -55,10 +55,17 @@ def getLocalIPAddress():
 
 # converts given srm url of an LTA site into a transport url as needed by gridftp. (Sring replacement based on arcane knowledge.)
 def convert_surl_to_turl(surl):
-    turl = surl.replace("srm://srm.grid.sara.nl:8443","gsiftp://gridftp.grid.sara.nl",1)
-    turl = turl.replace("srm://srm.grid.sara.nl","gsiftp://gridftp.grid.sara.nl",1)
-    turl = turl.replace("srm://lofar-srm.fz-juelich.de:8443","gsiftp://lofar-gridftp.fz-juelich.de",1)
-    turl = turl.replace("srm://lofar-srm.fz-juelich.de","gsiftp://lofar-gridftp.fz-juelich.de",1)
+    sara_nodes = ['fly%d' % i for i in range(1, 10)] # + \
+                 #['wasp%d' % i for i in range(1, 10)] + \
+                 #['by27-%d' % i for i in range(1, 10)] + \
+                 #['bw27-%d' % i for i in range(1, 10)] + \
+                 #['by32-%d' % i for i in range(1, 10)] + \
+                 #['bw32-%d' % i for i in range(1, 10)]
+    sara_turl = 'gsiftp://%s.grid.sara.nl:2811' % sara_nodes[random.randint(0, len(sara_nodes)-1)]
+    turl = surl.replace("srm://srm.grid.sara.nl:8443",sara_turl, 1)
+    turl = turl.replace("srm://srm.grid.sara.nl",sara_turl,1)
+    turl = turl.replace("srm://lofar-srm.fz-juelich.de:8443", "gsiftp://dcachepool%d.fz-juelich.de:2811" % (random.randint(9, 16),), 1)
+    turl = turl.replace("srm://lofar-srm.fz-juelich.de", "gsiftp://dcachepool%d.fz-juelich.de:2811" % (random.randint(9, 16),), 1)
     turl = turl.replace("srm://srm.target.rug.nl:8444","gsiftp://gridftp02.target.rug.nl/target/gpfs2/lofar/home/srm",1)
     turl = turl.replace("srm://srm.target.rug.nl","gsiftp://gridftp02.target.rug.nl/target/gpfs2/lofar/home/srm",1)
     return turl
@@ -174,7 +181,13 @@ class LtaCp:
             self.started_procs[p_a32_local] = cmd_a32_local
 
             # start copy fifo stream to SRM
-            cmd_data_out = ['/bin/bash', '-c', 'source %s; globus-url-copy %s %s' % (_ingest_init_script, self.local_data_fifo, dst_turl)]
+            guc_options = ['-cd', #create remote directories if missing
+                           '-p 4', #number of parallel ftp connections
+                           '-bs 131072', #buffer size
+                           '-b', # binary
+                           '-nodcau', # turn off data channel authentication for ftp transfers
+                           ]
+            cmd_data_out = ['/bin/bash', '-c', 'source %s; globus-url-copy %s file://%s %s' % (_ingest_init_script, ' '.join(guc_options), self.local_data_fifo, dst_turl)]
             logger.info('ltacp %s: copying data stream into globus-url-copy. executing: %s' % (self.logId, ' '.join(cmd_data_out)))
             p_data_out = Popen(cmd_data_out, stdout=PIPE, stderr=PIPE)
             self.started_procs[p_data_out] = cmd_data_out
@@ -274,7 +287,7 @@ class LtaCp:
                             avg_speed = total_bytes_transfered / elapsed_secs_since_start
                             current_bytes_transfered = total_bytes_transfered - prev_bytes_transfered
                             current_speed = current_bytes_transfered / elapsed_secs_since_prev
-                            if elapsed_secs_since_prev > 30 or current_bytes_transfered > 1e9:
+                            if elapsed_secs_since_prev > 60 or current_bytes_transfered > 0.05*input_datasize:
                                 prev_progress_time = current_progress_time
                                 prev_bytes_transfered = total_bytes_transfered
                                 percentage_to_go = 100.0 - percentage_done
@@ -330,7 +343,7 @@ class LtaCp:
             byte_count = int(output_byte_count[0].split()[0].strip())
             logger.info('ltacp %s: byte count of datastream is %d %s' % (self.logId, byte_count, humanreadablesize(byte_count)))
 
-            logger.debug('ltacp %s: waiting for transfer via globus-url-copy to LTA to finish...' % self.logId)
+            logger.info('ltacp %s: waiting for transfer via globus-url-copy to LTA to finish...' % self.logId)
             output_data_out = p_data_out.communicate()
             if p_data_out.returncode != 0:
                 raise LtacpException('ltacp %s: transfer via globus-url-copy to LTA failed: %s' % (self.logId, output_data_out[1]))
@@ -343,7 +356,7 @@ class LtaCp:
             logger.debug('ltacp %s: finished computation of local adler32 checksum' % self.logId)
             a32_checksum_local = output_a32_local[0].split()[1]
 
-            logger.debug('ltacp %s: fetching adler32 checksum from LTA...' % self.logId)
+            logger.info('ltacp %s: fetching adler32 checksum from LTA...' % self.logId)
             srm_a32_checksum = get_srm_a32_checksum(self.dst_surl)
 
             if not srm_a32_checksum:
