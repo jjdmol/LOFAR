@@ -14,7 +14,7 @@ install(FILES
   TreeService.ini
   TreeStatusEvents.ini
   OTDB_Services.ini
-  DESTIONATION etc/supervisord.d)
+  DESTINATION etc/supervisord.d)
 
 
 add_subdirectory(test)
