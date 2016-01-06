@@ -154,8 +154,8 @@ class LtaCp:
             p_tee_byte_count = teeDataStreams(p_tee_data.stdout, self.local_byte_count_fifo)
             p_tee_checksums = teeDataStreams(p_tee_byte_count.stdout, self.local_adler32_fifo)
 
-            # start computing md5 checksum of incoming data stream
-            cmd_byte_count = ['wc', self.local_byte_count_fifo]
+            # start counting number of bytes in incoming data stream
+            cmd_byte_count = ['LC_ALL=C wc -c', self.local_byte_count_fifo]
             logger.info('ltacp %s: computing byte count. executing: %s' % (self.logId, ' '.join(cmd_byte_count)))
             p_byte_count = Popen(cmd_byte_count, stdout=PIPE, stderr=PIPE)
             self.started_procs[p_byte_count] = cmd_byte_count
