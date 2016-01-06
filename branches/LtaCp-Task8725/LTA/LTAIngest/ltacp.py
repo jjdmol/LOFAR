@@ -155,9 +155,9 @@ class LtaCp:
             p_tee_checksums = teeDataStreams(p_tee_byte_count.stdout, self.local_adler32_fifo)
 
             # start counting number of bytes in incoming data stream
-            cmd_byte_count = ['LC_ALL=C wc -c', self.local_byte_count_fifo]
+            cmd_byte_count = ['wc', '-c', self.local_byte_count_fifo]
             logger.info('ltacp %s: computing byte count. executing: %s' % (self.logId, ' '.join(cmd_byte_count)))
-            p_byte_count = Popen(cmd_byte_count, stdout=PIPE, stderr=PIPE)
+            p_byte_count = Popen(cmd_byte_count, stdout=PIPE, stderr=PIPE, env=dict(os.environ, LC_ALL="C"))
             self.started_procs[p_byte_count] = cmd_byte_count
 
             # start computing md5 checksum of incoming data stream
@@ -327,7 +327,7 @@ class LtaCp:
             output_byte_count = p_byte_count.communicate()
             if p_byte_count.returncode != 0:
                 raise LtacpException('ltacp %s: Error while receiving remote md5 checksum: %s' % (self.logId, output_byte_count[1]))
-            byte_count = int(output_byte_count[0].split()[2])
+            byte_count = int(output_byte_count[0].split()[0].strip())
             logger.info('ltacp %s: byte count of datastream is %d %s' % (self.logId, byte_count, humanreadablesize(byte_count)))
 
             logger.debug('ltacp %s: waiting for transfer via globus-url-copy to LTA to finish...' % self.logId)
