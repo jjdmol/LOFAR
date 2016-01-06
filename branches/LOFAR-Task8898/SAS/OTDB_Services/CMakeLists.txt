@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(OTDB_Services 1.0 DEPENDS PyMessaging OTDB)
+lofar_package(OTDB_Services 1.0 DEPENDS PyMessaging)
 
 include(PythonInstall)
 
