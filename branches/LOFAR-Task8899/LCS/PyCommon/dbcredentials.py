@@ -22,8 +22,9 @@
 from glob import glob
 from os import environ
 from ConfigParser import SafeConfigParser, NoSectionError, DuplicateSectionError
+from optparse import OptionGroup
 
-__all__ = ["DBCredentials"]
+__all__ = ["DBCredentials", "options_group", "parse_options"]
 
 def findfiles(pattern):
   """ Returns a list of files matched by `pattern'.
@@ -105,6 +106,51 @@ class DBCredentials:
 
   def _section(self, database):
     return "database:%s" % (database,)
+
+def options_group():
+  """
+    Return an optparse.OptionGroup containing command-line parameters
+    for database connections and authentication.
+  """
+  group = OptionGroup("Database Credentials")
+  group.add_option("-D", "--database", dest="dbName", type="string", default="",
+                   help="Name of the database")
+  group.add_option("-H", "--host", dest="dbHost", type="string", default="",
+                   help="Hostname of the database server")
+  group.add_option("-p", "--port", dest="dbPort", type="string", default="",
+                   help="Port number of the database server")
+  group.add_option("-U", "--user", dest="dbUser", type="string", default="",
+                   help="User of the database server")
+  group.add_option("-P", "--password", dest="dbPassword", type="string", default="",
+                   help="Password of the database server")
+  group.add_option("-C", "--dbcredentials", dest="dbcredentials", type="string", default="",
+                   help="Name of database credential set to use")
+
+  return group
+
+
+def parse_options(options, filepatterns=None):
+  """
+    Parses command-line parameters provided through options_group()
+    and returns a credentials dictionary.
+
+    `filepatterns' can be used to override the patterns used to find configuration
+    files.
+  """
+
+  dbc = DBCredentials(filepatterns)
+
+  # get default values
+  creds = dbc.get(options.dbcredentials)
+
+  # process supplied overrides
+  if options.dbName:     creds["database"] = options.dbName
+  if options.dbHost:     creds["host"]     = options.dbHost
+  if options.dbPort:     creds["port"]     = options.dbPort
+  if options.dbUser:     creds["user"]     = options.dbUser
+  if options.dbPassword: creds["password"] = options.dbPassword
+
+  return creds
 
 if __name__ == "__main__":
   import sys
