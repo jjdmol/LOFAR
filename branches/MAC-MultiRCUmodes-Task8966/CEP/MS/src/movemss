@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+
+import lofar.mstools as lms
+import sys
+import os
+
+# This is the main entry.
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print 'Insufficient arguments; run as:'
+        print '    movemss srcPattern dstPattern [bandsPerBeam [dryrun]]'
+        print ''
+        print '    This program ensures that, if needed, MSs are moved such that'
+        print '    MSs belonging together reside on the same node.'
+        print '    It can be used to move calibrations MSs to the target observations'
+        print '    and to move the slices of MSSS target observations to the same node.'
+        print ''
+        print '     srcPattern     glob pattern of files to move if needed'
+        print '     dstPattern     glob pattern of files on nodes to which'
+        print '                    matching src files have to be moved'
+        print '     bandsPerBeam   nr of bands per beam (default 80)'
+        print '     dryrun         True = do not execute commands (default False)'
+        sys.exit(1)
+
+    bandsPerBeam = 80;
+    dryrun = False;
+    if len(sys.argv) >= 4:
+        bandsPerBeam = int(sys.argv[3])
+    if len(sys.argv) >= 5:
+        dryrun = bool(sys.argv[4])
+
+    lms.movemss (sys.argv[1], sys.argv[2], os.environ["USER"], bandsPerBeam, dryrun)

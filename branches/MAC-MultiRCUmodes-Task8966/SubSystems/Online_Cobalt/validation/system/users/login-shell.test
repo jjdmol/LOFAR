@@ -1,0 +1,12 @@
+#!/bin/bash
+
+for USER in lofarsys lofarbuild mol amesfoort klijn loose grit broekema schoenma renting
+do
+  LOGIN_SHELL=`getent passwd $USER | cut -d: -f7`
+  echo "$USER has login shell $LOGIN_SHELL"
+
+  [ "$LOGIN_SHELL" == "/usr/sbin/nologin" ] && exit 1
+  [ "$LOGIN_SHELL" == "/bin/false" ] && exit 1
+done
+
+exit 0

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+. ./testFuncs.sh
+
+listqueues.sh
+
+
