@@ -35,6 +35,7 @@ import logging
 from optparse import OptionParser
 from lofar.messaging.Service import *
 from lofar.common import dbcredentials
+from lofar.common.util import waitForInterrupt
 
 QUERY_EXCEPTIONS = (TypeError, ValueError, MemoryError, pg.ProgrammingError, pg.InternalError)
 
@@ -298,7 +299,7 @@ if __name__ == "__main__":
 
     with serv1, serv2, serv3:
         logger.info("Started the OTDB services")
-        serv3.wait_for_interrupt()
+        waitForInterrupt()
 
     logger.info("Stopped the OTDB services")
 
