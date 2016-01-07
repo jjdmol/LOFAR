@@ -133,8 +133,8 @@ if __name__ == "__main__":
                         msg = EventMessage(context="otdb.treestatus", content=content)
                         print treeid, allowed_states.get(state, "unknwon_state"), modtime, creation
                         send_bus.send(msg)
-                        otdb_connection.query("update otdb_admin set treestatusevent = '%s'" % start_time)
                         start_time = creation
+                        otdb_connection.query("update otdb_admin set treestatusevent = '%s'" % start_time)
                     print "==="
 
                 # Redetermine the database status.
