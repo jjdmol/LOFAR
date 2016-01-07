@@ -24,13 +24,15 @@
 Daemon that watches the OTDB database for status changes of trees and publishes those on the messagebus.
 """
 
-import os, sys, time, pg, signal
-from optparse import OptionParser
+import sys, time, pg
+import logging
 from lofar.messaging import EventMessage, ToBus
-from lofar.common import dbcredentials
 
 QUERY_EXCEPTIONS = (TypeError, ValueError, MemoryError, pg.ProgrammingError, pg.InternalError)
 alive = False
+
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Define our own exceptions
 class FunctionError(Exception):
@@ -69,12 +71,16 @@ def PollForStatusChanges(start_time, end_time, otdb_connection):
 
 def signal_handler(signum, frame):
     "Signal redirection to stop the daemon in a neat way."
-    print "Stopping program"
+    logger.info("Stopping program")
     global alive
     alive = False
 
 
 if __name__ == "__main__":
+    from optparse import OptionParser
+    from lofar.common import dbcredentials
+    import signal
+
     # Check the invocation arguments
     parser = OptionParser("%prog [options]")
     parser.add_option("-B", "--busname", dest="busname", type="string", default="",
@@ -120,22 +126,23 @@ if __name__ == "__main__":
                     start_time = otdb_connection.query("select treestatusevent from otdb_admin").getresult()[0][0]
                 except IndexError, QUERY_EXCEPTIONS:
                     start_time = "2015-01-01 00:00:00.00"
-                print "start_time=", start_time
  
                 try:
+                    logger.info("start_time=%s, polling database" % (start_time,))
                     record_list = PollForStatusChanges(start_time, "now", otdb_connection)
                 except FunctionError, exc_info:
-                    print exc_info
+                    logger.error(exc_info)
                 else:
                     for (treeid, state, modtime, creation) in record_list:
                         content = { "treeID" : treeid, "state" : allowed_states.get(state, "unknwon_state"), 
                                     "time_of_change" : modtime }
                         msg = EventMessage(context="otdb.treestatus", content=content)
-                        print treeid, allowed_states.get(state, "unknwon_state"), modtime, creation
+                        logger.info("sending message treeid %s state %s modtime %s" % (treeid, allowed_states.get(state, "unknwon_state"), modtime))
                         send_bus.send(msg)
+
                         start_time = creation
+                        logger.info("start_time:=%s" % (start_time,))
                         otdb_connection.query("update otdb_admin set treestatusevent = '%s'" % start_time)
-                    print "==="
 
                 # Redetermine the database status.
                 connected = (otdb_connection and otdb_connection.status == 1)
