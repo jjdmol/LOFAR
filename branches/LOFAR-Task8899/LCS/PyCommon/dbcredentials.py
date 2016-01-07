@@ -114,12 +114,12 @@ class DBCredentials:
   def _section(self, database):
     return "database:%s" % (database,)
 
-def options_group():
+def options_group(parser):
   """
     Return an optparse.OptionGroup containing command-line parameters
     for database connections and authentication.
   """
-  group = OptionGroup("Database Credentials")
+  group = OptionGroup(parser, "Database Credentials")
   group.add_option("-D", "--database", dest="dbName", type="string", default="",
                    help="Name of the database")
   group.add_option("-H", "--host", dest="dbHost", type="string", default="",

@@ -79,7 +79,7 @@ if __name__ == "__main__":
     parser = OptionParser("%prog [options]")
     parser.add_option("-B", "--busname", dest="busname", type="string", default="",
                       help="Busname or queue-name the status changes are published on")
-    parser.add_option_group(dbcredentials.options_group())
+    parser.add_option_group(dbcredentials.options_group(parser))
     (options, args) = parser.parse_args()
 
     dbcreds = dbcredentials.parse_options(options)
