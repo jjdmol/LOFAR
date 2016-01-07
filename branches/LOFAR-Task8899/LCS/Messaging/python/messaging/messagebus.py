@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 # Default settings for often used parameters.
 DEFAULT_ADDRESS_OPTIONS = {'create': 'never'}
 DEFAULT_BROKER = "localhost:5672"
-DEFAULT_BROKER_OPTIONS = {}
+DEFAULT_BROKER_OPTIONS = {'reconnect': True}
 DEFAULT_RECEIVER_CAPACITY = 1
 DEFAULT_TIMEOUT = 5
 
