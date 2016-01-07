@@ -229,10 +229,10 @@ class PostgressMessageHandlerInterface(MessageHandlerInterface):
                 self.connection = pg.connect(user=self.dbcreds["user"], host=self.dbcreds["host"], dbname=self.dbcreds["database"])
                 self.connected = True
                 logger.info("Connected to database %s on host %s" % (self.dbcreds["database"], self.dbcreds["host"]))
-            except (TypeError, SyntaxError, pg.InternalError):
+            except (TypeError, SyntaxError, pg.InternalError), e:
                 self.connected = False
-                logger.error("Not connected to database %s on host %s (anymore), retry in 5 seconds"
-                             % (self.dbcreds["database"], self.dbcreds["host"]))
+                logger.error("Not connected to database %s on host %s (anymore), retry in 5 seconds: %s"
+                             % (self.dbcreds["database"], self.dbcreds["host"], e))
                 time.sleep(5)
 
 class PostgressTaskSpecificationRequest(PostgressMessageHandlerInterface):

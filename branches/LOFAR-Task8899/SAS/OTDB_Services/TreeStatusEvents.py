@@ -106,10 +106,10 @@ if __name__ == "__main__":
                     allowed_states = {}
                     for (state_nr, name) in otdb_connection.query("select id,name from treestate").getresult():
                         allowed_states[state_nr] = name
-                except (TypeError, SyntaxError, pg.InternalError):
+                except (TypeError, SyntaxError, pg.InternalError), e:
                     connected = False
-                    logger.error("Not connected to database %s on host %s (anymore), retry in 5 seconds"
-                                 % (dbcreds["database"], dbcreds["host"]))
+                    logger.error("Not connected to database %s on host %s (anymore), retry in 5 seconds: %s"
+                                 % (dbcreds["database"], dbcreds["host"], e))
                     time.sleep(5)
 
             # When we are connected we can poll the database
