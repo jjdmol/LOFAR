@@ -1,6 +1,0 @@
-BobOBufVector bobSize=3163 vecSize=3163 vecCap=3164
-BobOBufVector bobSize=3163 vecSize=3163 vecCap=3259
-BobOBufString bobSize=3163 strSize=3163
-BobOBufString bobSize=3163 strSize=3163
-BlobOStream::putBuf - 16 bytes asked, but only 0 could be written (pos=48)
-OK
