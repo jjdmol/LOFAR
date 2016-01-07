@@ -106,7 +106,7 @@ if __name__ == "__main__":
             while alive and not connected:
                 # Connect to the database
                 try:
-                    otdb_connection = pg.connect(user="postgres", host=dbcreds["host"], dbname=dbcreds["database"])
+                    otdb_connection = pg.connect(user=dbcreds["user"], passwd=dbcreds["password"], host=dbcreds["host"], port=dbcreds["port"] or -1, dbname=dbcreds["database"])
                     connected = True
                     # Get list of allowed tree states
                     allowed_states = {}

@@ -224,7 +224,7 @@ class PostgressMessageHandlerInterface(MessageHandlerInterface):
         self.connected = (self.connection and self.connection.status == 1)
         while not self.connected:
             try:
-                self.connection = pg.connect(user=self.dbcreds["user"], host=self.dbcreds["host"], dbname=self.dbcreds["database"])
+                self.connection = pg.connect(user=self.dbcreds["user"], passwd=self.dbcreds["password"], host=self.dbcreds["host"], port=self.dbcreds["port"] or -1, dbname=self.dbcreds["database"])
                 self.connected = True
                 logger.info("Connected to database %s on host %s" % (self.dbcreds["database"], self.dbcreds["host"]))
             except (TypeError, SyntaxError, pg.InternalError), e:

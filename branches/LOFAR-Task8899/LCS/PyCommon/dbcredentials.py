@@ -48,9 +48,9 @@ class DBCredentials:
     # Flavour of database (postgres, mysql, oracle, sqlite)
     "type": "postgres",
 
-    # Connection information
+    # Connection information (port 0 = use default)
     "host": "localhost",
-    "port": "",
+    "port": 0,
 
     # Authentication
     "user": "{USER}".format(**environ),
@@ -81,7 +81,12 @@ class DBCredentials:
       Return credentials for a given database.
     """
     try:
-      return dict(self.config.items(self._section(database)))
+      d = dict(self.config.items(self._section(database)))
+
+      # fix types
+      d["port"] = int(d["port"] or 0)
+
+      return d
     except NoSectionError:
       return self.config.defaults()
 
