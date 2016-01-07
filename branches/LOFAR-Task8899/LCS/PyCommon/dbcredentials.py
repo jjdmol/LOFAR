@@ -84,7 +84,25 @@ class Credentials:
 class DBCredentials:
   def __init__(self, filepatterns=None):
     """
-      Read database credentials from all configuration files matched by any of the patterns 
+      Read database credentials from all configuration files matched by any of the patterns.
+
+      By default, the following files are read:
+
+        $LOFARROOT/etc/dbcredentials/*.ini
+        ~/.lofar/dbcredentials/*.ini
+
+      The configuration files allow for any number of database sections:
+
+        [database:OTDB]
+        type = postgres     # postgres, mysql, oracle, sqlite
+        host = localhost
+        port = 0            # 0 = use default port
+        user = paulus
+        password = boskabouter
+        database = LOFAR_4
+
+      These database credentials can subsequently be queried under their
+      symbolic name ("OTDB" in the example).
     """
     if filepatterns is None:
       filepatterns = [
@@ -136,9 +154,12 @@ class DBCredentials:
       pass
 
     # set or override credentials
-    for k,v in credentials.iteritems():
-      self.config.set(section, k, v)
-
+    self.config.set(section, "type", credentials.type)
+    self.config.set(section, "host", credentials.host)
+    self.config.set(section, "port", str(credentials.port))
+    self.config.set(section, "user", credentials.user)
+    self.config.set(section, "password", credentials.password)
+    self.config.set(section, "database", credentials.database)
 
   def list(self):
     """
