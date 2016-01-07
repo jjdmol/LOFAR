@@ -276,7 +276,7 @@ if __name__ == "__main__":
     parser = OptionParser("%prog [options]")
     parser.add_option("-B", "--busname", dest="busname", type="string", default="testbus",
                       help="Busname or queue-name on which RPC commands are received")
-    parser.add_group(dbcredentials.options_group())
+    parser.add_option_group(dbcredentials.options_group())
     (options, args) = parser.parse_args()
 
     dbcreds = dbcredentials.parse_options(options)
