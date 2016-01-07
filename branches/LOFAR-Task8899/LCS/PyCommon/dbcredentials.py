@@ -20,11 +20,18 @@
 # $Id$
 
 from glob import glob
-from os import environ
+import os
+import pwd
 from ConfigParser import SafeConfigParser, NoSectionError, DuplicateSectionError
 from optparse import OptionGroup
 
 __all__ = ["DBCredentials", "options_group", "parse_options"]
+
+# obtain the environment, and add USER and HOME if needed (since supervisord does not)
+environ = os.environ
+user_info = pwd.getpwduid(os.getuid())
+environ.setdefault("HOME", user_info["pw_dir"])
+environ.setdefault("USER", user_info["pw_name"])
 
 def findfiles(pattern):
   """ Returns a list of files matched by `pattern'.
