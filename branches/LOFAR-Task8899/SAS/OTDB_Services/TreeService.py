@@ -224,13 +224,12 @@ class PostgressMessageHandlerInterface(MessageHandlerInterface):
         self.connected = (self.connection and self.connection.status == 1)
         while not self.connected:
             try:
-                self.connection = pg.connect(user=self.dbcreds["user"], passwd=self.dbcreds["password"], host=self.dbcreds["host"], port=self.dbcreds["port"] or -1, dbname=self.dbcreds["database"])
+                self.connection = pg.connect(**self.dbcreds.pg_connect_options())
                 self.connected = True
-                logger.info("Connected to database %s on host %s" % (self.dbcreds["database"], self.dbcreds["host"]))
+                logger.info("Connected to database %s" % (self.dbcreds,))
             except (TypeError, SyntaxError, pg.InternalError), e:
                 self.connected = False
-                logger.error("Not connected to database %s on host %s (anymore), retry in 5 seconds: %s"
-                             % (self.dbcreds["database"], self.dbcreds["host"], e))
+                logger.error("Not connected to database %s, retry in 5 seconds: %s" % (self.dbcreds, e))
                 time.sleep(5)
 
 class PostgressTaskSpecificationRequest(PostgressMessageHandlerInterface):

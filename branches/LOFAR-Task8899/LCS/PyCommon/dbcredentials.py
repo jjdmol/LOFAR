@@ -25,13 +25,14 @@ import pwd
 from ConfigParser import SafeConfigParser, NoSectionError, DuplicateSectionError
 from optparse import OptionGroup
 
-__all__ = ["DBCredentials", "options_group", "parse_options"]
+__all__ = ["DBCredentials", "options_group", "parse_options", "pg_connect_options"]
 
 # obtain the environment, and add USER and HOME if needed (since supervisord does not)
 environ = os.environ
 user_info = pwd.getpwuid(os.getuid())
 environ.setdefault("HOME", user_info.pw_dir)
 environ.setdefault("USER", user_info.pw_name)
+
 
 def findfiles(pattern):
   """ Returns a list of files matched by `pattern'.
@@ -43,23 +44,44 @@ def findfiles(pattern):
   except KeyError:
     return []
 
-class DBCredentials:
-  defaults = {
+
+class Credentials:
+  def __init__(self):
     # Flavour of database (postgres, mysql, oracle, sqlite)
-    "type": "postgres",
+    self.type = "postgres"
 
     # Connection information (port 0 = use default)
-    "host": "localhost",
-    "port": 0,
+    self.host = "localhost"
+    self.port = 0
 
     # Authentication
-    "user": "{USER}".format(**environ),
-    "password": "",
+    self.user = environ["USER"]
+    self.password = ""
 
     # Database selection
-    "database": "",
-  }
+    self.database = ""
 
+  def __str__(self):
+    return "type={type} addr={host}:{port} auth={user}:{password} db={database}".format(**self.__dict__)
+
+  def pg_connect_options(self):
+    """
+      Returns a dict of options to provide to PyGreSQL's pg.connect function. Use:
+
+      conn = pg.connect(**dbcreds.pg_connect_options())
+    """
+    return {
+      "host": self.host,
+      "port": self.port or -1,
+
+      "user": self.user,
+      "passwd": self.password,
+
+      "dbname": self.database,
+    }
+
+
+class DBCredentials:
   def __init__(self, filepatterns=None):
     """
       Read database credentials from all configuration files matched by any of the patterns 
@@ -70,7 +92,7 @@ class DBCredentials:
         "{HOME}/.lofar/dbcredentials/*.ini",
         ]
 
-    self.config = SafeConfigParser(defaults=self.defaults)
+    self.config = SafeConfigParser()
 
     self.files = sum([findfiles(p) for p in filepatterns],[])
     self.config.read(self.files)
@@ -80,15 +102,25 @@ class DBCredentials:
     """
       Return credentials for a given database.
     """
+    # create default credentials
+    creds = Credentials()
+
+    # read configuration
     try:
       d = dict(self.config.items(self._section(database)))
-
-      # fix types
-      d["port"] = int(d["port"] or 0)
-
-      return d
     except NoSectionError:
-      return self.config.defaults()
+      return creds
+
+    # parse and convert config information
+    if "host" in d:     creds.host = d["host"]
+    if "port" in d:     creds.port = int(d["port"] or 0)
+
+    if "user" in d:     creds.user = d["user"]
+    if "password" in d: creds.password = d["password"]
+
+    if "database" in d: creds.database = d["database"]
+
+    return creds
 
 
   def set(self, database, credentials):
@@ -118,6 +150,7 @@ class DBCredentials:
 
   def _section(self, database):
     return "database:%s" % (database,)
+
 
 def options_group(parser):
   """
@@ -156,13 +189,14 @@ def parse_options(options, filepatterns=None):
   creds = dbc.get(options.dbcredentials)
 
   # process supplied overrides
-  if options.dbName:     creds["database"] = options.dbName
-  if options.dbHost:     creds["host"]     = options.dbHost
-  if options.dbPort:     creds["port"]     = options.dbPort
-  if options.dbUser:     creds["user"]     = options.dbUser
-  if options.dbPassword: creds["password"] = options.dbPassword
+  if options.dbHost:     creds.host     = options.dbHost
+  if options.dbPort:     creds.port     = options.dbPort
+  if options.dbUser:     creds.user     = options.dbUser
+  if options.dbPassword: creds.password = options.dbPassword
+  if options.dbName:     creds.database = options.dbName
 
   return creds
+
 
 if __name__ == "__main__":
   import sys
@@ -198,5 +232,5 @@ if __name__ == "__main__":
     sys.exit(0)
 
   """ Print credentials of a specific database. """
-  print "\n".join(["%s %s" % (k,v) for k,v in dbc.get(options.database).iteritems()])
+  print str(dbc.get(options.database))
 

@@ -106,16 +106,17 @@ if __name__ == "__main__":
             while alive and not connected:
                 # Connect to the database
                 try:
-                    otdb_connection = pg.connect(user=dbcreds["user"], passwd=dbcreds["password"], host=dbcreds["host"], port=dbcreds["port"] or -1, dbname=dbcreds["database"])
+                    otdb_connection = pg.connect(**dbcreds.pg_connect_options())
                     connected = True
+                    logger.info("Connected to database %s" % (dbcreds,))
+
                     # Get list of allowed tree states
                     allowed_states = {}
                     for (state_nr, name) in otdb_connection.query("select id,name from treestate").getresult():
                         allowed_states[state_nr] = name
                 except (TypeError, SyntaxError, pg.InternalError), e:
                     connected = False
-                    logger.error("Not connected to database %s on host %s (anymore), retry in 5 seconds: %s"
-                                 % (dbcreds["database"], dbcreds["host"], e))
+                    logger.error("Not connected to database %s, retry in 5 seconds: %s" % (dbcreds, e))
                     time.sleep(5)
 
             # When we are connected we can poll the database
