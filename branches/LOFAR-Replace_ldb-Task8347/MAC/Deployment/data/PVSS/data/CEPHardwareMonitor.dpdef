@@ -1,0 +1,4 @@
+# CEPHardwareMonitor
+#
+Cobalt.connected	bool
+Cluster.connected	bool
