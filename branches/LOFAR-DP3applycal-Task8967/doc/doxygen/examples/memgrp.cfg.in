@@ -1,0 +1,12 @@
+PROJECT_NAME         = "Member Grouping"
+GENERATE_LATEX       = NO
+GENERATE_MAN         = NO
+GENERATE_RTF         = NO
+CASE_SENSE_NAMES     = NO
+INPUT                = "@CMAKE_CURRENT_SOURCE_DIR@/memgrp.h"
+HTML_OUTPUT          = "@CMAKE_BINARY_DIR@/doc/html/doxygen/examples/memgrp"
+QUIET                = YES
+DISTRIBUTE_GROUP_DOC = YES
+JAVADOC_AUTOBRIEF    = YES
+INPUT_FILTER         = "@CMAKE_SOURCE_DIR@/CMake/docscripts/slash2spanning.pl"
+FILTER_SOURCE_FILES  = YES

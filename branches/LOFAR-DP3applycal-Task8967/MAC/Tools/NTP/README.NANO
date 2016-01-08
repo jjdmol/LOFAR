@@ -1,0 +1,146 @@
+
+INTRO
+=====
+
+The LOFAR remote station LCU time synchronization uses the NTP time
+keeping software with patches on NTP and the linux kernel to implement
+nanosecond precision. The goal of this setup is to lock the kernel
+clock to the GPS clock and ensure that when we take the time on a PPS
+interrupt it is as close to UTC top-of-second as possible.
+
+NTP takes precise timestamps from the station GPS receiver. The PPS
+output from the GPS unit is fed through the Rubidium reference and
+distributed to the RSP boards and the LCU as the control sync signal.
+
+This file README.NANO explains how the NTP system is setup, how the
+NTP daemon and the linux kernel are patched, built and configured.
+
+This directory contains the following files
+
+README.NANO                   # this file, you're reading it
+linux-2.4.21.tar.gz           # the vanilla source distribution of linux-2.4.21
+NTP-4.2.0.tar.gz              # the vanilla source distribution of NTP-4.2.0
+PPSkit-2.1.4.tar.gz           # the PPSkit patches on linux and NTP to achieve nanosecond precise timing
+kernel-2.4.21-NANO.config     # linux kernel configuration file (single CPU)
+kernel-2.4.21-NANO-SMP.config # SMP kernel with NANO support 
+                              # WARNING: this kernel hangs after a while when ntpd is started.
+ntp-4.2.0.lofar               # Directory containing all the files necessary to build
+                              # the ntp-4.2.0.lofar-4.i386.rpm which can be installed on the target system
+
+INSTALL
+=======
+
+These INSTALL instructions cover points 0) to 3b) of PPSkit-2.1.4/INSTALL.
+
+1. Untar all .tar.gz's with 'tar zxf {name}.tar.gz'.
+2. Patch kernel. These patches should succeed withouth problems.
+	> cd linux-2.4.21
+	> patch -p1 < ../PPSkit-2.1.4/patch-2.4.21
+
+3. Configure and build the linux kernel
+	Copy correct configuration
+	> cd linux-2.4.21
+	> make mrproper
+	> cp ../kernel-2.4.21-NANO.config .config
+	> make oldconfig
+	> make dep
+	> make bzImage modules
+	> sudo make modules_install # will install in /lib/modules/2.4.21-NANO
+
+4. Continue instructions in PPSkit-2.1.4/INSTALL at 4a) with the following
+   modifications. At step 4c) copy the files instead of linking them from $LINUX
+   (your linux-2.4.21 source dir) to /usr/include/sys. You need to be root
+   to do this.
+
+-----%< begin excerpt from PPSkit-2.1.4/INSTALL
+
+4a) Activate the new kernel (copy the files and modules into place,
+    maybe edit /etc/lilo.conf, and re-run LILO) and reboot (as
+    usual)...
+
+4b) If you have built the serial driver as a module, load that module
+    (`insmod serial.o' if it isn't done automatically) and be sure
+    that the `PPSAPI' option is displayed (or logged).  The string
+    should read similar to ``Serial driver version 5.05+ with
+    PPS_API(RFC-2783) enabled''.
+
+4c) Make sure the right include files for the C compiler are found and
+    used: The patch creates new files "timepps.h", and "timex.h" in
+    ``$LINUX/include/linux'' (where ``$LINUX'' is your source directory.
+    Despite of discussions whether files in /usr/include/sys should be the
+    current kernel's versions, I simply state:
+
+    If you intend to use ntpd with PPS support, you'll have to make a
+    symbolic link for each of the files mentioned above.  Maybe you
+    want to backup the original timex.h file.
+
+    (e.g.	for i in timepps.h timex.h
+		do
+			ln -s $LINUX/include/linux/$i /usr/include/sys/$i
+		done
+    )
+
+    Remember to repeat this step whenever you upgrade your C library
+    or include files (overwrite ``<sys/timex.h>'' to be specific).
+
+5) Do whatever you like ;-) (...) If you use ntpd, (...). You must recompile
+   ntpd 4.0 to work correctly with the new kernel. (...)
+
+-----%< end excerpt from PPSkit-2.1.4/INSTALL
+
+5. At step 5) above build the ntp-4.2.0.lofar-4.i386.rpm and install it
+
+	# !! We assume that the linux-2.4.1-NANO kernel is running at this moment
+
+	> cd ntp-4.2.0.lofar
+	> make srpm
+	> rpmbuild --rebuild ntp-4.2.0.lofar-4.src.rpm
+
+	# assuming you've set up your RPM build environment in $HOME/rpm
+	> cd $HOME/rpm/RPMS/i386
+	> sudo rpm -ivh ntp-4.2.0.lofar-4.i386.rpm
+
+	# That will install and configure NTP on your system
+
+6. Start NTP
+
+
+	#
+	# Start the ntp daemon. Use a startup script in /etc/init.d/
+	# to do this as startup.
+	#
+	sudo /opt/ntp/bin/ntpd start
+
+	#
+	# Watch the log output in:
+	#
+	# /var/log/ntpstats/ntpd
+	# /var/log/ntpstats/clockstats
+	# /var/log/ntpstats/peerstats
+	# /var/log/ntpstats/loopstats
+	#
+	# plot clock offset using gnuplot
+	> gnuplot
+	plot 'looptstats' using 2:3 with lines
+
+	# plot frequency
+	plot 'loopstats' using 2:4 with lines
+
+	#
+	# plot frequency over multiple days
+	#
+	> cat loopstats.* > /tmp/loopstats
+	> gnuplot
+	plot '/tmp/loopstats' using ($1*86400+$2):4 with lines
+
+	#
+	# In most cases you can see day/night temperature variations in
+	# the frequency. Frequency goes down as temperature goes down.
+	#
+
+7. This concludes the installation of the NANO kernel and NTP.
+
+		
+
+
+
