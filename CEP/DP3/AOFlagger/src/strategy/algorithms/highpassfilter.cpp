@@ -162,7 +162,7 @@ void HighPassFilter::setFlaggedValuesToZeroAndMakeWeights(const Image2DCPtr &inp
 	{
 		for(size_t x=0;x<width;++x)
 		{
-			if(inputMask->Value(x, y) || !isfinite(inputImage->Value(x, y)))
+			if(inputMask->Value(x, y) || !std::isfinite(inputImage->Value(x, y)))
 			{
 				outputImage->SetValue(x, y, 0.0);
 				weightsOutput->SetValue(x, y, 0.0);
@@ -193,8 +193,8 @@ void HighPassFilter::setFlaggedValuesToZeroAndMakeWeightsSSE(const Image2DCPtr &
 			// Assign each integer to one bool in the mask
 			// Convert false to 0xFFFFFFFF and true to 0
 			__m128 conditionMask = _mm_castsi128_ps(
-				_mm_cmpeq_epi32(_mm_set_epi32(rowPtr[3] || !isfinite(inputPtr[3]), rowPtr[2] || !isfinite(inputPtr[2]),
-																			rowPtr[1] || !isfinite(inputPtr[1]), rowPtr[0] || !isfinite(inputPtr[0])),
+				_mm_cmpeq_epi32(_mm_set_epi32(rowPtr[3] || !std::isfinite(inputPtr[3]), rowPtr[2] || !std::isfinite(inputPtr[2]),
+																			rowPtr[1] || !std::isfinite(inputPtr[1]), rowPtr[0] || !std::isfinite(inputPtr[0])),
 												zero4i));
 			
 			_mm_store_ps(weightsPtr, _mm_or_ps(
