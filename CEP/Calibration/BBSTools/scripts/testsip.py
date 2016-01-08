@@ -42,7 +42,7 @@ class testsip:
         self.test_MS = os.path.split(self.MS)[0] + "/test_" + os.path.split(self.MS)[1] 
         self.gds = ""
         self.host = gethostname()
-        self.dbserver = "ldb001"
+        self.dbserver = "ldb-bbs"
         if clusterdesc=="":
           self.clusterdesc = self.getClusterDescription()
         else:
