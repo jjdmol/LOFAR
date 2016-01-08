@@ -182,7 +182,7 @@ num_t Image2D::GetMaximumFinite() const {
 	for(size_t y=0;y<_height;++y)
 	{
 		for(size_t x=0;x<_width;++x) {
-			if(isfinite(_dataPtr[y][x]) && _dataPtr[y][x] > max) {
+			if(std::isfinite(_dataPtr[y][x]) && _dataPtr[y][x] > max) {
 				max = _dataPtr[y][x];
 			}
 		}
@@ -195,7 +195,7 @@ num_t Image2D::GetMinimumFinite() const {
 	for(size_t y=0;y<_height;++y)
 	{
 		for(size_t x=0;x<_width;++x) {
-			if(isfinite(_dataPtr[y][x]) && _dataPtr[y][x] < min) {
+			if(std::isfinite(_dataPtr[y][x]) && _dataPtr[y][x] < min) {
 				min = _dataPtr[y][x];
 			}
 		}
