@@ -92,7 +92,7 @@ class skymodel(BaseRecipe):
         'db_host': ingredient.StringField(
             '--db-host',
             help="Host with MonetDB database instance",
-            default="ldb001"
+            default="ldb-gsm"
         ),
         'db_port': ingredient.IntField(
             '--db-port',

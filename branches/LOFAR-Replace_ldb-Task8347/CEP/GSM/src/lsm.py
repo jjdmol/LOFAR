@@ -9,7 +9,7 @@ import monetdb
 import monetdb.sql as db
 import gsmutils as gsm 
 
-db_host = "ldb002"
+db_host = "ldb-gsm"
 db_dbase = "gsm"
 db_user = "gsm"
 db_passwd = "msss"
