@@ -467,7 +467,7 @@ T storeCoeff(const Location &cell, const ParmGroup &solvables, T first)
 template <typename T>
 inline bool isfinite(T x)
 {
-    return !std::isnan(x) && !std::isinf(x);
+    return !isnan(x) && !isinf(x);
 }
 
 // @}
