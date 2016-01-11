@@ -106,20 +106,33 @@ sleep 1
 rspctl --rcuenable=1
 sleep 1
 
-# Determine broken tiles
+# Determine broken tiles. On International stations in local mode we need to read a file
+# called /localhome/stationtest/DISABLED/disabled-mode5.txt
+# For NL stations and international stations in ILT mode we can query PVSS
+
 DISABLED_RCU_LIST=""
-if [ $checkbroken -eq 1 ]; then 
-   if [ -e /opt/lofar/sbin/disabledRCUlist ]; then  
-      DISABLED_RCU_LIST=`/opt/lofar/sbin/disabledRCUlist $hbamode 2</dev/null`
-   else
-      echo "Cannot determine broken RCUs; missing /opt/lofar/sbin/disabledRCUlist"
-   fi
-fi 
+modeline=`stationswitch -s`
+if [[ $modeline =~ ilt ]]; then 
+   if [ $checkbroken -eq 1 ]; then 
+      if [ -e /opt/lofar/sbin/disabledRCUlist ]; then  
+         DISABLED_RCU_LIST=`/opt/lofar/sbin/disabledRCUlist $hbamode 2</dev/null`
+      else
+         echo "Cannot determine broken RCUs; missing /opt/lofar/sbin/disabledRCUlist"
+      fi
+   fi 
+else
+  if [ -e /localhome/stationtest/DISABLED/disabled-mode5.txt ]; then 
+     DISABLED_RCU_LIST=`cat /localhome/stationtest/DISABLED/disabled-mode5.txt`
+  else
+     echo "Cannot determine broken RCUs; missingCannot determine broken RCUs; missing file /localhome/stationtest/DISABLED/disabled-mode5.txt"
+  fi
+fi
 
 # Switch off broken tiles (if any)
 if [ "$DISABLED_RCU_LIST" == "" ]; then 
    echo "No disabled HBA tiles found" 
 else 
+   echo "List of disabled RCUs: "$DISABLED_RCU_LIST
    rspctl --rcumode=0 --select=$DISABLED_RCU_LIST 
    sleep 1
    rspctl --rcuenable=0 --select=$DISABLED_RCU_LIST 
