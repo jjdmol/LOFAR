@@ -25,7 +25,7 @@ import pwd
 from ConfigParser import SafeConfigParser, NoSectionError, DuplicateSectionError
 from optparse import OptionGroup
 
-__all__ = ["DBCredentials", "options_group", "parse_options", "pg_connect_options"]
+__all__ = ["Credentials", "DBCredentials", "options_group", "parse_options"]
 
 # obtain the environment, and add USER and HOME if needed (since supervisord does not)
 environ = os.environ
@@ -166,7 +166,7 @@ class DBCredentials:
       Return a list of databases for which credentials are available.
     """
     sections = self.config.sections()
-    return [s[9:] for s in sections if s.startsWith("database:")]
+    return [s[9:] for s in sections if s.startswith("database:")]
 
 
   def _section(self, database):
