@@ -58,19 +58,20 @@ class FromBus(object):
     but that of __new__().
     """
 
-    def __init__(self, address, options=None, broker=None):
+    def __init__(self, address, options=None, broker=None, broker_options=None):
         """
         Initializer.
         :param address: valid Qpid address
         :param options: valid Qpid address options, e.g. {'create': 'never'}
         :param broker: valid Qpid broker URL, e.g. "localhost:5672"
+        :param broker_options: valid Qpid broker options, e.g. {'reconnect': True}
         """
         self.address = address
         self.options = options if options else DEFAULT_ADDRESS_OPTIONS
         self.broker = broker if broker else DEFAULT_BROKER
+        self.broker_options = broker_options if broker_options else DEFAULT_BROKER_OPTIONS
 
-        self.connection = qpid.messaging.Connection(self.broker,
-                                                    **DEFAULT_BROKER_OPTIONS)
+        self.connection = qpid.messaging.Connection(self.broker, **self.broker_options)
         self.session = None
         self.opened=0
 
@@ -246,19 +247,20 @@ class ToBus(object):
     but that of __new__().
     """
 
-    def __init__(self, address, options=None, broker=None):
+    def __init__(self, address, options=None, broker=None, broker_options=None):
         """
         Initializer.
         :param address: valid Qpid address
         :param options: valid Qpid address options, e.g. {'create': 'never'}
         :param broker: valid Qpid broker URL, e.g. "localhost:5672"
+        :param broker_options: valid Qpid broker options, e.g. {'reconnect': True}
         """
         self.address = address
         self.options = options if options else DEFAULT_ADDRESS_OPTIONS
         self.broker = broker if broker else DEFAULT_BROKER
+        self.broker_options = broker_options if broker_options else DEFAULT_BROKER_OPTIONS
 
-        self.connection = qpid.messaging.Connection(self.broker,
-                                                    **DEFAULT_BROKER_OPTIONS)
+        self.connection = qpid.messaging.Connection(self.broker, **self.broker_options)
         self.session = None
         self.opened = 0
 

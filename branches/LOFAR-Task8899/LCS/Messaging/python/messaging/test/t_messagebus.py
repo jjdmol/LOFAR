@@ -35,9 +35,6 @@ from lofar.messaging.exceptions import MessageBusError, InvalidMessage
 
 TIMEOUT = 1.0
 
-# Disable auto reconnect to test behaviour w.r.t. invalid addresses
-DEFAULT_BROKER_OPTIONS['reconnect'] = False
-
 
 # ========  FromBus unit tests  ======== #
 
@@ -56,7 +53,7 @@ class FromBusInitFailed(unittest.TestCase):
         regexp = re.escape(self.error)
         regexp += '.*' + 'No address associated with hostname'
         with self.assertRaisesRegexp(MessageBusError, regexp):
-            with FromBus(QUEUE, broker="foo.bar"):
+            with FromBus(QUEUE, broker="foo.bar", broker_options={'reconnect': False}):
                 pass
 
     def test_connection_refused(self):
@@ -65,7 +62,7 @@ class FromBusInitFailed(unittest.TestCase):
         """
         regexp = re.escape(self.error) + '.*' + 'Connection refused'
         with self.assertRaisesRegexp(MessageBusError, regexp):
-            with FromBus("fake" + QUEUE, broker="localhost:4"):
+            with FromBus("fake" + QUEUE, broker="localhost:4", broker_options={'reconnect': False}):
                 pass
 
 
@@ -167,7 +164,7 @@ class ToBusInitFailed(unittest.TestCase):
         regexp = re.escape(self.error)
         regexp += '.*' + 'No address associated with hostname'
         with self.assertRaisesRegexp(MessageBusError, regexp):
-            with ToBus(QUEUE, broker="foo.bar"):
+            with ToBus(QUEUE, broker="foo.bar",  broker_options={'reconnect': False}):
                 pass
 
     def test_connection_refused(self):
@@ -176,7 +173,7 @@ class ToBusInitFailed(unittest.TestCase):
         """
         regexp = re.escape(self.error) + '.*' + 'Connection refused'
         with self.assertRaisesRegexp(MessageBusError, regexp):
-            with ToBus(QUEUE, broker="localhost:4"):
+            with ToBus(QUEUE, broker="localhost:4", broker_options={'reconnect': False}):
                 pass
 
 
