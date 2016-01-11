@@ -171,10 +171,17 @@ class ToBusInitFailed(unittest.TestCase):
         """
         Connecting to broker on wrong port must raise MessageBusError
         """
+        # Cache and disable auto reconnect
+        old_reconnect = DEFAULT_BROKER_OPTIONS.get('reconnect', False)
+        DEFAULT_BROKER_OPTIONS['reconnect'] = False
+
         regexp = re.escape(self.error) + '.*' + 'Connection refused'
         with self.assertRaisesRegexp(MessageBusError, regexp):
             with ToBus(QUEUE, broker="localhost:4"):
                 pass
+
+        # Restore auto reconnect
+        DEFAULT_BROKER_OPTIONS['reconnect'] = old_reconnect
 
 
 class ToBusSendMessage(unittest.TestCase):
