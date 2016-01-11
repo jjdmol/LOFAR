@@ -124,7 +124,7 @@ else
   if [ -e /localhome/stationtest/DISABLED/disabled-mode5.txt ]; then 
      DISABLED_RCU_LIST=`cat /localhome/stationtest/DISABLED/disabled-mode5.txt`
   else
-     echo "Cannot determine broken RCUs; missingCannot determine broken RCUs; missing file /localhome/stationtest/DISABLED/disabled-mode5.txt"
+     echo "Cannot determine broken RCUs; missing file /localhome/stationtest/DISABLED/disabled-mode5.txt"
   fi
 fi
 
