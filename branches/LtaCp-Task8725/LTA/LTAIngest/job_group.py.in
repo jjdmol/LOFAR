@@ -251,8 +251,28 @@ Total Failed: %(failed)i""" % {'done': self.done['Total'], 'corr': self.corr, 'b
       message = self.make_report()
     except Exception as e:
       self.logger.error('Could not construct mail message for job_group %s' % (self.Id))
-    os.system('echo "%s"|mailx -s "Ingest job of %s, %s(%s) has ended" ' % (message, user, job_name, self.Id) + self.mailCommand)
-    self.logger.info('job_group %s sent an email to %s' % (self.Id, self.mailCommand))
+    mailAddresses = self.mailCommand
+
+    if self.Type.lower() == "eor":
+      # get extra addresses from eor job specs
+      # list of comma seperated addresses strings
+      extra_addresses = set()
+      try:
+        jobs_mail_addresses = [job['email'] for job in self.jobs.values() if 'email' in job]
+        for job_mail_addresses in jobs_mail_addresses:
+            for address in job_mail_addresses.split(','):
+                extra_addresses.add(address)
+      except KeyError:
+          pass
+
+      if len(extra_addresses) > 0:
+        mailAddressesItems = mailAddresses.split(' ')
+        #assume 3 items: '-c', csv-string-of-cc-addresses, to-address
+        mailAddressesItems[1] += ',' + ','.join(extra_addresses)
+        mailAddresses = ' '.join(mailAddressesItems)
+
+    os.system('echo "%s"|mailx -s "Ingest job of %s, %s(%s) has ended" ' % (message, user, job_name, self.Id) + mailAddresses)
+    self.logger.info('job_group %s sent an email to %s' % (self.Id, mailAddresses))
 
   
 ## Stand alone execution code ------------------------------------------
