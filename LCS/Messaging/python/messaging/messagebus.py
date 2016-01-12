@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # messagebus.py: Provide an easy way exchange messages on the message bus.
 #
 # Copyright (C) 2015
@@ -31,7 +33,10 @@ from lofar.common.util import raise_exception
 import qpid.messaging
 import logging
 import sys
+import uuid
+import threading
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Default settings for often used parameters.
@@ -73,6 +78,9 @@ class FromBus(object):
                                                     **DEFAULT_BROKER_OPTIONS)
         self.session = None
         self.opened=0
+
+    def isConnected(self):
+        return self.opened > 0
 
     def open(self):
         """
@@ -402,4 +410,190 @@ class ToBus(object):
         logger.info("[ToBus] Message sent to queue: %s subject: %s" % (sender.target, message.subject))
 
 
-__all__ = ["FromBus", "ToBus"]
+class AbstractBusListener(object):
+    """
+    AbstractBusListener class for handling messages which are received on a message bus.
+    Typical usage is to derive from this class and implement the handle_message method with concrete logic.
+    """
+
+    def __init__(self, address, broker=None, **kwargs):
+        """
+        Initialize AbstractBusListener object with servicename (str) and servicehandler function.
+        :param address: valid Qpid address
+        additional parameters in kwargs:
+            options=   <dict>  Dictionary of options passed to QPID
+            exclusive= <bool>  Create an exclusive binding so no other services can consume duplicate messages (default: True)
+            numthreads= <int>  Number of parallel threads processing messages (default: 1)
+            verbose=   <bool>  Output extra logging over stdout (default: False)
+        """
+        self.address          = address
+        self.broker           = broker
+        self.running          = [False]
+        self._listening       = False
+        self.exclusive        = kwargs.pop("exclusive", True)
+        self._numthreads      = kwargs.pop("numthreads", 1)
+        self.verbose          = kwargs.pop("verbose", False)
+        self.frombus_options  = {"capacity": self._numthreads*20}
+        options               = kwargs.pop("options", None)
+
+        # only add options if it is given as a dictionary
+        if isinstance(options,dict):
+            for key,val in options.iteritems():
+                self.frombus_options[key] = val
+
+    def _debug(self, txt):
+        """
+        Internal use only.
+        """
+        if self.verbose == True:
+            logger.debug("[%s: %s]", self.__class__.__name__, txt)
+
+    def start_listening(self, numthreads=None):
+        """
+        Start the background threads and process incoming messages.
+        """
+        if self._listening == True:
+            return
+
+        self._bus_listener  = FromBus(self.address, broker=self.broker, options=self.frombus_options)
+        self._bus_listener.open()
+
+        if numthreads != None:
+            self._numthreads = numthreads
+
+        # use a list to ensure that threads always 'see' changes in the running state.
+        self.running = [ True ]
+        self._threads = {}
+        for i in range(self._numthreads):
+            thread = threading.Thread(target=self._loop)
+            self._threads[thread] = self._create_thread_args(i)
+            thread.start()
+        self._listening = True
+
+    def _create_thread_args(self, index):
+        return {'index':index,
+                'num_received_messages':0,
+                'num_processed_messages':0}
+
+    def stop_listening(self):
+        """
+        Stop the background threads that listen to incoming messages.
+        """
+        # stop all running threads
+        if self.running[0] == True:
+            self.running[0] = False
+            for thread, args in self._threads.items():
+                thread.join()
+                logger.info("Thread %2d: STOPPED Listening for messages on %s" % (args['index'], self.address))
+                logger.info("           %d messages received and %d processed OK." % (args['num_received_messages'], args['num_processed_messages']))
+        self._listening = False
+
+        # close the listeners
+        if self._bus_listener.isConnected():
+            self._bus_listener.close()
+
+
+    def __enter__(self):
+        """
+        Internal use only. Handles scope with keyword 'with'
+        """
+        self.start_listening()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Internal use only. Handles scope with keyword 'with'
+        """
+        self.stop_listening()
+
+    def prepare_loop(self):
+        "Called before main processing loop is entered."
+        pass
+
+    def prepare_receive(self):
+        "Called in main processing loop just before a blocking wait for messages is done."
+        pass
+
+    def handle_message(self, msg):
+        "Implement this method in your subclass to handle a received message"
+        raise NotImplementedError("Please implement the handle_message method in your subclass to handle a received message")
+
+    def finalize_handling(self, successful):
+        "Called in the main loop after the result was send back to the requester."
+        "@successful@ reflects the state of the handling: true/false"
+        pass
+
+    def finalize_loop(self):
+        "Called after main processing loop is finished."
+        pass
+
+    def _loop(self):
+        """
+        Internal use only. Message listener loop that receives messages and starts the attached function with the message content as argument.
+        """
+        currentThread = threading.currentThread()
+        args = self._threads[currentThread]
+        thread_idx = args['index']
+        logger.info( "Thread %d START Listening for messages on %s" %(thread_idx, self.address))
+        try:
+            self.prepare_loop()
+        except Exception as e:
+            logger.error("prepare_loop() failed with %s", e)
+
+        while self.running[0]:
+            try:
+                self.prepare_receive()
+            except Exception as e:
+                logger.error("prepare_receive() failed with %s", e)
+                continue
+
+            try:
+                # get the next message
+                lofar_msg = self._bus_listener.receive(1)
+                # retry if timed-out
+                if lofar_msg is None:
+                    continue
+
+                # Keep track of number of received messages
+                args['num_received_messages'] += 1
+
+                # Execute the service handler function and send reply back to client
+                try:
+                    self._debug("Running handler")
+
+                    self.handle_message(lofar_msg)
+
+                    self._debug("Finished handler")
+
+                    self._bus_listener.ack(lofar_msg)
+
+                    args['num_processed_messages'] += 1
+
+                    try:
+                        self.finalize_handling(True)
+                    except Exception as e:
+                        logger.error("finalize_handling() failed with %s", e)
+                        continue
+
+                except Exception as e:
+                    # Any thrown exceptions either Service exception or unhandled exception
+                    # during the execution of the service handler is caught here.
+                    self._debug(str(e))
+                    try:
+                        self.finalize_handling(False)
+                    except Exception as e:
+                        logger.error("finalize_handling() failed with %s", e)
+                    continue
+
+            except Exception as e:
+                # Unknown problem in the library. Report this and continue.
+                logger.error("[%s:] ERROR during processing of incoming message.\n%s" %(self.__class__.__name__, str(e)))
+                logger.info("Thread %d: Resuming listening on %s " % (thread_idx, self.address))
+
+        try:
+            self.finalize_loop()
+        except Exception as e:
+            logger.error("finalize_loop() failed with %s", e)
+
+
+__all__ = ["FromBus", "ToBus", "AbstractBusListener"]
