@@ -225,6 +225,7 @@ class LtaCp:
 
             # block until fifo is created
             output_remote_mkfifo = p_remote_mkfifo.communicate()
+            del self.started_procs[p_remote_mkfifo]
             if p_remote_mkfifo.returncode != 0:
                 raise LtacpException('ltacp %s: remote fifo creation failed: \nstdout: %s\nstderr: %s' % (self.logId, output_remote_mkfifo[0],output_remote_mkfifo[1]))
 
@@ -236,6 +237,7 @@ class LtaCp:
 
             # block until du is finished
             output_remote_du = p_remote_du.communicate()
+            del self.started_procs[p_remote_du]
             if p_remote_du.returncode != 0:
                 raise LtacpException('ltacp %s: remote fifo creation failed: \nstdout: %s\nstderr: %s' % (self.logId,
                                                                                                           output_remote_du[0],
@@ -275,7 +277,7 @@ class LtaCp:
             prev_bytes_transfered = 0
 
             # wait and poll for progress while all processes are runnning
-            while len([p for p in self.started_procs.values() if p.poll() is not None]) == 0:
+            while len([p for p in self.started_procs.keys() if p.poll() is not None]) == 0:
                 try:
                     # read and process tar stdout lines to create progress messages
                     nextline = p_remote_data.stdout.readline()
