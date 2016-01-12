@@ -275,7 +275,7 @@ class LtaCp:
             prev_bytes_transfered = 0
 
             # wait and poll for progress while all processes are runnning
-            while len([p for p in self.started_procs.values() if p.poll() is not None]) == 0
+            while len([p for p in self.started_procs.values() if p.poll() is not None]) == 0:
                 try:
                     # read and process tar stdout lines to create progress messages
                     nextline = p_remote_data.stdout.readline()
@@ -302,7 +302,7 @@ class LtaCp:
                                                                                                         humanreadablesize(avg_speed, 'Bps'),
                                                                                                         humanreadablesize(current_speed, 'Bps'),
                                                                                                         timedelta(seconds=int(round(time_to_go)))))
-                time.sleep(0.25)
+                    time.sleep(0.25)
                 except KeyboardInterrupt:
                     self.cleanup()
 
