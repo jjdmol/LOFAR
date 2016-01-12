@@ -522,7 +522,9 @@ class IngestPipeline():
         break  
       retry += 1
       if retry < times:
-        time.sleep(random.randint(30, 60) * retry)
+        wait_time = random.randint(30, 60) * retry
+        self.logger.debug('waiting %d seconds before trying %s again' % (wait_time, self.JobId))
+        time.sleep(wait_time)
     if error:
       raise PipelineError(errortext + ' tried %s times but failed on %s. Got the following errors: %s' % (retry, self.JobId, error), func.__name__)
 
