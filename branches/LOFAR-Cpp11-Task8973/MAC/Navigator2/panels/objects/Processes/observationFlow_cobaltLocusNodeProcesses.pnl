@@ -1,0 +1,336 @@
+V 11
+1
+LANG:1 16 childStateBorder
+PANEL,-1 -1 335 88 N "_3DFace" 0
+"main()
+{
+  baseDP = \"LOFAR_PermSW\";
+  database=dpSubStr(baseDP,DPSUB_SYS);
+
+  activeObsDP =MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\";
+  // check if MACScheduler pointenabled and accessible
+  if (dpExists(activeObsDP)) {
+    if (dpConnect(\"updateActiveObservations\", activeObsDP+\":_online.._value\",
+                                              activeObsDP+\":_online.._invalid\") == -1) {
+      LOG_ERROR(\"ObservationFlow_cobaltNodeProcesses.pnl:main|Couldn't connect to: \"+activeObsDP);
+    }
+  } else {
+    if (!isStandalone()) LOG_ERROR(\"ObservationFlow_cobaltLocusNodeProcesses.pnl:main|Couldn't find DP to connect to: \"+activeObsDP);
+  }	
+
+}
+" 0
+ E "main(int x, int y)
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  70 70
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP          = \"\";
+bool   bDoubleClicked  = false;
+dyn_string observationsList;
+dyn_string oldObsConnections;   // keep copy latest observations to be disconnected when the list changes
+dyn_string activeObservations;
+string activeObsDP = \"\";
+string database;
+bool connectedStates;
+dyn_string oldStateDPs;
+bool connectedOutputProcs;
+bool selectedObservations=false;
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"Stations\",\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"ObservationFlow_cobaltLocusNodeProcesses.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    //we also have to set the tabctrl to think this was initiated from the ProcessesTab, otherwise we will get the wrong panel.
+    navPanel_setEvent(\"Hardware\",\"ChangeTab\");
+  }
+
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"Stations\",\"EventRightClick\");
+}
+
+void updateActiveObservations(string dp1, dyn_string obs,
+                              string dp2, bool invalid)
+{
+
+  // remove pipelines from the list
+  for (int i=dynlen(obs);i > 0;  i--) if (!navFunct_isObservation(obs[i])) dynRemove(obs,i);
+  
+  activeObservations = obs;
+  // if there are selected observation check the observationsList if those selected observations still are active
+  // remove the unactive observations from the list  
+  
+  // replace old observations if there are no observations selected
+  if (selectedObservations) {
+    for (int i=dynlen(observationsList); i < 1; i--) {
+      int idx = dynContains(activeObservations,observationsList[i]);
+      if (i <= 0) dynRemove(observationsList,i);
+    }
+    if (dynlen(observationsList) ==0) {
+      selectedObservations=false;
+    }
+  }
+  
+  if (!selectedObservations) {
+    observationsList = activeObservations;
+  }
+  // because CobaltProcesses claim their datapoints when the observation is actually running we need to connect to all these observations
+  // and give a signal when the runstate of one of them changes to running to trigger the Cobalt point collection
+  
+  LOG_DEBUG(\"ObservationFlow_cobaltNodeProcesses.pnl:updateActiveObservations|observationList: \"+observationsList);
+
+  dyn_string obsConnections = makeDynString();  
+  for (int i = 1; i <= dynlen(observationsList) ; i++) {
+    // compose the WinCC OA DP name 
+    string obsName = \"LOFAR_ObsSW_\"+observationsList[i]; 
+
+    // Ask the claimmanager for the temp obs representation
+    string obsDP=MainDBName+claimManager_nameToRealName(obsName);
+
+    // add DP to list with all connects
+    dynAppend(obsConnections,obsDP+\".runState\");
+  }
+  
+  if (dynlen(oldObsConnections) > 0) {
+    // disconnect old observations
+    dpDisconnect(\"monitorRunStates\",oldObsConnections);
+    dynClear(oldObsConnections);
+  }
+  
+  // connect to runState for all active observations  
+  if (dynlen(obsConnections) > 0 && dpConnect(\"monitorRunStates\",obsConnections) == -1) {
+    LOG_ERROR(\"ObservationFlow_cobaltNodeProcesses.pnl:updateActiveObservations|ERROR: couldn't connect to : \"+obsConnections+ \" \" + getLastError());
+  } else if (dynlen(obsConnections) > 0) {
+    oldObsConnections = obsConnections;
+  } else {
+    setStates(0,0);
+  }    
+}
+
+void monitorRunStates(dyn_string dpList,dyn_string runStates) {
+
+  for (int i=1; i<= dynlen(runStates); i++) {
+    if (runStates[i] == \"Running\" || runStates[i] == \"Quiting\") {
+      connectCobaltLocusNodesAndProcesses(runStates[i]);
+      break;
+    }
+  }
+}
+
+// connect to stationInputStreams from the active observations
+void connectCobaltLocusNodesAndProcesses(string runState) {
+  string connectToStates = \"\";
+  // change all found DP's to contain all the elements that contain the states and childstates
+  if (connectedStates) {
+    dpDisconnect(\"cobaltLocusNodesAndProcessesCB\",oldStateDPs);
+    connectedStates = false;
+  }
+
+  if (dynlen(observationsList) == 1 && runState == \"Quiting\") {
+    setStates(0,0);
+    return;
+  }
+  
+  if (dynlen(observationsList) > 0) {
+    
+    // prepare LocusNode & CobaltOutputProc connectList for States/childStates for each observation
+    for(int i=1; i <= dynlen(observationsList); i++) {      
+      // compose the WinCC OA DP name 
+      string obsName = \"LOFAR_ObsSW_\"+observationsList[i]; 
+
+      // Ask the claimmanager for the temp obs representation
+      string obsDP=CEPDBName+claimManager_nameToRealName(obsName);
+      
+      
+      if (i==1) {
+        connectToStates =  \"SELECT '_online.._value' FROM '{\"+obsDP+\"_CobaltOutputProc.status.state,\"+obsDP+\"_CobaltOutputProc.status.childState\";
+      } else {
+        connectToStates += \",\"+obsDP+\"_CobaltOutputProc.status.state,\"+obsDP+\"_CobaltOutputProc.status.childState\";
+      }
+    }
+
+    dyn_dyn_anytype aResult;
+    if (connectToStates != \"\") {
+      connectToStates += \",LOFAR**LocusNode*.status.state,LOFAR**LocusNode*.status.childstate}' REMOTE '\"+CEPDBName+\"'\";
+      dpQuery(connectToStates,aResult);
+      // Iterate through the results and collect the state and childState dps
+      dyn_string stateDPs;
+      for( int t = 2; t <= dynlen( aResult ); t++)
+      {
+        string line = aResult[t][1];
+         if (!dynContains(stateDPs, line)) dynAppend(stateDPs,line);
+      }
+  
+      if (dpConnect(\"cobaltLocusNodesAndProcessesCB\",TRUE,stateDPs) == -1) {
+        LOG_ERROR(\"ObservationFlow_cobaltLocusNodeProcesses.pnl:connectCobaltNodesAndProcesses| ERROR: connect fails:\"+ stateDPs);
+      } else {
+        connectedStates = true;
+        oldStateDPs = stateDPs;
+      }
+    }
+  } else {
+    setStates(0,0);
+  }
+}
+
+void cobaltLocusNodesAndProcessesCB(dyn_string dpList,  dyn_int stateList) 
+{
+  LOG_DEBUG( \"ObservationFlow_cobaltLocusNodeProcesses.pnl:cobaltNodesAndProcessesCB| has \" + dynlen( dpList) + \" results\" );
+  LOG_DEBUG( \"ObservationFlow_cobaltLocusNodeProcesses.pnl:cobaltNodesAndProcessesCB| \"+stateList);
+
+  int highestState=0;
+  int highestChildState=0;
+
+  if( dynlen( stateList ) < 2 ) {
+    setStates(highestState,highestChildState);
+    return;
+  }
+  
+  // Iterate through the results
+  for( int t = 1; t < dynlen( dpList ); t++)
+  {
+    if (strpos(dpList[t],\"status.state\") >= 0 && stateList[t] > highestState) {
+      highestState=stateList[t];
+    } else if (strpos(dpList[t],\"status.childState\") >= 0 && stateList[t] > highestChildState) {
+      highestChildState=stateList[t];
+    }
+  }
+  setStates(highestState,highestChildState);
+}  
+
+void setStates(int state, int childState) {
+  
+
+   string SymbolCol;
+
+   SymbolCol = getStateColor(childState);
+   setValue(\"childStateBorder\", \"foreCol\", SymbolCol);
+
+   SymbolCol = getStateColor(state);
+   setValue(\"childStateBorder\", \"backCol\", SymbolCol);
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 1
+"childStateBorder"
+""
+1 130 160 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 71 All LocusNodes involved in the  currently(selected) active observations
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 2 1 2 1 E 0.7222222222222223 0 0.8333333333333334 -43.8888888888889 -123.3333333333333 1 E 130 160 310 220
+2 2
+"PRIMITIVE_TEXT1"
+""
+1 70 30 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  0 E 70 30 162 43
+0 2 2 "0s" 0 0 0 192 0 0  70 30 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 17 CEP 2 /LocusNodes
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

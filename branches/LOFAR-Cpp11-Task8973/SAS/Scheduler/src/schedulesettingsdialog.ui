@@ -1,0 +1,1604 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ScheduleSettingsDialogClass</class>
+ <widget class="QDialog" name="ScheduleSettingsDialogClass">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>830</width>
+    <height>638</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>610</width>
+    <height>530</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Settings</string>
+  </property>
+  <property name="sizeGripEnabled">
+   <bool>true</bool>
+  </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="tabShape">
+      <enum>QTabWidget::Rounded</enum>
+     </property>
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
+     <widget class="QWidget" name="tab_General">
+      <attribute name="title">
+       <string>General</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_7">
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="cb_LoadDefaultSettings">
+         <property name="toolTip">
+          <string>when selected the default scheduler settings will be loaded at startup</string>
+         </property>
+         <property name="text">
+          <string>Load previously saved default settings on start up</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCheckBox" name="cb_LoadSASscheduleOnStartUp">
+         <property name="toolTip">
+          <string>when selected downloads the current schedule from SAS at startup</string>
+         </property>
+         <property name="text">
+          <string>Load current schedule from SAS on start up</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <spacer name="verticalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="cb_LoadStorageNodesOnStartUp">
+         <property name="toolTip">
+          <string>when selected updates the storage nodes information from the data monitor at startup</string>
+         </property>
+         <property name="text">
+          <string>Load storage nodes from Data Monitor on start up</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QCheckBox" name="checkBoxTestEnvironment">
+         <property name="toolTip">
+          <string>Switch to test environment settings.
+When enabled the observation id 'Lxxxxx' and the file names will start with a 'T' in stead of a 'L'
+to make it easy to recognise files and directories written by the test system.</string>
+         </property>
+         <property name="text">
+          <string>Test Environment Mode settings</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_Schedule">
+      <attribute name="title">
+       <string>Schedule</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Schedule earliest date</string><!--Used to be Mondays only [AS]-->
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0" colspan="2">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Schedule latest date (sunday)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="3">
+        <widget class="QDateEdit" name="dateEdit_Latest">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>the last day of the schedule</string>
+         </property>
+         <property name="displayFormat">
+          <string>yyyy-MM-dd</string>
+         </property>
+         <property name="calendarPopup">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0" colspan="3">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Minimum time between observations</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="3" colspan="2">
+        <widget class="QTimeEdit" name="timeEdit_MinTimeBetweenObservations">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>the minimum distance (time) to keep between tasks</string>
+         </property>
+         <property name="locale">
+          <locale language="English" country="UnitedStates"/>
+         </property>
+         <property name="buttonSymbols">
+          <enum>QAbstractSpinBox::UpDownArrows</enum>
+         </property>
+         <property name="displayFormat">
+          <string>hh:mm:ss</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3" colspan="2">
+        <widget class="QDateEdit" name="dateEdit_Earliest">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>The first day of the schedule.
+Will automatically select the monday of the week you select.</string>
+         </property>
+         <property name="displayFormat">
+          <string>yyyy-MM-dd</string>
+         </property>
+         <property name="calendarPopup">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QPushButton" name="pb_Today">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>set the start day of the schedule to the monday of the current week</string>
+         </property>
+         <property name="text">
+          <string>Current week</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="3">
+        <widget class="QLabel" name="label_10">
+         <property name="text">
+          <string>Short term schedule duration (weeks)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="3">
+        <widget class="QSpinBox" name="sp_ShortTermDurationWeeks">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>the short term schedule duration</string>
+         </property>
+         <property name="maximum">
+          <number>12</number>
+         </property>
+         <property name="value">
+          <number>2</number>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Schedule duration (months)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QSpinBox" name="sb_ScheduleDurationMonths">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>the schedule duration in months</string>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="value">
+          <number>6</number>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="4">
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_Stations">
+      <attribute name="title">
+       <string>Stations</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0" rowspan="3" colspan="3">
+        <widget class="QListWidget" name="listStations">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>154</height>
+          </size>
+         </property>
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
+         <property name="toolTip">
+          <string>the list of known stations.
+double click a station to edit its coordinates</string>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::ExtendedSelection</enum>
+         </property>
+         <property name="resizeMode">
+          <enum>QListView::Adjust</enum>
+         </property>
+         <property name="sortingEnabled">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QPushButton" name="pb_ClearStationList">
+         <property name="maximumSize">
+          <size>
+           <width>80</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>delete all stations</string>
+         </property>
+         <property name="text">
+          <string>Clear list</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_6">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>10</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLabel" name="label_7">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>10</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Latitude</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QLabel" name="label_8">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>10</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Longitude</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLineEdit" name="lineEdit_StationName">
+         <property name="toolTip">
+          <string>designation of the station</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLineEdit" name="lineEdit_Latitude">
+         <property name="toolTip">
+          <string>latitude coordinate of the station</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2">
+        <widget class="QLineEdit" name="lineEdit_Longitude">
+         <property name="toolTip">
+          <string>longitude coordinate of the station</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="3">
+        <widget class="QPushButton" name="pb_AddStation">
+         <property name="maximumSize">
+          <size>
+           <width>80</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Add/Update</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QPushButton" name="pb_DeleteStation">
+         <property name="maximumSize">
+          <size>
+           <width>80</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>delete the selected station(s)</string>
+         </property>
+         <property name="text">
+          <string>Delete</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_Pipelines">
+      <attribute name="title">
+       <string>Pipelines</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_10">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_27">
+         <property name="text">
+          <string>Sources that can be demixed:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <spacer name="horizontalSpacer_8">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="0" rowspan="3">
+        <widget class="QTableWidget" name="tableWidgetDemixSources">
+         <property name="toolTip">
+          <string>Source patches that can be demixed and which are defined in the existing sky models</string>
+         </property>
+         <property name="rowCount">
+          <number>0</number>
+         </property>
+         <property name="columnCount">
+          <number>1</number>
+         </property>
+         <attribute name="horizontalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
+         <attribute name="horizontalHeaderDefaultSectionSize">
+          <number>100</number>
+         </attribute>
+         <attribute name="horizontalHeaderStretchLastSection">
+          <bool>true</bool>
+         </attribute>
+         <attribute name="verticalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
+         <column/>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QPushButton" name="pushButtonAddDemixSource">
+         <property name="text">
+          <string>Add</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QPushButton" name="pushButtonDeleteDemixSource">
+         <property name="text">
+          <string>Delete</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_StorageNodes">
+      <attribute name="title">
+       <string>Storage</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_8">
+       <item row="1" column="0" colspan="6">
+        <widget class="QTreeWidget" name="treeWidgetStorageNodes">
+         <column>
+          <property name="text">
+           <string notr="true">1</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_20">
+         <property name="text">
+          <string>Raid set write speed (MB/sec)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_21">
+         <property name="text">
+          <string>Network bandwidth to single node:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QLineEdit" name="lineEditStorageNodeBandwidth">
+         <property name="minimumSize">
+          <size>
+           <width>50</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>the network bandwidth limit to a single storage node</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="2">
+        <widget class="QRadioButton" name="radioButtonMbs">
+         <property name="text">
+          <string>Mb/s</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLineEdit" name="lineEditStorageRaidWriteSpeed">
+         <property name="toolTip">
+          <string>the write speed limit for a single raid set (MB/sec)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="4">
+        <widget class="QLabel" name="label_26">
+         <property name="text">
+          <string>Maximum fill percentage:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="4">
+        <widget class="QLabel" name="label_9">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="text">
+          <string>Maximum files to single node:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="5">
+        <widget class="QSpinBox" name="spinBoxMaxNrFilesToNode">
+         <property name="toolTip">
+          <string>the maximum number of files to write to a single storage node (per task)</string>
+         </property>
+         <property name="maximum">
+          <number>999</number>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="5">
+        <widget class="QPushButton" name="pb_RefreshStorageNodesInfo">
+         <property name="maximumSize">
+          <size>
+           <width>60</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>updates the storage nodes info (disk space and status) from the data monitor</string>
+         </property>
+         <property name="text">
+          <string>Refresh</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="3">
+        <widget class="QRadioButton" name="radioButtonGbs">
+         <property name="text">
+          <string>Gb/s</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="5">
+        <widget class="QSpinBox" name="spinBoxStorageFillPercentage">
+         <property name="toolTip">
+          <string>the maximum fill percentage of each storage node (as a percentage of total space)</string>
+         </property>
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="value">
+          <number>90</number>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_25">
+         <property name="text">
+          <string>Selected nr. of nodes:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="lineEditNrOfSelectedNodes">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>Data distribution</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_9">
+       <item row="6" column="0" colspan="7">
+        <widget class="QTableWidget" name="tableWidgetDataProductStorage"/>
+       </item>
+       <item row="7" column="0" colspan="2">
+        <widget class="QLabel" name="label_23">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Preferred storage nodes based on project</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0" colspan="7">
+        <widget class="QTableWidget" name="tableWidgetProjectStorage"/>
+       </item>
+       <item row="3" column="0" colspan="3">
+        <widget class="QLabel" name="label_24">
+         <property name="minimumSize">
+          <size>
+           <width>250</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Preferred storage nodes based on data product</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="6">
+        <spacer name="horizontalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="7" column="6">
+        <widget class="QPushButton" name="pushButtonUpdateProjects">
+         <property name="maximumSize">
+          <size>
+           <width>110</width>
+           <height>90</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Update projects</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="5">
+        <widget class="QPushButton" name="pushButtonDeselectProjectStorage">
+         <property name="maximumSize">
+          <size>
+           <width>65</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>deselect</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="3">
+        <widget class="QPushButton" name="pushButtonSelectProjectStorage">
+         <property name="maximumSize">
+          <size>
+           <width>65</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>select</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="3">
+        <widget class="QPushButton" name="pushButtonSelectDataProductStorage">
+         <property name="maximumSize">
+          <size>
+           <width>65</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>select</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="5">
+        <widget class="QPushButton" name="pushButtonDeselectDataProductStorage">
+         <property name="maximumSize">
+          <size>
+           <width>65</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>deselect</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_22">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="layoutDirection">
+          <enum>Qt::LeftToRight</enum>
+         </property>
+         <property name="text">
+          <string>Distribution scheme:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <spacer name="horizontalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>1</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="1">
+        <spacer name="horizontalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>1</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="1" colspan="3">
+        <widget class="QComboBox" name="comboBoxDataDistribution">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <spacer name="horizontalSpacer_7">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>1</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_Optimize">
+      <attribute name="title">
+       <string>Optimize</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Optimization stop criteria</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="cbMaxNrOptimizations">
+            <property name="toolTip">
+             <string>the maximum number of optimization iterations after which the optimization stops.
+Uncheck this box to disable the maximum number of optimizations. 
+Optimization will then stop after one of the other stopping criteria 
+have been met or when user interrupts the optimization.
+The best schedule thus far will be used.</string>
+            </property>
+            <property name="text">
+             <string>Maximum number of optimization iterations</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="cbUserAcceptedPenalty">
+            <property name="toolTip">
+             <string>Stop optimization when total penalty falls below the given value. Best schedule thus far will be used.
+Uncheck to disable the user accepted penalty</string>
+            </property>
+            <property name="text">
+             <string>User accepted penalty</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="sbMaxNrOptimizations">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>60</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>the maximum number of iterations when optimizing the schedule</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>5000</number>
+            </property>
+            <property name="value">
+             <number>1000</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="sbUserAcceptedPenalty">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>60</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>specifies a good enough penalty value for optimizing the schedule</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_Publishing">
+      <attribute name="title">
+       <string>Publishing</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_6">
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_PublishLocalPath">
+         <property name="text">
+          <string>Publish local path:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QLineEdit" name="lineEdit_PublishLocalPath">
+         <property name="toolTip">
+          <string>the local path to save the published html files</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="2" colspan="2">
+        <widget class="QLineEdit" name="lineEdit_PublishWebServerDirectory">
+         <property name="statusTip">
+          <string>the directory on the web server to store the published schedule</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLabel" name="label_PublishSCPCommand">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="text">
+          <string>Publish directory on server:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="0">
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="0">
+        <widget class="QRadioButton" name="radioButton_PublishLocal">
+         <property name="text">
+          <string>Publish locally</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_PublishWebServerPath">
+         <property name="text">
+          <string>Publish web server:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="2" colspan="2">
+        <widget class="QLineEdit" name="lineEdit_PublishWebServerName">
+         <property name="statusTip">
+          <string>the web server to upload the published schedule</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QRadioButton" name="radioButton_PublishToWeb">
+         <property name="text">
+          <string>Publish to webserver</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>Scheduler account name:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2" colspan="2">
+        <widget class="QLineEdit" name="lineEdit_PublishAccountName">
+         <property name="toolTip">
+          <string>the account name to use for uploading the schedule</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="3">
+        <widget class="QPushButton" name="pushButton_BrowseLocalPath">
+         <property name="maximumSize">
+          <size>
+           <width>50</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Browse</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_PublishPrivateKeyFile">
+         <property name="text">
+          <string>Private key file</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="2">
+        <widget class="QLineEdit" name="lineEdit_PublishPrivateKeyFile"/>
+       </item>
+       <item row="5" column="3">
+        <widget class="QPushButton" name="pushButton_BrowsePrivateKeyFile">
+         <property name="maximumSize">
+          <size>
+           <width>50</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Browse</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="checkBoxAutoPublish">
+         <property name="toolTip">
+          <string>Auto publish to webserver.
+(This setting is not saved to the default settings)</string>
+         </property>
+         <property name="text">
+          <string>Auto publish with every SAS synchronize</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_SAS">
+      <attribute name="title">
+       <string>SAS</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_5">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>SAS host name:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="edit_SAShostname">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="statusTip">
+          <string>the host that holds the SAS database</string>
+         </property>
+         <property name="whatsThis">
+          <string>The name or IP-address of the host on which the SAS database is running.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Database name:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="edit_SASdatabase">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="statusTip">
+          <string>the name of the database</string>
+         </property>
+         <property name="whatsThis">
+          <string>The name of the SAS database itself.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_12">
+         <property name="text">
+          <string>SAS user name:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="edit_SASusername">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="statusTip">
+          <string>the internal database user that has write rights </string>
+         </property>
+         <property name="whatsThis">
+          <string>The user name to get access to the database.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_13">
+         <property name="text">
+          <string>SAS password:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="edit_SASpassword">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="statusTip">
+          <string>password for the internal user of the database</string>
+         </property>
+         <property name="whatsThis">
+          <string>The password belonging to the SAS database account.</string>
+         </property>
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0" colspan="2">
+        <widget class="QTableWidget" name="tableWidgetDefaultTemplates">
+         <property name="toolTip">
+          <string>Shows the existing default templates in the SAS database</string>
+         </property>
+         <property name="editTriggers">
+          <set>QAbstractItemView::NoEditTriggers</set>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+         <property name="sortingEnabled">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="QLabel" name="label_15">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Default templates:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="QPushButton" name="pushButtonUpdateDefaultTemplates">
+         <property name="text">
+          <string>Update</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QPushButton" name="pushButtonTestSASConnection">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Test connection</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_DataMonitor">
+      <attribute name="title">
+       <string>Data Monitor</string>
+      </attribute>
+      <layout class="QFormLayout" name="formLayout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_18">
+         <property name="text">
+          <string>DM host name:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="edit_DMhostname">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="statusTip">
+          <string>the host name of the machine that holds the data monitor database</string>
+         </property>
+         <property name="whatsThis">
+          <string>The name or IP-address of the host on which the Data Monitor database is running.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_19">
+         <property name="text">
+          <string>Database name:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="edit_DMdatabase">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="statusTip">
+          <string>the database name of the data monitor</string>
+         </property>
+         <property name="whatsThis">
+          <string>The name of the Data Monitor database itself.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_16">
+         <property name="text">
+          <string>DM user name:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="edit_DMusername">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="statusTip">
+          <string>the data monitor user name</string>
+         </property>
+         <property name="whatsThis">
+          <string>The user name to get access to the database.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_17">
+         <property name="text">
+          <string>DM password:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="edit_DMpassword">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="statusTip">
+          <string>the data monitor user password</string>
+         </property>
+         <property name="whatsThis">
+          <string>The password belonging to the Data Monitor database account.</string>
+         </property>
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QPushButton" name="pushButtonTestDataMonitorConnection">
+         <property name="text">
+          <string>Test connection</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pb_Cancel">
+       <property name="maximumSize">
+        <size>
+         <width>70</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pb_Ok">
+       <property name="maximumSize">
+        <size>
+         <width>70</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>cb_LoadDefaultSettings</tabstop>
+  <tabstop>pb_Today</tabstop>
+  <tabstop>dateEdit_Earliest</tabstop>
+  <tabstop>sb_ScheduleDurationMonths</tabstop>
+  <tabstop>sp_ShortTermDurationWeeks</tabstop>
+  <tabstop>dateEdit_Latest</tabstop>
+  <tabstop>timeEdit_MinTimeBetweenObservations</tabstop>
+  <tabstop>lineEdit_StationName</tabstop>
+  <tabstop>lineEdit_Latitude</tabstop>
+  <tabstop>lineEdit_Longitude</tabstop>
+  <tabstop>pb_AddStation</tabstop>
+  <tabstop>pb_DeleteStation</tabstop>
+  <tabstop>pb_ClearStationList</tabstop>
+  <tabstop>cbMaxNrOptimizations</tabstop>
+  <tabstop>cbUserAcceptedPenalty</tabstop>
+  <tabstop>pb_Cancel</tabstop>
+  <tabstop>pb_Ok</tabstop>
+  <tabstop>tabWidget</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>cbMaxNrOptimizations</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>sbMaxNrOptimizations</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>206</x>
+     <y>95</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>400</x>
+     <y>98</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cbUserAcceptedPenalty</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>sbUserAcceptedPenalty</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>206</x>
+     <y>127</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>400</x>
+     <y>130</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_Today</sender>
+   <signal>clicked()</signal>
+   <receiver>ScheduleSettingsDialogClass</receiver>
+   <slot>today()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>231</x>
+     <y>74</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>168</x>
+     <y>259</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dateEdit_Earliest</sender>
+   <signal>dateChanged(QDate)</signal>
+   <receiver>ScheduleSettingsDialogClass</receiver>
+   <slot>scheduleStartDateChanged(QDate)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>339</x>
+     <y>73</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>278</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sb_ScheduleDurationMonths</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>ScheduleSettingsDialogClass</receiver>
+   <slot>scheduleDurationChanged(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>339</x>
+     <y>106</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>354</x>
+     <y>262</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dateEdit_Latest</sender>
+   <signal>dateChanged(QDate)</signal>
+   <receiver>ScheduleSettingsDialogClass</receiver>
+   <slot>scheduleEndDateChanged(QDate)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>370</x>
+     <y>166</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>424</x>
+     <y>114</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonTestSASConnection</sender>
+   <signal>clicked()</signal>
+   <receiver>ScheduleSettingsDialogClass</receiver>
+   <slot>testSASconnection()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>121</x>
+     <y>186</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>88</x>
+     <y>302</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>today()</slot>
+  <slot>scheduleStartDateChanged(QDate)</slot>
+  <slot>scheduleDurationChanged(int)</slot>
+  <slot>scheduleEndDateChanged(QDate)</slot>
+  <slot>testSASconnection()</slot>
+ </slots>
+</ui>
