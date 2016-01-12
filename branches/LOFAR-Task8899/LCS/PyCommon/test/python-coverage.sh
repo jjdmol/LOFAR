@@ -17,9 +17,9 @@ fi
 #
 # Usage:
 #
-#   coverage_test module mytest.py [testarg1 testarg2 ...]
+#   python_coverage_test module mytest.py [testarg1 testarg2 ...]
 #
-function coverage_test {
+function python_coverage_test {
   PYTHON_MODULE=$1
   shift
 
