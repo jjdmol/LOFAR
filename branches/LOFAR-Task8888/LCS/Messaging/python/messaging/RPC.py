@@ -69,7 +69,7 @@ class RPC():
     As a side-effect the sender and session are destroyed.
 
     """
-    def __init__(self, service, **kwargs ):
+    def __init__(self, service, broker=None, **kwargs ):
         """
         Initialize an Remote procedure call using:
             service= <str>    Service Name
@@ -84,11 +84,12 @@ class RPC():
         self.ForwardExceptions = kwargs.pop("ForwardExceptions", False)
         self.Verbose           = kwargs.pop("Verbose", False)
         self.BusName           = kwargs.pop("busname", None)
-        self.ServiceName = service
+        self.ServiceName       = service
+        self.broker            = broker
         if self.BusName is None:
-            self.Request = ToBus(self.ServiceName)
+            self.Request = ToBus(self.ServiceName, broker=self.broker)
         else:
-            self.Request = ToBus("%s/%s" % (self.BusName, self.ServiceName))
+            self.Request = ToBus("%s/%s" % (self.BusName, self.ServiceName), broker=self.broker)
         if len(kwargs):
             raise AttributeError("Unexpected argument passed to RPC class: %s" %( kwargs ))
 
@@ -122,9 +123,9 @@ class RPC():
         options = {'create':'always','delete':'receiver'}
         ReplyAddress = "reply.%s" % (str(uuid.uuid4()))
         if self.BusName is None:
-            Reply = FromBus("%s ; %s" %(ReplyAddress,str(options)))
+            Reply = FromBus("%s ; %s" %(ReplyAddress,str(options)), broker=self.broker)
         else:
-            Reply = FromBus("%s/%s" % (self.BusName, ReplyAddress))
+            Reply = FromBus("%s/%s" % (self.BusName, ReplyAddress), broker=self.broker)
         with Reply:
             MyMsg = RequestMessage(content=Content, reply_to=ReplyAddress, has_args=HasArgs, has_kwargs=HasKwArgs)
             MyMsg.ttl = timeout
