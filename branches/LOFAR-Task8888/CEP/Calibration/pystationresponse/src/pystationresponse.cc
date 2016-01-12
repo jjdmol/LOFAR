@@ -415,8 +415,8 @@ namespace BBS
     ASSERT (vh_station0.dataType() == TpArrayDouble);
     ASSERT (vh_tile0.dataType() == TpArrayDouble);
     Array<Double> arr_dir(vh_direction.asArrayDouble());
-    Array<Double> st0_dir(vh_direction.asArrayDouble());
-    Array<Double> tile_dir(vh_direction.asArrayDouble());
+    Array<Double> st0_dir(vh_station0.asArrayDouble());
+    Array<Double> tile_dir(vh_tile0.asArrayDouble());
     vector3r_t direction={{arr_dir.data()[0],arr_dir.data()[1],arr_dir.data()[2]}};
     vector3r_t station0 ={{st0_dir.data()[0],st0_dir.data()[1],st0_dir.data()[2]}};
     vector3r_t tile0    ={{tile_dir.data()[0],tile_dir.data()[1],tile_dir.data()[2]}};
@@ -651,7 +651,8 @@ namespace BBS
          boost::python::arg("freq")))
       .def ("evaluate4", &PyStationResponse::evaluate4,
       (boost::python::arg("time"), boost::python::arg("station"),
-         boost::python::arg("freq"), boost::python::arg("direction")))
+         boost::python::arg("freq"), boost::python::arg("direction"),
+         boost::python::arg("station0"), boost::python::arg("tile0")))
       ;
   }
 
