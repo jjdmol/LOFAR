@@ -113,6 +113,7 @@ class Service(AbstractBusListener):
         self.handler_args     = kwargs.pop("handler_args", {})
 
         address = self.busname+"/"+self.service_name if self.busname else self.service_name
+        kwargs["exclusive"] = True #set binding to exclusive for services
 
         super(Service, self).__init__(address, broker, **kwargs)
 
