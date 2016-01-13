@@ -1,0 +1,19 @@
+option(BUILD_SHARED_LIBS        "Build shared libraries"      ON)
+
+set(CASACORE_ROOT_DIR /opt/cep/casacore/builds/casacore-2.0.3/build/gnu_opt)
+set(CASAREST_ROOT_DIR /opt/cep/casarest/builds/casarest-svn8765)
+set(PYRAP_ROOT_DIR /opt/cep/pyrap/builds/python-casacore-2.0.0-2.0.3)
+set(WCSLIB_ROOT_DIR /opt/cep/wcslib/builds/wcslib-4.23)
+
+set(DAL_ROOT_DIR /opt/cep/dal/current)
+set(QPID_ROOT_DIR /opt/qpid)
+
+set(LOG4CXX_ROOT_DIR /opt/cep/lofar/external/log4cxx)
+set(LOG4CPLUS_ROOT_DIR /opt/cep/lofar/external/log4cplus)
+
+#set(ENV{JAVA_HOME} /usr/lib/jvm/java-1.5.0-sun)
+
+set(CTEST_CUSTOM_WARNING_EXCEPTION
+  "/log4cxx/helpers/objectptr.h:[0-9]+: warning: base class"
+  "/log4cxx/helpers/objectptr.h:[0-9]+: warning: dereferencing type-punned pointer"
+)
