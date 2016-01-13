@@ -49,7 +49,6 @@ class OTDBBusListener(AbstractBusListener):
             numthreads= <int>  Number of parallel threads processing messages (default: 1)
             verbose=   <bool>  Output extra logging over stdout (default: False)
         """
-        kwargs['exclusive'] = True
         address = "%s/%s" % (busname, subject)
         super(OTDBBusListener, self).__init__(address, broker, **kwargs)
 
