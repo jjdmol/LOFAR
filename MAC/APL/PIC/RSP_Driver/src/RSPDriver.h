@@ -211,8 +211,8 @@ private:
 	int						m_ppsfd;			// file descriptor for PPS device
 	pps_handle_t			m_ppshandle;		// handle to PPS API interface
 	pps_info_t				m_ppsinfo;			// most recent ppsinfo
+	int						itsPPSdelay;		// nr of usec to wait after PPS was received.
 #endif
-	int						itsPPSdelay;		// nr of usec to wait after PPS was received or simulated.
 };
 
   } // namespace RSP

@@ -3,6 +3,7 @@
 # $Id$
 
 option(USE_MPI       "Use MPI"       ON)
+option(USE_OPENMP    "Use OpenMP"    ON)
 option(USE_CUDA      "Use CUDA"      ON)
 
 # Specify versions, such that ABI incompat updates of these don't break already installed LOFAR binaries. Matters when we have to roll-back.
