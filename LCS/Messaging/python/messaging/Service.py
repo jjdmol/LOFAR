@@ -219,15 +219,15 @@ class Service(AbstractBusListener):
         args = self._threads[currentThread]
         return args['service_handler']
 
-    def onListenLoopBegin(self):
+    def _onListenLoopBegin(self):
         "Called before main processing loop is entered."
         self._getServiceHandlerForCurrentThread().prepare_loop()
 
-    def onBeforeReceiveMessage(self):
+    def _onBeforeReceiveMessage(self):
         "Called in main processing loop just before a blocking wait for messages is done."
         self._getServiceHandlerForCurrentThread().prepare_receive()
 
-    def handleMessage(self, lofar_msg):
+    def _handleMessage(self, lofar_msg):
         service_handler = self._getServiceHandlerForCurrentThread()
 
         try:
@@ -296,12 +296,12 @@ class Service(AbstractBusListener):
                 logger.info("[Service:] BackTrace: %s", str( backtrace ))
             self._send_reply(None, status, lofar_msg.reply_to, errtxt=errtxt, backtrace=backtrace)
 
-    def onAfterReceiveMessage(self, successful):
+    def _onAfterReceiveMessage(self, successful):
         "Called in the main loop after the result was send back to the requester."
         "@successful@ reflects the state of the handling: true/false"
         self._getServiceHandlerForCurrentThread().finalize_handling(successful)
 
-    def onListenLoopEnd(self):
+    def _onListenLoopEnd(self):
         "Called after main processing loop is finished."
         self._getServiceHandlerForCurrentThread().finalize_loop()
 
