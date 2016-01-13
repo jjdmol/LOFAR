@@ -181,9 +181,9 @@ class FromBus(object):
             return None
         except qpid.messaging.MessagingError:
             raise_exception(MessageBusError,
-                            "[FromBus] Failed to fetch message from queue: "
+                            "[FromBus] Failed to fetch message from: "
                             "%s" % self.address) 
-        logger.info("[FromBus] Message received on queue: %s subject: %s" % (self.address, msg.subject))
+        logger.info("[FromBus] Message received on: %s subject: %s" % (self.address, msg.subject))
         logger.debug("[FromBus] %s" % msg)
         try:
             amsg = MESSAGE_FACTORY.create(msg)
@@ -421,7 +421,7 @@ class AbstractBusListener(object):
         :param address: valid Qpid address
         additional parameters in kwargs:
             options=   <dict>  Dictionary of options passed to QPID
-            exclusive= <bool>  Create an exclusive binding so no other services can consume duplicate messages (default: True)
+            exclusive= <bool>  Create an exclusive binding so no other services can consume duplicate messages (default: False)
             numthreads= <int>  Number of parallel threads processing messages (default: 1)
             verbose=   <bool>  Output extra logging over stdout (default: False)
         """
@@ -429,7 +429,7 @@ class AbstractBusListener(object):
         self.broker           = broker
         self.running          = [False]
         self._listening       = False
-        self.exclusive        = kwargs.pop("exclusive", True)
+        self.exclusive        = kwargs.pop("exclusive", False)
         self._numthreads      = kwargs.pop("numthreads", 1)
         self.verbose          = kwargs.pop("verbose", False)
         self.frombus_options  = {"capacity": self._numthreads*20}
@@ -437,9 +437,10 @@ class AbstractBusListener(object):
 
         # Set appropriate flags for exclusive binding
         if self.exclusive == True:
-            self.frombus_options["link"] = '{name:"' + str(uuid.uuid4()) + \
-                                           '", x-bindings:[{key:' + self.service_name + \
-                                           ', arguments: {"qpid.exclusive-binding":True}}]}'
+            binding_key = address.split('/')[-1]
+            self.frombus_options["link"] = '''{name:"%s",
+                                              x-bindings:[{key: %s,
+                                                          arguments: {"qpid.exclusive-binding":True}}]}''' % (str(uuid.uuid4()), binding_key)
 
         # only add options if it is given as a dictionary
         if isinstance(options,dict):
@@ -514,24 +515,24 @@ class AbstractBusListener(object):
         """
         self.stop_listening()
 
-    def onListenLoopBegin(self):
+    def _onListenLoopBegin(self):
         "Called before main processing loop is entered."
         pass
 
-    def onBeforeReceiveMessage(self):
+    def _onBeforeReceiveMessage(self):
         "Called in main processing loop just before a blocking wait for messages is done."
         pass
 
-    def handleMessage(self, msg):
+    def _handleMessage(self, msg):
         "Implement this method in your subclass to handle a received message"
-        raise NotImplementedError("Please implement the handle_message method in your subclass to handle a received message")
+        raise NotImplementedError("Please implement the _handleMessage method in your subclass to handle a received message")
 
-    def onAfterReceiveMessage(self, successful):
+    def _onAfterReceiveMessage(self, successful):
         "Called in the main loop after the result was send back to the requester."
         "@successful@ reflects the state of the handling: true/false"
         pass
 
-    def onListenLoopEnd(self):
+    def _onListenLoopEnd(self):
         "Called after main processing loop is finished."
         pass
 
@@ -544,13 +545,13 @@ class AbstractBusListener(object):
         thread_idx = args['index']
         logger.info( "Thread %d START Listening for messages on %s" %(thread_idx, self.address))
         try:
-            self.onListenLoopBegin()
+            self._onListenLoopBegin()
         except Exception as e:
             logger.error("onListenLoopBegin() failed with %s", e)
 
         while self.running[0]:
             try:
-                self.onBeforeReceiveMessage()
+                self._onBeforeReceiveMessage()
             except Exception as e:
                 logger.error("onBeforeReceiveMessage() failed with %s", e)
                 continue
@@ -569,7 +570,7 @@ class AbstractBusListener(object):
                 try:
                     self._debug("Running handler")
 
-                    self.handleMessage(lofar_msg)
+                    self._handleMessage(lofar_msg)
 
                     self._debug("Finished handler")
 
@@ -578,7 +579,7 @@ class AbstractBusListener(object):
                     args['num_processed_messages'] += 1
 
                     try:
-                        self.onAfterReceiveMessage(True)
+                        self._onAfterReceiveMessage(True)
                     except Exception as e:
                         logger.error("onAfterReceiveMessage() failed with %s", e)
                         continue
@@ -588,7 +589,7 @@ class AbstractBusListener(object):
                     # during the execution of the service handler is caught here.
                     self._debug(str(e))
                     try:
-                        self.onAfterReceiveMessage(False)
+                        self._onAfterReceiveMessage(False)
                     except Exception as e:
                         logger.error("onAfterReceiveMessage() failed with %s", e)
                     continue
@@ -599,7 +600,7 @@ class AbstractBusListener(object):
                 logger.info("Thread %d: Resuming listening on %s " % (thread_idx, self.address))
 
         try:
-            self.onListenLoopEnd()
+            self._onListenLoopEnd()
         except Exception as e:
             logger.error("finalize_loop() failed with %s", e)
 
