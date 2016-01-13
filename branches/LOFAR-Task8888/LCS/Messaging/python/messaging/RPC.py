@@ -93,18 +93,32 @@ class RPC():
         if len(kwargs):
             raise AttributeError("Unexpected argument passed to RPC class: %s" %( kwargs ))
 
+    def open(self):
+        """
+        Start accepting requests.
+        """
+
+        self.Request.open()
+
+    def close(self):
+        """
+        Stop accepting requests.
+        """
+
+        self.Request.close()
+
     def __enter__(self):
         """
         Internal use only. (handles scope 'with')
         """
-        self.Request.open()
+        self.open()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
         Internal use only. (handles scope 'with')
         """
-        self.Request.close()
+        self.close()
 
     def __call__(self, *args, **kwargs):
         """
