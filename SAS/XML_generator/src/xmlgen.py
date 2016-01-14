@@ -786,7 +786,7 @@ def writeImagingPipelineXML(ofile, input_list, bbsParameters):
           <topology>%(imaging_pipe_topology)s</topology>
           <predecessor_topology>%(imaging_pipe_predecessors_string)s</predecessor_topology>
           <name>%(imaging_pipe_name)s</name>
-          <description>%(imaging_pipe_name)s (Imaging pipeline beam %(beamNr)s</description>
+          <description>%(imaging_pipe_name)s (Imaging pipeline beam %(beamNr)s)</description>
           <imagingPipelineAttributes>
             <defaultTemplate>%(imaging_pipe_default_template)s</defaultTemplate>
             <duration>%(imaging_pipe_duration)s</duration>
