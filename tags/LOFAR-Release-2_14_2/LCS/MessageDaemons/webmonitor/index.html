@@ -1,0 +1,121 @@
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=0.5, maximum-scale=0.5, user-scalable=0">
+<body>
+<div id="drawing"></div>
+<script src="lib/svg.js" type="text/javascript" charset="utf-8"></script>
+<script src="lib/svg.parser.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="lib/svg.import.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="lib/svg.easing.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="lib/svg.clock.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="lib/draggable.js" type="text/javascript" charset="utf-8"></script>
+
+
+<script type='text/javascript'>
+
+
+function To_QPID_State(qpidstate)
+{
+    var replacement = schemasvg;
+    console.log(qpidstate);
+    if ( qpidstate.search('amqp') != -1)
+    {
+        var obj = eval('(' + qpidstate + ')');
+        for (var key in obj) {
+	    var hostname=key.split("/").pop();
+            for (var subkey in obj[key]) {
+                    var lastname=subkey.split(".").pop();
+                    var queueinfo=obj[key][subkey];
+                    replacement=replacement.replace(hostname+":"+subkey,queueinfo[0]+" "+queueinfo[1]);
+                    replacement=replacement.replace(hostname+":"+subkey,queueinfo[0]+" "+queueinfo[1]);
+                    replacement=replacement.replace(hostname+":"+subkey,queueinfo[0]+" "+queueinfo[1]);
+            }
+        }
+    }
+    schemabody.clear();
+    schemabody.svg( replacement );
+}
+
+function readtext_from_file(urlname)
+{
+   var request = new XMLHttpRequest();
+   request.open("GET", urlname , false);
+   request.send(null);
+   return request.responseText;
+}
+
+
+var draw = SVG('drawing').size("100%","100%")
+draw.style("background-color: grey;")
+var myclock = draw.nested();
+var schema= draw.nested();
+var teller=0;
+var schemasvg = " " + readtext_from_file("Schema.svg");
+schemasvg=schemasvg.replace(/\n/gm,"");
+var schemabody = schema.nested();
+schemabody.svg(schemasvg);
+schema.draggable();
+var clk = myclock.clock('15%').start();
+
+function doAnim()
+{
+  requestAnimationFrameID = requestAnimationFrame(doAnim);
+}
+
+myclock.draggable();
+var myVar=setInterval(function () {myTimer()}, 1000);
+
+function myTimer() {
+   var request = new XMLHttpRequest();
+   request.open("GET", "/qpid" , true);
+   request.onreadystatechange=function()
+   {
+      if (request.readyState == 4)
+      {
+         To_QPID_State(request.responseText);
+      }
+   }
+   request.send(null);
+}
+
+
+// touch handlers for touch devices rerouted as mouse clicks.
+function touchHandlerDummy(e)
+{
+    e.preventDefault();
+    return false;
+}
+
+function touchHandler(event)
+{
+    var touches = event.changedTouches,
+        first = touches[0],
+        type = "";
+         switch(event.type)
+    {
+        case "touchstart": type = "mousedown"; break;
+        case "touchmove":  type="mousemove"; break;        
+        case "touchend":   type="mouseup"; break;
+        default: return;
+    }
+
+    var simulatedEvent = document.createEvent("MouseEvent");
+    simulatedEvent.initMouseEvent(type, true, true, window, 1, 
+                              first.screenX, first.screenY, 
+                              first.clientX, first.clientY, false, 
+                              false, false, false, 0/*left*/, null);
+                                                                                 first.target.dispatchEvent(simulatedEvent);
+    event.preventDefault();
+}
+
+function touchinit() 
+{
+    document.addEventListener("touchstart", touchHandler, true);
+    document.addEventListener("touchmove", touchHandler, true);
+    document.addEventListener("touchend", touchHandler, true);
+    document.addEventListener("touchcancel", touchHandler, true);    
+}
+touchinit()
+
+</script>
+</body>
+</html>
