@@ -1882,11 +1882,14 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
     elif processing == 'Preprocessing':
       for i in range(0,len(calibratorDemix)):
         if len(calibratorDemix) > 1: #TODO a cludge right now, but want to refactor how to call the writeXML soon
-          cal_pipe_calibrator_topology = cal_pipe_calibrator_topology + ".%i" % i
-          cal_pipe_name = cal_pipe_name + ".%i" % i
-        writeXMLAvgPipeline(ofile, cal_pipe_calibrator_topology, cal_obs_topology, cal_pipe_name, cal_pipe_calibrator_description, 
+          cal_pipe_calibrator_topology_tmp = cal_pipe_calibrator_topology + ".%i" % i
+          cal_pipe_name_tmp = cal_pipe_name + ".%i" % i
+        else:
+          cal_pipe_calibrator_topology_tmp = cal_pipe_calibrator_topology
+          cal_pipe_name_tmp = cal_pipe_name
+        writeXMLAvgPipeline(ofile, cal_pipe_calibrator_topology_tmp, cal_obs_topology, cal_pipe_name_tmp, cal_pipe_calibrator_description, 
           cal_obs_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorDemix[i],
-          cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_topology + '.uv.dps', cluster) ##FIXME cal_pipe_calibrator_topology + '.uv.dps'
+          cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_topology_tmp + '.uv.dps', cluster) ##FIXME cal_pipe_calibrator_topology + '.uv.dps'
 
     elif processing == 'Calibration':
       
@@ -1965,11 +1968,16 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
         elif processing == 'Preprocessing':
           for i in range(0, len(calibratorDemix)):
             if len(calibratorDemix) > 1: #TODO a cludge right now, but want to refactor how to call the writeXML soon
-              cal_pipe_target_topology = cal_pipe_target_topology + ".%i" % i
-              cal_pipe_target_name     = cal_pipe_target_name + ".%i" % i
-            writeXMLAvgPipeline(ofile, cal_pipe_target_topology, tar_obs_topology, cal_pipe_target_name, cal_pipe_target_description,
-              cal_tar_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorDemix[i],
-              tar_obs_uv_data_topologies[nr_beams], cal_pipe_target_topology + '.uv.dps', cluster) ##FIXME cal_pipe_target_topology + '.uv.dps'
+              cal_pipe_target_topology_tmp = cal_pipe_target_topology + ".%i" % i
+              cal_pipe_target_name_tmp     = cal_pipe_target_name + ".%i" % i
+            else:
+              cal_pipe_target_topology_tmp = cal_pipe_target_topology + ".%i" % i
+              cal_pipe_target_name_tmp     = cal_pipe_target_name + ".%i" % i
+            writeXMLAvgPipeline(ofile, cal_pipe_target_topology_tmp, tar_obs_topology,
+              cal_pipe_target_name_tmp, cal_pipe_target_description,
+              cal_tar_pipe_default_template, flaggingStrategy, calibratorBeam[8],
+              calibratorDemix[i], tar_obs_uv_data_topologies[nr_beams],
+              cal_pipe_target_topology_tmp + '.uv.dps', cluster) ##FIXME cal_pipe_target_topology + '.uv.dps'
         
         elif processing == 'Calibration':
           
@@ -2048,11 +2056,12 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
       elif processing == 'Preprocessing':
         for i in range(0,len(targetDemix[beamNr])):
           if len(targetDemix[beamNr]) > 1: #TODO a cludge right now, but want to refactor how to call the writeXML soon
-            tar_pipe_topology = tar_pipe_topologies[beamNr] + ".%i" % i
-            tar_pipe_name     = tar_pipe_name + ".%i" % i
+            tar_pipe_topology_tmp = tar_pipe_topologies[beamNr] + ".%i" % i
+            tar_pipe_name_tmp     = tar_pipe_name + ".%i" % i
           else:
-            tar_pipe_topology = tar_pipe_topologies[beamNr]
-          writeXMLAvgPipeline(ofile, tar_pipe_topology, tar_pipe_predecessor, tar_pipe_name, 
+            tar_pipe_topology_tmp = tar_pipe_topologies[beamNr]
+            tar_pipe_name_tmp     = tar_pipe_name
+          writeXMLAvgPipeline(ofile, tar_pipe_topology_tmp, tar_pipe_predecessor, tar_pipe_name_tmp, 
             tar_pipe_description, tar_pipe_default_template,
             flaggingStrategy, targetBeams[beamNr][8], targetDemix[beamNr][i],
             tar_obs_uv_data_topologies[beamNr], tar_pipe_output_MS_topologies[beamNr], cluster) ##FIXME tar_pipe_output_MS_topologies[beamNr]
