@@ -5,10 +5,9 @@ lofar_package(PyCommon 1.0)
 lofar_find_package(Python 2.6 REQUIRED)
 include(PythonInstall)
 
-add_subdirectory(test)
+#add_subdirectory(test)
 
 set(_py_files
-  dbcredentials.py
   factory.py
   util.py
   datetimeutils.py)

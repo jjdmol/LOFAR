@@ -14,11 +14,36 @@ qpid-config add exchange topic $queue
 # Setup a clean database with predefined content
 dropdb -U postgres -h ${DBHOST} unittest_db
 gzip -dc $srcdir/unittest_db.dump.gz | psql -U postgres -h ${DBHOST} -f -
-TreeStatusEvents.py -B $queue -D unittest_db -H ${DBHOST} -U postgres &
+TreeStatusEvents.py -B $queue -D unittest_db -H ${DBHOST} &
 SERVICE_PID=$!
 # Starting up takes a while
 sleep 3
 
 # Run the unit test
-source python-coverage.sh
-python_coverage_test "Messaging/python" t_TreeStatusEvents.py -D unittest_db -H ${DBHOST} -B $queue
+# either with or without code coverage measurements,
+# depending wheter coverage has been installed
+
+if type "coverage" > /dev/null; then
+    #run test using python coverage tool
+
+    #erase previous results
+    coverage erase
+
+    #setup coverage config file
+    printf "[report]\nexclude_lines = \n  if __name__ == .__main__.\n  def main\n" > .coveragerc
+
+    coverage run --branch --include=*Messaging/python* t_TreeStatusEvents.py -D unittest_db -H ${DBHOST} -B $queue
+    RESULT=$?
+    if [ $RESULT -eq 0 ]; then
+        echo " *** Code coverage results *** "
+        coverage report -m
+        echo " *** End coverage results *** "
+    fi
+    exit $RESULT
+else
+    #coverage not available
+    echo "Please run: 'pip install coverage' to enable code coverage reporting of the unit tests"
+    #run plain test script
+    python t_TreeStatusEvents.py -D unittest_db -H ${DBHOST} -B $queue 
+fi
+

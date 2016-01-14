@@ -93,16 +93,10 @@ namespace LOFAR {
       string           itsName;
       DPBuffer         itsBuffer;
       string           itsSourceDBName;
-      string           itsOperation;
       bool             itsApplyBeam;
       bool             itsUseChannelFreq;
       bool             itsOneBeamPerPatch;
       Position         itsPhaseRef;
-
-      bool             itsDoApplyCal;
-      ApplyCal         itsApplyCalStep;
-      DPBuffer         itsTempBuffer;
-      ResultStep*      itsResultStep; // For catching results from ApplyCal
 
       uint             itsDebugLevel;
 
@@ -127,6 +121,7 @@ namespace LOFAR {
 
       vector<casa::Cube<dcomplex> > itsModelVis; // one for every thread
       vector<casa::Cube<dcomplex> > itsModelVisPatch;
+      string           itsOperation;
 
       NSTimer          itsTimer;
       NSTimer          itsTimerPredict;

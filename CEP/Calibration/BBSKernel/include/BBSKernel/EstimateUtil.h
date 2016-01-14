@@ -35,8 +35,6 @@
 #include <Common/lofar_vector.h>
 #include <Common/Timer.h>
 
-#include <cmath>
-
 #include <scimath/Fitting/LSQFit.h>
 
 //# For the definition of SolverOptions...
@@ -469,7 +467,7 @@ T storeCoeff(const Location &cell, const ParmGroup &solvables, T first)
 template <typename T>
 inline bool isfinite(T x)
 {
-    return !std::isnan(x) && !std::isinf(x);
+    return !isnan(x) && !isinf(x);
 }
 
 // @}

@@ -171,26 +171,14 @@ namespace BBS
     // direction is the direction used by the station beamformer.
     void setRefDelay(double ra, double dec);
 
-    // Get the delay reference direction in meters, ITRF. The delay reference
-    // direction is the direction used by the station beamformer.
-    ValueHolder getRefDelay(real_t time);
-
     // Set the tile reference direction in radians, J2000. The tile reference
     // direction is the direction used by the analog tile beamformer and is
     // relevant only for HBA observations.
     void setRefTile(double ra, double dec);
 
-    // Get the tile reference direction in meters, ITRF. The delay reference
-    // direction is the direction used by the analog tile beamformer and is
-    // relevant only for HBA observations.
-    ValueHolder getRefTile(real_t time);
-
     // Set the direction of interest in radians, J2000. Can and often will be
     // different than the delay and/or tile reference direction.
     void setDirection(double ra, double dec);
-
-    // Get the direction of intereset in meters, ITRF.
-    ValueHolder getDirection(real_t time);
 
     // Compute the LOFAR beam Jones matrices for the given time, station, and/or
     // channel.
@@ -198,14 +186,8 @@ namespace BBS
     ValueHolder evaluate1(double time, int station);
     ValueHolder evaluate2(double time, int station, int channel);
     ValueHolder evaluate3(double time, int station, double freq);
-    ValueHolder evaluate4(double time, int station, double freq, const ValueHolder& direction, const ValueHolder& station0, const ValueHolder& tile0); 
 
   private:
-    Matrix<DComplex> evaluate_itrf(
-      const Station::ConstPtr &station, double time, double freq, double freq0,
-      const vector3r_t &direction, const vector3r_t &station0, 
-      const vector3r_t &tile0) const;
-
     Matrix<DComplex> evaluate(const Station::ConstPtr &station, double time,
       double freq,  double freq0) const;
 
@@ -298,43 +280,16 @@ namespace BBS
     itsRefDelay.reset(new ITRFDirection(itsRefPosition, direction));
   }
 
-  ValueHolder PyStationResponse::getRefDelay(real_t time)
-  {
-    vector3r_t refDelay=itsRefDelay->at(time);
-    Vector<Double> result(3);
-    result(0)=refDelay[0]; result(1)=refDelay[1]; result(2)=refDelay[2];
-
-    return ValueHolder(result);
-  }
-
   void PyStationResponse::setRefTile(double ra, double dec)
   {
     vector2r_t direction = {{ra, dec}};
     itsRefTile.reset(new ITRFDirection(itsRefPosition, direction));
   }
 
-  ValueHolder PyStationResponse::getRefTile(real_t time)
-  {
-    vector3r_t refTile=itsRefTile->at(time);
-    Vector<Double> result(3);
-    result(0)=refTile[0]; result(1)=refTile[1]; result(2)=refTile[2];
-
-    return ValueHolder(result);
-  }
-
   void PyStationResponse::setDirection(double ra, double dec)
   {
     vector2r_t direction = {{ra, dec}};
     itsDirection.reset(new ITRFDirection(itsRefPosition, direction));
-  }
-
-  ValueHolder PyStationResponse::getDirection(real_t time)
-  {
-    vector3r_t direction=itsDirection->at(time);
-    Vector<Double> result(3);
-    result(0)=direction[0]; result(1)=direction[1]; result(2)=direction[2];
-
-    return ValueHolder(result);
   }
 
   ValueHolder PyStationResponse::evaluate0(double time)
@@ -407,29 +362,6 @@ namespace BBS
 
     double freq0 = itsRefFreq(0);
     return ValueHolder(evaluate(itsStations(station), time, freq, freq0));
-  }
-
-  ValueHolder PyStationResponse::evaluate4(double time, int station, double freq, const ValueHolder& vh_direction, const ValueHolder& vh_station0, const ValueHolder& vh_tile0)
-  {
-    ASSERT (vh_direction.dataType() == TpArrayDouble);
-    ASSERT (vh_station0.dataType() == TpArrayDouble);
-    ASSERT (vh_tile0.dataType() == TpArrayDouble);
-    Array<Double> arr_dir(vh_direction.asArrayDouble());
-    Array<Double> st0_dir(vh_station0.asArrayDouble());
-    Array<Double> tile_dir(vh_tile0.asArrayDouble());
-    vector3r_t direction={{arr_dir.data()[0],arr_dir.data()[1],arr_dir.data()[2]}};
-    vector3r_t station0 ={{st0_dir.data()[0],st0_dir.data()[1],st0_dir.data()[2]}};
-    vector3r_t tile0    ={{tile_dir.data()[0],tile_dir.data()[1],tile_dir.data()[2]}};
-
-    if(itsUseChanFreq)
-    {
-      return ValueHolder(evaluate_itrf(itsStations(station), time, freq, freq, 
-                                       direction, station0, tile0));
-    }
-
-    double freq0 = itsRefFreq(0);
-    return ValueHolder(evaluate_itrf(itsStations(station), time, freq, freq0,
-                                     direction, station0, tile0));
   }
 
   Cube<DComplex> PyStationResponse::evaluate(const Station::ConstPtr &station,
@@ -513,14 +445,16 @@ namespace BBS
     return result;
   }
 
-  Matrix<DComplex> PyStationResponse::evaluate_itrf(
-    const Station::ConstPtr &station, double time, double freq, double freq0,
-    const vector3r_t &direction, const vector3r_t &station0, 
-    const vector3r_t &tile0) const
+  Matrix<DComplex> PyStationResponse::evaluate(const Station::ConstPtr &station,
+    double time, double freq,  double freq0) const
   {
     Matrix<DComplex> result(2, 2, 0.0);
     if(itsUseArrayFactor)
     {
+      vector3r_t direction = itsDirection->at(time);
+      vector3r_t station0 = itsRefDelay->at(time);
+      vector3r_t tile0 = itsRefTile->at(time);
+
       if(itsUseElementResponse)
       {
         matrix22c_t response = station->response(time, freq, direction, freq0,
@@ -557,6 +491,7 @@ namespace BBS
       // the station is always selected.
       AntennaField::ConstPtr field = *station->beginFields();
 
+      vector3r_t direction = itsDirection->at(time);
       matrix22c_t response = field->elementResponse(time, freq,
         direction);
 
@@ -577,22 +512,6 @@ namespace BBS
     }
 
     return result;
-  }
-
-  Matrix<DComplex> PyStationResponse::evaluate(const Station::ConstPtr &station,
-    double time, double freq,  double freq0) const
-  {
-    vector3r_t direction;
-    vector3r_t station0;
-    vector3r_t tile0;
-    if (itsUseArrayFactor) {
-      direction = itsDirection->at(time);
-      station0 = itsRefDelay->at(time);
-      tile0 = itsRefTile->at(time);
-    } else if (itsUseElementResponse) {
-      direction = itsDirection->at(time);
-    }
-    return evaluate_itrf(station, time, freq, freq0, direction, station0, tile0);
   }
 
   void PyStationResponse::invert(matrix22c_t &in) const
@@ -629,16 +548,10 @@ namespace BBS
         (boost::python::arg("type")="other"))
       .def ("setRefDelay", &PyStationResponse::setRefDelay,
         (boost::python::arg("ra"), boost::python::arg("dec")))
-      .def ("getRefDelay", &PyStationResponse::getRefDelay,
-        (boost::python::arg("time")))
       .def ("setRefTile", &PyStationResponse::setRefTile,
         (boost::python::arg("ra"), boost::python::arg("dec")))
-      .def ("getRefTile", &PyStationResponse::getRefTile,
-        (boost::python::arg("time")))
       .def ("setDirection", &PyStationResponse::setDirection,
         (boost::python::arg("ra"), boost::python::arg("dec")))
-      .def ("getDirection", &PyStationResponse::getDirection,
-        (boost::python::arg("time")))
       .def ("evaluate0", &PyStationResponse::evaluate0,
         (boost::python::arg("time")))
       .def ("evaluate1", &PyStationResponse::evaluate1,
@@ -649,10 +562,6 @@ namespace BBS
       .def ("evaluate3", &PyStationResponse::evaluate3,
       (boost::python::arg("time"), boost::python::arg("station"),
          boost::python::arg("freq")))
-      .def ("evaluate4", &PyStationResponse::evaluate4,
-      (boost::python::arg("time"), boost::python::arg("station"),
-         boost::python::arg("freq"), boost::python::arg("direction"),
-         boost::python::arg("station0"), boost::python::arg("tile0")))
       ;
   }
 

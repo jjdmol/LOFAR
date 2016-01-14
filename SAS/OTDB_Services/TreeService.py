@@ -32,6 +32,7 @@ StatusUpdateCommand     : finction to update the status of a tree.
 
 import sys, time, pg
 import logging
+from optparse import OptionParser
 from lofar.messaging.Service import *
 
 QUERY_EXCEPTIONS = (TypeError, ValueError, MemoryError, pg.ProgrammingError, pg.InternalError)
@@ -212,7 +213,9 @@ class PostgressMessageHandlerInterface(MessageHandlerInterface):
     """
     def __init__(self, **kwargs):
         super(PostgressMessageHandlerInterface, self).__init__()
-        self.dbcreds  = kwargs.pop("dbcreds")
+        self.database = kwargs.pop("database")
+        self.db_user  = kwargs.pop("db_user",  "postgres")
+        self.db_host  = kwargs.pop("db_host",  "localhost")
         if len(kwargs):
             raise AttributeError("Unknown keys in arguments of 'DatabaseTiedMessageHandler: %s" % kwargs)
         self.connection = None
@@ -224,12 +227,13 @@ class PostgressMessageHandlerInterface(MessageHandlerInterface):
         self.connected = (self.connection and self.connection.status == 1)
         while not self.connected:
             try:
-                self.connection = pg.connect(**self.dbcreds.pg_connect_options())
+                self.connection = pg.connect(user=self.db_user, host=self.db_host, dbname=self.database)
                 self.connected = True
-                logger.info("Connected to database %s" % (self.dbcreds,))
-            except (TypeError, SyntaxError, pg.InternalError), e:
+                logger.info("Connected to database %s on host %s" % (self.database, self.db_host))
+            except (TypeError, SyntaxError, pg.InternalError):
                 self.connected = False
-                logger.error("Not connected to database %s, retry in 5 seconds: %s" % (self.dbcreds, e))
+                logger.error("Not connected to database %s on host %s (anymore), retry in 5 seconds"
+                             % (self.database, self.db_host))
                 time.sleep(5)
 
 class PostgressTaskSpecificationRequest(PostgressMessageHandlerInterface):
@@ -269,37 +273,39 @@ class PostgressKeyUpdateCommand(PostgressMessageHandlerInterface):
 
 
 if __name__ == "__main__":
-    from optparse import OptionParser
-    from lofar.common import dbcredentials
-    from lofar.common.util import waitForInterrupt
-
     # Check the invocation arguments
     parser = OptionParser("%prog [options]")
-    parser.add_option("-B", "--busname", dest="busname", type="string", default="testbus",
-                      help="Busname or queue-name on which RPC commands are received")
-    parser.add_option_group(dbcredentials.options_group(parser))
+    parser.add_option("-D", "--database", dest="dbName", type="string", default="",
+                      help="Name of the database")
+    parser.add_option("-H", "--hostname", dest="dbHost", type="string", default="sasdb",
+                      help="Hostname of database server")
     (options, args) = parser.parse_args()
 
-    dbcreds = dbcredentials.parse_options(options)
-
-    if not options.busname:
-        print "Missing busname"
+    if not options.dbName:
+        print "Missing database name"
         parser.print_help()
-        sys.exit(1)
+        sys.exit(0)
+
+    if not options.dbHost:
+        print "Missing database server name"
+        parser.print_help()
+        sys.exit(0)
+
+    busname = sys.argv[1] if len(sys.argv) > 1 else "simpletest"
 
     serv1 = Service("TaskSpecification", PostgressTaskSpecificationRequest,
-                    busname=options.busname, numthreads=1,
-                    handler_args = {"dbcreds" : dbcreds})
+                    busname=busname, numthreads=1,
+                    handler_args = {"database" : options.dbName, "db_host" : options.dbHost})
     serv2 = Service("StatusUpdateCmd",   PostgressStatusUpdateCommand,
-                    busname=options.busname, numthreads=1,
-                    handler_args = {"dbcreds" : dbcreds})
+                    busname=busname, numthreads=1,
+                    handler_args = {"database" : options.dbName, "db_host" : options.dbHost})
     serv3 = Service("KeyUpdateCmd",      PostgressKeyUpdateCommand,
-                    busname=options.busname, numthreads=1,
-                    handler_args = {"dbcreds" : dbcreds})
+                    busname=busname, numthreads=1,
+                    handler_args = {"database" : options.dbName, "db_host" : options.dbHost})
 
     with serv1, serv2, serv3:
         logger.info("Started the OTDB services")
-        waitForInterrupt()
+        serv3.wait_for_interrupt()
 
     logger.info("Stopped the OTDB services")
 

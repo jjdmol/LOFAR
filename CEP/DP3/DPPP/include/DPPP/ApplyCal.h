@@ -47,10 +47,7 @@ namespace LOFAR {
     public:
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
-      ApplyCal (DPInput*, const ParameterSet&, const string& prefix,
-                bool substep=false);
-
-      ApplyCal();
+      ApplyCal (DPInput*, const ParameterSet&, const string& prefix);
 
       virtual ~ApplyCal();
 
@@ -70,10 +67,6 @@ namespace LOFAR {
 
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
-
-      bool invert() {
-        return itsInvert;
-      }
 
       // Invert a 2x2 matrix in place
       static void invert (casa::DComplex* v, double sigmaMMSE=0);

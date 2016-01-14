@@ -6,6 +6,7 @@
 ## $Id: variants.fs5 25763 2013-07-25 09:33:20Z mol $
 
 option(USE_LOG4CPLUS "Use Log4Cplus" ON)
+option(USE_OPENMP    "Use OpenMP"    ON)
 option(USE_MPI       "Use MPI"       ON)
 
 set(CUDADRIVER_ROOT_DIR $ENV{CUDA_ROOT})
