@@ -589,11 +589,12 @@ void MultiReceiver::dispatch( PortBroker::ServerStream *stream )
 // Maintains the connections of an rtcp process with all its outputProc processes
 // it needs to send data to.
 MultiSender::MultiSender( const HostMap &hostMap, const Parset &parset,
-                          double maxRetentionTime )
+                          double maxRetentionTime, const std::string &bind_local_iface )
 :
   hostMap(hostMap),
   itsParset(parset),
-  maxRetentionTime(maxRetentionTime)
+  maxRetentionTime(maxRetentionTime),
+  bind_local_iface(bind_local_iface)
 {
   for (HostMap::const_iterator i = hostMap.begin(); i != hostMap.end(); ++i) {
     // keep a list of unique hosts
@@ -639,7 +640,7 @@ void MultiSender::process( OMPThreadSet *threadSet )
 
       LOG_DEBUG_STR(logPrefix << "MultiSender: Connecting to " << host.hostName << ":" << host.brokerPort << ":" << host.service);
 
-      PortBroker::ClientStream stream(host.hostName, host.brokerPort, host.service);
+      PortBroker::ClientStream stream(host.hostName, host.brokerPort, host.service, 0, bind_local_iface);
 
       LOG_DEBUG_STR(logPrefix << "Connected");
 

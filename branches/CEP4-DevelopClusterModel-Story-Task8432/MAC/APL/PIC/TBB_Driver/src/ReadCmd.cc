@@ -314,7 +314,7 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
 		*/
 		if (tp_ack.status == 0xfd) {
 			LOG_INFO_STR(formatString("TBB busy, %d pages left", tp_ack.pages_left));
-			usleep(1000); // wait for some time and try again
+			usleep(100000); // wait for some time and try again
 		}
 		else { 
 		    if (tp_ack.status != 0) {

@@ -351,8 +351,9 @@ namespace LOFAR
         // hostMap:          the mapping fileIdx -> Host
         // parset:           the parset (i.e. observation configuration)
         // maxRetentionTime: drop data older than this from the queue
+        // bind_local_iface: local NIC to bind to (or "" for any)
         MultiSender( const HostMap &hostMap, const Parset &parset,
-                     double maxRetentionTime = 3.0 );
+                     double maxRetentionTime = 3.0, const std::string &bind_local_iface = "" );
         ~MultiSender();
 
         // Send the data from the queues to the receiving hosts. Will run until
@@ -388,6 +389,9 @@ namespace LOFAR
         // That way, the queue size remains limited to at most the data produced in
         // 'maxRetentionTime' seconds.
         const double maxRetentionTime;
+
+        // Local NIC to bind network connections to, or "" if no binding is required
+        const std::string bind_local_iface;
 
         // Set of hosts to connect to (the list of unique values in hostMap)
         std::vector<struct Host> hosts;

@@ -25,16 +25,59 @@ def init_test_lib():
 class cSPU:
     def __init__(self, db):
         self.db = db
+        self.board_info_str = []
+        self.board_info_val = [-1, 0.0, 0.0, 0.0, 0.0, 0]
+    
+    def extract_board_info(self, line):
+        li = line.split("|")
+        if not li[0].strip().isdigit():
+            return False
+            
+        self.board_info_str = [i.strip() for i in li]
+                
+        if li[0].strip().isdigit():
+            self.board_info_val[0] = int(li[0].strip())
+        else:
+            self.board_info_val[0] = -1
+            
+        for i in xrange(1, 5, 1):
+            if li[i].strip().replace('.','').isdigit():
+                self.board_info_val[i] = float(li[i].strip())
+            else:
+                self.board_info_val[i] = 0.0
+                                
+        if li[5].strip().isdigit():
+            self.board_info_val[5] = int(li[5].strip())
+        else:
+            self.board_info_val[5] = 0
+        return True
+        
         
     def checkStatus(self):
         """
         check PSU if boards idle and fully loaded
-        """ 
+        """
+        # in future get all settings from configuration file
+        max_3_3 = 3.4
+        min_3_3 = 3.1
+        max_drop_3_3 = 0.3
+        
+        max_5_0 = 5.0
+        min_5_0 = 4.5
+        max_drop_5_0 = 0.3
+        
+        max_8_0 = 8.0
+        min_8_0 = 7.4
+        max_drop_8_0 = 0.3
+        
+        max_48  = 48.0
+        min_48  = 43.0
+        max_drop_48 = 2.0
+          
         logger.info("=== SPU status check ===")
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down, skip test")
             return
-        # [0] = no-load,  [1] = full-load
         
         noload = []
         fullload_3 = []
@@ -49,13 +92,13 @@ class cSPU:
         else:
             infolines = answer.splitlines()
             for line in infolines:
-                li = line.split("|")
-                if li[0].strip().isdigit():
-                    sr = int(li[0].strip())
-                    noload.append([sr, float(li[1]), float(li[2]), float(li[3]), float(li[4])])
-                    self.db.spu[sr].temp = float(li[5])
-                    logger.debug("Subrack %d voltages: rcu=%3.1f  lba=%3.1f  hba=%3.1f  spu=%3.1f  temp: %3.1f" %\
-                                (sr, float(li[1]), float(li[2]), float(li[3]), float(li[4]), self.db.spu[sr].temp))
+                if self.extract_board_info(line):
+                    bi = self.board_info_val
+                    noload.append([bi[0], bi[1], bi[2], bi[3], bi[4]])
+                    self.db.spu[bi[0]].temp = bi[5]
+                    bi = self.board_info_str
+                    logger.debug("Subrack %s voltages: rcu=%s  lba=%s  hba=%s  spu=%s  temp: %s" % (
+                                 bi[0], bi[1], bi[2], bi[3], bi[4], bi[5]))
 
             # turn on all hbas
             logger.debug("check spu full load mode 3")
@@ -63,12 +106,12 @@ class cSPU:
             answer = rspctl('--spustatus')
             infolines = answer.splitlines()
             for line in infolines:
-                li = line.split("|")
-                if li[0].strip().isdigit():
-                    sr = int(li[0].strip())
-                    fullload_3.append([sr, float(li[1]), float(li[2]), float(li[3]), float(li[4])])
-                    logger.debug("Subrack %d voltages: rcu=%3.1f  lba=%3.1f  hba=%3.1f  spu=%3.1f  temp: %3.1f" %\
-                                (sr, float(li[1]), float(li[2]), float(li[3]), float(li[4]), self.db.spu[sr].temp))
+                if self.extract_board_info(line):
+                    bi = self.board_info_val
+                    fullload_3.append([bi[0], bi[1], bi[2], bi[3], bi[4]])
+                    bi = self.board_info_str
+                    logger.debug("Subrack %s voltages: rcu=%s  lba=%s  hba=%s  spu=%s  temp: %s" % (
+                                 bi[0], bi[1], bi[2], bi[3], bi[4], bi[5]))
 
             # turn on all hbas
             logger.debug("check spu full load mode 5")
@@ -76,32 +119,49 @@ class cSPU:
             answer = rspctl('--spustatus')
             infolines = answer.splitlines()
             for line in infolines:
-                li = line.split("|")
-                if li[0].strip().isdigit():
-                    sr = int(li[0].strip())
-                    fullload_5.append([sr, float(li[1]), float(li[2]), float(li[3]), float(li[4])])
-                    logger.debug("Subrack %d voltages: rcu=%3.1f  lba=%3.1f  hba=%3.1f  spu=%3.1f  temp: %3.1f" %\
-                                (sr, float(li[1]), float(li[2]), float(li[3]), float(li[4]), self.db.spu[sr].temp))
+                if self.extract_board_info(line):
+                    bi = self.board_info_val
+                    fullload_5.append([bi[0], bi[1], bi[2], bi[3], bi[4]])
+                    bi = self.board_info_str
+                    logger.debug("Subrack %s voltages: rcu=%s  lba=%s  hba=%s  spu=%s  temp: %s" % (
+                                 bi[0], bi[1], bi[2], bi[3], bi[4], bi[5]))
                                 
             for sr in range(self.db.nr_spu):
                 # calculate mean of noload, fullload_3, fullload_5
                 self.db.spu[sr].rcu_5_0V = (noload[sr][1] + fullload_3[sr][1] + fullload_5[sr][1]) / 3.0
-                self.db.spu[sr].lba_8_0V = (noload[sr][2] + fullload_3[sr][2] + fullload_5[sr][2]) / 3.0
-                self.db.spu[sr].hba_48V  = (noload[sr][3] + fullload_3[sr][3] + fullload_5[sr][3]) / 3.0
+                self.db.spu[sr].lba_8_0V = fullload_3[sr][2]
+                self.db.spu[sr].hba_48V  = fullload_5[sr][3]
                 self.db.spu[sr].spu_3_3V = (noload[sr][4] + fullload_3[sr][4] + fullload_5[sr][4]) / 3.0
                 
-                if (abs(4.7 - self.db.spu[sr].rcu_5_0V) > 0.2) or ((noload[sr][1] - fullload_3[sr][1]) > 0.3):
+                if (self.db.spu[sr].temp > 35.0):
+                    self.db.spu[sr].temp_ok = 0
+                
+                if (not (min_5_0 <= noload[sr][1] <= max_5_0)
+                or not (min_5_0 < fullload_3[sr][1] <= max_5_0)
+                or not (min_5_0 <= fullload_5[sr][1] <= max_5_0)
+                or (noload[sr][1] - fullload_3[sr][1]) > max_drop_5_0):
                     self.db.spu[sr].rcu_ok = 0
+                    logger.info("SPU voltage 5.0V out of range")
+                    
+                if (not (min_8_0 <= noload[sr][2] <= max_8_0)
+                or not (min_8_0 <= fullload_3[sr][2] <= max_8_0)
+                or (noload[sr][2] - fullload_3[sr][2]) > max_drop_8_0):
+                    self.db.spu[sr].lba_ok = 0   
+                    logger.info("SPU voltage 8.0V out of range")
                 
-                if (abs(7.6 - self.db.spu[sr].lba_8_0V) > 0.2) or ((noload[sr][2] - fullload_3[sr][2]) > 0.3):
-                    self.db.spu[sr].lba_ok = 0
-                # if voltage drop is too high
-                if (abs(45.75 - self.db.spu[sr].hba_48V) > 0.75) or ((noload[sr][3] - fullload_5[sr][3]) > 1.0):
-                    self.db.spu[sr].hba_ok = 0
+                if (not (min_48 <= noload[sr][3] <= max_48)
+                or not (min_48 <= fullload_5[sr][3] <= max_48)
+                or (noload[sr][3] - fullload_5[sr][3]) > max_drop_48):
+                    self.db.spu[sr].hba_ok = 0   
+                    logger.info("SPU voltage 48V out of range")
                 
-                if (abs(3.3 - self.db.spu[sr].spu_3_3V) > 0.2) or ((noload[sr][3] - fullload_3[sr][3]) > 0.3):
-                    self.db.spu[sr].spu_ok = 0            
-                
+                if (not (min_3_3 <= noload[sr][4] <= max_3_3)
+                or not (min_3_3 <= fullload_3[sr][4] <= max_3_3)
+                or not (min_3_3 <= fullload_5[sr][4] <= max_3_3)
+                or (noload[sr][4] - fullload_5[sr][4]) > max_drop_3_3):
+                    self.db.spu[sr].spu_ok = 0   
+                    logger.info("SPU voltage 3.3V out of range")
+                    
         logger.info("=== Done SPU check ===")
         self.db.addTestDone('SPU')
         return
@@ -235,6 +295,15 @@ class cRSP:
         return (images_ok)
 
     def checkBoard(self):
+        max_1_2 = 1.3
+        min_1_2 = 1.1
+        
+        max_2_5 = 2.6
+        min_2_5 = 2.4
+        
+        max_3_3 = 3.4
+        min_3_3 = 3.1
+        
         ok = True
         logger.info("=== RSP Board check ===")
         if not checkActiveRSPDriver():
@@ -247,19 +316,19 @@ class cRSP:
             p2 = answer.find("\n", p1)
             d = [float(i.split(":")[1].strip()) for i in answer[p1+7:p2].split(',')]
             if len(d) == 3:
-                logger.debug("RSP board %d: [1.2V]=%3.1fV, [2.5V]=%3.1fV, [3.3V]=%3.1fV" %(rsp.nr, d[0],  d[1],  d[2]))
+                logger.debug("RSP board %d: [1.2V]=%3.2fV, [2.5V]=%3.2fV, [3.3V]=%3.2fV" %(rsp.nr, d[0],  d[1],  d[2]))
                 rsp.voltage1_2 = d[0]
-                if d[0] < 1.1 or d[0] > 1.3:
+                if not (min_1_2 <= d[0] <= max_1_2):
                     rsp.voltage_ok = 0
-                    logger.info("RSP board %d [1.2V]=%3.1fV" %(rsp.nr, d[0]))
+                    logger.info("RSP board %d [1.2V]=%3.2fV" %(rsp.nr, d[0]))
                 rsp.voltage2_5 = d[1]
-                if d[1] < 2.4 or d[1] > 2.6:
+                if not (min_2_5 <= d[1] <= max_2_5):
                     rsp.voltage_ok = 0
-                    logger.info("RSP board %d [2.5V]=%3.1fV" %(rsp.nr, d[1]))
+                    logger.info("RSP board %d [2.5V]=%3.2fV" %(rsp.nr, d[1]))
                 rsp.voltage3_3 = d[2]
-                if d[2] < 3.2 or d[2] > 3.4:
+                if not (min_3_3 <= d[2] <= max_3_3):
                     rsp.voltage_ok = 0
-                    logger.info("RSP board %d [3.3V]=%3.1fV" %(rsp.nr, d[2]))
+                    logger.info("RSP board %d [3.3V]=%3.2fV" %(rsp.nr, d[2]))
 
         for rsp in self.db.rsp:
             p1 = answer.find("RSP[%2d]" %(rsp.nr), p2)
@@ -272,29 +341,29 @@ class cRSP:
                 rsp.pcb_temp   = d[0]
                 if d[0] > 45.0:
                     rsp.temp_ok = 0
-                    logger.info("RSP board %d [pcb_temp]=%3.1f" %(rsp.nr, d[0]))
+                    logger.info("RSP board %d [pcb_temp]=%2.0f" %(rsp.nr, d[0]))
                 rsp.bp_temp    = d[1]
                 if d[1] > 75.0:
                     rsp.temp_ok = 0
-                    logger.info("RSP board %d [bp_temp]=%3.1f" %(rsp.nr, d[1]))
+                    logger.info("RSP board %d [bp_temp]=%2.0f" %(rsp.nr, d[1]))
                 rsp.ap0_temp   = d[2]
                 if d[2] > 75.0:
                     rsp.temp_ok = 0
-                    logger.info("RSP board %d [ap0_temp]=%3.1f" %(rsp.nr, d[2]))
+                    logger.info("RSP board %d [ap0_temp]=%2.0f" %(rsp.nr, d[2]))
                 rsp.ap1_temp   = d[3]
                 if d[3] > 75.0:
                     rsp.temp_ok = 0
-                    logger.info("RSP board %d [ap1_temp]=%3.1f" %(rsp.nr, d[3]))
+                    logger.info("RSP board %d [ap1_temp]=%2.0f" %(rsp.nr, d[3]))
                 rsp.ap2_temp   = d[4]
                 if d[4] > 75.0:
                     rsp.temp_ok = 0
-                    logger.info("RSP board %d [ap2_temp]=%3.1f" %(rsp.nr, d[4]))
+                    logger.info("RSP board %d [ap2_temp]=%2.0f" %(rsp.nr, d[4]))
                 rsp.ap3_temp   = d[5]
                 if d[5] > 75.0:
                     rsp.temp_ok = 0
-                    logger.info("RSP board %d [ap3_temp]=%3.1f" %(rsp.nr, d[5]))
+                    logger.info("RSP board %d [ap3_temp]=%2.0f" %(rsp.nr, d[5]))
         logger.info("=== Done RSP Board check ===")
-        self.db.addTestDone('RBV')
+        self.db.addTestDone('RBC')
         return (ok)
 
 #### end of cRSP class ####
@@ -896,7 +965,7 @@ class cHBA:
         if n_tile_err < (self.db.nr_hba / 2):
             for tile_nr in range(self.db.nr_hba):
                 for elem_nr in range(n_elements):
-                    if no_modem[tile_nr][elem_nr] > 3: # more than 3 ctrl values went wrong
+                    if no_modem[tile_nr][elem_nr] >= 2: # 2 or more ctrl values went wrong
                         self.db.hba.tile[tile_nr].element[elem_nr].no_modem = 1
 
         n_tile_err = 0
@@ -911,7 +980,7 @@ class cHBA:
         if n_tile_err < (self.db.nr_hba / 2):
             for tile_nr in range(self.db.nr_hba):
                 for elem_nr in range(n_elements):
-                    if no_modem[tile_nr][elem_nr] > 3: # more than 3 ctrl values went wrong
+                    if no_modem[tile_nr][elem_nr] >= 2: # 2 or more ctrl values went wrong
                         self.db.hba.tile[tile_nr].element[elem_nr].modem_error = 1
 
         self.hba.modem_check_done = 1
@@ -1173,6 +1242,7 @@ class cHBA:
         self.set_mode(mode)
 
         # check twice
+        # 2   ... check if all elements are turned off, normal value between 60.0 and 62.0
         # 128 ...
         # 253 ...
         for tile in self.hba.tile:
@@ -1180,7 +1250,7 @@ class cHBA:
                 logger.info("skip signal test for tile %d, RCUs turned off" %(tile.nr))
 
         logger.info("start test")
-        for ctrl in ('128,', '253,'):
+        for ctrl in ('2,', '128,', '253,'):
             if self.db.checkEndTime(duration=20.0) == False:
                 logger.warn("check stopped, end time reached")
                 return
@@ -1197,16 +1267,29 @@ class cHBA:
             self.rcudata.searchTestSignal(subband=subband, minsignal=min_signal, maxsignal=150.0)
             logger.info("HBA, X used test subband=%d  avg_signal=%3.1f" %(self.rcudata.testSubband_X, self.rcudata.testSignal_X))
             logger.info("HBA, Y used test subband=%d  avg_signal=%3.1f" %(self.rcudata.testSubband_Y, self.rcudata.testSignal_Y))
-
+            
+            if ctrl == '2,':
+                ssdataX = self.rcudata.getSubbandX(subband=subband)
+                ssdataY = self.rcudata.getSubbandY(subband=subband)
+            else:
+                ssdataX = self.rcudata.getSubbandX()
+                ssdataY = self.rcudata.getSubbandY()
+                
+            for tile in self.hba.tile:
+                if tile.x.rcu_off or tile.y.rcu_off:
+                    continue
+                logger.debug("HBA Tile=%d :  X=%3.1fdB  Y=%3.1fdB" %\
+                            (tile.nr, ssdataX[tile.nr], ssdataY[tile.nr]))
+            if ctrl == '2,':
+                continue
+            
             if (self.rcudata.testSignal_X != -1) and (self.rcudata.testSignal_Y != -1):
 
                 self.hba.ref_signal_x[ctrl_nr]   = self.rcudata.testSignal_X
                 self.hba.ref_signal_y[ctrl_nr]   = self.rcudata.testSignal_Y
                 self.hba.test_subband_x[ctrl_nr] = self.rcudata.testSubband_X
                 self.hba.test_subband_y[ctrl_nr] = self.rcudata.testSubband_Y
-
-                ssdataX = self.rcudata.getSubbandX()
-                ssdataY = self.rcudata.getSubbandY()
+                
                 avgX = self.rcudata.testSignal_X
                 avgY = self.rcudata.testSignal_Y
                 minX = ssdataX.min()
@@ -1222,9 +1305,6 @@ class cHBA:
                 for tile in self.hba.tile:
                     if tile.x.rcu_off or tile.y.rcu_off:
                         continue
-
-                    logger.debug("HBA Tile=%d :  X=%3.1fdB  Y=%3.1fdB" %\
-                                (tile.nr, ssdataX[tile.nr], ssdataY[tile.nr]))
 
                     tile.x.test_signal[ctrl_nr] = ssdataX[tile.nr]
                     tile.y.test_signal[ctrl_nr] = ssdataY[tile.nr]

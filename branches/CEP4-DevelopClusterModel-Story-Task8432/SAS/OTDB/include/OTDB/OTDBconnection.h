@@ -100,7 +100,7 @@ public:
 	// groupType = 1: observations that are scheduled to start the next 'period' minutes
 	//             2: active observations ; period is ignored
 	//             3: observations that were finished during the last 'period' minutes
-	vector<OTDBtree> getTreeGroup(uint32	groupType, uint32	periodInMinutes);
+	vector<OTDBtree> getTreeGroup(uint32	groupType, uint32	periodInMinutes, const string& cluster="");
 
 	// Get a list of all trees that are scheduled in the given period (partially).
 	vector<OTDBtree> getTreesInPeriod(treeType		aTreeType,

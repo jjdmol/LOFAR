@@ -30,3 +30,7 @@ maxFinishedList	= 40	# Never show more finished observations
 #ChildControl.MaxStartupRetry	   = 5
 
 ParsetQueuename = lofar.task.specification.system
+
+# Pipelines on cluster X can be ignored by the MACScheduler with this key.
+# use e.g. 'CEP2' or 'CEP4'
+excludePipelinesOnThisCluster = ''

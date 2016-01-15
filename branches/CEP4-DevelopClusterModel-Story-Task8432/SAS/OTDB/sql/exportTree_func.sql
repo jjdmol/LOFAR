@@ -228,30 +228,27 @@ CREATE OR REPLACE FUNCTION exportPICSubTree(INT4, INT4, INT4)
 	DECLARE
 	  vResult		TEXT := '';
 	  vRow			RECORD;
+      vName         PIChierarchy.name%TYPE;
 
 	BEGIN
-	  -- first dump own parameters
-	  FOR vRow IN
-	    SELECT	name     --, value
-	    FROM	PIChierarchy
-	    WHERE	treeID = $1
-	    AND	 	parentID = $2
-		AND		leaf = true
-		ORDER BY name
-	  LOOP
-		vResult := vResult || substr(vRow.name,$3) || chr(10); 
-	  END LOOP;
+	  -- first get name of top node
+      SELECT	name
+      INTO      vName
+	  FROM	PIChierarchy
+	  WHERE	treeID = $1
+	  AND	nodeID = $2;
+      vName := vName || '%';
 
 	  -- call myself for all the children
 	  FOR vRow IN
-	    SELECT	nodeID, name
+	    SELECT	name
 	    FROM	PIChierarchy
 	    WHERE	treeID = $1
-	    AND	 	parentID = $2
-		AND		leaf = false
-		ORDER BY name
+	    AND	 	name like vName
+		AND		leaf = true
+		ORDER BY nodeid
 	  LOOP
-		vResult := vResult || exportPICSubTree($1, vRow.nodeID, $3);
+		vResult := vResult || substr(vRow.name,$3) || chr(10); 
 	  END LOOP;
 
 	  RETURN vResult;

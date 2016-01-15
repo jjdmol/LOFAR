@@ -9,6 +9,4 @@ python_install(
   gsm_exceptions.py
   DESTINATION lofar/gsm)
 
-install(PROGRAMS
-  gsm.py
-  DESTINATION bin)
+lofar_add_bin_scripts(gsm.py)

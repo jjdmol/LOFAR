@@ -76,7 +76,7 @@ class PortBroker: protected SocketStream {
      */
     class ClientStream: public SocketStream {
       public:
-        ClientStream( const std::string &hostname, uint16 port, const std::string &resource, time_t deadline = 0 );
+        ClientStream( const std::string &hostname, uint16 port, const std::string &resource, time_t deadline = 0, const std::string &bind_local_iface = "" );
     };
 
   protected:

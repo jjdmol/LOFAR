@@ -2,10 +2,13 @@
 #
 # Defines the following macros:
 #   lofar_add_bin_program(name)
+#   lofar_add_bin_scripts([name1 [name2 ..]])
 #   lofar_add_executable(name)
 #   lofar_add_library(name)
 #   lofar_add_sbin_program(name)
+#   lofar_add_sbin_scripts([name1 [name2 ..]])
 #   lofar_add_test(name)
+#   lofar_create_target_symlink(target symlink)
 #   lofar_join_arguments(var)
 #   lofar_search_path(path package)
 #
@@ -46,6 +49,22 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     lofar_add_executable(${_name} ${ARGN})
     install(TARGETS ${_name} DESTINATION bin)
   endmacro(lofar_add_bin_program)
+
+
+  # --------------------------------------------------------------------------
+  # lofar_add_bin_scripts([name1 [name2 ..]])
+  #
+  # Add scripts that need to be installed into the <prefix>/bin directory.
+  # Also create a symbolic link in <build-dir>/bin to each of these scripts.
+  # --------------------------------------------------------------------------
+  macro(lofar_add_bin_scripts)
+    foreach(_name ${ARGN})
+      get_filename_component(_abs_name ${_name} ABSOLUTE)
+      execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${_abs_name} ${CMAKE_BINARY_DIR}/bin/${_name})
+      install(PROGRAMS ${_name} DESTINATION bin)
+    endforeach(_name ${ARGN})
+  endmacro(lofar_add_bin_scripts)
 
 
   # --------------------------------------------------------------------------
@@ -129,6 +148,22 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
 
 
   # --------------------------------------------------------------------------
+  # lofar_add_sbin_scripts([name1 [name2 ..]])
+  #
+  # Add scripts that need to be installed into the <prefix>/sbin directory.
+  # Also create a symbolic link in <build-dir>/sbin to each of these scripts.
+  # --------------------------------------------------------------------------
+  macro(lofar_add_sbin_scripts)
+    foreach(_name ${ARGN})
+      get_filename_component(_abs_name ${_name} ABSOLUTE)
+      execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${_abs_name} ${CMAKE_BINARY_DIR}/sbin/${_name})
+      install(PROGRAMS ${_name} DESTINATION sbin)
+    endforeach(_name ${ARGN})
+  endmacro(lofar_add_sbin_scripts)
+
+
+  # --------------------------------------------------------------------------
   # lofar_add_test(name [source ...] [DEPENDS depend ...])
   #
   # Add a test like add_test() does.
@@ -164,6 +199,31 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
       add_dependencies(check ${_name})
     endif(BUILD_TESTING)
   endmacro(lofar_add_test)
+
+
+  # --------------------------------------------------------------------------
+  # lofar_create_target_symlink(target symlink)
+  #
+  # Create a symbolic link <symlink> to the location of the given <target>.
+  # This macro will create a custom target <target>_symlink that depends on
+  # <target>.
+  #
+  # The need for this macro arose when CMake policy CMP0026 was introduced. This
+  # policy disallows the use of the LOCATION target property, and promotes the
+  # use of the generator expression $<TARGET_FILE>.
+  # --------------------------------------------------------------------------
+  macro(lofar_create_target_symlink _target _symlink)
+    if(POLICY CMP0026)
+      set(_location $<TARGET_FILE:${_target}>)
+    else(POLICY CMP0026)
+      get_target_property(_location ${_target} LOCATION)
+    endif(POLICY CMP0026)
+    add_custom_target(${PACKAGE_NAME}_${_target}_symlink ALL
+      COMMAND ${CMAKE_COMMAND} -E create_symlink
+      ${_location}
+      ${_symlink})
+    add_dependencies(${PACKAGE_NAME}_${_target}_symlink ${_target})
+  endmacro(lofar_create_target_symlink _target _symlink)
 
 
   # --------------------------------------------------------------------------

@@ -72,7 +72,7 @@ namespace LOFAR {
                ColumnDesc::FixedShape + ColumnDesc::Direct);
     addColumn (td, "COORDINATE_AXES", TpArrayDouble,
                "Local field coordinates as P,Q,R (cartesian) direction vectors",
-               "m", "DIRECTION", MDirection::ITRF, 2, IPosition(2,3,3),
+               "m", "POSITION", MPosition::ITRF, 2, IPosition(2,3,3),
                ColumnDesc::FixedShape + ColumnDesc::Direct);
     addColumn (td, "ELEMENT_OFFSET", TpArrayDouble,
                "Position offsets of elements w.r.t. center of station field",

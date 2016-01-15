@@ -26,7 +26,7 @@ StationType = dict( CS=1, RS=2, IS=3 )
 
 logger           = None
 rcumode          = -1
-active_delay_str = ('2,'*16)[:-1]
+active_delay_str = ('555,'*16)[:-1]
 
 
 def init_lofar_lib():

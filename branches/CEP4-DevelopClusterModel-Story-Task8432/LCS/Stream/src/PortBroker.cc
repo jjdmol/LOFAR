@@ -259,10 +259,10 @@ std::string PortBroker::ServerStream::getResource() const
 }
 
 
-PortBroker::ClientStream::ClientStream( const string &hostname, uint16 port, const string &resource, time_t deadline )
+PortBroker::ClientStream::ClientStream( const string &hostname, uint16 port, const string &resource, time_t deadline, const std::string &bind_local_iface )
 :
   // connect to port broker
-  SocketStream(hostname, port, SocketStream::TCP, SocketStream::Client, deadline)
+  SocketStream(hostname, port, SocketStream::TCP, SocketStream::Client, deadline, true, bind_local_iface)
 {
   // request service
   PortBroker::requestResource(*this, resource);

@@ -24,7 +24,7 @@ Install using Docker Scripts
 
 To create a Docker container with Ubuntu or CentOS and LOFAR Offline processing tools, see:
 
-	https://github.com/ygrange/lofar-profiling
+	https://github.com/lofar-astron/lofar-deploy
 
 
 Dependencies for Manual Build from Source
@@ -38,11 +38,11 @@ For Ubuntu/Mint (likely incomplete list, but goes a long way):
 
 	apt-get install subversion cmake make g++ gfortran python-dev python-numpy
 	apt-get install libboost-dev libblitz0-dev libfftw3-dev libcfitsio3-dev libxml2-dev
-        apt-get install libpng12-dev                         # or a newer version (for AOFlagger)
+	apt-get install libpng12-dev                         # or a newer version (for AOFlagger)
 
 	apt-get install libreadline-dev libpqxx-dev doxygen  # optional
 	apt-get install libunittest++-dev                    # optional, for tests that use UnitTest++
-        apt-get install libgsl0-dev                          # optional, for AOFlagger's RayleighFitter
+	apt-get install libgsl0-dev                          # optional, for AOFlagger's RayleighFitter
 	apt-get install libgtkmm-2.4-dev libsigc++-2.0-dev   # optional, for AOFlagger's rficonsole
 
 
@@ -53,22 +53,22 @@ For CentOS/Fedora (likely incomplete list, but goes a long way):
 
 	yum install readline-devel libpqxx-devel doxygen     # optional
 	yum install gsl-devel                                # optional, for AOFlagger's RayleighFitter
-        yum install gtkmm24-devel libsigc++20-devel          # optional, for AOFlagger's rficonsole
+	yum install gtkmm24-devel libsigc++20-devel          # optional, for AOFlagger's rficonsole
 
 	The blitz and blitz-devel pkgs are available on some distros, but not on e.g. CentOS 7.
-        If required for your build, but not in your repo, take the two RPMs from CentOS 6 (or build from source).
+	If required for your build, but not in your repo, take the two RPMs from CentOS 6 (or build from source).
 	Idem for log4cplus (LOFAR log4cxx support is dodgy).
 	Similar for unittest++ and unitest++-devel (both optional), but take two RPMs from Fedora 22 (or build from source).
 	RPMs known to work on CentOS 7 can be found at: https://support.astron.nl/lofar_issuetracker/issues/8161
 
 
 
-NOTE (any OS): The most prominent dependency you likely need to build from source is casacore (+ friends):
+NOTE (any OS): For manual builds, the most prominent dependency you likely need to build is casacore (+ friends):
 
 	casacore:                  https://github.com/casacore/casacore
 	python-casacore ('pyrap'): https://github.com/casacore/python-casacore
 	IERS/measures tables:      https://github.com/casacore/casacore-data-update
-        casarest:                  https://svn.astron.nl/casarest
+	casarest:                  https://svn.astron.nl/casarest
 
 
 Instructions for Manual Build from Source
@@ -99,7 +99,7 @@ Instructions for Manual Build from Source
 	ctest -j 4 --timeout 60
 
   All tests should pass, however, a few packages (not selected above) require
-  GPU hardware or a database to pass.
+  GPU hardware or a database to pass all tests.
 
 - You may want to add the installation path bin/ to your PATH:
 

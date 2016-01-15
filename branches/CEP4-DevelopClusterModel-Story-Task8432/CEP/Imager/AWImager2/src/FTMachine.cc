@@ -469,15 +469,50 @@ void FTMachine::initialize_grids()
   }
 }
 
+void FTMachine::residual(
+    VisBuffer& vb, 
+    casa::Int row, 
+    casa::FTMachine::Type type)
+{
+  // First put the negated value of the data column in the modelviscube of vb
+  switch(type) 
+  {
+  case FTMachine::OBSERVED:
+    vb.setModelVisCube(-vb.visCube());
+    break;
+  case FTMachine::CORRECTED:
+    vb.setModelVisCube(-vb.correctedVisCube());
+    break;
+  case FTMachine::MODEL:
+    vb.setModelVisCube(-vb.modelVisCube());
+    break;
+  default:
+    throw Exception("Invalid value for argument type in call of FTMachine::residual");
+  }
+  
+  // get adds the predicted visibilies to the modelviscube
+  get(vb, row);
+  // Now negate the modelviscube so that its value is datacolumn - predicted visibilities
+  vb.setModelVisCube(-vb.modelVisCube());
+  // Put the residual visibilities onto the grid
+  put(vb, row, False, FTMachine::MODEL);
+}
+
 void FTMachine::get(casa::VisBuffer& vb, Int row) 
 {
-  put( *static_cast<VisBuffer*>(&vb), row);
+  // do not call this FTMachine with a casa::VisBuffer 
+  // only use the get method which accepts a LOFAR VisBuffer
+  throw Exception("Not implemented.");
+//   put( *static_cast<VisBuffer*>(&vb), row);
 }
 
 void FTMachine::put(const casa::VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type) 
 {
-  put( *static_cast<const VisBuffer*>(&vb), row, dopsf, type);
+  // do not call this FTMachine with a casa::VisBuffer 
+  // only use the put method which accepts a LOFAR VisBuffer
+  throw Exception("Not implemented.");
+//   put( *static_cast<const VisBuffer*>(&vb), row, dopsf, type);
 }
 
 // Finalize the FFT to the Sky. Here we actually do the FFT and
@@ -589,131 +624,6 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
     }
   }
 }
-//           Array<Complex> slice;
-//           IPosition pos(4,0);
-//           start[3] = i;
-//           start[2] = j;
-//           image.getSlice(slice, start, slice_shape, True);
-//           ArrayLattice<Complex> lattice(slice);
-//             lattice.copyData(LatticeExpr<Complex>(iif(factor < 1e-2, 0.0, lattice / factor)));
- 
-
-// Finalize the FFT to the Sky. Here we actually do the FFT and
-// return the resulting image
-ImageInterface<Complex>& FTMachine::getImage(Matrix<Float>& weights, Bool normalize)
-{
-//   AlwaysAssert(itsImage, AipsError);
-//   logIO() << LogOrigin("FTMachine", "getImage") << LogIO::NORMAL;
-// 
-//   if (itsVerbose > 0) 
-//   {
-//     cout<<"GETIMAGE"<<endl;
-//   }
-//   
-//   itsAvgPB.reference (itsConvFunc->compute_avg_pb(itsSumPB[0], itsSumCFWeight[0]));
-// 
-//   weights.resize(itsSumWeight[0].shape());
-// 
-//   convertArray(weights, itsSumWeight[0]);
-//   // If the weights are all zero then we cannot normalize
-//   // otherwise we don't care.
-//   if(normalize&&max(weights)==0.0) 
-//   {
-//     logIO() << LogIO::SEVERE << "No useful data in LofarFTMachine: weights all zero"
-//             << LogIO::POST;
-//     return *itsImage;
-//   }
-// 
-//   const IPosition latticeShape = itsLattice->shape();
-// 
-//   logIO() << LogIO::DEBUGGING
-//           << "Starting FFT and scaling of image" << LogIO::POST;
-// 
-//   if (itsUseDoubleGrid) 
-//   {
-//     ArrayLattice<DComplex> darrayLattice(itsGriddedData2[0]);
-//     LatticeFFT::cfft2d(darrayLattice,False);
-//     convertArray(itsGriddedData[0], itsGriddedData2[0]);
-//   }
-//   else 
-//   {
-//     LatticeFFT::cfft2d(*itsLattice, False);
-//   }
-// 
-//   if (itsVerbose > 0) 
-//   {
-//     cout<<"POLMAP:::::::  "<< itsPolMap << endl;
-//     cout<<"POLMAP:::::::  "<< itsCFMap << endl;
-//   }
-//   
-//   Int inx = itsLattice->shape()(0);
-//   Int iny = itsLattice->shape()(1);
-//   Vector<Complex> correction(inx);
-//   correction=Complex(1.0, 0.0);
-//   // Do the Grid-correction
-//   IPosition cursorShape(4, inx, 1, 1, 1);
-//   IPosition axisPath(4, 0, 1, 2, 3);
-//   LatticeStepper lsx(itsLattice->shape(), cursorShape, axisPath);
-//   LatticeIterator<Complex> lix(*itsLattice, lsx);
-//   for (lix.reset(); !lix.atEnd(); lix++) 
-//   {
-//     Int pol=lix.position()(2);
-//     Int chan=lix.position()(3);
-//     if (weights(pol, chan) != 0.0) 
-//     {
-//       if (normalize) 
-//       {
-//         Complex rnorm(Float(inx)*Float(iny)/weights(pol,chan));
-//         lix.rwCursor()*=rnorm;
-//       }
-//       else 
-//       {
-//         Complex rnorm(Float(inx)*Float(iny));
-//         lix.rwCursor()*=rnorm;
-//       }
-//     }
-//     else {
-//       lix.woCursor()=0.0;
-//     }
-//   }
-//   
-//   IPosition pos(4, itsLattice->shape()[0], itsLattice->shape()[1], 1, 1);
-//   uInt shapeout(floor(itsLattice->shape()[0]/itsPadding));
-//   uInt istart(floor((itsLattice->shape()[0] - shapeout)/2.));
-//   Cube<Complex> tempimage(IPosition(3, shapeout, shapeout, itsLattice->shape()[2]));
-// 
-//   pos[3] = 0.;
-//   for(Int k=0; k < itsLattice->shape()[2]; ++k)
-//   {
-//     for(uInt i = 0; i < shapeout; ++i)
-//     {
-//       for(uInt j = 0; j < shapeout; ++j)
-//       {
-//         pos[0] = i + istart;
-//         pos[1] = j + istart;
-//         pos[2] = k;
-//         Complex pixel(itsLattice->getAt(pos));
-//         pixel /= sqrt(itsAvgPB(i + istart, j + istart));
-//         itsLattice->putAt(pixel,pos);
-//       }
-//     }
-//   }
-// 
-//   IPosition blc(
-//     4, 
-//     (itsNX - itsImage->shape()(0) + (itsNX % 2 == 0)) / 2, 
-//     (itsNY - itsImage->shape()(1) + (itsNY % 2 == 0)) / 2,
-//     0,
-//     0);
-//   IPosition stride(4, 1);
-//   IPosition trc( blc + itsImage->shape() - stride);
-//   // Do the copy
-//   IPosition start(4, 0);
-//   itsImage->put(itsGriddedData[0](blc, trc));
-//   
-//   return *image;
-}
-
 
 // Get weight image
 void FTMachine::getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& weights)
@@ -754,26 +664,6 @@ void FTMachine::makeImage(
   
   vi.origin();
 
-//   cout << "Image shape: " << theImage.shape() << endl;
-//   CoordinateSystem coords = theImage.coordinates();
-//   Int stokesIndex = coords.findCoordinate(Coordinate::STOKES);
-//   AlwaysAssert(stokesIndex>-1, AipsError);
-//   StokesCoordinate stokesCoord = coords.stokesCoordinate(stokesIndex);
-//   
-//   if(vb.polFrame()==MSIter::Linear) {
-//     StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::LINEAR);
-//   }
-//   else {
-//     StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::CIRCULAR);
-//   }
-// 
-//   coords = theImage.coordinates();
-//   stokesIndex = coords.findCoordinate(Coordinate::STOKES);
-//   AlwaysAssert(stokesIndex>-1, AipsError);
-//   stokesCoord = coords.stokesCoordinate(stokesIndex);
-//   
-// 
-
   // Loop over the visibilities, putting VisBuffers
   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
   {
@@ -782,23 +672,11 @@ void FTMachine::makeImage(
       switch(type) 
       {
       case FTMachine::RESIDUAL:
-        vb.visCube()=vb.correctedVisCube();
-        vb.visCube()-=vb.modelVisCube();
-        put(vb, -1, False);
-        break;
-      case FTMachine::MODEL:
-        vb.visCube()=vb.modelVisCube();
-        put(vb, -1, False);
-        break;
-      case FTMachine::CORRECTED:
-        vb.visCube()=vb.correctedVisCube();
-        put(vb, -1, False);
+        residual(vb, -1);
         break;
       case FTMachine::PSF:
-        vb.visCube()=Complex(1.0,0.0);
         put(vb, -1, True);
         break;
-      case FTMachine::OBSERVED:
       default:
         put(vb, -1, False);
         break;
@@ -807,24 +685,6 @@ void FTMachine::makeImage(
   }
   finalizeToSky();
   getImages(weight, True);
-}
-
-void FTMachine::ComputeResiduals(casa::VisBuffer&vb, Bool useCorrected)
-{
-  VBStore vbs;
-  vbs.nRow(vb.nRow());
-  vbs.beginRow(0);
-  vbs.endRow(vbs.endRow());
-  vbs.modelVisCube(vb.modelVisCube());
-  if (useCorrected) 
-  {
-    vbs.visCube(vb.correctedVisCube());
-  }
-  else
-  {
-    vbs.visCube(vb.visCube());
-  }
-  itsVisResampler->ComputeResiduals(vbs);
 }
 
 void FTMachine::showTimings (ostream& os, double duration) const
@@ -884,6 +744,28 @@ StokesCoordinate FTMachine::get_stokes_coordinates()
 
   return StokesCoordinate(stokes);
 }  
+
+ImageInterface<Complex>& FTMachine::getImage(Matrix<Float>&, Bool)
+{
+  throw Exception("Not implemented");
+}
+
+void FTMachine::ComputeResiduals(
+    casa::VisBuffer&, 
+    casa::Bool)
+{
+  throw Exception("Not implemented");
+}
+
+void FTMachine::initializeToVis(casa::ImageInterface<casa::Complex>&, const casa::VisBuffer&)
+{
+  throw Exception("Not implemented");
+}
+
+void FTMachine::initializeToSky(casa::ImageInterface<casa::Complex>&, casa::Matrix<casa::Float>&, const casa::VisBuffer&)
+{
+  throw Exception("Not implemented");
+}
 
 
 } // end namespace LofarFT

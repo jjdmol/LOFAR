@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # Copyright (C) 2012-2015  ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 #
@@ -25,6 +25,7 @@ except ImportError:
 
 import xml.dom.minidom as xml
 import xml.parsers.expat as expat
+from xml.sax.saxutils import escape
 import datetime
 
 #
@@ -83,12 +84,22 @@ class XMLDoc(object):
       return self.document.toxml()
 
     def getXMLdata(self, name):
-      """ Return the value of an XML key, given by its XPath. """
-      return self._get_data(self._getXMLnode(name))
+      """ Return the value of an XML key, given by its XPath.
+          Raise MessageException if name is N/A. """
+      node = self._getXMLnode(name)
+      if node is None:
+          raise MessageException('node ' + name + ' not in XML document')
+
+      return self._get_data(node)
 
     def setXMLdata(self, name, data):
-      """ Set the value of an XML key, given by its XPath. """
-      return self._set_data(self._getXMLnode(name), data)
+      """ Set the value of an XML key, given by its XPath.
+          Raise MessageException if name is N/A. """
+      node = self._getXMLnode(name)
+      if node is None:
+          raise MessageException('node ' + name + ' not in XML document')
+
+      return self._set_data(node, data)
 
     def insertXML(self, parent, xmlStr):
       """ Insert XML into the current message. """
@@ -174,13 +185,24 @@ class MessageContent(object):
         self.timestamp       = _timestamp()
         self.momid           = momid
         self.sasid           = sasid
-      else:
-        # Set properties by provided qpidMsg
-
-        # Replace literal << in the content, which is occasionally inserted by the C++
-        # code as part of the Parset ("Observation.Clock=<<Clock200"),
-        # if libxml++ is not used.
-        self.document = XMLDoc(qpidMsg.content.replace("<<","&lt;&lt;"))
+      else:  # Set properties by provided qpidMsg
+        # MessageBus msg fmt def and C++ side are broken, hence deprecated.
+        # Try to encode '<', '&', '>' in the content payload, whenever possible.
+        # Content header should not have these. For C++ MessageBus non-libxml++
+        # builds, skip encode if XML tags continue in <payload>. Hack ahead!
+        if qpidMsg.content is None:
+          qpidMsg.content = ''  # avoid find() or replace() via escape() on None
+        plIdx = qpidMsg.content.find('<payload>')
+        if plIdx != -1:
+          plIdx += len('<payload>')
+          plEndIdx = qpidMsg.content.rfind('</payload>', plIdx)
+          if plEndIdx != -1:
+            eqIdx = qpidMsg.content.find('=', plIdx, plEndIdx)  # non-empty parset
+            if eqIdx != -1 and eqIdx < qpidMsg.content.find('<', plIdx, plEndIdx):
+              qpidMsg.content = qpidMsg.content[ : plIdx] + \
+                                escape(qpidMsg.content[plIdx : plEndIdx]) + \
+                                qpidMsg.content[plEndIdx : ]
+        self.document = XMLDoc(qpidMsg.content)  # may raise MessageException
 
     def _add_property(self, name, element):
       def getter(self):

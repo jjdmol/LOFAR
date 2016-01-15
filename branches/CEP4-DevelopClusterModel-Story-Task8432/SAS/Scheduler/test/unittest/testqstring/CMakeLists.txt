@@ -1,6 +1,6 @@
 # $Id$
 
+include(LofarCTest)
+
 qt4_generate_moc(testqstring.cpp testqstring.moc)
-add_executable(testqstring testqstring.cpp testqstring.moc)
-target_link_libraries(testqstring ${QT_LIBRARIES})
-add_test(testqstring testqstring)
+lofar_add_test(testqstring testqstring.cpp testqstring.moc)

@@ -479,7 +479,8 @@ namespace LOFAR
 
         node.hostName = getString(prefix + "host", "localhost");
         node.cpu      = getUint32(prefix + "cpu",  0);
-        node.nic      = getString(prefix + "nic",  "");
+        node.mpi_nic  = getString(prefix + "mpi_nic",  "");
+        node.out_nic  = getString(prefix + "out_nic",  "");
         node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
 
         settings.nodes.push_back(node);

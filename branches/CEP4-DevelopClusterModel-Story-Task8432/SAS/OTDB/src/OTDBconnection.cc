@@ -370,26 +370,27 @@ vector<OTDBtree> OTDBconnection::getExecutableTrees(classifType aClassification)
 }
 
 //
-// getTreeGroup(groupType, periodInMinutes)
+// getTreeGroup(groupType, periodInMinutes, cluster)
 //
-// 1 = planned, 2 = active, 3 = finished
+// 0 = to be scheduled, 1 = planned, 2 = active, 3 = finished, 4 = APPROVED trees
 //
 // Note: this function will probably make getExecutableTrees obsolete.
 //
-vector<OTDBtree> OTDBconnection::getTreeGroup(uint32	groupType, uint32 period)
+vector<OTDBtree> OTDBconnection::getTreeGroup(uint32	groupType, uint32 period, const string& cluster)
 {
 	if (!itsIsConnected && !connect()) {
 		vector<OTDBtree> 	empty;
 		return (empty); 
 	}
 
-	LOG_TRACE_FLOW_STR ("OTDB:getTreeGroup(" << groupType << "," << period << ")");
+	LOG_TRACE_FLOW_STR ("OTDB:getTreeGroup(" << groupType << "," << period << "," << cluster << ")");
 	try {
 		// construct a query that calls a stored procedure.
 		work	xAction(*itsConnection, "getTreeGroup");
 		string	query("SELECT * from getTreeGroup('" +
 						toString(groupType) + "','" +
-						toString(period) + "')");
+						toString(period) + "','" + 
+                        cluster + "')");
 
 		// execute query
 		result	res = xAction.exec(query);

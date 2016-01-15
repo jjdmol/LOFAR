@@ -25,4 +25,4 @@ INSTALL(CODE "FILE(MAKE_DIRECTORY \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/etc/p
 
 
 # Install script to generate StationStreams.parset for the live test system.
-install(PROGRAMS parset-additions.d/default/generateStationStreams.sh DESTINATION sbin)
+lofar_add_sbin_scripts(parset-additions.d/default/generateStationStreams.sh)

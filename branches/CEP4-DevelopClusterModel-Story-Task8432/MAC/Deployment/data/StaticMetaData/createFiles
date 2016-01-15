@@ -118,6 +118,26 @@ def findTBBDestNodes(stationName, dataDir):
         setWarning(stationName+" not found in file 'TBBConnections.dat'")
     return tbbDestNode
 
+#
+# findStationAttenuationValues(stationName)
+#
+def findStationAttenuationValues(stationName, dataDir):
+    """
+    Collects the Attenuation values for a given station from the file
+    StationAttenuation.dat
+    Expected format of the StationAttenuation file is:
+    # Station AttStepSize ATT_1 ATT_2 ATT_3 ATT_4 ATT_5 ATT_6 ATT_7
+    CS001     0.25        0.0   0.0   0.0   0.0   0.0   0.0   0.0
+
+    Function returns a list with all numerical values of the stations as strings.
+    """
+    # NOTE: for now we always take the first nodename
+    pattern=re.compile("[^#]"+stationName+"[ \t]*([0-9\. \t\n]*)", re.IGNORECASE)
+    attenuationValues = pattern.findall(open(dataDir+"/StationAttenuation.dat").read())[0].split()
+    if len(attenuationValues) == 0:
+        setWarning(stationName+" not found in file 'StationAttenuation.dat'")
+    return attenuationValues
+
 def findIPandMAC_station(stationName, dataDir):
     """
     Based on stationname, find destination node, IP and MAC address for all RSP boards of
@@ -155,12 +175,10 @@ def findIPandMAC_test(testName, dataDir):
     """
     Translates the given testName to a MAC and IP address + alias name.
     """
-    print testName
     pattern=re.compile("^"+testName+"[ \t]*([0-9\.]*)[ \t]*([0-9a-fA-F:]*)[ \t]*([\S]*)", re.IGNORECASE | re.MULTILINE)
     ipAndMacAndAlias = pattern.findall(open(dataDir+"/RSPConnections_test.dat").read())
     if not ipAndMacAndAlias:
         raise "\nFatal error: "+testName+" is not defined in file 'RSPConnections_test.dat'"
-    print ipAndMacAndAlias
     return ipAndMacAndAlias
 
 def findStorageIPandMAC(nodeName, dataDir):
@@ -438,7 +456,8 @@ def createRSPDriverFile(resultDir, stationName, dataDir,int_local,is_Cobalt):
               RSPconfig = RSPconfig.replace(repl_str, str(int_station_nr))
             repl_str = "@IP_EXTEN_0"+str(rspNr)+"@"
             RSPconfig = RSPconfig.replace(repl_str, str(srcip_suffix))
-                       
+            
+    RSPconfig = setAttenuationSettings(RSPconfig, stationName, dataDir)                       
     outFile = os.open(dataDir+"/RSPDriver.conf.tmp", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
     os.write(outFile, RSPconfig)
     os.close(outFile)
@@ -487,11 +506,11 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
     if (len(alias) == 2):
         # Assume core station; fill in LANE_1, as well
-        ip_mac_alias = findIPandMAC_test(alias[1],dataDir)
+        ip_mac_alias_1 = findIPandMAC_test(alias[1],dataDir)
         for rspNr in range(4):  
             blet_out = find_Blets(stationName, dataDir)[5+rspNr];
-            RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", ip_mac_alias[0][1] +"   # "+ip_mac_alias[0][2])
-            RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip_mac_alias[0][0])
+            RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", ip_mac_alias_1[0][1] +"   # "+ip_mac_alias_1[0][2])
+            RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip_mac_alias_1[0][0])
             RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
             RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out) 
 
@@ -514,9 +533,11 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
             # SOURCE IP contains information on which Cobalt iface to send to, to help
             # Cobalt route the packet.
             for rspNr in range(4):
-                dstip = ip_mac_alias[1][0]
+                dstip = ip_mac_alias_1[0][0]
                 dstiface = dstip.split('.')[3] # 1 = 10GB01 ... 4 = 10GB04
                 RSPconfig = RSPconfig.replace("@IP_SUBNET_1"+str(rspNr)+"@", dstiface) 
+                RSPconfig = RSPconfig.replace("@IP_EXTEN_1"+str(rspNr)+"@",  ip_parts[2])
+
       
         hexStationID = str("%02x" % int(stationName[3:6]))
         ringID = '0'+stationName[2]
@@ -568,7 +589,7 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
               RSPconfig = RSPconfig.replace(repl_str, str(int_station_nr))
             repl_str = "@IP_EXTEN_0"+str(rspNr)+"@"
             RSPconfig = RSPconfig.replace(repl_str, str(srcip_suffix))
-                        
+    RSPconfig = setAttenuationSettings(RSPconfig, stationName, dataDir)                    
     outFile = os.open(dataDir+"/RSPDriver.conf.tmp", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
     os.write(outFile, RSPconfig)
     os.close(outFile)
@@ -680,6 +701,18 @@ def createRemoteStationFile(resultDir, stationName, dataDir):
     os.write(outFile, RSconfig)
     os.close(outFile)
 
+
+def setAttenuationSettings(RSPconfig, stationName, dataDir):
+    """
+    setAttenuationSettings fills in the Attenuation setting in RSPDriver.conf
+    """
+    attenuationValues = findStationAttenuationValues(stationName, dataDir)
+    if len(attenuationValues) > 0:
+      RSPconfig = RSPconfig.replace("@ATT_STEP_SIZE@", attenuationValues[0])
+      for rcumode in range(1,8):
+        RSPconfig = RSPconfig.replace("@ATT_MODE_"+str(rcumode)+"@", attenuationValues[rcumode])
+    return RSPconfig
+    
 def createAntennaArraysFile(resultDir, stationName, dataDir):
     """
     Copies the right AntennaArrays.conf file for this station
@@ -744,17 +777,6 @@ def createCableDelaysFile(resultDir, stationName, dataDir):
     #print command
     os.system(command)
 
-def createAttenuationFile(resultDir, stationName, dataDir):
-    """
-    Copies the Attenuation.conf file for this station to resultDir
-    """
-    srcFile = dataDir + "/Attenuation.conf"
-    destFile = resultDir + "/Attenuation.conf"
-    
-    command = "cp -f "+srcFile+ " " + destFile
-    #print command
-    os.system(command)
-
 def createiHBADeltasFile(resultDir, stationName, dataDir):
     """
     Copies the right iHBADeltas.conf file for this station
@@ -800,20 +822,7 @@ def stationExceptions(resultDir, stationName, dataDir):
     """
     Handle exceptional files for some stations
     """
-    if (stationName.lower() == "de601"):
-        srcFile = dataDir + "/DE601-Attenuation.conf"
-        destFile= resultDir + "/Attenuation.conf"
-        command = "cp -f "+srcFile+ " " + destFile
-        #print command
-        os.system(command)
-    elif (stationName.lower() == "fi609"):
-        # Reinstall Attenuation.conf
-        srcFile = dataDir + "/FI609-Attenuation.conf"
-        destFile= resultDir + "/Attenuation.conf"
-        command = "cp -f "+srcFile+ " " + destFile
-        #print command
-        os.system(command)
-
+    if (stationName.lower() == "fi609"):
         # Reinstall HardwareMonitor.conf with FI609 specific IP for EC
         createHardwareMonitorFile(resultDir, stationName, dataDir, "103")
         
@@ -891,7 +900,6 @@ if __name__ == "__main__":
                     createRemoteStationFile(resultDir, stationName, dataDir)
                     createAntennaArraysFile(resultDir, stationName, dataDir)
                     createAntennaFieldFile (resultDir, stationName, dataDir)
-                    createAttenuationFile  (resultDir, stationName, dataDir)
                     createCableDelaysFile  (resultDir, stationName, dataDir)
                     createiHBADeltasFile   (resultDir, stationName, dataDir)
                     createHardwareMonitorFile(resultDir, stationName, dataDir)
@@ -936,7 +944,6 @@ if __name__ == "__main__":
             createRemoteStationFile(resultDir, stationName, dataDir)
             createAntennaArraysFile(resultDir, stationName, dataDir)
             createAntennaFieldFile (resultDir, stationName, dataDir)
-            createAttenuationFile  (resultDir, stationName, dataDir)
             createCableDelaysFile  (resultDir, stationName, dataDir)
             createiHBADeltasFile   (resultDir, stationName, dataDir)
             createHardwareMonitorFile(resultDir, stationName, dataDir)

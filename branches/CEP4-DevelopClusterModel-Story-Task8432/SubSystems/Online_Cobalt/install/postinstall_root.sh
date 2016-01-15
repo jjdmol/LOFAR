@@ -7,6 +7,11 @@ echo "Giving /localhome/lofar to lofarbuild..."
 mkdir /localhome/lofar
 chown lofarbuild.lofarbuild /localhome/lofar
 
+echo "Giving capabilities to lofarbuild..."
+addgroup --system capabilities
+usermod -a -G capabilities lofarbuild
+echo "%capabilities  ALL= NOPASSWD:/sbin/setcap" >> /etc/sudoers
+
 #
 # Casacore
 #

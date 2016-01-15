@@ -26,10 +26,6 @@
 // \file
 // namespace wrapper for Boost.Tribool
 
-#if !defined(HAVE_BOOST)
-#error Boost.Tribool is required.
-#endif
-
 #include <boost/logic/tribool.hpp>
 
 namespace LOFAR

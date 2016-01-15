@@ -8,3 +8,5 @@ lofar_find_package(QPID REQUIRED) # MessageBus may be able to fake it without QP
 add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(webmonitor)
+
+lofar_add_package(ObservationStartListener)

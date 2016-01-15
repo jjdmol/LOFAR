@@ -319,7 +319,8 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
         if(config.useTEC())
         {
             exprDIE[i] = compose(exprDIE[i],
-                makeTECExpr(itsScope, instrument->station(i)));
+                makeTECExpr(itsScope, instrument->station(i),
+                            config.getTECConfig()));
         }
 
         // Direction independent polarization rotation.
@@ -439,7 +440,8 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
         if(config.useTEC())
         {
             stationExpr[i] = compose(stationExpr[i],
-                makeTECExpr(itsScope, instrument->station(i)));
+                makeTECExpr(itsScope, instrument->station(i),
+                            config.getTECConfig()));
         }
 
         // Direction independent polarization rotation.
@@ -860,7 +862,9 @@ void MeasurementExprLOFAR::setCorrelations(bool circular)
     if(circular)
     {
         LOG_DEBUG_STR("Visibilities will be simulated using circular-RL"
-            " correlations.");
+            " correlations. Instrument tables are interpreted as linear"
+            " so when applying them the visibilities will be converted to"
+            " linear and back.");
         itsCorrelations.append(Correlation::RR);
         itsCorrelations.append(Correlation::RL);
         itsCorrelations.append(Correlation::LR);

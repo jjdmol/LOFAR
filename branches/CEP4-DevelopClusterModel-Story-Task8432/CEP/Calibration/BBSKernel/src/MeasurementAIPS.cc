@@ -719,9 +719,17 @@ void MeasurementAIPS::initDimensions()
 
     ASSERT(frequency.nelements() == nFreq);
     ASSERT(width.nelements() == nFreq);
-    // TODO: Technically, checking for equal channel widths is not enough,
-    // because there could still be gaps between channels even though the
-    // widths are all equal (this is not prevented by the MS 2.0 standard).
+
+    // Check that channels have no gaps and are evenly spaced
+    // (this is not prevented by the MS 2.0 standard).
+    if (frequency.nelements()>1) {
+      Vector<Double> upFreq = frequency(Slice(1,frequency.nelements()-1));
+      Vector<Double> lowFreq = frequency(Slice(0,frequency.nelements()-1));
+      Double freqstep0=upFreq(0)-lowFreq(0);
+      ASSERTSTR(allEQ(upFreq-lowFreq,freqstep0),
+                "Channels are not evenly spaced. This is not supported.");
+    }
+
     ASSERTSTR(allEQ(width, width(0)),
         "Channels width is not the same for all channels. This is not supported"
         " yet.");

@@ -1,7 +1,3 @@
 # $Id$
 
-
-install(PROGRAMS
-  QToPipeline.py
-
-  DESTINATION bin)
+lofar_add_bin_scripts(QToPipeline.py)

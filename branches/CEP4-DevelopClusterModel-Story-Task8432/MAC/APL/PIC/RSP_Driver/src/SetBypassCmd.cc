@@ -63,10 +63,10 @@ void SetBypassCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
 	bool setSIon  = m_event->settings()(0).getXSI();	// note: X and Y are equal
 	bool setSDOon = m_event->settings()(0).getSDO();
-    bool siSet    =  m_event->settings()(0).isSIset();
-    bool sdoSet   =  m_event->settings()(0).isSDOset();
-	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); 
-																	cache_rcu++) {
+    bool siSet    = m_event->settings()(0).isSIset();
+    bool sdoSet   = m_event->settings()(0).isSDOset();
+	int  board_nr;
+    for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 		if (m_event->rcumask[cache_rcu]) {	// is this RCU in the mask?
 			// make change
             if (siSet) {
@@ -83,9 +83,10 @@ void SetBypassCmd::apply(CacheBuffer& cache, bool setModFlag)
             }
             if (sdoSet) {
                 if ((cache_rcu % 8) == 0) {
-                    cache.getBypassSettings()()(cache_rcu/N_POL).setSDO(setSDOon);
+                    board_nr = cache_rcu / 8;
+                    cache.getBypassSettingsBP()()(board_nr).setSDO(setSDOon);
                     if (setModFlag) {
-                        cache.getCache().getState().bypasssettings().write(cache_rcu/N_POL);
+                        cache.getCache().getState().bypasssettings_bp().write(board_nr);
                     }
                 }
             }

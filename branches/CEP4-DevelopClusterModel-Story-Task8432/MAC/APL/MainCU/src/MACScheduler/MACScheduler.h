@@ -168,6 +168,9 @@ private:
 	// OTDB related variables.
    	OTDB::OTDBconnection*	itsOTDBconnection;	// connection to the database
 
+	// Cluster to exclude for pipelines. Key is used in the getTreeGroup stored-procedure in OTDB.
+	string				itsExclPLcluster;		// like !CEP2 or !CEP4
+
 	// Messagebus related variables
 	ToBus*					itsMsgQueue;		// Bus used for sending
 };

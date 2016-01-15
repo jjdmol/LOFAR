@@ -44,12 +44,12 @@ namespace LOFAR {
 
     ApplyCal::ApplyCal (DPInput* input,
                         const ParameterSet& parset,
-                        const string& prefix)
+                        const string& prefix,
+                        bool substep)
       : itsInput       (input),
         itsName        (prefix),
         itsParmDBName  (parset.getString (prefix + "parmdb")),
         itsCorrectType (toLower(parset.getString (prefix + "correction", "gain"))),
-        itsInvert      (parset.getBool (prefix + "invert", true)),
         itsTimeSlotsPerParmUpdate (parset.getInt (prefix +
             "timeslotsperparmupdate", 500)),
         itsSigmaMMSE   (parset.getDouble (prefix + "MMSE.Sigma", 0)),
@@ -61,10 +61,18 @@ namespace LOFAR {
         itsUseAP       (false)
     {
       ASSERT (!itsParmDBName.empty());
+      if (substep) {
+        itsInvert=false;
+      } else {
+        itsInvert=parset.getBool (prefix + "invert", true);
+      }
       if (itsCorrectType=="fulljones" && itsUpdateWeights) {
         ASSERTSTR (itsInvert, "Updating weights has not been implemented for invert=false and fulljones");
       }
     }
+
+    ApplyCal::ApplyCal()
+    {}
 
     ApplyCal::~ApplyCal()
     {}
@@ -97,17 +105,19 @@ namespace LOFAR {
         if (!itsParmDB->getNames("Gain:0:0:Real*").empty()) {
           // Values with :Real present
           itsUseAP = false; 
-        } else if (!itsParmDB->getNames("Gain:0:0:Ampl*").empty()) {
+        } else if (!itsParmDB->getNames("Gain:0:0:Ampl*").empty() || 
+                   !itsParmDB->getNames("Phase:0:0:Ampl*").empty()) {
           // Values with :Ampl present
           itsUseAP = true;
         } else if (!itsParmDB->getDefNames("Gain:0:0:Real*").empty()) {
           // Defvalues with :Real present
           itsUseAP = false;
-        } else if (!itsParmDB->getDefNames("Gain:0:0:Ampl*").empty()) {
+        } else if (!itsParmDB->getDefNames("Gain:0:0:Ampl*").empty() ||
+                   !itsParmDB->getDefNames("Gain:0:0:Phase*").empty()) {
           // Defvalues with :Ampl present
           itsUseAP = true;
         } else {
-          THROW (Exception, "No gains found in parmdb");
+          THROW (Exception, "No gains found in parmdb "+itsParmDBName);
         }
       }
 
@@ -144,7 +154,14 @@ namespace LOFAR {
           itsParmExprs.push_back("Gain:1:1:Imag");
         }
       } else if (itsCorrectType == "tec") {
-        itsParmExprs.push_back("TEC");
+        if (itsParmDB->getNames("TEC:0:*").empty() &&
+                    itsParmDB->getDefNames("TEC:0:*").empty() ) {
+          itsParmExprs.push_back("TEC");
+        }
+        else {
+          itsParmExprs.push_back("TEC:0");
+          itsParmExprs.push_back("TEC:1");
+        }
       } else if (itsCorrectType == "clock") {
         if (itsParmDB->getNames("Clock:0:*").empty() &&
             itsParmDB->getDefNames("Clock:0:*").empty() ) {
@@ -362,8 +379,14 @@ namespace LOFAR {
           else if (itsCorrectType=="tec") {
             itsParms[0][ant][tf]=polar(1.,
                 parmvalues[0][ant][tf] * -8.44797245e9 / freq);
-            itsParms[1][ant][tf]=polar(1.,
-                parmvalues[0][ant][tf] * -8.44797245e9 / freq);
+            if (itsParmExprs.size() == 1) { // No TEC:0, only TEC:
+              itsParms[1][ant][tf]=polar(1.,
+                  parmvalues[0][ant][tf] * -8.44797245e9 / freq);
+            }
+            else { // TEC:0 and TEC:1
+              itsParms[1][ant][tf]=polar(1.,
+                  parmvalues[1][ant][tf] * -8.44797245e9 / freq);
+            }
           }
           else if (itsCorrectType=="clock") {
             itsParms[0][ant][tf]=polar(1.,

@@ -1,4 +1,4 @@
-//#  CableAttenuation.h: Interface class for the Attenuation.conf file
+//#  CableAttenuation.h: Interface class for the CableAttenuation.conf file
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +24,7 @@
 #define LOFAR_APPLCOMMON_CABLEATTENUATION_H
 
 // \file
-// Interface class for the Attenuation.conf file.
+// Interface class for the CableAttenuation.conf file.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -45,7 +45,7 @@ namespace LOFAR {
 //# Forward Declarations
 //class forward;
 
-// The CableAttenuation class is an interface for the Attenuation.conf file.
+// The CableAttenuation class is an interface for CableAttenuation.conf file.
 //It reads in the file and stores the values in its datamembers. Defines some
 //useful functions for accessing the data.
 
@@ -54,7 +54,7 @@ class CableAttenuation
 public:
 	CableAttenuation(const string&	filename);
 	~CableAttenuation();
-
+    
 	// Returns the attenuation in dB for the given cable length and rcumode.
 	float	getAttenuation(int	cableLength, int	rcuMode) const;
 

@@ -184,6 +184,7 @@ if [ -e $BINDIR/tbbctl ]; then
    # Introduce a timeout of 60 sec for images to initialize
    echo "Waiting for TBB images to be initialized"
    timeout=60
+   sleep 10
    for (( s=0 ; s<timeout; s++ ))
    do 
      tbb_respons=`tbbctl --version`

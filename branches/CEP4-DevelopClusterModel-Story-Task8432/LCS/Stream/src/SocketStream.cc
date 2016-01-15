@@ -35,14 +35,17 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <dirent.h>
+#include <net/if.h>
+#include <arpa/inet.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
 
 #include <Common/SystemCallException.h>
-#include <Common/Thread/Mutex.h>
 #include <Common/Thread/Cancellation.h>
 #include <Common/LofarLogger.h>
+
+#include "NetFuncs.h"
 
 //# AI_NUMERICSERV is not defined on OS-X
 #ifndef AI_NUMERICSERV
@@ -54,27 +57,8 @@ using boost::format;
 
 namespace LOFAR {
 
-// port range for unused ports search
-const int MINPORT = 10000;
-const int MAXPORT = 30000;
-
-
-static struct RandomState {
-  RandomState() {
-    xsubi[0] = getpid();
-    xsubi[1] = time(0);
-    xsubi[2] = time(0) >> 16;
-  }
-
-  unsigned short xsubi[3];
-} randomState;
-
-namespace {
-  Mutex getAddrInfoMutex;
-};
-
 SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol,
-                           Mode mode, time_t deadline, bool doAccept)
+                           Mode mode, time_t deadline, bool doAccept, const std::string &bind_local_iface)
 :
   protocol(protocol),
   mode(mode),
@@ -87,116 +71,99 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
       % hostname
       % _port);
 
-  struct addrinfo hints;
-  const bool autoPort = (port == 0);
-
-  // use getaddrinfo, because gethostbyname is not thread safe
-  memset(&hints, 0, sizeof(struct addrinfo));
-  hints.ai_family = AF_INET; // IPv4
-  hints.ai_flags = AI_NUMERICSERV; // we only use numeric port numbers, not strings like "smtp"
-
-  if (protocol == TCP) {
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-  } else {
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_protocol = IPPROTO_UDP;
-  }
-
   for(;;) {
     try {
-      try {
-        // Not all potentially blocking calls below have a timeout arg.
-        // So check early every round. It may abort hanging tests early (=good).
-        if (deadline > 0 && deadline <= time(0))
-          THROW(TimeOutException, "SocketStream");
+      // Not all potentially blocking calls below have a timeout arg.
+      // So check early every round. It may abort hanging tests early (=good).
+      if (deadline > 0 && deadline <= time(0))
+        THROW(TimeOutException, "SocketStream");
 
-        char portStr[16];
-        int  retval;
-        struct addrinfo *result;
+      // Resolve host + port to a 'struct addrinfo'
+      safeAddrInfo result;
+      safeGetAddrInfo(result, protocol == SocketStream::TCP, hostname, port);
 
-        if (mode == Server && autoPort)
-          port = MINPORT + static_cast<unsigned short>((MAXPORT - MINPORT) * erand48(randomState.xsubi)); // erand48() not thread safe, but not a problem.
+      // result is a linked list of resolved addresses, we only use the first
 
-        snprintf(portStr, sizeof portStr, "%hu", port);
+      if ((fd = socket(result.addrinfo->ai_family, result.addrinfo->ai_socktype, result.addrinfo->ai_protocol)) < 0)
+        THROW_SYSCALL("socket");
 
-        {
-          // getaddrinfo does not seem to be thread safe
-          ScopedLock sl(getAddrInfoMutex);
+      if (bind_local_iface != "") {
+        // Bind socket to a specific network interface, causing packets to be
+        // emitted through this interface.
+        //
+        // Requires CAP_NET_RAW (or root)
+        LOG_DEBUG_STR("Binding socket " << description << " to interface " << bind_local_iface);
 
-          if ((retval = getaddrinfo(hostname.c_str(), portStr, &hints, &result)) != 0) {
-            const string errorstr = gai_strerror(retval);
+        struct ifreq ifr;
+        memset(&ifr, 0, sizeof ifr);
+        snprintf(ifr.ifr_name, sizeof ifr.ifr_name, "%s", bind_local_iface.c_str());
 
-            throw SystemCallException(str(format("getaddrinfo(%s): %s") % hostname % errorstr), 0, THROW_ARGS); // TODO: SystemCallException also adds strerror(0), which is useless here
+        if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof ifr) < 0)
+          try {
+            THROW_SYSCALL("setsockopt(SO_BINDTODEVICE)");
+          } catch(Exception &ex) {
+            LOG_ERROR_STR("Could not bind socket to device " << bind_local_iface << ": " << ex);
           }
-        }
+      }
 
-        // make sure result will be freed
-        struct D {
-          ~D() {
-            freeaddrinfo(result);
-          }
+      if (mode == Client) {
+        if (bind_local_iface != "") {
+          struct sockaddr sa = getInterfaceIP(bind_local_iface);
+          LOG_DEBUG_STR("Binding socket " << description << " to IP " << inet_ntoa(((struct sockaddr_in*)&sa)->sin_addr) << " of interface " << bind_local_iface);
 
-          struct addrinfo *result;
-        } onDestruct = { result };
-        (void) onDestruct;
-
-        // result is a linked list of resolved addresses, we only use the first
-
-        if ((fd = socket(result->ai_family, result->ai_socktype, result->ai_protocol)) < 0)
-          THROW_SYSCALL("socket");
-
-        if (mode == Client) {
-          while (connect(fd, result->ai_addr, result->ai_addrlen) < 0)
-            if (errno == ECONNREFUSED || errno == ETIMEDOUT) {
-              if (deadline > 0 && time(0) >= deadline)
-                throw TimeOutException("client socket", THROW_ARGS);
-
-              if (usleep(999999) < 0) { // near 1 sec; max portably safe arg val
-                // interrupted by a signal handler -- abort to allow this thread to
-                // be forced to continue after receiving a SIGINT, as with any other
-                // system call in this constructor 
-                THROW_SYSCALL("usleep");
-              }
-            } else
-              THROW_SYSCALL(str(boost::format("connect [%s]") % description));
-        } else {
-          const int on = 1;
-
-          if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) < 0)
-            THROW_SYSCALL("setsockopt(SO_REUSEADDR)");
-
-          if (bind(fd, result->ai_addr, result->ai_addrlen) < 0)
+          if (bind(fd, &sa, sizeof sa) < 0)
             THROW_SYSCALL(str(boost::format("bind [%s]") % description));
-
-          if (protocol == TCP) {
-            listen_sk = fd;
-            fd	= -1;
-
-            const int listenBacklog = 15;
-            if (listen(listen_sk, listenBacklog) < 0)
-              THROW_SYSCALL(str(boost::format("listen [%s]") % description));
-
-            if (doAccept)
-              accept(deadline);
-            else
-              break;
-          }
         }
 
-        // we have an fd! break out of the infinite loop
-        break;
-      } catch (...) {
-        if (listen_sk >= 0) { close(listen_sk); listen_sk = -1; }
-        if (fd >= 0)        { close(fd);        fd = -1; }
+        while (connect(fd, result.addrinfo->ai_addr, result.addrinfo->ai_addrlen) < 0)
+          if (errno == ECONNREFUSED || errno == ETIMEDOUT) {
+            if (deadline > 0 && time(0) >= deadline)
+              throw TimeOutException("client socket", THROW_ARGS);
 
-        throw;
+            if (usleep(999999) < 0) { // near 1 sec; max portably safe arg val
+              // interrupted by a signal handler -- abort to allow this thread to
+              // be forced to continue after receiving a SIGINT, as with any other
+              // system call in this constructor 
+              THROW_SYSCALL("usleep");
+            }
+          } else
+            THROW_SYSCALL(str(boost::format("connect [%s]") % description));
+      } else {
+        const int on = 1;
+
+        if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) < 0)
+          THROW_SYSCALL("setsockopt(SO_REUSEADDR)");
+
+        if (bind(fd, result.addrinfo->ai_addr, result.addrinfo->ai_addrlen) < 0)
+          THROW_SYSCALL(str(boost::format("bind [%s]") % description));
+
+        if (port == 0) {
+          // we let OS search for a free port
+          port = getSocketPort(fd);
+
+          LOG_DEBUG(str(boost::format("Bound socket %s to port %s") % description % port));
+        }
+
+        if (protocol == TCP) {
+          listen_sk = fd;
+          fd	= -1;
+
+          const int listenBacklog = 15;
+          if (listen(listen_sk, listenBacklog) < 0)
+            THROW_SYSCALL(str(boost::format("listen [%s]") % description));
+
+          if (doAccept)
+            accept(deadline);
+          else
+            break;
+        }
       }
-    } catch (SystemCallException &exc) {
-      if ( (exc.syscall() == "bind" || exc.syscall() == "listen") &&
-           mode == Server && autoPort ) {
-        continue; // try listening on / binding to another server port
-      }
+
+      // we have an fd! break out of the infinite loop
+      break;
+    } catch (...) {
+      if (listen_sk >= 0) { close(listen_sk); listen_sk = -1; }
+      if (fd >= 0)        { close(fd);        fd = -1; }
 
       throw;
     }

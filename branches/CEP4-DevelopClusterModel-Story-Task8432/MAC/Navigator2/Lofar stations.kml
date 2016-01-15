@@ -421,6 +421,27 @@
 					<coordinates>20.7609103,69.0714225,533.25</coordinates>
 				</Point>
 			</Placemark>
+			<Placemark>
+				<description>PL610</description>
+				<styleUrl>#msn_shaded_dot</styleUrl>
+				<Point>
+					<coordinates>17.0741606,52.2759328,122.29</coordinates>
+				</Point>
+			</Placemark>
+			<Placemark>
+				<description>PL611</description>
+				<styleUrl>#msn_shaded_dot</styleUrl>
+				<Point>
+					<coordinates>20.4896131,49.9649386,305.42</coordinates>
+				</Point>
+			</Placemark>
+			<Placemark>
+				<description>PL612</description>
+				<styleUrl>#msn_shaded_dot</styleUrl>
+				<Point>
+					<coordinates>20.5897506,53.5939042,178.38</coordinates>
+				</Point>
+			</Placemark>
 		</Folder>
 		<Placemark>
 			<description>CEP</description>

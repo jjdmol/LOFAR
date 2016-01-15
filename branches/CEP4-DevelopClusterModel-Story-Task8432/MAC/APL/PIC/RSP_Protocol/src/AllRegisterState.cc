@@ -59,6 +59,7 @@ size_t AllRegisterState::getSize() const
     + tbbsettings_state.getSize()
     + tbbbandsel_state.getSize()
     + bypasssettings_state.getSize()
+    + bypasssettings_bp_state.getSize()
 	+ rawdatawrite_state.getSize()
 	+ rawdataread_state.getSize()
 	+ itsSerdesWriteState.getSize()
@@ -97,6 +98,7 @@ size_t AllRegisterState::pack  (char* buffer) const
 	offset += tbbsettings_state.pack(buffer + offset);
 	offset += tbbbandsel_state.pack(buffer + offset);
 	offset += bypasssettings_state.pack(buffer + offset);
+	offset += bypasssettings_bp_state.pack(buffer + offset);
 	offset += rawdatawrite_state.pack(buffer + offset);
 	offset += rawdataread_state.pack(buffer + offset);
 	offset += itsSerdesWriteState.pack(buffer + offset);
@@ -137,6 +139,7 @@ size_t AllRegisterState::unpack(const char *buffer)
 	offset += tbbsettings_state.unpack(buffer + offset);
 	offset += tbbbandsel_state.unpack(buffer + offset);
 	offset += bypasssettings_state.unpack(buffer + offset);
+	offset += bypasssettings_bp_state.unpack(buffer + offset);
 	offset += rawdatawrite_state.unpack(buffer + offset);
 	offset += rawdataread_state.unpack(buffer + offset);
 	offset += itsSerdesWriteState.unpack(buffer + offset);

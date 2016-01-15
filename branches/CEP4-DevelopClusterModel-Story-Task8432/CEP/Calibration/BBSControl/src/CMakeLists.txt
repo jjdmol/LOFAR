@@ -61,13 +61,10 @@ if(HAVE_PQXX)
   lofar_add_bin_program(SolverControl SolverControl.cc)
 endif(HAVE_PQXX)
 
-install(PROGRAMS
-  calibrate-stand-alone
-  DESTINATION bin)
+lofar_add_bin_scripts(calibrate-stand-alone)
 
 if(HAVE_PQXX)
-  install(PROGRAMS
+  lofar_add_bin_scripts(
     calibrate
-    calibrate-part
-    DESTINATION bin)
+    calibrate-part)
 endif(HAVE_PQXX)

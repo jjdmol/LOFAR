@@ -82,6 +82,15 @@ class stationresponse(object):
         """
         self._response.setRefDelay(ra, dec)
 
+    def getRefDelay (self, time):
+        """Get the reference direction used by the station beamformer.
+        Returns an ITRF vector in meters (numpy array of 3 floats).
+ 
+        `time`
+          Time at which to evaluate the direction
+        """
+        return self._response.getRefDelay(time)
+
     def setRefTile (self, ra, dec):
         """Set the reference direction used by the analog tile beamformer
         (relevant for HBA observations only). By default, LOFAR_TILE_BEAM_DIR
@@ -95,6 +104,16 @@ class stationresponse(object):
         """
         self._response.setRefTile(ra, dec)
 
+    def getRefTile (self, time):
+        """Get the reference direction used by the analog tile beamformer
+        (relevant for HBA observations only).
+        Returns an ITRF vector in meters (numpy array of 3 floats).
+ 
+        `time`
+          Time at which to evaluate the direction
+        """
+        return self._response.getRefTile(time)
+
     def setDirection (self, ra, dec):
         """Set the direction of interest (can be and often will be different
         from the pointing). By default, PHASE_DIR of field 0 is used.
@@ -105,6 +124,15 @@ class stationresponse(object):
           Declination (in radians, J2000)
         """
         self._response.setDirection(ra, dec)
+
+    def getDirection (self, time):
+        """Get the direction of interest.
+        Returns an ITRF vector in meters (numpy array of 3 floats).
+
+        `time`
+          Time at which to evaluate the direction
+        """
+        return self._response.getDirection(time)
 
     def evaluate (self, time):
         """Compute the beam Jones matrix for all stations and channels at the
@@ -158,3 +186,25 @@ class stationresponse(object):
           Frequency to compute beam at (in Hz)
         """
         return self._response.evaluate3(time, station, freq)
+
+    def evaluateFreqITRF (self, time, station, freq, direction, station0, tile0):
+        """Compute the beam Jones matrix for the given time, station, and
+        frequency, with the given ITRF directions.
+        The result is returned as a 2-dim complex numpy array with
+        shape: 2 x 2.
+
+        `time`
+          Time (MJD in seconds).
+        `station`
+          Station number (as defined in the ANTENNA table of the Measurement
+          Set).
+        `frequency`
+          Frequency to compute beam at (in Hz)
+        `direction`
+          ITRF direction to compute beam at (numpy array with 3 floats)
+        `station0`
+          ITRF direction of the station beamformer (numpy array with 3 floats)
+        `tile0`
+          ITRF direction of the tile beamformer (numpy array with 3 floats)
+        """
+        return self._response.evaluate4(time, station, freq, direction, station0, tile0)
