@@ -431,8 +431,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT0.uv.dps</name>
-                      <topology>B0.1.PT0.uv.dps</topology>
+                      <name>B0.1.PT0.0.uv.dps</name>
+                      <topology>B0.1.PT0.0.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
@@ -469,8 +469,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT0.uv.dps</name>
-                      <topology>B0.1.PT0.uv.dps</topology>
+                      <name>B0.1.PT0.1.uv.dps</name>
+                      <topology>B0.1.PT0.1.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
@@ -507,8 +507,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT1.uv.dps</name>
-                      <topology>B0.1.PT1.uv.dps</topology>
+                      <name>B0.1.PT1.0.uv.dps</name>
+                      <topology>B0.1.PT1.0.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
@@ -545,8 +545,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT1.uv.dps</name>
-                      <topology>B0.1.PT1.uv.dps</topology>
+                      <name>B0.1.PT1.1.uv.dps</name>
+                      <topology>B0.1.PT1.1.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
@@ -583,8 +583,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT2.uv.dps</name>
-                      <topology>B0.1.PT2.uv.dps</topology>
+                      <name>B0.1.PT2.0.uv.dps</name>
+                      <topology>B0.1.PT2.0.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
@@ -621,8 +621,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT2.uv.dps</name>
-                      <topology>B0.1.PT2.uv.dps</topology>
+                      <name>B0.1.PT2.1.uv.dps</name>
+                      <topology>B0.1.PT2.1.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
@@ -659,8 +659,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT3.uv.dps</name>
-                      <topology>B0.1.PT3.uv.dps</topology>
+                      <name>B0.1.PT3.0.uv.dps</name>
+                      <topology>B0.1.PT3.0.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
@@ -697,8 +697,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT3.uv.dps</name>
-                      <topology>B0.1.PT3.uv.dps</topology>
+                      <name>B0.1.PT3.1.uv.dps</name>
+                      <topology>B0.1.PT3.1.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
@@ -735,8 +735,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT4.uv.dps</name>
-                      <topology>B0.1.PT4.uv.dps</topology>
+                      <name>B0.1.PT4.0.uv.dps</name>
+                      <topology>B0.1.PT4.0.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
@@ -773,8 +773,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT4.uv.dps</name>
-                      <topology>B0.1.PT4.uv.dps</topology>
+                      <name>B0.1.PT4.1.uv.dps</name>
+                      <topology>B0.1.PT4.1.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
@@ -811,8 +811,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT5.uv.dps</name>
-                      <topology>B0.1.PT5.uv.dps</topology>
+                      <name>B0.1.PT5.0.uv.dps</name>
+                      <topology>B0.1.PT5.0.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
@@ -849,8 +849,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT5.uv.dps</name>
-                      <topology>B0.1.PT5.uv.dps</topology>
+                      <name>B0.1.PT5.1.uv.dps</name>
+                      <topology>B0.1.PT5.1.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
@@ -887,8 +887,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT6.uv.dps</name>
-                      <topology>B0.1.PT6.uv.dps</topology>
+                      <name>B0.1.PT6.0.uv.dps</name>
+                      <topology>B0.1.PT6.0.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
@@ -925,8 +925,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT6.uv.dps</name>
-                      <topology>B0.1.PT6.uv.dps</topology>
+                      <name>B0.1.PT6.1.uv.dps</name>
+                      <topology>B0.1.PT6.1.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
@@ -963,8 +963,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT7.uv.dps</name>
-                      <topology>B0.1.PT7.uv.dps</topology>
+                      <name>B0.1.PT7.0.uv.dps</name>
+                      <topology>B0.1.PT7.0.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
@@ -1001,8 +1001,8 @@
                 <resultDataProducts>
                   <item>
                     <lofar:uvDataProduct>
-                      <name>B0.1.PT7.uv.dps</name>
-                      <topology>B0.1.PT7.uv.dps</topology>
+                      <name>B0.1.PT7.1.uv.dps</name>
+                      <topology>B0.1.PT7.1.uv.dps</topology>
                       <status>no_data</status>
                       
                     </lofar:uvDataProduct>
