@@ -3,4 +3,4 @@
 
 # do not commit passwd in svn
 # this file should have permissions 600
-radb_passwd=''
+radb_password=''
