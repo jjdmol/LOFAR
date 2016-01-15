@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-import sys, os, subprocess
+import sys, os, subprocess, difflib
 
 # diff should only be something like:
 # 3,5c3,5
@@ -11,7 +11,7 @@ import sys, os, subprocess
 # >   <template version="2.12.0" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
 # >   <description>XML Template generator version 2.12.0</description>
 def checkDiff(diff):
-  if len(diff) == 8:
+  if len(diff) == 8 or len(diff) == 0:
     return True
   return False
 
@@ -35,14 +35,21 @@ def main():
       results.append((infile, xmlgen, -1, False))
       continue
     else:
-      cmd   = ["diff", "-w", "-B", "./xml/%s.xml" % name, "test.xml"]
+      #import fileinput
+      #for line in fileinput.FileInput("test.xml",inplace=1):
+      #  if line.rstrip():
+      #    print line,
+      #cmd   = ["sed", "-i", "'/^$/d'", "test.xml"]
+      #p     = subprocess.Popen(cmd, stdin=open('/dev/null'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      cmd   = ["diff", "-w", "-I", r"^[[:space:]]*$", "./xml/%s.xml" % name, "test.xml"]
+      #cmd   = ["diff -w -I '^[[:space:]]*$' ./xml/%s.xml test.xml" % name]
       ## -w ignores differences in whitespace
-      ## -I '^[[:space:]]*$' because -B doesn't work for blank lines
+      ## -I '^[[:space:]]*$' because -B doesn't work for blank lines (on OSX?)
       p     = subprocess.Popen(cmd, stdin=open('/dev/null'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       logs  = p.communicate()
       diffs = logs[0].splitlines() #stdout
       print "diff reply was %i lines long" % len(diffs)
-      check = checkDiff(diffs)
+      check = checkDiff(diffs) and len(logs[1]) == 0
       if not check:
         for l in diffs: print l
         print logs[1]
