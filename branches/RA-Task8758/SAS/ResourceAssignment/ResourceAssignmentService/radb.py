@@ -46,8 +46,7 @@ class RADatabase:
         query = '''SELECT * from resource_allocation.task_status;'''
         self.cursor.execute(query)
 
-        result = self.cursor.fetchall()
-        return list(result)
+        return list(self.cursor.fetchall())
 
     def getTaskStatusNames(self):
         return [x['name'] for x in self.getTaskStatuses()]
@@ -56,8 +55,7 @@ class RADatabase:
         query = '''SELECT * from resource_allocation.task_type;'''
         self.cursor.execute(query)
 
-        result = self.cursor.fetchall()
-        return list(result)
+        return list(self.cursor.fetchall())
 
     def getTaskTypeNames(self):
         return [x['name'] for x in self.getTaskTypes()]
@@ -66,8 +64,7 @@ class RADatabase:
         query = '''SELECT * from resource_allocation.resource_claim_status;'''
         self.cursor.execute(query)
 
-        result = self.cursor.fetchall()
-        return list(result)
+        return list(self.cursor.fetchall())
 
     def getResourceClaimStatusNames(self):
         return [x['name'] for x in self.getResourceClaimStatuses()]
@@ -84,10 +81,7 @@ class RADatabase:
         '''
         self.cursor.execute(query)
 
-        result = self.cursor.fetchall()
-        for task in result:
-            print type(task['starttime']), task['starttime']
-        return list(result)
+        return list(self.cursor.fetchall())
 
     def getTask(self, id):
         query = '''SELECT t.*, ts.name as status,
@@ -105,6 +99,85 @@ class RADatabase:
         result = self.cursor.fetchone()
         return dict(result) if result else None
 
+    def insertTask(self, mom_id, otdb_id, task_status, task_type, specification_id, commit=True):
+        if isinstance(task_status, basestring):
+            #convert task_status string to task_status.id
+            task_status = next((x for x in self.getTaskStatuses() if x['name'] == task_status))['id']
+
+        if isinstance(task_type, basestring):
+            #convert task_type string to task_type.id
+            task_type = next((x for x in self.getTaskTypes() if x['name'] == task_type))['id']
+
+        query = '''INSERT INTO resource_allocation.task
+        (mom_id, otdb_id, status_id, type_id, specification_id)
+        VALUES (%s, %s, %s, %s, %s)
+        RETURNING id;'''
+
+        self.cursor.execute(query, (mom_id, otdb_id, task_status, task_type, specification_id))
+        id = self.cursor.fetchone()['id']
+        if commit:
+            self.conn.commit()
+        return id
+
+    def updateTask(self, task_id, mom_id=None, otdb_id=None, task_status=None, task_type=None, specification_id=None, commit=True):
+        if task_status and isinstance(task_status, basestring):
+            #convert task_status string to task_status.id
+            task_status = next((x for x in self.getTaskStatuses() if x['name'] == task_status))['id']
+
+        if task_type and isinstance(task_type, basestring):
+            #convert task_type string to task_type.id
+            task_type = next((x for x in self.getTaskTypes() if x['name'] == task_type))['id']
+
+        fields = []
+        values = []
+
+        if mom_id:
+            fields.append('mom_id')
+            values.append(mom_id)
+
+        if otdb_id:
+            fields.append('otdb_id')
+            values.append(otdb_id)
+
+        if task_status:
+            fields.append('status_id')
+            values.append(task_status)
+
+        if task_type:
+            fields.append('type_id')
+            values.append(task_type)
+
+        if specification_id:
+            fields.append('specification_id')
+            values.append(specification_id)
+
+        values.append(task_id)
+
+        query = '''UPDATE resource_allocation.task
+        SET ({fields}) = ({value_placeholders})
+        WHERE resource_allocation.task.id = {task_id_placeholder};'''.format(fields=', '.join(fields),
+                                                                             value_placeholders=', '.join('%s' for x in fields),
+                                                                             task_id_placeholder='%s')
+
+        self.cursor.execute(query, values)
+        if commit:
+            self.conn.commit()
+
+        return self.cursor.rowcount > 0
+
+    def getSpecifications(self):
+        query = '''SELECT * from resource_allocation.specification;'''
+        self.cursor.execute(query)
+
+        return list(self.cursor.fetchall())
+
+    def getSpecification(self, specification_id):
+        query = '''SELECT * from resource_allocation.specification spec
+        WHERE spec.id = (%s);'''
+        self.cursor.execute(query, (specification_id,))
+
+        return list(self.cursor.fetchall())
+
     def getResourceTypes(self):
         query = '''SELECT rt.*, rtu.units as unit
         from virtual_instrument.resource_type rt
@@ -112,8 +185,7 @@ class RADatabase:
         '''
         self.cursor.execute(query)
 
-        result = self.cursor.fetchall()
-        return list(result)
+        return list(self.cursor.fetchall())
 
     def getResourceTypeNames(self):
         return [x['name'] for x in self.getResourceTypes()]
@@ -122,8 +194,7 @@ class RADatabase:
         query = '''SELECT * from virtual_instrument.resource_group_type;'''
         self.cursor.execute(query)
 
-        result = self.cursor.fetchall()
-        return list(result)
+        return list(self.cursor.fetchall())
 
     def getResourceGroupTypeNames(self):
         return [x['name'] for x in self.getResourceGroupTypes()]
@@ -132,8 +203,7 @@ class RADatabase:
         query = '''SELECT * from virtual_instrument.unit;'''
         self.cursor.execute(query)
 
-        result = self.cursor.fetchall()
-        return list(result)
+        return list(self.cursor.fetchall())
 
     def getUnitNames(self):
         return [x['units'] for x in self.getUnits()]
@@ -146,8 +216,7 @@ class RADatabase:
         '''
         self.cursor.execute(query)
 
-        result = self.cursor.fetchall()
-        return list(result)
+        return list(self.cursor.fetchall())
 
     def getResourceGroups(self):
         query = '''SELECT rg.*, rgt.name as type
@@ -156,8 +225,7 @@ class RADatabase:
         '''
         self.cursor.execute(query)
 
-        result = self.cursor.fetchall()
-        return list(result)
+        return list(self.cursor.fetchall())
 
     def getResourceClaims(self):
         query = '''SELECT rc.*, rcs.name as status
@@ -166,8 +234,9 @@ class RADatabase:
         '''
         self.cursor.execute(query)
 
-        result = self.cursor.fetchall()
-        return list(result)
+        return list(self.cursor.fetchall())
+
+
 
 if __name__ == '__main__':
     db = RADatabase(host='10.149.96.6', password='123456')
@@ -191,5 +260,20 @@ if __name__ == '__main__':
     resultPrint(db.getResources)
     resultPrint(db.getResourceGroups)
     resultPrint(db.getTasks)
+    resultPrint(db.getSpecifications)
     resultPrint(db.getResourceClaims)
+
+    taskId = db.insertTask(1234, 5678, 'active', 'OBSERVATION', 1)
+
+    resultPrint(db.getTasks)
+
+    print db.updateTask(taskId, task_status='scheduled', otdb_id=723, task_type='PIPELINE')
+
+    resultPrint(db.getTasks)
+
+
+
+
+
+
 
