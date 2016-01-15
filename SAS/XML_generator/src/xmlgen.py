@@ -24,7 +24,7 @@ IMAGING_PIPELINE_TYPES = ['MSSS','standard','none']
 #MODES = ['Calobs','Calbeam','MultiObs']
 PROCESSING = ['Preprocessing','Calibration','Pulsar','Imaging','LongBaseline','none']
 CALIBRATION_MODE = ['internal','external','none']
-ALL_STATIONS = 'CS001,CS002,CS003,CS004,CS005,CS006,CS007,CS011,CS013,CS017,CS021,CS024,CS026,CS028,CS030,CS031,CS032,CS101,CS103,CS201,CS301,CS302,CS401,CS501,RS106,RS205,RS208,RS210,RS305,RS306,RS307,RS310,RS406,RS407,RS409,RS503,RS508,RS509,DE601,DE602,DE603,DE604,DE605,FR606,SE607,UK608,DE609'
+ALL_STATIONS = 'CS001,CS002,CS003,CS004,CS005,CS006,CS007,CS011,CS013,CS017,CS021,CS024,CS026,CS028,CS030,CS031,CS032,CS101,CS103,CS201,CS301,CS302,CS401,CS501,RS106,RS205,RS208,RS210,RS305,RS306,RS307,RS310,RS406,RS407,RS409,RS503,RS508,RS509,DE601,DE602,DE603,DE604,DE605,FR606,SE607,UK608,DE609,PL610,PL611,PL612'
 CORE_STATIONS = 'CS001,CS002,CS003,CS004,CS005,CS006,CS007,CS011,CS013,CS017,CS021,CS024,CS026,CS028,CS030,CS031,CS032,CS101,CS103,CS201,CS301,CS302,CS401,CS501'
 SUPERTERP_STATIONS = 'CS002,CS003,CS004,CS005,CS006,CS007'
 REMOTE_STATIONS = 'RS106,RS205,RS208,RS210,RS305,RS306,RS307,RS310,RS406,RS407,RS409,RS503,RS508,RS509'
@@ -1189,7 +1189,6 @@ def readCalibratorBeam(startLine, lines, globalSubbands, globalTABrings, globalB
       DemixDefault    = ['','','','','','','']
       calibratorBBS   = [] #Can now be a list of pipelines per beam
       calibratorDemix = []
-      print "!!!!! " + str(len(pipelines))
       for pipeline in pipelines:
         if pipeline.startswith("BBS"):
           calibratorBBS.append(BBSDefault)
@@ -1230,7 +1229,6 @@ def readCalibratorBeam(startLine, lines, globalSubbands, globalTABrings, globalB
       calibratorBBS.append(BBSDefault)
       if globalBBS:
         printInfo('Using global BBS settings for pipeline(s) coupled to Calibrator beam')
-        calibratorBBS.append(BBSDefault)
         for i in range(0,len(globalBBS)):
           calibratorBBS[-1][i] = globalBBS[i]
 
@@ -1238,7 +1236,6 @@ def readCalibratorBeam(startLine, lines, globalSubbands, globalTABrings, globalB
       calibratorDemix.append(DemixDefault)
       if globalDemix:
         printInfo('Using global demix settings for pipeline(s) coupled to Calibrator beam')
-        calibratorDemix.append(DemixDefault)
         for i in range(0,len(globalDemix)):
           calibratorDemix[-1][i] = globalDemix[i]
 
@@ -1358,7 +1355,6 @@ def readTargetBeams(startLine, lines, globalSubbands, globalBBS, globalDemix, gl
           targetBBS[nr_beams].append(BBSDefault)
           if globalBBS:
             printInfo('Using global BBS settings for pipeline(s) coupled to target beam:' + str(nr_beams))
-            targetBBS[nr_beams].append(BBSDefault)
             for i in range(0,len(globalBBS)):
               targetBBS[nr_beams][-1][i] = globalBBS[i]
 
@@ -1366,7 +1362,6 @@ def readTargetBeams(startLine, lines, globalSubbands, globalBBS, globalDemix, gl
           targetDemix[nr_beams].append(DemixDefault)
           if globalDemix:
             printInfo('Using global demix settings for pipeline(s) coupled to target beam:' + str(nr_beams))
-            targetDemix[nr_beams].append(DemixDefault)
             for i in range(0,len(globalDemix)):
               targetDemix[nr_beams][-1][i] = globalDemix[i]
 
@@ -1374,7 +1369,6 @@ def readTargetBeams(startLine, lines, globalSubbands, globalBBS, globalDemix, gl
           targetPulsar[nr_beams].append(PulsarDefault)
           if globalPulsar:
             printInfo('Using global Pulsar settings for pulsar pipeline(s) coupled to target beam:' + str(nr_beams))
-            targetPulsar[nr_beams].append(PulsarDefault)
             for i in range(0,len(globalPulsar)):
               targetPulsar[nr_beams][-1][i] = globalPulsar[i]
       
@@ -1415,9 +1409,12 @@ def checkAntennaModeInstrumentFilterAndClockCombination(antennaMode, instrumentF
 def determineNrImages(targetBeams, nrSubbandsPerImage, variableName):
   nrImages = []
   for beam in targetBeams:
-    if int(beam[4]) % nrSubbandsPerImage <> 0:
-      raise GenException("nrSubbands (%s) should be integer dividable by the %s (%s) for target beam %i" % (beam[4], variableName, nrSubbandsPerImage, targetBeams.index(beam)+1))
-    nrImages.append(int(beam[4]) / nrSubbandsPerImage)
+    if beam[7]: ##Make pipelines
+      if int(beam[4]) % nrSubbandsPerImage <> 0:
+        raise GenException("nrSubbands (%s) should be integer dividable by the %s (%s) for target beam %i" % (beam[4], variableName, nrSubbandsPerImage, targetBeams.index(beam)+1))
+      nrImages.append(int(beam[4]) / nrSubbandsPerImage)
+    else:
+      nrImages.append(0)
   return nrImages
 
 def readBlock(lines, projectName, blockNr):
@@ -1971,8 +1968,8 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
               cal_pipe_target_topology_tmp = cal_pipe_target_topology + ".%i" % i
               cal_pipe_target_name_tmp     = cal_pipe_target_name + ".%i" % i
             else:
-              cal_pipe_target_topology_tmp = cal_pipe_target_topology + ".%i" % i
-              cal_pipe_target_name_tmp     = cal_pipe_target_name + ".%i" % i
+              cal_pipe_target_topology_tmp = cal_pipe_target_topology
+              cal_pipe_target_name_tmp     = cal_pipe_target_name
             writeXMLAvgPipeline(ofile, cal_pipe_target_topology_tmp, tar_obs_topology,
               cal_pipe_target_name_tmp, cal_pipe_target_description,
               cal_tar_pipe_default_template, flaggingStrategy, calibratorBeam[8],
@@ -2114,22 +2111,23 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
     LB_pipeline_description = "Long-Baseline Concat"
     
     for beamNr in range(0, nr_beams):
-      if writePackageTag:
-        LB_preproc_pipe_name = packageTag + "/" + targetBeams[beamNr][2] + "/" + str(repeatNr) + "." + str(beamNr) + "/PP"
-        LB_pipeline_name = packageTag + "/" + targetBeams[beamNr][2] + "/" + str(repeatNr) + "." + str(beamNr) + "/LBP"
-      else:
-        LB_preproc_pipe_name = targetBeams[beamNr][2] + "/" + str(repeatNr) + "." + str(beamNr) + "/PP"
-        LB_pipeline_name = targetBeams[beamNr][2] + "/" + str(repeatNr) + "." + str(beamNr) + "/LBP"
+      if targetBeams[beamNr][7]: #create pipelines for this beam
+        if writePackageTag:
+          LB_preproc_pipe_name = packageTag + "/" + targetBeams[beamNr][2] + "/" + str(repeatNr) + "." + str(beamNr) + "/PP"
+          LB_pipeline_name = packageTag + "/" + targetBeams[beamNr][2] + "/" + str(repeatNr) + "." + str(beamNr) + "/LBP"
+        else:
+          LB_preproc_pipe_name = targetBeams[beamNr][2] + "/" + str(repeatNr) + "." + str(beamNr) + "/PP"
+          LB_pipeline_name = targetBeams[beamNr][2] + "/" + str(repeatNr) + "." + str(beamNr) + "/LBP"
 
-      writeXMLAvgPipeline(ofile, LB_preproc_pipe_topologies[beamNr], LB_preproc_pipe_predecessor[beamNr], LB_preproc_pipe_name,
-      LB_preproc_pipe_description, LB_preproc_pipe_template, flaggingStrategy, targetBeams[beamNr][8], targetDemix[beamNr][0],
-      tar_pipe_output_MS_topologies[beamNr], LB_preproc_pipe_output_MS_topologies[beamNr], cluster)
+        writeXMLAvgPipeline(ofile, LB_preproc_pipe_topologies[beamNr], LB_preproc_pipe_predecessor[beamNr], LB_preproc_pipe_name,
+        LB_preproc_pipe_description, LB_preproc_pipe_template, flaggingStrategy, targetBeams[beamNr][8], targetDemix[beamNr][0],
+        tar_pipe_output_MS_topologies[beamNr], LB_preproc_pipe_output_MS_topologies[beamNr], cluster)
 
-      #nv 13okt2014: #6716 - Implement Long Baseline Pipeline     
-      writeXMLLongBaselinePipe(ofile, LB_pipeline_topologies[beamNr], LB_pipeline_predecessor[beamNr], LB_pipeline_name,
-      LB_pipeline_description, LB_pipeline_default_template, targetBeams[beamNr][8], subbandsPerSubbandGroup, subbandGroupsPerMS,
-      LB_pipeline_input_uv_topologies[beamNr], LB_pipeline_output_uv_topologies[beamNr], cluster)
-  return imaging_pipe_inputs, imaging_pipe_predecessors
+        #nv 13okt2014: #6716 - Implement Long Baseline Pipeline     
+        writeXMLLongBaselinePipe(ofile, LB_pipeline_topologies[beamNr], LB_pipeline_predecessor[beamNr], LB_pipeline_name,
+        LB_pipeline_description, LB_pipeline_default_template, targetBeams[beamNr][8], subbandsPerSubbandGroup, subbandGroupsPerMS,
+        LB_pipeline_input_uv_topologies[beamNr], LB_pipeline_output_uv_topologies[beamNr], cluster)
+  return imaging_pipe_inputs, imaging_pipe_predecessors, startTimeObs
 
 def writeBlock(ofile, settings, projectName, blockNr):
   defaults = {
@@ -2155,13 +2153,16 @@ def writeBlock(ofile, settings, projectName, blockNr):
           
   if settings["set_starttime"]:
     settings["startTimeObs"] = settings["startTime"]
+  else:
+    settings["startTimeObs"] = 0
   
   imaging_pipe_inputs = [[] for i in range(settings["nr_beams"])]
   imaging_pipe_predecessors = [[] for i in range(settings["nr_beams"])]
       
   blockTopo = "B%i." % (blockNr-1,)
   for repeatNr in range (1, settings["nrRepeats"]+1):
-     imaging_pipe_inputs, imaging_pipe_predecessors = writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_inputs, imaging_pipe_predecessors)
+     imaging_pipe_inputs, imaging_pipe_predecessors, settings["startTimeObs"] = writeRepeat(ofile,
+       projectName, blockTopo, repeatNr, settings, imaging_pipe_inputs, imaging_pipe_predecessors)
 
   if settings["do_imaging"]:
     imagingPipelineKeys = ["imaging_pipe_type", "imaging_pipe_default_template", "imaging_pipe_duration",
