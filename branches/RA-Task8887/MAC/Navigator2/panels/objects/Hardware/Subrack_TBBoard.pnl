@@ -1,0 +1,652 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 120 455 N "_3DFace" 1
+"$TBB"
+"main()
+{
+  baseDP = g_currentDatapoint;
+  
+  string database=dpSubStr(baseDP,DPSUB_SYS);
+
+  dyn_string dpAr= strsplit(dpSubStr(baseDP,DPSUB_DP),\"_\");
+	
+  for (int i = 1; i <= dynlen(dpAr);i++ ) {
+    if (strpos(dpAr[i],\"Subrack\") > -1) {
+      sNr = substr(dpAr[i],7,strlen(dpAr[i]));
+      break;
+    }
+  }
+  
+  int t = $TBB;
+
+  tbbNr=t+(sNr*2);	
+  string TBBoard=\"TBBoard\"+tbbNr;
+	
+  setValue(\"txt_tbboard\",\"text\",TBBoard);
+	
+  baseDP+=\"_\"+TBBoard;
+
+  // check if the required datapoint for this view are enabled and accessible
+  if (dpExists(baseDP+\".boardVersion\")) {
+    dpConnect(\"navPanel_showVersion\", baseDP +\".boardVersion:_online.._value\");
+  } else {
+    setValue(\"txt_version\", \"text\", \"ver: x.x\");
+  }	
+
+  if(!dpExists(baseDP + \".voltage12:_online.._value\") ||
+     !dpExists(baseDP + \".voltage25:_online.._value\") ||
+     !dpExists(baseDP + \".voltage33:_online.._value\"))
+  {
+    setValue(\"txt_voltage12\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"txt_voltage25\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"txt_voltage33\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    return;
+  }
+  else
+  {
+    dpConnect(\"boardDetails\", baseDP + \".voltage12:_online.._value\",
+			      baseDP + \".voltage25:_online.._value\",
+                              baseDP + \".voltage33:_online.._value\",
+                              baseDP + \".voltage12:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)){
+      boardDetails(\"\",0,\"\",0,\"\",0,\"\",true);
+    }
+  }
+      
+
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
+  // connect for selfUpdates
+  showSelfState(baseDP);
+}
+
+void boardDetails(string dp1, float voltage12,
+             string dp2, float voltage25,
+             string dp3, float voltage33,
+             string dp4, bool invalid)
+{
+    setValue(\"txt_voltage12\"   , \"text\", voltage12);
+    setValue(\"txt_voltage25\"   , \"text\", voltage25);
+    setValue(\"txt_voltage33\"   , \"text\", voltage33);
+}" 0
+ E "main()
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+ 1 0 0 0  11 451
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP          = \"\";
+int    tbbNr           = -1;
+int    sNr             = -1;
+bool   bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {   
+    navPanel_setEvent(\"TBBoard\"+tbbNr,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"Subrack_RSPBoard.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(\"TBBoard\"+tbbNr,\"ChangePanel\");  
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"TBBoard\"+tbbNr,\"EventRightClick\");
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 17
+"TBBoardHighlight"
+""
+1 140 10 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"TBBoardCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void TBBoardCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"Subrack_TBBoard.pnl:TBBoardCallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"Subrack_TBBoard.pnl:TBBoardCallback|Found highlight : \" + highlight + \" Looking for: TBBoard\" + tbbNr);
+  bool bHighlight=false;
+  if (dynContains(highlight,\"TBBoard\"+tbbNr)) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"Subrack_TBBoard.pnl:TBBoardCallback|Highlight request: \"+bHighlight);
+  TBBoardHighlight.visible = bHighlight;  
+}" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -5 -5 1 E 5 5 102 435
+6 0
+"border1"
+""
+1 11 439 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E 1 0 1 -5 -5 1 E 10 10 97 430
+2 1
+"txt_tbboard"
+""
+1 8 8 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 10 10 67 27
+0 2 0 "0s" 0 0 0 192 0 0  10 10 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 8 TBBoardx
+1 18 0 "" 1
+0
+2 3
+"txt_version"
+""
+1 49 408 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 53 410 90 425
+0 2 0 "0s" 0 0 0 194 0 0  90 410 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 8 ver: x.x
+2 4
+"label_voltage25"
+""
+1 18 137 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 20 139 84 155
+0 2 0 "0s" 0 0 0 194 0 0  84 139 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 12 Voltage 2.5:
+2 5
+"label_voltage12"
+""
+1 18 79 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 20 81 84 97
+0 2 0 "0s" 0 0 0 194 0 0  84 81 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 12 Voltage 1.2:
+6 6
+"rect_voltage12"
+""
+1 24 129 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E 1 0 1 -4 -12 1 E 24 109 87 129
+2 7
+"txt_voltage12"
+""
+1 41 98 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 43 100 68 117
+0 2 0 "1.2f" 4 0 0 194 0 0  68 100 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 4 0.00
+6 8
+"rect_voltage25"
+""
+1 23 187 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E 1 0 1 -4 -12 1 E 23 167 86 187
+2 9
+"txt_voltage25"
+""
+1 40 155 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 42 157 67 174
+0 2 0 "1.2f" 4 0 0 194 0 0  67 157 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 4 0.00
+2 10
+"txt_unitVoltage12"
+""
+1 69 98 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 71 100 80 117
+0 2 0 "0s" 0 0 0 192 0 0  71 100 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 V
+2 11
+"txt_unitVoltage25"
+""
+1 68 155 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 70 157 79 174
+0 2 0 "0s" 0 0 0 192 0 0  70 157 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 V
+2 12
+"label_voltage33"
+""
+1 84 197 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 20 196 84 212
+0 2 0 "0s" 0 0 0 194 0 0  84 196 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 12 Voltage 3.3:
+6 13
+"rect_voltage33"
+""
+1 23 245 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E 1 0 1 -4 -12 1 E 23 225 86 245
+2 14
+"txt_voltage33"
+""
+1 40 213 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+14 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 42 215 67 232
+0 2 0 "1.2f" 4 0 0 194 0 0  67 215 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 4 0.00
+2 15
+"txt_unitVoltage33"
+""
+1 68 212 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 70 214 79 231
+0 2 0 "0s" 0 0 0 192 0 0  70 214 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 V
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 "selfState"
+"objects\\lofar_self_state.pnl" 51 421 T 3 1 0 1 -42 -17
+0
+0

@@ -1,0 +1,24 @@
+TODO
+----
+
+Things that still have to be done (in arbitrary order).
+
+* Code clean-up.
+* Proper support for MS with multiple channels / bands (MF in FTMachine).
+    - How to determine reference frequencies?
+    - LofarATerm needs to correct the A-term for the response at the phase center for each channel.
+* Get rid of hardcoded values (oversampling, station diameter, ...).
+* Compute only the first and last row of the Mueller matrix when asked for a Stokes I image.
+* Ionosphere.
+* Facetting.
+* Allow a facet to be put at the location of a corrupting source.
+* MFS from Sanjay (?)
+* Parallelisation
+* Make sure convolution functions are not too large
+* Use WEIGHT_SPECTRUM
+* Support for multiple image channels
+* Distributed weighting and gridding (multiple subbands on different nodes)
+* Grid PSF and data simultaneously (to reduce data access and conv.func. calculation)
+* Get rid of multiple times writing avgpb and spheriod_cut_im for csclean
+* Implement (de)gridding on GPU
+

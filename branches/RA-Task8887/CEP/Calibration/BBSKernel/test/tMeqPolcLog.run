@@ -1,0 +1,3 @@
+#!/bin/bash
+./tMeqPolcLog 2>&1 | grep 'result:'
+exit $?
