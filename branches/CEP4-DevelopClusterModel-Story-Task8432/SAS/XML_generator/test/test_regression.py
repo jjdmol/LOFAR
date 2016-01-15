@@ -16,6 +16,7 @@ def checkDiff(diff):
   return False
 
 def main():
+  os.chdir('test_regression.in_data')
   infiles = os.listdir("txt")
   results = []
   for infile in infiles:
@@ -25,7 +26,7 @@ def main():
     outfile = name + ".xml"
     print "\n"
     print "*** Processing %s ***" % infile
-    cmd  = ["../src/xmlgen.py", "-i", "./txt/%s" % infile, "-o", "test.xml"]
+    cmd  = ["xmlgen", "-i", "./txt/%s" % infile, "-o", "test.xml"]
     p    = subprocess.Popen(cmd, stdin=open('/dev/null'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     logs = p.communicate()[0].splitlines()  #stdout
     print "xmlgen ran with return code: %s" % p.returncode

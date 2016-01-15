@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-from xmlgen import dms2deg, hms2deg
+from lofar.sas.xmlgenerator.xmlgen import dms2deg, hms2deg
 import sys
 
 #testing for bug #8134 Negative zero degrees were turned into positive ones
