@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 #
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
-# id.. TDB
+# $Id$
 
 try:
   import qpid.messaging as messaging
@@ -26,7 +26,6 @@ except ImportError:
   MESSAGING_ENABLED = False
 
 import os
-import signal
 import logging
 import lofar.messagebus.message as message
 import atexit
@@ -35,9 +34,6 @@ import atexit
 broker="127.0.0.1" 
 options="create:never"
 
-# Define logging. Until we have a python loging framework, we'll have
-# to do any initialising here
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 logger=logging.getLogger("MessageBus")
 
 class BusException(Exception):
@@ -46,19 +42,18 @@ class BusException(Exception):
 class Session:
     def __init__(self, broker):
         self.closed = False
-
-        logger.info("[Bus] Connecting to broker %s", broker)
         self.connection = messaging.Connection(broker)
         self.connection.reconnect = True
-        logger.info("[Bus] Connected to broker %s", broker)
 
+        logger.info("[Bus] Connecting to broker %s", broker)
         try:
             self.connection.open()
+            logger.info("[Bus] Connected to broker %s", broker)
             self.session = self.connection.session() 
         except messaging.MessagingError, m:
             raise BusException(m)
 
-        # NOTE: We cannuot use:
+        # NOTE: We cannot use:
         #  __del__: its broken (does not always get called, destruction order is unpredictable)
         #  with:    not supported in python 2.4, does not work well on arrays of objects
         #  weakref: dpes not guarantee to be called (depends on gc)
@@ -138,11 +133,11 @@ class FromBus(Session):
     def add_queue(self, queue, options=options):
         try:
             receiver = self.session.receiver(self.address(queue, options))
-
-            # Need capacity >=1 for 'self.session.next_receiver' to function across multiple queues
-            receiver.capacity = 1 #32
         except messaging.MessagingError, m:
             raise BusException(m)
+
+        # Need capacity >=1 for 'self.session.next_receiver' to function across multiple queues
+        receiver.capacity = 1
 
     def get(self, timeout=None):
         msg = None

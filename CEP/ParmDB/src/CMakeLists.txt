@@ -47,11 +47,10 @@ foreach(prog ${parmdb_PROGRAMS})
   lofar_add_bin_program(${prog} ${prog}.cc)
 endforeach(prog ${parmdb_PROGRAMS})
 
-install(PROGRAMS
+lofar_add_bin_scripts(
   setupparmdb
   setupparmdb-part
   setupsourcedb
   setupsourcedb-part
   startparmdbdistr
-  parmdbremote-scr
-  DESTINATION bin)
+  parmdbremote-scr)

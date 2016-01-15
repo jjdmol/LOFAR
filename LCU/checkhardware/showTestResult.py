@@ -8,28 +8,29 @@ import string
 # import datetime
 # import time
 
+logdir = ''
 
 def print_help():
     """ print help """
     print "possible option for this script"
-    print "-------------------------------"
+    print "--------------------------------------------------"
     print "-h            print this help screen"
-    print "-d=2          show last 2 days"
-    print "-f=full_path_filename"
-    print "-------------------------------"
+    print "-L2=2         show last 2 checks from L2 file"
+    print "-S=2          show last 2 checks from S file"
+    print "-f=filename   full_path_filename, L2 and S are ignored"
+    print " "
+    print " if no option is given the last check done is used"
+    print "--------------------------------------------------"
     sys.exit(0)
 
-arg_nr = 1
 args = dict()
-while arg_nr < len(sys.argv):
-    if sys.argv[arg_nr][0] == '-':
-        opt = sys.argv[arg_nr][1].upper()
-        optval = '-'
-        valpos = sys.argv[arg_nr].find('=')
-        if valpos != -1:
-            optval = sys.argv[arg_nr][valpos+1:]
-        args[opt] = optval
-        arg_nr += 1
+for argument in sys.argv[1:]:
+    if argument.startswith('-'):
+        if '=' in argument:
+            option, value = argument.strip()[1:].split('=')
+            args[option.strip().upper()] = value.strip()
+        else:
+            args[argument.strip()[1:].upper()] = '-'
 
 if 'H' in args:
     print_help()
@@ -48,6 +49,8 @@ station_id = getHostName().upper()
 
 
 def main():
+    global logdir
+    
     """ main function """
     fd = open(run_path+r'/checkHardware.conf', 'r')
     data = fd.readlines()
@@ -56,161 +59,172 @@ def main():
         if line.find('log-dir-local') != -1:
             key, logdir = line.strip().split('=')
 
+    data_sets = []
+    
     if 'F' in args:
         fullfilename = args.get('F')
     else:
-        if 'D' in args:
+        if 'L2' in args:
             testfilename = '%s_L2_StationTestHistory.csv' % station_id
-        else:
+            data_sets.append( ['L2', get_data(testfilename, int(args.get('L2', '1')))] )
+        
+        if 'S' in args:    
+            testfilename = '%s_S_StationTestHistory.csv' % station_id
+            data_sets.append( ['S', get_data(testfilename, int(args.get('S', '1')))] )
+            
+        if not 'L2' in args and not 'S' in args:
             testfilename = '%s_StationTest.csv' % station_id
+            data_sets.append( ['', get_data(testfilename, 1)] )
 
+    rcu_x = rcu_y = 0
+
+    _part = ''
+    _part_nr = -1
+
+    # print data for all sets
+    print "\n\n\n"
+    for check_type, data in data_sets:
+        message = "STATION-CHECK RESULTS %s for last %s checks" % (check_type, args.get('%s' % check_type, '1')) 
+        banner_len = 100
+        msg_len = len(message)
+        print "-" * banner_len
+        print ">" * ((banner_len - msg_len - 6) / 2) + "   %s   " % message + "<" * ((banner_len - msg_len - 6) / 2)
+        print "-" * banner_len
+        
+        check_nr = int(args.get('%s' % check_type, '1')) - 1
+        for line in data:
+            partnumber = -1
+            if line[0] == '#':
+                continue
+
+            d = line.strip().split(',')
+            if len(d) < 4:
+                continue
+            date = d[0]
+
+            if 'STATION' in line:
+                if check_nr:
+                    message = "= csv -%s-  (last - %d) =" % (check_type, check_nr)
+                else:
+                    message = "= csv -%s-  (last) =" % check_type
+                print '   ' + '=' * len(message)        
+                print '   ' + message
+                print '   ' + '=' * len(message)        
+                check_nr -= 1
+
+            part = d[1]
+            if d[2] != '---':
+                partnumber = int(d[2])
+                if part == 'LBL':
+                    if partnumber < 48:
+                        print "ERROR: LBL %d NOT a legal partnumber" % partnumber
+                        rcu_x = 0
+                        rcu_y = 0
+                    else:
+                        rcu_x = (partnumber - 48) * 2
+                        rcu_y = (partnumber - 48) * 2 + 1
+                if part in ('LBH', 'HBA'):
+                    rcu_x = partnumber * 2
+                    rcu_y = partnumber * 2 + 1
+
+            msg = d[3].strip()
+            msg_info = string.join(d[4:], " ")
+            keyvalue = dict()
+            for i in range(4, len(d)):
+                if d[i].find('=') != -1:
+                    key, valstr = d[i].split('=')
+                    vallist = valstr.split(' ')
+                    if len(vallist) == 1:
+                        keyvalue[key] = vallist[0]
+                    elif len(vallist) > 1:
+                        keyvalue[key] = vallist
+                else:
+                    keyvalue[d[i]] = '-'
+
+            if part == 'NFO':
+                print_info(msg, keyvalue, msg_info)
+
+            if part == 'SPU':
+                if part != _part:
+                    _part = part
+                    hdr = "\n== SPU "
+                    print hdr + "=" * (banner_len - len(hdr))
+                print_spu(partnumber, msg, keyvalue, msg_info)
+
+            if part == 'RSP':
+                if part != _part:
+                    _part = part
+                    hdr = "\n== RSP "
+                    print hdr + "=" * (banner_len - len(hdr))
+                print_rsp(partnumber, msg, keyvalue)
+
+            if part == 'TBB':
+                if part != _part:
+                    _part = part
+                    hdr = "\n== TBB "
+                    print hdr + "="*(banner_len - len(hdr))
+                print_tbb(partnumber, msg, keyvalue)
+
+            if part == 'RCU':
+                if part != _part:
+                    _part = part
+                    hdr = "\n== RCU "
+                    print hdr + "=" * (banner_len - len(hdr))
+                print_rcu(partnumber, msg, keyvalue)
+
+            if part in ('LBL', 'LBH'):
+                if part != _part:
+                    _part = part
+                    if part == 'LBL':
+                        hdr = "\n== LBA Low "
+                    else:
+                        hdr = "\n== LBA High "
+                    print hdr + "=" * (banner_len - len(hdr))
+                print_lba(partnumber, msg, keyvalue, rcu_x, rcu_y)
+
+            if part == 'HBA':
+                if part != _part:
+                    _part = part
+                    hdr = "\n== HBA "
+                    print hdr + "=" * (banner_len - len(hdr))
+
+                if partnumber != -1 and partnumber != _part_nr:
+                    _part_nr = partnumber
+                    header = "Tile %d (RCU %d/%d)" % (partnumber, rcu_x, rcu_y)
+                    print "\n-- %s %s" % (header, '-' * (banner_len - len(header)))
+
+                print_hba(partnumber, msg, keyvalue, rcu_x, rcu_y)
+
+    #print '\n' + '#' * banner_len
+
+
+def get_data(filename, n_checks):
+    if not filename.startswith('/'):
         if os.path.exists(logdir):
-            fullfilename = os.path.join(logdir, testfilename)
+                fullfilename = os.path.join(logdir, filename)
         else:
             print "not a valid log dir"
             sys.exit(-1)
-
     try:
         fd = open(fullfilename, 'r')
         data = fd.readlines()
         fd.close()
     except:
-        print "%s not found in %s" % (testfilename, logdir)
+        print "%s not found in %s" % (filename, logdir)
         sys.exit(-1)
-
-    rcu_x = rcu_y = 0
-
-    print "\n" + "-" * 103
-    print ">" * 36 + "   LAST STATION-CHECK RESULT   " + "<" * 36
-    print "-" * 103
-
-    _part = ''
-    _part_nr = -1
-
-    first_date = 0
-    if 'D' in args:
-        days = int(args.get('D'))
-
-        days_cnt = 1
-
-        first_date = data[-1].strip().split(',')[0]
-        print first_date
-        for i in range(len(data) - 1, -1, -1):
-            line = data[i]
-            if line[0] == '#':
-                continue
-            line_date = line.strip().split(',')[0]
-            if line_date != first_date:
-                first_date = line_date
-                days_cnt += 1
-            if days_cnt == days:
-                break
-        print first_date
-
-    last_date = first_date
-    for line in data:
-        partnumber = -1
+    
+    first_line = 0
+    check_cnt  = 0
+    for i in range(len(data) - 1, -1, -1):
+        line = data[i]
         if line[0] == '#':
             continue
-
-        d = line.strip().split(',')
-        if len(d) < 4:
-            continue
-        date = d[0]
-
-        if 'D' in args:
-            if last_date != date:
-                print '\n'+'#'*103
-            last_date = date
-
-        if first_date != 0 and int(date) < int(first_date):
-            continue
-
-        part = d[1]
-        if d[2] != '---':
-            partnumber = int(d[2])
-            if part == 'LBL':
-                if partnumber < 48:
-                    print "ERROR: LBL %d NOT a legal partnumber" % partnumber
-                    rcu_x = 0
-                    rcu_y = 0
-                else:
-                    rcu_x = (partnumber - 48) * 2
-                    rcu_y = (partnumber - 48) * 2 + 1
-            if part in ('LBH', 'HBA'):
-                rcu_x = partnumber * 2
-                rcu_y = partnumber * 2 + 1
-
-        msg = d[3].strip()
-        msg_info = string.join(d[4:], " ")
-        keyvalue = dict()
-        for i in range(4, len(d)):
-            if d[i].find('=') != -1:
-                key, valstr = d[i].split('=')
-                vallist = valstr.split(' ')
-                if len(vallist) == 1:
-                    keyvalue[key] = vallist[0]
-                elif len(vallist) > 1:
-                    keyvalue[key] = vallist
-            else:
-                keyvalue[d[i]] = '-'
-
-        if part == 'NFO':
-            print_info(msg, keyvalue, msg_info)
-
-        if part == 'SPU':
-            if part != _part:
-                _part = part
-                hdr = "\n== SPU "
-                print hdr + "=" * (104 - len(hdr))
-            print_spu(partnumber, msg, keyvalue, msg_info)
-
-        if part == 'RSP':
-            if part != _part:
-                _part = part
-                hdr = "\n== RSP "
-                print hdr + "=" * (104 - len(hdr))
-            print_rsp(partnumber, msg, keyvalue)
-
-        if part == 'TBB':
-            if part != _part:
-                _part = part
-                hdr = "\n== TBB "
-                print hdr + "="*(104-len(hdr))
-            print_tbb(partnumber, msg, keyvalue)
-
-        if part == 'RCU':
-            if part != _part:
-                _part = part
-                hdr = "\n== RCU "
-                print hdr + "=" * (104 - len(hdr))
-            print_rcu(partnumber, msg, keyvalue)
-
-        if part in ('LBL', 'LBH'):
-            if part != _part:
-                _part = part
-                if part == 'LBL':
-                    hdr = "\n== LBA Low "
-                else:
-                    hdr = "\n== LBA High "
-                print hdr + "=" * (104 - len(hdr))
-            print_lba(partnumber, msg, keyvalue, rcu_x, rcu_y)
-
-        if part == 'HBA':
-            if part != _part:
-                _part = part
-                hdr = "\n== HBA "
-                print hdr + "=" * (104 - len(hdr))
-
-            if partnumber != -1 and partnumber != _part_nr:
-                _part_nr = partnumber
-                header = "Tile %d (RCU %d/%d)" % (partnumber, rcu_x, rcu_y)
-                print "\n-- %s %s" % (header, '-' * (99 - len(header)))
-
-            print_hba(partnumber, msg, keyvalue, rcu_x, rcu_y)
-
-    print '\n' + '#' * 103
-
+        if 'STATION' in line:
+            first_line = i
+            check_cnt += 1
+        if check_cnt == n_checks:
+            break
+    return data[first_line:]
 
 def print_info(msg, keyvalue, msg_info):
     """
@@ -327,10 +341,10 @@ def print_rsp(partnumber, msg, keyvalue):
             print "    Board %2d wrong firmware version: AP=%s BP=%s" % (
                 partnumber, keyvalue.get('AP'), keyvalue.get('BP'))
     if msg == 'VOLTAGE':
-        print "    Board %2d wrong voltage: 1.2V=%3.1f 2.5V=%3.1f 3.3V=%3.1f" % (
+        print "    Board %2d wrong voltage: 1.2V=%s 2.5V=%s 3.3V=%s" % (
               partnumber, keyvalue.get('1.2V'), keyvalue.get('2.5V'), keyvalue.get('3.3V'))
     if msg == 'TEMPERATURE':
-        print "    Board %2d high temperature: PCB=%3.1f BP=%3.1f AP0=%3.1f AP1=%3.1f AP2=%3.1f AP3=%3.1f" % (
+        print "    Board %2d high temperature: PCB=%s BP=%s AP0=%s AP1=%s AP2=%s AP3=%s" % (
               partnumber, keyvalue.get('PCB'), keyvalue.get('BP'), keyvalue.get('AP0'), keyvalue.get('AP1'),
               keyvalue.get('AP2'), keyvalue.get('AP3'))
     return

@@ -46,7 +46,7 @@ class SocketStream : public FileDescriptorBasedStream
     };
 
     SocketStream(const std::string &hostname, uint16 _port, Protocol, Mode,
-                 time_t deadline = 0, bool doAccept = true);
+                 time_t deadline = 0, bool doAccept = true, const std::string &bind_local_iface = "");
     virtual ~SocketStream();
 
     FileDescriptorBasedStream *detach();
@@ -70,6 +70,8 @@ class SocketStream : public FileDescriptorBasedStream
 
     // Allow individual recv()/send() calls to last for 'timeout' seconds before returning EWOULDBLOCK
     void setTimeout(double timeout);
+
+    int getPort() const { return port; }
 
   private:
     const std::string hostname;

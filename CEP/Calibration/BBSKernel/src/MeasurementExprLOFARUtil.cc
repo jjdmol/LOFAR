@@ -179,12 +179,22 @@ makeGainExpr(Scope &scope,
 
 Expr<JonesMatrix>::Ptr
 makeTECExpr(Scope &scope,
-    const Station::ConstPtr &station)
+    const Station::ConstPtr &station,
+    const TECConfig &config)
 {
-    ExprParm::Ptr tec = scope(INSTRUMENT, "TEC:" + station->name());
+    if (config.splitTEC()) {
+      ExprParm::Ptr tec0 = scope(INSTRUMENT, "TEC:0:" + station->name());
+      ExprParm::Ptr tec1 = scope(INSTRUMENT, "TEC:1:" + station->name());
 
-    Expr<Scalar>::Ptr shift = Expr<Scalar>::Ptr(new TECU2Phase(tec));
-    return Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(shift, shift));
+      Expr<Scalar>::Ptr shift0 = Expr<Scalar>::Ptr(new TECU2Phase(tec0));
+      Expr<Scalar>::Ptr shift1 = Expr<Scalar>::Ptr(new TECU2Phase(tec1));
+
+      return Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(shift0, shift1));
+    } else {
+        ExprParm::Ptr tec = scope(INSTRUMENT, "TEC:" + station->name());
+        Expr<Scalar>::Ptr shift = Expr<Scalar>::Ptr(new TECU2Phase(tec));
+        return Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(shift, shift));
+    }
 }
 
 Expr<JonesMatrix>::Ptr

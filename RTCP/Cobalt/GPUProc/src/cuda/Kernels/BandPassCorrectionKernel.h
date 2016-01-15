@@ -51,7 +51,6 @@ namespace LOFAR
       {
         Parameters(const Parset& ps);
         unsigned nrStations;
-        unsigned nrBitsPerSample;
 
         unsigned nrDelayCompensationChannels;
         unsigned nrHighResolutionChannels;

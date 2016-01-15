@@ -3,13 +3,11 @@
 include(LofarCTest)
 
 # Create symbolic links to scripts used by some of the test programs
-get_target_property(_loc getparsetvalue LOCATION)
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-  ${_loc}
+lofar_create_target_symlink(
+  getparsetvalue 
   ${CMAKE_CURRENT_BINARY_DIR}/getparsetvalue)
-get_target_property(_loc finddproc LOCATION)
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-  ${_loc}
+lofar_create_target_symlink(
+  finddproc 
   ${CMAKE_CURRENT_BINARY_DIR}/finddproc)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${LMWCommon_SOURCE_DIR}/src/startdistproc

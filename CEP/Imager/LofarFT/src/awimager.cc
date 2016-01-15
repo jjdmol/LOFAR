@@ -484,7 +484,7 @@ int main (Int argc, char** argv)
 		   "If turned to true, apply the element beam every TWElement.",
 		   "int");
     inputs.create ("ApplyBeamCode", "0",
-		   "Ask developers.",
+		   "0: arrayfactor and elementbeam (default), 1: only arrayfactor, 2: only elementbeam, 3: no arrayfactor, no elementbeam",
 		   "int");
     inputs.create ("UseMasks", "true",
 		   "When the element beam is applied (StepApplyElement), the addictional step of convolving the grid can be made more efficient by computing masks. If true, it will create a directory in which it stores the masks.",

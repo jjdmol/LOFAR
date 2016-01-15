@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys
 print >>sys.stderr, "QPID support NOT enabled! Will NOT connect to any broker, and messages will be lost!"

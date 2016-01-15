@@ -7,8 +7,14 @@
 #
 
 #
-# Write trigger message info to a file
-# see /opt/lofar/var/log/<date>_TRIGGER.dat
+# Set default working imag.
+# Set to 0 for flashing the firmware in image-0
+# 
+TBBDriver.DEFAULT_IMAGE=1
+
+#
+# Write trigger messages to a file
+# see /localhome/data/<date>_TRIGGER.dat
 # 
 TBBDriver.SAVE_TRIGGERS_TO_FILE=1
 

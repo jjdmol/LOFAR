@@ -37,6 +37,7 @@ DROP SEQUENCE IF EXISTS	OTDBtreeID;
 DROP SEQUENCE IF EXISTS	OTDBgroupID;
 DROP TABLE IF EXISTS StateHistory CASCADE;
 DROP INDEX IF EXISTS otdbtree_treeid_indx;
+DROP INDEX IF EXISTS statehist_creation_idx;
 
 CREATE SEQUENCE	OTDBtreeID START 1;
 -- Create a new start number based on current time. To prevent overlap in treeid's
@@ -98,6 +99,9 @@ CREATE TABLE StateHistory (
 	momID		INT4			NOT NULL,
 	state		INT2			NOT NULL,
 	userID		INT4			NOT NULL REFERENCES operator(ID),
-	timestamp	TIMESTAMP(0)	DEFAULT now()
+	timestamp	TIMESTAMP(0)	DEFAULT now(),
+	creation	TIMESTAMP(6)	DEFAULT now()
 ) WITHOUT OIDS;
+
+CREATE INDEX statehist_creation_idx ON statehistory(creation);
 

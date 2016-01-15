@@ -116,7 +116,7 @@ we use -DDATA_DIR=..., such that others can use our install AND measures tables.
   svn co http://casacore.googlecode.com/svn/trunk/ casacore
   mkdir casacore/build
   cd casacore/build
-  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -DUSE_HDF5=ON -DUSE_FFTW3=ON -DUSE_THREADS=ON -DUSE_OPENMP=ON -DBUILD_PYTHON=ON -DUSE_STACKTRACE=ON -DDATA_DIR=$HOME/casacore/data ..
+  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -D-DUSE_HDF5=ON -DUSE_FFTW3=ON -DUSE_THREADS=ON -DUSE_OPENMP=ON -DCXX11=ON -DBUILD_PYTHON=ON -DUSE_STACKTRACE=ON -DDATA_DIR=$HOME/casacore/data ..
   make -j 8 install
   ctest    # optional
 
@@ -138,17 +138,18 @@ Dependency for: LOFAR Calibration package, maybe others
   make -j 8 install
 
 
-pyrap (optional for LOFAR Cobalt)
+python-casacore (formerly pyrap) (optional for LOFAR Cobalt)
 -----
 
 Dependency for: various LOFAR/CEP packages
 Depends on: python boost-python casacore numpy scons
 
   cd $HOME/root/src
-  svn co http://pyrap.googlecode.com/svn/trunk pyrap
-  cd pyrap
-  ./batchbuild-trunk.py --casacore-root=$HOME/root --enable-hdf5 --cfitsio-root=$HOME/root --wcs-root=$HOME/root --prefix=$HOME/root --python-prefix=$HOME/root/lib64/python2.6/site-packages
-  python -c 'import pyrap'  # optional (test), should print nothing and exit 0
+  git clone https://github.com/casacore/python-casacore.git
+  cd python-casacore
+  ./setup.py build_ext -I$HOME/root/include -L$HOME/root/lib  # casacore include and lib paths
+  ./setup install --prefix=$HOME/root
+  python -c 'import casacore'  # optional (test), should print nothing and exit 0
 
 
 blitz++ (easier to install using your OS' package manager, not needed for LOFAR Cobalt)

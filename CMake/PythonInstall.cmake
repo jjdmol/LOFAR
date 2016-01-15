@@ -30,7 +30,11 @@ find_package(PythonInterp)
 if(PYTHON_EXECUTABLE)
   set(_cmd
     "from distutils.sysconfig import get_python_lib"
-    "print(get_python_lib(plat_specific=True, prefix=''))")
+    "from os.path import join"
+    "print(join(
+       get_python_lib(plat_specific=True, standard_lib=True, prefix=''), 
+       'site-packages'))"
+  )
   execute_process(
     COMMAND "${PYTHON_EXECUTABLE}" "-c" "${_cmd}"
     OUTPUT_VARIABLE _pydir
@@ -67,9 +71,24 @@ macro(python_install)
   endif(NOT PYTHON_EXECUTABLE)
 
   # Parse arguments.
+  # apart from the python files list, there are two additional arguments
+  # DESTINATION (required), where to put the py files (relative to python lib dir)
+  # EXECUTABLE (optional), makes the py files executable
   string(REGEX REPLACE ";?DESTINATION.*" "" _py_files "${ARGN}")
+  string(REGEX REPLACE ";?EXECUTABLE.*" "" _py_files "${_py_files}")
   string(REGEX MATCH "DESTINATION;.*" _dest_dir "${ARGN}")
   string(REGEX REPLACE "^DESTINATION;" "" _dest_dir "${_dest_dir}")
+  string(REGEX REPLACE ";?EXECUTABLE.*" "" _dest_dir "${_dest_dir}")
+  string(REGEX MATCH "EXECUTABLE;" _executable "${ARGN}")
+
+  #check if optional argument EXECUTABLE is set
+  #if so, then install the _py_files as EXECUTABLE type (executable)
+  #else as normal files (not executable)
+  if("${_executable}" STRGREATER "")
+    set(INSTALL_TYPE PROGRAMS)
+  else()
+    set(INSTALL_TYPE FILES)
+  endif("${_executable}" STRGREATER "")
 
   if(_py_files MATCHES "^$")
     message(FATAL_ERROR "python_install: no sources files specified")
@@ -98,7 +117,7 @@ macro(python_install)
     file(MAKE_DIRECTORY ${_build_dir}/${_py_path})
     execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
       ${_py_abs} ${_build_dir}/${_py})
-    install(FILES ${_py_abs} DESTINATION ${_inst_dir}/${_py_path})
+    install(${INSTALL_TYPE} ${_py_abs} DESTINATION ${_inst_dir}/${_py_path})
     if(USE_PYTHON_COMPILATION)
       set(_py_code
         "import py_compile, os"

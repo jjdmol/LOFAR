@@ -37,6 +37,7 @@ VersionsRead::VersionsRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD + 1 /* BP */)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
+  //doAtInit();
 }
 
 VersionsRead::~VersionsRead()

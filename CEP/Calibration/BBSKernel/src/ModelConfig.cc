@@ -51,6 +51,24 @@ bool ClockConfig::splitClock() const
 }
 
 // -------------------------------------------------------------------------- //
+// - TECConfig implementation                                               - //
+// -------------------------------------------------------------------------- //
+TECConfig::TECConfig()
+    : itsSplitTEC(false)
+{
+}
+
+TECConfig::TECConfig(bool splitTEC)
+    :   itsSplitTEC(splitTEC)
+{
+}
+
+bool TECConfig::splitTEC() const
+{
+  return itsSplitTEC;
+}
+
+// -------------------------------------------------------------------------- //
 // - GainConfig implementation                                               - //
 // -------------------------------------------------------------------------- //
 GainConfig::GainConfig(bool phasors)
@@ -132,13 +150,15 @@ const string &BeamConfig::asString(Mode in)
 }
 
 BeamConfig::BeamConfig()
-    :   itsMode(DEFAULT),
+    :   notdef(0),
+        itsMode(DEFAULT),
         itsUseChannelFreq(false)
 {
 }
 
 BeamConfig::BeamConfig(Mode mode, bool useChannelFreq)
-    :   itsMode(mode),
+    :   notdef(0),
+        itsMode(mode),
         itsUseChannelFreq(useChannelFreq)
 {
 }
@@ -190,13 +210,15 @@ const string &IonosphereConfig::asString(ModelType in)
 }
 
 IonosphereConfig::IonosphereConfig()
-    :   itsModelType(N_ModelType),
+    :   notdef(0),
+        itsModelType(N_ModelType),
         itsDegree(0)
 {
 }
 
 IonosphereConfig::IonosphereConfig(ModelType type, unsigned int degree = 0)
-    :   itsModelType(type),
+    :   notdef(0),
+        itsModelType(type),
         itsDegree(degree)
 {
 }
@@ -265,6 +287,11 @@ const GainConfig &ModelConfig::getGainConfig() const
 bool ModelConfig::useTEC() const
 {
     return itsModelOptions[TEC];
+}
+
+const TECConfig &ModelConfig::getTECConfig() const
+{
+    return itsConfigTEC;
 }
 
 bool ModelConfig::useCommonRotation() const
@@ -369,6 +396,18 @@ void ModelConfig::clearClockConfig()
     itsModelOptions[CLOCK] = false;
 }
 
+void ModelConfig::setTECConfig(const TECConfig &config)
+{
+    itsModelOptions[TEC] = true;
+    itsConfigTEC= config;
+}
+
+void ModelConfig::clearTECConfig()
+{
+    itsConfigTEC= TECConfig();
+    itsModelOptions[TEC] = false;
+}
+
 void ModelConfig::setGainConfig(const GainConfig &config)
 {
     itsModelOptions[GAIN] = true;
@@ -379,11 +418,6 @@ void ModelConfig::clearGainConfig()
 {
     itsModelOptions[GAIN] = false;
     itsConfigGain = GainConfig();
-}
-
-void ModelConfig::setTEC(bool value)
-{
-    itsModelOptions[TEC] = value;
 }
 
 void ModelConfig::setCommonRotation(bool value)
@@ -501,6 +535,13 @@ ostream &operator<<(ostream &out, const ClockConfig &obj)
     return out;
 }
 
+ostream &operator<<(ostream &out, const TECConfig &obj)
+{
+    out << indent << "Split TEC: " << boolalpha << obj.splitTEC()
+        << noboolalpha;
+    return out;
+}
+
 ostream &operator<<(ostream &out, const GainConfig &obj)
 {
     out << indent << "Phasors: " << boolalpha << obj.phasors() << noboolalpha;
@@ -570,6 +611,10 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
 
     out << endl << indent << "TEC enabled: " << boolalpha
         << obj.useTEC() << noboolalpha;
+    if (obj.useTEC()) {
+      Indent id;
+      out << endl << obj.getTECConfig();
+    }
     out << endl << indent << "Common rotation enabled: " << boolalpha
         << obj.useCommonRotation() << noboolalpha;
     out << endl << indent << "Common scalar phase enabled: " << boolalpha

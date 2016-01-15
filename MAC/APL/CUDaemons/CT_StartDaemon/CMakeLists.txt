@@ -9,5 +9,5 @@ lofar_add_library(ctstartdaemon
 
 lofar_add_bin_program(CTStartDaemon CTStartDaemonMain.cc CTStartDaemon.cc)
 
-install(PROGRAMS startController.sh DESTINATION bin)
+lofar_add_bin_scripts(startController.sh)
 install(FILES CTStartDaemon.conf DESTINATION etc)

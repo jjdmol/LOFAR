@@ -554,6 +554,7 @@ public:
 private:
 	int itsStage;
 	int itsRcu;
+	int itsBoard;
 	uint32 itsPages;
 	NsTimestamp itsTime;
     NsTimestamp itsTimeBefore;

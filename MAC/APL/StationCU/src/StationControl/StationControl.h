@@ -141,6 +141,7 @@ private:
 	int32					itsBitmode;
 
 	map<string, ActiveObs*>	itsObsMap;			// current running observations
+  map<string, bool> itsClaimedMap; // whether resources for the Obs are being or have been claimed
 	ObsIter					itsStartingObs;		// the Obs that is being started is this moment.
 
 	// Availability information of Antenna's and circuit boards.

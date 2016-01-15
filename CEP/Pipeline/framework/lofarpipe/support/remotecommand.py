@@ -92,8 +92,23 @@ def run_remote_command(config, logger, host, command, env, arguments = None):
         return run_via_mpiexec(logger, command, arguments, host)
     elif method == "cep_mpi":
         return run_via_mpiexec_cep(logger, command, arguments, host)
+    elif method == "slurm_srun_cep3":
+        return run_via_slurm_srun_cep3(logger, command, arguments, host)
     else:
         return run_via_ssh(logger, host, command, env, arguments)
+
+def run_via_slurm_srun_cep3(logger, command, arguments, host):
+    for arg in arguments:
+        command = command + " " + str(arg)
+    commandstring = ["srun","-N 1","-n 1","-w",host, "/bin/sh", "-c", "hostname && " + command]
+    # we have a bug that crashes jobs when too many get startet at the same time
+    # temporary NOT 100% reliable workaround
+    #from random import randint
+    #time.sleep(randint(0,10))
+    ##########################
+    process = spawn_process(commandstring, logger)
+    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
+    return process
 
 def run_via_mpirun(logger, host, command, environment, arguments):
     """
@@ -255,7 +270,8 @@ class ComputeJob(object):
                     "PYTHONPATH": os.environ.get('PYTHONPATH'),
                     "LD_LIBRARY_PATH": os.environ.get('LD_LIBRARY_PATH'),
                     "LOFARROOT" : os.environ.get('LOFARROOT'),
-                    "QUEUE_PREFIX" : os.environ.get('QUEUE_PREFIX','')
+                    "QUEUE_PREFIX" : os.environ.get('QUEUE_PREFIX',''),
+                    "LOFAR_OBSID" : os.environ.get('LOFAR_OBSID','')
                 },
                 arguments = [id, jobhost, jobport]
             )

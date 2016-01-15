@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # Test the basic functionality of FromBus and ToBus, both
 # to send and to forward messages.
@@ -9,6 +9,9 @@
 
 from lofar.messagebus.messagebus import FromBus, ToBus, MESSAGING_ENABLED
 from lofar.messagebus.message import Message, MessageContent
+
+import logging
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
 
 # Send a message (send MessageContent)
 tbus = ToBus("test")

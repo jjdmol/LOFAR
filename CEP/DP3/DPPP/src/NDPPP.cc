@@ -49,6 +49,8 @@ void showUsage() {
   std::cout<<"If no arguments are specified, the program tries to read "<<
     "\"NDPPP.parset\" or \"DPPP.parset\" as a default."<<std::endl;
   std::cout<<"-v will show version info and exit."<<std::endl;
+  std::cout<<"Documentation is at http://www.lofar.org/wiki/doku.php?id="<<
+    "public:user_software:ndppp"<<std::endl;
 }
 
 int main(int argc, char *argv[])
@@ -56,7 +58,7 @@ int main(int argc, char *argv[])
   try
   {
     TEST_SHOW_VERSION (argc, argv, DPPP);
-    INIT_LOGGER(basename(string(argv[0])));
+    INIT_LOGGER("DPPP");
     // Get the name of the parset file.
     if (argc>1 && (
           string(argv[1])=="--help" ||
@@ -83,11 +85,18 @@ int main(int argc, char *argv[])
 
     // Execute the parset file.
     DPRun::execute (parsetName, argc, argv);
+  } catch (LOFAR::APSException& err) {
+    // just send err.what() to the error stream
+    // this is just the error message, not a full backtrace
+    std::cerr << std::endl;
+    std::cerr << "ParameterSet Exception detected: "<< err.what() << std::endl;
+    return 1;
   } catch (LOFAR::Exception& err) {
     std::cerr << "LOFAR Exception detected: " << err << std::endl;
     return 1;
 #ifdef __clang__
   } catch (std::exception& err) {
+    std::cerr << std::endl;
     std::cerr << "std exception detected: " << err.what() << std::endl;
     return 1;
 #endif

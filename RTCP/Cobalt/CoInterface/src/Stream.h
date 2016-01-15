@@ -36,7 +36,7 @@ namespace LOFAR
     std::string getStorageControlDescription(int observationID, int rank);
 
     // The returned descriptor can be supplied to LCS/Stream StreamFactory.h
-    std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr);
+    std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr, const std::string &bind_local_iface = "");
 
   } // namespace Cobalt
 } // namespace LOFAR
