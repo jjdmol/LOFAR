@@ -1716,9 +1716,6 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
   tar_pipe_topologies = []
   LB_preproc_pipe_predecessor = []
   LB_preproc_pipe_topologies = []
-  tar_pipe_output_INST_topologies = []  
-  tar_pipe_output_MS_topologies = []
-  pulsar_pipe_output_topologies = []
   LB_preproc_pipe_output_MS_topologies = []
 
   #nv 13okt2014: #6716 - Implement Long Baseline Pipeline
@@ -1800,9 +1797,6 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
     tar_obs_uv_data_topologies.append(tar_obs_beam_topologies[beamNr] + ".uv.dps")
         
     tar_pipe_topologies.append(repeatTopo + ".PT" + beam_nr_str)
-    tar_pipe_output_INST_topologies.append(tar_pipe_topologies[beamNr] + ".inst.dps")
-    tar_pipe_output_MS_topologies.append(tar_pipe_topologies[beamNr] + ".uv.dps")
-    pulsar_pipe_output_topologies.append(tar_pipe_topologies[beamNr] + ".pu.dps")
 
     if processing == 'LongBaseline':
       LB_preproc_pipe_topologies.append(repeatTopo + ".PTLB" + beam_nr_str)
@@ -1816,7 +1810,7 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
       LB_pipeline_output_uv_topologies.append(LB_pipeline_topologies[beamNr] + ".uv.dps")
 
     if do_imaging:
-      imaging_pipe_inputs[beamNr].append(tar_pipe_output_MS_topologies[beamNr])
+      imaging_pipe_inputs[beamNr].append(tar_pipe_topologies[beamNr] + ".uv.dps")
       imaging_pipe_predecessors[beamNr].append(tar_pipe_topologies[beamNr])
 
   if "create_extra_ncp_beam" in settings and settings["create_extra_ncp_beam"]:
@@ -1837,16 +1831,19 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
       startTimeStr = ''
       endTimeStr = ''
       
-    writeXMLObs(ofile, cal_obs_name, cal_obs_name + ' (Calibration Observation)', cal_obs_topology, '', cal_obs_name,
-      projectName, tbbPiggybackAllowed, aartfaacPiggybackAllowed, correlatedData, coherentStokesData, incoherentStokesData,
-      antennaMode, clock, instrumentFilter, integrationTime, channelsPerSubband, coherentDedisperseChannels, flysEye,
-      subbandsPerFileCS, numberCollapsedChannelsCS,
-      stokesDownsamplingStepsCS, whichCS, subbandsPerFileIS, numberCollapsedChannelsIS, stokesDownsamplingStepsIS, whichIS,
-      stationList, startTimeStr, endTimeStr, calibratorDuration_s, numberOfBitsPerSample)
-    writeXMLBeam(ofile, calibratorBeam[2], calibratorBeam[2], cal_obs_beam0_topology, 'Calibration', calibratorBeam[2],
-      calibratorBeam[0], calibratorBeam[1], calibratorBeam[3], flysEye, str(calibratorBeam[5]), str(calibratorBeam[6]),
-      writeTABXML(calibratorTAB), writeDataProducts(cal_obs_beam0_topology, correlatedData, coherentStokesData,
-      incoherentStokesData, cluster) )
+    writeXMLObs(ofile, cal_obs_name, cal_obs_name + ' (Calibration Observation)',
+      cal_obs_topology, '', cal_obs_name, projectName, tbbPiggybackAllowed,
+      aartfaacPiggybackAllowed, correlatedData, coherentStokesData, incoherentStokesData,
+      antennaMode, clock, instrumentFilter, integrationTime, channelsPerSubband,
+      coherentDedisperseChannels, flysEye, subbandsPerFileCS, numberCollapsedChannelsCS,
+      stokesDownsamplingStepsCS, whichCS, subbandsPerFileIS, numberCollapsedChannelsIS,
+      stokesDownsamplingStepsIS, whichIS, stationList, startTimeStr, endTimeStr,
+      calibratorDuration_s, numberOfBitsPerSample)
+    writeXMLBeam(ofile, calibratorBeam[2], calibratorBeam[2], cal_obs_beam0_topology,
+      'Calibration', calibratorBeam[2], calibratorBeam[0], calibratorBeam[1],
+      calibratorBeam[3], flysEye, str(calibratorBeam[5]), str(calibratorBeam[6]),
+      writeTABXML(calibratorTAB), writeDataProducts(cal_obs_beam0_topology, correlatedData,
+      coherentStokesData, incoherentStokesData, cluster) )
     writeXMLObsEnd(ofile)
       
   # target start and end time:
@@ -1884,9 +1881,11 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
         else:
           cal_pipe_calibrator_topology_tmp = cal_pipe_calibrator_topology
           cal_pipe_name_tmp = cal_pipe_name
-        writeXMLAvgPipeline(ofile, cal_pipe_calibrator_topology_tmp, cal_obs_topology, cal_pipe_name_tmp, cal_pipe_calibrator_description, 
-          cal_obs_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorDemix[i],
-          cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_topology_tmp + '.uv.dps', cluster) ##FIXME cal_pipe_calibrator_topology + '.uv.dps'
+        writeXMLAvgPipeline(ofile, cal_pipe_calibrator_topology_tmp, cal_obs_topology,
+          cal_pipe_name_tmp, cal_pipe_calibrator_description, cal_obs_pipe_default_template,
+          flaggingStrategy, calibratorBeam[8], calibratorDemix[i],
+          cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_topology_tmp + '.uv.dps',
+          cluster)
 
     elif processing == 'Calibration':
       
@@ -1894,9 +1893,10 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
         raise GenException("BBS SkyModel is not specified for pipeline coupled to calibrator beam")
       
       #TODO ['', '', '', '', '', '', ''] is really ugly, this will break the regression test
-      writeXMLCalPipe(ofile, cal_pipe_calibrator_topology, cal_obs_topology, cal_pipe_name, cal_pipe_calibrator_description, 
-        cal_obs_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorBBS[0][0], calibratorDemix[0], 
-        ['', '', '', '', '', '', ''], cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_topology + '.inst.dps', 
+      writeXMLCalPipe(ofile, cal_pipe_calibrator_topology, cal_obs_topology, cal_pipe_name,
+        cal_pipe_calibrator_description, cal_obs_pipe_default_template, flaggingStrategy,
+        calibratorBeam[8], calibratorBBS[0][0], calibratorDemix[0], ['', '', '', '', '', '', ''],
+        cal_obs_beam0_topology + '.uv.dps', cal_pipe_calibrator_topology + '.inst.dps', 
         cal_pipe_calibrator_topology + '.inst.dps', cal_pipe_calibrator_topology + '.uv.dps', cluster)
    
   if not split_targets:  
@@ -1905,13 +1905,14 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
     else:
       tar_obs_name = targetBeams[0][2] + "/" + str(repeatNr) + "/TO"
 
-    writeXMLObs(ofile, tar_obs_name, tar_obs_name + ' (Target Observation)', tar_obs_topology, tar_obs_predecessor, 
-          tar_obs_name, projectName, tbbPiggybackAllowed,
-          aartfaacPiggybackAllowed, correlatedData, coherentStokesData, incoherentStokesData, antennaMode,
-          clock, instrumentFilter, integrationTime, channelsPerSubband, coherentDedisperseChannels, flysEye,
-          subbandsPerFileCS, numberCollapsedChannelsCS, stokesDownsamplingStepsCS, whichCS, subbandsPerFileIS,
-          numberCollapsedChannelsIS, stokesDownsamplingStepsIS, whichIS, stationList, startTimeStr, endTimeStr,
-          targetDuration_s, numberOfBitsPerSample)
+    writeXMLObs(ofile, tar_obs_name, tar_obs_name + ' (Target Observation)', tar_obs_topology,
+      tar_obs_predecessor, tar_obs_name, projectName, tbbPiggybackAllowed,
+      aartfaacPiggybackAllowed, correlatedData, coherentStokesData, incoherentStokesData,
+      antennaMode, clock, instrumentFilter, integrationTime, channelsPerSubband,
+      coherentDedisperseChannels, flysEye, subbandsPerFileCS, numberCollapsedChannelsCS,
+      stokesDownsamplingStepsCS, whichCS, subbandsPerFileIS, numberCollapsedChannelsIS,
+      stokesDownsamplingStepsIS, whichIS, stationList, startTimeStr, endTimeStr,
+      targetDuration_s, numberOfBitsPerSample)
       
     if set_starttime:
       if create_calibrator_observations:
@@ -1920,17 +1921,20 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
         startTimeObs = startTimeObs + timedelta(seconds=timeStep1+targetDuration_s)
 
     for beamNr in range(0, nr_beams):
-      writeXMLBeam(ofile, targetBeams[beamNr][2], targetBeams[beamNr][2], tar_obs_beam_topologies[beamNr], 'Target', targetBeams[beamNr][2],
-        targetBeams[beamNr][0], targetBeams[beamNr][1], targetBeams[beamNr][3], flysEye, targetBeams[beamNr][5],
-        targetBeams[beamNr][6], writeTABXML(targetTAB[beamNr]), 
-        writeDataProducts(tar_obs_beam_topologies[beamNr], correlatedData, coherentStokesData, incoherentStokesData, cluster) )
+      writeXMLBeam(ofile, targetBeams[beamNr][2], targetBeams[beamNr][2],
+        tar_obs_beam_topologies[beamNr], 'Target', targetBeams[beamNr][2],
+        targetBeams[beamNr][0], targetBeams[beamNr][1], targetBeams[beamNr][3], flysEye,
+        targetBeams[beamNr][5], targetBeams[beamNr][6], writeTABXML(targetTAB[beamNr]), 
+        writeDataProducts(tar_obs_beam_topologies[beamNr], correlatedData,
+        coherentStokesData, incoherentStokesData, cluster) )
 
     # create the extra polarization beam?
     if "create_extra_ncp_beam" in settings and settings["create_extra_ncp_beam"]:
       polBeamTopo = tar_obs_topology + ".SAP" + str(beamNr+1).rjust(3,'0')
-      writeXMLBeam(ofile, targetBeams[0][2], targetBeams[0][2], targetBeams[0][2], 'Target', targetBeams[0][0], flysEye,
-      targetBeams[0][5], targetBeams[0][6], writeTABXML(targetTAB[0]),
-      writeDataProducts(polBeamTopo, correlatedData, coherentStokesData, incoherentStokesData, cluster) )
+      writeXMLBeam(ofile, targetBeams[0][2], targetBeams[0][2], targetBeams[0][2], 'Target',
+      targetBeams[0][0], flysEye, targetBeams[0][5], targetBeams[0][6],
+      writeTABXML(targetTAB[0]), writeDataProducts(polBeamTopo, correlatedData,
+      coherentStokesData, incoherentStokesData, cluster) )
 
     # create a calibrator beam in the target observation?
     if create_target_cal_beam:
@@ -1939,10 +1943,11 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
       else:
         calBeamTopo = tar_obs_topology + ".SAP" + str(beamNr+1).rjust(3,'0')
       
-      writeXMLBeam(ofile, calibratorBeam[2], calibratorBeam[2], calBeamTopo, 'Calibration', calibratorBeam[2],
-              calibratorBeam[0], calibratorBeam[1], calibratorBeam[3], flysEye, calibratorBeam[5],
-              calibratorBeam[6], writeTABXML(calibratorTAB),
-              writeDataProducts(tar_obs_beam_topologies[nr_beams], correlatedData, coherentStokesData, incoherentStokesData, cluster) )
+      writeXMLBeam(ofile, calibratorBeam[2], calibratorBeam[2], calBeamTopo, 'Calibration',
+        calibratorBeam[2], calibratorBeam[0], calibratorBeam[1], calibratorBeam[3], flysEye,
+        calibratorBeam[5], calibratorBeam[6], writeTABXML(calibratorTAB),
+        writeDataProducts(tar_obs_beam_topologies[nr_beams], correlatedData,
+        coherentStokesData, incoherentStokesData, cluster) )
       
       writeXMLObsEnd(ofile)
               
@@ -1957,10 +1962,11 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
           if not calibratorBBS:
             raise GenException("BBS SkyModel is not specified for pipeline coupled to calibration beam")
 
-          writeXMLCalPipe(ofile, cal_pipe_target_topology, tar_obs_topology, cal_pipe_target_name, cal_pipe_target_description,
-          cal_tar_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorBBS[0][0], calibratorDemix[0],
-          calibratorBBS[0][1:], tar_obs_uv_data_topologies[nr_beams], cal_pipe_target_topology + '.inst.dps',
-          cal_pipe_target_topology + '.inst.dps', cal_pipe_target_topology + '.uv.dps', cluster)
+          writeXMLCalPipe(ofile, cal_pipe_target_topology, tar_obs_topology, cal_pipe_target_name,
+            cal_pipe_target_description, cal_tar_pipe_default_template, flaggingStrategy,
+            calibratorBeam[8], calibratorBBS[0][0], calibratorDemix[0], calibratorBBS[0][1:],
+            tar_obs_uv_data_topologies[nr_beams], cal_pipe_target_topology + '.inst.dps',
+            cal_pipe_target_topology + '.inst.dps', cal_pipe_target_topology + '.uv.dps', cluster)
         
         elif processing == 'Preprocessing':
           for i in range(0, len(calibratorDemix)):
@@ -1974,17 +1980,19 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
               cal_pipe_target_name_tmp, cal_pipe_target_description,
               cal_tar_pipe_default_template, flaggingStrategy, calibratorBeam[8],
               calibratorDemix[i], tar_obs_uv_data_topologies[nr_beams],
-              cal_pipe_target_topology_tmp + '.uv.dps', cluster) ##FIXME cal_pipe_target_topology + '.uv.dps'
+              cal_pipe_target_topology_tmp + '.uv.dps', cluster)
         
         elif processing == 'Calibration':
           
           if not calibratorBBS:
             raise GenException("BBS SkyModel is not specified for pipeline coupled to calibration beam")
 
-          writeXMLCalPipe(ofile, cal_pipe_target_topology, tar_obs_topology, cal_pipe_target_name, cal_pipe_target_description,
-            cal_tar_pipe_default_template, flaggingStrategy, calibratorBeam[8], calibratorBBS[0][0], calibratorDemix[0],
-            calibratorBBS[0][1:], tar_obs_uv_data_topologies[nr_beams], cal_pipe_target_topology + '.inst.dps',
-            cal_pipe_target_topology + '.inst.dps', cal_pipe_target_topology + '.uv.dps', cluster)
+          writeXMLCalPipe(ofile, cal_pipe_target_topology, tar_obs_topology,
+            cal_pipe_target_name, cal_pipe_target_description, cal_tar_pipe_default_template,
+            flaggingStrategy, calibratorBeam[8], calibratorBBS[0][0], calibratorDemix[0],
+            calibratorBBS[0][1:], tar_obs_uv_data_topologies[nr_beams],
+            cal_pipe_target_topology + '.inst.dps', cal_pipe_target_topology + '.inst.dps',
+            cal_pipe_target_topology + '.uv.dps', cluster)
     else:    
       writeXMLObsEnd(ofile)
       
@@ -1996,17 +2004,21 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
         tar_obs_name = targetBeams[beamNr][2] + "/" + str(repeatNr) + "/TO"
 
       tar_obs_topology_MultiObs = tar_obs_topology + '.' + str(beamNr)
-      writeXMLObs(ofile, tar_obs_name, tar_obs_name + ' (Target Observation)', tar_obs_topology_MultiObs, '', tar_obs_name, projectName, tbbPiggybackAllowed,
-          aartfaacPiggybackAllowed, correlatedData, coherentStokesData, incoherentStokesData, antennaMode,
-          clock, instrumentFilter, integrationTime, channelsPerSubband, coherentDedisperseChannels, flysEye,
-          subbandsPerFileCS, numberCollapsedChannelsCS, stokesDownsamplingStepsCS, whichCS, subbandsPerFileIS,
-          numberCollapsedChannelsIS, stokesDownsamplingStepsIS, whichIS, stationList, startTimeStr, endTimeStr,
-          targetDuration_s, numberOfBitsPerSample)
+      writeXMLObs(ofile, tar_obs_name, tar_obs_name + ' (Target Observation)',
+        tar_obs_topology_MultiObs, '', tar_obs_name, projectName, tbbPiggybackAllowed,
+        aartfaacPiggybackAllowed, correlatedData, coherentStokesData, incoherentStokesData,
+        antennaMode, clock, instrumentFilter, integrationTime, channelsPerSubband,
+        coherentDedisperseChannels, flysEye, subbandsPerFileCS, numberCollapsedChannelsCS,
+        stokesDownsamplingStepsCS, whichCS, subbandsPerFileIS, numberCollapsedChannelsIS,
+        stokesDownsamplingStepsIS, whichIS, stationList, startTimeStr, endTimeStr,
+        targetDuration_s, numberOfBitsPerSample)
           
-      writeXMLBeam(ofile, targetBeams[beamNr][2], targetBeams[beamNr][2], tar_obs_beam_topologies[beamNr], 'Target', targetBeams[beamNr][2],
-        targetBeams[beamNr][0], targetBeams[beamNr][1], targetBeams[beamNr][3], flysEye, targetBeams[beamNr][5],
-        targetBeams[beamNr][6], writeTABXML(targetTAB[beamNr]), 
-        writeDataProducts(tar_obs_beam_topologies[beamNr], correlatedData, coherentStokesData, incoherentStokesData, cluster) )
+      writeXMLBeam(ofile, targetBeams[beamNr][2], targetBeams[beamNr][2],
+        tar_obs_beam_topologies[beamNr], 'Target', targetBeams[beamNr][2],
+        targetBeams[beamNr][0], targetBeams[beamNr][1], targetBeams[beamNr][3], flysEye,
+        targetBeams[beamNr][5], targetBeams[beamNr][6], writeTABXML(targetTAB[beamNr]), 
+        writeDataProducts(tar_obs_beam_topologies[beamNr], correlatedData,
+        coherentStokesData, incoherentStokesData, cluster) )
           
       writeXMLObsEnd(ofile)
       
@@ -2043,64 +2055,71 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
         tar_pipe_name = targetBeams[beamNr][2] + "/" + str(repeatNr) + "." + str(beamNr) + tar_pipe_ID
         
       if processing == 'Imaging' or processing == 'LongBaseline':
-        writeXMLTargetPipeline(ofile, tar_pipe_topologies[beamNr], tar_pipe_predecessor, tar_pipe_name, 
-          tar_pipe_description, tar_pipe_default_template,
-          flaggingStrategy, targetBeams[beamNr][8], targetDemix[beamNr][0],
-          targetBBS[beamNr][0][1:], tar_obs_uv_data_topologies[beamNr], 
-          tar_obs_uv_data_topologies[beamNr], tar_pipe_input_INST_topo, tar_pipe_input_INST_topo, 
-          tar_pipe_output_MS_topologies[beamNr], tar_pipe_output_MS_topologies[beamNr], cluster)
+        writeXMLTargetPipeline(ofile, tar_pipe_topologies[beamNr], tar_pipe_predecessor,
+          tar_pipe_name, tar_pipe_description, tar_pipe_default_template, flaggingStrategy,
+          targetBeams[beamNr][8], targetDemix[beamNr][0], targetBBS[beamNr][0][1:],
+          tar_obs_uv_data_topologies[beamNr], tar_obs_uv_data_topologies[beamNr],
+          tar_pipe_input_INST_topo, tar_pipe_input_INST_topo, 
+          tar_pipe_topologies[beamNr] + ".uv.dps", tar_pipe_topologies[beamNr] + ".uv.dps",
+          cluster)
             
       elif processing == 'Preprocessing':
         for i in range(0,len(targetDemix[beamNr])):
           if len(targetDemix[beamNr]) > 1: #TODO a cludge right now, but want to refactor how to call the writeXML soon
             tar_pipe_topology_tmp = tar_pipe_topologies[beamNr] + ".%i" % i
             tar_pipe_name_tmp     = tar_pipe_name + ".%i" % i
+            tar_pipe_topology_output_MS_tmp= tar_pipe_topologies[beamNr] + ".%i" % i + ".uv.dps"
           else:
             tar_pipe_topology_tmp = tar_pipe_topologies[beamNr]
             tar_pipe_name_tmp     = tar_pipe_name
-          writeXMLAvgPipeline(ofile, tar_pipe_topology_tmp, tar_pipe_predecessor, tar_pipe_name_tmp, 
-            tar_pipe_description, tar_pipe_default_template,
+            tar_pipe_topology_output_MS_tmp= tar_pipe_topologies[beamNr] + ".uv.dps"
+          writeXMLAvgPipeline(ofile, tar_pipe_topology_tmp, tar_pipe_predecessor,
+            tar_pipe_name_tmp, tar_pipe_description, tar_pipe_default_template,
             flaggingStrategy, targetBeams[beamNr][8], targetDemix[beamNr][i],
-            tar_obs_uv_data_topologies[beamNr], tar_pipe_output_MS_topologies[beamNr], cluster) ##FIXME tar_pipe_output_MS_topologies[beamNr]
+            tar_obs_uv_data_topologies[beamNr], tar_pipe_topology_output_MS_tmp,
+            cluster) ##FIXME tar_pipe_topologies[beamNr] + ".uv.dps"
 
       elif processing == 'Calibration': #TODO currently doesn't work according to Alwin's wiki, why?
         if targetBBS[beamNr][0][0] == '':
           raise GenException("BBS SkyModel is not specified for pipeline coupled to target beam " + str(beamNr))
         
-        writeXMLCalPipe(ofile, tar_pipe_topologies[beamNr], tar_pipe_predecessor, tar_pipe_name, 
-          tar_pipe_description, tar_pipe_default_template, 
-          flaggingStrategy, targetBeams[beamNr][8], targetBBS[beamNr][0][0], targetDemix[beamNr][0],
+        writeXMLCalPipe(ofile, tar_pipe_topologies[beamNr], tar_pipe_predecessor,
+          tar_pipe_name, tar_pipe_description, tar_pipe_default_template, flaggingStrategy,
+          targetBeams[beamNr][8], targetBBS[beamNr][0][0], targetDemix[beamNr][0],
           targetBBS[beamNr][0][1:], tar_obs_uv_data_topologies[beamNr], 
-          tar_pipe_output_INST_topologies[beamNr], tar_pipe_output_INST_topologies[beamNr], tar_pipe_output_MS_topologies[beamNr], cluster)
+          tar_pipe_topologies[beamNr] + ".inst.dps", tar_pipe_topologies[beamNr] + ".inst.dps",
+          tar_pipe_topologies[beamNr] + ".uv.dps", cluster)
+
       elif processing == 'Pulsar':
         #tar_obs_topology_MultiObs = tar_obs_topology + '.' + str(beamNr)
         tar_pipe_predecessor = tar_obs_topology
         
-        writeXMLPulsarPipe(ofile, tar_pipe_topologies[beamNr], tar_obs_topology, tar_pipe_name, 
-        tar_pipe_description, tar_pipe_default_template, targetBeams[beamNr][8],
-        tar_obs_bf_data_topologies[beamNr], pulsar_pipe_output_topologies[beamNr], cluster,
-            pulsar                  = targetPulsar[beamNr][0][0],
-            singlePulse             = targetPulsar[beamNr][0][1], 
-            rawTo8bit               = targetPulsar[beamNr][0][2], 
-            dspsrExtraOpts          = targetPulsar[beamNr][0][3],
-            prepdataExtraOpts       = targetPulsar[beamNr][0][4],
-            _8bitConversionSigma    = targetPulsar[beamNr][0][5],
-            tsubint                 = targetPulsar[beamNr][0][6],
-            norfi                   = targetPulsar[beamNr][0][7],
-            nofold                  = targetPulsar[beamNr][0][8],
-            nopdmp                  = targetPulsar[beamNr][0][9],
-            skipDsps                = targetPulsar[beamNr][0][10],
-            rrats                   = targetPulsar[beamNr][0][11],
-            _2bf2fitsExtraOpts      = targetPulsar[beamNr][0][12],
-            decodeSigma             = targetPulsar[beamNr][0][13],
-            decodeNblocks           = targetPulsar[beamNr][0][14],
-            rfifindExtraOpts        = targetPulsar[beamNr][0][15],
-            prepfoldExtraOpts       = targetPulsar[beamNr][0][16],
-            prepsubbandExtraOpts    = targetPulsar[beamNr][0][17],
-            dynamicSpectrumTimeAverage = targetPulsar[beamNr][0][18],
-            skipDynamicSpectrum     = targetPulsar[beamNr][0][19],
-            skipPrepfold            = targetPulsar[beamNr][0][20],
-            digifilExtraOpts        = targetPulsar[beamNr][0][21])
+        writeXMLPulsarPipe(ofile, tar_pipe_topologies[beamNr], tar_obs_topology,
+          tar_pipe_name, tar_pipe_description, tar_pipe_default_template,
+          targetBeams[beamNr][8], tar_obs_bf_data_topologies[beamNr],
+          tar_pipe_topologies[beamNr] + ".pu.dps", cluster,
+          pulsar                  = targetPulsar[beamNr][0][0],
+          singlePulse             = targetPulsar[beamNr][0][1], 
+          rawTo8bit               = targetPulsar[beamNr][0][2], 
+          dspsrExtraOpts          = targetPulsar[beamNr][0][3],
+          prepdataExtraOpts       = targetPulsar[beamNr][0][4],
+          _8bitConversionSigma    = targetPulsar[beamNr][0][5],
+          tsubint                 = targetPulsar[beamNr][0][6],
+          norfi                   = targetPulsar[beamNr][0][7],
+          nofold                  = targetPulsar[beamNr][0][8],
+          nopdmp                  = targetPulsar[beamNr][0][9],
+          skipDsps                = targetPulsar[beamNr][0][10],
+          rrats                   = targetPulsar[beamNr][0][11],
+          _2bf2fitsExtraOpts      = targetPulsar[beamNr][0][12],
+          decodeSigma             = targetPulsar[beamNr][0][13],
+          decodeNblocks           = targetPulsar[beamNr][0][14],
+          rfifindExtraOpts        = targetPulsar[beamNr][0][15],
+          prepfoldExtraOpts       = targetPulsar[beamNr][0][16],
+          prepsubbandExtraOpts    = targetPulsar[beamNr][0][17],
+          dynamicSpectrumTimeAverage = targetPulsar[beamNr][0][18],
+          skipDynamicSpectrum     = targetPulsar[beamNr][0][19],
+          skipPrepfold            = targetPulsar[beamNr][0][20],
+          digifilExtraOpts        = targetPulsar[beamNr][0][21])
         
   # for long baseline processsing an additional (special purpose adapted) preprocessing pipeline is necessary
   if processing == 'LongBaseline':
@@ -2119,14 +2138,20 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
           LB_preproc_pipe_name = targetBeams[beamNr][2] + "/" + str(repeatNr) + "." + str(beamNr) + "/PP"
           LB_pipeline_name = targetBeams[beamNr][2] + "/" + str(repeatNr) + "." + str(beamNr) + "/LBP"
 
-        writeXMLAvgPipeline(ofile, LB_preproc_pipe_topologies[beamNr], LB_preproc_pipe_predecessor[beamNr], LB_preproc_pipe_name,
-        LB_preproc_pipe_description, LB_preproc_pipe_template, flaggingStrategy, targetBeams[beamNr][8], targetDemix[beamNr][0],
-        tar_pipe_output_MS_topologies[beamNr], LB_preproc_pipe_output_MS_topologies[beamNr], cluster)
+        writeXMLAvgPipeline(ofile, LB_preproc_pipe_topologies[beamNr],
+          LB_preproc_pipe_predecessor[beamNr], LB_preproc_pipe_name,
+          LB_preproc_pipe_description, LB_preproc_pipe_template, flaggingStrategy,
+          targetBeams[beamNr][8], targetDemix[beamNr][0],
+          tar_pipe_topologies[beamNr] + ".uv.dps", LB_preproc_pipe_output_MS_topologies[beamNr],
+          cluster)
 
         #nv 13okt2014: #6716 - Implement Long Baseline Pipeline     
-        writeXMLLongBaselinePipe(ofile, LB_pipeline_topologies[beamNr], LB_pipeline_predecessor[beamNr], LB_pipeline_name,
-        LB_pipeline_description, LB_pipeline_default_template, targetBeams[beamNr][8], subbandsPerSubbandGroup, subbandGroupsPerMS,
-        LB_pipeline_input_uv_topologies[beamNr], LB_pipeline_output_uv_topologies[beamNr], cluster)
+        writeXMLLongBaselinePipe(ofile, LB_pipeline_topologies[beamNr],
+          LB_pipeline_predecessor[beamNr], LB_pipeline_name, LB_pipeline_description,
+          LB_pipeline_default_template, targetBeams[beamNr][8], subbandsPerSubbandGroup,
+          subbandGroupsPerMS, LB_pipeline_input_uv_topologies[beamNr],
+          LB_pipeline_output_uv_topologies[beamNr], cluster)
+  
   return imaging_pipe_inputs, imaging_pipe_predecessors, startTimeObs
 
 def writeBlock(ofile, settings, projectName, blockNr):
