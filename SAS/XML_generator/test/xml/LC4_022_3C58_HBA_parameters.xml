@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
   <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
-  <version>2.14.1</version>
-  <template version="2.14.1" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
-  <description>XML Template generator version 2.14.1</description>
+  <version>2.15.0</version>
+  <template version="2.15.0" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
+  <description>XML Template generator version 2.15.0</description>
   </template>
   <name>LC4_022</name>
   <children>
@@ -95,13 +95,13 @@
                           <nrTabRings></nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.1.C.SAP000.uv.dps</name>
                     <topology>B0.1.C.SAP000.uv.dps</topology>
@@ -135,17 +135,16 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                  <bbsParameters>
-                    <baselines></baselines>
-                    <correlations></correlations>
-                    <beamModelEnable>true</beamModelEnable>
-                    <solveParms></solveParms>
-                    <solveUVRange></solveUVRange>
-                    <strategyBaselines></strategyBaselines>
-                    <strategyTimeRange></strategyTimeRange>
-                  </bbsParameters>
-                
-                </pipelineAttributes>
+            <bbsParameters>
+              <baselines></baselines>
+              <correlations></correlations>
+              <beamModelEnable>true</beamModelEnable>
+              <solveParms></solveParms>
+              <solveUVRange></solveUVRange>
+              <strategyBaselines></strategyBaselines>
+              <strategyTimeRange></strategyTimeRange>
+            </bbsParameters>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.C.SAP000.uv.dps">
@@ -250,13 +249,13 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.1.T.SAP000.uv.dps</name>
                     <topology>B0.1.T.SAP000.uv.dps</topology>
@@ -280,26 +279,25 @@
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
                       <duration>50000</duration>
-                      <demixingParameters>
-                        <averagingFreqStep>16</averagingFreqStep>
-                        <averagingTimeStep>2</averagingTimeStep>
-                        <demixFreqStep>16</demixFreqStep>
-                        <demixTimeStep>2</demixTimeStep>
-                        <demixAlways></demixAlways>
-                        <demixIfNeeded></demixIfNeeded>
-                        <ignoreTarget></ignoreTarget>
-                      </demixingParameters>
-                      <bbsParameters>
-                        <baselines></baselines>
-                        <correlations></correlations>
-                        <beamModelEnable>true</beamModelEnable>
-                        <solveParms></solveParms>
-                        <solveUVRange></solveUVRange>
-                        <strategyBaselines></strategyBaselines>
-                        <strategyTimeRange></strategyTimeRange>
-                      </bbsParameters>
-                    
-                    </pipelineAttributes>
+                  <demixingParameters>
+                    <averagingFreqStep>16</averagingFreqStep>
+                    <averagingTimeStep>2</averagingTimeStep>
+                    <demixFreqStep>16</demixFreqStep>
+                    <demixTimeStep>2</demixTimeStep>
+                    <demixAlways></demixAlways>
+                    <demixIfNeeded></demixIfNeeded>
+                    <ignoreTarget></ignoreTarget>
+                  </demixingParameters>
+            <bbsParameters>
+              <baselines></baselines>
+              <correlations></correlations>
+              <beamModelEnable>true</beamModelEnable>
+              <solveParms></solveParms>
+              <solveUVRange></solveUVRange>
+              <strategyBaselines></strategyBaselines>
+              <strategyTimeRange></strategyTimeRange>
+            </bbsParameters>
+</pipelineAttributes>
                     <usedDataProducts>
                       <item>
                         <lofar:uvDataProduct topology="B0.1.T.SAP000.uv.dps">
@@ -454,13 +452,13 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B1.1.T.SAP000.uv.dps</name>
                     <topology>B1.1.T.SAP000.uv.dps</topology>
@@ -476,7 +474,7 @@
                 </item>
         <item index="0">
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
-                <topology>B1.1.PT0.0</topology>
+                <topology>B1.1.PT0</topology>
                 <predecessor_topology>B1.1.T</predecessor_topology>
                 <name>3C196/1.0/TP</name>
                 <description>3C196/1.0/TP (Preprocessing)</description>
@@ -493,47 +491,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
-                <usedDataProducts>
-                  <item>
-                    <lofar:uvDataProduct topology="B1.1.T.SAP000.uv.dps">
-                    </lofar:uvDataProduct>
-                  </item>
-                </usedDataProducts>
-                <resultDataProducts>
-                  <item>
-                    <lofar:uvDataProduct>
-                      <name>B1.1.PT0.uv.dps</name>
-                      <topology>B1.1.PT0.uv.dps</topology>
-                      <status>no_data</status>
-                      
-                    </lofar:uvDataProduct>
-                  </item>
-                </resultDataProducts>
-              </lofar:pipeline>
-            </item>
-        <item index="0">
-              <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
-                <topology>B1.1.PT0.1</topology>
-                <predecessor_topology>B1.1.T</predecessor_topology>
-                <name>3C196/1.0/TP</name>
-                <description>3C196/1.0/TP (Preprocessing)</description>
-                <pipelineAttributes>
-                  <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
-                  <flaggingStrategy>HBAdefault</flaggingStrategy>
-                  <duration>1000</duration>
-                  <demixingParameters>
-                    <averagingFreqStep>16</averagingFreqStep>
-                    <averagingTimeStep>2</averagingTimeStep>
-                    <demixFreqStep>16</demixFreqStep>
-                    <demixTimeStep>2</demixTimeStep>
-                    <demixAlways></demixAlways>
-                    <demixIfNeeded></demixIfNeeded>
-                    <ignoreTarget></ignoreTarget>
-                  </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B1.1.T.SAP000.uv.dps">

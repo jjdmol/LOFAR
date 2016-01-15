@@ -131,7 +131,7 @@
                     <demixTimeStep>10</demixTimeStep>
                     <demixAlways></demixAlways>
                     <demixIfNeeded></demixIfNeeded>
-                    <ignoreTarget>False</ignoreTarget>
+                    <ignoreTarget>false</ignoreTarget>
                   </demixingParameters>
                 </pipelineAttributes>
                 <usedDataProducts>
@@ -314,7 +314,7 @@
                     <demixTimeStep>10</demixTimeStep>
                     <demixAlways></demixAlways>
                     <demixIfNeeded></demixIfNeeded>
-                    <ignoreTarget>False</ignoreTarget>
+                    <ignoreTarget>false</ignoreTarget>
                   </demixingParameters>
                 </pipelineAttributes>
                 <usedDataProducts>
@@ -351,7 +351,7 @@
                     <demixTimeStep>10</demixTimeStep>
                     <demixAlways></demixAlways>
                     <demixIfNeeded></demixIfNeeded>
-                    <ignoreTarget>False</ignoreTarget>
+                    <ignoreTarget>false</ignoreTarget>
                   </demixingParameters>
                 </pipelineAttributes>
                 <usedDataProducts>
@@ -494,7 +494,7 @@
                     <demixTimeStep>10</demixTimeStep>
                     <demixAlways></demixAlways>
                     <demixIfNeeded></demixIfNeeded>
-                    <ignoreTarget>False</ignoreTarget>
+                    <ignoreTarget>false</ignoreTarget>
                   </demixingParameters>
                 </pipelineAttributes>
                 <usedDataProducts>

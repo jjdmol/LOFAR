@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
   <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
-  <version>2.14.1</version>
-  <template version="2.14.1" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
-  <description>XML Template generator version 2.14.1</description>
+  <version>2.15.0</version>
+  <template version="2.15.0" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
+  <description>XML Template generator version 2.15.0</description>
   </template>
   <name>LOFAROBS</name>
   <children>
@@ -95,13 +95,13 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.1.T.SAP000.uv.dps</name>
                     <topology>B0.1.T.SAP000.uv.dps</topology>
@@ -136,13 +136,13 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.1.T.SAP001.uv.dps</name>
                     <topology>B0.1.T.SAP001.uv.dps</topology>
@@ -177,13 +177,13 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.1.T.SAP002.uv.dps</name>
                     <topology>B0.1.T.SAP002.uv.dps</topology>
@@ -218,13 +218,13 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.1.T.SAP003.uv.dps</name>
                     <topology>B0.1.T.SAP003.uv.dps</topology>
@@ -259,13 +259,13 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.1.T.SAP004.uv.dps</name>
                     <topology>B0.1.T.SAP004.uv.dps</topology>
@@ -300,13 +300,13 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.1.T.SAP005.uv.dps</name>
                     <topology>B0.1.T.SAP005.uv.dps</topology>
@@ -341,13 +341,13 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.1.T.SAP006.uv.dps</name>
                     <topology>B0.1.T.SAP006.uv.dps</topology>
@@ -382,13 +382,13 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.1.T.SAP007.uv.dps</name>
                     <topology>B0.1.T.SAP007.uv.dps</topology>
@@ -406,8 +406,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT0.0</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/L000+30/1.0/TP</name>
-                <description>MSSSLBA/L000+30/1.0/TP (Preprocessing)</description>
+                <name>MSSSLBA/L000+30/1.0/TP.0</name>
+                <description>MSSSLBA/L000+30/1.0/TP.0 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -421,8 +421,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP000.uv.dps">
@@ -445,8 +444,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT0.1</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/L000+30/1.0/TP</name>
-                <description>MSSSLBA/L000+30/1.0/TP (Preprocessing)</description>
+                <name>MSSSLBA/L000+30/1.0/TP.1</name>
+                <description>MSSSLBA/L000+30/1.0/TP.1 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -460,8 +459,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP000.uv.dps">
@@ -484,8 +482,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT1.0</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/L005+30/1.1/TP</name>
-                <description>MSSSLBA/L005+30/1.1/TP (Preprocessing)</description>
+                <name>MSSSLBA/L005+30/1.1/TP.0</name>
+                <description>MSSSLBA/L005+30/1.1/TP.0 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -499,8 +497,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP001.uv.dps">
@@ -523,8 +520,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT1.1</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/L005+30/1.1/TP</name>
-                <description>MSSSLBA/L005+30/1.1/TP (Preprocessing)</description>
+                <name>MSSSLBA/L005+30/1.1/TP.1</name>
+                <description>MSSSLBA/L005+30/1.1/TP.1 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -538,8 +535,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP001.uv.dps">
@@ -562,8 +558,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT2.0</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/L354+30/1.2/TP</name>
-                <description>MSSSLBA/L354+30/1.2/TP (Preprocessing)</description>
+                <name>MSSSLBA/L354+30/1.2/TP.0</name>
+                <description>MSSSLBA/L354+30/1.2/TP.0 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -577,8 +573,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP002.uv.dps">
@@ -601,8 +596,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT2.1</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/L354+30/1.2/TP</name>
-                <description>MSSSLBA/L354+30/1.2/TP (Preprocessing)</description>
+                <name>MSSSLBA/L354+30/1.2/TP.1</name>
+                <description>MSSSLBA/L354+30/1.2/TP.1 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -616,8 +611,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP002.uv.dps">
@@ -640,8 +634,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT3.0</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/L357+34/1.3/TP</name>
-                <description>MSSSLBA/L357+34/1.3/TP (Preprocessing)</description>
+                <name>MSSSLBA/L357+34/1.3/TP.0</name>
+                <description>MSSSLBA/L357+34/1.3/TP.0 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -655,8 +649,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP003.uv.dps">
@@ -679,8 +672,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT3.1</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/L357+34/1.3/TP</name>
-                <description>MSSSLBA/L357+34/1.3/TP (Preprocessing)</description>
+                <name>MSSSLBA/L357+34/1.3/TP.1</name>
+                <description>MSSSLBA/L357+34/1.3/TP.1 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -694,8 +687,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP003.uv.dps">
@@ -718,8 +710,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT4.0</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/L003+34/1.4/TP</name>
-                <description>MSSSLBA/L003+34/1.4/TP (Preprocessing)</description>
+                <name>MSSSLBA/L003+34/1.4/TP.0</name>
+                <description>MSSSLBA/L003+34/1.4/TP.0 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -733,8 +725,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP004.uv.dps">
@@ -757,8 +748,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT4.1</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/L003+34/1.4/TP</name>
-                <description>MSSSLBA/L003+34/1.4/TP (Preprocessing)</description>
+                <name>MSSSLBA/L003+34/1.4/TP.1</name>
+                <description>MSSSLBA/L003+34/1.4/TP.1 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -772,8 +763,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP004.uv.dps">
@@ -796,8 +786,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT5.0</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/L357+25/1.5/TP</name>
-                <description>MSSSLBA/L357+25/1.5/TP (Preprocessing)</description>
+                <name>MSSSLBA/L357+25/1.5/TP.0</name>
+                <description>MSSSLBA/L357+25/1.5/TP.0 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -811,8 +801,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP005.uv.dps">
@@ -835,8 +824,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT5.1</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/L357+25/1.5/TP</name>
-                <description>MSSSLBA/L357+25/1.5/TP (Preprocessing)</description>
+                <name>MSSSLBA/L357+25/1.5/TP.1</name>
+                <description>MSSSLBA/L357+25/1.5/TP.1 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -850,8 +839,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP005.uv.dps">
@@ -874,8 +862,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT6.0</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/L003+25/1.6/TP</name>
-                <description>MSSSLBA/L003+25/1.6/TP (Preprocessing)</description>
+                <name>MSSSLBA/L003+25/1.6/TP.0</name>
+                <description>MSSSLBA/L003+25/1.6/TP.0 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -889,8 +877,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP006.uv.dps">
@@ -913,8 +900,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT6.1</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/L003+25/1.6/TP</name>
-                <description>MSSSLBA/L003+25/1.6/TP (Preprocessing)</description>
+                <name>MSSSLBA/L003+25/1.6/TP.1</name>
+                <description>MSSSLBA/L003+25/1.6/TP.1 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -928,8 +915,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP006.uv.dps">
@@ -952,8 +938,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT7.0</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/NCP/1.7/TP</name>
-                <description>MSSSLBA/NCP/1.7/TP (Preprocessing)</description>
+                <name>MSSSLBA/NCP/1.7/TP.0</name>
+                <description>MSSSLBA/NCP/1.7/TP.0 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -967,8 +953,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP007.uv.dps">
@@ -991,8 +976,8 @@
               <lofar:pipeline xsi:type="lofar:AveragingPipelineType">
                 <topology>B0.1.PT7.1</topology>
                 <predecessor_topology>B0.1.T</predecessor_topology>
-                <name>MSSSLBA/NCP/1.7/TP</name>
-                <description>MSSSLBA/NCP/1.7/TP (Preprocessing)</description>
+                <name>MSSSLBA/NCP/1.7/TP.1</name>
+                <description>MSSSLBA/NCP/1.7/TP.1 (Preprocessing)</description>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>LBAdefault</flaggingStrategy>
@@ -1006,8 +991,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP007.uv.dps">
