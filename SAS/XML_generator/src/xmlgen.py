@@ -2077,8 +2077,8 @@ def writeRepeat(ofile, projectName, blockTopo, repeatNr, settings, imaging_pipe_
             tar_pipe_name_tmp, tar_pipe_description, tar_pipe_default_template,
             flaggingStrategy, targetBeams[beamNr][8], targetDemix[beamNr][i],
             tar_obs_uv_data_topologies[beamNr], tar_pipe_topology_output_MS_tmp,
-            cluster) ##FIXME tar_pipe_topologies[beamNr] + ".uv.dps"
-
+            cluster) 
+            
       elif processing == 'Calibration': #TODO currently doesn't work according to Alwin's wiki, why?
         if targetBBS[beamNr][0][0] == '':
           raise GenException("BBS SkyModel is not specified for pipeline coupled to target beam " + str(beamNr))
