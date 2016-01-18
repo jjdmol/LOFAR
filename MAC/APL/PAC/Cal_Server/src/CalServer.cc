@@ -94,7 +94,7 @@ CalServer::CalServer(const string& name, ACCs& accs)
 	: GCFTask((State)&CalServer::initial, name),
 	m_accs(accs),
 	m_converter(0),
-	itsClockSetting(0.0),
+	itsClockSetting(0),
 	m_n_rspboards(0),
 	m_n_rcus(0),
 	itsHasSecondRing	(0),
@@ -555,7 +555,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 		}
 
 #ifdef USE_CAL_THREAD
-		itsSubArrays.updateAll();
+		// itsSubArrays.updateAll();  // TODO: is update still needed
 #endif
 	}
 	break;
@@ -710,7 +710,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 							itsClockSetting * 1.0e6,
 							RCUcontrol.getNyquistZone());
 
-            itsSubArrays.scheduleAdd(subarray);
+            itsSubArrays.scheduleAdd(subarray, &port);
 
             // calibration will start within one second
             // set the spectral inversion right
@@ -725,11 +725,11 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
                             << " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
             itsRSPDriver->send(specInvCmd);
 
-            RCUSettings rcu_settings;
-            rcu_settings().resize(1);
-            rcu_settings()(0).setMode(start.rcumode);
+            //RCUSettings rcu_settings;
+            //rcu_settings().resize(1);
+            //rcu_settings()(0).setMode(start.rcumode);
 
-            _enableRCUs(subarray, rcu_settings, SCHEDULING_DELAY + 4);
+            _enableRCUs(subarray, SCHEDULING_DELAY + 4);
 		}
 	}
 	port.send(ack); // send ack
@@ -881,7 +881,8 @@ void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 	}
 
 	// when the lbl inputs are selected swap the X and the Y.
-	int rcumode(subarray->SPW().rcumode());
+	//int rcumode(subarray->SPW().rcumode());
+	int rcumode(0);  // TODO: add real rcumode or change all to antennaset
 	if (rcumode == 1 || rcumode == 2) {		// LBLinput used?
 		LOG_INFO("LBL inputs are used, swapping X and Y RCU's");
 		RSPSetswapxyEvent	swapCmd;
@@ -1142,4 +1143,4 @@ int main(int argc, char** argv)
 }
 
     };  // CAL
-};  / LOFAR
+};  // LOFAR
