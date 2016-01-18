@@ -2197,7 +2197,10 @@ def writeBlock(ofile, settings, projectName, blockNr):
     for key in imagingPipelineKeys: #Can this be done with list comprehension as well?
       if key not in settings.keys():
         settings[key] = ''
-    imagingPipelineSettings = { key: settings[key] for key in imagingPipelineKeys }
+    ##imagingPipelineSettings = { key: settings[key] for key in imagingPipelineKeys }
+    imagingPipelineSettings = {}
+    for key in imagingPipelineKeys:
+      imagingPipelineSettings[key] = settings[key]
     writeImagingPipeline(ofile, settings["nr_beams"], settings["targetBeams"], blockTopo,
       settings["nrRepeats"], imaging_pipe_inputs, imaging_pipe_predecessors,
       settings["writePackageTag"], settings["packageTag"], settings["nrImages"],
