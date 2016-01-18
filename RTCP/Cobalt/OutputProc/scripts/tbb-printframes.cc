@@ -1,7 +1,7 @@
-/* tbb-dumpframes.cc
+/* tbb-printframes.cc
  * Author: Alexander S. van Amesfoort, ASTRON
  * Last-modified: Jun 2013
- * build: g++ -Wall -o tbb-dumpframes tbb-dumpframes.cc
+ * build: g++ -Wall -o tbb-printframes tbb-printframes.cc
  */
 
 #include <stdint.h>
