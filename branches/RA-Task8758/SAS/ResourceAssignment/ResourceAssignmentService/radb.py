@@ -51,6 +51,17 @@ class RADatabase:
     def getTaskStatusNames(self):
         return [x['name'] for x in self.getTaskStatuses()]
 
+    def getTaskStatusId(self, status_name):
+        query = '''SELECT id from resource_allocation.task_status
+                   WHERE name = %s;'''
+        self.cursor.execute(query, status_name)
+        result = self.cursor.fetchone()
+
+        if result:
+            return result['id']
+
+        raise KeyError('No such status: %s' % status_name)
+
     def getTaskTypes(self):
         query = '''SELECT * from resource_allocation.task_type;'''
         self.cursor.execute(query)
@@ -59,6 +70,17 @@ class RADatabase:
 
     def getTaskTypeNames(self):
         return [x['name'] for x in self.getTaskTypes()]
+
+    def getTaskTypeId(self, type_name):
+        query = '''SELECT id from resource_allocation.task_type
+                   WHERE name = %s;'''
+        self.cursor.execute(query, type_name)
+        result = self.cursor.fetchone()
+
+        if result:
+            return result['id']
+
+        raise KeyError('No such type: %s' % type_name)
 
     def getResourceClaimStatuses(self):
         query = '''SELECT * from resource_allocation.resource_claim_status;'''
@@ -99,14 +121,20 @@ class RADatabase:
         result = self.cursor.fetchone()
         return dict(result) if result else None
 
-    def insertTask(self, mom_id, otdb_id, task_status, task_type, specification_id, commit=True):
-        if isinstance(task_status, basestring):
+    def _convertTaskTypeAndStatusToIds(self, task_status, task_type):
+        '''converts task_status and task_type to id's in case one and/or the other are strings'''
+        if task_status and isinstance(task_status, basestring):
             #convert task_status string to task_status.id
-            task_status = next((x for x in self.getTaskStatuses() if x['name'] == task_status))['id']
+            task_status = self.getTaskStatusId(task_status)
 
-        if isinstance(task_type, basestring):
+        if task_type and isinstance(task_type, basestring):
             #convert task_type string to task_type.id
-            task_type = next((x for x in self.getTaskTypes() if x['name'] == task_type))['id']
+            task_type = self.getTaskTypeId(task_type)
+
+        return task_status, task_type
+
+    def insertTask(self, mom_id, otdb_id, task_status, task_type, specification_id, commit=True):
+        task_status, task_type = _convertTaskTypeAndStatusToIds(task_status, task_type)
 
         query = '''INSERT INTO resource_allocation.task
         (mom_id, otdb_id, status_id, type_id, specification_id)
@@ -120,13 +148,7 @@ class RADatabase:
         return id
 
     def updateTask(self, task_id, mom_id=None, otdb_id=None, task_status=None, task_type=None, specification_id=None, commit=True):
-        if task_status and isinstance(task_status, basestring):
-            #convert task_status string to task_status.id
-            task_status = next((x for x in self.getTaskStatuses() if x['name'] == task_status))['id']
-
-        if task_type and isinstance(task_type, basestring):
-            #convert task_type string to task_type.id
-            task_type = next((x for x in self.getTaskTypes() if x['name'] == task_type))['id']
+        task_status, task_type = _convertTaskTypeAndStatusToIds(task_status, task_type)
 
         fields = []
         values = []
