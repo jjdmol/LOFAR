@@ -25,9 +25,10 @@
 #define SUBARRAYS_H_
 
 #include <APL/CAL_Protocol/SubArray.h>
+#include "SharedResource.h"
 
 namespace LOFAR {
-  using EPA_Protocol::MEPHeader;
+  //using EPA_Protocol::MEPHeader;
   namespace CAL {
 
 // forward declarations
@@ -98,8 +99,8 @@ private:
 	bool remove(const string& name);
 	bool remove(SubArray*& subarray);
 
-	SubArrayMap 		m_new_arrays; 	// subarrays that should be added 
-										// for the next run of the 
+	SubArrayMap 		m_new_arrays; 	// subarrays that should be added
+										// for the next run of the
 										// calibration algorithm
 	SubArrayMap			m_arrays;
 	list<SubArray*>    	m_dead_arrays; 	// subarrays that have been stopped
@@ -108,5 +109,5 @@ private:
   }; // namespace CAL
 }; // namespace LOFAR
 
-#endif 
+#endif
 

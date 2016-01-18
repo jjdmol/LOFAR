@@ -28,21 +28,19 @@
 #include <APL/RTCCommon/PSAccess.h>
 
 #include <pthread.h>
-#include "SubArrays.h"
+#include "SubArrayMgr.h"
 #include "CalibrationThread.h"
 
 using namespace LOFAR;
 using namespace CAL;
 
-CalibrationThread::CalibrationThread(SubArrays*            subarrays,
-									 CalibrationInterface* cal,
+CalibrationThread::CalibrationThread(SubArrayMgr*          subarrays,
 									 pthread_mutex_t&      globallock,
 									 const string&		   dataDir) :
-	m_subarrays	(subarrays), 
-	m_cal		(cal), 
-	m_acc		(0), 
+	m_subarrays	(subarrays),
+	m_acc		(0),
 	itsDataDir  (dataDir),
-	m_thread	(0), 
+	m_thread	(0),
 	m_globallock(globallock)
 {
 }
@@ -84,11 +82,7 @@ void* CalibrationThread::thread_main(void* thisthread)
 
 	if (thread->m_acc) {
 		bool	writeGains(GET_CONFIG("CalServer.WriteGainsToFile", i) == 1);
-		if (GET_CONFIG("CalServer.DisableCalibration", i)) {
-			thread->m_subarrays->calibrate(0, *thread->m_acc, writeGains, thread->itsDataDir);
-		} else {
-			thread->m_subarrays->calibrate(thread->m_cal, *thread->m_acc, writeGains, thread->itsDataDir);
-		}
+        thread->m_subarrays->calibrate(*thread->m_acc, writeGains);
 	}
 
 	thread->m_acc->readUnlock();
@@ -111,6 +105,6 @@ int CalibrationThread::join()
 		LOG_WARN_STR("pthread_join returned " << returncode);
 	}
 	return returncode;
-}	 
+}
 
 #endif
