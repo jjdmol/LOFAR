@@ -25,6 +25,8 @@ TODO: documentation
 import logging
 import psycopg2
 import psycopg2.extras
+import datetime
+import time
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.INFO)
@@ -90,6 +92,17 @@ class RADatabase:
 
     def getResourceClaimStatusNames(self):
         return [x['name'] for x in self.getResourceClaimStatuses()]
+
+    def getResourceClaimStatusId(self, status_name):
+        query = '''SELECT id from resource_allocation.resource_claim_status
+                   WHERE name = %s;'''
+        self.cursor.execute(query, [status_name])
+        result = self.cursor.fetchone()
+
+        if result:
+            return result['id']
+
+        raise KeyError('No such status: %s. Valid values are: %s' % (status_name, ', '.join(self.getResourceClaimStatusNames())))
 
     def getTasks(self):
         query = '''SELECT t.*, ts.name as status,
@@ -291,6 +304,79 @@ class RADatabase:
 
         return list(self.cursor.fetchall())
 
+    def insertResourceClaim(self, resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, commit=True):
+        if status and isinstance(status, basestring):
+            #convert status string to status.id
+            status = self.getResourceClaimStatusId(status)
+
+        query = '''INSERT INTO resource_allocation.resource_claim
+        (resource_id, task_id, starttime, endtime, status_id, session_id, claim_size, username, user_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        RETURNING id;'''
+
+        self.cursor.execute(query, (resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id))
+        id = self.cursor.fetchone()['id']
+        if commit:
+            self.conn.commit()
+        return id
+
+    def updateResourceClaim(self, resource_claim_id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, username=None, user_id=None, commit=True):
+        if status and isinstance(status, basestring):
+            #convert status string to status.id
+            status = self.getResourceClaimStatusId(status)
+
+        fields = []
+        values = []
+
+        if resource_id:
+            fields.append('resource_id')
+            values.append(resource_id)
+
+        if task_id:
+            fields.append('task_id')
+            values.append(task_id)
+
+        if starttime:
+            fields.append('starttime')
+            values.append(starttime)
+
+        if endtime:
+            fields.append('endtime')
+            values.append(endtime)
+
+        if status:
+            fields.append('status_id')
+            values.append(status)
+
+        if session_id:
+            fields.append('session_id')
+            values.append(session_id)
+
+        if claim_size:
+            fields.append('claim_size')
+            values.append(claim_size)
+
+        if username:
+            fields.append('username')
+            values.append(username)
+
+        if user_id:
+            fields.append('user_id')
+            values.append(user_id)
+
+        values.append(resource_claim_id)
+
+        query = '''UPDATE resource_allocation.resource_claim
+        SET ({fields}) = ({value_placeholders})
+        WHERE resource_allocation.resource_claim.id = {rc_id_placeholder};'''.format(fields=', '.join(fields),
+                                                                                     value_placeholders=', '.join('%s' for x in fields),
+                                                                                     rc_id_placeholder='%s')
+
+        self.cursor.execute(query, values)
+        if commit:
+            self.conn.commit()
+
+        return self.cursor.rowcount > 0
 
 
 if __name__ == '__main__':
@@ -318,6 +404,16 @@ if __name__ == '__main__':
     resultPrint(db.getSpecifications)
     resultPrint(db.getResourceClaims)
 
+    rcId = db.insertResourceClaim(1, 1, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1, True)
+
+    resultPrint(db.getResourceClaims)
+
+    time.sleep(1)
+
+    rcId = db.updateResourceClaim(rcId, starttime=datetime.datetime.utcnow(), status='ALLOCATED')
+
+    resultPrint(db.getResourceClaims)
+
     taskId = db.insertTask(1234, 5678, 'active', 'OBSERVATION', 1)
 
     resultPrint(db.getTasks)
@@ -325,16 +421,4 @@ if __name__ == '__main__':
     print db.updateTask(taskId, task_status='scheduled', otdb_id=723, task_type='PIPELINE')
 
     resultPrint(db.getTasks)
-
-    units = db.getUnits()
-    for q in units:
-        print q['id'], db.getUnitId(q['units'])
-
-    statuses = db.getTaskStatuses()
-    for q in statuses:
-        print q['id'], db.getTaskStatusId(q['name'])
-
-
-
-
 
