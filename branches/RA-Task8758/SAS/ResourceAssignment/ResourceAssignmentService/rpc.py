@@ -69,6 +69,28 @@ class RARPC:
             task['endtime'] = task['endtime'].datetime()
         return task
 
+        taskId = self.radb.insertTask(kwargs['mom_id'],
+                                      kwargs['otdb_id'],
+                                      kwargs.get('status_id', kwargs.get('status', 'prepared')),
+                                      kwargs['task_type'],
+                                      kwargs['specification_id'])
+
+
+    def insertTask(self, mom_id, otdb_id, status, type, specification_id):
+        return self._rpc('RAS.InsertTask', mom_id=mom_id,
+                                           otdb_id=otdb_id,
+                                           status=status,
+                                           type=type,
+                                           specification_id=specification_id)
+
+    def updateTask(self, task_id, mom_id=None, otdb_id=None, status=None, task_type=None, specification_id=None):
+        return self._rpc('RAS.UpdateTask', task_id=task_id,
+                                           mom_id=mom_id,
+                                           otdb_id=otdb_id,
+                                           status=status,
+                                           task_type=task_type,
+                                           specification_id=specification_id)
+
     def getTasks(self):
         tasks = self._rpc('RAS.GetTasks')
         for task in tasks:
@@ -85,3 +107,16 @@ class RARPC:
     def getUnits(self):
         return self._rpc('RAS.GetUnits')
 
+if __name__ == '__main__':
+    rpc = RARPC()
+    #print rpc.getTasks()
+    result = rpc.insertTask(1, 1, 'scheduled', 'PIPELINE', 10)
+    print result
+    task_id = result['task_id']
+
+    print rpc.getTask(task_id)
+
+    result = rpc.updateTask(task_id, status='active')
+
+    print result
+    print rpc.getTask(task_id)

@@ -25,8 +25,8 @@ from lofar.messaging.Service import MessageHandlerInterface
 from lofar.common.util import waitForInterrupt
 from lofar.sas.resourceassignment.resourceassignmentservice import radb
 
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                    level=logging.INFO)
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +45,8 @@ class RADBHandler(MessageHandlerInterface):
             'RAS.GetResourceTypes': self._getResourceTypes,
             'RAS.GetResources': self._getResources,
             'RAS.GetTask': self._getTask,
+            'RAS.InsertTask': self._insertTask,
+            'RAS.UpdateTask': self._updateTask,
             'RAS.GetTaskStatuses': self._getTaskStatuses,
             'RAS.GetTaskTypes': self._getTaskTypes,
             'RAS.GetTaskTypes': self._getTaskTypes,
@@ -86,6 +88,26 @@ class RADBHandler(MessageHandlerInterface):
         task = self.radb.getTask(kwargs['id'])
         return task
 
+    def _insertTask(self, **kwargs):
+        logger.info('InsertTask: %s' % kwargs)
+        task_id = self.radb.insertTask(kwargs['mom_id'],
+                                       kwargs['otdb_id'],
+                                       kwargs.get('status_id', kwargs.get('status', 'prepared')),
+                                       kwargs.get('type_id', kwargs.get('type')),
+                                       kwargs['specification_id'])
+        return {'task_id':task_id}
+
+    def _updateTask(self, **kwargs):
+        logger.info('UpdateTask: %s' % kwargs)
+        task_id = kwargs['task_id']
+        updated = self.radb.updateTask(task_id,
+                                       mom_id=kwargs.get('mom_id'),
+                                       otdb_id=kwargs.get('otdb_id'),
+                                       task_status=kwargs.get('status_id', kwargs.get('status', 'prepared')),
+                                       task_type=kwargs.get('type_id', kwargs.get('type')),
+                                       specification_id=kwargs.get('specification_id'))
+        return {'task_id': task_id, 'updated': updated}
+
     def _getUnits(self):
         return self.radb.getUnits()
 
@@ -93,7 +115,8 @@ def createService(busname='lofarbus', radb_password=''):
     return Service('RAS.*',
                    RADBHandler,
                    busname=busname,
-                   handler_args={'password': radb_password})
+                   handler_args={'password': radb_password},
+                   verbose=True)
 
 def main():
     # make sure config.py is mode 600 to hide passwords
