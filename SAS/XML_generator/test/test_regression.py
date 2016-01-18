@@ -20,7 +20,7 @@ def main():
   infiles = os.listdir("txt")
   results = []
   for infile in infiles:
-    if infile.startswith("old"):
+    if infile.startswith("old") or infile.startswith("."):
       continue # pre 2.6 files that no longer have valid syntax
     name, ext = os.path.splitext(infile)
     outfile = name + ".xml"
