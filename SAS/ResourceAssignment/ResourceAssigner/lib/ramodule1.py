@@ -24,6 +24,9 @@ from . import ramodule2
 def foo():
     print "foo"
 
+def answerToEverything():
+    return 42
+
 def main(args=None):
     print "YO: main!"
 
