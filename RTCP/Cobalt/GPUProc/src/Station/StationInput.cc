@@ -169,6 +169,9 @@ namespace LOFAR {
       mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz),
       nrBoards(ps.settings.antennaFields.at(stationIdx).inputStreams.size()),
 
+      loggedSeenFutureData(0),
+      loggedNonRealTime(0),
+
       targetSubbands(values(subbandDistribution)),
       beamletIndices(generateBeamletIndices())
     {
@@ -330,9 +333,14 @@ namespace LOFAR {
       const TimeStamp now = TimeStamp::now(mode.clockHz());
 
       if (deadline < now) {
-        // We're too late! Don't process data, or we'll get even further behind!
-        LOG_ERROR_STR(logPrefix << "[block " << current.block << "] Not running at real time! Deadline was " <<
-          TimeStamp(now - deadline, deadline.getClock()).getSeconds() << " seconds ago");
+	// Only emit log lines every minute seconds to prevent spam
+        if (loggedNonRealTime + mode.secondsToSamples(60) < now) {
+          // We're too late! Don't process data, or we'll get even further behind!
+          LOG_ERROR_STR(logPrefix << "[block " << current.block << "] Not running at real time! Deadline was " <<
+            TimeStamp(now - deadline, deadline.getClock()).getSeconds() << " seconds ago");
+
+          loggedNonRealTime = now;
+        }
 
       } else {
         // One core can't handle the load, so use multiple
@@ -364,7 +372,11 @@ namespace LOFAR {
                 // We have data (potentially) spilling into `next'.
 
                 if (next->write(packet, beamletIndices, nrBeamletIndices)) {
-                  LOG_WARN_STR(logPrefix << "Received data for several blocks into the future -- discarding.");
+	          // Only emit log lines every minute seconds to prevent spam
+                  if (loggedSeenFutureData + mode.secondsToSamples(60) < now) {
+                    LOG_ERROR_STR(logPrefix << "Received data for several blocks into the future -- discarding.");
+                    loggedSeenFutureData = now;
+                  }
                 }
               }
             }
