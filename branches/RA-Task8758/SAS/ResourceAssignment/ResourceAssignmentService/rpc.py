@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import logging
-from lofar.messaging.RPC import RPC
+from lofar.messaging.RPC import RPC, RPCException
 
 ''' Simple RPC client for Service lofarbus.RAS.*Z
 '''
@@ -20,23 +20,44 @@ class RARPCException(Exception):
 class RARPC:
     def __init__(self, busname='lofarbus'):
         self.busname = busname
+        self._serviceRPCs = {} #cache of rpc's for each service
+
+    def __enter__(self):
+        """
+        Internal use only. (handles scope 'with')
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Internal use only. (handles scope 'with')
+        """
+        for servicename, rpc in self._serviceRPCs.items():
+            rpc.__exit__(None, None, None)
 
     def _rpc(self, service, timeout=10, **kwargs):
         try:
             rpckwargs = {'timeout': timeout}
-            with RPC(service, busname=self.busname, **rpckwargs) as rpc:
-                if kwargs:
-                    res, status = rpc(**kwargs)
-                else:
-                    res, status = rpc()
 
-                if status != 'OK':
-                    message = "%s %s" % (status, res)
-                    logger.error(message)
-                    raise RARPCException(message)
+            if service not in self._serviceRPCs:
+                rpc = RPC(service, busname=self.busname, ForwardExceptions=True, **rpckwargs)
+                rpc.Request.__enter__()
+                self._serviceRPCs[service] = rpc
 
-                return res
-        except Exception as e:
+            rpc = self._serviceRPCs[service]
+
+            if kwargs:
+                res, status = rpc(**kwargs)
+            else:
+                res, status = rpc()
+
+            if status != 'OK':
+                logger.error('status: %s' % status)
+                logger.error('result: %s' % res)
+                raise RARPCException("%s %s" % (status, res))
+
+            return res
+        except RPCException as e:
             logger.error(str(e))
             raise RARPCException(str(e))
 
@@ -108,15 +129,15 @@ class RARPC:
         return self._rpc('RAS.GetUnits')
 
 if __name__ == '__main__':
-    rpc = RARPC()
-    #print rpc.getTasks()
-    result = rpc.insertTask(1, 1, 'scheduled', 'PIPELINE', 10)
-    print result
-    task_id = result['task_id']
+    with RARPC() as rpc:
+        #print rpc.getTasks()
+        result = rpc.insertTask(1, 1, 'scheduled', 'PIPELINE', 1)
+        print result
+        task_id = result['task_id']
 
-    print rpc.getTask(task_id)
+        print rpc.getTask(task_id)
 
-    result = rpc.updateTask(task_id, status='active')
+        result = rpc.updateTask(task_id, status='active')
 
-    print result
-    print rpc.getTask(task_id)
+        print result
+        print rpc.getTask(task_id)
