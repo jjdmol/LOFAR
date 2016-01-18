@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
+  <version>2.15.0</version>
+  <template version="2.15.0" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
+  <description>XML Template generator version 2.15.0</description>
+  </template>
+  <name>test_lofar</name>
+  <children>
+   <item index="0">
+        <lofar:folder topology_parent="true">
+          <topology>0</topology>
+          <name>alwin1</name>
+          <description>example template (Pulsar)</description>
+          <children>
+          <item index="0">
+                <lofar:observation>
+                  <name>Crab test/1/TO</name>
+                  <description>Crab test/1/TO (Target Observation)</description>
+                  <topology>B0.1.T.0</topology>
+                  <predecessor_topology></predecessor_topology>
+                  <currentStatus>
+                    <mom2:openedStatus/>
+                  </currentStatus>
+                  <lofar:observationAttributes>
+                    <observationId>
+                    </observationId>
+                    <name>Crab test/1/TO</name>
+                    <projectName>test_lofar</projectName>
+                    <instrument>Beam Observation</instrument>
+                    <defaultTemplate>BeamObservation</defaultTemplate>
+                    <tbbPiggybackAllowed>true</tbbPiggybackAllowed>
+                    <aartfaacPiggybackAllowed>false</aartfaacPiggybackAllowed>
+                    <userSpecification>
+                      <correlatedData>true</correlatedData>
+                      <coherentStokesData>false</coherentStokesData>
+                      <incoherentStokesData>true</incoherentStokesData>
+                      <antenna>HBA Dual</antenna>
+                      <clock mode="200 MHz"/>
+                      <instrumentFilter>110-190 MHz</instrumentFilter>
+                      <integrationInterval>1.0</integrationInterval>
+                      <channelsPerSubband>16</channelsPerSubband>
+                      <coherentDedisperseChannels>false</coherentDedisperseChannels>
+                      <tiedArrayBeams>
+                        <flyseye>false</flyseye>
+                      </tiedArrayBeams>
+                      <stokes>
+                        <integrateChannels>false</integrateChannels>
+                        <subbandsPerFileCS>512</subbandsPerFileCS>
+                        <numberCollapsedChannelsCS>16</numberCollapsedChannelsCS>
+                        <stokesDownsamplingStepsCS>128</stokesDownsamplingStepsCS>
+                        <whichCS>IQUV</whichCS>
+                        <subbandsPerFileIS></subbandsPerFileIS>
+                        <numberCollapsedChannelsIS></numberCollapsedChannelsIS>
+                        <stokesDownsamplingStepsIS></stokesDownsamplingStepsIS>
+                        <whichIS></whichIS>
+                      </stokes>
+                      <stationSet>Custom</stationSet>
+                      <stations>CS001,CS002,CS003,CS004,CS005,CS006,CS007,CS011,CS013,CS017,CS021,CS024,CS026,CS028,CS030,CS031,CS032,CS101,CS103,CS201,CS301,CS302,CS401,CS501,RS106,RS205,RS208,RS210,RS305,RS306,RS307,RS310,RS406,RS407,RS409,RS503,RS508,RS509</stations>
+                      <timeFrame>UT</timeFrame>
+                      <startTime>2014-07-07T12:00:00</startTime>
+                      <endTime>2014-07-07T12:10:00</endTime>
+                      <duration>600</duration>
+                      <bypassPff>false</bypassPff>
+                      <enableSuperterp>false</enableSuperterp>
+                      <numberOfBitsPerSample>8</numberOfBitsPerSample>
+                    </userSpecification>
+                  </lofar:observationAttributes>
+                  <children>
+<item index="0">
+                      <lofar:measurement xsi:type="lofar:BFMeasurementType">
+                        <name>Crab test</name>
+                        <description>Crab test</description>
+                        <topology>B0.1.T.SAP000</topology>
+                        <currentStatus>
+                          <mom2:openedStatus/>
+                        </currentStatus>
+                        <lofar:bfMeasurementAttributes>
+                          <measurementType>Target</measurementType>
+                          <specification>
+                            <targetName>Crab test</targetName>
+                            <ra>83.7164166667</ra>
+                            <dec>22.0145</dec>
+                            <equinox>J2000</equinox>
+                            <duration>0</duration>
+                            <subbandsSpecification>
+                              <subbands>54..297</subbands>
+                            </subbandsSpecification>
+                          <tiedArrayBeams>
+                            <flyseye>false</flyseye>
+                          <nrTabRings>0</nrTabRings>
+                          <tabRingSize></tabRingSize>
+                            <tiedArrayBeamList>
+                              
+                            </tiedArrayBeamList>
+                          </tiedArrayBeams>
+                          </specification>
+                        </lofar:bfMeasurementAttributes>
+                        <resultDataProducts>
+                                          <item>
+                    <lofar:uvDataProduct>
+                    <name>B0.1.T.SAP000.uv.dps</name>
+                    <topology>B0.1.T.SAP000.uv.dps</topology>
+                    <status>no_data</status>
+                    <storageCluster>
+                      <name>CEP4</name>
+                      <partition>/data</partition>
+                    </storageCluster>
+                    </lofar:uvDataProduct>
+                  </item>
+                                  <item>
+                    <lofar:bfDataProduct>
+                    <name>B0.1.T.SAP000.is</name>
+                    <topology>B0.1.T.SAP000.is</topology>
+                    <status>no_data</status>
+                    <storageCluster>
+                      <name>CEP4</name>
+                      <partition>/data</partition>
+                    </storageCluster>
+                    </lofar:bfDataProduct>
+                  </item>
+                        </resultDataProducts>   
+                      </lofar:measurement>
+                    </item>
+</children>
+                </lofar:observation>
+                </item>
+        <item index="0">
+              <lofar:pipeline xsi:type="lofar:PulsarPipelineType">
+                <topology>B0.1.PT0</topology>
+                <predecessor_topology>B0.1.T</predecessor_topology>
+                <name>Crab test/1.0/PP</name>
+                <description>Crab test/1.0/PP (Pulsar Pipeline)</description>
+                <pipelineAttributes>
+                  <defaultTemplate>Pulsar Pipeline</defaultTemplate>
+                  <duration>600</duration>
+                  <_2bf2fitsExtraOpts></_2bf2fitsExtraOpts>
+                  <_8bitConversionSigma></_8bitConversionSigma>
+                  <decodeNblocks></decodeNblocks>
+                  <decodeSigma></decodeSigma>
+                  <digifilExtraOpts></digifilExtraOpts>
+                  <dspsrExtraOpts></dspsrExtraOpts>
+                  <dynamicSpectrumTimeAverage></dynamicSpectrumTimeAverage>
+                  <nofold></nofold>
+                  <nopdmp></nopdmp>
+                  <norfi></norfi>
+                  <prepdataExtraOpts></prepdataExtraOpts>
+                  <prepfoldExtraOpts></prepfoldExtraOpts>
+                  <prepsubbandExtraOpts></prepsubbandExtraOpts>
+                  <pulsar></pulsar>
+                  <rawTo8bit></rawTo8bit>
+                  <rfifindExtraOpts></rfifindExtraOpts>
+                  <rrats></rrats>
+                  <singlePulse></singlePulse>
+                  <skipDsps></skipDsps>
+                  <skipDynamicSpectrum></skipDynamicSpectrum>
+                  <skipPrepfold></skipPrepfold>
+                  <tsubint></tsubint>
+                    <processingCluster>
+                    <name>CEP4</name>
+                    <partition>/data</partition>
+                    <numberOfTasks>244</numberOfTasks>
+                    <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
+                    <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
+                    <maxDurationPerTask>PT600S</maxDurationPerTask>
+                    <numberOfCoresPerTask>20</numberOfCoresPerTask>
+                    <runSimultaneous>true</runSimultaneous>
+                  </processingCluster>
+                </pipelineAttributes>
+                <usedDataProducts>
+                  <item>
+                    <lofar:bfDataProduct topology="B0.1.T.SAP000.is">
+                    </lofar:bfDataProduct>
+                  </item>
+                </usedDataProducts>
+                <resultDataProducts>
+                  <item>
+                    <lofar:pulsarDataProduct>
+                      <name>B0.1.PT0.pu.dps</name>
+                      <topology>B0.1.PT0.pu.dps</topology>
+                      <status>no_data</status>
+                      <storageCluster>
+                      <name>CEP4</name>
+                      <partition>/data</partition>
+                    </storageCluster>
+                    </lofar:pulsarDataProduct>
+                  </item>
+                </resultDataProducts>
+              </lofar:pipeline>
+            </item>
+          <item index="0">
+                <lofar:observation>
+                  <name>Crab test/2/TO</name>
+                  <description>Crab test/2/TO (Target Observation)</description>
+                  <topology>B0.2.T.0</topology>
+                  <predecessor_topology></predecessor_topology>
+                  <currentStatus>
+                    <mom2:openedStatus/>
+                  </currentStatus>
+                  <lofar:observationAttributes>
+                    <observationId>
+                    </observationId>
+                    <name>Crab test/2/TO</name>
+                    <projectName>test_lofar</projectName>
+                    <instrument>Beam Observation</instrument>
+                    <defaultTemplate>BeamObservation</defaultTemplate>
+                    <tbbPiggybackAllowed>true</tbbPiggybackAllowed>
+                    <aartfaacPiggybackAllowed>false</aartfaacPiggybackAllowed>
+                    <userSpecification>
+                      <correlatedData>true</correlatedData>
+                      <coherentStokesData>false</coherentStokesData>
+                      <incoherentStokesData>true</incoherentStokesData>
+                      <antenna>HBA Dual</antenna>
+                      <clock mode="200 MHz"/>
+                      <instrumentFilter>110-190 MHz</instrumentFilter>
+                      <integrationInterval>1.0</integrationInterval>
+                      <channelsPerSubband>16</channelsPerSubband>
+                      <coherentDedisperseChannels>false</coherentDedisperseChannels>
+                      <tiedArrayBeams>
+                        <flyseye>false</flyseye>
+                      </tiedArrayBeams>
+                      <stokes>
+                        <integrateChannels>false</integrateChannels>
+                        <subbandsPerFileCS>512</subbandsPerFileCS>
+                        <numberCollapsedChannelsCS>16</numberCollapsedChannelsCS>
+                        <stokesDownsamplingStepsCS>128</stokesDownsamplingStepsCS>
+                        <whichCS>IQUV</whichCS>
+                        <subbandsPerFileIS></subbandsPerFileIS>
+                        <numberCollapsedChannelsIS></numberCollapsedChannelsIS>
+                        <stokesDownsamplingStepsIS></stokesDownsamplingStepsIS>
+                        <whichIS></whichIS>
+                      </stokes>
+                      <stationSet>Custom</stationSet>
+                      <stations>CS001,CS002,CS003,CS004,CS005,CS006,CS007,CS011,CS013,CS017,CS021,CS024,CS026,CS028,CS030,CS031,CS032,CS101,CS103,CS201,CS301,CS302,CS401,CS501,RS106,RS205,RS208,RS210,RS305,RS306,RS307,RS310,RS406,RS407,RS409,RS503,RS508,RS509</stations>
+                      <timeFrame>UT</timeFrame>
+                      <startTime>2014-07-07T12:11:00</startTime>
+                      <endTime>2014-07-07T12:21:00</endTime>
+                      <duration>600</duration>
+                      <bypassPff>false</bypassPff>
+                      <enableSuperterp>false</enableSuperterp>
+                      <numberOfBitsPerSample>8</numberOfBitsPerSample>
+                    </userSpecification>
+                  </lofar:observationAttributes>
+                  <children>
+<item index="0">
+                      <lofar:measurement xsi:type="lofar:BFMeasurementType">
+                        <name>Crab test</name>
+                        <description>Crab test</description>
+                        <topology>B0.2.T.SAP000</topology>
+                        <currentStatus>
+                          <mom2:openedStatus/>
+                        </currentStatus>
+                        <lofar:bfMeasurementAttributes>
+                          <measurementType>Target</measurementType>
+                          <specification>
+                            <targetName>Crab test</targetName>
+                            <ra>83.7164166667</ra>
+                            <dec>22.0145</dec>
+                            <equinox>J2000</equinox>
+                            <duration>0</duration>
+                            <subbandsSpecification>
+                              <subbands>54..297</subbands>
+                            </subbandsSpecification>
+                          <tiedArrayBeams>
+                            <flyseye>false</flyseye>
+                          <nrTabRings>0</nrTabRings>
+                          <tabRingSize></tabRingSize>
+                            <tiedArrayBeamList>
+                              
+                            </tiedArrayBeamList>
+                          </tiedArrayBeams>
+                          </specification>
+                        </lofar:bfMeasurementAttributes>
+                        <resultDataProducts>
+                                          <item>
+                    <lofar:uvDataProduct>
+                    <name>B0.2.T.SAP000.uv.dps</name>
+                    <topology>B0.2.T.SAP000.uv.dps</topology>
+                    <status>no_data</status>
+                    <storageCluster>
+                      <name>CEP4</name>
+                      <partition>/data</partition>
+                    </storageCluster>
+                    </lofar:uvDataProduct>
+                  </item>
+                                  <item>
+                    <lofar:bfDataProduct>
+                    <name>B0.2.T.SAP000.is</name>
+                    <topology>B0.2.T.SAP000.is</topology>
+                    <status>no_data</status>
+                    <storageCluster>
+                      <name>CEP4</name>
+                      <partition>/data</partition>
+                    </storageCluster>
+                    </lofar:bfDataProduct>
+                  </item>
+                        </resultDataProducts>   
+                      </lofar:measurement>
+                    </item>
+</children>
+                </lofar:observation>
+                </item>
+        <item index="0">
+              <lofar:pipeline xsi:type="lofar:PulsarPipelineType">
+                <topology>B0.2.PT0</topology>
+                <predecessor_topology>B0.2.T</predecessor_topology>
+                <name>Crab test/2.0/PP</name>
+                <description>Crab test/2.0/PP (Pulsar Pipeline)</description>
+                <pipelineAttributes>
+                  <defaultTemplate>Pulsar Pipeline</defaultTemplate>
+                  <duration>600</duration>
+                  <_2bf2fitsExtraOpts></_2bf2fitsExtraOpts>
+                  <_8bitConversionSigma></_8bitConversionSigma>
+                  <decodeNblocks></decodeNblocks>
+                  <decodeSigma></decodeSigma>
+                  <digifilExtraOpts></digifilExtraOpts>
+                  <dspsrExtraOpts></dspsrExtraOpts>
+                  <dynamicSpectrumTimeAverage></dynamicSpectrumTimeAverage>
+                  <nofold></nofold>
+                  <nopdmp></nopdmp>
+                  <norfi></norfi>
+                  <prepdataExtraOpts></prepdataExtraOpts>
+                  <prepfoldExtraOpts></prepfoldExtraOpts>
+                  <prepsubbandExtraOpts></prepsubbandExtraOpts>
+                  <pulsar></pulsar>
+                  <rawTo8bit></rawTo8bit>
+                  <rfifindExtraOpts></rfifindExtraOpts>
+                  <rrats></rrats>
+                  <singlePulse></singlePulse>
+                  <skipDsps></skipDsps>
+                  <skipDynamicSpectrum></skipDynamicSpectrum>
+                  <skipPrepfold></skipPrepfold>
+                  <tsubint></tsubint>
+                    <processingCluster>
+                    <name>CEP4</name>
+                    <partition>/data</partition>
+                    <numberOfTasks>244</numberOfTasks>
+                    <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
+                    <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
+                    <maxDurationPerTask>PT600S</maxDurationPerTask>
+                    <numberOfCoresPerTask>20</numberOfCoresPerTask>
+                    <runSimultaneous>true</runSimultaneous>
+                  </processingCluster>
+                </pipelineAttributes>
+                <usedDataProducts>
+                  <item>
+                    <lofar:bfDataProduct topology="B0.2.T.SAP000.is">
+                    </lofar:bfDataProduct>
+                  </item>
+                </usedDataProducts>
+                <resultDataProducts>
+                  <item>
+                    <lofar:pulsarDataProduct>
+                      <name>B0.2.PT0.pu.dps</name>
+                      <topology>B0.2.PT0.pu.dps</topology>
+                      <status>no_data</status>
+                      <storageCluster>
+                      <name>CEP4</name>
+                      <partition>/data</partition>
+                    </storageCluster>
+                    </lofar:pulsarDataProduct>
+                  </item>
+                </resultDataProducts>
+              </lofar:pipeline>
+            </item>
+</children>
+  </lofar:folder>
+  </item>
+          </children>
+  </lofar:project>
