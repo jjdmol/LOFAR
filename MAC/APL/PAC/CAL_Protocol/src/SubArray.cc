@@ -21,237 +21,231 @@
 //#
 //#  $Id$
 
-#include <APL/CAL_Protocol/SubArray.h>
-#include <APL/CAL_Protocol/CalibrationInterface.h>
+#include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/hexdump.h>
+#include <ApplCommon/AntennaSets.h>
+
 #include <MACIO/Marshalling.tcc>
 #include <APL/RTCCommon/MarshallBlitz.h>
+#include <APL/CAL_Protocol/SubArray.h>
+//#include <APL/CAL_Protocol/CalibrationInterface.h>
 
-using namespace std;
-using namespace blitz;
-using namespace LOFAR;
-using namespace CAL;
+namespace LOFAR {
+  namespace CAL {
+    using namespace blitz;
 
 // forward declaration
 class CalibrationInterface;
-    
+
 //
 // SubArray()
 //
-SubArray::SubArray() : 
-	AntennaArray(), 
-	m_antenna_selection(), 
-	m_spw("undefined", 0, 0, 0, 0)
+SubArray::SubArray() :
+    itsSPW("undefined", 0, 0, false),
+    itsGains(new AntennaGains)
 {
-	LOG_TRACE_OBJ("SubArray()");
-
-	m_result[FRONT] = 0;
-	m_result[BACK]  = 0;
+    LOG_TRACE_OBJ("SubArray()");
 }
 
 //
-// SubArray(name, geoloc, pos, select, freq, nyquist, nrSubbands, rcuControl)
+// SubArray(name, antennaSet, select, freq, nyquist, nrSubbands, rcuControl)
 //
-SubArray::SubArray (string					name,
-					const Array<double,1>&	geoloc,
-					const Array<double,3>&	pos,
-					const Array<bool, 2>&	select,
-					double 					sampling_frequency,
-					int    					nyquist_zone,
-					int    					nsubbands,
-					uint32 					rcucontrol) :
-	AntennaArray(name, geoloc, pos),
-	m_antenna_selection(select),
-	m_spw(name + "_spw", sampling_frequency, nyquist_zone, nsubbands, rcucontrol)
+SubArray::SubArray (const string&           name,
+                    const string&           antennaSet,
+                    RCUmask_t               RCUmask,
+                    bool                    LBAfilterOn,
+                    double                  sampling_frequency,
+                    int                     nyquist_zone) :
+    itsName(name),
+    itsAntennaSet (antennaSet),
+    itsSPW        (name + "_spw", sampling_frequency, nyquist_zone, LBAfilterOn),
+    itsRCUmask    (RCUmask & globalAntennaSets()->RCUallocation(antennaSet))
 {
-	LOG_TRACE_OBJ(formatString("SubArray(%s,%f,%d,%d,%08X)", 
-							name.c_str(), sampling_frequency, nyquist_zone, nsubbands, rcucontrol));
+    LOG_DEBUG(formatString("SubArray(%s,%f,%d,%s)",
+                            name.c_str(), sampling_frequency, nyquist_zone, (LBAfilterOn ? "ON" : "OFF")));
 
-	// assert sizes
-	ASSERT(m_antenna_selection.extent(firstDim) == m_pos.extent(firstDim)
-		&& m_antenna_selection.extent(secondDim) == m_pos.extent(secondDim)
-		&& m_pos.extent(thirdDim) == 3);
+    // create calibration result objects [ant x pol x subbands]
+    itsGains = new AntennaGains(itsRCUmask.count(), MAX_SUBBANDS); // TODO: does this work with non contiguous RCUmasks????
+    ASSERT(itsGains);
 
-	LOG_DEBUG_STR("name=" << name);
-	LOG_DEBUG_STR("select=" << select);
-	LOG_DEBUG_STR("m_pos=" << m_pos);
-
-	// construct a new pos(ition) array containing only the coordinates of the
-	// the subarray. Remember in m_rcuindex of each of these elements to which
-	// of the global rcus the newpos element refers.
-
-	// make array at least big enough
-	m_rcuindex.resize(m_pos.extent(firstDim), m_pos.extent(secondDim));
-	m_rcuindex = -1;
-
-	// will contain positions of antenna's that contribute to subarray
-	Array<double, 3> newpos(m_pos.shape());
-	newpos = 0.0;
-	
-	// clear RCUbitset
-	itsRCUmask.reset();
-
-	// loop over inputs and update our admin.
-	int sel = 0;
-	for (int ant = 0; ant < m_pos.extent(firstDim); ant++) {
-		if (sum(m_antenna_selection(ant, Range::all())) > 0) {
-			for (int pol = 0; pol < m_pos.extent(secondDim); pol++) {
-				if (m_antenna_selection(ant, pol)) {
-					newpos(sel, pol, Range::all()) = m_pos(ant, pol, Range::all());
-					m_rcuindex(sel, pol) = ant * m_pos.extent(secondDim) + pol;
-					itsRCUmask.set(ant * N_POL + pol);
-				}
-			} // for each pol
-			sel++;
-		} // antenna in subarray?
-	} // for each antenna
-	m_antenna_count = sel;
-	m_pos 			= newpos; // overwrite original positions
-
-	ASSERT(m_antenna_count > 0);
-
-	// resize the arrays
-	m_pos.resizeAndPreserve(m_antenna_count, m_pos.extent(secondDim), m_pos.extent(thirdDim));
-	m_rcuindex.resizeAndPreserve(m_antenna_count, m_rcuindex.extent(secondDim));
-
-	LOG_DEBUG_STR("m_pos=" << m_pos);
-	LOG_DEBUG_STR("m_rcuindex=" << m_rcuindex);
-	LOG_DEBUG_STR("itsRCUmask=" << itsRCUmask);
-
-	// create calibration result objects
-	m_result[FRONT] = new AntennaGains(m_pos.extent(firstDim), m_pos.extent(secondDim), m_spw.getNumSubbands());
-	m_result[BACK]  = new AntennaGains(m_pos.extent(firstDim), m_pos.extent(secondDim), m_spw.getNumSubbands());
-	ASSERT(m_result[FRONT] && m_result[BACK]);
+    // fill rcumode array
+    string  RCUinputs(globalAntennaSets()->RCUinputs(itsAntennaSet));
+    itsRCUmodes.resize(MAX_RCUS);
+    itsRCUmodes = 0;
+    for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
+        if (itsRCUmask.test(rcu)) {
+            switch (RCUinputs[rcu]) {
+            case 'l': itsRCUmodes(rcu) = (LBAfilterOn ? 2 : 1); break;
+            case 'h': itsRCUmodes(rcu) = (LBAfilterOn ? 4 : 3); break;
+            case 'H': itsRCUmodes(rcu) = itsSPW.rcumodeHBA();   break;
+            case '.': itsRCUmodes(rcu) = 0;                         break;
+            default: ASSERTSTR(false, "RCUinput #" << rcu << " contains illegal specification");
+            } // switch
+            itsRCUuseFlags.set(itsRCUmodes(rcu));
+        } // if
+    } // for
 }
 
 SubArray::~SubArray()
 {
-	LOG_DEBUG_STR("SubArray destructor");	
-	if (m_result[FRONT]) {
-		delete m_result[FRONT];
-	}
-	if (m_result[BACK])  {
-		delete m_result[BACK];
-	}
+    LOG_DEBUG_STR("SubArray destructor: " << itsName);
+    if (itsGains) {
+        delete itsGains;
+    }
 }
 
-void SubArray::calibrate(CalibrationInterface* cal, ACC& acc)
+SubArray& SubArray::operator=(const SubArray& that)
 {
-	ASSERT(m_result[FRONT]);
+    LOG_DEBUG_STR("SubArray operator= : " << that.itsName);
 
-	if (cal) {
-		acc.setSelection(m_antenna_selection);
-		cal->calibrate(*this, acc, *m_result[FRONT]);
-	}
-	m_result[FRONT]->setDone();
+    if (this != &that) {
+        itsName         = that.itsName;
+        itsAntennaSet   = that.itsAntennaSet;
+        itsSPW          = that.itsSPW;
+        itsRCUmask      = that.itsRCUmask;
+        itsRCUmodes.resize(that.itsRCUmodes.shape());
+        itsRCUmodes     = that.itsRCUmodes.copy();
+        itsGains        = that.itsGains->clone();
+    }
+
+    return (*this);
 }
 
-bool SubArray::getGains(AntennaGains*& cal, int buffer)
+bool SubArray::usesRCUmode(int  rcumode) const
 {
-	cal = 0;
-	ASSERT(buffer >= FRONT && buffer <= BACK && m_result[buffer]);
+    ASSERTSTR(rcumode >= 0 && rcumode <= NR_RCU_MODES, "RCUmode must be in the range 0..7");
 
-	cal = m_result[buffer];
-
-	return m_result[buffer]->isDone();
+    return (itsRCUuseFlags.test(rcumode));
 }
 
-void SubArray::abortCalibration()
-{}
-
-const SpectralWindow& SubArray::getSPW() const
+//
+// RCUMask(rcumode)
+//
+RCUmask_t    SubArray::RCUMask(uint rcumode) const
 {
-	return m_spw;
+    RCUmask_t   result;
+    if (!itsRCUuseFlags.test(rcumode)) {    // is this mode used anywhere?
+        return (result);
+    }
+
+    // mode is used somewhere, is this the only used mode?
+    if (itsRCUuseFlags.count() == 1) {
+        return (itsRCUmask);
+    }
+
+    // several modes are used, compose the right mask.
+    for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
+        if (itsRCUmodes(rcu) == rcumode) {
+            result.set(rcu);
+        }
+    } // for
+    return (result);
 }
 
-SubArray& SubArray::operator=(const SubArray& rhs)
+void SubArray::updateGains(const AntennaGains&  newGains)
 {
-	if (this != &rhs) {
-		// base-class assignment
-		AntennaArray::operator=(rhs);
-
-		// assign spectral window
-		m_spw = rhs.getSPW();
-
-		// clear m_result pointers
-		this->m_result[FRONT] = 0;
-		this->m_result[BACK] = 0;
-
-		itsRCUmask = rhs.itsRCUmask;
-	}
-
-	return *this;
+    itsGains = newGains.clone();
 }
 
-bool SubArray::isDone()
+//
+// writeGains()
+//
+void SubArray::writeGains()
 {
-	ASSERT(m_result[FRONT]);
-	return m_result[FRONT]->isDone();
+    time_t now   = time(0);
+    struct tm* t = gmtime(&now);
+    char filename[PATH_MAX];
+
+    snprintf(filename, PATH_MAX, "%s_%04d%02d%02d_%02d%02d%02d_gain_%dx%dx%d.dat",
+                        itsName.c_str(),
+                        t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+                        t->tm_hour, t->tm_min, t->tm_sec,
+                        itsGains->getGains().extent(firstDim),
+                        itsGains->getGains().extent(secondDim),
+                        itsGains->getGains().extent(thirdDim));
+    LOG_DEBUG_STR("writeGains(" << name() << ") to " << filename);
+
+    FILE* gainFile = fopen(filename, "w");
+
+    if (!gainFile) {
+        LOG_ERROR_STR("failed to open file: " << filename);
+        return;
+    }
+
+    if (fwrite(itsGains->getGains().data(), sizeof(complex<double>), itsGains->getGains().size(), gainFile) !=
+            (size_t)itsGains->getGains().size()) {
+        LOG_ERROR_STR("failed to write to file: " << filename);
+    }
+
+    (void)fclose(gainFile);
 }
 
-void SubArray::clearDone()
+//
+// print function for operator<<
+//
+ostream& SubArray::print (ostream& os) const
 {
-	ASSERT(m_result[FRONT]);
-	m_result[FRONT]->setDone(false);
+    os << "SubArray " << itsName << ":AntennaSet=" << itsAntennaSet << ", SPW={" << itsSPW;
+    os << "}, RCUmask=" << itsRCUmask << ", RCUmodeFlags=" << itsRCUuseFlags;
+    return (os);
 }
 
+//
+// ---------- pack and unpack routines ----------
+//
 size_t SubArray::getSize() const
 {
   return
-      MSH_size(m_name)
-    + MSH_size(m_geoloc)
-    + MSH_size(m_pos)
-    + MSH_size(m_rcuindex)
+      MSH_size(itsName)
+    + MSH_size(itsAntennaSet)
     + MSH_size(itsRCUmask)
-    + m_spw.getSize();
+    + itsSPW.getSize();
 }
 
 size_t SubArray::pack(char* buffer) const
 {
-	size_t offset = 0;
+    size_t offset = 0;
 
-	offset = MSH_pack(buffer, offset, m_name);
-	offset = MSH_pack(buffer, offset, m_geoloc);
-	offset = MSH_pack(buffer, offset, m_pos);
-	offset = MSH_pack(buffer, offset, m_rcuindex);
-	offset = MSH_pack(buffer, offset, itsRCUmask);
-	offset += m_spw.pack(buffer + offset);
+    offset = MSH_pack(buffer, offset, itsName);
+    offset = MSH_pack(buffer, offset, itsAntennaSet);
+    offset = MSH_pack(buffer, offset, itsRCUmask);
+    offset += itsSPW.pack(buffer + offset);
 
-	return offset;
+    return offset;
 }
 
 size_t SubArray::unpack(const char* buffer)
 {
-	size_t offset = 0;
+    size_t offset = 0;
 
-	offset = MSH_unpack(buffer, offset, m_name);
-	offset = MSH_unpack(buffer, offset, m_geoloc);
-	offset = MSH_unpack(buffer, offset, m_pos);
-	offset = MSH_unpack(buffer, offset, m_rcuindex);
-	offset = MSH_unpack(buffer, offset, itsRCUmask);
-	offset += m_spw.unpack(buffer + offset);
+    offset = MSH_unpack(buffer, offset, itsName);
+    offset = MSH_unpack(buffer, offset, itsAntennaSet);
+    offset = MSH_unpack(buffer, offset, itsRCUmask);
+    offset += itsSPW.unpack(buffer + offset);
 
-	return offset;
+    return offset;
 }
 
 // -------------------- SubArrayMap --------------------
 
 size_t SubArrayMap::getSize() const
 {
-	return (MSH_size(*this));
+    return MSH_size(*this);
 }
 
 size_t SubArrayMap::pack(char* buffer) const
 {
-	size_t offset = 0;
-	return MSH_pack(buffer, offset, (*this));
+    size_t offset = 0;
+    return MSH_pack(buffer, offset, (*this));
 }
 
 size_t SubArrayMap::unpack(const char* buffer)
 {
-	size_t offset = 0;
-	return MSH_unpack(buffer, offset, (*this));
+    size_t offset = 0;
+    return MSH_unpack(buffer, offset, (*this));
 }
 
+  } // namespace CAL
+} // namespace LOFAR

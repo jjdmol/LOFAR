@@ -23,7 +23,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <APL/CAL_Protocol/ACC.h>
+#include "ACC.h"
 #include "SubArrays.h"
 
 //using namespace std;
@@ -34,7 +34,7 @@ namespace LOFAR {
 
 // forward declaration
 class CalibrationInterface;
-    
+
 //
 // SubArrays()
 //
@@ -83,7 +83,7 @@ bool SubArrays::conflicting(SubArray*	newArray) const
 		if (activeRCUmode != newRCUmode) {				// diffent rcumode? check rcus
 			SubArray::RCUmask_t	activeRCUs(it->second->getRCUMask());
 			if ((newRCUs & activeRCUs).any()) {
-				LOG_INFO_STR ("New subarray " << newArray->getName() << " would conflict with " << 
+				LOG_INFO_STR ("New subarray " << newArray->getName() << " would conflict with " <<
 								it->second->getName() << ". Refused.");
 				return (true);		// we have a conflict
 			}
@@ -97,7 +97,7 @@ bool SubArrays::conflicting(SubArray*	newArray) const
 			SubArray::RCUmask_t	activeRCUs(it->second->getRCUMask());
 			// Note: inDeadList is a relatively expensive call, call it as last-check.
 			if ((newRCUs & activeRCUs).any() && !inDeadList(newArray->getName())) {
-				LOG_INFO_STR ("New subarray " << newArray->getName() << " would conflict with " << 
+				LOG_INFO_STR ("New subarray " << newArray->getName() << " would conflict with " <<
 								it->second->getName() << ". Refused.");
 				return (true);		// we have a conflict
 			}
@@ -353,7 +353,7 @@ SubArrayMap	SubArrays::getSubArrays(const string&	optionalName) {
 	else {
 		// get subarray by name
 		SubArrayMap::const_iterator		subarray;
-		if (((subarray = m_arrays.find(optionalName)) != m_arrays.end()) || 
+		if (((subarray = m_arrays.find(optionalName)) != m_arrays.end()) ||
 			((subarray = m_new_arrays.find(optionalName)) != m_new_arrays.end()))  {
 			answer[optionalName] = subarray->second;
 		}
@@ -406,7 +406,7 @@ void SubArrays::writeGains(SubArray*	anSubArr, const string&	dataDir)
 		return;
 	}
 
-	if (fwrite(gains->getGains().data(), sizeof(complex<double>), gains->getGains().size(), gainFile) != 
+	if (fwrite(gains->getGains().data(), sizeof(complex<double>), gains->getGains().size(), gainFile) !=
 			(size_t)gains->getGains().size()) {
 		LOG_ERROR_STR("failed to write to file: " << filename);
 	}

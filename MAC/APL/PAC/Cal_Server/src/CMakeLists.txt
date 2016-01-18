@@ -15,16 +15,16 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 lofar_add_library(caldevel
   Package__Version.cc
-  CalibrationAlgorithm.cc
+  AntennaArray.cc
+  AntennaArrayData.cc
+  ACC.cc
   CalibrationThread.cc
   DipoleModel.cc
   DipoleModelData.cc
-  RemoteStationCalibration.cc
   Source.cc
   SourceData.cc
-  SubArrays.cc
-  SubArraySubscription.cc)
-  
+  SubArrayMgr.cc)
+
 lofar_add_bin_program(versioncal_server versioncal_server.cc)
 lofar_add_bin_program(CalServer CalServer.cc ACMProxy.cc)
 lofar_add_bin_program(calinfo calinfo.cc)
