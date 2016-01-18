@@ -62,7 +62,7 @@ class RADatabase:
         if result:
             return result['id']
 
-        raise KeyError('No such status: %s' % status_name)
+        raise KeyError('No such status: %s Valid values are: %s' % (status_name, ', '.join(self.getTaskStatusNames())))
 
     def getTaskTypes(self):
         query = '''SELECT * from resource_allocation.task_type;'''
@@ -82,7 +82,7 @@ class RADatabase:
         if result:
             return result['id']
 
-        raise KeyError('No such type: %s' % type_name)
+        raise KeyError('No such type: %s Valid values are: %s' % (type_name, ', '.join(self.getTaskTypeNames())))
 
     def getResourceClaimStatuses(self):
         query = '''SELECT * from resource_allocation.resource_claim_status;'''
@@ -234,7 +234,7 @@ class RADatabase:
         if result:
             return result['id']
 
-        raise KeyError('No such type: %s' % type_name)
+        raise KeyError('No such type: %s Valid values are: %s' % (type_name, ', '.join(self.getResourceTypeNames())))
 
     def getResourceGroupTypes(self):
         query = '''SELECT * from virtual_instrument.resource_group_type;'''
@@ -254,7 +254,7 @@ class RADatabase:
         if result:
             return result['id']
 
-        raise KeyError('No such type: %s' % type_name)
+        raise KeyError('No such type: %s Valid values are: %s' % (type_name, ', '.join(self.getResourceGroupTypeNames())))
 
     def getUnits(self):
         query = '''SELECT * from virtual_instrument.unit;'''
@@ -274,7 +274,7 @@ class RADatabase:
         if result:
             return result['id']
 
-        raise KeyError('No such unit: %s' % unit_name)
+        raise KeyError('No such unit: %s Valid values are: %s' % (type_name, ', '.join(self.getUnitNames())))
 
     def getResources(self):
         query = '''SELECT r.*, rt.name as type, rtu.units as unit
