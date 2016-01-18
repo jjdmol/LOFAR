@@ -54,7 +54,7 @@ class RADatabase:
     def getTaskStatusId(self, status_name):
         query = '''SELECT id from resource_allocation.task_status
                    WHERE name = %s;'''
-        self.cursor.execute(query, status_name)
+        self.cursor.execute(query, [status_name])
         result = self.cursor.fetchone()
 
         if result:
@@ -74,7 +74,7 @@ class RADatabase:
     def getTaskTypeId(self, type_name):
         query = '''SELECT id from resource_allocation.task_type
                    WHERE name = %s;'''
-        self.cursor.execute(query, type_name)
+        self.cursor.execute(query, [type_name])
         result = self.cursor.fetchone()
 
         if result:
@@ -134,7 +134,7 @@ class RADatabase:
         return task_status, task_type
 
     def insertTask(self, mom_id, otdb_id, task_status, task_type, specification_id, commit=True):
-        task_status, task_type = _convertTaskTypeAndStatusToIds(task_status, task_type)
+        task_status, task_type = self._convertTaskTypeAndStatusToIds(task_status, task_type)
 
         query = '''INSERT INTO resource_allocation.task
         (mom_id, otdb_id, status_id, type_id, specification_id)
@@ -148,7 +148,7 @@ class RADatabase:
         return id
 
     def updateTask(self, task_id, mom_id=None, otdb_id=None, task_status=None, task_type=None, specification_id=None, commit=True):
-        task_status, task_type = _convertTaskTypeAndStatusToIds(task_status, task_type)
+        task_status, task_type = self._convertTaskTypeAndStatusToIds(task_status, task_type)
 
         fields = []
         values = []
@@ -212,6 +212,17 @@ class RADatabase:
     def getResourceTypeNames(self):
         return [x['name'] for x in self.getResourceTypes()]
 
+    def getResourceTypeId(self, type_name):
+        query = '''SELECT id from virtual_instrument.resource_type
+                   WHERE name = %s;'''
+        self.cursor.execute(query, [type_name])
+        result = self.cursor.fetchone()
+
+        if result:
+            return result['id']
+
+        raise KeyError('No such type: %s' % type_name)
+
     def getResourceGroupTypes(self):
         query = '''SELECT * from virtual_instrument.resource_group_type;'''
         self.cursor.execute(query)
@@ -221,6 +232,17 @@ class RADatabase:
     def getResourceGroupTypeNames(self):
         return [x['name'] for x in self.getResourceGroupTypes()]
 
+    def getResourceGroupTypeId(self, type_name):
+        query = '''SELECT id from virtual_instrument.resource_group_type
+                   WHERE name = %s;'''
+        self.cursor.execute(query, [type_name])
+        result = self.cursor.fetchone()
+
+        if result:
+            return result['id']
+
+        raise KeyError('No such type: %s' % type_name)
+
     def getUnits(self):
         query = '''SELECT * from virtual_instrument.unit;'''
         self.cursor.execute(query)
@@ -229,6 +251,17 @@ class RADatabase:
 
     def getUnitNames(self):
         return [x['units'] for x in self.getUnits()]
+
+    def getUnitId(self, unit_name):
+        query = '''SELECT * from virtual_instrument.unit
+                   WHERE units = %s;'''
+        self.cursor.execute(query, [unit_name])
+        result = self.cursor.fetchone()
+
+        if result:
+            return result['id']
+
+        raise KeyError('No such unit: %s' % unit_name)
 
     def getResources(self):
         query = '''SELECT r.*, rt.name as type, rtu.units as unit
@@ -293,7 +326,13 @@ if __name__ == '__main__':
 
     resultPrint(db.getTasks)
 
+    units = db.getUnits()
+    for q in units:
+        print q['id'], db.getUnitId(q['units'])
 
+    statuses = db.getTaskStatuses()
+    for q in statuses:
+        print q['id'], db.getTaskStatusId(q['name'])
 
 
 
