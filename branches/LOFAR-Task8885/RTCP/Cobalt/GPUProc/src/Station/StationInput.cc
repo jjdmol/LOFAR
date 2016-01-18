@@ -333,7 +333,8 @@ namespace LOFAR {
       const TimeStamp now = TimeStamp::now(mode.clockHz());
 
       if (deadline < now) {
-        if (loggedNonRealTime + mode.secondsToSamples(600) < now) {
+	// Only emit log lines every minute seconds to prevent spam
+        if (loggedNonRealTime + mode.secondsToSamples(60) < now) {
           // We're too late! Don't process data, or we'll get even further behind!
           LOG_ERROR_STR(logPrefix << "[block " << current.block << "] Not running at real time! Deadline was " <<
             TimeStamp(now - deadline, deadline.getClock()).getSeconds() << " seconds ago");
@@ -371,7 +372,8 @@ namespace LOFAR {
                 // We have data (potentially) spilling into `next'.
 
                 if (next->write(packet, beamletIndices, nrBeamletIndices)) {
-                  if (loggedSeenFutureData + mode.secondsToSamples(600) < now) {
+	          // Only emit log lines every minute seconds to prevent spam
+                  if (loggedSeenFutureData + mode.secondsToSamples(60) < now) {
                     LOG_ERROR_STR(logPrefix << "Received data for several blocks into the future -- discarding.");
                     loggedSeenFutureData = now;
                   }
