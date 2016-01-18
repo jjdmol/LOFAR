@@ -112,6 +112,10 @@ namespace LOFAR {
       const size_t nrBoards;
       std::vector< SmartPtr< Pool< RSPData > > > rspDataPool; // [nrboards]
 
+      // Whether we emitted certain errors (to prevent log spam)
+      TimeStamp loggedSeenFutureData;
+      TimeStamp loggedNonRealTime;
+
       const std::vector<size_t> targetSubbands;
 
       // Mapping of
