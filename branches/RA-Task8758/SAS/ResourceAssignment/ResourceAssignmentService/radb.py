@@ -160,6 +160,15 @@ class RADatabase:
             self.conn.commit()
         return id
 
+    def deleteTask(self, task_id, commit=True):
+        query = '''DELETE FROM resource_allocation.task
+                   WHERE resource_allocation.task.id = %s;'''
+
+        self.cursor.execute(query, [task_id])
+        if commit:
+            self.conn.commit()
+        return self.cursor.rowcount > 0
+
     def updateTask(self, task_id, mom_id=None, otdb_id=None, task_status=None, task_type=None, specification_id=None, commit=True):
         task_status, task_type = self._convertTaskTypeAndStatusToIds(task_status, task_type)
 
@@ -395,43 +404,61 @@ if __name__ == '__main__':
         print '\n-- ' + str(method.__name__) + ' --'
         print '\n'.join([str(x) for x in method()])
 
-    resultPrint(db.getTaskStatuses)
-    resultPrint(db.getTaskStatusNames)
-    resultPrint(db.getTaskTypes)
-    resultPrint(db.getTaskTypeNames)
-    resultPrint(db.getResourceClaimStatuses)
-    resultPrint(db.getResourceClaimStatusNames)
-    resultPrint(db.getUnits)
-    resultPrint(db.getUnitNames)
-    resultPrint(db.getResourceTypes)
-    resultPrint(db.getResourceTypeNames)
-    resultPrint(db.getResourceGroupTypes)
-    resultPrint(db.getResourceGroupTypeNames)
-    resultPrint(db.getResources)
-    resultPrint(db.getResourceGroups)
-    resultPrint(db.getTasks)
-    resultPrint(db.getSpecifications)
-    resultPrint(db.getResourceClaims)
+    #resultPrint(db.getTaskStatuses)
+    #resultPrint(db.getTaskStatusNames)
+    #resultPrint(db.getTaskTypes)
+    #resultPrint(db.getTaskTypeNames)
+    #resultPrint(db.getResourceClaimStatuses)
+    #resultPrint(db.getResourceClaimStatusNames)
+    #resultPrint(db.getUnits)
+    #resultPrint(db.getUnitNames)
+    #resultPrint(db.getResourceTypes)
+    #resultPrint(db.getResourceTypeNames)
+    #resultPrint(db.getResourceGroupTypes)
+    #resultPrint(db.getResourceGroupTypeNames)
+    #resultPrint(db.getResources)
+    #resultPrint(db.getResourceGroups)
+    #resultPrint(db.getTasks)
+    #resultPrint(db.getSpecifications)
+    #resultPrint(db.getResourceClaims)
 
-    rcId = db.insertResourceClaim(1, 1, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1, True)
+    #rcId = db.insertResourceClaim(1, 1, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1, True)
 
-    resultPrint(db.getResourceClaims)
+    #resultPrint(db.getResourceClaims)
 
-    time.sleep(1)
+    #time.sleep(1)
 
-    rcId = db.updateResourceClaim(rcId, starttime=datetime.datetime.utcnow(), status='ALLOCATED')
+    #rcId = db.updateResourceClaim(rcId, starttime=datetime.datetime.utcnow(), status='ALLOCATED')
 
-    resultPrint(db.getResourceClaims)
+    #resultPrint(db.getResourceClaims)
 
-    taskId = db.insertTask(1234, 5678, 'active', 'OBSERVATION', 1)
+    #taskId = db.insertTask(1234, 5678, 'active', 'OBSERVATION', 1)
 
-    resultPrint(db.getTasks)
+    #resultPrint(db.getTasks)
 
-    print db.updateTask(taskId, task_status='scheduled', otdb_id=723, task_type='PIPELINE')
+    #print db.updateTask(taskId, task_status='scheduled', otdb_id=723, task_type='PIPELINE')
 
-    resultPrint(db.getTasks)
+    #resultPrint(db.getTasks)
 
     claims = db.getResourceClaims()
     for c in claims:
         db.deleteResourceClaim(c['id'])
         resultPrint(db.getResourceClaims)
+
+    tasks = db.getTasks()
+    for t in tasks:
+        db.deleteTask(t['id'])
+        resultPrint(db.getTasks)
+        resultPrint(db.getResourceClaims)
+
+    taskId = db.insertTask(1234, 5678, 'active', 'OBSERVATION', 1)
+    rcId = db.insertResourceClaim(1, taskId, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1, True)
+
+    resultPrint(db.getTasks)
+    resultPrint(db.getResourceClaims)
+
+    db.deleteTask(taskId)
+
+    resultPrint(db.getTasks)
+    resultPrint(db.getResourceClaims)
+
