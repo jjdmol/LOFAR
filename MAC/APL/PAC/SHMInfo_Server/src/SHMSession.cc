@@ -822,7 +822,7 @@ void SHMSession::getAntennaCorrelation(GCFEvent& e)
 }
 
 
-//TODO. change AntennaArrays to AnteenaFields
+//TODO. change AntennaArrays to AntennaFields
 #if 0
 GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortInterface& p)
 {

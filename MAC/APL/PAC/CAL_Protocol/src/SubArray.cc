@@ -73,6 +73,7 @@ SubArray::SubArray (const string&           name,
 
     // fill rcumode array
     string  RCUinputs(globalAntennaSets()->RCUinputs(itsAntennaSet));
+    LOG_INFO_STR("RCUinputs= " << RCUinputs);
     itsRCUmodes.resize(MAX_RCUS);
     itsRCUmodes = 0;
     for (int rcu = 0; rcu < MAX_RCUS; rcu++) {

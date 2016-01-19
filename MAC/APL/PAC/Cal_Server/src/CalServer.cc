@@ -267,9 +267,13 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 			// load the source catalog
 			m_sources.getAll(cl.locate(GET_CONFIG_STRING("CalServer.SourceCatalogFile")));
 
+            // load the antenna positions
+			ASSERTSTR(globalAntennaField(), "Could not load the antennaposition file");
+			LOG_DEBUG("Loaded antenna postions file");
+
 			// Load antenna arrays
-			m_arrays.getAll(cl.locate(GET_CONFIG_STRING("CalServer.AntennaArraysFile")));
-			ASSERTSTR(!m_arrays.getNameList().empty(), "No antenna positions found");
+			//m_arrays.getAll(cl.locate(GET_CONFIG_STRING("CalServer.AntennaArraysFile")));
+			//ASSERTSTR(!m_arrays.getNameList().empty(), "No antenna positions found");
 
 			// Setup datapath
 			itsDataDir = globalParameterSet()->getString("CalServer.DataDirectory", "/opt/lofar/bin");
@@ -620,9 +624,6 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 	ack.status      = CAL_Protocol::CAL_SUCCESS; // assume succes, until otherwise
 	ack.name        = start.name;
 
-	// find parent AntennaArray
-	const AntennaArray* parent = m_arrays.getByName(start.antennaSet);
-
 	if (itsSubArrays.getByName(start.name)) {
 		LOG_ERROR_STR("A subarray with name='" << start.name << "' has already been registered.");
 		ack.status = ERR_ALREADY_REGISTERED;
@@ -631,11 +632,19 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 		LOG_ERROR("Empty subarray name.");
 		ack.status = ERR_NO_SUBARRAY_NAME;
 
-	} else if (!parent) {
-		// parent not found, set error status
-		LOG_ERROR_STR("Parent array '" << start.antennaSet << "' not found.");
+	} else if (!globalAntennaSets()->isAntennaSet(start.antennaSet)) {
+		// AntenneSet not found, set error status
+		LOG_ERROR_STR("AntennaSet '" << start.antennaSet << "' not found.");
 		ack.status = ERR_NO_PARENT;
 
+    } else if (globalAntennaSets()->usesLBAfield(start.antennaSet) &&
+              ((start.band < BAND_10_70) || (start.band > BAND_30_90))) {
+            LOG_ERROR_STR("AntennaSet and band do not match '" << start.antennaSet << ", " <<  start.band << "'.");
+            ack.status = ERR_WRONG_BAND;
+    } else if (!globalAntennaSets()->usesLBAfield(start.antennaSet) &&
+              ((start.band < BAND_110_190) || (start.band > BAND_210_250))) {
+            LOG_ERROR_STR("AntennaSet and band do not match '" << start.antennaSet << ", " <<  start.band << "'.");
+            ack.status = ERR_WRONG_BAND;
 	} else if (start.rcuMask.count() == 0) {
 		// empty selection
 		LOG_ERROR("Empty antenna selection not allowed.");
@@ -650,7 +659,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 	} else {
 		// register because this is a cal_start
 		m_clients[start.name] = &port;		// register subarray and port
-
+#if 0
 		// Construct a 'select' array (nAntennas, nPol) that knows which antennas the user will use.
 		const Array<double, 3>& positions = parent->getAntennaPos();
 		Array<bool, 2> select;
@@ -666,6 +675,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 
 		LOG_DEBUG_STR("m_accs.getBack().getACC().shape()=" << m_accs.getBack().getACC().shape());
 		LOG_DEBUG_STR("positions.shape()" << positions.shape());
+#endif
 
 		// check start.subset value
 		bitset<MAX_RCUS> invalidmask;
@@ -868,9 +878,18 @@ void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 		timeStamp.setNow(delay);
 		enableCmd.timestamp = timeStamp;
 		enableCmd.rcumask   = rcus2switchOn;
-		enableCmd.settings().resize(1);
-        //enableCmd.settings()(0) = rcu_settings()(0);
-		enableCmd.settings()(0).setEnable(true);
+		enableCmd.settings().resize(m_n_rcus);
+
+        blitz::Array<uint,1> rcuModes = subarray->RCUmodes();
+        LOG_INFO_STR("rcuModes= " << rcuModes);
+
+        for (uint r = 0; r < m_n_rcus; r++) {
+            if (rcus2switchOn.test(r)) {
+                enableCmd.settings()(r).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)rcuModes(r));
+                enableCmd.settings()(r).setEnable(true);
+            }
+        }
+        LOG_INFO_STR("enableCmd= " << enableCmd);
 		sleep (1);
 		LOG_INFO("Enabling some rcu's because they are used for the first time");
 		itsRSPDriver->send(enableCmd);
