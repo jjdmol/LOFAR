@@ -32,6 +32,7 @@
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
+#include <APL/CAL_Protocol/SpectralWindow.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <signal.h>
 
@@ -51,6 +52,7 @@ namespace LOFAR {
 	using namespace APLCommon;
 	using namespace DP_Protocol;
 	using namespace Controller_Protocol;
+	using namespace CAL;
 	using namespace CAL_Protocol;
 	namespace StationCU {
 
@@ -149,39 +151,20 @@ void    CalibrationControl::setState(CTState::CTstateNr     newState)
 
 
 //
-// convertFilterSelection(string) : uint8
+// convertFilterSelection2int(string)
 //
-int32 CalibrationControl::convertFilterSelection(const string&	filterselection, const string&	antennaSet)
+int32 CalibrationControl::convertFilterSelection2int(const string&	filterselection)
 {
-	// international stations don't have the LBL's connected, force them to use the LBH inputs.
-	string	tmpAntennaSet(antennaSet);	// modifyable copy
-	if ((stationTypeValue() == 2) && (tmpAntennaSet == "LBA_OUTER")) {
-		tmpAntennaSet = "LBA_INNER";
-		LOG_INFO("LBA_OUTER on an international station: forcing it to LBA_INNER");
-	}
-	LOG_DEBUG_STR("stationTypeValue() = " << stationTypeValue());
-	LOG_DEBUG_STR("antennaSet         = " << tmpAntennaSet);
-	LOG_DEBUG_STR("filterselection    = " << filterselection);
-	// support new filternames
-	if (tmpAntennaSet == "LBA_OUTER") {
-		if (filterselection == "LBA_10_70")	{ return(1); }	// 160 Mhz
-		if (filterselection == "LBA_10_90")	{ return(1); }	// 200 Mhz
-		if (filterselection == "LBA_30_70")	{ return(2); }	// 160 Mhz
-		if (filterselection == "LBA_30_90")	{ return(2); }	// 200 Mhz
-	}
-	if (tmpAntennaSet == "LBA_INNER") {
-		if (filterselection == "LBA_10_70")	{ return(3); }	// 160 Mhz
-		if (filterselection == "LBA_10_90")	{ return(3); }	// 200 Mhz
-		if (filterselection == "LBA_30_70")	{ return(4); }	// 160 Mhz
-		if (filterselection == "LBA_30_90")	{ return(4); }	// 200 Mhz
-	}
-	if (filterselection == "HBA_110_190")	{ return(5); }	// 200 Mhz
-	if (filterselection == "HBA_170_230")	{ return(6); }	// 160 Mhz
-	if (filterselection == "HBA_210_250")	{ return(7); }	// 200 Mhz
+    if (filterselection == "LBA_10_70")   { return(BAND_10_70);   }  // 160 Mhz
+    if (filterselection == "LBA_10_90")   { return(BAND_10_90);   }  // 200 Mhz
+    if (filterselection == "LBA_30_70")   { return(BAND_30_70);   }  // 160 Mhz
+    if (filterselection == "LBA_30_90")   { return(BAND_30_90);   }  // 200 Mhz
+	if (filterselection == "HBA_110_190") { return(BAND_110_190); }  // 200 Mhz
+	if (filterselection == "HBA_170_230") { return(BAND_170_230); }  // 160 Mhz
+	if (filterselection == "HBA_210_250") { return(BAND_210_250); }  // 200 Mhz
 
-	LOG_WARN_STR ("filterselection value '" << filterselection <<
-									"' not recognized, using LBA_10_70");
-	return (1);
+	LOG_WARN_STR ("filterselection value '" << filterselection << "' not recognized");
+	return (BAND_UNDEFINED);
 }
 
 //
@@ -651,14 +634,14 @@ bool	CalibrationControl::startCalibration()
 		// TODO: As long as the AntennaArray.conf uses different names as SAS we have to use this dirty hack.
 //		calStartEvent.parent = itsObsPar->getAntennaArrayName(config.hasSplitters);
 		calStartEvent.antennaSet = AS->antennaField(itsObsPar->beams[i].antennaSet);
-		calStartEvent.rcumode = convertFilterSelection(itsObsPar->filter, itsObsPar->beams[i].antennaSet);
+		calStartEvent.band = convertFilterSelection2int(itsObsPar->filter);
 		calStartEvent.rcuMask = itsObsPar->getRCUbitset(0, 0, itsObsPar->beams[i].antennaSet) &
 								AS->RCUallocation(itsObsPar->beams[i].antennaSet);
 
 		// Note: when HBA_DUAL is selected we should set up a calibration on both HBA_0 and HBA_1 field.
 		LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%d)",
 								calStartEvent.name.c_str(), calStartEvent.antennaSet.c_str(),
-								calStartEvent.rcumode));
+								calStartEvent.band));
 		itsCalServer->send(calStartEvent);
 		beamNameArr.push_back(new GCFPVString(itsObsPar->beams[i].name));	// update array for PVSS
 	} // for all beams

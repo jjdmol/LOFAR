@@ -66,7 +66,7 @@ private:
    	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult started_state (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult claimed_state (GCFEvent& e, GCFPortInterface& p);
-	// Normal control mode. 
+	// Normal control mode.
    	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
 	// Quiting, shutdown connections, send FINISH and quit
    	GCFEvent::TResult quiting_state (GCFEvent& e, GCFPortInterface& p);
@@ -83,7 +83,7 @@ private:
 	void 				_showBeamAdmin();
 
 	void    setState          	  (CTState::CTstateNr     newState);
-	int32	convertFilterSelection(const string&	bandselection, const string&	antennaSet);
+	int32	convertFilterSelection2int(const string&	bandselection);
 	uint16	handleClaimEvent	  ();
 	uint16	handlePrepareEvent	  ();
 	bool	startCalibration  	  ();
@@ -97,7 +97,7 @@ private:
 	GCFITCPort*				itsParentPort;		// comm.port with parent task
 	GCFTimerPort*			itsTimerPort;		// general port for timers
 	GCFTCPPort*				itsCalServer;		// connection with CalServer
-	CTState::CTstateNr		itsState;			// 
+	CTState::CTstateNr		itsState;			//
 	uint32					itsNrBeams;			// according to the Parset, corrected for HBA_DUAL
 	map<string, bool>		itsBeams;			// beam active or not.
 

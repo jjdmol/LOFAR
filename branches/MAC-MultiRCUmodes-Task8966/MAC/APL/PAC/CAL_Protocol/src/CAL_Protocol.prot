@@ -24,8 +24,6 @@ include = '<Common/LofarConstants.h>';
 
 prelude = << PRELUDE_END
 
-typedef	void*	memptr_t;
-
 enum {
 	CAL_SUCCESS = 0,
 	ERR_RANGE,       		// range error in message parameters
@@ -78,13 +76,9 @@ event = {
 		name = "rcuMask";
 		type = "LOFAR::bitset<LOFAR::MAX_RCUS>";
 	};
-	param = {
-		// RCU control byte controls the setting of all
-		// RCU's for this subarray
-		name = "rcumode";
-		type = "int32";
-//		type = "RSP_Protocol::RCUSettings";
-//		userdefined;
+	param = { // part of spectra to use
+		name = "band";
+		type = "uint32";
 	};
 	// TODO: add this parameter for faster calibration in the future
 	//      param = { // set of subbands
@@ -205,10 +199,6 @@ event = {
 	param = {
 		name = "status";
 		type = "int16";
-	};
-	param = {
-		name = "handle";
-		type = "memptr_t";
 	};
 };
 

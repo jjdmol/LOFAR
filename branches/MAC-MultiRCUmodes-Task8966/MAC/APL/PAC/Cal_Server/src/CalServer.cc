@@ -77,7 +77,7 @@ namespace LOFAR {
   using namespace GCF::TM;
   namespace CAL {
 
-#define NPOL 2
+
 
 #define SCHEDULING_DELAY 3
 
@@ -701,27 +701,23 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
             RCUmask_t	validRCUs(start.rcuMask & globalAntennaSets()->RCUallocation(start.antennaSet));
 
             // create subarray to calibrate
-            RCUSettings::Control	RCUcontrol;		// for conversion from rcumode to LBAfilter setting
-            RCUcontrol.setMode((RCUSettings::Control::RCUMode)start.rcumode);
             SubArray* subarray = new SubArray(start.name,
-							start.antennaSet,
-							validRCUs,
-							RCUcontrol.LBAfilter(),
-							itsClockSetting * 1.0e6,
-							RCUcontrol.getNyquistZone());
+                                              start.antennaSet,
+                                              validRCUs,
+                                              start.band);
 
             itsSubArrays.scheduleAdd(subarray, &port);
 
             // calibration will start within one second
             // set the spectral inversion right
             RSPSetbypassEvent	specInvCmd;
-            bool				SIon(RCUcontrol.getNyquistZone() == 2);// on or off?
+            bool				SIon(subarray->SPW().nyquistZone() == 2);// on or off?
             specInvCmd.timestamp = Timestamp(0,0);
             specInvCmd.rcumask   = start.rcuMask;
             specInvCmd.settings().resize(1);
             specInvCmd.settings()(0).setXSI(SIon);
             specInvCmd.settings()(0).setYSI(SIon);
-            LOG_DEBUG_STR("NyquistZone = " << RCUcontrol.getNyquistZone()
+            LOG_DEBUG_STR("NyquistZone = " << subarray->SPW().nyquistZone()
                             << " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
             itsRSPDriver->send(specInvCmd);
 
@@ -1087,59 +1083,6 @@ void CalServer::write_acc()
 	}
 
 	(void)fclose(accfile);
-}
-
-//
-// MAIN
-//
-int main(int argc, char** argv)
-{
-	GCFScheduler::instance()->init(argc, argv, "CalServer");
-
-	LOG_INFO("MACProcessScope: LOFAR_PermSW_CalServer");
-
-	LOG_INFO(formatString("Program %s has started", argv[0]));
-
-	ACCs* 			accs; // the ACC buffers
-	StationConfig	SC;
-	accs = new ACCs(GET_CONFIG("CalServer.N_SUBBANDS", i), SC.nrRSPs * NR_ANTENNAS_PER_RSPBOARD, NPOL);
-
-	if (!accs) {
-		LOG_FATAL("Failed to allocate memory for the ACC arrays.");
-		exit(EXIT_FAILURE);
-	}
-
-	// SOMETIMES CALSERVER IS STARTED BEFORE RSPDRIVER IS ON THE AIR THIS SHOULD NOT BE A PROBLEM
-	// BUT IT SOMETIMES IS. QAD HACK TO AVOID HANGING CalServer
-	sleep(3);
-
-	//
-	// create CalServer and ACMProxy tasks
-	// they communicate via the ACCs instance
-	//
-	bool	ACMProxyEnabled(!globalParameterSet()->getBool("CalServer.DisableACMProxy"));
-	try {
-		CalServer cal     ("CalServer", *accs);
-		ACMProxy  acmproxy("ACMProxy",  *accs);
-
-		cal.start();      // make initial transition
-		if (ACMProxyEnabled) {
-			LOG_INFO("ACMProxy is enabled");
-			acmproxy.start(); // make initial transition
-		}
-
-		GCFScheduler::instance()->run();
-	}
-	catch (Exception& e) {
-		LOG_ERROR_STR("Exception: " << e.text());
-		exit(EXIT_FAILURE);
-	}
-
-	delete accs;
-
-	LOG_INFO("Normal termination of program");
-
-	return 0;
 }
 
     };  // CAL
