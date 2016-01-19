@@ -30,7 +30,18 @@
 #include <Common/LofarConstants.h>
 
 namespace LOFAR {
-  namespace CAL {
+    namespace CAL {
+
+enum {
+    BAND_UNDEFINED,
+    BAND_10_70,            // 170 MHz
+    BAND_10_90,            // 200 MHz
+    BAND_30_70,            // 160 MHz
+    BAND_30_90,            // 200 MHz
+    BAND_110_190,          // 200 MHz
+    BAND_170_230,          // 160 MHz
+    BAND_210_250           // 200 MHz
+};
 
 // Class which represents a window on the electromagnetic spectrum.
 //
@@ -45,8 +56,8 @@ class SpectralWindow
 public:
     // Constructors
     SpectralWindow();
-    explicit SpectralWindow(uint rcumode);
-    SpectralWindow(const string& name, double sampling_freq, int nyquist_zone, bool LBAfilterOn);
+//TODO    explicit SpectralWindow(uint rcumode);
+    SpectralWindow(const string& name, uint band);
     ~SpectralWindow();
 
     // Return the name of the spectral window.
@@ -82,6 +93,7 @@ public:
 
 private:
     string  itsName;            // name of the spectral window
+
     double  itsSamplingFreq;    // sampling frequency
     uint16  itsNyquistZone;     // defines the window
     bool    itsLBAfilterOn;     // 10-30Mhz filter switch on/off

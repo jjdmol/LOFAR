@@ -29,7 +29,7 @@
 #include <Common/Exception.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <MACIO/MACServiceInfo.h>
-#include "calinfo.h" 
+#include "calinfo.h"
 
 namespace LOFAR {
   using namespace CAL_Protocol;
@@ -37,7 +37,7 @@ namespace LOFAR {
   using namespace GCF::TM;
   namespace CAL {
 
-calinfo::calinfo(const string&	name) : 
+calinfo::calinfo(const string&	name) :
 	GCFTask((State)&calinfo::initial, "calinfo"),
 	itsSAname(name)
 {
@@ -101,8 +101,8 @@ GCFEvent::TResult	calinfo::getInfo(GCFEvent&	event, GCFPortInterface&	port)
 		SubArrayMap::iterator	end  = answer.subarraymap.end();
 		while (iter != end) {
 			cout << "name          :" << iter->first << endl;
-			cout << "spectralwindow:" << iter->second->getSPW().getName() << endl;
-			cout << "RCUmask       :" << iter->second->getRCUMask() << endl;
+			cout << "spectralwindow:" << iter->second->SPW().name() << endl;
+			cout << "RCUmask       :" << iter->second->RCUMask() << endl;
 			iter++;
 		}
 		TRAN(calinfo::finish);

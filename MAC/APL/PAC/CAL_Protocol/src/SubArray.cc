@@ -26,24 +26,25 @@
 #include <Common/StringUtil.h>
 #include <Common/hexdump.h>
 #include <ApplCommon/AntennaSets.h>
+#include <ApplCommon/StationInfo.h>
 
 #include <MACIO/Marshalling.tcc>
 #include <APL/RTCCommon/MarshallBlitz.h>
 #include <APL/CAL_Protocol/SubArray.h>
 //#include <APL/CAL_Protocol/CalibrationInterface.h>
 
+using namespace blitz;
+
 namespace LOFAR {
   namespace CAL {
-    using namespace blitz;
 
 // forward declaration
-class CalibrationInterface;
+//class CalibrationInterface;
 
 //
 // SubArray()
 //
 SubArray::SubArray() :
-    itsSPW("undefined", 0, 0, false),
     itsGains(new AntennaGains)
 {
     LOG_TRACE_OBJ("SubArray()");
@@ -55,16 +56,16 @@ SubArray::SubArray() :
 SubArray::SubArray (const string&           name,
                     const string&           antennaSet,
                     RCUmask_t               RCUmask,
-                    bool                    LBAfilterOn,
-                    double                  sampling_frequency,
-                    int                     nyquist_zone) :
+                    uint32                  band):
     itsName(name),
     itsAntennaSet (antennaSet),
-    itsSPW        (name + "_spw", sampling_frequency, nyquist_zone, LBAfilterOn),
-    itsRCUmask    (RCUmask & globalAntennaSets()->RCUallocation(antennaSet))
+    itsRCUmask    (RCUmask & globalAntennaSets()->RCUallocation(antennaSet)),
+    itsBand(band),
+    itsSPW (name + "_spw", itsBand)
 {
-    LOG_DEBUG(formatString("SubArray(%s,%f,%d,%s)",
-                            name.c_str(), sampling_frequency, nyquist_zone, (LBAfilterOn ? "ON" : "OFF")));
+
+    LOG_DEBUG(formatString("SubArray(%s,%s,%u)",
+                           name.c_str(), itsAntennaSet.c_str(), itsBand));
 
     // create calibration result objects [ant x pol x subbands]
     itsGains = new AntennaGains(itsRCUmask.count(), MAX_SUBBANDS); // TODO: does this work with non contiguous RCUmasks????
@@ -77,8 +78,8 @@ SubArray::SubArray (const string&           name,
     for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
         if (itsRCUmask.test(rcu)) {
             switch (RCUinputs[rcu]) {
-            case 'l': itsRCUmodes(rcu) = (LBAfilterOn ? 2 : 1); break;
-            case 'h': itsRCUmodes(rcu) = (LBAfilterOn ? 4 : 3); break;
+            case 'l': itsRCUmodes(rcu) = (itsSPW.LBAfilterOn() ? 2 : 1); break;
+            case 'h': itsRCUmodes(rcu) = (itsSPW.LBAfilterOn() ? 4 : 3); break;
             case 'H': itsRCUmodes(rcu) = itsSPW.rcumodeHBA();   break;
             case '.': itsRCUmodes(rcu) = 0;                         break;
             default: ASSERTSTR(false, "RCUinput #" << rcu << " contains illegal specification");

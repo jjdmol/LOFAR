@@ -26,6 +26,7 @@
 #include <Common/StringUtil.h>
 
 #include <APL/CAL_Protocol/SpectralWindow.h>
+//#include <APL/CAL_Protocol/CAL_Protocol.ph>
 
 #include <MACIO/Marshalling.tcc>
 #include <APL/RTCCommon/MarshallBlitz.h>
@@ -39,6 +40,9 @@ SpectralWindow::SpectralWindow() :
     LOG_TRACE_OBJ("SpectralWindow()");
 }
 
+
+#if 0
+//TODO
 SpectralWindow::SpectralWindow(uint rcumode)
 {
     switch (rcumode) {
@@ -53,16 +57,53 @@ SpectralWindow::SpectralWindow(uint rcumode)
         ASSERTSTR(rcumode >= 1 && rcumode <= (uint)NR_RCU_MODES, "rcumode must have value: 1.." << NR_RCU_MODES);
     }
 }
+#endif
 
-SpectralWindow::SpectralWindow(const string& name, double sampling_freq,
-                                 int nyquist_zone, bool LBAfilterOn) :
-    itsName         (name),
-    itsSamplingFreq(sampling_freq),
-    itsNyquistZone (nyquist_zone),
-    itsLBAfilterOn  (LBAfilterOn)
+SpectralWindow::SpectralWindow(const string& name, uint band) :
+    itsName         (name)
 {
+    itsSamplingFreq = 200e6;
+    itsLBAfilterOn = false;
+
+    switch (band) {
+        case BAND_10_70: {
+            itsSamplingFreq = 160e6;
+            itsNyquistZone = 1;
+        } break;
+
+        case BAND_10_90: {
+            itsNyquistZone = 1;
+        } break;
+
+        case BAND_30_70: {
+            itsSamplingFreq = 160e6;
+            itsNyquistZone = 1;
+            itsLBAfilterOn = true;
+        } break;
+
+        case BAND_30_90: {
+            itsNyquistZone = 1;
+            itsLBAfilterOn = true;
+        } break;
+
+        case BAND_110_190: {
+            itsNyquistZone = 2;
+        } break;
+
+        case BAND_170_230: {
+            itsSamplingFreq = 160e6;
+            itsNyquistZone = 3;
+        } break;
+
+        case BAND_210_250: {
+            itsNyquistZone = 3;
+        } break;
+
+        default: {
+        } break;
+    }
     LOG_TRACE_OBJ(formatString("SpectralWindow(%s,%f,%d,%s)",
-                  name.c_str(), sampling_freq, nyquist_zone, (LBAfilterOn ? "ON" : " OFF")));
+                  name.c_str(), itsSamplingFreq, itsNyquistZone, (itsLBAfilterOn ? "ON" : " OFF")));
 }
 
 SpectralWindow::~SpectralWindow()

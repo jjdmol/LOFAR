@@ -84,6 +84,7 @@ private:
 	list<int>		itsSubbands; 		// selection of subbands
 	list<int>		itsBeamlets; 		// selection of beamlets
 	int				itsRCUmode;
+	int				itsBand;
 	list<Pointing>	itsDigPointings;
 	list<Pointing>	itsAnaPointings;
 	bool			itsCalInfo;			// request for calibrationinformation
@@ -95,5 +96,5 @@ private:
 
   }; // namespace BS
 }; // namespace LOFAR
-     
+
 #endif /* BEAMCTL_H_ */

@@ -34,6 +34,8 @@
 
 #include <APL/CAL_Protocol/SpectralWindow.h>
 #include <APL/CAL_Protocol/AntennaGains.h>
+#include <ApplCommon/AntennaSets.h>
+
 //#include <APL/RTCCommon/Subject.h>
 //#include <APL/RSP_Protocol/MEPHeader.h>
 //#include <APL/CAL_Protocol/AntennaArray.h>
@@ -67,9 +69,7 @@ public:
     SubArray(const string&                  name,
              const string&                  antennaSet,
              RCUmask_t                      RCUmask,
-             bool                           LBAfilterOn,
-             double                         sampling_frequency,
-             int                            nyquist_zone);
+             uint32                         band);
     SubArray(const string& name); // used to return unknown subarray
     ~SubArray();
 
@@ -139,10 +139,11 @@ private:
     // prevent copy
     SubArray(const SubArray& other); // no implementation
 
-    string  itsName; // unique name choosen by user.
+    string                  itsName; // unique name choosen by user.
     string                  itsAntennaSet;      // name of the used antennaSet
-    SpectralWindow          itsSPW;             // the spectral window for this subarray
     RCUmask_t               itsRCUmask;         // used RCU's
+    uint32                  itsBand;            // used frequency band
+    SpectralWindow          itsSPW;             // the spectral window for this subarray
 
     blitz::Array<uint,1>    itsRCUmodes;        // redundant info (=AntSet+SPW for each rcu in RCUmask)
     bitset<NR_RCU_MODES+1>  itsRCUuseFlags;     // which modes are used.

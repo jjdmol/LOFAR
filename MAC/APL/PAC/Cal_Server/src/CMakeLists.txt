@@ -26,7 +26,7 @@ lofar_add_library(caldevel
   SubArrayMgr.cc)
 
 lofar_add_bin_program(versioncal_server versioncal_server.cc)
-lofar_add_bin_program(CalServer CalServer.cc ACMProxy.cc)
+lofar_add_bin_program(CalServer CalServer.cc CalServerMain.cc ACMProxy.cc)
 lofar_add_bin_program(calinfo calinfo.cc)
 lofar_add_sbin_program(juggle_acc juggle_acc.cc)
 
