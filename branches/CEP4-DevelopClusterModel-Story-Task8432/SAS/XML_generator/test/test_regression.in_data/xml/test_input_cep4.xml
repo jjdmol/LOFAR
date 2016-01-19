@@ -130,6 +130,16 @@
                 <predecessor_topology>B0.1.T</predecessor_topology>
                 <name>Crab test/1.0/PP</name>
                 <description>Crab test/1.0/PP (Pulsar Pipeline)</description>
+  <processingCluster>
+                    <name>CEP4</name>
+                    <partition>/data</partition>
+                    <numberOfTasks>244</numberOfTasks>
+                    <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
+                    <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
+                    <maxDurationPerTask>PT600S</maxDurationPerTask>
+                    <numberOfCoresPerTask>20</numberOfCoresPerTask>
+                    <runSimultaneous>true</runSimultaneous>
+                  </processingCluster>
                 <pipelineAttributes>
                   <defaultTemplate>Pulsar Pipeline</defaultTemplate>
                   <duration>600</duration>
@@ -155,16 +165,6 @@
                   <skipDynamicSpectrum></skipDynamicSpectrum>
                   <skipPrepfold></skipPrepfold>
                   <tsubint></tsubint>
-                    <processingCluster>
-                    <name>CEP4</name>
-                    <partition>/data</partition>
-                    <numberOfTasks>244</numberOfTasks>
-                    <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
-                    <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
-                    <maxDurationPerTask>PT600S</maxDurationPerTask>
-                    <numberOfCoresPerTask>20</numberOfCoresPerTask>
-                    <runSimultaneous>true</runSimultaneous>
-                  </processingCluster>
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -305,6 +305,16 @@
                 <predecessor_topology>B0.2.T</predecessor_topology>
                 <name>Crab test/2.0/PP</name>
                 <description>Crab test/2.0/PP (Pulsar Pipeline)</description>
+  <processingCluster>
+                    <name>CEP4</name>
+                    <partition>/data</partition>
+                    <numberOfTasks>244</numberOfTasks>
+                    <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
+                    <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
+                    <maxDurationPerTask>PT600S</maxDurationPerTask>
+                    <numberOfCoresPerTask>20</numberOfCoresPerTask>
+                    <runSimultaneous>true</runSimultaneous>
+                  </processingCluster>
                 <pipelineAttributes>
                   <defaultTemplate>Pulsar Pipeline</defaultTemplate>
                   <duration>600</duration>
@@ -330,16 +340,6 @@
                   <skipDynamicSpectrum></skipDynamicSpectrum>
                   <skipPrepfold></skipPrepfold>
                   <tsubint></tsubint>
-                    <processingCluster>
-                    <name>CEP4</name>
-                    <partition>/data</partition>
-                    <numberOfTasks>244</numberOfTasks>
-                    <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
-                    <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
-                    <maxDurationPerTask>PT600S</maxDurationPerTask>
-                    <numberOfCoresPerTask>20</numberOfCoresPerTask>
-                    <runSimultaneous>true</runSimultaneous>
-                  </processingCluster>
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
