@@ -27,6 +27,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/Exception.h>
+#include <Common/hexdump.h>
+
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <MACIO/MACServiceInfo.h>
 #include "calinfo.h"
@@ -97,6 +99,11 @@ GCFEvent::TResult	calinfo::getInfo(GCFEvent&	event, GCFPortInterface&	port)
 			break;
 		}
 		cout << "Received " << answer.subarraymap.size() << " entries" << endl;
+        {
+            string s;
+            hexdump(s, (void*)(&answer), answer.length);
+            cout << s << endl;
+        }
 		SubArrayMap::iterator	iter = answer.subarraymap.begin();
 		SubArrayMap::iterator	end  = answer.subarraymap.end();
 		while (iter != end) {

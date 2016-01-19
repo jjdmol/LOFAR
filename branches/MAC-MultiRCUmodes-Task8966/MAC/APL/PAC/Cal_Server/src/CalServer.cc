@@ -1016,27 +1016,15 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 	// create ack
 	CALGetsubarrayackEvent ack;
 	ack.status = CAL_Protocol::CAL_SUCCESS;
+	ack.subarraymap = itsSubArrays.getSubArrays(getsubarray.subarrayname);
+	LOG_INFO("Sending subarray info: " << getsubarray.subarrayname);
 
-	// find associated subarray
-	SubArray* subarray = itsSubArrays.getByName(getsubarray.name);
-	if (subarray) {
-
-	// return antenna positions
-	ack.positions = *(static_cast<AntennaArray*>(subarray));
-
-	LOG_INFO("Sending subarray info: " << getsubarray.name);
-
-	} else {
-
-	// TODO: need sensible value for ack.positions, it is not initialized at this point
-	ack.status = ERR_NO_SUBARRAY;
-
-	LOG_INFO("Getsubarray. Subarray not found: " << getsubarray.name);
-
+	if (ack.subarraymap.empty()) {
+        ack.status = ERR_NO_SUBARRAY;
+        LOG_INFO("Getsubarray. Subarray not found: " << getsubarray.subarrayname);
 	}
 
 	port.send(ack);
-
 	return status;
 }
 #endif

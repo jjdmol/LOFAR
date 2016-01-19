@@ -189,7 +189,7 @@ void SubArray::writeGains()
 ostream& SubArray::print (ostream& os) const
 {
     os << "SubArray " << itsName << ":AntennaSet=" << itsAntennaSet << ", SPW={" << itsSPW;
-    os << "}, RCUmask=" << itsRCUmask << ", RCUmodeFlags=" << itsRCUuseFlags;
+    os << "}, RCUmask=" << itsRCUmask << ", RCUmodeFlags=" << itsRCUuseFlags << ", Band=" << itsBand;
     return (os);
 }
 
@@ -202,6 +202,7 @@ size_t SubArray::getSize() const
       MSH_size(itsName)
     + MSH_size(itsAntennaSet)
     + MSH_size(itsRCUmask)
+    + MSH_size(itsBand)
     + itsSPW.getSize();
 }
 
@@ -212,7 +213,14 @@ size_t SubArray::pack(char* buffer) const
     offset = MSH_pack(buffer, offset, itsName);
     offset = MSH_pack(buffer, offset, itsAntennaSet);
     offset = MSH_pack(buffer, offset, itsRCUmask);
+    offset = MSH_pack(buffer, offset, itsBand);
     offset += itsSPW.pack(buffer + offset);
+
+    {
+        string s;
+        hexdump(s, (void*)buffer, offset);
+        LOG_INFO_STR("packed=" << s);
+    }
 
     return offset;
 }
@@ -221,10 +229,19 @@ size_t SubArray::unpack(const char* buffer)
 {
     size_t offset = 0;
 
+
+
     offset = MSH_unpack(buffer, offset, itsName);
     offset = MSH_unpack(buffer, offset, itsAntennaSet);
     offset = MSH_unpack(buffer, offset, itsRCUmask);
+    offset = MSH_unpack(buffer, offset, itsBand);
     offset += itsSPW.unpack(buffer + offset);
+
+    {
+        string s;
+        hexdump(s, (void*)buffer, offset);
+        LOG_INFO_STR("unpacked=" << s);
+    }
 
     return offset;
 }
@@ -233,19 +250,25 @@ size_t SubArray::unpack(const char* buffer)
 
 size_t SubArrayMap::getSize() const
 {
-    return MSH_size(*this);
+    size_t size = MSH_size(*this);
+    LOG_INFO_STR("size subarraymap= " << size);
+    return size;
 }
 
 size_t SubArrayMap::pack(char* buffer) const
 {
     size_t offset = 0;
-    return MSH_pack(buffer, offset, (*this));
+    offset = MSH_pack(buffer, offset, (*this));
+    LOG_INFO_STR("packed size subarraymap= " << offset);
+    return offset;
 }
 
 size_t SubArrayMap::unpack(const char* buffer)
 {
     size_t offset = 0;
-    return MSH_unpack(buffer, offset, (*this));
+    offset = MSH_unpack(buffer, offset, (*this));
+    LOG_INFO_STR("unpacked size subarraymap= " << offset);
+    return offset;
 }
 
   } // namespace CAL

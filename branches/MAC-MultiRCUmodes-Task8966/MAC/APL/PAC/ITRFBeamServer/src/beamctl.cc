@@ -225,11 +225,11 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& event, GCFPortInterface& po
     case F_ENTRY: {
         CALStartEvent start;
         start.name   = BEAMCTL_BEAM + formatString("_%d", getpid());
-        start.antennaSet = globalAntennaSets()->antennaField(itsAntSet);
+        start.antennaSet = itsAntSet;
         start.rcuMask = getRCUMask() & globalAntennaSets()->RCUallocation(itsAntSet);
         start.band    = itsBand;
 
-        LOG_INFO_STR("Creating subarray: " << start);
+        LOG_INFO_STR("Creating subarray: " << start  << "for testing size");
 
         itsCalServer->send(start);
     }

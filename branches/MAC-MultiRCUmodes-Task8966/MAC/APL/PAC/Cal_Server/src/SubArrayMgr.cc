@@ -293,15 +293,25 @@ SubArrayMap	SubArrayMgr::getSubArrays(const string&	optionalName) {
 
 	SubArrayMap	answer;
 
+    LOG_INFO_STR("optionalName= " << optionalName);
+
 	if (optionalName.empty()) {         // no name specified?
 		LOG_DEBUG("getSubArray: delivering all subarrays");
 		// copy whole new array
-		answer = itsNewArrays;
-		// add active array
-		SubArrayMap::const_iterator		iter = itsActiveArrays.begin();
-		SubArrayMap::const_iterator		end  = itsActiveArrays.end();
+		SubArrayMap::const_iterator		iter = itsNewArrays.begin();
+		SubArrayMap::const_iterator		end  = itsNewArrays.end();
 		while (iter != end) {
 			answer[iter->first] = iter->second;
+            LOG_INFO_STR("adding-0 name: " << iter->first << *(iter->second));
+            LOG_INFO_STR("adding-0 name: " << iter->first << *(answer[iter->first]));
+			++iter;
+		}
+		// add active array
+		iter = itsActiveArrays.begin();
+		end  = itsActiveArrays.end();
+		while (iter != end) {
+			answer[iter->first] = iter->second;
+            LOG_INFO_STR("adding-1 name: " << iter->first << iter->second);
 			++iter;
 		}
 	}
@@ -311,6 +321,7 @@ SubArrayMap	SubArrayMgr::getSubArrays(const string&	optionalName) {
 		if (((subarray = itsActiveArrays.find(optionalName)) != itsActiveArrays.end()) ||
 			((subarray = itsNewArrays.find(optionalName)) != itsNewArrays.end()))  {
 			answer[optionalName] = subarray->second;
+            LOG_INFO_STR("adding-2 name: " << optionalName);
 		}
 		else {
 			LOG_DEBUG_STR("getSubArray: Subarray " << optionalName << " not found");
