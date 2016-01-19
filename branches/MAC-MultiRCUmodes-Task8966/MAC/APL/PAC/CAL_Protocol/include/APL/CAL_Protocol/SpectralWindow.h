@@ -34,7 +34,7 @@ namespace LOFAR {
 
 enum {
     BAND_UNDEFINED,
-    BAND_10_70,            // 170 MHz
+    BAND_10_70,            // 160 MHz
     BAND_10_90,            // 200 MHz
     BAND_30_70,            // 160 MHz
     BAND_30_90,            // 200 MHz
