@@ -446,16 +446,16 @@ def writeXMLTargetPipeline(ofile, topo, pred_topo, name, descr, defaulttemplate,
                     <topology>%s</topology>
                     <predecessor_topology>%s</predecessor_topology>
                     <name>%s</name>
-                    <description>%s (%s)</description>
-                    <pipelineAttributes>
+                    <description>%s (%s)</description>""" % (topo, pred_topo, name, name, descr)
+  if proc_cluster:
+    print >> ofile, proc_cluster
+  print >> ofile, r"""                    <pipelineAttributes>
                       <defaultTemplate>%s</defaultTemplate>
                       <flaggingStrategy>%s</flaggingStrategy>
-                      <duration>%s</duration>""" % (topo, pred_topo, name, name, descr, defaulttemplate, flagging, duration)
+                      <duration>%s</duration>""" % (defaulttemplate, flagging, duration)
   writeDemixParameters(ofile, demixParameters)
   ##TODO if bbsParameters: ??
   writeBBSParameters(ofile, bbsParameters)
-  if proc_cluster:
-    print >> ofile, proc_cluster
   print >> ofile, r"""</pipelineAttributes>
                     <usedDataProducts>
                       <item>
@@ -491,17 +491,17 @@ def writeXMLCalPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, flaggi
                 <topology>%s</topology>
                 <predecessor_topology>%s</predecessor_topology>
                 <name>%s</name>
-                <description>%s (%s)</description>
-                <pipelineAttributes>
+                <description>%s (%s)</description>""" %(topo, pred_topo, name, name, descr)
+  if proc_cluster:
+    print >> ofile, proc_cluster
+  print >> ofile, r"""                <pipelineAttributes>
                   <defaultTemplate>%s</defaultTemplate>
                   <flaggingStrategy>%s</flaggingStrategy>
                   <duration>%s</duration>
-                  <skyModelDatabase>%s</skyModelDatabase>""" % (topo, pred_topo, name, name, descr, defaulttemplate, flagging, duration, skymodel)
+                  <skyModelDatabase>%s</skyModelDatabase>""" % (defaulttemplate, flagging, duration, skymodel)
   writeDemixParameters(ofile, demixParameters)
   ##TODO if bbsParameters: ??
   writeBBSParameters(ofile, bbsParameters)
-  if proc_cluster:
-    print >> ofile, proc_cluster
   print >> ofile, r"""</pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -539,14 +539,14 @@ def writeXMLAvgPipeline(ofile, topo, pred_topo, name, descr, defaulttemplate, fl
                 <topology>%s</topology>
                 <predecessor_topology>%s</predecessor_topology>
                 <name>%s</name>
-                <description>%s (%s)</description>
-                <pipelineAttributes>
-                  <defaultTemplate>%s</defaultTemplate>
-                  <flaggingStrategy>%s</flaggingStrategy>
-                  <duration>%s</duration>""" % (topo, pred_topo, name, name, descr, defaulttemplate, flagging, duration)
-  writeDemixParameters(ofile, demixParameters)
+                <description>%s (%s)</description>""" % (topo, pred_topo, name, name, descr)
   if proc_cluster:
     print >> ofile, proc_cluster
+  print >> ofile, r"""                <pipelineAttributes>
+                  <defaultTemplate>%s</defaultTemplate>
+                  <flaggingStrategy>%s</flaggingStrategy>
+                  <duration>%s</duration>""" % (defaulttemplate, flagging, duration)
+  writeDemixParameters(ofile, demixParameters)
   print >> ofile, r"""</pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -578,8 +578,10 @@ def writeXMLPulsarPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, dur
                 <topology>%s</topology>
                 <predecessor_topology>%s</predecessor_topology>
                 <name>%s</name>
-                <description>%s (%s)</description>
-                <pipelineAttributes>
+                <description>%s (%s)</description>""" % (topo, pred_topo, name, name, descr)
+  if proc_cluster:
+    print >> ofile, proc_cluster
+  print >> ofile, r"""                <pipelineAttributes>
                   <defaultTemplate>%s</defaultTemplate>
                   <duration>%s</duration>
                   <_2bf2fitsExtraOpts>%s</_2bf2fitsExtraOpts>
@@ -604,7 +606,6 @@ def writeXMLPulsarPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, dur
                   <skipDynamicSpectrum>%s</skipDynamicSpectrum>
                   <skipPrepfold>%s</skipPrepfold>
                   <tsubint>%s</tsubint>
-                  %s
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -623,14 +624,17 @@ def writeXMLPulsarPipe(ofile, topo, pred_topo, name, descr, defaulttemplate, dur
                   </item>
                 </resultDataProducts>
               </lofar:pipeline>
-            </item>""" % (topo, pred_topo, name, name, descr, defaulttemplate, duration, _2bf2fitsExtraOpts, _8bitConversionSigma, 
-            decodeNblocks, decodeSigma, digifilExtraOpts, dspsrExtraOpts, dynamicSpectrumTimeAverage, writeBoolean(nofold), writeBoolean(nopdmp), writeBoolean(norfi), 
-            prepdataExtraOpts, prepfoldExtraOpts, prepsubbandExtraOpts, pulsar, writeBoolean(rawTo8bit), rfifindExtraOpts, writeBoolean(rrats), writeBoolean(singlePulse), 
+            </item>""" % (defaulttemplate, duration, _2bf2fitsExtraOpts, _8bitConversionSigma, 
+            decodeNblocks, decodeSigma, digifilExtraOpts, dspsrExtraOpts, dynamicSpectrumTimeAverage,
+            writeBoolean(nofold), writeBoolean(nopdmp), writeBoolean(norfi), 
+            prepdataExtraOpts, prepfoldExtraOpts, prepsubbandExtraOpts, pulsar, writeBoolean(rawTo8bit),
+            rfifindExtraOpts, writeBoolean(rrats), writeBoolean(singlePulse), 
             writeBoolean(skipDsps), writeBoolean(skipDynamicSpectrum), writeBoolean(skipPrepfold), tsubint, 
-            proc_cluster, bfintopo, pouttopo, pouttopo, stor_cluster)
+            bfintopo, pouttopo, pouttopo, stor_cluster)
 
 #nv 13okt2014: #6716 - Implement Long Baseline Pipeline     
-def writeXMLLongBaselinePipe(ofile, topo, pred_topo, name, descr, defaulttemplate, duration, subbands_per_subbandgroup, subbandgroups_per_ms, uvintopo, uvouttopo, storageCluster) :
+def writeXMLLongBaselinePipe(ofile, topo, pred_topo, name, descr, defaulttemplate, duration,
+  subbands_per_subbandgroup, subbandgroups_per_ms, uvintopo, uvouttopo, storageCluster):
   stor_cluster = dataProductCluster(storageCluster)
   proc_cluster = processingCluster(storageCluster)
   print >> ofile, r"""        <item index="0">
@@ -638,13 +642,14 @@ def writeXMLLongBaselinePipe(ofile, topo, pred_topo, name, descr, defaulttemplat
                 <topology>%s</topology>
                 <predecessor_topology>%s</predecessor_topology>
                 <name>%s</name>
-                <description>%s (%s)</description>
-                <pipelineAttributes>
+                <description>%s (%s)</description>""" % (topo, pred_topo, name, name, descr)
+  if proc_cluster:
+    print >> ofile, proc_cluster
+  print >> ofile, r"""                <pipelineAttributes>
                   <defaultTemplate>%s</defaultTemplate>
                   <duration>%s</duration>
                   <subbandsPerSubbandGroup>%s</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>%s</subbandGroupsPerMS>
-                  %s
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -663,8 +668,8 @@ def writeXMLLongBaselinePipe(ofile, topo, pred_topo, name, descr, defaulttemplat
                   </item>
                 </resultDataProducts>
               </lofar:pipeline>
-            </item>""" % (topo, pred_topo, name, name, descr, defaulttemplate, duration, subbands_per_subbandgroup, subbandgroups_per_ms, 
-            proc_cluster, uvintopo, uvouttopo, uvouttopo, stor_cluster)  
+            </item>""" % (defaulttemplate, duration, subbands_per_subbandgroup, subbandgroups_per_ms, 
+            uvintopo, uvouttopo, uvouttopo, stor_cluster)  
 
 def writeDataProducts(dataTopo, correlatedData, coherentStokesData, incoherentStokesData, storageCluster):
   strVal = r""
@@ -708,18 +713,20 @@ def writeImagingPipelineInputDataproducts(ofile, topologyList):
             </item>""" % (topology, topology)
   print >> ofile, r"""               </usedDataProducts>"""
 
-def writeSkyImageOutputDataproduct(ofile, topology):
-        print >> ofile, r"""                <resultDataProducts>
+def writeSkyImageOutputDataproduct(ofile, topology, storageCluster):
+  stor_cluster = dataProductCluster(storageCluster)
+  print >> ofile, r"""                <resultDataProducts>
                   <item>
                     <lofar:skyImageDataProduct>
                       <name>%s</name>
                       <topology>%s</topology>
                       <status>no_data</status>
+                      %s
                     </lofar:skyImageDataProduct>
                   </item>
                 </resultDataProducts>
               </lofar:pipeline>
-            </item>""" % (topology, topology)
+            </item>""" % (topology, topology, stor_cluster)
 
 def writeFolderStart(ofile, packageName, packageDescription, processing):
   print >>ofile, r"""   <item index="0">
@@ -780,7 +787,8 @@ def writeMainFolderEnd(ofile):
   </lofar:folder>
   </item>"""
 
-def writeImagingPipelineXML(ofile, input_list, bbsParameters):        
+def writeImagingPipelineXML(ofile, input_list, bbsParameters, storageCluster):
+  proc_cluster = processingCluster(storageCluster)
   print >> ofile, r"""<item index="0">
         <lofar:pipeline xsi:type="lofar:%(imaging_pipe_type)s">
           <topology>%(imaging_pipe_topology)s</topology>
@@ -1666,8 +1674,8 @@ def checkSettings(settings, blockNr):
   return settings
 
 def  writeImagingPipeline(ofile, nr_beams, targetBeams, blockTopo, nrRepeats,
-       imaging_pipe_inputs, imaging_pipe_predecessors,
-       writePackageTag, packageTag, nrImages, imagingPipelineSettings, imagingBBS):
+       imaging_pipe_inputs, imaging_pipe_predecessors, writePackageTag, packageTag,
+       nrImages, imagingPipelineSettings, imagingBBS, cluster):
   for key,val in imagingPipelineSettings.items(): #TODO somewhat dirty hack, to be solved better later.
     exec(key + '=val')
   for beamNr in range (0, nr_beams):
@@ -1690,9 +1698,9 @@ def  writeImagingPipeline(ofile, nr_beams, targetBeams, blockTopo, nrRepeats,
         "imaging_pipe_name":imaging_pipe_name,
         "beamNr":beamNr, "nrImages":nrImages[beamNr], "nrRepeats":nrRepeats}
         
-      writeImagingPipelineXML(ofile, merge_dicts(temp, imagingPipelineSettings), imagingBBS)          
+      writeImagingPipelineXML(ofile, merge_dicts(temp, imagingPipelineSettings), imagingBBS, cluster)          
       writeImagingPipelineInputDataproducts(ofile, imaging_pipe_inputs[beamNr])
-      writeSkyImageOutputDataproduct(ofile, imaging_pipe_output_topology)
+      writeSkyImageOutputDataproduct(ofile, imaging_pipe_output_topology, cluster)
 
 def determineBfDataExtension(coherentStokesData, incoherentStokesData):
   bfDataExtension = ''
@@ -2204,7 +2212,7 @@ def writeBlock(ofile, settings, projectName, blockNr):
     writeImagingPipeline(ofile, settings["nr_beams"], settings["targetBeams"], blockTopo,
       settings["nrRepeats"], imaging_pipe_inputs, imaging_pipe_predecessors,
       settings["writePackageTag"], settings["packageTag"], settings["nrImages"],
-      imagingPipelineSettings, settings["imagingBBS"])
+      imagingPipelineSettings, settings["imagingBBS"], settings["cluster"])
 
   writeFolderEnd(ofile)
                 
