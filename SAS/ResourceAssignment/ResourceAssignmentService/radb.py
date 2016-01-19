@@ -320,6 +320,15 @@ class RADatabase:
             self.conn.commit()
         return id
 
+    def deleteResourceClaim(self, resource_claim_id, commit=True):
+        query = '''DELETE FROM resource_allocation.resource_claim
+                   WHERE resource_allocation.resource_claim.id = %s;'''
+
+        self.cursor.execute(query, [resource_claim_id])
+        if commit:
+            self.conn.commit()
+        return self.cursor.rowcount > 0
+
     def updateResourceClaim(self, resource_claim_id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, username=None, user_id=None, commit=True):
         if status and isinstance(status, basestring):
             #convert status string to status.id
@@ -422,3 +431,7 @@ if __name__ == '__main__':
 
     resultPrint(db.getTasks)
 
+    claims = db.getResourceClaims()
+    for c in claims:
+        db.deleteResourceClaim(c['id'])
+        resultPrint(db.getResourceClaims)
