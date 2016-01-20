@@ -169,7 +169,7 @@ class GenericPipeline(control):
         resultdicts.update({'input': input_dictionary})
         resultdicts.update({self.name: input_dictionary})
 
-        if 'pipeline.mapfile' in self.parset.keys:
+        if 'pipeline.mapfile' in self.parset.keywords():
             resultdicts['input']['mapfile'] = str(self.parset['pipeline.mapfile'])
             resultdicts[self.name]['mapfile'] = str(self.parset['pipeline.mapfile'])
 
@@ -242,7 +242,7 @@ class GenericPipeline(control):
                 submapfile = ''
                 subpipeline_steplist = subpipeline_parset.getStringVector('pipeline.steps')
 
-                if 'pipeline.mapfile' in subpipeline_parset.keys:
+                if 'pipeline.mapfile' in subpipeline_parset.keywords():
                     submapfile = subpipeline_parset['pipeline.mapfile']
                     subpipeline_parset.remove('pipeline.mapfile')
                 if 'mapfile_in' in inputdict.keys():
@@ -256,10 +256,10 @@ class GenericPipeline(control):
                 # maybe as dicts to combine them to one
 
                 subpipeline_parset.remove('pipeline.steps')
-                if 'pipeline.pluginpath' in subpipeline_parset.keys:
+                if 'pipeline.pluginpath' in subpipeline_parset.keywords():
                     subpipeline_parset.remove('pipeline.pluginpath')
                 checklist = copy.deepcopy(subpipeline_steplist)
-                for k in subpipeline_parset.keys:
+                for k in subpipeline_parset.keywords():
                     if 'loopsteps' in k:
                         for item in subpipeline_parset.getStringVector(k):
                             checklist.append(item)
@@ -268,25 +268,25 @@ class GenericPipeline(control):
                 # proper format only after use of parset.makesubset. then it is a different object
                 # from a different super class :(. this also explains use of parset.keys and parset.keys()
                 # take the parset from subpipeline and add it to the master parset.
+                # UPDATE: do not use .keys on master parset. use .keywords(), then comments are filtered.
                 # *********************************************************************
                 # replace names of steps with the subpipeline stepname to create a unique identifier.
                 # replacement values starting with ! will be taken from the master parset and overwrite
                 # the ones in the subpipeline. only works if the ! value is already in the subpipeline
-                for k in subpipeline_parset.keys:
-                    if not str(k).startswith('#'):
-                        val = subpipeline_parset[k]
-                        if not str(k).startswith('!') and not str(k).startswith('pipeline.replace.'):
-                            for item in checklist:
-                                if item in str(val):
-                                    val = str(val).replace(item, stepname + '-' + item)
+                for k in subpipeline_parset.keywords():
+                    val = subpipeline_parset[k]
+                    if not str(k).startswith('!') and not str(k).startswith('pipeline.replace.'):
+                        for item in checklist:
+                            if item in str(val):
+                                val = str(val).replace(item, stepname + '-' + item)
 
-                            self.parset.add(stepname + '-' + k, str(val))
-                        else:
-                            self.parset.add(k, str(val))
+                        self.parset.add(stepname + '-' + k, str(val))
+                    else:
+                        self.parset.add(k, str(val))
                 for i, item in enumerate(subpipeline_steplist):
                     subpipeline_steplist[i] = stepname + '-' + item
                 for item in step_parset_obj[stepname].keys():
-                    for k in self.parset.keys:
+                    for k in self.parset.keywords():
                         if str(k).startswith('!') and item in k or str(k).startswith('pipeline.replace.') and item in k:
                             self.parset.remove(k)
                             self.parset.add('! ' + item, str(step_parset_obj[stepname][item]))
@@ -299,7 +299,7 @@ class GenericPipeline(control):
                     step_name_list.insert(0, name)
 
                 # remove replacements strings to prevent loading the same key twice
-                for k in copy.deepcopy(self.parset.keys):
+                for k in copy.deepcopy(self.parset.keywords()):
                     if str(k).startswith('!'):
                         self.parset.remove(k)
 
@@ -411,7 +411,7 @@ class GenericPipeline(control):
                 # for name, parset in step_parset_dict.iteritems():
                 try:
                     file_parset = Parset(stepparset.getString('parset'))
-                    for k in file_parset.keys:
+                    for k in file_parset.keywords():
                         if not k in stepparset.keys():
                             stepparset.add(k, str(file_parset[k]))
                     stepparset.remove('parset')
@@ -420,7 +420,7 @@ class GenericPipeline(control):
                 # parset from task.cfg
                 try:
                     file_parset = Parset(self.task_definitions.get(str(subparset['type']), 'parset'))
-                    for k in file_parset.keys:
+                    for k in file_parset.keywords():
                         if not k in stepparset.keys():
                             stepparset.add(k, str(file_parset[k]))
                 except:
@@ -428,7 +428,7 @@ class GenericPipeline(control):
                 # for parset in control section
                 try:
                     file_parset = Parset(subparset.getString('parset'))
-                    for k in file_parset.keys:
+                    for k in file_parset.keywords():
                         if not k in stepparset.keys():
                             stepparset.add(k, str(file_parset[k]))
                     subparset.remove('parset')
@@ -464,12 +464,11 @@ class GenericPipeline(control):
         tmp_keys = argsparset.keys()
         ordered_keys = []
         parsetdict = {}
-        for orig in self.parset.keys:
+        for orig in self.parset.keywords():
             for item in tmp_keys:
-                if not str(orig).startswith('#'):
-                    if (stepname + '.') in orig and ('argument.'+item in orig and not 'argument.'+item+'.' in orig):
-                        ordered_keys.append(item)
-                        continue
+                if (stepname + '.') in orig and ('argument.'+item in orig and not 'argument.'+item+'.' in orig):
+                    ordered_keys.append(item)
+                    continue
         # add keys from parset files that were not in the original list
         for item in argsparset.keys():
             if not item in ordered_keys:
@@ -498,7 +497,7 @@ class GenericPipeline(control):
         if self.task_definitions.has_option(task,'parset'):
             task_parset.adoptFile(self.task_definitions.get(task,'parset'))
             print 'possible arguments: key    =    value'
-            for k in task_parset.keys:
+            for k in task_parset.keywords():
                 print '                   ',k,'    ','=','    ',task_parset[k]
 
     def _add_step(self):
@@ -506,18 +505,17 @@ class GenericPipeline(control):
 
     def _replace_values(self):
         replacedict = {}
-        for check in self.parset.keys:
+        for check in self.parset.keywords():
             if str(check).startswith('!'):
                 replacedict[str(check).lstrip('!').lstrip(' ')] = str(self.parset[check])
             if str(check).startswith('pipeline.replace.'):
                 replacedict[str(check).replace('pipeline.replace.', '').lstrip(' ')] = str(self.parset[check])
         #print 'REPLACEDICT: ',replacedict
-        for check in self.parset.keys:
-            if not str(check).startswith('#'):
-                for k, v in replacedict.iteritems():
-                    if '{{ '+k+' }}' in str(self.parset[check]):
-                        replacestring = str(self.parset[check]).replace('{{ '+k+' }}',v)
-                        self.parset.replace(check,replacestring)
+        for check in self.parset.keywords():
+            for k, v in replacedict.iteritems():
+                if '{{ '+k+' }}' in str(self.parset[check]):
+                    replacestring = str(self.parset[check]).replace('{{ '+k+' }}',v)
+                    self.parset.replace(check,replacestring)
 
 
 class GenericPipelineParsetValidation():
