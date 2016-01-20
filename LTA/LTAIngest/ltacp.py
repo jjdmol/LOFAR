@@ -365,9 +365,9 @@ class LtaCp:
             a32_checksum_local = output_a32_local[0].split()[1]
 
             logger.info('ltacp %s: fetching adler32 checksum from LTA...' % self.logId)
-            srm_a32_checksum = get_srm_a32_checksum(self.dst_surl)
+            srm_ok, srm_file_size, srm_a32_checksum = get_srm_size_and_a32_checksum(self.dst_surl)
 
-            if not srm_a32_checksum:
+            if not srm_ok:
                 raise LtacpException('ltacp %s: Could not get srm adler32 checksum for: %s'  % (self.logId, self.dst_surl))
 
             if(srm_a32_checksum != a32_checksum_local):
@@ -376,6 +376,14 @@ class LtaCp:
                                                                                                                                      a32_checksum_local))
 
             logger.info('ltacp %s: adler32 checksums are equal: %s' % (self.logId, a32_checksum_local))
+
+            if(srm_file_size != byte_count):
+                raise LtacpException('ltacp %s: file size reported by srm (%s) does not match datastream byte count (%s)' % (self.logId,
+                                                                                                                             srm_file_size,                                                                                                                                     byte_count))
+
+            logger.info('ltacp %s: srm file size and datastream byte count are equal: %s bytes (%s)' % (self.logId,
+                                                                                                        srm_file_size,
+                                                                                                        humanreadablesize(srm_file_size)))
             logger.info('ltacp %s: transfer to LTA completed successfully.' % (self.logId))
 
         except Exception as e:
@@ -476,25 +484,39 @@ def srmls(surl):
 def srmll(surl):
     return execute(['/bin/bash', '-c', 'source %s; srmls -l %s' % (_ingest_init_script, surl)])
 
-# get checksum from srm via srmls
-def get_srm_a32_checksum(surl):
-    output, errors, code = srmll(surl)
+# get file size and checksum from srm via srmll
+def get_srm_size_and_a32_checksum(surl):
+    try:
+        output, errors, code = srmll(surl)
 
-    if code != 0:
-        return False
+        if code != 0:
+            return (False, None, None)
 
-    if not 'Checksum type:' in output:
-        return False
+        pathLine = output.strip()
+        pathLineItems = [x.strip() for x in pathLine.split()]
 
-    if 'Checksum type:' in output:
-        cstype = output.split('Checksum type:')[1].split()[0].strip()
-        if cstype.lower() != 'adler32':
+        if len(pathLineItems) < 2:
+            #path line shorter than expected
+            return (False, None, None)
+
+        file_size = int(pathLineItems[0])
+
+        if not 'Checksum type:' in output:
             return False
 
-    if 'Checksum value:' in output:
-        return output.split('Checksum value:')[1].lstrip().split()[0]
+        if 'Checksum type:' in output:
+            cstype = output.split('Checksum type:')[1].split()[0].strip()
+            if cstype.lower() != 'adler32':
+                return (False, None, None)
 
-    return False
+        if 'Checksum value:' in output:
+            a32_value = output.split('Checksum value:')[1].lstrip().split()[0]
+            return (True, file_size, a32_value)
+
+    except:
+        pass
+
+    return (False, None, None)
 
 #recursively checks for presence of parent directory and created the missing part of a tree
 def create_missing_directories(surl):
