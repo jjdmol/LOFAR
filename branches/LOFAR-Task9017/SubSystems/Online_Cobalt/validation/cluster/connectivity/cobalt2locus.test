@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# Test connectivity from Cobalt to the Locus nodes locus001..locus100
+#
+# This test is a big awkward, because we cannot assume that every locus node
+# is online. Therefore, we execute the same command, using cexec, both
+# from the CEP2 head node (lhn001), and from the current node. The outputs
+# should be the same.
+#
+# $Id$
+
+# Source useful functions.
+. $(dirname $0)/../funcs.sh
+
+# Path to our local cexec program.
+CEXEC=$(cd $(dirname $0)/../c3 && pwd)/cexec || exit
+
+# Setup cleanup handler.
+trap 'STATUS=$?; rm -rf -- "$TMPDIR"; exit $STATUS' 0 1 2 3 15
+
+# Create temporary directory for output files
+TMPDIR=$(mktemp -dt "$(basename $0).XXXXXX") || exit
+
+# Filenames for our output files.
+C3_CONF=$TMPDIR/c3.conf
+LHN_LOCUS=$TMPDIR/lhn.locus
+CBM_LOCUS=$TMPDIR/cbm.locus
+
+# Path to remote cexec command
+C3_PATH=$(dirname $(run_command "ssh lhn001 which cexec")) || exit
+
+# Retrieve the c3.conf file from lhn001.
+run_command "scp lhn001:/etc/c3.conf $C3_CONF" || exit
+
+# Retrieve the list of locus nodes reachable from lhn001
+run_command "ssh lhn001 cexec locus: hostname" | \
+  grep '^locus' > $LHN_LOCUS || exit
+
+# Retrieve the list of locus nodes reachable from localhost
+C3_PATH=$C3_PATH run_command "$CEXEC -f $C3_CONF locus: hostname" | \
+  grep '^locus' > $CBM_LOCUS || exit
+
+# Compare the results.
+diff -s $LHN_LOCUS $CBM_LOCUS
