@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Check whether the SATA controller is in AHCI mode
+lspci -vvv | awk '/SATA/,/^$/ { print; }' | grep 'Kernel driver in use: ahci' || exit 1

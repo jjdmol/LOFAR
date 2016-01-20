@@ -1,0 +1,22 @@
+# ascii dump of database
+
+# DpType
+TypeName
+ClaimManager.ClaimManager	1#1
+	request	1#2
+		typeName	25#3
+		newObjectName	25#4
+	response	1#5
+		typeName	25#6
+		newObjectName	25#7
+		DPName	25#8
+		claimDate	26#13
+	cache	1#9
+		typeNames	9#10
+		newObjectNames	9#11
+		DPNames	9#12
+		claimDates	10#14
+
+# Datapoint/DpId
+DpName	TypeName	ID
+ClaimManager	ClaimManager	1483
