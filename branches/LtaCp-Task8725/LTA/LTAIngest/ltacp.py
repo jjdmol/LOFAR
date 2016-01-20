@@ -55,12 +55,16 @@ def getLocalIPAddress():
 
 # converts given srm url of an LTA site into a transport url as needed by gridftp. (Sring replacement based on arcane knowledge.)
 def convert_surl_to_turl(surl):
-    sara_nodes = ['fly%d' % i for i in range(1, 10)] # + \
-                 #['wasp%d' % i for i in range(1, 10)] + \
-                 #['by27-%d' % i for i in range(1, 10)] + \
-                 #['bw27-%d' % i for i in range(1, 10)] + \
-                 #['by32-%d' % i for i in range(1, 10)] + \
-                 #['bw32-%d' % i for i in range(1, 10)]
+    #list of sara doors is based on recent actual transfers using srmcp, which translates the surl to a 'random' turl
+    sara_nodes = ['fly%d' % i for i in range(1, 11)]  + \
+                 ['wasp%d' % i for i in range(1, 10)] + \
+                 ['by27-%d' % i for i in range(1, 10)] + \
+                 ['bw27-%d' % i for i in range(1, 10)] + \
+                 ['by32-%d' % i for i in range(1, 10)] + \
+                 ['bw32-%d' % i for i in range(4, 10)] + \
+                 ['s35-0%d' % i for i in range(1, 5)] + \
+                 ['v40-%d' % i for i in range(8, 11)] + \
+                 ['rabbit%d' % i for i in range(1, 4)]
     sara_turl = 'gsiftp://%s.grid.sara.nl:2811' % sara_nodes[random.randint(0, len(sara_nodes)-1)]
     turl = surl.replace("srm://srm.grid.sara.nl:8443",sara_turl, 1)
     turl = turl.replace("srm://srm.grid.sara.nl",sara_turl,1)
