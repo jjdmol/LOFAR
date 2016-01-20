@@ -178,10 +178,10 @@ class LtaCp:
             self.started_procs[p_md5_local] = cmd_md5_local
 
             # start computing adler checksum of incoming data stream
-            cmd_a32_local = ['./md5adler/a32', self.local_adler32_fifo]
-            #cmd_a32_local = ['md5sum', self.local_adler32_fifo]
+            currdir = os.path.dirname(os.path.realpath(__file__))
+            cmd_a32_local = [currdir + '/md5adler/a32', self.local_adler32_fifo]
             logger.info('ltacp %s: computing local adler32 checksum. executing: %s' % (self.logId, ' '.join(cmd_a32_local)))
-            p_a32_local = Popen(cmd_a32_local, stdout=PIPE, stderr=PIPE)
+            p_a32_local = Popen(cmd_a32_local, stdin=PIPE, stdout=PIPE, stderr=PIPE)
             self.started_procs[p_a32_local] = cmd_a32_local
 
             # start copy fifo stream to SRM
@@ -277,7 +277,7 @@ class LtaCp:
                     return (td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / float(10**6)
 
                 # waiting for output, comparing checksums, etc.
-                logger.info('ltacp %s: transfering...' % self.logId)
+                logger.info('ltacp %s: transfering... waiting for progress...' % self.logId)
                 transfer_start_time = datetime.utcnow()
                 prev_progress_time = datetime.utcnow()
                 prev_bytes_transfered = 0
@@ -367,7 +367,7 @@ class LtaCp:
             if p_a32_local.returncode != 0:
                 raise LtacpException('ltacp %s: local adler32 checksum computation failed: %s' (self.logId, str(output_a32_local)))
             logger.debug('ltacp %s: finished computation of local adler32 checksum' % self.logId)
-            a32_checksum_local = output_a32_local[0].split()[1]
+            a32_checksum_local = output_a32_local[0].split()[1].zfill(8)
 
             logger.info('ltacp %s: fetching adler32 checksum from LTA...' % self.logId)
             srm_ok, srm_file_size, srm_a32_checksum = get_srm_size_and_a32_checksum(self.dst_surl)
@@ -382,7 +382,7 @@ class LtaCp:
 
             logger.info('ltacp %s: adler32 checksums are equal: %s' % (self.logId, a32_checksum_local))
 
-            if(srm_file_size != byte_count):
+            if(int(srm_file_size) != int(byte_count)):
                 raise LtacpException('ltacp %s: file size reported by srm (%s) does not match datastream byte count (%s)' % (self.logId,
                                                                                                                              srm_file_size,                                                                                                                                     byte_count))
 
