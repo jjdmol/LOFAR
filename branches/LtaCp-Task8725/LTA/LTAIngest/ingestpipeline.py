@@ -315,6 +315,7 @@ class IngestPipeline():
   def CheckSIP(self):
       ##might do more than validate in the future
     try:
+      self.logger.debug("CheckSIP for %s" % (self.JobId))
       start = time.time()
       f      = open('doc/LTA-SIP.xsd')
       xml    = etree.parse(f)
@@ -330,7 +331,7 @@ class IngestPipeline():
 
   def CheckSIPContent(self):
     try:
-      start = time.time()
+      self.logger.debug("CheckSIPContent for %s" % (self.JobId))
       sip   = StringIO(self.SIP)
       tree   = etree.parse(sip)
       root   = tree.getroot()
@@ -360,6 +361,7 @@ class IngestPipeline():
         self.logger.error("CheckSIPContent for %s storageTicket %s does not match expected %s" % (self.JobId, storageTickets[0].text, self.ticket))
         return False
         
+      self.logger.debug("CheckSIPContent OK for %s" % (self.JobId,))
       return True
     except Exception as e:
       self.logger.error('CheckSIPContent failed: ' + str(e))
@@ -391,9 +393,6 @@ class IngestPipeline():
             raise PipelineError('GetSIP error getting EoR SIP for %s: %s' % (self.JobId, err), 'GetSip')
 
         self.SIP = out
-
-	with open('eor_sip1.xml', 'w') as f:
-          f.write(self.SIP)
 
         # parse sip xml and add filesize, storageticket and checkums
         from xml.dom import minidom
@@ -443,13 +442,10 @@ class IngestPipeline():
         self.SIP = sip_dom.toxml("utf-8")
         self.SIP = self.SIP.replace('<stationType>Europe</stationType>','<stationType>International</stationType>')
 
-        with open('eor_sip2.xml', 'w') as f:
-          f.write(self.SIP)
-
       except:
         self.logger.exception('Getting SIP from EoR failed')
         raise
-      self.logger.debug('SIP received for %s from EoR with size %d (%s): \n%s' % (self.JobId, len(self.SIP), humanreadablesize(len(self.SIP)), self.SIP))
+      self.logger.debug('SIP received for %s from EoR with size %d (%s): \n%s' % (self.JobId, len(self.SIP), humanreadablesize(len(self.SIP)), self.SIP[0:1024]))
     else:
       self.SIP = unspecifiedSIP.makeSIP(self.Project, self.ObsId, self.ArchiveId, self.ticket, self.FileName, self.FileSize, self.MD5Checksum, self.Adler32Checksum, self.Type)
       self.FileType = unspec_type
@@ -465,7 +461,7 @@ class IngestPipeline():
       ###raise Exception('Got a malformed SIP from MoM: %s' % self.SIP[0:50])
     if not self.CheckSIPContent():
       self.logger.error('SIP has invalid content for %s\n%s' % (self.JobId, self.SIP))
-      raise PipelineError('Got a SIP with wrong contents from MoM for %s : %s' % (self.JobId, self.SIP), func.__name__)
+      raise PipelineError('Got a SIP with wrong contents for %s : %s' % (self.JobId, self.SIP), 'GetSIP')
 
   def SendSIP(self):
     try:
@@ -611,7 +607,7 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         print 'usage: ingestpipeline.py <path_to_jobfile.xml>'
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(format="%(asctime)-15s %(levelname)s %(message)s", level=logging.DEBUG)
     logger = logging.getLogger('Slave')
 
     jobfile = sys.argv[1]
