@@ -246,12 +246,13 @@ class LtaCp:
             input_datasize = int(output_remote_du[0].split()[0])
             logger.info('ltacp %s: input datasize: %d bytes, %s' % (self.logId, input_datasize, humanreadablesize(input_datasize)))
             estimated_tar_size = 512*(input_datasize / 512) + 3*512 #512byte header, 2*512byte ending, 512byte modulo data
+            logger.info('ltacp %s: estimated_tar_size: %d bytes, %s' % (self.logId, estimated_tar_size, humanreadablesize(estimated_tar_size)))
             tar_record_size = 10240 # 20 * 512 byte blocks
 
             with open(os.devnull, 'r') as devnull:
                 # start sending remote data, tee to fifo
                 src_path_parent, src_path_child = os.path.split(self.src_path_data)
-                cmd_remote_data = self.ssh_cmd + ['cd %s && tar c --checkpoint=100 --checkpoint-action="ttyout=checkpoint %%u\\n" -O %s | tee %s | %s %s %s' % (src_path_parent,
+                cmd_remote_data = self.ssh_cmd + ['cd %s && tar c --blocking-factor=20 --checkpoint=1000 --checkpoint-action="ttyout=checkpoint %%u\\n" -O %s | tee %s | %s %s %s' % (src_path_parent,
                     src_path_child,
                     self.remote_data_fifo,
                     self.remoteNetCatCmd,
@@ -281,11 +282,11 @@ class LtaCp:
                 while len([p for p in self.started_procs.keys() if p.poll() is not None]) == 0:
                     try:
                         # read and process tar stdout lines to create progress messages
-                        nextline = p_remote_data.stdout.readline()
+                        nextline = p_remote_data.stdout.readline().strip()
                         if len(nextline) > 0:
                             record_nr = int(nextline.split()[-1].strip())
                             total_bytes_transfered = record_nr * tar_record_size
-                            percentage_done = 100.0*total_bytes_transfered/input_datasize
+                            percentage_done = (100.0*float(total_bytes_transfered))/float(estimated_tar_size)
                             current_progress_time = datetime.utcnow()
                             elapsed_secs_since_start = timedelta_total_seconds(current_progress_time - transfer_start_time)
                             elapsed_secs_since_prev = timedelta_total_seconds(current_progress_time - prev_progress_time)
@@ -293,7 +294,7 @@ class LtaCp:
                                 avg_speed = total_bytes_transfered / elapsed_secs_since_start
                                 current_bytes_transfered = total_bytes_transfered - prev_bytes_transfered
                                 current_speed = current_bytes_transfered / elapsed_secs_since_prev
-                                if elapsed_secs_since_prev > 60 or current_bytes_transfered > 0.05*input_datasize:
+                                if elapsed_secs_since_prev > 60 or current_bytes_transfered > 0.05*estimated_tar_size:
                                     prev_progress_time = current_progress_time
                                     prev_bytes_transfered = total_bytes_transfered
                                     percentage_to_go = 100.0 - percentage_done
@@ -305,7 +306,7 @@ class LtaCp:
                                                                                                             humanreadablesize(avg_speed, 'Bps'),
                                                                                                             humanreadablesize(current_speed, 'Bps'),
                                                                                                             timedelta(seconds=int(round(time_to_go)))))
-                        time.sleep(0.25)
+                        time.sleep(0.05)
                     except KeyboardInterrupt:
                         self.cleanup()
 
