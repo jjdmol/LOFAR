@@ -1,8 +1,8 @@
 """ test parameterset for resource estimator
 """
 
-#from lofar.sas.resourceassignment.resourceassignmentestimator.resource_estimators import ParameterSet
-from parameterset import ParameterSet
+from lofar.sas.resourceassignment.resourceassignmentestimator.resource_estimators import ParameterSet
+#from parameterset import ParameterSet
 
 class TestSet(object):
     def __init__(self):
