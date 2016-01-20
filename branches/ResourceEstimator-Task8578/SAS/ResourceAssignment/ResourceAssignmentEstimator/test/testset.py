@@ -19,6 +19,7 @@ class TestSet(object):
     def valid_dict(self):
         return self.valid_set.get_set()
 
+    # for observation
     def add_observation(self):
         checkset = """
         observation.sample_clock= 200
@@ -99,25 +100,6 @@ class TestSet(object):
         self.valid_set.import_string(valid_response)
 
 
-    def enabble_flys_eye(self):
-        checkset = """
-        observation.flys_eye.enabled= true
-        """
-        self.check_set.import_string(checkset)
-        self.check_set.import_string(checkset)
-        validset = """
-        observation.total_data_size=
-        observation.total_bandwidth=
-        observation.output_files.dp_correlated_uv.nr_files=
-        observation.output_files.dp_correlated_uv.file_size=
-        observation.output_files.dp_coherent_stokes.nr_files=
-        observation.output_files.dp_coherent_stokes.file_size=
-        observation.output_files.dp_incoherent_stokes.nr_files=
-        observation.output_files.dp_incoherent_stokes.file_size=
-        """
-        self.valid_set.import_string(valid_response)
-
-
     def enable_observations_coherent_stokes(self):
         checkset = """
         # coherent_stokes.type can be: DATA_TYPE_XXYY or DATA_TYPE_STOKES_IQUV
@@ -161,6 +143,25 @@ class TestSet(object):
         self.valid_set.import_string(valid_response)
 
 
+    def enabble_flys_eye(self):
+        checkset = """
+        observation.flys_eye.enabled= true
+        """
+        self.check_set.import_string(checkset)
+        self.check_set.import_string(checkset)
+        validset = """
+        observation.total_data_size=
+        observation.total_bandwidth=
+        observation.output_files.dp_correlated_uv.nr_files=
+        observation.output_files.dp_correlated_uv.file_size=
+        observation.output_files.dp_coherent_stokes.nr_files=
+        observation.output_files.dp_coherent_stokes.file_size=
+        observation.output_files.dp_incoherent_stokes.nr_files=
+        observation.output_files.dp_incoherent_stokes.file_size=
+        """
+        self.valid_set.import_string(valid_response)
+
+    # for all pipelines
     def enable_calibration_pipeline(self):
         checkset = """
         # for calibration-pipeline
