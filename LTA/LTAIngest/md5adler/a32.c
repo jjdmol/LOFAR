@@ -1,20 +1,37 @@
 # include <stdio.h>
 #include <stdlib.h>
+#include <sys/poll.h>
 #include "md5.h"
 
 unsigned int adlercount = 1;
 
 int main(int argc, char *argv[]) {
-   FILE *fp;
-   char res[16];
-   fp=fopen(argv[1],"rb");
-   if (fp==(FILE *)NULL) { 
-     fprintf (stderr,"failed: can't open %s", argv[1]);
-     exit(-1);
-   }
-   parse_stream(fp,res);
-   fprintf(stderr, "ADLER32 %x\n",adlercount);
-   fclose(fp);
+    FILE *fp;
+    char res[16];
+
+    struct pollfd fds;
+    fds.fd = 0; /* this is STDIN */
+    fds.events = POLLIN;
+    int inputViaStdIn = poll(&fds, 1, 0);
+
+    if(inputViaStdIn) {
+        fp = stdin;
+    }
+    else {
+        fp=fopen(argv[1],"rb");
+        if (fp==(FILE *)NULL) {
+            fprintf (stderr,"failed: can't open %s\n", argv[1]);
+            exit(-1);
+        }
+    }
+
+    parse_stream(fp,res);
+    fprintf(stdout, "ADLER32 %x\n",adlercount);
+
+    if(!inputViaStdIn)
+        fclose(fp);
+
+    exit(0);
 }
 
 
