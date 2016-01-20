@@ -530,10 +530,11 @@ class IngestPipeline():
       start = time.time()
       self.RetryRun(self.GetStorageTicket, self.ltaRetry, 'Getting storage ticket')
 
-      if self.Type.lower() == "eor":
-        self.RetryRun(self.TransferFileNew, self.srmRetry , 'Transfering file')
-      else:
-        self.RetryRun(self.TransferFile, self.srmRetry , 'Transfering file')
+      self.RetryRun(self.TransferFileNew, self.srmRetry , 'Transfering file')
+      #if self.Type.lower() == "eor":
+        #self.RetryRun(self.TransferFileNew, self.srmRetry , 'Transfering file')
+      #else:
+        #self.RetryRun(self.TransferFile, self.srmRetry , 'Transfering file')
 
       self.RetryRun(self.SendChecksums, self.ltaRetry, 'Sending Checksums')
 #      self.RenameFile()
