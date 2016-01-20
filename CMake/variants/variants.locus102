@@ -16,3 +16,11 @@ set(CTEST_CUSTOM_WARNING_EXCEPTION
   "/log4cxx/helpers/objectptr.h:[0-9]+: warning: base class"
   "/log4cxx/helpers/objectptr.h:[0-9]+: warning: dereferencing type-punned pointer"
 )
+set(CASACORE_ROOT_DIR /opt/cep/casacore/builds/casacore-2.0.3/build/gnu_opt)
+set(CASAREST_ROOT_DIR  /opt/cep/casarest/builds/casarest-svn8765-2.0.3)
+set(WCSLIB_ROOT_DIR /opt/cep/lofar/external/wcslib/builds/wcslib-4.23)
+set(LOG4CPLUS_ROOT_DIR /opt/cep/lofar/external/log4cplus)
+set(LOG4CXX_ROOT_DIR /opt/cep/lofar/external/log4cxx)
+set(PYRAP_ROOT_DIR /opt/cep/pyrap/builds/python-casacore-2.0.1-2.0.3)
+set(AOFLAGGER_ROOT_DIR /opt/cep/aoflagger/aoflagger-2.7.1/install)
+
