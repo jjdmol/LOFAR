@@ -1,0 +1,217 @@
+V 11
+1
+LANG:1 10 CobaltNode
+PANEL,-1 -1 649 54 N "_3DFace" 1
+"$nr"
+"main()
+{
+  if (strpos(baseDP,\"Cobalt\")<0) {
+    baseDP = g_currentDatapoint+\"_Cobalt\";
+  }
+  string database=dpSubStr(baseDP,DPSUB_SYS);
+  nodeNr = $nr;
+  nodeTxt = \"CBT\"+navFunct_formatInt(nodeNr,999); 
+  baseDP+=\"_\"+nodeTxt;
+
+  setValue(\"nodetxt\",\"text\",nodeTxt);
+  
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+  
+  // connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP);}
+" 0
+ E "main()
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+string baseDP;
+int nodeNr = -1;
+string nodeTxt = \"\";
+bool   bDoubleClicked  = false;
+
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(nodeTxt,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"CEP_CobaltNode_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(nodeTxt,\"ChangePanel\");  
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(nodeTxt,\"EventRightClick\");
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 1
+"cobaltnodeHighlight"
+""
+1 15 5.000000000000001 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"cobaltNodeCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void cobaltNodeCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"CEP_CobaltNode_small.pnl:cobaltNodeCallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"CEP_CobaltNode_small.pnl:cobaltNodeCallback|Found highlight : \" + highlight + \" Looking for: nodeTxt\");
+  bool bHighlight=false;
+  if (dynContains(highlight,nodeTxt)) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"CEP_CobaltNode_small.pnl:cobaltNodeCallback|Highlight request: \"+bHighlight);
+  cobaltnodeHighlight.visible = bHighlight;  
+}" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 5.819420688818186 -3.966609184700326e-020 -5.047542842739014e-018 0.09146378058824077 -87.29131033227279 -0.4573189029412039 1 E 15 5 37 287
+6 0
+"childStateBorder"
+""
+1 119.9999999999999 -5.551115123125783e-017 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 3 1 0 1 E 1 0 1 -119.9999999999999 5.551115123125783e-017 1 E 122 2 244 22
+1 13 0 "" 1
+0
+2 12
+"nodetxt"
+""
+1 43.00000000000011 6 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  0 E 43.00000000000011 6 76 19
+0 2 2 "0s" 0 0 0 192 0 0  43.00000000000011 6 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 6 cbt000
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 0 "selfState" -1
+"objects\\lofar_self_state.pnl" 7 8 T 3 1 0 1 -4.999999999999886 -6
+0
+0

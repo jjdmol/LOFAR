@@ -1,0 +1,14 @@
+#
+# total time of all SKYSCAN'S (integer in secs)
+#
+beamctl.SKYSCAN_TOTAL_TIME=3600
+
+#
+# time to stay on each point (integer in secs)
+#
+beamctl.SKYSCAN_POINT_TIME=2
+
+#
+# time between 2 compleet scans (integer in secs)
+#
+beamctl.SKYSCAN_WAIT_TIME=10
