@@ -80,23 +80,21 @@ class TestService(unittest.TestCase):
     self.requested_parsets = 0
 
     # setup mock parset service
-    def TaskSpecificationService( input_dict ):
-      obsid = input_dict["OtdbID"]
-
-      if obsid == 1:
+    def TaskSpecificationService( OtdbID ):
+      if OtdbID == 1:
         predecessors = "[2,3]"
-      elif obsid == 2:
+      elif OtdbID == 2:
         predecessors = "[3]"
-      elif obsid == 3:
+      elif OtdbID == 3:
         predecessors = "[]"
       else:
-        raise Exception("Invalid obsID")
+        raise Exception("Invalid OtdbID: %s" % OtdbID)
 
       self.requested_parsets += 1
 
       return {
         "Version.number":                                     "1",
-        PARSET_PREFIX + "Observation.ObsID":                  str(obsid),
+        PARSET_PREFIX + "Observation.ObsID":                  str(OtdbID),
         PARSET_PREFIX + "Observation.Scheduler.predecessors": predecessors,
       }
 

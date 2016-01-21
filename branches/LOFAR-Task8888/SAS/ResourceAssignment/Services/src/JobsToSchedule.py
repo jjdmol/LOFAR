@@ -178,7 +178,7 @@ class JobsToSchedule(OTDBBusListener):
 
     # Request the parset
     main_obsID  = treeId
-    main_parset,_ = self.parset_rpc( { "OtdbID": main_obsID } )
+    main_parset,_ = self.parset_rpc( OtdbID=main_obsID )
 
     # Construct a dict of all the parsets we retrieved
     parsets = {}
@@ -202,7 +202,7 @@ class JobsToSchedule(OTDBBusListener):
         logger.info("Fetching predecessor %s", obsID)
 
         # Request predecessor parset
-        parsets[obsID],_ = self.parset_rpc( { "OtdbID": obsID } )
+        parsets[obsID],_ = self.parset_rpc( OtdbID=obsID )
 
         # Add the list of predecessors
         request_obsIDs = request_obsIDs.union(predecessors(parsets[obsID]))
