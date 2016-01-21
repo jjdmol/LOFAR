@@ -25,11 +25,13 @@
 #include <string>
 #include <iomanip>
 
+#include <qpid/messaging/exceptions.h>
 using namespace std;
+
+
 
 void brokermgt::list(std::string type)
 {
-//        if (command == "list") {
             Message request;
             request.setReplyTo(recv.getAddress());
             request.setProperty("x-amqp-0-10.app-id", "qmf2");
@@ -44,11 +46,16 @@ void brokermgt::list(std::string type)
             send.send(request);
 }
 
-std::string brokermgt::reply()
+std::string brokermgt::reply(unsigned long long timeout)
 {
       if (lasttype=="queue")
       {
             std::ostringstream ss;
+
+	    Duration tmout(timeout);
+
+	    try {
+
             Message response = recv.fetch();
             Variant::List contentIn = response.getContentObject().asList();
 
@@ -70,6 +77,12 @@ std::string brokermgt::reply()
             }
             sess.acknowledge();
 	    return ss.str();
+	    } catch (const qpid::messaging::NoMessageAvailable &e)
+	    {
+		std::string noret("None");
+		return noret;
+	    };
+
       }
       return "Unknown";
 }

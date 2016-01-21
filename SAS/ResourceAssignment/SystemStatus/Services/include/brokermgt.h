@@ -53,7 +53,7 @@ class brokermgt
 
        //void docmd(std::string command,std::string type);
        void list(std::string type);// { docmd("list",type);};
-       std::string reply();
+       std::string reply(unsigned long long timeout=0);
 
        ~brokermgt()
        {
