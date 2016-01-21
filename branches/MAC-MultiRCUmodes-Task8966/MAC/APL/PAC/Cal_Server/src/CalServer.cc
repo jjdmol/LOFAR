@@ -46,7 +46,6 @@
 #include "CalServer.h"
 #include "SubArrayMgr.h"
 #include "SubArraySubscription.h"
-//#include "CalibrationAlgorithm.h"
 #include <Cal_Server/Package__Version.h>
 
 #ifdef USE_CAL_THREAD

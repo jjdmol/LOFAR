@@ -528,9 +528,13 @@ void beamctl::usage() const
         "  <digpointing>  = --digdir \n"
         "  <anapointing>  = --anadir \n"
         "with option arguments: \n"
-        "  --antennaset=name # name of the antenna (sub)field the RCU's are part of\n"
+        "  --antennaset=name # name of the antenna (sub)field the RCU's are part of, may not conflict with band\n"
+        "                    # name = LBA_INNER | LBA_OUTER | LBA_SPARSE_EVEN | LBA_SPARSE_ODD |\n"
+        "                    # LBA_X | LBA_Y | HBA_ZERO |  HBA_ONE | HBA_DUAL | HBA_JOINED |\n"
+        "                    # HBA_ZERO_INNER | HBA_ONE_INNER | HBA_DUAL_INNER | HBA_JOINED_INNER\n"
         "  --rcus=<set>      # optional subselection of RCU's\n"
-        "  --band=name       # band selection 10_90|30_90|110_190|170_230|210_250\n"
+        "  --band=name       # name of band selection, may not conflict with antennaset\n"
+        "                    # name = 10_90 | 30_90 | 110_190 | 170_230 | 210_250\n"
         "  --subbands=<set>  # set of subbands to use for this beam\n"
         "  --beamlets=<list> # list of beamlets on which to allocate the subbands\n"
         "                    # beamlet range = 0..247 when Serdes splitter is OFF\n"
@@ -541,7 +545,7 @@ void beamctl::usage() const
         "                    # SKYSCAN will scan the sky with a L x M grid in the (l,m) plane\n"
         "  --anadir=longitude,latitude,type[,duration]\n"
         "                    # direction of the analogue HBA beam\n"
-        "  --rcumode=0..7    # OBSOLETE, RCU mode to use (may not conflict with antennaset\n"
+        "  --rcumode=0..7    # OBSOLETE, RCU mode to use (may not conflict with antennaset)\n"
         "  --help            # print this usage\n"
         "\n"
         "The order of the arguments is trivial.\n"
@@ -788,6 +792,11 @@ bool beamctl::parseOptions(int  myArgc, char** myArgv)
         case 'm': {     // optional rcumode
             itsRCUmode = atoi(optarg);
             cout << "rcumode  : " << itsRCUmode << endl;
+            cout << endl;
+            cout << "====================================================================" << endl;
+            cout << ">>> '--rcumode' option is OBSOLETE, use '--band' option instead. <<<" << endl;
+            cout << "====================================================================" << endl;
+            cout << endl;
         }
         break;
 
