@@ -587,6 +587,8 @@ class AbstractBusListener(object):
                         continue
 
                 except Exception as e:
+                    logger.warning("Handling of message failed with %s", e)
+
                     # Any thrown exceptions either Service exception or unhandled exception
                     # during the execution of the service handler is caught here.
                     self._debug(str(e))
