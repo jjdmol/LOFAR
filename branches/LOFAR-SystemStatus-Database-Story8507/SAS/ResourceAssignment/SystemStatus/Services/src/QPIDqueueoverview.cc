@@ -61,17 +61,27 @@ int main(int argc, char** argv)
     }
     // num_brokers should be the total number of queried brokers.
 
-    while (true)// (int t=0;t<1;t++)
+    while (true)
     {
+	time_t rawtime;
+	struct tm * timeinfo;
+	char buffer[80];
+
 	string output="{";
         for (int i=1;i<numbrokers;i++)
 	    broker[i]->list(type);
-	bool moreitems=false; 
+	time (&rawtime);
+	//timeinfo = localtime(&rawtime);
+	timeinfo = gmtime(&rawtime);
+	strftime(buffer,80,"%d-%m-%Y %I:%M:%S",timeinfo);
+	std::string mytime(buffer);
+	output.append("\"datestamp\":\"");
+	output.append(mytime);
+	output.append("\"");
+
 	for (int i=1;i<numbrokers;i++)
 	{
-	    if (moreitems) output.append(",");
-	    moreitems=true;
-	    output.append("\"");
+	    output.append(",\"");
 	    output.append(broker[i]->brokername());
 	    output.append("\":{");
 	    output.append(broker[i]->reply(1000));
