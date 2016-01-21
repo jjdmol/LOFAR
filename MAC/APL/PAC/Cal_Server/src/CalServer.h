@@ -48,7 +48,6 @@ namespace LOFAR {
   namespace CAL {
 
 // forward declarations
-class CalibrationAlgorithm;
 #ifdef USE_CAL_THREAD
 class CalibrationThread;
 #endif
@@ -116,8 +115,6 @@ private:
 
 	SubArrayMgr                 itsSubArrays;    // the subarrays (created by clients)
 	ACCs&                       m_accs;         // front and back ACC buffers (received from ACMServer)
-
-	CalibrationAlgorithm*       m_cal;          // pointer to the calibration algorithm to use
 
 	AMC::ConverterClient*       m_converter;    // interface for coordinate conversion (Astronomical Measures Conversion)
 
