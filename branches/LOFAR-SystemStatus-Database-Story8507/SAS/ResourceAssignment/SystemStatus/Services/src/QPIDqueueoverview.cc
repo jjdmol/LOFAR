@@ -74,7 +74,7 @@ int main(int argc, char** argv)
 	    output.append("\"");
 	    output.append(broker[i]->brokername());
 	    output.append("\":{");
-	    output.append(broker[i]->reply());
+	    output.append(broker[i]->reply(1000));
 	    output.append("}");
 	}
 	output.append("}");
