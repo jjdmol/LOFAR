@@ -76,6 +76,9 @@ class TestService(unittest.TestCase):
     self.parset_service = "%s/TaskSpecification" % (self.busname,)
     self.jts_service    = "%s/TaskSpecified" % (self.busname,)
 
+    # Nr of parsets requested, to detect multiple requests for the same parset, or of superfluous parsets
+    self.requested_parsets = 0
+
     # setup mock parset service
     def TaskSpecificationService( input_dict ):
       obsid = input_dict["OtdbID"]
@@ -88,6 +91,8 @@ class TestService(unittest.TestCase):
         predecessors = "[]"
       else:
         raise Exception("Invalid obsID")
+
+      self.requested_parsets += 1
 
       return {
         "Version.number":                                     "1",
@@ -137,6 +142,9 @@ class TestService(unittest.TestCase):
         self.assertNotIn("2", result.content["resource_indicators"])
         self.assertIn("3", result.content["resource_indicators"])
 
+        # Make sure we only requested one parset
+        self.assertEqual(self.requested_parsets, 1)
+
   def testPredecessors(self):
     """
       Request the resources for a simulated obsid 1, with the following predecessor tree:
@@ -171,6 +179,9 @@ class TestService(unittest.TestCase):
         self.assertIn("1", result.content["resource_indicators"])
         self.assertIn("2", result.content["resource_indicators"])
         self.assertIn("3", result.content["resource_indicators"])
+
+        # Make sure we only requested exactly three parsets
+        self.assertEqual(self.requested_parsets, 3)
 
 def main(argv):
   unittest.main(verbosity=2)
