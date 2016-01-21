@@ -25,10 +25,13 @@ Daemon that listens to OTDB status changes to PRESCHEDULED and SCHEDULED, reques
 the parset of such jobs (+ their predecessors), and posts them on the bus.
 """
 
-from lofar.messaging import FromBus, ToBus, RPC, LofarMessage
+from lofar.messaging import FromBus, ToBus, RPC, EventMessage
 from lofar.parameterset import PyParameterValue
 from lofar.sas.otdb.OTDBBusListener import OTDBBusListener
 from lofar.common.util import waitForInterrupt
+
+import logging
+logger = logging.getLogger(__name__)
 
 """ Prefix that is common to all parset keys, depending on the exact source. """
 PARSET_PREFIX="ObsSW."
@@ -36,8 +39,8 @@ PARSET_PREFIX="ObsSW."
 def predecessors( parset ):
   """ Extract the list of predecessor obs IDs from the given parset. """
 
-  key = parset[PARSET_PREFIX + "Observation.Scheduler.predecessors"]
-  strlist = PyParameterValue(parset_dict[key]).getStringVector()
+  key = PARSET_PREFIX + "Observation.Scheduler.predecessors"
+  strlist = PyParameterValue(str(parset[key]), True).getStringVector()
 
   # Key contains "Lxxxxx" values, we want to have "xxxxx" only
   result = [int(filter(str.isdigit,x)) for x in strlist]
@@ -63,18 +66,18 @@ def resourceIndicatorsFromParset( parset ):
 
   """ Some conversion functions for common parameter-value types."""
   def strvector(value):
-    return PyParameterValue(value).getStringVector()
+    return PyParameterValue(value, True).getStringVector()
 
   def intvector(value):
-    return PyParameterValue(value).getIntVector()
+    return PyParameterValue(value, True).getIntVector()
 
   def bool(value):
-    return PyParameterValue(value).getBool()
+    return PyParameterValue(value, True).getBool()
 
   # =====================================
   # Parset meta info
   # =====================================
-  add(parset["Version.number"])
+  subset["Version.number"] = parset.get("Version.number")
 
   # =====================================
   # Observation settings
@@ -86,7 +89,7 @@ def resourceIndicatorsFromParset( parset ):
   add("Observation.startTime")
   add("Observation.stopTime")
   add("Observation.nrBeams")
-  nrSAPs = get("Observation.nrBeams", 0)
+  nrSAPs = int(get("Observation.nrBeams", 0))
   for sap in xrange(0, nrSAPs):
     add("Observation.Beam[%d].subbandList" % (sap,), intvector)
 
@@ -118,7 +121,7 @@ def resourceIndicatorsFromParset( parset ):
   for sap in xrange(0, nrSAPs):
     add("Observation.Beam[%d].nrTabRings" % (sap,))
 
-    nrTABs = get("Observation.Beam[%d].nrTiedArrayBeams" % (sap,), 0)
+    nrTABs = int(get("Observation.Beam[%d].nrTiedArrayBeams" % (sap,), 0))
     for tab in xrange(0, nrTABs):
       add("Observation.Beam[%d].TiedArrayBeam[%d].coherent" % (sap,tab), bool)
 
@@ -152,11 +155,11 @@ def resourceIndicatorsFromParset( parset ):
   return subset
 
 class JobsToSchedule(OTDBBusListener):
-  def __init__(self, parset_busname=None, sendbus_name=None, **kwargs):
-    super(JobsToSchedule, self).__init__(**kwargs)
+  def __init__(self, servicename, otdb_busname=None, my_busname=None, **kwargs):
+    super(JobsToSchedule, self).__init__(busname=otdb_busname, subject="TaskStatus", **kwargs)
 
-    self.parset_rpc = RPC(service="TaskSpecification", busname=parset_busname)
-    self.send_bus   = ToBus(sendbus_name)
+    self.parset_rpc = RPC(service="TaskSpecification", busname=otdb_busname)
+    self.send_bus   = ToBus("%s/%s" % (my_busname, servicename))
 
   def start_listening(self, **kwargs):
     self.parset_rpc.open()
@@ -171,44 +174,54 @@ class JobsToSchedule(OTDBBusListener):
     self.parset_rpc.close()
 
   def onObservationPrescheduled(self, treeId, modificationTime):
+    logger.info("Processing obs ID %s", treeId)
+
     # Request the parset
     main_obsID  = treeId
-    main_parset = self.parset_rpc( { "OtdbID": main_obsID } )
+    main_parset,_ = self.parset_rpc( { "OtdbID": main_obsID } )
 
     # Construct a dict of all the parsets we retrieved
     parsets = {}
     parsets[main_obsID] = main_parset
 
+    logger.info("Processing predecessors")
+
     # Collect the initial set of predecessors
     request_obsIDs = set(predecessors(main_parset))
 
+    logger.info("Processing %s", request_obsIDs)
+
     # Iterate recursively over all known predecessor obsIDs, and request their parsets
-    while not request_obsIDs.empty():
+    while request_obsIDs:
         obsID = request_obsIDs.pop()
 
         if obsID in parsets:
             # Predecessor lists can overlap -- we already have this one
             continue
 
+        logger.info("Fetching predecessor %s", obsID)
+
         # Request predecessor parset
-        parsets[obsID] = self.parset_rpc( { "OtdbID": obsID } )
+        parsets[obsID],_ = self.parset_rpc( { "OtdbID": obsID } )
 
         # Add the list of predecessors
         request_obsIDs = request_obsIDs.union(predecessors(parsets[obsID]))
 
     # Convert parsets to resource indicators
-    resourceIndicators = dict([(obsID, resourceIndicatorsFromParset(parset)) for (obsID,parset) in parsets.iteritems()])
+    logger.info("Extracting resource indicators")
+    resourceIndicators = dict([(str(obsID), resourceIndicatorsFromParset(parset)) for (obsID,parset) in parsets.iteritems()])
 
     # Construct and send result message
+    logger.info("Sending result")
     result = {
       "sasID": main_obsID,
-      "state": main_state,
+      "state": "prescheduled",
       "time_of_change": modificationTime,
       "resource_indicators": resourceIndicators,
     }
 
     # Put result on bus
-    msg = LofarMessage(content=result)
+    msg = EventMessage(content=result)
     self.send_bus.send(msg)
 
 if __name__ == "__main__":
@@ -216,19 +229,17 @@ if __name__ == "__main__":
     from optparse import OptionParser
 
     # Check the invocation arguments
-    parser = OptionParser("%prog -S busname -P busname -B busname [options]")
-    parser.add_option("-S", "--statusbus", dest="statusbus", type="string", default="",
-                      help="Busname or queue-name the status changes are published on")
-    parser.add_option("-P", "--parsetbus", dest="parsetbus", type="string", default="",
-                      help="Busname or queue-name a parset can be requested from")
-    parser.add_option("-B", "--busname", dest="busname", type="string", default="",
-                      help="Busname or queue-name the status changes are published on")
+    parser = OptionParser("%prog -O otdb_bus -B my_bus [options]")
+    parser.add_option("-O", "--otdb_bus", dest="otdb_busname", type="string", default="",
+                      help="Bus or queue OTDB operates on")
+    parser.add_option("-B", "--my_bus", dest="my_busname", type="string", default="",
+                      help="Bus or queue we publish resource requests on")
     (options, args) = parser.parse_args()
 
     if not options.statusbus or not options.parsetbus or not options.busname:
         parser.print_help()
         sys.exit(1)
 
-    with JobsToSchedule(busname=options.statusbus, parset_busname=options.parsetbus, send_busname=options.busname) as jts:
+    with JobsToSchedule("TaskSpecified", otdb_busname=options.otdb_busname, my_busname=options.my_busname) as jts:
         waitForInterrupt()
 
