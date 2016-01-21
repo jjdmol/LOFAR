@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 def do_rpc(rpc_instance, arg_dict):
 #    try:
-    (data, status) = (rpc_instance)(arg_dict)
+    (data, status) = (rpc_instance)(**arg_dict)
     if status != "OK":
         raise Exception("Status returned is %s" % status)
     for key in sorted(data):
