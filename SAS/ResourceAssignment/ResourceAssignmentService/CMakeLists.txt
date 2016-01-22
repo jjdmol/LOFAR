@@ -17,4 +17,9 @@ python_install(${_py_files} DESTINATION lofar/sas/resourceassignment/resourceass
 
 lofar_add_bin_scripts(radbservice)
 
+# supervisord config files
+install(FILES
+  radbservice.ini
+  DESTINATION etc/supervisord.d)
+
 add_subdirectory(test)
