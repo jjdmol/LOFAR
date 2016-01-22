@@ -4,11 +4,14 @@ import logging
 import datetime
 from lofar.messaging.RPC import RPC, RPCException
 
-''' Simple RPC client for Service lofarbus.RAS.*Z
+''' Simple RPC client for Service lofarbus.*Z
 '''
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+DEFAULT_BUSNAME = 'lofar.ra.command'
+DEFAULT_SERVICENAME = 'RADBService'
 
 class RARPCException(Exception):
     def __init__(self, message):
@@ -19,8 +22,11 @@ class RARPCException(Exception):
 
 
 class RARPC:
-    def __init__(self, busname='lofarbus'):
+    def __init__(self, busname=DEFAULT_BUSNAME,
+                 servicename=DEFAULT_SERVICENAME):
         self.busname = busname
+        self.servicename = servicename
+
         self._serviceRPCs = {} #cache of rpc's for each service
 
     def __enter__(self):
@@ -33,19 +39,20 @@ class RARPC:
         """
         Internal use only. (handles scope 'with')
         """
-        for servicename, rpc in self._serviceRPCs.items():
+        for rpc in self._serviceRPCs.values():
             rpc.__exit__(None, None, None)
 
-    def _rpc(self, service, timeout=10, **kwargs):
+    def _rpc(self, method, timeout=10, **kwargs):
         try:
             rpckwargs = {'timeout': timeout}
+            service_method = self.servicename + '.' + method
 
-            if service not in self._serviceRPCs:
-                rpc = RPC(service, busname=self.busname, ForwardExceptions=True, **rpckwargs)
+            if service_method not in self._serviceRPCs:
+                rpc = RPC(service_method, busname=self.busname, ForwardExceptions=True, **rpckwargs)
                 rpc.Request.__enter__()
-                self._serviceRPCs[service] = rpc
+                self._serviceRPCs[service_method] = rpc
 
-            rpc = self._serviceRPCs[service]
+            rpc = self._serviceRPCs[service_method]
 
             if kwargs:
                 res, status = rpc(**kwargs)
@@ -63,17 +70,17 @@ class RARPC:
             raise RARPCException(str(e))
 
     def getResourceClaimStatuses(self):
-        return self._rpc('RAS.GetResourceClaimStatuses')
+        return self._rpc('GetResourceClaimStatuses')
 
     def getResourceClaims(self):
-        claims = self._rpc('RAS.GetResourceClaims')
+        claims = self._rpc('GetResourceClaims')
         for claim in claims:
             claim['starttime'] = claim['starttime'].datetime()
             claim['endtime'] = claim['endtime'].datetime()
         return claims
 
     def getResourceClaim(self, id):
-        resource_claim = self._rpc('RAS.GetResourceClaim', id=id)
+        resource_claim = self._rpc('GetResourceClaim', id=id)
         if resource_claim:
             resource_claim['starttime'] = resource_claim['starttime'].datetime()
             resource_claim['endtime'] = resource_claim['endtime'].datetime()
@@ -81,7 +88,7 @@ class RARPC:
 
 
     def insertResourceClaim(self, resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id):
-        return self._rpc('RAS.InsertResourceClaim', resource_id=resource_id,
+        return self._rpc('InsertResourceClaim', resource_id=resource_id,
                                                     task_id=task_id,
                                                     starttime=starttime,
                                                     endtime=endtime,
@@ -92,10 +99,10 @@ class RARPC:
                                                     user_id=user_id)
 
     def deleteResourceClaim(self, id):
-        return self._rpc('RAS.DeleteResourceClaim', id=id)
+        return self._rpc('DeleteResourceClaim', id=id)
 
     def updateResourceClaim(self, id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, username=None, user_id=None):
-        return self._rpc('RAS.UpdateResourceClaim', id=id,
+        return self._rpc('UpdateResourceClaim', id=id,
                                                     resource_id=resource_id,
                                                     task_id=task_id,
                                                     starttime=starttime,
@@ -107,36 +114,36 @@ class RARPC:
                                                     user_id=user_id)
 
     def getResourceGroupTypes(self):
-        return self._rpc('RAS.GetResourceGroupTypes')
+        return self._rpc('GetResourceGroupTypes')
 
     def getResourceGroups(self):
-        return self._rpc('RAS.GetResourceGroups')
+        return self._rpc('GetResourceGroups')
 
     def getResourceTypes(self):
-        return self._rpc('RAS.GetResourceTypes')
+        return self._rpc('GetResourceTypes')
 
     def getResources(self):
-        return self._rpc('RAS.GetResources')
+        return self._rpc('GetResources')
 
     def getTask(self, id):
-        task = self._rpc('RAS.GetTask', id=id)
+        task = self._rpc('GetTask', id=id)
         if task:
             task['starttime'] = task['starttime'].datetime()
             task['endtime'] = task['endtime'].datetime()
         return task
 
     def insertTask(self, mom_id, otdb_id, status, type, specification_id):
-        return self._rpc('RAS.InsertTask', mom_id=mom_id,
+        return self._rpc('InsertTask', mom_id=mom_id,
                                            otdb_id=otdb_id,
                                            status=status,
                                            type=type,
                                            specification_id=specification_id)
 
     def deleteTask(self, id):
-        return self._rpc('RAS.DeleteTask', id=id)
+        return self._rpc('DeleteTask', id=id)
 
     def updateTask(self, task_id, mom_id=None, otdb_id=None, status=None, task_type=None, specification_id=None):
-        return self._rpc('RAS.UpdateTask', task_id=task_id,
+        return self._rpc('UpdateTask', task_id=task_id,
                                            mom_id=mom_id,
                                            otdb_id=otdb_id,
                                            status=status,
@@ -144,28 +151,23 @@ class RARPC:
                                            specification_id=specification_id)
 
     def getTasks(self):
-        tasks = self._rpc('RAS.GetTasks')
+        tasks = self._rpc('GetTasks')
         for task in tasks:
             task['starttime'] = task['starttime'].datetime()
             task['endtime'] = task['endtime'].datetime()
         return tasks
 
     def getTaskTypes(self):
-        return self._rpc('RAS.GetTaskTypes')
+        return self._rpc('GetTaskTypes')
 
     def getTaskStatuses(self):
-        return self._rpc('RAS.GetTaskStatuses')
+        return self._rpc('GetTaskStatuses')
 
     def getUnits(self):
-        return self._rpc('RAS.GetUnits')
+        return self._rpc('GetUnits')
 
-if __name__ == '__main__':
-    with RARPC() as rpc:
-        #claims = rpc.getResourceClaims()
-        #for c in claims:
-            #rpc.deleteResourceClaim(c['id'])
-            #print rpc.getResourceClaims()
-
+def main(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME):
+    with RARPC(busname=busname, servicename=servicename) as rpc:
         for i in range(0, 10):
             taskId = rpc.insertTask(1234, 5678, 'active', 'OBSERVATION', 1)['id']
             rcId = rpc.insertResourceClaim(1, taskId, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1)['id']
@@ -191,3 +193,5 @@ if __name__ == '__main__':
 
 
 
+if __name__ == '__main__':
+    main()
