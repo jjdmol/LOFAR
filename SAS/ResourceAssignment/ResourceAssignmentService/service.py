@@ -40,12 +40,17 @@ class RADBHandler(MessageHandlerInterface):
         self.service2MethodMap = {
             'RAS.GetResourceClaimStatuses': self._getResourceClaimStatuses,
             'RAS.GetResourceClaims': self._getResourceClaims,
+            'RAS.GetResourceClaim': self._getResourceClaim,
+            'RAS.InsertResourceClaim': self._insertResourceClaim,
+            'RAS.DeleteResourceClaim': self._deleteResourceClaim,
+            'RAS.UpdateResourceClaim': self._updateResourceClaim,
             'RAS.GetResourceGroupTypes': self._getResourceGroupTypes,
             'RAS.GetResourceGroups': self._getResourceGroups,
             'RAS.GetResourceTypes': self._getResourceTypes,
             'RAS.GetResources': self._getResources,
             'RAS.GetTask': self._getTask,
             'RAS.InsertTask': self._insertTask,
+            'RAS.DeleteTask': self._deleteTask,
             'RAS.UpdateTask': self._updateTask,
             'RAS.GetTaskStatuses': self._getTaskStatuses,
             'RAS.GetTaskTypes': self._getTaskTypes,
@@ -69,6 +74,44 @@ class RADBHandler(MessageHandlerInterface):
     def _getResourceClaims(self):
         return self.radb.getResourceClaims()
 
+    def _getResourceClaim(self, **kwargs):
+        claim = self.radb.getResourceClaim(kwargs['id'])
+        return claim
+
+    def _insertResourceClaim(self, **kwargs):
+        logger.info('InsertResourceClaim: %s' % kwargs)
+        id = self.radb.insertResourceClaim(kwargs['resource_id'],
+                                           kwargs['task_id'],
+                                           kwargs['starttime'].datetime(),
+                                           kwargs['endtime'].datetime(),
+                                           kwargs.get('status_id', kwargs.get('status')),
+                                           kwargs['session_id'],
+                                           kwargs['claim_size'],
+                                           kwargs['username'],
+                                           kwargs['user_id'])
+        return {'id':id}
+
+    def _deleteResourceClaim(self, **kwargs):
+        logger.info('DeleteResourceClaim: %s' % kwargs)
+        id = kwargs['id']
+        deleted = self.radb.deleteResourceClaim(id)
+        return {'id': id, 'deleted': deleted}
+
+    def _updateResourceClaim(self, **kwargs):
+        logger.info('UpdateResourceClaim: %s' % kwargs)
+        id = kwargs['id']
+        updated = self.radb.updateResourceClaim(id,
+                                                resource_id=kwargs.get('resource_id'),
+                                                task_id=kwargs.get('task_id'),
+                                                starttime=kwargs['starttime'].datetime() if 'starttime' in kwargs else None,
+                                                endtime=kwargs['endtime'].datetime() if 'endtime' in kwargs else None,
+                                                status=kwargs.get('status_id', kwargs.get('status')),
+                                                session_id=kwargs.get('session_id'),
+                                                claim_size=kwargs.get('claim_size'),
+                                                username=kwargs.get('username'),
+                                                user_id=kwargs.get('user_id'))
+        return {'id': id, 'updated': updated}
+
     def _getResourceGroupTypes(self):
         return self.radb.getResourceGroupTypes()
 
@@ -85,6 +128,7 @@ class RADBHandler(MessageHandlerInterface):
         return self.radb.getTasks()
 
     def _getTask(self, **kwargs):
+        logger.info('GetTask: %s' % kwargs)
         task = self.radb.getTask(kwargs['id'])
         return task
 
@@ -95,18 +139,24 @@ class RADBHandler(MessageHandlerInterface):
                                        kwargs.get('status_id', kwargs.get('status', 'prepared')),
                                        kwargs.get('type_id', kwargs.get('type')),
                                        kwargs['specification_id'])
-        return {'task_id':task_id}
+        return {'id':task_id }
+
+    def _deleteTask(self, **kwargs):
+        logger.info('DeleteTask: %s' % kwargs)
+        id = kwargs['id']
+        deleted = self.radb.deleteTask(id)
+        return {'id': id, 'deleted': deleted}
 
     def _updateTask(self, **kwargs):
         logger.info('UpdateTask: %s' % kwargs)
-        task_id = kwargs['task_id']
-        updated = self.radb.updateTask(task_id,
+        id = kwargs['id']
+        updated = self.radb.updateTask(id,
                                        mom_id=kwargs.get('mom_id'),
                                        otdb_id=kwargs.get('otdb_id'),
                                        task_status=kwargs.get('status_id', kwargs.get('status', 'prepared')),
                                        task_type=kwargs.get('type_id', kwargs.get('type')),
                                        specification_id=kwargs.get('specification_id'))
-        return {'task_id': task_id, 'updated': updated}
+        return {'id': id, 'updated': updated}
 
     def _getUnits(self):
         return self.radb.getUnits()
