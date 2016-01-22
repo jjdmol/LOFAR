@@ -77,6 +77,7 @@ class RPC():
         Initialize an Remote procedure call using:
             service= <str>    Service Name
             busname= <str>    Bus Name
+            broker= <str>     qpid broker, default None which is localhost
             timeout= <float>  Time to wait in seconds before the call is considered a failure.
             Verbose= <bool>   If True output extra logging to stdout.
 
@@ -87,11 +88,12 @@ class RPC():
         self.ForwardExceptions = kwargs.pop("ForwardExceptions", False)
         self.Verbose           = kwargs.pop("Verbose", False)
         self.BusName           = kwargs.pop("busname", None)
+        self.broker            = kwargs.pop("broker", None)
         self.ServiceName = service
         if self.BusName is None:
-            self.Request = ToBus(self.ServiceName)
+            self.Request = ToBus(self.ServiceName, broker=self.broker)
         else:
-            self.Request = ToBus("%s/%s" % (self.BusName, self.ServiceName))
+            self.Request = ToBus("%s/%s" % (self.BusName, self.ServiceName), broker=self.broker)
         if len(kwargs):
             raise AttributeError("Unexpected argument passed to RPC class: %s" %( kwargs ))
 
@@ -125,9 +127,9 @@ class RPC():
         options = {'create':'always','delete':'receiver'}
         ReplyAddress = "reply.%s" % (str(uuid.uuid4()))
         if self.BusName is None:
-            Reply = FromBus("%s ; %s" %(ReplyAddress,str(options)))
+            Reply = FromBus("%s ; %s" %(ReplyAddress,str(options)), broker=self.broker)
         else:
-            Reply = FromBus("%s/%s" % (self.BusName, ReplyAddress))
+            Reply = FromBus("%s/%s" % (self.BusName, ReplyAddress), broker=self.broker)
         with Reply:
             MyMsg = RequestMessage(content=Content, reply_to=ReplyAddress, has_args=HasArgs, has_kwargs=HasKwArgs)
             MyMsg.ttl = timeout
