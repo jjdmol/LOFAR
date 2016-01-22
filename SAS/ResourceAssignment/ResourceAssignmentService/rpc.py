@@ -8,7 +8,6 @@ from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAUL
 ''' Simple RPC client for Service lofarbus.*Z
 '''
 
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class RARPCException(Exception):
@@ -21,9 +20,11 @@ class RARPCException(Exception):
 
 class RARPC:
     def __init__(self, busname=DEFAULT_BUSNAME,
-                 servicename=DEFAULT_SERVICENAME):
+                 servicename=DEFAULT_SERVICENAME,
+                 broker=None):
         self.busname = busname
         self.servicename = servicename
+        self.broker = broker
 
         self._serviceRPCs = {} #cache of rpc's for each service
 
@@ -46,7 +47,7 @@ class RARPC:
             service_method = self.servicename + '.' + method
 
             if service_method not in self._serviceRPCs:
-                rpc = RPC(service_method, busname=self.busname, ForwardExceptions=True, **rpckwargs)
+                rpc = RPC(service_method, busname=self.busname, broker=self.broker, ForwardExceptions=True, **rpckwargs)
                 rpc.Request.__enter__()
                 self._serviceRPCs[service_method] = rpc
 
@@ -164,7 +165,7 @@ class RARPC:
     def getUnits(self):
         return self._rpc('GetUnits')
 
-def main(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME):
+def do_tests(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME):
     with RARPC(busname=busname, servicename=servicename) as rpc:
         for i in range(0, 10):
             taskId = rpc.insertTask(1234, 5678, 'active', 'OBSERVATION', 1)['id']
@@ -177,7 +178,7 @@ def main(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME):
         tasks = rpc.getTasks()
         for t in tasks:
             print rpc.getTask(t['id'])
-            print rpc.deleteTask(t['id'])
+            #print rpc.deleteTask(t['id'])
             #print rpc.getTasks()
             #print rpc.getResourceClaims()
 
@@ -192,4 +193,5 @@ def main(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME):
 
 
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+    do_tests()
