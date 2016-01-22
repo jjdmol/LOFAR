@@ -24,12 +24,9 @@ from lofar.messaging import Service
 from lofar.messaging.Service import MessageHandlerInterface
 from lofar.common.util import waitForInterrupt
 from lofar.sas.resourceassignment.resourceassignmentservice import radb
+from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_BUSNAME = 'lofar.ra.command'
-DEFAULT_SERVICENAME = 'RADBService'
-
 
 class RADBHandler(MessageHandlerInterface):
     def __init__(self, **kwargs):
