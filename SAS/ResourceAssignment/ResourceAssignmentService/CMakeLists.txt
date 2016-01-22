@@ -15,4 +15,6 @@ set(_py_files
 
 python_install(${_py_files} DESTINATION lofar/sas/resourceassignment/resourceassignmentservice)
 
+lofar_add_bin_scripts(radbservice)
+
 add_subdirectory(test)
