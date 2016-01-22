@@ -3,15 +3,13 @@
 import logging
 import datetime
 from lofar.messaging.RPC import RPC, RPCException
+from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 
 ''' Simple RPC client for Service lofarbus.*Z
 '''
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-DEFAULT_BUSNAME = 'lofar.ra.command'
-DEFAULT_SERVICENAME = 'RADBService'
 
 class RARPCException(Exception):
     def __init__(self, message):
