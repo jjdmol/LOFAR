@@ -2,9 +2,9 @@
 CC=gcc
 CPP=g++
 CFLAGS=
-CPPFLAGS= -O3  -std=gnu++11 
+CPPFLAGS= -g  -std=gnu++11 
 INCLUDE=-I../include/
-LIBS=-lqpidmessaging -lqpidtypes 
+LIBS=-lqpidmessaging -lqpidtypes -lpthread
 
 # DEPS = .h
 OBJ= QPIDqueueoverview.o brokermgt.o
