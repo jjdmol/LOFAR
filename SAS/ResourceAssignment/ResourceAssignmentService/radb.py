@@ -313,6 +313,17 @@ class RADatabase:
 
         return list(self.cursor.fetchall())
 
+    def getResourceClaim(self, id):
+        query = '''SELECT rc.*, rcs.name as status
+        from resource_allocation.resource_claim rc
+        inner join resource_allocation.resource_claim_status rcs on rcs.id = rc.status_id
+        where rc.id = %s;
+        '''
+        self.cursor.execute(query, [id])
+
+        result = self.cursor.fetchone()
+        return dict(result) if result else None
+
     def insertResourceClaim(self, resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, commit=True):
         if status and isinstance(status, basestring):
             #convert status string to status.id
