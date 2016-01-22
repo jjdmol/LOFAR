@@ -25,8 +25,16 @@
 #include "broadcast.h"
 #include <unistd.h>
 
+#include <thread>
+
 using namespace std;
 template <typename T,size_t N> int size(T (&a)[N]){ return N;}
+
+void startbroker(string brokername,brokermgt** dest)
+{
+    *dest = new brokermgt(brokername);
+    cout << "connected to broker at " << brokername << endl;
+}
 
 int main(int argc, char** argv)
 {
@@ -35,6 +43,10 @@ int main(int argc, char** argv)
     std::string host = "localhost";
 
     brokermgt * broker[120];
+    string brokername[120];
+    thread tbroker[120];
+    int sbroker[120];
+
 
     int numbrokers=0;
 
@@ -43,8 +55,13 @@ int main(int argc, char** argv)
 	char name[256];
 	sprintf(name,"locus%03d.cep2.lofar",numbrokers);
 	std::string host(name);
-	std::cout << "Connecting to " << host << std::endl;
-	broker[numbrokers]=new brokermgt(host);
+	brokername[numbrokers]=host;
+	broker[numbrokers]=0;
+	tbroker[numbrokers]=std::thread(startbroker,host,&broker[numbrokers]);
+	sbroker[numbrokers]=1;
+
+	//std::cout << "Connecting to " << host << std::endl;
+	//broker[numbrokers]=new brokermgt(host);
     }
 #ifndef __RUN_ON_PRD__
     std::string brokerlist[] = { "CCU001.control.lofar","sas001.control.lofar","lcs023.control.lofar","cbm001.control.lofar","mcu001.control.lofar","lhn001.cep2.lofar"};
@@ -56,9 +73,27 @@ int main(int argc, char** argv)
     int t=0;
     while (t<num_other)
     {
-	std::cout << "Connecting to " << host << std::endl;
-	broker[numbrokers++]=new brokermgt(brokerlist[t++]);
+	broker[numbrokers]=0;
+	brokername[numbrokers]=brokerlist[t];
+	cout << " adding broker " << brokername[numbrokers] << endl;
+	tbroker[numbrokers]=std::thread(startbroker,brokername[numbrokers],&broker[numbrokers]);
+	sbroker[numbrokers]=1;
+	numbrokers++;t++;
     }
+    /*
+    for (t=1;t<numbrokers;t++)
+    {
+
+	try {
+	std::cout << "Connecting to " << host << std::endl;
+	broker[numbrokers]=new brokermgt(brokerlist[t++]);
+	}
+	catch (qpid::messaging::TransportFailure &e)
+	{
+	    std::cout << "Connection failed" << std::endl;
+	}
+    }
+    */
     // num_brokers should be the total number of queried brokers.
 
     while (true)
@@ -69,7 +104,16 @@ int main(int argc, char** argv)
 
 	string output="{";
         for (int i=1;i<numbrokers;i++)
-	    broker[i]->list(type);
+	    if (broker[i]) 
+	    {
+		// cleanup connector thread
+		if (sbroker[i])
+		{
+		   tbroker[i].join();
+		   sbroker[i]=0;
+		}
+	      broker[i]->list(type);
+	    }
 	time (&rawtime);
 	//timeinfo = localtime(&rawtime);
 	timeinfo = gmtime(&rawtime);
@@ -80,15 +124,17 @@ int main(int argc, char** argv)
 	output.append("\"");
 
 	for (int i=1;i<numbrokers;i++)
-	{
-	    output.append(",\"");
-	    output.append(broker[i]->brokername());
-	    output.append("\":{");
-	    output.append(broker[i]->reply(1000));
-	    output.append("}");
-	}
+	    if (broker[i])
+	    {
+	        output.append(",\"");
+	        output.append(broker[i]->brokername());
+	        output.append("\":{");
+	        output.append(broker[i]->reply(1000));
+	        output.append("}");
+	    }
 	output.append("}");
 	Bcast(output);
+	cout << " sending.." << endl;
 	usleep(1000000);
     }
 

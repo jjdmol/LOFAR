@@ -34,6 +34,8 @@ using namespace qpid::types;
 
 #include <string>
 
+static const qpid::types::Variant::Map connopts={{ "reconnect",true }};
+
 class brokermgt
 {
     private:
@@ -45,10 +47,10 @@ class brokermgt
 	std::string lasttype;
 
     public:
-	brokermgt(std::string host) : broker(host),conn(host),sess((conn.open(),conn.createSession())),
+	brokermgt(std::string host) : broker(host),conn(host,connopts),sess((conn.open(),conn.createSession())),
 				      recv(sess.createReceiver("#")),
 	 			      send(sess.createSender("qmf.default.direct/broker"))
-       {	   
+       {
        };
 
        //void docmd(std::string command,std::string type);
