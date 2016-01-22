@@ -56,6 +56,8 @@ class MessageHandlerInterface(object):
         # then the default handle_message is called
         self.service2MethodMap = {}
 
+        self.servicename = kwargs.pop('servicename', None)
+
     def prepare_loop(self):
         "Called before main processing loop is entered."
         pass
@@ -110,6 +112,7 @@ class Service(object):
         self.service_name     = servicename
         self.service_handler  = servicehandler
         self.connected        = False
+        self.listening        = False
         self.running          = [False]
         self.link_uuid        = str(uuid.uuid4())
         self.busname          = kwargs.pop("busname", None)
@@ -120,7 +123,8 @@ class Service(object):
         options               = kwargs.pop("options", None)
         self.parsefullmessage = kwargs.pop("parsefullmessage", False)
         self.handler_args     = kwargs.pop("handler_args", {})
-        self.listening        = False
+        self.handler_args['servicename'] = servicename
+
         if len(kwargs):
             raise AttributeError("Unexpected argument passed to Service class: %s", kwargs)
 
@@ -149,16 +153,23 @@ class Service(object):
         if self.listening == True:
             return
 
+        servicename = self.service_name
+
+        # if (an instance of) the service_handler uses the service2MethodMap
+        # then we need to listen to <servicename>.*
+        if hasattr(self.service_handler(**self.handler_args), 'service2MethodMap'):
+            servicename += '.*'
+
         # Usually a service will be listening on a 'bus' implemented by a topic exchange
         if self.busname != None:
-            self.listener  = FromBus(self.busname+"/"+self.service_name, options=self.options)
+            self.listener  = FromBus(self.busname+"/"+servicename, options=self.options)
             self.reply_bus = ToBus(self.busname)
             self.listener.open()
             self.reply_bus.open()
         # Handle case when queues are used
         else:
             # assume that we are listening on a queue and therefore we cannot use a generic ToBus() for replies.
-            self.listener = FromBus(self.service_name, options=self.options)
+            self.listener = FromBus(servicename, options=self.options)
             self.listener.open()
             self.reply_bus=None
 
@@ -176,7 +187,7 @@ class Service(object):
             # set up service_handler
             if str(type(self.service_handler)) == "<type 'instancemethod'>" or \
                str(type(self.service_handler)) == "<type 'function'>":
-                thread_service_handler = MessageHandlerInterface()
+                thread_service_handler = MessageHandlerInterface(**self.handler_args)
                 thread_service_handler.handle_message = self.service_handler
             else:
                 thread_service_handler = self.service_handler(**self.handler_args)
@@ -199,7 +210,7 @@ class Service(object):
             self.running[0] = False
             for i in range(self._numthreads):
                 self._tr[i].join()
-                logger.info("Thread %2d: STOPPED Listening for messages on Bus %s and service name %s." % (i, self.busname, self.service_name))
+                logger.info("Thread %2d: STOPPED Listening for messages on %s" % (i, self.listener.address))
                 logger.info("           %d messages received and %d processed OK." % (self.reccounter[i], self.okcounter[i]))
         self.listening = False
         # close the listeners
@@ -257,7 +268,7 @@ class Service(object):
                     reply_msg.subject=subject
                     dest.send(reply_msg)
             except  MessageBusError as e:
-                logger.error("Failed to send reply message to reply address %s on messagebus %s." %(subject,reply_busname))
+                logger.error("Failed to send reply message to reply address %s on messagebus %s" %(subject,reply_busname))
             return
 
         if isinstance(self.reply_bus,ToBus):
@@ -265,7 +276,7 @@ class Service(object):
             try:
                 self.reply_bus.send(reply_msg)
             except MessageBusError as e:
-                logger.error("Failed to send reply message to reply address %s on messagebus %s." %(reply_to,self.busname))
+                logger.error("Failed to send reply message to reply address %s on messagebus %s" %(reply_to,self.busname))
             return
         else:
             # the reply address is not in a default known format
@@ -284,7 +295,7 @@ class Service(object):
 	"""
         thread_idx = kwargs.pop("index")
         service_handler = kwargs.pop("service_handler")
-        logger.info( "Thread %d START Listening for messages on Bus %s and service name %s." %(thread_idx, self.busname, self.service_name))
+        logger.info( "Thread %d START Listening for messages on %s" %(thread_idx, self.listener.address))
         try:
             service_handler.prepare_loop()
         except Exception as e:
@@ -318,9 +329,12 @@ class Service(object):
                     self._debug("Running handler")
 
                     # determine which handler method has to be called
-                    if hasattr(service_handler, 'service2MethodMap') and lofar_msg.subject in service_handler.service2MethodMap:
-                        # pass the handling of this message on to the specific method for this service
-                        serviceHandlerMethod = service_handler.service2MethodMap[lofar_msg.subject]
+                    if hasattr(service_handler, 'service2MethodMap') and '.' in lofar_msg.subject:
+                        if lofar_msg.subject in service_handler.service2MethodMap:
+                            # pass the handling of this message on to the specific method for this service
+                            serviceHandlerMethod = service_handler.service2MethodMap[lofar_msg.subject]
+                        else:
+                            raise ValueError('Unknown method on service: ' + lofar_msg.subject)
                     else:
                         serviceHandlerMethod = service_handler.handle_message
 
