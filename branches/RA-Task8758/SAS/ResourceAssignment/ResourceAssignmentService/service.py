@@ -25,10 +25,10 @@ from lofar.messaging.Service import MessageHandlerInterface
 from lofar.common.util import waitForInterrupt
 from lofar.sas.resourceassignment.resourceassignmentservice import radb
 
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
-
 logger = logging.getLogger(__name__)
+
+DEFAULT_BUSNAME = 'lofar.ra.command'
+DEFAULT_SERVICENAME = 'RADBService'
 
 
 class RADBHandler(MessageHandlerInterface):
@@ -38,25 +38,25 @@ class RADBHandler(MessageHandlerInterface):
         self.password = kwargs.pop("password", '')
 
         self.service2MethodMap = {
-            'RAS.GetResourceClaimStatuses': self._getResourceClaimStatuses,
-            'RAS.GetResourceClaims': self._getResourceClaims,
-            'RAS.GetResourceClaim': self._getResourceClaim,
-            'RAS.InsertResourceClaim': self._insertResourceClaim,
-            'RAS.DeleteResourceClaim': self._deleteResourceClaim,
-            'RAS.UpdateResourceClaim': self._updateResourceClaim,
-            'RAS.GetResourceGroupTypes': self._getResourceGroupTypes,
-            'RAS.GetResourceGroups': self._getResourceGroups,
-            'RAS.GetResourceTypes': self._getResourceTypes,
-            'RAS.GetResources': self._getResources,
-            'RAS.GetTask': self._getTask,
-            'RAS.InsertTask': self._insertTask,
-            'RAS.DeleteTask': self._deleteTask,
-            'RAS.UpdateTask': self._updateTask,
-            'RAS.GetTaskStatuses': self._getTaskStatuses,
-            'RAS.GetTaskTypes': self._getTaskTypes,
-            'RAS.GetTaskTypes': self._getTaskTypes,
-            'RAS.GetTasks': self._getTasks,
-            'RAS.GetUnits': self._getUnits}
+            self.servicename + '.GetResourceClaimStatuses': self._getResourceClaimStatuses,
+            self.servicename + '.GetResourceClaims': self._getResourceClaims,
+            self.servicename + '.GetResourceClaim': self._getResourceClaim,
+            self.servicename + '.InsertResourceClaim': self._insertResourceClaim,
+            self.servicename + '.DeleteResourceClaim': self._deleteResourceClaim,
+            self.servicename + '.UpdateResourceClaim': self._updateResourceClaim,
+            self.servicename + '.GetResourceGroupTypes': self._getResourceGroupTypes,
+            self.servicename + '.GetResourceGroups': self._getResourceGroups,
+            self.servicename + '.GetResourceTypes': self._getResourceTypes,
+            self.servicename + '.GetResources': self._getResources,
+            self.servicename + '.GetTask': self._getTask,
+            self.servicename + '.InsertTask': self._insertTask,
+            self.servicename + '.DeleteTask': self._deleteTask,
+            self.servicename + '.UpdateTask': self._updateTask,
+            self.servicename + '.GetTaskStatuses': self._getTaskStatuses,
+            self.servicename + '.GetTaskTypes': self._getTaskTypes,
+            self.servicename + '.GetTaskTypes': self._getTaskTypes,
+            self.servicename + '.GetTasks': self._getTasks,
+            self.servicename + '.GetUnits': self._getUnits}
 
     def prepare_loop(self):
         self.radb = radb.RADatabase(username=self.username,
@@ -161,14 +161,14 @@ class RADBHandler(MessageHandlerInterface):
     def _getUnits(self):
         return self.radb.getUnits()
 
-def createService(busname='lofarbus', radb_password=''):
-    return Service('RAS.*',
+def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, radb_password=''):
+    return Service(servicename,
                    RADBHandler,
                    busname=busname,
                    handler_args={'password': radb_password},
                    verbose=True)
 
-def main():
+def main(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME):
     # make sure config.py is mode 600 to hide passwords
     if oct(stat('config.py').st_mode & 0777) != '0600':
         print 'Please change permissions of config.py to 600'
@@ -177,8 +177,11 @@ def main():
     # safely import radb_password
     from lofar.sas.resourceassignment.resourceassignmentservice.config import radb_password
 
-    with createService(busname='lofarbus', radb_password=radb_password):
+    with createService(busname=busname,
+                       servicename=servicename,
+                       radb_password=radb_password):
         waitForInterrupt()
 
 if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
     main()
