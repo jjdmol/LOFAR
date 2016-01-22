@@ -18,7 +18,6 @@ with RPC(busname, 'GetProjectDetails') as getProjectDetails:
     res, status = getProjectDetails(ids_string)
 
 '''
-from os import stat
 import logging
 from lofar.messaging import Service
 from lofar.messaging.Service import MessageHandlerInterface
@@ -166,8 +165,10 @@ def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, radb
                    verbose=True)
 
 def main(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME):
+    from os import stat, path
     # make sure config.py is mode 600 to hide passwords
-    if oct(stat('config.py').st_mode & 0777) != '0600':
+    config_path = path.join(path.dirname(path.realpath(__file__)), 'config.py')
+    if oct(stat(config_path).st_mode & 0777) != '0600':
         print 'Please change permissions of config.py to 600'
         exit(-1)
 
