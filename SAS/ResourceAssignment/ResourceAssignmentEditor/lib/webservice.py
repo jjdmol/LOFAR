@@ -39,6 +39,7 @@ from flask.json import jsonify
 from lofar.sas.resourceassignment.resourceassignmenteditor.utils import gzipped
 from lofar.sas.resourceassignment.resourceassignmenteditor.fakedata import *
 from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC
+from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 
 __root_path = os.path.dirname(os.path.abspath(__file__))
 print '__root_path=%s' % __root_path
@@ -56,7 +57,7 @@ print 'app.static_folder= %s' % app.static_folder
 # Load the default configuration
 app.config.from_object('lofar.sas.resourceassignment.resourceassignmenteditor.config.default')
 
-rpc = RARPC('lofarbus')
+rpc = RARPC(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker='10.149.96.6')
 
 @app.route('/')
 @app.route('/index.htm')
@@ -86,9 +87,8 @@ def resourceclaims():
 @app.route('/rest/resourcegroupclaims')
 @gzipped
 def resourcegroupclaims():
-    data = {'resourcegroupclaims': resourceGroupClaims}
+    abort(500)
 
-    return jsonify(data)
 
 @app.route('/rest/tasks')
 @gzipped
