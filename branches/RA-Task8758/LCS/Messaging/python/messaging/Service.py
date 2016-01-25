@@ -56,8 +56,6 @@ class MessageHandlerInterface(object):
         # then the default handle_message is called
         self.service2MethodMap = {}
 
-        self.servicename = kwargs.pop('servicename', None)
-
     def prepare_loop(self):
         "Called before main processing loop is entered."
         pass
@@ -103,27 +101,29 @@ class Service(object):
         """
         Initialize Service object with servicename (str) and servicehandler function.
         additional parameters:
-            busname= <string>  Name of the bus in case exchanges are used in stead of queues
-            options=   <dict>  Dictionary of options passed to QPID
-            exclusive= <bool>  Create an exclusive binding so no other services can consume duplicate messages (default: True)
-            numthreads= <int>  Number of parallel threads processing messages (default: 1)
-            verbose=   <bool>  Output extra logging over stdout (default: False)
+            busname             = <string> Name of the bus in case exchanges are used in stead of queues
+            options             = <dict>   Dictionary of options passed to QPID
+            exclusive           = <bool>   Create an exclusive binding so no other services can consume duplicate messages (default: True)
+            numthreads          = <int>    Number of parallel threads processing messages (default: 1)
+            verbose             = <bool>   Output extra logging over stdout (default: False)
+            use_service_methods = <bool>   Listen to <servicename>.* and map 2nd subject part to method. (default: False) \
+                                           Example: MyService.foo calls the method foo in the handler.
         """
-        self.service_name     = servicename
-        self.service_handler  = servicehandler
-        self.connected        = False
-        self.listening        = False
-        self.running          = [False]
-        self.link_uuid        = str(uuid.uuid4())
-        self.busname          = kwargs.pop("busname", None)
-        self.exclusive        = kwargs.pop("exclusive", True)
-        self._numthreads      = kwargs.pop("numthreads", 1)
-        self.verbose          = kwargs.pop("verbose", False)
-        self.options          = {"capacity": self._numthreads*20}
-        options               = kwargs.pop("options", None)
-        self.parsefullmessage = kwargs.pop("parsefullmessage", False)
-        self.handler_args     = kwargs.pop("handler_args", {})
-        self.handler_args['servicename'] = servicename
+        self.service_name        = servicename
+        self.service_handler     = servicehandler
+        self.connected           = False
+        self.listening           = False
+        self.running             = [False]
+        self.link_uuid           = str(uuid.uuid4())
+        self.busname             = kwargs.pop("busname", None)
+        self.exclusive           = kwargs.pop("exclusive", True)
+        self._numthreads         = kwargs.pop("numthreads", 1)
+        self.verbose             = kwargs.pop("verbose", False)
+        self.use_service_methods = kwargs.pop("use_service_methods", False)
+        self.options             = {"capacity": self._numthreads*20}
+        options                  = kwargs.pop("options", None)
+        self.parsefullmessage    = kwargs.pop("parsefullmessage", False)
+        self.handler_args        = kwargs.pop("handler_args", {})
 
         if len(kwargs):
             raise AttributeError("Unexpected argument passed to Service class: %s", kwargs)
@@ -155,9 +155,9 @@ class Service(object):
 
         servicename = self.service_name
 
-        # if (an instance of) the service_handler uses the service2MethodMap
+        # if the service_handler wants to map the 2nd part of the subject to a method
         # then we need to listen to <servicename>.*
-        if hasattr(self.service_handler(**self.handler_args), 'service2MethodMap'):
+        if self.use_service_methods:
             servicename += '.*'
 
         # Usually a service will be listening on a 'bus' implemented by a topic exchange
@@ -330,11 +330,13 @@ class Service(object):
 
                     # determine which handler method has to be called
                     if hasattr(service_handler, 'service2MethodMap') and '.' in lofar_msg.subject:
-                        if lofar_msg.subject in service_handler.service2MethodMap:
+                        subject_parts = lofar_msg.subject.split('.')
+                        method_name = subject_parts[-1]
+                        if method_name in service_handler.service2MethodMap:
                             # pass the handling of this message on to the specific method for this service
-                            serviceHandlerMethod = service_handler.service2MethodMap[lofar_msg.subject]
+                            serviceHandlerMethod = service_handler.service2MethodMap[method_name]
                         else:
-                            raise ValueError('Unknown method on service: ' + lofar_msg.subject)
+                            raise ValueError('Unknown method %s on service %s' % (method_name, lofar_msg.subject))
                     else:
                         serviceHandlerMethod = service_handler.handle_message
 
