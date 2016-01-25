@@ -34,25 +34,25 @@ class RADBHandler(MessageHandlerInterface):
         self.password = kwargs.pop("password", '')
 
         self.service2MethodMap = {
-            self.servicename + '.GetResourceClaimStatuses': self._getResourceClaimStatuses,
-            self.servicename + '.GetResourceClaims': self._getResourceClaims,
-            self.servicename + '.GetResourceClaim': self._getResourceClaim,
-            self.servicename + '.InsertResourceClaim': self._insertResourceClaim,
-            self.servicename + '.DeleteResourceClaim': self._deleteResourceClaim,
-            self.servicename + '.UpdateResourceClaim': self._updateResourceClaim,
-            self.servicename + '.GetResourceGroupTypes': self._getResourceGroupTypes,
-            self.servicename + '.GetResourceGroups': self._getResourceGroups,
-            self.servicename + '.GetResourceTypes': self._getResourceTypes,
-            self.servicename + '.GetResources': self._getResources,
-            self.servicename + '.GetTask': self._getTask,
-            self.servicename + '.InsertTask': self._insertTask,
-            self.servicename + '.DeleteTask': self._deleteTask,
-            self.servicename + '.UpdateTask': self._updateTask,
-            self.servicename + '.GetTaskStatuses': self._getTaskStatuses,
-            self.servicename + '.GetTaskTypes': self._getTaskTypes,
-            self.servicename + '.GetTaskTypes': self._getTaskTypes,
-            self.servicename + '.GetTasks': self._getTasks,
-            self.servicename + '.GetUnits': self._getUnits}
+            'GetResourceClaimStatuses': self._getResourceClaimStatuses,
+            'GetResourceClaims': self._getResourceClaims,
+            'GetResourceClaim': self._getResourceClaim,
+            'InsertResourceClaim': self._insertResourceClaim,
+            'DeleteResourceClaim': self._deleteResourceClaim,
+            'UpdateResourceClaim': self._updateResourceClaim,
+            'GetResourceGroupTypes': self._getResourceGroupTypes,
+            'GetResourceGroups': self._getResourceGroups,
+            'GetResourceTypes': self._getResourceTypes,
+            'GetResources': self._getResources,
+            'GetTask': self._getTask,
+            'InsertTask': self._insertTask,
+            'DeleteTask': self._deleteTask,
+            'UpdateTask': self._updateTask,
+            'GetTaskStatuses': self._getTaskStatuses,
+            'GetTaskTypes': self._getTaskTypes,
+            'GetTaskTypes': self._getTaskTypes,
+            'GetTasks': self._getTasks,
+            'GetUnits': self._getUnits}
 
     def prepare_loop(self):
         self.radb = radb.RADatabase(username=self.username,
@@ -161,6 +161,7 @@ def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, radb
     return Service(servicename,
                    RADBHandler,
                    busname=busname,
+                   use_service_methods=True,
                    handler_args={'password': radb_password},
                    verbose=True)
 
