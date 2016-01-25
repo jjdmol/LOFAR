@@ -222,6 +222,57 @@ class RADatabase:
 
         return list(self.cursor.fetchall())
 
+    def insertSpecification(self, starttime, endtime, content, commit=True):
+        query = '''INSERT INTO resource_allocation.specification
+        (starttime, endtime, content)
+        VALUES (%s, %s, %s)
+        RETURNING id;'''
+
+        self.cursor.execute(query, (starttime, endtime, content))
+        id = self.cursor.fetchone()['id']
+        if commit:
+            self.conn.commit()
+        return id
+
+    def deleteSpecification(self, specification_id, commit=True):
+        query = '''DELETE FROM resource_allocation.specification
+                   WHERE resource_allocation.specification.id = %s;'''
+
+        self.cursor.execute(query, [specification_id])
+        if commit:
+            self.conn.commit()
+        return self.cursor.rowcount > 0
+
+    def updateSpecification(self, specification_id, starttime=None, endtime=None, content=None, commit=True):
+        fields = []
+        values = []
+
+        if starttime:
+            fields.append('starttime')
+            values.append(starttime)
+
+        if endtime:
+            fields.append('endtime')
+            values.append(endtime)
+
+        if content:
+            fields.append('content')
+            values.append(content)
+
+        values.append(specification_id)
+
+        query = '''UPDATE resource_allocation.specification
+        SET ({fields}) = ({value_placeholders})
+        WHERE resource_allocation.specification.id = {id_placeholder};'''.format(fields=', '.join(fields),
+                                                                                 value_placeholders=', '.join('%s' for x in fields),
+                                                                                 id_placeholder='%s')
+
+        self.cursor.execute(query, values)
+        if commit:
+            self.conn.commit()
+
+        return self.cursor.rowcount > 0
+
     def getResourceTypes(self):
         query = '''SELECT rt.*, rtu.units as unit
         from virtual_instrument.resource_type rt
@@ -451,6 +502,9 @@ if __name__ == '__main__':
 
     #resultPrint(db.getTasks)
 
+    for s in db.getSpecifications():
+        db.updateSpecification(s['id'], datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1))
+
     claims = db.getResourceClaims()
     for c in claims:
         db.deleteResourceClaim(c['id'])
@@ -468,8 +522,4 @@ if __name__ == '__main__':
     resultPrint(db.getTasks)
     resultPrint(db.getResourceClaims)
 
-    db.deleteTask(taskId)
-
-    resultPrint(db.getTasks)
-    resultPrint(db.getResourceClaims)
 
