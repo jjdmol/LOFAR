@@ -24,6 +24,8 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
     $scope.dataService = dataService;
     $scope.ganttData = []
 
+    self.taskStatusColors = {'active':'#00ff00', 'aborted':'#ff0000', 'scheduled':'#ffff00', 'prescheduled':'#cccc00' }
+
     $scope.options = {
         mode: 'custom',
         scale: 'day',
@@ -161,7 +163,8 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
                     id: groupClaim.id,
                     name: task ? task.name : '<unknown>',
                     'from': groupClaim.starttime,
-                    'to': groupClaim.endtime
+                    'to': groupClaim.endtime,
+                    'color': self.taskStatusColors[task.status]
                 };
 
                 if(ganntGroupRow)
@@ -189,7 +192,8 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
                                 id: claim.id,
                                 name: task ? task.name : '<unknown>',
                                 'from': claim.starttime,
-                                'to': claim.endtime
+                                'to': claim.endtime,
+                                'color': self.taskStatusColors[task.status]
                             };
 
                             ganntRow.tasks.push(claimTask);
@@ -204,7 +208,8 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
                         var claimTask = {
                             name: task ? task.name : '<unknown>',
                             'from': claim.starttime,
-                            'to': claim.endtime
+                            'to': claim.endtime,
+                            'color': self.taskStatusColors[task.status]
                         };
 
                         ganntRow.tasks.push(claimTask);
