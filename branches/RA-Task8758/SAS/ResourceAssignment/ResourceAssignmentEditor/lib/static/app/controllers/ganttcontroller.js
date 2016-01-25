@@ -61,19 +61,19 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
 
     function moveHandler(item)
     {
-        var taskId = undefined;
+        var task_id = undefined;
         if(item.row.model.id.startsWith('group')) {
             var claimGroupId = item.model.id;
             var claimGroup = $scope.dataService.resourceGroupClaimDict[claimGroupId];
-            taskId = claimGroup.taskId;
+            task_id = claimGroup.task_id;
         }
         else {
             var claimId = item.model.id;
             var claim = $scope.dataService.resourceClaimDict[claimId];
-            taskId = claim.taskId;
+            task_id = claim.task_id;
         }
-        if(taskId) {
-            var task = $scope.dataService.taskDict[taskId];
+        if(task_id) {
+            var task = $scope.dataService.taskDict[task_id];
             task.starttime = item.model.starttime._d.toISOString();
             task.endtime = item.model.endtime._d.toISOString();
             $scope.dataService.putTask(task);
@@ -150,7 +150,7 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
         //assign each groupclaim to its resourcegroup
         for(var i = 0; i < numResourceGroupClaims; i++) {
             var groupClaim = resourceGroupClaims[i];
-            var task = taskDict[groupClaim.taskId];
+            var task = taskDict[groupClaim.task_id];
 
             if(task)
             {
@@ -160,8 +160,8 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
                 var groupClaimTask = {
                     id: groupClaim.id,
                     name: task ? task.name : '<unknown>',
-                    'starttime': groupClaim.startTime,
-                    'endtime': groupClaim.endTime
+                    'from': groupClaim.starttime,
+                    'to': groupClaim.endtime
                 };
 
                 if(ganntGroupRow)
@@ -172,24 +172,24 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
         //and assign each resourceclaim to its resource in each group
         for(var i = 0; i < numResourceClaims; i++) {
             var claim = resourceClaims[i];
-            var task = taskDict[claim.taskId];
+            var task = taskDict[claim.task_id];
 
             if(task)
             {
-                var groupIds = resourceIdToGroupIdsDict[claim.resourceId];
+                var groupIds = resourceIdToGroupIdsDict[claim.resource_id];
                 var numGroups = groupIds.length;
 
                 if(numGroups > 0) {
                     for(var j = 0; j < numGroups; j++) {
-                        var resourceRowId = 'resource_' + claim.resourceId + '_group_' + groupIds[j];
+                        var resourceRowId = 'resource_' + claim.resource_id + '_group_' + groupIds[j];
                         var ganntRow = ganntRowsDict[resourceRowId];
                         if(ganntRow)
                         {
                             var claimTask = {
                                 id: claim.id,
                                 name: task ? task.name : '<unknown>',
-                                'starttime': claim.startTime,
-                                'endtime': claim.endTime
+                                'from': claim.starttime,
+                                'to': claim.endtime
                             };
 
                             ganntRow.tasks.push(claimTask);
@@ -197,14 +197,14 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
                     }
                 }
                 else {
-                    var resourceRowId = 'resource_' + claim.resourceId;
+                    var resourceRowId = 'resource_' + claim.resource_id;
                     var ganntRow = ganntRowsDict[resourceRowId];
                     if(ganntRow)
                     {
                         var claimTask = {
                             name: task ? task.name : '<unknown>',
-                            'starttime': claim.startTime,
-                            'endtime': claim.endTime
+                            'from': claim.starttime,
+                            'to': claim.endtime
                         };
 
                         ganntRow.tasks.push(claimTask);
