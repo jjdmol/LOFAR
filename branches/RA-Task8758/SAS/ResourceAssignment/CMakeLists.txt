@@ -2,4 +2,5 @@
 
 lofar_add_package(ResourceAssignmentEditor)
 lofar_add_package(ResourceAssignmentService)
+lofar_add_package(ResourceAssignmentDatabase)
 
