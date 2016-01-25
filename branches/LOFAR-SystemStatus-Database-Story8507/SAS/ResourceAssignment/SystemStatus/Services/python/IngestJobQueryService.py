@@ -3,6 +3,7 @@
 import psycopg2 as pg
 import psycopg2.extras as pgdefs
 from lofar.messaging import Service
+from lofar.common.util import waitForInterrupt
 
 import logging
 import sys
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 SERVICENAME = "IngestJobQueryService"
 BUSNAME     = "simpletest"
 DATABASE    = "datamonitor"
-USER        = "peterzon"
+USER        = "lofarsys"
 PASSWORD    = "welkom001"
 
 class DBlistener:
@@ -28,7 +29,7 @@ class DBlistener:
 	    try:
 		self.conn= pg.connect("dbname=%s user=%s password=%s" % (DATABASE,USER,PASSWORD))
 		self.DBconnected = (self.conn and self.conn.status==1)
-	    except Exception e:
+	    except Exception as e:
 		logger.error("DB connection could not be restored.")
 	return self.DBconnected
 
@@ -41,7 +42,8 @@ class DBlistener:
         return self.run(text)
 
     def run(self,text):
-	if (ensure_connected==False):
+        logger.info("got message: %s" %(text))
+	if (self.ensure_connected()==False):
 	    raise Exception ("Not connected to Database")
         cmd = text.split(";")
         if (cmd[0]=="ArchivingStatus"):
@@ -52,4 +54,4 @@ class DBlistener:
 
 
 with Service(SERVICENAME, DBlistener().run, busname=BUSNAME) as GetServerState:
-    GetServerState.wait_for_interrupt()
+    waitForInterrupt()
