@@ -22,7 +22,7 @@ import logging
 from lofar.messaging import Service
 from lofar.messaging.Service import MessageHandlerInterface
 from lofar.common.util import waitForInterrupt
-from lofar.sas.resourceassignment.resourceassignmentservice import radb
+from lofar.sas.resourceassignment.database import radb
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 
 logger = logging.getLogger(__name__)
@@ -166,15 +166,7 @@ def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, radb
                    verbose=True)
 
 def main(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME):
-    from os import stat, path
-    # make sure config.py is mode 600 to hide passwords
-    config_path = path.join(path.dirname(path.realpath(__file__)), 'config.py')
-    if oct(stat(config_path).st_mode & 0777) != '0600':
-        print 'Please change permissions of config.py to 600'
-        exit(-1)
-
-    # safely import radb_password
-    from lofar.sas.resourceassignment.resourceassignmentservice.config import radb_password
+    from lofar.sas.resourceassignment.database.config import radb_password
 
     with createService(busname=busname,
                        servicename=servicename,
