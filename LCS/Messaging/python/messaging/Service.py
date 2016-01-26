@@ -115,6 +115,13 @@ class Service(AbstractBusListener):
         address = self.busname+"/"+self.service_name if self.busname else self.service_name
         kwargs["exclusive"] = True #set binding to exclusive for services
 
+        # Force the use of a topic in the bus options by setting
+        #   options["node"]["type"] = "topic"
+        options = kwargs.get("options", {})
+        options.setdefault("node", {})
+        options["node"]["type"] = "topic"
+        kwargs["options"] = options
+
         super(Service, self).__init__(address, broker, **kwargs)
 
     def start_listening(self, numthreads=None):
