@@ -1,10 +1,15 @@
 # $Id$
 
 lofar_add_bin_scripts(
+  jobstoscheduleservice
+)
+
+python_install(
   JobsToSchedule.py
+  DESTINATION lofar/sas/resourceassignment
 )
 
 # supervisord config files
 install(FILES
-  JobsToSchedule.ini
+  jobstoscheduleservice.ini
   DESTINATION etc/supervisord.d)

@@ -68,7 +68,7 @@ class TestService(unittest.TestCase):
   def setUp(self):
     # Create a random bus
     self.busname = "%s-%s" % (sys.argv[0], str(uuid.uuid4())[:8])
-    self.bus = ToBus(self.busname + '; { create: "always", delete: "always", node: { type: "topic" }}')
+    self.bus = ToBus(self.busname, { "create": "always", "delete": "always", "node": { "type": "topic" } })
     self.bus.open()
 
     # Define the services we use
