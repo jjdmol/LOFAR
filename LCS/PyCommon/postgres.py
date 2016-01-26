@@ -98,6 +98,39 @@ class PostgresListener(object):
             if notification in self.__callbacks:
                 del self.__callbacks[notification]
 
+    def setupPostgresNotifications(self, schema, table, updateNotification=True, insertNotification=True, deleteNotification=True):
+        items = []
+        if updateNotification:
+            items.append(('update', 'NEW'))
+
+        if insertNotification:
+            items.append(('insert', 'NEW'))
+
+        if deleteNotification:
+            items.append(('delete', 'OLD'))
+
+        for item in items:
+            sql = '''
+            CREATE OR REPLACE FUNCTION {schema}.notify_{table}_{action}()
+            RETURNS trigger AS $$
+            BEGIN
+            PERFORM pg_notify(CAST('{table}_{action}' AS text), row_to_json({value})::text);
+            RETURN {value};
+            END;
+            $$ LANGUAGE plpgsql;
+
+            DROP TRIGGER IF EXISTS trigger_notify_{table}_{action} ON {schema}.{table};
+
+            CREATE TRIGGER trigger_notify_{table}_{action}
+            AFTER {action} ON {schema}.{table}
+            FOR EACH ROW
+            EXECUTE PROCEDURE {schema}.notify_{table}_{action}();
+            '''.format(schema=schema,
+                       table=table,
+                       action=item[0],
+                       value=item[1])
+            self.cursor.execute(sql)
+
     def isListening(self):
         '''Are we listening? Has the listener been started?'''
         with self.__lock:
