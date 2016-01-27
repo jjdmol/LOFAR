@@ -31,19 +31,19 @@ import json
 
 from lofar.common.postgres import PostgresListener
 from lofar.messaging import EventMessage, ToBus
+from lofar.sas.resourceassignment.database.config import radb_password, DEFAULT_BUSNAME
 
 logger = logging.getLogger(__name__)
 
-
-class RADBListener(PostgresListener):
+class RADBPGListener(PostgresListener):
     def __init__(self,
                  host='10.149.96.6', #mcu005.control.lofar
                  database='resourceassignment',
                  username='resourceassignment',
-                 password='123456',
-                 busname='lofar.ra.notification',
+                 password=radb_password,
+                 busname=DEFAULT_BUSNAME,
                  broker=None):
-        super(RADBListener, self).__init__(host, database, username, password)
+        super(RADBPGListener, self).__init__(host, database, username, password)
 
         self.event_bus = ToBus(busname, broker=broker)
 
@@ -58,30 +58,30 @@ class RADBListener(PostgresListener):
         self.subscribe('resource_claim_delete', self.onResourceClaimDeleted)
 
     def onTaskUpdated(self, payload = None):
-        self._sendNotification('TaskUpdated', payload)
+        self._sendNotification('RADB.TaskUpdated', payload)
 
     def onTaskInserted(self, payload = None):
-        self._sendNotification('TaskInserted', payload)
+        self._sendNotification('RADB.TaskInserted', payload)
 
     def onTaskDeleted(self, payload = None):
-        self._sendNotification('TaskDeleted', payload)
+        self._sendNotification('RADB.TaskDeleted', payload)
 
     def onResourceClaimUpdated(self, payload = None):
-        self._sendNotification('ResourceClaimUpdated', payload)
+        self._sendNotification('RADB.ResourceClaimUpdated', payload)
 
     def onResourceClaimInserted(self, payload = None):
-        self._sendNotification('ResourceClaimInserted', payload)
+        self._sendNotification('RADB.ResourceClaimInserted', payload)
 
     def onResourceClaimDeleted(self, payload = None):
-        self._sendNotification('ResourceClaimDeleted', payload)
+        self._sendNotification('RADB.ResourceClaimDeleted', payload)
 
     def __enter__(self):
-        super(RADBListener, self).__enter__()
+        super(RADBPGListener, self).__enter__()
         self.event_bus.open()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        super(RADBListener, self).__exit__(exc_type, exc_val, exc_tb)
+        super(RADBPGListener, self).__exit__(exc_type, exc_val, exc_tb)
         self.event_bus.close()
 
     def _sendNotification(self, subject, payload):
@@ -97,12 +97,14 @@ class RADBListener(PostgresListener):
         except Exception as e:
             logger.error(str(e))
 
+def main(busname=DEFAULT_BUSNAME):
+    with RADBPGListener(busname=busname, password=radb_password) as listener:
+        listener.waitWhileListening()
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                         level=logging.INFO)
-
-    with RADBListener() as listener:
-        listener.waitWhileListening()
+    main(busname=DEFAULT_BUSNAME)
 
 
 
