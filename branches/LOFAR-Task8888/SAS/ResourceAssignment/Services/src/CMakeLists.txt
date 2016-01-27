@@ -1,16 +1,16 @@
 # $Id$
 
 lofar_add_bin_scripts(
-  jobstoscheduleservice
+  rataskspecifiedservice
 )
 
 python_install(
-  JobsToSchedule.py
+  RATaskSpecified.py
   RABusListener.py
   DESTINATION lofar/sas/resourceassignment
 )
 
 # supervisord config files
 install(FILES
-  jobstoscheduleservice.ini
+  rataskspecifiedservice.ini
   DESTINATION etc/supervisord.d)

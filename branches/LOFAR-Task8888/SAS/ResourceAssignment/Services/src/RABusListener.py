@@ -36,11 +36,11 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 
-class JobsToScheduleBusListener(AbstractBusListener):
+class RATaskSpecifiedBusListener(AbstractBusListener):
     def __init__(self, busname='lofar.ra', subject='TaskSpecified', broker=None, **kwargs):
         """
-        JobsToScheduleBusListener listens on the lofar ra message bus and calls (empty) on<SomeMessage> methods when such a message is received.
-        Typical usage is to derive your own subclass from JobsToScheduleBusListener and implement the specific on<SomeMessage> methods that you are interested in.
+        RATaskSpecifiedBusListener listens on the lofar ra message bus and calls (empty) on<SomeMessage> methods when such a message is received.
+        Typical usage is to derive your own subclass from RATaskSpecifiedBusListener and implement the specific on<SomeMessage> methods that you are interested in.
         :param address: valid Qpid address (default: lofar.otdb.status)
         :param broker: valid Qpid broker host (default: None, which means localhost)
         additional parameters in kwargs:
@@ -50,7 +50,7 @@ class JobsToScheduleBusListener(AbstractBusListener):
             verbose=   <bool>  Output extra logging over stdout (default: False)
         """
         address = "%s/%s" % (busname, subject)
-        super(JobsToScheduleBusListener, self).__init__(address, broker, **kwargs)
+        super(RATaskSpecifiedBusListener, self).__init__(address, broker, **kwargs)
 
     def _handleMessage(self, msg):
         logger.debug("RABusListener.handleMessage: %s" %str(msg))
@@ -70,4 +70,4 @@ class JobsToScheduleBusListener(AbstractBusListener):
     def onMessage(self, sasId, modificationTime, resourceIndicators):
         pass
 
-__all__ = ["JobsToScheduleBusListener"]
+__all__ = ["RATaskSpecifiedBusListener"]

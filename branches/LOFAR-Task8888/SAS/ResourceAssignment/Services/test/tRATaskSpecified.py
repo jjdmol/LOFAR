@@ -4,8 +4,8 @@
 import sys, os
 sys.path.insert(0, "{srcdir}/../src".format(**os.environ))
 
-from JobsToSchedule import *
-from RABusListener import JobsToScheduleBusListener
+from RATaskSpecified import *
+from RABusListener import RATaskSpecifiedBusListener
 from lofar.parameterset import PyParameterSet
 from lofar.messaging import EventMessage, Service
 
@@ -58,11 +58,11 @@ class TestResourceIndicators(unittest.TestCase):
   """
 
   def test_preprocessing_pipeline(self):
-    parset = parset_as_dict("tJobsToSchedule.in_preprocessing")
+    parset = parset_as_dict("tRATaskSpecified.in_preprocessing")
     r = resourceIndicatorsFromParset(parset)
 
   def test_correlator_observation(self):
-    parset = parset_as_dict("tJobsToSchedule.in_correlator")
+    parset = parset_as_dict("tRATaskSpecified.in_correlator")
     r = resourceIndicatorsFromParset(parset)
 
 
@@ -109,7 +109,7 @@ class TestService(unittest.TestCase):
     # of our service
     # ================================
 
-    class Listener(JobsToScheduleBusListener):
+    class Listener(RATaskSpecifiedBusListener):
       def __init__(self, **kwargs):
         super(Listener, self).__init__(**kwargs)
 
@@ -146,7 +146,7 @@ class TestService(unittest.TestCase):
 
         3 requires nothing
     """
-    with JobsToSchedule("TaskSpecified", otdb_busname=self.busname, my_busname=self.busname) as jts:
+    with RATaskSpecified("TaskSpecified", otdb_busname=self.busname, my_busname=self.busname) as jts:
       # Send fake status update
       with ToBus(self.status_service) as tb:
         msg = EventMessage(content={
@@ -177,7 +177,7 @@ class TestService(unittest.TestCase):
         3 requires nothing
     """
 
-    with JobsToSchedule("TaskSpecified", otdb_busname=self.busname, my_busname=self.busname) as jts:
+    with RATaskSpecified("TaskSpecified", otdb_busname=self.busname, my_busname=self.busname) as jts:
       # Send fake status update
       with ToBus(self.status_service) as tb:
         msg = EventMessage(content={
