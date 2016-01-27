@@ -216,7 +216,7 @@ class RATaskSpecified(OTDBBusListener):
     result = {
       "sasID": main_obsID,
       "state": "prescheduled",
-      "time_of_change": modificationTime.strftime('%F %T.%f'),
+      "time_of_change": modificationTime,
       "resource_indicators": resourceIndicators,
     }
 
@@ -224,22 +224,5 @@ class RATaskSpecified(OTDBBusListener):
     msg = EventMessage(content=result)
     self.send_bus.send(msg)
 
-if __name__ == "__main__":
-    import sys
-    from optparse import OptionParser
-
-    # Check the invocation arguments
-    parser = OptionParser("%prog -O otdb_bus -B my_bus [options]")
-    parser.add_option("-O", "--otdb_bus", dest="otdb_busname", type="string", default="lofar.otdb.notification",
-                      help="Bus or queue OTDB operates on")
-    parser.add_option("-B", "--my_bus", dest="my_busname", type="string", default="lofar.ra.notification",
-                      help="Bus or queue we publish resource requests on")
-    (options, args) = parser.parse_args()
-
-    if not options.statusbus or not options.parsetbus or not options.busname:
-        parser.print_help()
-        sys.exit(1)
-
-    with RATaskSpecified("OTDB.TaskSpecified", otdb_busname=options.otdb_busname, my_busname=options.my_busname) as jts:
-        waitForInterrupt()
+    logger.info("Result sent")
 

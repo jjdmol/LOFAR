@@ -56,13 +56,7 @@ class RATaskSpecifiedBusListener(AbstractBusListener):
         logger.debug("RABusListener.handleMessage: %s" %str(msg))
 
         sasId = msg.content['sasID']
-        modificationTime = datetime.utcnow()
-        if 'time_of_change' in msg.content:
-            try:
-                modificationTime = datetime.strptime(msg.content['time_of_change'], '%Y-%m-%d %H:%M:%S.%f')
-            except ValueError as e:
-                logger.error('could not parse time_of_change %s : %s' % (msg.content['time_of_change'], e))
-
+        modificationTime = msg.content['time_of_change'].datetime()
         resource_indicators = msg.content['resource_indicators']
 
         self.onTaskSpecified(sasId, modificationTime, resource_indicators)
