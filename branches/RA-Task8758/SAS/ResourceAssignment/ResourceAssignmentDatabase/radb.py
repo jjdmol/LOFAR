@@ -28,8 +28,6 @@ import psycopg2.extras
 import datetime
 import time
 
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                    level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -43,6 +41,9 @@ class RADatabase:
                                      password=password,
                                      database=database)
         self.cursor = self.conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
+
+    def commit(self):
+        self.conn.commit()
 
     def getTaskStatuses(self):
         query = '''SELECT * from resource_allocation.task_status;'''
@@ -460,7 +461,11 @@ class RADatabase:
 
 
 if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                        level=logging.INFO)
+
     db = RADatabase(host='10.149.96.6', password='123456')
+    #db = RADatabase(host='localhost', password='123456')
 
     def resultPrint(method):
         print '\n-- ' + str(method.__name__) + ' --'
@@ -502,24 +507,34 @@ if __name__ == '__main__':
 
     #resultPrint(db.getTasks)
 
-    for s in db.getSpecifications():
-        db.updateSpecification(s['id'], datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1))
+    #for s in db.getSpecifications():
+        #db.updateSpecification(s['id'], datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1))
 
-    claims = db.getResourceClaims()
-    for c in claims:
-        db.deleteResourceClaim(c['id'])
-        resultPrint(db.getResourceClaims)
+    #claims = db.getResourceClaims()
+    #for c in claims:
+        #db.deleteResourceClaim(c['id'])
+        ##resultPrint(db.getResourceClaims)
+
+    #tasks = db.getTasks()
+    #for t in tasks:
+        #db.deleteTask(t['id'])
+        ##resultPrint(db.getTasks)
+        ##resultPrint(db.getResourceClaims)
+
+    for i in range(10):
+        taskId = db.insertTask(1234, 5678, 600, 0, 1, False)
+        for j in range(100*i):
+            rcId = db.insertResourceClaim(1, taskId, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 0, 1, 10, 'einstein', -1, False)
+
+        db.commit()
+
+    #resultPrint(db.getTasks)
+    #resultPrint(db.getResourceClaims)
 
     tasks = db.getTasks()
     for t in tasks:
-        db.deleteTask(t['id'])
-        resultPrint(db.getTasks)
-        resultPrint(db.getResourceClaims)
+        db.deleteTask(t['id'], False)
+        #resultPrint(db.getTasks)
+        #resultPrint(db.getResourceClaims)
 
-    taskId = db.insertTask(1234, 5678, 'active', 'OBSERVATION', 1)
-    rcId = db.insertResourceClaim(1, taskId, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1, True)
-
-    resultPrint(db.getTasks)
-    resultPrint(db.getResourceClaims)
-
-
+    db.commit()
