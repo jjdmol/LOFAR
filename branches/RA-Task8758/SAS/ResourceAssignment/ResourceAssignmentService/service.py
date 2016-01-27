@@ -163,7 +163,7 @@ def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, radb
                    busname=busname,
                    use_service_methods=True,
                    handler_args={'password': radb_password},
-                   verbose=True)
+                   verbose=False)
 
 def main(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME):
     from lofar.sas.resourceassignment.database.config import radb_password
