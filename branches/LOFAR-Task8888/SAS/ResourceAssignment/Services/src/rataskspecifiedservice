@@ -25,7 +25,7 @@ Daemon that listens to OTDB status changes to PRESCHEDULED, requests
 the parset of such jobs (+ their predecessors), and posts them on the bus.
 """
 
-from lofar.sas.resourceassignment.JobsToSchedule import JobsToScheduleService
+from lofar.sas.resourceassignment.RATaskSpecified import RATaskSpecified
 
 if __name__ == "__main__":
     import sys
@@ -43,6 +43,6 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
 
-    with JobsToScheduleService("TaskSpecified", otdb_busname=options.otdb_busname, my_busname=options.my_busname) as jts:
+    with RATaskSpecified("OTDB.TaskSpecified", otdb_busname=options.otdb_busname, my_busname=options.my_busname) as jts:
         waitForInterrupt()
 
