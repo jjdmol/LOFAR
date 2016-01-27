@@ -31,8 +31,6 @@ import psycopg2
 import psycopg2.extras
 import psycopg2.extensions
 
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                    level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
