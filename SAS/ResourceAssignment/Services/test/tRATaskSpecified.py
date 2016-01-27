@@ -12,6 +12,7 @@ from lofar.messaging import EventMessage, Service
 import unittest
 from glob import glob
 import uuid
+import datetime
 from threading import Condition, Lock
 
 import logging
@@ -152,7 +153,7 @@ class TestService(unittest.TestCase):
         msg = EventMessage(content={
           "treeID": 3,
           "state": "prescheduled",
-          "time_of_change": "2016-01-01 00:00:00.00",
+          "time_of_change": datetime.datetime(2016,1,1),
         })
         tb.send(msg)
 
@@ -183,7 +184,7 @@ class TestService(unittest.TestCase):
         msg = EventMessage(content={
           "treeID": 1,
           "state": "prescheduled",
-          "time_of_change": "2016-01-01 00:00:00.00",
+          "time_of_change": datetime.datetime(2016,1,1),
         })
         tb.send(msg)
 

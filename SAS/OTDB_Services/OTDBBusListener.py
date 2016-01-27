@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 
 class OTDBBusListener(AbstractBusListener):
-    def __init__(self, busname='lofar.otdb.status', subject='otdb.treestatus', broker=None, **kwargs):
+    def __init__(self, busname='lofar.otdb.notification', subject='otdb.treestatus', broker=None, **kwargs):
         """
         OTDBBusListener listens on the lofar otdb message bus and calls (empty) on<SomeMessage> methods when such a message is received.
         Typical usage is to derive your own subclass from OTDBBusListener and implement the specific on<SomeMessage> methods that you are interested in.
@@ -56,12 +56,7 @@ class OTDBBusListener(AbstractBusListener):
         logger.debug("OTDBBusListener.handleMessage: %s" %str(msg))
 
         treeId =  msg.content['treeID']
-        modificationTime = datetime.utcnow()
-        if 'time_of_change' in msg.content:
-            try:
-                modificationTime = datetime.strptime(msg.content['time_of_change'], '%Y-%m-%d %H:%M:%S.%f')
-            except ValueError as e:
-                logger.error('could not parse time_of_change %s : %s' % (msg.content['time_of_change'], e))
+        modificationTime = msg.content['time_of_change'].datetime()
 
         if msg.content['state'] == 'described':
             self.onObservationDescribed(treeId, modificationTime)
