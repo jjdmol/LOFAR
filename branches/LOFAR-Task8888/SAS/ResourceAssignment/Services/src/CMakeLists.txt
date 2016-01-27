@@ -6,6 +6,7 @@ lofar_add_bin_scripts(
 
 python_install(
   JobsToSchedule.py
+  RABusListener.py
   DESTINATION lofar/sas/resourceassignment
 )
 

@@ -216,7 +216,7 @@ class JobsToSchedule(OTDBBusListener):
     result = {
       "sasID": main_obsID,
       "state": "prescheduled",
-      "time_of_change": modificationTime,
+      "time_of_change": modificationTime.strftime('%F %T.%f'),
       "resource_indicators": resourceIndicators,
     }
 
@@ -230,9 +230,9 @@ if __name__ == "__main__":
 
     # Check the invocation arguments
     parser = OptionParser("%prog -O otdb_bus -B my_bus [options]")
-    parser.add_option("-O", "--otdb_bus", dest="otdb_busname", type="string", default="",
+    parser.add_option("-O", "--otdb_bus", dest="otdb_busname", type="string", default="lofar.otdb",
                       help="Bus or queue OTDB operates on")
-    parser.add_option("-B", "--my_bus", dest="my_busname", type="string", default="",
+    parser.add_option("-B", "--my_bus", dest="my_busname", type="string", default="lofar.ra",
                       help="Bus or queue we publish resource requests on")
     (options, args) = parser.parse_args()
 

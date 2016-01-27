@@ -5,12 +5,14 @@ import sys, os
 sys.path.insert(0, "{srcdir}/../src".format(**os.environ))
 
 from JobsToSchedule import *
+from RABusListener import JobsToScheduleBusListener
 from lofar.parameterset import PyParameterSet
 from lofar.messaging import EventMessage, Service
 
 import unittest
 from glob import glob
 import uuid
+from threading import Condition, Lock
 
 import logging
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -73,13 +75,14 @@ class TestService(unittest.TestCase):
 
     # Define the services we use
     self.status_service = "%s/TaskStatus" % (self.busname,)
-    self.parset_service = "%s/TaskSpecification" % (self.busname,)
-    self.jts_service    = "%s/TaskSpecified" % (self.busname,)
+
+    # ================================
+    # Setup mock parset service
+    # ================================
 
     # Nr of parsets requested, to detect multiple requests for the same parset, or of superfluous parsets
     self.requested_parsets = 0
 
-    # setup mock parset service
     def TaskSpecificationService( OtdbID ):
       if OtdbID == 1:
         predecessors = "[2,3]"
@@ -98,12 +101,42 @@ class TestService(unittest.TestCase):
         PARSET_PREFIX + "Observation.Scheduler.predecessors": predecessors,
       }
 
-
-    # Setup our fake TaskSpecification server, and start our JobsToSchedule service to test
     self.parset_service = Service("TaskSpecification", TaskSpecificationService, busname=self.busname)
     self.parset_service.start_listening()
 
+    # ================================
+    # Setup listener to catch result
+    # of our service
+    # ================================
+
+    class Listener(JobsToScheduleBusListener):
+      def __init__(self, **kwargs):
+        super(Listener, self).__init__(**kwargs)
+
+        self.messageReceived = False
+        self.lock = Lock()
+        self.cond = Condition(self.lock)
+
+      def onMessage(self, sasId, modificationTime, resourceIndicators):
+        self.messageReceived = True
+
+        self.sasID = sasId
+        self.resourceIndicators = resourceIndicators
+
+        # Release waiting parent
+        with self.lock:
+          self.cond.notify()
+
+      def waitForMessage(self):
+        with self.lock:
+          self.cond.wait(5.0)
+        return self.messageReceived
+
+    self.listener = Listener(busname=self.busname)
+    self.listener.start_listening()
+
   def tearDown(self):
+    self.listener.stop_listening()
     self.parset_service.stop_listening()
     self.bus.close()
 
@@ -113,35 +146,27 @@ class TestService(unittest.TestCase):
 
         3 requires nothing
     """
-
     with JobsToSchedule("TaskSpecified", otdb_busname=self.busname, my_busname=self.busname) as jts:
-      # Start listening for answer before we trigger it
-      with FromBus(self.jts_service) as fb:
+      # Send fake status update
+      with ToBus(self.status_service) as tb:
+        msg = EventMessage(content={
+          "treeID": 3,
+          "state": "prescheduled",
+          "time_of_change": "2016-01-01 00:00:00.00",
+        })
+        tb.send(msg)
 
-        # Send fake status update
-        with ToBus(self.status_service) as tb:
-          msg = EventMessage(content={
-            "treeID": 3,
-            "state": "prescheduled",
-            "time_of_change": "2016-01-01 00:00:00.00",
-          })
-          tb.send(msg)
+      # Wait for message to arrive
+      self.assertTrue(self.listener.waitForMessage())
 
-        # Wait for answer from service
-        result = fb.receive(1.0)
-        self.assertIsNotNone(result)
+      # Verify message
+      self.assertEqual(self.listener.sasID, 3)
+      self.assertNotIn("1", self.listener.resourceIndicators);
+      self.assertNotIn("2", self.listener.resourceIndicators);
+      self.assertIn("3", self.listener.resourceIndicators);
 
-        # Verify result
-        self.assertIn("sasID", result.content)
-        self.assertIn("resource_indicators", result.content)
-
-        self.assertEqual(result.content["sasID"], 3)
-        self.assertNotIn("1", result.content["resource_indicators"])
-        self.assertNotIn("2", result.content["resource_indicators"])
-        self.assertIn("3", result.content["resource_indicators"])
-
-        # Make sure we only requested one parset
-        self.assertEqual(self.requested_parsets, 1)
+      # Make sure we only requested one parset
+      self.assertEqual(self.requested_parsets, 1)
 
   def testPredecessors(self):
     """
@@ -153,33 +178,26 @@ class TestService(unittest.TestCase):
     """
 
     with JobsToSchedule("TaskSpecified", otdb_busname=self.busname, my_busname=self.busname) as jts:
-      # Start listening for answer before we trigger it
-      with FromBus(self.jts_service) as fb:
+      # Send fake status update
+      with ToBus(self.status_service) as tb:
+        msg = EventMessage(content={
+          "treeID": 1,
+          "state": "prescheduled",
+          "time_of_change": "2016-01-01 00:00:00.00",
+        })
+        tb.send(msg)
 
-        # Send fake status update
-        with ToBus(self.status_service) as tb:
-          msg = EventMessage(content={
-            "treeID": 1,
-            "state": "prescheduled",
-            "time_of_change": "2016-01-01 00:00:00.00",
-          })
-          tb.send(msg)
+      # Wait for message to arrive
+      self.assertTrue(self.listener.waitForMessage())
 
-        # Wait for answer from service
-        result = fb.receive(1.0)
-        self.assertIsNotNone(result)
+      # Verify message
+      self.assertEqual(self.listener.sasID, 1)
+      self.assertIn("1", self.listener.resourceIndicators);
+      self.assertIn("2", self.listener.resourceIndicators);
+      self.assertIn("3", self.listener.resourceIndicators);
 
-        # Verify result
-        self.assertIn("sasID", result.content)
-        self.assertIn("resource_indicators", result.content)
-
-        self.assertEqual(result.content["sasID"], 1)
-        self.assertIn("1", result.content["resource_indicators"])
-        self.assertIn("2", result.content["resource_indicators"])
-        self.assertIn("3", result.content["resource_indicators"])
-
-        # Make sure we only requested exactly three parsets
-        self.assertEqual(self.requested_parsets, 3)
+      # Make sure we only requested exactly three parsets
+      self.assertEqual(self.requested_parsets, 3)
 
 def main(argv):
   unittest.main(verbosity=2)
