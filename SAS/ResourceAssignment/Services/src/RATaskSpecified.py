@@ -230,9 +230,9 @@ if __name__ == "__main__":
 
     # Check the invocation arguments
     parser = OptionParser("%prog -O otdb_bus -B my_bus [options]")
-    parser.add_option("-O", "--otdb_bus", dest="otdb_busname", type="string", default="lofar.otdb",
+    parser.add_option("-O", "--otdb_bus", dest="otdb_busname", type="string", default="lofar.otdb.notification",
                       help="Bus or queue OTDB operates on")
-    parser.add_option("-B", "--my_bus", dest="my_busname", type="string", default="lofar.ra",
+    parser.add_option("-B", "--my_bus", dest="my_busname", type="string", default="lofar.ra.notification",
                       help="Bus or queue we publish resource requests on")
     (options, args) = parser.parse_args()
 
@@ -240,6 +240,6 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
 
-    with RATaskSpecified("TaskSpecified", otdb_busname=options.otdb_busname, my_busname=options.my_busname) as jts:
+    with RATaskSpecified("OTDB.TaskSpecified", otdb_busname=options.otdb_busname, my_busname=options.my_busname) as jts:
         waitForInterrupt()
 
