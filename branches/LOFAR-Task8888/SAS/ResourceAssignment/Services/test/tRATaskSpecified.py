@@ -117,7 +117,7 @@ class TestService(unittest.TestCase):
         self.lock = Lock()
         self.cond = Condition(self.lock)
 
-      def onMessage(self, sasId, modificationTime, resourceIndicators):
+      def onTaskSpecified(self, sasId, modificationTime, resourceIndicators):
         self.messageReceived = True
 
         self.sasID = sasId
@@ -146,7 +146,7 @@ class TestService(unittest.TestCase):
 
         3 requires nothing
     """
-    with RATaskSpecified("TaskSpecified", otdb_busname=self.busname, my_busname=self.busname) as jts:
+    with RATaskSpecified("OTDB.TaskSpecified", otdb_busname=self.busname, my_busname=self.busname) as jts:
       # Send fake status update
       with ToBus(self.status_service) as tb:
         msg = EventMessage(content={
@@ -177,7 +177,7 @@ class TestService(unittest.TestCase):
         3 requires nothing
     """
 
-    with RATaskSpecified("TaskSpecified", otdb_busname=self.busname, my_busname=self.busname) as jts:
+    with RATaskSpecified("OTDB.TaskSpecified", otdb_busname=self.busname, my_busname=self.busname) as jts:
       # Send fake status update
       with ToBus(self.status_service) as tb:
         msg = EventMessage(content={
