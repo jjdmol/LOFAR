@@ -613,7 +613,8 @@ class AbstractBusListener(object):
                         continue
 
                 except Exception as e:
-                    logger.warning("Handling of message failed with %s", e)
+                    import traceback
+                    logger.warning("Handling of message failed with %s: %s\nMessage: %s", e, traceback.format_exc(),lofar_msg.content)
 
                     # Any thrown exceptions either Service exception or unhandled exception
                     # during the execution of the service handler is caught here.
