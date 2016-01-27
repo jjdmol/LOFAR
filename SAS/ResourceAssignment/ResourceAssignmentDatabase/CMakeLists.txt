@@ -9,6 +9,7 @@ set(_py_files
   __init__.py
   config.py
   radb.py
+  radblistener.py
 )
 
 python_install(${_py_files} DESTINATION lofar/sas/resourceassignment/database)
