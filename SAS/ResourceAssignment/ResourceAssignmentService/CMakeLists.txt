@@ -8,7 +8,6 @@ include(PythonInstall)
 set(_py_files
   __init__.py
   config.py
-  radb.py
   rpc.py
   service.py
 )
