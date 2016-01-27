@@ -2,4 +2,4 @@
 
 include(LofarCTest)
 
-lofar_add_test(tJobsToSchedule)
+lofar_add_test(tRATaskSpecified)

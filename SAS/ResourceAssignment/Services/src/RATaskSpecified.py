@@ -154,9 +154,9 @@ def resourceIndicatorsFromParset( parset ):
 
   return subset
 
-class JobsToSchedule(OTDBBusListener):
+class RATaskSpecified(OTDBBusListener):
   def __init__(self, servicename, otdb_busname=None, my_busname=None, **kwargs):
-    super(JobsToSchedule, self).__init__(busname=otdb_busname, subject="TaskStatus", **kwargs)
+    super(RATaskSpecified, self).__init__(busname=otdb_busname, subject="TaskStatus", **kwargs)
 
     self.parset_rpc = RPC(service="TaskSpecification", busname=otdb_busname)
     self.send_bus   = ToBus("%s/%s" % (my_busname, servicename))
@@ -165,10 +165,10 @@ class JobsToSchedule(OTDBBusListener):
     self.parset_rpc.open()
     self.send_bus.open()
 
-    super(JobsToSchedule, self).start_listening(**kwargs)
+    super(RATaskSpecified, self).start_listening(**kwargs)
 
   def stop_listening(self, **kwargs):
-    super(JobsToSchedule, self).stop_listening(**kwargs)
+    super(RATaskSpecified, self).stop_listening(**kwargs)
 
     self.send_bus.close()
     self.parset_rpc.close()
@@ -240,6 +240,6 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
 
-    with JobsToSchedule("TaskSpecified", otdb_busname=options.otdb_busname, my_busname=options.my_busname) as jts:
+    with RATaskSpecified("TaskSpecified", otdb_busname=options.otdb_busname, my_busname=options.my_busname) as jts:
         waitForInterrupt()
 
