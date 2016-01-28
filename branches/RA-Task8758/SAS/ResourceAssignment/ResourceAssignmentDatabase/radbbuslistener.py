@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# RADBBusListener.py: RADBBusListener listens on the lofar otdb message bus and calls (empty) on<SomeMessage> methods when such a message is received.
+# RADBBusListener.py
 #
 # Copyright (C) 2015
 # ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,10 +20,10 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
-# $Id: messagebus.py 1580 2015-09-30 14:18:57Z loose $
+# $Id: RADBBusListener.py 1580 2015-09-30 14:18:57Z loose $
 
 """
-RADBBusListener listens on the lofar otdb message bus and calls (empty) on<SomeMessage> methods when such a message is received.
+RADBBusListener listens on the lofar notification message bus and calls (empty) on<SomeMessage> methods when such a message is received.
 Typical usage is to derive your own subclass from RADBBusListener and implement the specific on<SomeMessage> methods that you are interested in.
 """
 
@@ -41,9 +41,9 @@ logger = logging.getLogger(__name__)
 class RADBBusListener(AbstractBusListener):
     def __init__(self, busname=DEFAULT_BUSNAME, subject='RADB.*', broker=None, **kwargs):
         """
-        RADBBusListener listens on the lofar otdb message bus and calls (empty) on<SomeMessage> methods when such a message is received.
+        RADBBusListener listens on the lofar notification message bus and calls (empty) on<SomeMessage> methods when such a message is received.
         Typical usage is to derive your own subclass from RADBBusListener and implement the specific on<SomeMessage> methods that you are interested in.
-        :param address: valid Qpid address (default: lofar.otdb.status)
+        :param busname: valid Qpid address (default: lofar.ra.notification)
         :param broker: valid Qpid broker host (default: None, which means localhost)
         additional parameters in kwargs:
             options=   <dict>  Dictionary of options passed to QPID
@@ -73,22 +73,34 @@ class RADBBusListener(AbstractBusListener):
             logger.error("RADBBusListener.handleMessage: unknown subject: %s" %str(msg.subject))
 
     def onTaskUpdated(self, task):
+        '''onTaskUpdated is called upon receiving a TaskUpdated message.
+        :param task: dictionary with the updated task'''
         pass
 
     def onTaskInserted(self, task):
+        '''onTaskInserted is called upon receiving a TaskInserted message.
+        :param task: dictionary with the inserted task'''
         pass
 
     def onTaskDeleted(self, task):
+        '''onTaskDeleted is called upon receiving a TaskDeleted message.
+        :param task: dictionary with the deleted task'''
         pass
 
     def onResourceClaimUpdated(self, claim):
+        '''onResourceClaimUpdated is called upon receiving a ResourceClaimUpdated message.
+        :param task: dictionary with the updated claim'''
         pass
 
     def onResourceClaimInserted(self, claim):
-        logger.info("RADBBusListener.onResourceClaimInserted: %s" %str(claim))
+        '''onResourceClaimInserted is called upon receiving a ResourceClaimInserted message.
+        :param task: dictionary with the inserted claim'''
+        pass
 
     def onResourceClaimDeleted(self, claim):
-        logger.info("RADBBusListener.onResourceClaimDeleted: %s" %str(claim))
+        '''onResourceClaimDeleted is called upon receiving a ResourceClaimDeleted message.
+        :param task: dictionary with the deleted claim'''
+        pass
 
 if __name__ == '__main__':
     with RADBBusListener(broker='10.149.96.6') as listener:
