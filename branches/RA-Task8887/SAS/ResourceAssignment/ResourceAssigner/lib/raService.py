@@ -128,6 +128,7 @@ def onTaskSpecified(treeId, modificationTime, specification):
     result = claimResources(needed)
     if result.success:
       commitResources(result.id)
+      SetTaskToSCHEDULED(Task.)
     else:
       SetTaskToCONFLICT(Task.)
 
