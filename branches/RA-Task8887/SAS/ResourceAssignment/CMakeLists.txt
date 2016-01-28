@@ -2,4 +2,4 @@
 
 lofar_add_package(ResourceAssigner)
 lofar_add_package(ResourceAssignmentEditor)
-
+lofar_add_package(ResourceAssignmentEstimator)
