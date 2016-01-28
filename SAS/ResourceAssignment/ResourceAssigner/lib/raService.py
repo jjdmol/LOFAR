@@ -73,6 +73,7 @@ class SpecifiedTaskListener(AbstractBusListener):
 __all__ = ["SpecifiedTaskListener"]
 
 def parseSpecification(specification):
+  default = "CEP2"
   cluster ="CEP4"
   return cluster
 
@@ -127,6 +128,8 @@ def onTaskSpecified(treeId, modificationTime, specification):
     result = claimResources(needed)
     if result.success:
       commitResources(result.id)
+    else:
+      SetTaskToCONFLICT(Task.)
 
 def main(args=None):
   print "SpecifiedTaskListener started"
