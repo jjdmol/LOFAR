@@ -29,7 +29,8 @@ import time
 from collections import deque
 from threading import Condition
 from datetime import datetime
-from dateutil import parser
+import time
+from dateutil import parser, tz
 from flask import Flask
 from flask import render_template
 from flask import request
@@ -38,6 +39,8 @@ from flask import url_for
 from flask.json import jsonify
 from lofar.sas.resourceassignment.resourceassignmenteditor.utils import gzipped
 from lofar.sas.resourceassignment.resourceassignmenteditor.fakedata import *
+from lofar.sas.resourceassignment.resourceassignmenteditor.radbchangeshandler import RADBChangesHandler, CHANGE_DELETE_TYPE
+from lofar.sas.resourceassignment.database.config import DEFAULT_BUSNAME as DEFAULT_RADB_CHANGES_BUSNAME
 from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 
@@ -58,6 +61,7 @@ print 'app.static_folder= %s' % app.static_folder
 app.config.from_object('lofar.sas.resourceassignment.resourceassignmenteditor.config.default')
 
 rpc = RARPC(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker='10.149.96.6')
+radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker='10.149.96.6')
 
 @app.route('/')
 @app.route('/index.htm')
@@ -120,6 +124,13 @@ def getTask(task_id):
 
 _changes = []
 changedCondition = Condition()
+
+def notifyChanges():
+    with changedCondition:
+        print "WAKE UP!"
+        changedCondition.notifyAll()
+
+radbchangeshandler.onChangedCallback = notifyChanges
 
 @app.route('/rest/tasks/<int:task_id>', methods=['PUT'])
 def putTask(task_id):
@@ -209,15 +220,27 @@ def getTaskStatusTypes():
 
 @app.route('/rest/updates/<since>')
 def getUpdateEventsSince(since):
+    print since
+    try:
+        if since[-1] == 'Z': since = since[:-1]
+        if since[-4] == '.': since += '000'
+        datetime.strptime(since, '%Y-%m-%dT%H:%M:%S.%f')
+    except ValueError:
+        abort(400, 'timestamp not in iso format: ' + since)
+
     with changedCondition:
         while True:
-            changesSince = [c for c in _changes if c['timestamp'] > since]
+            changesSince = radbchangeshandler.getChangesSince(since)
 
             if changesSince:
                 return jsonify({'changes': changesSince})
 
+            print "WAITING!"
             changedCondition.wait()
 
+            radbchangeshandler.clearChangesBefore(datetime.utcnow()-timedelta(minutes=1))
+
+    print "DOES THIS HAPPEN?"
     return jsonify({'changes': []})
 
 @app.route('/rest/updates')
@@ -225,8 +248,9 @@ def getUpdateEvents():
     return getUpdateEventsSince(datetime.utcnow().isoformat())
 
 def main(argv=None, debug=False):
-    '''Start the webserver'''
-    app.run(debug=debug, threaded=True, host='0.0.0.0', port=5001)
+    with radbchangeshandler:
+        '''Start the webserver'''
+        app.run(debug=debug, threaded=True, host='0.0.0.0', port=5001)
 
 if __name__ == '__main__':
     main(sys.argv[1:], True)
