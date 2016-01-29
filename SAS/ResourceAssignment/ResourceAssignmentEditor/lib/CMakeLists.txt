@@ -4,6 +4,7 @@ python_install(
     __init__.py
     webservice.py
     utils.py
+    radbchangeshandler.py
     fakedata.py
     DESTINATION lofar/sas/resourceassignment/resourceassignmenteditor)
 
