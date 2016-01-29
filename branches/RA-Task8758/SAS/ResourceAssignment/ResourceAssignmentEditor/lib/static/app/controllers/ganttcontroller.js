@@ -24,7 +24,19 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
     $scope.dataService = dataService;
     $scope.ganttData = []
 
-    self.taskStatusColors = {'active':'#00ff00', 'aborted':'#ff0000', 'scheduled':'#ffff00', 'prescheduled':'#cccc00' }
+    self.taskStatusColors = {'prepared':'#aaff00',
+                             'approved':'#ffaa00',
+                             'on_hold':'#ff0000',
+                             'conflict':'#ffccaa',
+                             'prescheduled': '#6666ff',
+                             'scheduled': '#ff66ff',
+                             'queued': '#bb6644',
+                             'active': '#eeffee',
+                             'completing': '#776688',
+                             'finished': '#66ff33',
+                             'aborted': '#ff3366',
+                             'error': '#ff4488',
+                             'obsolete': '#555555'}
 
     $scope.options = {
         mode: 'custom',
