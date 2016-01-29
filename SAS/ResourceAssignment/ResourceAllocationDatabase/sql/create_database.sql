@@ -207,4 +207,31 @@ CREATE TABLE resource_allocation.config (
 ALTER TABLE resource_allocation.config
   OWNER TO resourceassignment;
 
+-- VIEWS ----------------------------------------------
+
+CREATE OR REPLACE VIEW resource_allocation.task_view AS
+ SELECT t.id, t.mom_id, t.otdb_id, t.status_id, t.type_id, t.specification_id,
+    ts.name AS status, tt.name AS type, s.starttime, s.endtime
+   FROM resource_allocation.task t
+   JOIN resource_allocation.task_status ts ON ts.id = t.status_id
+   JOIN resource_allocation.task_type tt ON tt.id = t.type_id
+   JOIN resource_allocation.specification s ON s.id = t.specification_id;
+ALTER TABLE resource_allocation.task_view
+  OWNER TO resourceassignment;
+COMMENT ON VIEW resource_allocation.task_view
+  IS 'plain view on task table including task_status.name task_type.name specification.starttime and specification.endtime';
+
+
+CREATE OR REPLACE VIEW resource_allocation.resource_claim_view AS
+ SELECT rc.id, rc.resource_id, rc.task_id, rc.starttime, rc.endtime,
+    rc.status_id, rc.session_id, rc.claim_size, rc.username, rc.user_id,
+    rcs.name AS status
+   FROM resource_allocation.resource_claim rc
+   JOIN resource_allocation.resource_claim_status rcs ON rcs.id = rc.status_id;
+ALTER TABLE resource_allocation.resource_claim_view
+  OWNER TO resourceassignment;
+COMMENT ON VIEW resource_allocation.resource_claim_view
+  IS 'plain view on resource_claim table, including resource_claim_status.name';
+
+
 COMMIT;
