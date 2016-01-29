@@ -1,0 +1,49 @@
+# Alexander's variants file
+#
+# $Id$
+
+option(USE_MPI       "Use MPI"       ON)
+option(USE_CUDA      "Use CUDA"      ON)
+#option(USE_OPENCL    "Use OpenCL"    OFF)
+#set(GNU_COMPILE_DEFINITIONS   -DCL_USE_DEPRECATED_OPENCL_1_1_APIS)
+#set(CLANG_COMPILE_DEFINITIONS -DCL_USE_DEPRECATED_OPENCL_1_1_APIS)
+
+# Default search path for LOFAR deps (see CMake/variants/variants): /opt/lofar/external:/usr/local
+# The dirs thereunder must be lower case, e.g. unittest++/ or dal/
+
+# For the RPMs to make it work under CentOS 7, see https://support.astron.nl/lofar_issuetracker/issues/8161
+
+# RHEL/CentOS 7 has log4cxx in the repo, but LOFAR log4cxx is dodgy, so install log4cplus from CentOS 6 rpm pkgs.
+#option(USE_LOG4CPLUS "Use log4cplus" OFF)
+#option(USE_LOG4CXX   "Use log4cxx"   ON)
+
+# RHEL/CentOS 7: blitz/blitz-devel N/A, so installed from two CentOS 6 rpm pkgs. (Idem for UnitTest++, but from Fedora 22 pkgs)
+# blitz includes end up in /usr/include, but an arch specific one under /usr/lib64/blitz/include.
+# Set the latter as INCLUDE_DIR, since /usr/include is already in the std search path.
+set(BLITZ_INCLUDE_DIR /usr/lib64/blitz/include CACHE PATH "blitz include path")
+
+# RHEL/CentOS 7 has openmpi in /usr/lib64/openmpi and mpich in /usr/lib64/mpich
+set(MPI_ROOT_DIR      /usr/lib64/openmpi)
+
+# By default and on RHEL/CentOS 7, the GCC linker does not opt out overlinking.
+# Make it so. It removes some ghost deps, but still leaves mysterious lib deps in place...
+set(GNU_EXE_LINKER_FLAGS      "-Wl,--as-needed")
+set(GNU_SHARED_LINKER_FLAGS   "-Wl,--as-needed")
+set(CLANG_EXE_LINKER_FLAGS    "-Wl,--as-needed")
+set(CLANG_SHARED_LINKER_FLAGS "-Wl,--as-needed")
+
+# Enable ccache symlinks to accelerate recompilation (/usr/bin/ccache).
+#set(GNU_C         /usr/lib64/ccache/gcc)
+#set(GNU_CXX       /usr/lib64/ccache/g++)
+#set(GNU_Fortran   /usr/bin/gfortran)
+#set(GNU_ASM       /usr/lib64/ccache/gcc)
+
+# CUDA 5.0 headers reject gcc > 4.6. Force 4.6 (see cuda/include/host_config.h)
+# CUDA 6.5 headers reject gcc > 4.8. Force 4.8
+# CUDA 7.0 headers reject gcc > 4.9. Force 4.9
+# This is only needed for 2 COBALT tests that configure/compile a .cu file with nvcc at cmake/make time.
+#set(GNU_C         /usr/bin/gcc-4.9)
+#set(GNU_CXX       /usr/bin/g++-4.9)
+#set(GNU_Fortran   /usr/bin/gfortran-4.9)
+#set(GNU_ASM       /usr/bin/gcc-4.9)
+

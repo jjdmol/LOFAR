@@ -1,0 +1,415 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 1013 747 N "_3DFace" 0
+"main()
+{
+  
+  strPanelName    = \"antennaField\";
+  strModuleName   = myModuleName();  
+  
+  // get PanelSize to determine scaling and offsets
+  if ( panelSize( \"\" , mainpanel_horSize , mainpanel_vertSize) != 0 ) {
+    DebugN(\"Station.pnl:initialize|Error: couldn't define the size of the mainPanel : \" + strPanelName);
+  } else {
+    DebugN(\"Mainpanel Xsize: \",mainpanel_horSize);
+    DebugN(\"Mainpanel Ysize: \",mainpanel_vertSize);    
+    calcViewboxSize();
+  }  
+  
+  initValues();
+}
+  
+" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP=\"\";
+int mainpanel_midX;
+int mainpanel_midY;
+dyn_string refNames;
+dyn_string arrays;
+int mainpanel_horSize; 
+int mainpanel_vertSize;
+int symbolSize=44;
+float zoomFactor=1;
+int   shiftValue=25;
+int   shiftFactorX=0;
+int   shiftFactorY=0;
+int   test=1;
+
+int NRSP=-1;
+int NTBB=-1;
+int NLBA=-1;
+int NHBA=-1;
+bool HBASplit=false;
+bool WideLBAs=false;
+float angle=0;
+
+
+float centerX;
+float centerY;
+float centerZ;
+dyn_float antennaOffsetsX;
+dyn_float antennaOffsetsY;
+dyn_float antennaOffsetsZ;
+dyn_dyn_float rotMatrix;
+float HBA0Angle=0;
+float HBA1Angle=0;
+
+string strPanelName;
+string strModuleName;
+
+void initValues() { 
+  centerX = 3826937.852669377;
+  centerY = 460938.478138958;
+  centerZ  = 5064630.668;
+
+    
+  rotMatrix[1]=makeDynFloat(-0.1195950000,-0.7919540000,0.5987530000);  
+  rotMatrix[2]=makeDynFloat(0.9928230000,-0.0954190000,0.0720990000);  
+  rotMatrix[3]=makeDynFloat(0.0000330000,0.6030780000,0.7976820000);  
+  
+     
+
+  if (test==1) {
+    antennaOffsetsX[1]=0;
+    antennaOffsetsX[2]=0;
+    antennaOffsetsX[3]=40;
+    antennaOffsetsX[4]=40;
+    antennaOffsetsY[1]=0;
+    antennaOffsetsY[2]=40;
+    antennaOffsetsY[3]=40;
+    antennaOffsetsY[4]=0; 
+    antennaOffsetsZ[1]=0;
+    antennaOffsetsZ[2]=0;
+    antennaOffsetsZ[3]=0;
+    antennaOffsetsZ[4]=0; 
+
+  } else if (test==2) {
+    antennaOffsetsX[1]=-49.183149;
+    antennaOffsetsX[2]=-45.894149;
+    antennaOffsetsX[3]=-37.254149;
+    antennaOffsetsX[4]=-33.965149;
+    antennaOffsetsY[1]=36.069080;
+    antennaOffsetsY[2]=50.681080;
+    antennaOffsetsY[3]=31.176081;
+    antennaOffsetsY[4]=45.789081; 
+    antennaOffsetsZ[1]=33.657709;
+    antennaOffsetsZ[2]=29.868709;
+    antennaOffsetsZ[3]=25.145709;
+    antennaOffsetsZ[4]=21.356709; 
+  } else if (test==3) {
+    antennaOffsetsX[1]=(rotMatrix[1][1]*-49.183149)+(rotMatrix[1][2]*36.069080)+(rotMatrix[1][3]*33.657709);
+    antennaOffsetsX[2]=(rotMatrix[1][1]*-45.894149)+(rotMatrix[1][2]*50.681080)+(rotMatrix[1][3]*29.868709);
+    antennaOffsetsX[3]=(rotMatrix[1][1]*-37.254149)+(rotMatrix[1][2]*31.176081)+(rotMatrix[1][3]*25.145709);
+    antennaOffsetsX[4]=(rotMatrix[1][1]*-33.965149)+(rotMatrix[1][2]*45.789081)+(rotMatrix[1][3]*21.356709);
+    antennaOffsetsY[1]=(rotMatrix[2][1]*-49.183149)+(rotMatrix[2][2]*36.069080)+(rotMatrix[2][3]*33.657709);
+    antennaOffsetsY[2]=(rotMatrix[2][1]*-45.894149)+(rotMatrix[2][2]*50.681080)+(rotMatrix[2][3]*29.868709);
+    antennaOffsetsY[3]=(rotMatrix[2][1]*-37.254149)+(rotMatrix[2][2]*31.176081)+(rotMatrix[2][3]*25.145709);
+    antennaOffsetsY[4]=(rotMatrix[2][1]*-33.965149)+(rotMatrix[2][2]*45.789081)+(rotMatrix[2][3]*21.356709); 
+    antennaOffsetsZ[1]=(rotMatrix[3][1]*-49.183149)+(rotMatrix[3][2]*36.069080)+(rotMatrix[3][3]*33.657709);
+    antennaOffsetsZ[2]=(rotMatrix[3][1]*-45.894149)+(rotMatrix[3][2]*50.681080)+(rotMatrix[3][3]*29.868709);
+    antennaOffsetsZ[3]=(rotMatrix[3][1]*-37.254149)+(rotMatrix[3][2]*31.176081)+(rotMatrix[3][3]*25.145709);
+    antennaOffsetsZ[4]=(rotMatrix[3][1]*-33.965149)+(rotMatrix[3][2]*45.789081)+(rotMatrix[3][3]*21.356709);
+  } else if (test==4) {
+    antennaOffsetsX[1]=(rotMatrix[1][1]/-49.183149)+(rotMatrix[1][2]/36.069080)+(rotMatrix[1][3]/33.657709);
+    antennaOffsetsX[2]=(rotMatrix[1][1]/-45.894149)+(rotMatrix[1][2]/50.681080)+(rotMatrix[1][3]/29.868709);
+    antennaOffsetsX[3]=(rotMatrix[1][1]/-37.254149)+(rotMatrix[1][2]/31.176081)+(rotMatrix[1][3]/25.145709);
+    antennaOffsetsX[4]=(rotMatrix[1][1]/-33.965149)+(rotMatrix[1][2]/45.789081)+(rotMatrix[1][3]/21.356709);
+    antennaOffsetsY[1]=(rotMatrix[2][1]/-49.183149)+(rotMatrix[2][2]/36.069080)+(rotMatrix[2][3]/33.657709);
+    antennaOffsetsY[2]=(rotMatrix[2][1]/-45.894149)+(rotMatrix[2][2]/50.681080)+(rotMatrix[2][3]/29.868709);
+    antennaOffsetsY[3]=(rotMatrix[2][1]/-37.254149)+(rotMatrix[2][2]/31.176081)+(rotMatrix[2][3]/25.145709);
+    antennaOffsetsY[4]=(rotMatrix[2][1]/-33.965149)+(rotMatrix[2][2]/45.789081)+(rotMatrix[2][3]/21.356709); 
+    antennaOffsetsZ[1]=(rotMatrix[3][1]/-49.183149)+(rotMatrix[3][2]/36.069080)+(rotMatrix[3][3]/33.657709);
+    antennaOffsetsZ[2]=(rotMatrix[3][1]/-45.894149)+(rotMatrix[3][2]/50.681080)+(rotMatrix[3][3]/29.868709);
+    antennaOffsetsZ[3]=(rotMatrix[3][1]/-37.254149)+(rotMatrix[3][2]/31.176081)+(rotMatrix[3][3]/25.145709);
+    antennaOffsetsZ[4]=(rotMatrix[3][1]/-33.965149)+(rotMatrix[3][2]/45.789081)+(rotMatrix[3][3]/21.356709);
+  } else if (test==5) {
+    antennaOffsetsX[1]=(rotMatrix[1][1]*-49.183149)+(rotMatrix[2][1]*36.069080)+(rotMatrix[3][1]*33.657709);
+    antennaOffsetsX[2]=(rotMatrix[1][1]*-45.894149)+(rotMatrix[2][1]*50.681080)+(rotMatrix[3][1]*29.868709);
+    antennaOffsetsX[3]=(rotMatrix[1][1]*-37.254149)+(rotMatrix[2][1]*31.176081)+(rotMatrix[3][1]*25.145709);
+    antennaOffsetsX[4]=(rotMatrix[1][1]*-33.965149)+(rotMatrix[2][1]*45.789081)+(rotMatrix[3][1]*21.356709);
+    antennaOffsetsY[1]=(rotMatrix[1][2]*-49.183149)+(rotMatrix[2][2]*36.069080)+(rotMatrix[3][2]*33.657709);
+    antennaOffsetsY[2]=(rotMatrix[1][2]*-45.894149)+(rotMatrix[2][2]*50.681080)+(rotMatrix[3][2]*29.868709);
+    antennaOffsetsY[3]=(rotMatrix[1][2]*-37.254149)+(rotMatrix[2][2]*31.176081)+(rotMatrix[3][2]*25.145709);
+    antennaOffsetsY[4]=(rotMatrix[1][2]*-33.965149)+(rotMatrix[2][2]*45.789081)+(rotMatrix[3][2]*21.356709); 
+    antennaOffsetsZ[1]=(rotMatrix[1][3]*-49.183149)+(rotMatrix[2][2]*36.069080)+(rotMatrix[3][3]*33.657709);
+    antennaOffsetsZ[2]=(rotMatrix[1][3]*-45.894149)+(rotMatrix[2][3]*50.681080)+(rotMatrix[3][3]*29.868709);
+    antennaOffsetsZ[3]=(rotMatrix[1][3]*-37.254149)+(rotMatrix[2][3]*31.176081)+(rotMatrix[3][3]*25.145709);
+    antennaOffsetsZ[4]=(rotMatrix[1][3]*-33.965149)+(rotMatrix[2][3]*45.789081)+(rotMatrix[3][3]*21.356709);
+  }
+  DebugN(\"X,Y,Z 1:\",antennaOffsetsX[1],\" \",antennaOffsetsY[1],\" \",antennaOffsetsZ[1]);
+  DebugN(\"X,Y,Z 2:\",antennaOffsetsX[2],\" \",antennaOffsetsY[2],\" \",antennaOffsetsZ[2]);
+  DebugN(\"X,Y,Z 3:\",antennaOffsetsX[3],\" \",antennaOffsetsY[3],\" \",antennaOffsetsZ[3]);
+  DebugN(\"X,Y,Z 4:\",antennaOffsetsX[4],\" \",antennaOffsetsY[4],\" \",antennaOffsetsZ[4]);
+  
+  redraw(\"HBA\");  
+}
+
+void clearRefNames() {
+  // remove all symbols because new ones will be added
+  for (int i=1; i <= dynlen(refNames); i++) {
+    removeSymbol(strModuleName,\"\",refNames[i]);
+  }
+  dynClear(refNames);
+}
+
+void calcViewboxSize() {
+    mainpanel_midX = floor( (mainpanel_horSize/2)-(symbolSize/2) );
+    mainpanel_midY = floor( (mainpanel_vertSize/2)-(symbolSize/2) );
+    DebugN(\"midX: \"+mainpanel_midX);
+    DebugN(\"midY: \"+mainpanel_midY);
+}
+
+void redraw(string mode) {
+  
+  float maxXOffsetValue=1.;
+  float maxYOffsetValue=1.;
+  float expandFactorX;
+  float expandFactorY;
+  int   xPos_AddSymbol;
+  int   yPos_AddSymbol;
+  string addPanelName;
+  
+  
+  DebugN(\"Station.pnl:redraw|Mode: \"+mode);
+
+  addPanelName    = \"Test/testHBA.pnl\";
+  
+        
+  if (dynlen(refNames) > 0) {
+    clearRefNames();
+  }
+   
+  // determine max values and calculate scaling factors
+  for (int i=1; i<= dynlen(antennaOffsetsX); i++) { 
+    if ( maxXOffsetValue < fabs(antennaOffsetsX[i]) ) maxXOffsetValue = fabs(antennaOffsetsX[i]);
+    if ( maxYOffsetValue < fabs(antennaOffsetsY[i]) ) maxYOffsetValue = fabs(antennaOffsetsY[i]);
+  }
+
+  DebugN(\"Station.pnl:redraw|mainpanel_midX: \"+mainpanel_midX);
+  DebugN(\"Station.pnl:redraw|mainpanel_midY: \"+mainpanel_midY);
+  DebugN(\"Station.pnl:redraw|maxXOffsetValue: \"+maxXOffsetValue);
+  DebugN(\"Station.pnl:redraw|maxYOffsetValue: \"+maxYOffsetValue);
+  
+  expandFactorX = (floor(mainpanel_midX / maxXOffsetValue))*zoomFactor;
+  expandFactorY = (floor(mainpanel_midY / maxYOffsetValue))*zoomFactor;
+  
+  DebugN(\"Station.pnl:redraw|expandFactorX: \"+expandFactorX);
+  DebugN(\"Station.pnl:redraw|expandFactorY: \"+expandFactorY);
+  
+  // To make the field a bit more square we will multiply all by the smallest expandfactor
+  if (expandFactorX > expandFactorY) {
+    expandFactorX=expandFactorY;
+  } else {
+    expandFactorY=expandFactorX;
+  }
+
+ DebugN(\"Station.pnl:redraw|Final expandfactors: \" + expandFactorX+\" \"+ expandFactorY);
+  
+  // set the hardware selectable items
+  // For this panel the Antenna's in a choosen layout should be selectable 
+  
+  // Replace the X & Y grid lines to the calculated center 
+  Yaxis.foreCol(\"STD_windows_available\");
+  Xaxis.foreCol(\"STD_windows_available\");
+  int xval=mainpanel_midX+shiftFactorX;
+  int yval=mainpanel_midY+shiftFactorY;
+  
+  Yaxis.position(xval , mainpanel_horSize );
+  Xaxis.position(0              , yval    );
+  
+  //  now start adding symbols to panel
+  int ref =   1;
+  for (int i = 1; i <= dynlen(antennaOffsetsX); i++ ) {
+    int XRCU;
+    int YRCU;
+    if (i-1 < NRSP*8/2) {
+      XRCU = 2 * (i-1);
+      YRCU = XRCU+1;
+    } else {
+      XRCU = 2*i - NRSP*8;
+      YRCU = 2*i-1 - NRSP*8;
+    }
+      
+    string xDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(XRCU)+\"_Subrack\"+
+               navFunct_receiver2Subrack(XRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(XRCU)+\"_RCU\"+XRCU;
+    string yDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(YRCU)+\"_Subrack\"+
+               navFunct_receiver2Subrack(YRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(YRCU)+\"_RCU\"+YRCU;
+    if (i-1 < NRSP*8/2) {
+      dynAppend(g_RCUList,XRCU);
+      dynAppend(g_RCUList,YRCU);
+    }
+    refNames[ref]=\"ant\"+(ref);
+    xPos_AddSymbol = (mainpanel_midX+shiftFactorX) + (antennaOffsetsX[i] * expandFactorX);
+    yPos_AddSymbol = (mainpanel_midY+shiftFactorY) - (antennaOffsetsY[i] * expandFactorY);
+      
+    if (  addSymbol(  strModuleName,                   // Stay in this modul
+                                  \"\",                  // Name of this panel
+		      addPanelName,                    // Panel to add
+		      refNames[ref],                     // Ref of the addedPanel
+		      makeDynString( \"$aNr:\" + (i-1) ,     // Define all $values
+		                     \"$aX:\" + antennaOffsetsX[i]  ,    
+		                     \"$aY:\" + antennaOffsetsY[i]  ,
+		                     \"$aZ:\"  + antennaOffsetsZ[i]),                  // of particular addedpanel
+		      xPos_AddSymbol,                  // Xpos of the AddedSymbol
+		      yPos_AddSymbol,                  // Ypos of the AddedSymbol
+		      angle,                           // angle
+		      1    ,1                          // zoomX , zoomY
+        ) < 0 ) {
+	  DebugN(\"Station.pnl:redraw|Error Appending antenna : \" + i + \" in this panel.\");
+          }
+    ref++;
+  }
+ 
+}
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+4 0
+"Xaxis"
+""
+1 249 100 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+3
+LANG:1 0 
+LANG:6 0 
+LANG:30 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  0 100 1499 100
+4 1
+"Yaxis"
+""
+1 100 1250 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+3
+LANG:1 0 
+LANG:6 0 
+LANG:30 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  100 1000 100 1
+21 2
+"SPIN_BUTTON1"
+""
+1 880 30 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 878 28 1002 49
+0
+
+E
+"main()
+{
+  angle=this.text();
+  DebugN(\"New angle: \", angle);
+  redraw(\"HBA\");
+}" 0
+
+E
+
+N 0 360 10 0 1 1
+22 3
+"COMBO_BOX1"
+""
+1 880 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 878 8 1002 29
+5
+1
+LANG:1 10 testvalues
+
+0
+1
+LANG:1 13 direct deltas
+
+0
+1
+LANG:1 23 deltas * rotationmatrix
+
+0
+1
+LANG:1 23 deltas / ratationmatrix
+
+0
+1
+LANG:1 32 deltas * rotationmatrix top down
+
+0
+
+E
+"main()
+{
+  test=this.selectedPos();
+  DebugN(test,\" \", this.selectedText());
+  initValues();
+}" 0
+
+E
+ 1 0
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0
