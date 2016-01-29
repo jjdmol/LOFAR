@@ -3,4 +3,7 @@
 lofar_add_package(ResourceAssignmentEditor)
 lofar_add_package(ResourceAssignmentService)
 lofar_add_package(ResourceAssignmentDatabase)
+lofar_add_package(SystemStatusDatabase)
+lofar_add_package(SystemStatusService)
+
 
