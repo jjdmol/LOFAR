@@ -11,7 +11,7 @@ set(_py_files
   SSDBrpc.py
 )
 
-python_install(${_py_files} DESTINATION lofar/sas/resourceassignment/systemstatus)
+python_install(${_py_files} DESTINATION lofar/sas/systemstatus/service)
 
 lofar_add_bin_scripts(ssdbservice)
 
