@@ -96,7 +96,7 @@ class PostgresListener(object):
             if notification in self.__callbacks:
                 del self.__callbacks[notification]
 
-    def setupPostgresNotifications(self, schema, table, updateNotification=True, insertNotification=True, deleteNotification=True):
+    def setupPostgresNotifications(self, schema, table, updateNotification=True, insertNotification=True, deleteNotification=True, view_for_row=None):
         items = []
         if updateNotification:
             items.append(('update', 'NEW'))
@@ -108,15 +108,38 @@ class PostgresListener(object):
             items.append(('delete', 'OLD'))
 
         for item in items:
-            sql = '''
-            CREATE OR REPLACE FUNCTION {schema}.notify_{table}_{action}()
-            RETURNS trigger AS $$
-            BEGIN
-            PERFORM pg_notify(CAST('{table}_{action}' AS text), row_to_json({value})::text);
-            RETURN {value};
-            END;
-            $$ LANGUAGE plpgsql;
+            if view_for_row:
+                function_sql = '''
+                CREATE OR REPLACE FUNCTION {schema}.notify_{table}_{action}()
+                RETURNS trigger AS $$
+                DECLARE
+                new_row_from_view {schema}.{view_for_row}%ROWTYPE;
+                BEGIN
+                select * into new_row_from_view from {schema}.{view_for_row} where id = {value}.id LIMIT 1;
+                PERFORM pg_notify(CAST('{table}_{action}' AS text), row_to_json(new_row_from_view)::text);
+                RETURN {value};
+                END;
+                $$ LANGUAGE plpgsql;
+                '''.format(schema=schema,
+                       table=table,
+                       action=item[0],
+                       value=item[1],
+                       view_for_row=view_for_row)
+            else:
+                function_sql = '''
+                CREATE OR REPLACE FUNCTION {schema}.notify_{table}_{action}()
+                RETURNS trigger AS $$
+                BEGIN
+                PERFORM pg_notify(CAST('{table}_{action}' AS text), row_to_json({value})::text);
+                RETURN {value};
+                END;
+                $$ LANGUAGE plpgsql;
+                '''.format(schema=schema,
+                       table=table,
+                       action=item[0],
+                       value=item[1])
 
+            trigger_sql = '''
             DROP TRIGGER IF EXISTS trigger_notify_{table}_{action} ON {schema}.{table};
 
             CREATE TRIGGER trigger_notify_{table}_{action}
@@ -127,6 +150,8 @@ class PostgresListener(object):
                        table=table,
                        action=item[0],
                        value=item[1])
+
+            sql = function_sql + trigger_sql
             self.cursor.execute(sql)
 
     def isListening(self):

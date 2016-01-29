@@ -47,12 +47,12 @@ class RADBPGListener(PostgresListener):
 
         self.event_bus = ToBus(busname, broker=broker)
 
-        self.setupPostgresNotifications('resource_allocation', 'task')
+        self.setupPostgresNotifications('resource_allocation', 'task', view_for_row='task_view')
         self.subscribe('task_update', self.onTaskUpdated)
         self.subscribe('task_insert', self.onTaskInserted)
         self.subscribe('task_delete', self.onTaskDeleted)
 
-        self.setupPostgresNotifications('resource_allocation', 'resource_claim')
+        self.setupPostgresNotifications('resource_allocation', 'resource_claim', view_for_row='resource_claim_view')
         self.subscribe('resource_claim_update', self.onResourceClaimUpdated)
         self.subscribe('resource_claim_insert', self.onResourceClaimInserted)
         self.subscribe('resource_claim_delete', self.onResourceClaimDeleted)
@@ -85,6 +85,7 @@ class RADBPGListener(PostgresListener):
         self.event_bus.close()
 
     def _sendNotification(self, subject, payload):
+        print subject, payload
         try:
             content = json.loads(payload)
         except Exception as e:
