@@ -106,29 +106,14 @@ class RADatabase:
         raise KeyError('No such status: %s. Valid values are: %s' % (status_name, ', '.join(self.getResourceClaimStatusNames())))
 
     def getTasks(self):
-        query = '''SELECT t.*, ts.name as status,
-        tt.name as type,
-        s.starttime as starttime,
-        s.endtime as endtime
-        from resource_allocation.task t
-        inner join resource_allocation.task_status ts on ts.id = t.status_id
-        inner join resource_allocation.task_type tt on tt.id = t.type_id
-        inner join resource_allocation.specification s on s.id = t.specification_id;
-        '''
+        query = '''SELECT * from resource_allocation.task_view;'''
         self.cursor.execute(query)
 
         return list(self.cursor.fetchall())
 
     def getTask(self, id):
-        query = '''SELECT t.*, ts.name as status,
-        tt.name as type,
-        s.starttime as starttime,
-        s.endtime as endtime
-        from resource_allocation.task t
-        inner join resource_allocation.task_status ts on ts.id = t.status_id
-        inner join resource_allocation.task_type tt on tt.id = t.type_id
-        inner join resource_allocation.specification s on s.id = t.specification_id
-        where t.id = (%s)
+        query = '''SELECT * from resource_allocation.task_view tv
+        where tv.id = (%s);
         '''
         self.cursor.execute(query, (id,))
 
@@ -357,19 +342,14 @@ class RADatabase:
         return list(self.cursor.fetchall())
 
     def getResourceClaims(self):
-        query = '''SELECT rc.*, rcs.name as status
-        from resource_allocation.resource_claim rc
-        inner join resource_allocation.resource_claim_status rcs on rcs.id = rc.status_id;
-        '''
+        query = '''SELECT * from resource_allocation.resource_claim_view'''
         self.cursor.execute(query)
 
         return list(self.cursor.fetchall())
 
     def getResourceClaim(self, id):
-        query = '''SELECT rc.*, rcs.name as status
-        from resource_allocation.resource_claim rc
-        inner join resource_allocation.resource_claim_status rcs on rcs.id = rc.status_id
-        where rc.id = %s;
+        query = '''SELECT * from resource_allocation.resource_claim_view rcv
+        where rcv.id = %s;
         '''
         self.cursor.execute(query, [id])
 
@@ -521,20 +501,20 @@ if __name__ == '__main__':
         ##resultPrint(db.getTasks)
         ##resultPrint(db.getResourceClaims)
 
-    for i in range(10):
-        taskId = db.insertTask(1234, 5678, 600, 0, 1, False)
-        for j in range(100*i):
-            rcId = db.insertResourceClaim(1, taskId, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 0, 1, 10, 'einstein', -1, False)
+    #for i in range(10):
+        #taskId = db.insertTask(1234, 5678, 600, 0, 1, False)
+        #for j in range(100*i):
+            #rcId = db.insertResourceClaim(1, taskId, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 0, 1, 10, 'einstein', -1, False)
 
-        db.commit()
+        #db.commit()
 
-    #resultPrint(db.getTasks)
-    #resultPrint(db.getResourceClaims)
+    resultPrint(db.getTasks)
+    resultPrint(db.getResourceClaims)
 
-    tasks = db.getTasks()
-    for t in tasks:
-        db.deleteTask(t['id'], False)
-        #resultPrint(db.getTasks)
-        #resultPrint(db.getResourceClaims)
+    #tasks = db.getTasks()
+    #for t in tasks:
+        #db.deleteTask(t['id'], False)
+        ##resultPrint(db.getTasks)
+        ##resultPrint(db.getResourceClaims)
 
-    db.commit()
+    #db.commit()
