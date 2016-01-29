@@ -108,7 +108,7 @@ class PostgresListener(object):
             items.append(('delete', 'OLD'))
 
         for item in items:
-            if view_for_row:
+            if view_for_row and item[0] != 'delete':
                 function_sql = '''
                 CREATE OR REPLACE FUNCTION {schema}.notify_{table}_{action}()
                 RETURNS trigger AS $$
