@@ -20,7 +20,7 @@ class SSDB:
         self.username = kwargs.pop("username", USER)
         self.password = kwargs.pop("password", PASSWORD)
         self.database = kwargs.pop("database", DATABASE)
-        self.conn = pg.connect("dbname=%s user=%s password=%s" % (self.database,self.user,self.password))
+        self.conn = pg.connect("dbname=%s user=%s password=%s" % (self.database,self.username,self.password))
         self.DBconnected = (self.conn and self.conn.status==1)
         self.Qlistall="select * from hosts inner join datapaths on hosts.id = datapaths.hostid;"
         self.Qgetstatenames="select statename,id from states;"
@@ -54,6 +54,13 @@ class SSDB:
         cur.execute(q)
         ret= cur.fetchall()
         return ret
+    
+    def _dolquery(self,q):
+        cur = self.conn.cursor()
+        cur.execute(q)
+        ret= cur.fetchall()
+        return ret
+        
 
     def getstatenames(self):
         return self._doquery(self.Qgetstatenames)
@@ -64,16 +71,16 @@ class SSDB:
     def gethostsforgid(self,gid):
         return self._doquery(self.Qgethostsforgid.replace("GID",gid))
 
-    def gethostsforgroups(self,groups,states):
+    def gethostsforgroups(self):
         return self._doquery(self.Qgethostsforgroups)
 
     def listall(self):
         return self._doquery(self.Qlistall)
 
     def getIngestJobs(self):
-        return self._doquery(self.QueryJobs)
+        return self._doquery(self.QueryIngestJobs)
         
     def getIngestMain(self):
-        return self._doquery(self.QueryJobs)
+        return self._doquery(self.QueryIngestMain)
             
 

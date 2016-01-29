@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-from lofar.messaging import Service
+from lofar.messaging import Service, MessageHandlerInterface
 from lofar.common.util import waitForInterrupt
-from lofar.sas.resourceassignent.database.ssdb import SSDB
+from lofar.sas.systemstatus.database.ssdb import SSDB
 
 import logging
 import sys
@@ -18,7 +18,7 @@ PASSWORD    = "welkom001"
 class DataMonitorQueryService(MessageHandlerInterface):
 
     def __init__(self,**kwargs):
-        super(DBlistener,self).__init__(**kwargs)
+        super(DataMonitorQueryService,self).__init__(**kwargs)
 
         self.username = kwargs.pop("username", USER)
         self.password = kwargs.pop("password", PASSWORD)
@@ -27,11 +27,11 @@ class DataMonitorQueryService(MessageHandlerInterface):
         self.service2MethodMap = {
             'GetStateNames':self.getstatenames,
             'GetActiveGroupNames':self.getactivegroupnames,
-            'GetHostForGID':gethostsforgid,
-            'CountHostsForGroups': counthostsforgroups,
+            'GetHostForGID':self.gethostsforgid,
+            'CountHostsForGroups': self.counthostsforgroups,
             'ListAll': self.listall,
             'CountActiveHosts': self.countactivehosts,
-            'GetArchinvingStatus': self.getArchivingStatus }
+            'GetArchivingStatus': self.getArchivingStatus }
 
 
     def prepare_loop(self):
@@ -57,7 +57,7 @@ class DataMonitorQueryService(MessageHandlerInterface):
 
     def gethostsforgid(self,gid):
         hosts = self.ssdb.gethostsforgid(gid)
-        groups = self.ssdb.getactivegroupnames()
+        groups = self.getactivegroupnames()
         ret = { "groupname":groups[str(gid)] , "nodes":hosts }
         return ret
 
@@ -90,15 +90,15 @@ class DataMonitorQueryService(MessageHandlerInterface):
         return ret
 
     def countactivehosts(self):
-        snames=self.ssdb.getstatenames()
-        gnames=self.ssdb.getactivegroupnames()
+        snames=self.getstatenames()
+        gnames=self.getactivegroupnames()
         return self.counthostsforgroups(gnames,snames)
 
-    def getArchivingStatus(self,*args,**kwargs)
+    def getArchivingStatus(self,*args,**kwargs):
         maininfo = self.ssdb.getIngestMain()
         jobinfo  = self.ssdb.getIngestJobs()
         return { "main" : maininfo, "jobs" : jobinfo };
 
 def runservice(busname=BUSNAME,servicename=SERVICENAME):
-    with Service(servicename,DataMonitorService,busname=busname) as GetServerState:
+    with Service(servicename,DataMonitorQueryService,busname=busname,numthreads=4,use_service_methods=True) as GetServerState:
         waitForInterrupt()
