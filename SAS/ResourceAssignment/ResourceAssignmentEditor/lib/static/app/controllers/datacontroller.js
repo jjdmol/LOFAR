@@ -142,32 +142,64 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
         }
         $http.get(url, {timeout:300000}).success(function(result) {
 
-            var changeTimestamps = result.changes.map(function(item) { return item.timestamp; });
-            self.lastUpdateTimestamp = changeTimestamps.reduce(function(a, b, idx, arr) { return a > b ? a : b; }, undefined);
+            try {
+                var changeTimestamps = result.changes.map(function(item) { return item.timestamp; });
+                self.lastUpdateTimestamp = changeTimestamps.reduce(function(a, b, idx, arr) { return a > b ? a : b; }, undefined);
 
-            for(var i = result.changes.length-1; i >=0; i--) {
-                var change = result.changes[i];
+                for(var i = result.changes.length-1; i >=0; i--) {
+                    try {
+                        var change = result.changes[i];
 
-                if(change.objectType == 'task') {
-                    var changedTask = change.value;
-                    var task = self.taskDict[changedTask.id];
-                    task.from = new Date(changedTask.from);
-                    task.to = new Date(changedTask.to);
+                        if(change.objectType == 'task') {
+                            var changedTask = change.value;
+                            if(change.changeType == 'update') {
+                                var task = self.taskDict[changedTask.id];
+                                task.status = changedTask.status;
+                                task.starttime = new Date(changedTask.starttime);
+                                task.endtime = new Date(changedTask.endtime);
+                            } else if(change.changeType == 'insert') {
+                                self.tasks.push(changedTask);
+                                self.taskDict[changedTask.id] = changedTask;
+                            } else if(change.changeType == 'delete') {
+                                delete self.taskDict[changedTask.id]
+                                for(var k = self.tasks.length-1; k >= 0; k--) {
+                                    if(self.tasks[k].id == changedTask.id) {
+                                        self.tasks.splice(k, 1);
+                                        break;
+                                    }
+                                }
+                            }
+                        } else if(change.objectType == 'resourceClaim') {
+                            var changedClaim = change.value;
+                            if(change.changeType == 'update') {
+                                var claim = self.resourceClaimDict[changedClaim.id];
+                                claim.status = changedClaim.status;
+                                claim.starttime = new Date(changedClaim.starttime);
+                                claim.endtime = new Date(changedClaim.endtime);
+                            } else if(change.changeType == 'insert') {
+                                self.resourceClaims.push(changedClaim);
+                                self.resourceClaimDict[changedClaim.id] = changedClaim;
+                            } else if(change.changeType == 'delete') {
+                                delete self.resourceClaimDict[changedClaim.id]
+                                for(var k = self.resourceClaims.length-1; k >= 0; k--) {
+                                    if(self.resourceClaims[k].id == changedClaim.id) {
+                                        self.resourceClaims.splice(k, 1);
+                                        break;
+                                    }
+                                }
+                            }
+                        } else if(change.objectType == 'resourceGroupClaim') {
+                            var changedGroupClaim = change.value;
+                            var claim = self.resourceGroupClaimDict[changedGroupClaim.id];
+                            claim.starttime = new Date(changedGroupClaim.starttime);
+                            claim.endtime = new Date(changedGroupClaim.endtime);
+                        }
+                    } catch(err) {
+                        console.log(err)
+                    }
                 }
-
-                if(change.objectType == 'resourceClaim') {
-                    var changedClaim = change.value;
-                    var claim = self.resourceClaimDict[changedClaim.id];
-                    claim.starttime = new Date(changedClaim.starttime);
-                    claim.endtime = new Date(changedClaim.endtime);
-                }
-
-                if(change.objectType == 'resourceGroupClaim') {
-                    var changedGroupClaim = change.value;
-                    var claim = self.resourceGroupClaimDict[changedGroupClaim.id];
-                    claim.starttime = new Date(changedGroupClaim.starttime);
-                    claim.endtime = new Date(changedGroupClaim.endtime);
-                }
+            } catch(err) {
+                console.log(err)
             }
 
             //and update again
