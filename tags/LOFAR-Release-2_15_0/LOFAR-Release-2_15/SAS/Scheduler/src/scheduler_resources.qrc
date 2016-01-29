@@ -1,0 +1,32 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/add_task.png</file>
+        <file>icons/align-left.png</file>
+        <file>icons/close16x16.png</file>
+        <file>icons/create_initial_schedule.png</file>
+        <file>icons/delete_task.png</file>
+        <file>icons/find.png</file>
+        <file>icons/load-balancing.png</file>
+        <file>icons/new_schedule.png</file>
+        <file>icons/open.png</file>
+        <file>icons/optimize.png</file>
+        <file>icons/printer.png</file>
+        <file>icons/publish.png</file>
+        <file>icons/redo.png</file>
+        <file>icons/save.png</file>
+        <file>icons/settings.png</file>
+        <file>icons/taskcolormode.png</file>
+        <file>icons/undo.png</file>
+        <file>icons/zoomin.png</file>
+        <file>icons/zoomout.png</file>
+        <file>icons/empty_trash.png</file>
+        <file>icons/full_trash.png</file>
+        <file>icons/cross.png</file>
+        <file>icons/clock.png</file>
+        <file>icons/connect_datamonitor.png</file>
+        <file>icons/download.png</file>
+        <file>icons/synchronize.png</file>
+        <file>images/timeline_day.png</file>
+        <file>images/timeline_day_long.png</file>
+    </qresource>
+</RCC>
