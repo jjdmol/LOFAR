@@ -7,5 +7,3 @@ password = ""
 langs = "en_US.iso88591"
 distributed = 1
 ctrlMaxPendings = 7500
-connectRetries = 30
-connectDelay = 20

@@ -35,13 +35,13 @@ and parameters under exponents (NL_ij) are non-linear.
 #include "boost_python.h"
 #include "MGFunction.h"
    
-#if defined(__GLIBCXX__) and __cplusplus <= 199711L
+#if defined(__GLIBCXX__)
 #include <ext/algorithm>
 #endif
 #include <num_util/num_util.h>
 #include <cfloat>
 
-#if not(defined(_LIBCPP_VERSION)) and __cplusplus <= 199711L
+#if not(defined(_LIBCPP_VERSION))
 using namespace __gnu_cxx;
 #endif
 using namespace std;

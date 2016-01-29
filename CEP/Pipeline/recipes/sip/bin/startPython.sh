@@ -86,9 +86,6 @@ if [ -n "$debug" ]; then
     >> ${logFile}
 fi
 
-# Set up the environment (information to propagate to the node scripts for monitoring and logging)
-export LOFAR_OBSID="$(getparsetvalue -d "-1" $parsetFile "ObsSW.Observation.otdbID")"
-
 # Start the Python program in the background. 
 # This script should return ASAP so that MAC can set the task to ACTIVE.
 # STDERR will be redirected to the log-file.

@@ -7,7 +7,7 @@ Installation instructions for LOFAR software.
 Supported Systems
 -----------------
 
-- Linux      (most in use at ASTRON are Ubuntu, CentOS, and SUSE Linux Enterprise)
+- Linux      (most in use at ASTRON are Ubuntu/Mint and CentOS)
 - Mac OS X   (reasonably recent should work, also with LLVM/Clang)
 
 
@@ -24,7 +24,7 @@ Install using Docker Scripts
 
 To create a Docker container with Ubuntu or CentOS and LOFAR Offline processing tools, see:
 
-	https://github.com/lofar-astron/lofar-deploy
+	https://github.com/ygrange/lofar-profiling
 
 
 Dependencies for Manual Build from Source
@@ -32,17 +32,18 @@ Dependencies for Manual Build from Source
 
 Please first try to install as many dependencies as possible using your OS
 package manager. For almost all cases, you also need the development packages
-('pkgname-dev' for Debian/Ubuntu, or 'pkgname-devel' for CentOS/Fedora).
+('pkgname-dev' for Ubuntu/Mint, or 'pkgname-devel' for CentOS/Fedora).
 
-For Debian/Ubuntu (likely incomplete list, but goes a long way):
+For Ubuntu/Mint (likely incomplete list, but goes a long way):
 
 	apt-get install subversion cmake make g++ gfortran python-dev python-numpy
 	apt-get install libboost-dev libblitz0-dev libfftw3-dev libcfitsio3-dev libxml2-dev
-	apt-get install libpng-dev                           # for AOFlagger
+        apt-get install libpng12-dev                         # or a newer version (for AOFlagger)
+
 	apt-get install libreadline-dev libpqxx-dev doxygen  # optional
-	apt-get install libgsl0-dev                          # optional, for AOFlagger's RayleighFitter
-	apt-get install libgtkmm-[2.4|3.0]-dev libsigc++-2.0-dev  # optional, for AOFlagger's rficonsole
 	apt-get install libunittest++-dev                    # optional, for tests that use UnitTest++
+        apt-get install libgsl0-dev                          # optional, for AOFlagger's RayleighFitter
+	apt-get install libgtkmm-2.4-dev libsigc++-2.0-dev   # optional, for AOFlagger's rficonsole
 
 
 For CentOS/Fedora (likely incomplete list, but goes a long way):
@@ -52,10 +53,10 @@ For CentOS/Fedora (likely incomplete list, but goes a long way):
 
 	yum install readline-devel libpqxx-devel doxygen     # optional
 	yum install gsl-devel                                # optional, for AOFlagger's RayleighFitter
-	yum install gtkmm[24|30]-devel libsigc++20-devel     # optional, for AOFlagger's rficonsole
+        yum install gtkmm24-devel libsigc++20-devel          # optional, for AOFlagger's rficonsole
 
 	The blitz and blitz-devel pkgs are available on some distros, but not on e.g. CentOS 7.
-	If required for your build, but not in your repo, take the two RPMs from CentOS 6 (or build from source).
+        If required for your build, but not in your repo, take the two RPMs from CentOS 6 (or build from source).
 	Idem for log4cplus (LOFAR log4cxx support is dodgy).
 	Similar for unittest++ and unitest++-devel (both optional), but take two RPMs from Fedora 22 (or build from source).
 	RPMs known to work on CentOS 7 can be found at: https://support.astron.nl/lofar_issuetracker/issues/8161
@@ -67,9 +68,7 @@ NOTE (any OS): For manual builds, the most prominent dependency you likely need 
 	casacore:                  https://github.com/casacore/casacore
 	python-casacore ('pyrap'): https://github.com/casacore/python-casacore
 	IERS/measures tables:      https://github.com/casacore/casacore-data-update
-	casarest:                  https://svn.astron.nl/casarest
-
-	AOFlagger:                 http://sourceforge.net/projects/aoflagger/
+        casarest:                  https://svn.astron.nl/casarest
 
 
 Instructions for Manual Build from Source

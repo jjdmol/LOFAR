@@ -50,7 +50,6 @@
 #include <vector>
 #include <algorithm>
 
-#include <limits>
 #include <iostream>
 #include <iomanip>
 
@@ -146,8 +145,6 @@ namespace LOFAR {
       for (int ant=0, nAnts=info().antennaUsed().size(); ant<nAnts; ++ant) {
         itsAntennaUsedNames[ant]=info().antennaNames()[info().antennaUsed()[ant]];
       }
-
-      iS.z.resize(OpenMP::maxThreads());
     }
 
     void GainCal::show (std::ostream& os) const
@@ -398,22 +395,26 @@ namespace LOFAR {
       iS.gx.resize(nUn,nCr);
       iS.gxx.resize(nUn,nCr);
       iS.h.resize(nUn,nCr);
-      uint numThreads=OpenMP::maxThreads();
-      for (uint thread=0; thread<numThreads; ++thread) {
-        iS.z[thread].resize(nUn*nCh*solInt*nSp,nCr);
-      }
+      iS.z.resize(nUn*nCh*solInt*nSp,nCr);
+
+      double ww; // Same as w, but specifically for pol==false
+      Vector<DComplex> w(nCr);
+      Vector<DComplex> t(nCr);
 
       // Initialize all vectors
       double fronormvis=0;
       double fronormmod=0;
 
-      DComplex* t_vis_p=itsVis.data();
-      DComplex* t_mvis_p=itsMVis.data();
+      DComplex* vis_p;
+      DComplex* mvis_p;
+
+      vis_p=itsVis.data();
+      mvis_p=itsMVis.data();
 
       uint vissize=itsVis.size();
       for (uint i=0;i<vissize;++i) {
-        fronormvis+=norm(t_vis_p[i]);
-        fronormmod+=norm(t_mvis_p[i]);
+        fronormvis+=norm(*vis_p++);
+        fronormmod+=norm(*mvis_p++);
       }
 
       fronormvis=sqrt(fronormvis);
@@ -454,35 +455,30 @@ namespace LOFAR {
 
 //#pragma omp parallel for
           for (uint st1=0;st1<nSt;++st1) {
-            uint thread=OpenMP::threadNum();
-            DComplex* vis_p;
-            DComplex* mvis_p;
-            Vector<DComplex> w(nCr);
-            Vector<DComplex> t(nCr);
-
             for (uint time=0;time<solInt;++time) {
               for (uint ch=0;ch<nCh;++ch) {
                 uint zoff=nSt*ch+nSt*nCh*time;
-                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,0,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z[thread](st2+zoff,0)  = iS.h(st2,0) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,0,st1)) 
-                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,0,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z[thread](st2+zoff,0) += iS.h(st2,2) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,1,st1)) 
-                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,1,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z[thread](st2+zoff,1)  = iS.h(st2,0) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,0,st1)) 
-                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,1,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z[thread](st2+zoff,1) += iS.h(st2,2) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,1,st1))
-                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,0,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z[thread](st2+zoff,2)  = iS.h(st2,1) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,0,st1)) 
-                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,0,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z[thread](st2+zoff,2) += iS.h(st2,3) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,1,st1)) 
-                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,1,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z[thread](st2+zoff,3)  = iS.h(st2,1) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,0,st1)) 
-                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,1,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z[thread](st2+zoff,3) += iS.h(st2,3) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,1,st1))
+                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,0,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+zoff,0)  = iS.h(st2,0) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,0,st1)); }
+                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,0,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+zoff,0) += iS.h(st2,2) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,1,st1)); }
+                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,1,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+zoff,1)  = iS.h(st2,0) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,0,st1)); }
+                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,1,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+zoff,1) += iS.h(st2,2) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,1,st1)); }
+                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,0,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+zoff,2)  = iS.h(st2,1) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,0,st1)); }
+                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,0,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+zoff,2) += iS.h(st2,3) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,1,st1)); }
+                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,1,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+zoff,3)  = iS.h(st2,1) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,0,st1)); }
+                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,1,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+zoff,3) += iS.h(st2,3) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,1,st1)); }
               }
             }
 
             w=0;
+            t=0;
 
             for (uint time=0;time<solInt;++time) {
               for (uint ch=0;ch<nCh;++ch) {
                 for (uint st2=0;st2<nSt;++st2) {
                   uint zoff=st2+nSt*ch+nSt*nCh*time;
-                  w(0) += conj(iS.z[thread](zoff,0))*iS.z[thread](zoff,0) + conj(iS.z[thread](zoff,2))*iS.z[thread](zoff,2);
-                  w(1) += conj(iS.z[thread](zoff,0))*iS.z[thread](zoff,1) + conj(iS.z[thread](zoff,2))*iS.z[thread](zoff,3);
-                  w(3) += conj(iS.z[thread](zoff,1))*iS.z[thread](zoff,1) + conj(iS.z[thread](zoff,3))*iS.z[thread](zoff,3);
+                  w(0) += conj(iS.z(zoff,0))*iS.z(zoff,0) + conj(iS.z(zoff,2))*iS.z(zoff,2);
+                  w(1) += conj(iS.z(zoff,0))*iS.z(zoff,1) + conj(iS.z(zoff,2))*iS.z(zoff,3);
+                  w(3) += conj(iS.z(zoff,1))*iS.z(zoff,1) + conj(iS.z(zoff,3))*iS.z(zoff,3);
                 }
               }
             }
@@ -492,14 +488,14 @@ namespace LOFAR {
 
             for (uint time=0;time<solInt;++time) {
               for (uint ch=0;ch<nCh;++ch) {
-                vis_p=&itsVis(IPosition(6,0,0,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,0)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,0,st1))
-                vis_p=&itsVis(IPosition(6,0,1,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,2)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,1,st1))
-                vis_p=&itsVis(IPosition(6,0,0,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,0)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,0,st1))
-                vis_p=&itsVis(IPosition(6,0,1,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,2)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,1,st1))
-                vis_p=&itsVis(IPosition(6,0,0,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,1)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,0,st1))
-                vis_p=&itsVis(IPosition(6,0,1,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,3)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,1,st1))
-                vis_p=&itsVis(IPosition(6,0,0,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,1)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,0,st1))
-                vis_p=&itsVis(IPosition(6,0,1,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,3)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,1,st1))
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,0)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,0,st1));}
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,2)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,1,st1));}
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,0)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,0,st1));}
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,2)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,1,st1));}
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,1)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,0,st1));}
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,3)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,1,st1));}
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,1)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,0,st1));}
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,3)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,1,st1));}
               }
             }
             DComplex invdet= 1./(w(0) * w (3) - w(1)*w(2));
@@ -521,13 +517,9 @@ namespace LOFAR {
           }
 //#pragma omp parallel for
           for (uint st1=0;st1<nUn;++st1) {
-            uint thread=OpenMP::threadNum();
-            DComplex* vis_p;
-            DComplex* mvis_p;
-            double ww=0; // Same as w, but specifically for pol==false
-            DComplex tt=0; // Same as t, but specifically for pol==false
-
-            DComplex* z_p=iS.z[thread].data();
+            ww=0;
+            t(0)=0;
+            DComplex* z_p=iS.z.data();
             mvis_p=&itsMVis(IPosition(6,0,0,0,0,st1/nSt,st1%nSt));
             vis_p = &itsVis(IPosition(6,0,0,0,0,st1/nSt,st1%nSt));
             for (uint st1pol=0;st1pol<nSp;++st1pol) {
@@ -537,7 +529,7 @@ namespace LOFAR {
                   for (uint st2=0;st2<nUn;++st2) {
                     *z_p = h_p[st2] * *mvis_p; //itsMVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1/nSt,st1%nSt));
                     ww+=norm(*z_p);
-                    tt+=conj(*z_p) * *vis_p; //itsVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1/nSt,st1%nSt));
+                    t(0)+=conj(*z_p) * *vis_p; //itsVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1/nSt,st1%nSt));
                     mvis_p++;
                     vis_p++;
                     z_p++;
@@ -546,9 +538,9 @@ namespace LOFAR {
                 }
               }
             }
-            //cout<<"st1="<<st1%nSt<<(st1>=nSt?"y":"x")<<", t="<<tt<<"       ";
+            //cout<<"st1="<<st1%nSt<<(st1>=nSt?"y":"x")<<", t="<<t(0)<<"       ";
             //cout<<", w="<<ww<<"       ";
-            iS.g(st1,0)=tt/ww;
+            iS.g(st1,0)=t(0)/ww;
             //cout<<", g="<<iS.g(st1,0)<<endl;
             //if (itsMode=="phaseonly" || itsMode=="scalarphase") {
             //  iS.g(st1,0)/=abs(iS.g(st1,0));
@@ -824,13 +816,6 @@ namespace LOFAR {
         itsParmDB->putDefValue("Gain:1:1:Ampl",pvset);
       }
 
-      // Write out default gains
-      if (itsMode=="diagonal" || itsMode=="fulljones") {
-        ParmValueSet pvset(ParmValue(1.0));
-        itsParmDB->putDefValue("Gain:0:0:Real",pvset);
-        itsParmDB->putDefValue("Gain:1:1:Real",pvset);
-      }
-
       // Write the solutions per parameter.
       const char* str0101[] = {"0:0:","1:0:","0:1:","1:1:"}; // Conjugate transpose!
       const char* strri[] = {"Real:","Imag:"};
@@ -864,12 +849,11 @@ namespace LOFAR {
             // Collect its solutions for all times in a single array.
             for (uint ts=0; ts<ntime; ++ts) {
               if (itsAntMaps[ts][st]==-1) {
-                // No solution found, insert NaN
                 if (itsMode!="phaseonly" && itsMode!="scalarphase" &&
                     realim==0 && (pol==0||pol==3)) {
-                  values(0, ts) = std::numeric_limits<double>::quiet_NaN();
+                  values(0, ts) = 1;
                 } else {
-                  values(0, ts) = std::numeric_limits<double>::quiet_NaN();
+                  values(0, ts) = 0;
                 }
               } else {
                 int rst=itsAntMaps[ts][st]; // Real station

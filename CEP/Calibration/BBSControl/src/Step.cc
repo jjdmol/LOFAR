@@ -254,20 +254,8 @@ namespace LOFAR
         itsModelConfig.clearGainConfig();
       }
 
-      if (ps.getBool(prefix+"Model.TEC.Enable", itsModelConfig.useTEC())) {
-        TECConfig parentConfig = itsModelConfig.getTECConfig();
-
-        bool splitTEC = false;
-        if(itsModelConfig.useTEC()) {
-          splitTEC = ps.getBool(prefix+"Model.TEC.Split",
-              parentConfig.splitTEC());
-        } else {
-          splitTEC = ps.getBool(prefix+"Model.TEC.Split", false);
-        }
-        itsModelConfig.setTECConfig(TECConfig(splitTEC));
-      } else {
-        itsModelConfig.clearTECConfig();
-      }
+      itsModelConfig.setTEC(ps.getBool(prefix+"Model.TEC.Enable",
+        itsModelConfig.useTEC()));
 
       itsModelConfig.setCommonRotation(ps.getBool(prefix+"Model.CommonRotation.Enable",
         itsModelConfig.useCommonRotation()));

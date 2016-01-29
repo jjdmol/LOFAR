@@ -44,12 +44,12 @@ namespace LOFAR {
 
     ApplyCal::ApplyCal (DPInput* input,
                         const ParameterSet& parset,
-                        const string& prefix,
-                        bool substep)
+                        const string& prefix)
       : itsInput       (input),
         itsName        (prefix),
         itsParmDBName  (parset.getString (prefix + "parmdb")),
         itsCorrectType (toLower(parset.getString (prefix + "correction", "gain"))),
+        itsInvert      (parset.getBool (prefix + "invert", true)),
         itsTimeSlotsPerParmUpdate (parset.getInt (prefix +
             "timeslotsperparmupdate", 500)),
         itsSigmaMMSE   (parset.getDouble (prefix + "MMSE.Sigma", 0)),
@@ -61,18 +61,10 @@ namespace LOFAR {
         itsUseAP       (false)
     {
       ASSERT (!itsParmDBName.empty());
-      if (substep) {
-        itsInvert=false;
-      } else {
-        itsInvert=parset.getBool (prefix + "invert", true);
-      }
       if (itsCorrectType=="fulljones" && itsUpdateWeights) {
         ASSERTSTR (itsInvert, "Updating weights has not been implemented for invert=false and fulljones");
       }
     }
-
-    ApplyCal::ApplyCal()
-    {}
 
     ApplyCal::~ApplyCal()
     {}
@@ -117,7 +109,7 @@ namespace LOFAR {
           // Defvalues with :Ampl present
           itsUseAP = true;
         } else {
-          THROW (Exception, "No gains found in parmdb "+itsParmDBName);
+          THROW (Exception, "No gains found in parmdb");
         }
       }
 
@@ -154,14 +146,7 @@ namespace LOFAR {
           itsParmExprs.push_back("Gain:1:1:Imag");
         }
       } else if (itsCorrectType == "tec") {
-        if (itsParmDB->getNames("TEC:0:*").empty() &&
-                    itsParmDB->getDefNames("TEC:0:*").empty() ) {
-          itsParmExprs.push_back("TEC");
-        }
-        else {
-          itsParmExprs.push_back("TEC:0");
-          itsParmExprs.push_back("TEC:1");
-        }
+        itsParmExprs.push_back("TEC");
       } else if (itsCorrectType == "clock") {
         if (itsParmDB->getNames("Clock:0:*").empty() &&
             itsParmDB->getDefNames("Clock:0:*").empty() ) {
@@ -279,7 +264,9 @@ namespace LOFAR {
       double minFreq       (info().chanFreqs()[0]-0.5*freqInterval);
       double maxFreq (info().chanFreqs()[numFreqs-1]+0.5*freqInterval);
 
-      itsLastTime = bufStartTime + itsTimeSlotsPerParmUpdate * itsTimeInterval;
+      itsLastTime = std::min(
+          bufStartTime + itsTimeSlotsPerParmUpdate * itsTimeInterval,
+          info().startTime() + info().ntime() * itsTimeInterval);
 
       map<string, vector<double> > parmMap;
       map<string, vector<double> >::iterator parmIt;
@@ -377,14 +364,8 @@ namespace LOFAR {
           else if (itsCorrectType=="tec") {
             itsParms[0][ant][tf]=polar(1.,
                 parmvalues[0][ant][tf] * -8.44797245e9 / freq);
-            if (itsParmExprs.size() == 1) { // No TEC:0, only TEC:
-              itsParms[1][ant][tf]=polar(1.,
-                  parmvalues[0][ant][tf] * -8.44797245e9 / freq);
-            }
-            else { // TEC:0 and TEC:1
-              itsParms[1][ant][tf]=polar(1.,
-                  parmvalues[1][ant][tf] * -8.44797245e9 / freq);
-            }
+            itsParms[1][ant][tf]=polar(1.,
+                parmvalues[0][ant][tf] * -8.44797245e9 / freq);
           }
           else if (itsCorrectType=="clock") {
             itsParms[0][ant][tf]=polar(1.,

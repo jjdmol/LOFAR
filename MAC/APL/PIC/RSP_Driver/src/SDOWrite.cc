@@ -55,8 +55,6 @@ SDOWrite::~SDOWrite()
 
 void SDOWrite::sendrequest()
 {
-    
-    
     if (StationSettings::instance()->hasAartfaac() == false) {
         LOG_INFO_STR(formatString("SDOWrite:: No Aartfaac on this station"));
         //Cache::getInstance().getState().sdoSelectState().unmodified(global_blp);
@@ -64,16 +62,16 @@ void SDOWrite::sendrequest()
         setFinished();
         return;
     }
+
+    itsActiveBanks   = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getSDOBitsPerSample());
+	uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + (getCurrentIndex() / itsActiveBanks);
 	
     if (getCurrentIndex() >= (itsActiveBanks * NR_BLPS_PER_RSPBOARD)) {
 		//Cache::getInstance().getState().sdoSelectState().unmodified(global_blp);
         setContinue(true);
-        setFinished();
+        //setFinished();
 		return;
 	}
-    
-    itsActiveBanks   = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getSDOBitsPerSample());
-	uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + (getCurrentIndex() / itsActiveBanks);
     
     if (RTC::RegisterState::WRITE != Cache::getInstance().getState().sdoSelectState().get(global_blp))
     {

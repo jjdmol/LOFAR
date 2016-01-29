@@ -80,13 +80,12 @@ public:
 		tdstatusread_state.resize(nrRspBoards);
 		tbbsettings_state.resize(nrRcus);
 		tbbbandsel_state.resize(nrRcus);
-		bypasssettings_bp_state.resize(nrRspBoards);
+		bypasssettings_state.resize(nrBlps);
 		rawdatawrite_state.resize(nrRspBoards);
 		rawdataread_state.resize(nrRspBoards);
 		itsSerdesWriteState.resize(nrRspBoards);
 		itsSerdesReadState.resize(nrRspBoards);
 		itsBitModeWriteState.resize(nrRspBoards);
-		bypasssettings_state.resize(nrBlps);
 		itsSDOModeWriteState.resize(nrRspBoards);
 		itsSDOSelectWriteState.resize(nrBlps);
 		ts_state.resize(nrRspBoards);
@@ -128,7 +127,6 @@ public:
 		itsSerdesWriteState.reset();
 		itsSerdesReadState.reset();
 		itsBitModeWriteState.reset();
-		bypasssettings_bp_state.reset();
 		itsSDOModeWriteState.reset();
 		itsSDOSelectWriteState.reset();
         ts_state.reset();
@@ -162,10 +160,9 @@ public:
 		itsSerdesWriteState.check();
 		itsSerdesReadState.check();
 		itsBitModeWriteState.write();
-		bypasssettings_bp_state.write(); // REO: When is this function called???
-        itsSDOModeWriteState.check();
+		itsSDOModeWriteState.check();
 		itsSDOSelectWriteState.check();
-        ts_state.write();
+		ts_state.write();
 	}
 
 	//
@@ -195,16 +192,15 @@ public:
 		tdstatusread_state.read();
 		tbbsettings_state.check();
 		tbbbandsel_state.check();
-		bypasssettings_bp_state.check();
+		bypasssettings_state.check();
 		rawdatawrite_state.check();
 		rawdataread_state.check();
 		itsSerdesWriteState.check();
 		itsSerdesReadState.check();
 		itsBitModeWriteState.check();
-		bypasssettings_state.check();
 		itsSDOModeWriteState.check();
 		itsSDOSelectWriteState.check();
-        ts_state.write(); // always write timestamp
+		ts_state.write(); // always write timestamp
 	}
 
 	//
@@ -234,23 +230,22 @@ public:
 		tdstatusread_state.clear();
 		tbbsettings_state.clear();
 		tbbbandsel_state.clear();
-		bypasssettings_bp_state.clear();
+		bypasssettings_state.clear();
 		rawdatawrite_state.clear();
 		rawdataread_state.clear();
 		itsSerdesWriteState.clear();
 		itsSerdesReadState.clear();
 		itsBitModeWriteState.clear();
-		bypasssettings_state.clear();
 		itsSDOModeWriteState.clear();
 		itsSDOSelectWriteState.clear();
-        ts_state.clear();
+		ts_state.clear();
 		
 	}
 
 	//
 	// print(os)
 	//
-	void print(std::ostream& out, bool hasAartfaac=false) const {
+	void print(std::ostream& out) const {
 		out << "                    ";
 		for (int i = 0; i < m_nrcus * N_POL; i++) {
 			out << (i % 10) << " ";
@@ -283,12 +278,9 @@ public:
 		out << "SerdesWrite         "; itsSerdesWriteState.print(out);
 		out << "SerdesRead          "; itsSerdesReadState.print(out);
 		out << "Bitmode Status (w)  "; itsBitModeWriteState.print(out);
-		if (hasAartfaac) {
-            out << "SDOEnable Status    "; bypasssettings_bp_state.print(out);
-            out << "SDOMode Status      "; itsSDOModeWriteState.print(out);
-            out << "SDOSelect Status    "; itsSDOSelectWriteState.print(out);
-        }
-        out << "RawDataBlock(write) "; rawdatawrite_state.print(out);
+		out << "SDOMode Status (w)  "; itsSDOModeWriteState.print(out);
+		out << "SDOSelect Status (w)"; itsSDOSelectWriteState.print(out);
+		out << "RawDataBlock(write) "; rawdatawrite_state.print(out);
 		out << "RawDataBlock(read)  "; rawdataread_state.print(out);
 		out << "Timestamp           "; ts_state.print(out);
 		out << endl;
@@ -329,7 +321,6 @@ public:
 	RTC::RegisterState& tbbsettings()       { return tbbsettings_state; }
 	RTC::RegisterState& tbbbandsel()        { return tbbbandsel_state; }
 	RTC::RegisterState& bypasssettings()    { return bypasssettings_state; }
-	RTC::RegisterState& bypasssettings_bp() { return bypasssettings_bp_state; }
 	RTC::RegisterState& rawdatawrite()      { return rawdatawrite_state; }
 	RTC::RegisterState& rawdataread()       { return rawdataread_state; }
 	RTC::RegisterState& sbwState()    	    { return itsSerdesWriteState; }
@@ -366,14 +357,13 @@ private:
 	RTC::RegisterState tdstatusread_state;      // TDS status result
 	RTC::RegisterState tbbsettings_state;       // TBB settings state
 	RTC::RegisterState tbbbandsel_state;        // TBB bandsel state
-	RTC::RegisterState bypasssettings_state;    // Bypass (specinv) state
-	RTC::RegisterState bypasssettings_bp_state; // Bypass (sdo enable) state
+	RTC::RegisterState bypasssettings_state;    // Bypass (specinv & sdo enable) state
 	RTC::RegisterState rawdatawrite_state;	    // Write userdefined datablock
 	RTC::RegisterState rawdataread_state;	    // Read userdefined datablock
 	RTC::RegisterState itsSerdesWriteState;	    // Writing Serdes registers
 	RTC::RegisterState itsSerdesReadState;	    // Reading Serdes registers
 	RTC::RegisterState itsBitModeWriteState;    // RSR Bitmode register state
-    RTC::RegisterState itsSDOModeWriteState;    // RSR SDOMode register state
+	RTC::RegisterState itsSDOModeWriteState;    // RSR SDOMode register state
 	RTC::RegisterState itsSDOSelectWriteState;  // SDO SDOSelect register state
 	RTC::RegisterState ts_state;                // RSR Timestamp register state
 

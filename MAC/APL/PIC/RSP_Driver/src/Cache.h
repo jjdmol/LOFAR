@@ -87,7 +87,6 @@ public:
 	SPUStatus& 				getSPUStatus() 			{ return m_spustatus; } 
 	TBBSettings& 			getTBBSettings() 		{ return m_tbbsettings; } 
 	BypassSettings& 		getBypassSettings()		{ return m_bypasssettings; } 
-	BypassSettings& 		getBypassSettingsBP()	{ return m_bypasssettings_bp; } 
 	RawDataBlock_t&			getRawDataBlock() 		{ return (itsRawDataBlock); } 
 	SerdesBuffer&			getSdsWriteBuffer() 	{ return (itsSdsWriteBuffer); }
 	SerdesBuffer&			getSdsReadBuffer(int rspBoardNr);
@@ -168,7 +167,6 @@ private:
 	RSP_Protocol::SPUStatus			m_spustatus;
 	RSP_Protocol::TBBSettings		m_tbbsettings;
 	RSP_Protocol::BypassSettings	m_bypasssettings;
-	RSP_Protocol::BypassSettings	m_bypasssettings_bp;
 	RawDataBlock_t					itsRawDataBlock;
 	SerdesBuffer					itsSdsWriteBuffer;
 	SerdesBuffer					itsSdsReadBuffer[MAX_RSPBOARDS];

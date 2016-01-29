@@ -86,8 +86,7 @@ makeGainExpr(Scope &scope,
 
 Expr<JonesMatrix>::Ptr
 makeTECExpr(Scope &scope,
-    const Station::ConstPtr &station,
-    const TECConfig &config);
+    const Station::ConstPtr &station);
 
 Expr<JonesMatrix>::Ptr
 makeCommonRotationExpr(Scope &scope,

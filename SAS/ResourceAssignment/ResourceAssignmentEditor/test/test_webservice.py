@@ -2,10 +2,13 @@
 
 import unittest
 import sys
+import time
 import urllib2
+from threading import Thread
+from datetime import datetime
 from flask.ext.testing import TestCase as FlaskTestCase
 from flask.ext.testing import LiveServerTestCase as FlaskLiveTestCase
-from resourceassignementeditor import webservice
+from lofar.sas.resourceassignment.resourceassignmenteditor import webservice
 
 
 def setUpModule():
@@ -18,8 +21,8 @@ def tearDownModule():
     pass
 
 
-class TestResourceAssignementEditor(FlaskTestCase):
-    '''Test the logic in the ResourceAssignementEditor web service'''
+class TestResourceAssignmentEditor(FlaskTestCase):
+    '''Test the logic in the ResourceAssignmentEditor web service'''
 
     def create_app(self):
         # override create_app method from FlaskTestCase
@@ -39,13 +42,13 @@ class TestResourceAssignementEditor(FlaskTestCase):
         self.assertEqual(404, self.client.get(baseurl + '/hdaHJSK/fsfaAFdsaf.gwg').status_code)
 
 
-class TestLiveResourceAssignementEditor(FlaskLiveTestCase):
-    '''Test the live ResourceAssignementEditor web service'''
+class TestLiveResourceAssignmentEditor(FlaskLiveTestCase):
+    '''Test the live ResourceAssignmentEditor web service'''
 
     def create_app(self):
         # override create_app method from FlaskLiveTestCase
         # this provides the FlaskLiveTestCase with our webservice to test.
-        self.port = 63124
+        self.port = 63123
         webservice.app.debug = False
         webservice.app.use_debugger = False
         webservice.app.use_reloader = False
@@ -64,6 +67,41 @@ class TestLiveResourceAssignementEditor(FlaskLiveTestCase):
         # also test a non-existent url, should give 404
         with self.assertRaises(urllib2.HTTPError):
             self.assertEqual(404, urllib2.urlopen(baseurl + '/hdaHJSK/fsfaAFdsaf.gwg').code)
+
+    #TODO: make testUpdatesSince working
+    #def testUpdatesSince(self):
+        #'''testUpdatesSince
+        #'''
+        #baseurl = 'http://localhost:%d' % (self.port)
+
+        #def putTask():
+            #print "putTask"
+            #time.sleep(1)
+            #print "putTask 2"
+            #task = "{'id': 1, 'from': %s}" % datetime.utcnow().isoformat()
+            #opener = urllib2.build_opener(urllib2.HTTPHandler)
+            #request = urllib2.Request(baseurl + '/rest/tasks/1', data=task)
+            #request.add_header('Content-Type', 'application/json')
+            #request.get_method = lambda: 'PUT'
+            #print "putTask send request"
+            #response = opener.open(request)
+            #print "putTask has response"
+            #self.assertEqual(200, response.code)
+
+        #def listenForUpdates():
+            #print "putTask"
+            #response = urllib2.urlopen(baseurl + '/rest/updates')
+            #self.assertEqual(200, response.code)
+
+        #t1 = Thread(target=putTask)
+        #t1.start()
+
+        #t2 = Thread(target=listenForUpdates)
+        #t2.start()
+
+        #t1.join()
+        #t2.join()
+
 
 
 def main(argv):

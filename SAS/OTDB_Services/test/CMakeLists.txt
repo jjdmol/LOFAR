@@ -2,8 +2,6 @@
 
 include(LofarCTest)
 
-lofar_find_package(Python REQUIRED)
-
 lofar_add_test(t_TreeService)
 lofar_add_test(t_TreeStatusEvents)
 

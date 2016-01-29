@@ -64,7 +64,6 @@
 #define TBB_SPECTRAL_MODE                       2
 
 #define RSP_NR_SUBBANDS                         512
-#define INVALID_SUBBAND_STORAGE_INDEX           UINT_MAX
 
 namespace LOFAR
 {
@@ -239,7 +238,6 @@ namespace LOFAR
       /*
        * Out-of-order or duplicate frames are very unlikely in the LOFAR TBB setup,
        * but let us know if it ever happens, then we will adapt this code and appendFlags().
-       * Update: it happens when data is dumped (incorrectly) across the frozen TBB write pointer. (TODO: deal with this one time data shift)
        */
       if (frame.header.time < itsTime || (frame.header.time == itsTime && frame.header.sampleNr < itsExpSampleNr)) {
         LOG_WARN_STR("TBB: Unhandled out-of-order or duplicate frame: " <<
@@ -275,7 +273,7 @@ namespace LOFAR
 
       /*
        * On a data checksum error, flag these samples.
-       * Flag zeroed payloads too, as incredibly unlikely to be correct (unless wave generator used and set to zero amp (pointless)), but not rejected by crc32tbb.
+       * Flag zeroed payloads too, as incredibly unlikely to be correct, but not rejected by crc32tbb.
        */
       if (!crc32tbb(&frame.payload, frame.header.nOfSamplesPerFrame)) {
         appendFlags(offset, frame.header.nOfSamplesPerFrame);
@@ -299,7 +297,6 @@ namespace LOFAR
       /*
        * Out-of-order or duplicate frames are very unlikely in the LOFAR TBB setup,
        * but let us know if it ever happens, then we will adapt this code and appendFlags().
-       * Update: it happens when data is dumped (incorrectly) across the frozen TBB write pointer. (TODO: deal with this one time data shift)
        */
       uint32_t sliceNr = frame.header.bandSliceNr >> TBB_SLICE_NR_SHIFT; // cannot sanitize fully: too large values indicate lost data: flag
       if (frame.header.time < itsTime || (frame.header.time == itsTime && sliceNr < itsExpSliceNr)) {
@@ -332,7 +329,7 @@ namespace LOFAR
 
       /*
        * On a data checksum error, flag these samples.
-       * Flag zeroed payloads too, as incredibly unlikely to be correct (unless wave generator used and set to zero amp (pointless)), but not rejected by crc32tbb.
+       * Flag zeroed payloads too, as incredibly unlikely to be correct, but not rejected by crc32tbb.
        *
        * TBB Design Doc states the crc32 is computed for transient data only, but it is also valid for spectral data.
        * Except that it looks invalid for the first spectral frame each second, so skip checking those. // TODO: enable 'sliceNr != 0 && ' below after verifying with recent real data
@@ -598,7 +595,7 @@ namespace LOFAR
         }
 
         // "Invert" tbbSubbandList, such that we can later simply lookup where to store a subband.
-        info.storageIndices.resize(RSP_NR_SUBBANDS, INVALID_SUBBAND_STORAGE_INDEX); // TODO: check for the invalid idx at frame rx
+        info.storageIndices.resize(RSP_NR_SUBBANDS, (unsigned)-1);
         for (unsigned i = 0; i < tbbSubbandList.size(); ++i) {
           unsigned sbNr = tbbSubbandList[i];
           if (sbNr >= RSP_NR_SUBBANDS) {

@@ -32,6 +32,7 @@
 #include <DPPP/ApplyBeam.h>
 #include <DPPP/Averager.h>
 #include <DPPP/MedFlagger.h>
+#include <DPPP/AORFlagger.h>
 #include <DPPP/PreFlagger.h>
 #include <DPPP/UVWFlagger.h>
 #include <DPPP/PhaseShift.h>
@@ -48,7 +49,6 @@
 #include <DPPP/DPLogger.h>
 #include <Common/Timer.h>
 #include <Common/StreamUtil.h>
-#include <Common/OpenMP.h>
 
 #include <casa/OS/Path.h>
 #include <casa/OS/DirectoryIterator.h>
@@ -83,7 +83,7 @@ namespace LOFAR {
         libname = libname.substr (0, pos);
       }
       // Try to load and initialize the dynamic library.
-      casa::DynLib dl(libname, string("libdppp_"), "register_"+libname, false);
+      casa::DynLib dl(libname, string(), "register_"+libname, false);
       if (dl.getHandle()) {
         // See if registered now.
         iter = theirStepMap.find (type);
@@ -92,8 +92,7 @@ namespace LOFAR {
         }
       }
       THROW(Exception, "Step type " + type +
-            " is unknown and no shared library lib" + libname + " or libdppp_" +
-            libname + " found in (DY)LD_LIBRARY_PATH");
+            " is unknown and no such shared library found");
     }
 
 
@@ -122,9 +121,6 @@ namespace LOFAR {
       }
 
       bool showcounts = parset.getBool ("showcounts", true);
-
-      uint numThreads = parset.getInt("numthreads", OpenMP::maxThreads());
-      OpenMP::setNumThreads(numThreads);
 
       // Create the steps and fill their DPInfo objects.
       DPStep::ShPtr firstStep = makeSteps (parset);
@@ -282,14 +278,16 @@ namespace LOFAR {
         string prefix(*iter + '.');
         // The name is the default step type.
         string type = toLower(parset.getString (prefix+"type", *iter));
-        // Define correct name for AOFlagger synonyms.
-        if (type == "aoflagger"  ||  type == "rficonsole") {
-          type = "aoflag";
+        if (type == "newaoflagger"  ||  type == "newaoflag") {
+          type = "aoflaggerstep";
         }
         if (type == "averager"  ||  type == "average"  ||  type == "squash") {
           step = DPStep::ShPtr(new Averager (reader, parset, prefix));
         } else if (type == "madflagger"  ||  type == "madflag") {
           step = DPStep::ShPtr(new MedFlagger (reader, parset, prefix));
+        } else if (type == "aoflagger"  ||  type == "aoflag"
+                   ||  type == "rficonsole") {
+          step = DPStep::ShPtr(new AORFlagger (reader, parset, prefix));
         } else if (type == "preflagger"  ||  type == "preflag") {
           step = DPStep::ShPtr(new PreFlagger (reader, parset, prefix));
         } else if (type == "uvwflagger"  ||  type == "uvwflag") {

@@ -96,7 +96,6 @@ lofar_add_bin_program(RSPDriver
   BstRead.cc
   XstRead.cc
   BypassRead.cc
-  BypassReadBP.cc
   VersionsRead.cc
   WGWrite.cc
   WGRead.cc
@@ -115,7 +114,6 @@ lofar_add_bin_program(RSPDriver
   TBBSettingsWrite.cc
   TBBBandselWrite.cc
   BypassWrite.cc
-  BypassWriteBP.cc
   SerdesWrite.cc
   SerdesRead.cc
   UpdSplitterCmd.cc

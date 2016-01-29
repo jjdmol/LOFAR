@@ -186,10 +186,9 @@ class MessageContent(object):
         self.momid           = momid
         self.sasid           = sasid
       else:  # Set properties by provided qpidMsg
-        # MessageBus msg fmt def and C++ side are broken, hence deprecated.
-        # Try to encode '<', '&', '>' in the content payload, whenever possible.
-        # Content header should not have these. For C++ MessageBus non-libxml++
-        # builds, skip encode if XML tags continue in <payload>. Hack ahead!
+        # Encode '<', '&', '>' in the content payload. Content header should not
+        # have these and going through all header fields is tedious; tough luck.
+        # Some senders fail to use libxml++ properly/at all. Fix it! Hack ahead!
         if qpidMsg.content is None:
           qpidMsg.content = ''  # avoid find() or replace() via escape() on None
         plIdx = qpidMsg.content.find('<payload>')
@@ -197,11 +196,7 @@ class MessageContent(object):
           plIdx += len('<payload>')
           plEndIdx = qpidMsg.content.rfind('</payload>', plIdx)
           if plEndIdx != -1:
-            eqIdx = qpidMsg.content.find('=', plIdx, plEndIdx)  # non-empty parset
-            if eqIdx != -1 and eqIdx < qpidMsg.content.find('<', plIdx, plEndIdx):
-              qpidMsg.content = qpidMsg.content[ : plIdx] + \
-                                escape(qpidMsg.content[plIdx : plEndIdx]) + \
-                                qpidMsg.content[plEndIdx : ]
+            qpidMsg.content = qpidMsg.content[ : plIdx] + escape(qpidMsg.content[plIdx : plEndIdx]) + qpidMsg.content[plEndIdx : ]
         self.document = XMLDoc(qpidMsg.content)  # may raise MessageException
 
     def _add_property(self, name, element):

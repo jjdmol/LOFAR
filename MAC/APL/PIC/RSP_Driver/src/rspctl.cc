@@ -1834,7 +1834,7 @@ GCFEvent::TResult RegisterStateCommand::ack(GCFEvent& e)
 	if (RSP_SUCCESS == upd.status) {
 		std::ostringstream logStream;
 		logStream << "registerstate update at " << upd.timestamp << endl;
-		upd.state.print(logStream, gHasAartfaac);
+		upd.state.print(logStream);
 		logMessage(cout,logStream.str());
 	}
 	else {
@@ -3679,20 +3679,17 @@ static void usage(bool exportMode)
 	cout << "rspctl --rspclear           [--select=<set>]   # clear FPGA registers on RSPboard" << endl;
 	cout << "rspctl --hbadelays[=<list>] [--select=<set>]   # set or get the 16 delays of one or more HBA's" << endl;
 	cout << "rspctl --tbbmode[=transient | =subbands,<set>] # set or get TBB mode, 'transient' or 'subbands', if subbands then specify subband set" << endl;
-	if (gHasSplitter) {
-        cout << "rspctl --splitter[=0|1]                        # set or get the status of the Serdes splitter" << endl;
-    }
-    cout << "rspctl --datastream[=0|1|2|3]                  # set or get the status of data stream to cep" << endl;
+	cout << "rspctl --splitter[=0|1]                        # set or get the status of the Serdes splitter" << endl;
+	cout << "rspctl --datastream[=0|1|2|3]                  # set or get the status of data stream to cep" << endl;
 	cout << "rspctl --swapxy[=0|1] [--select=<set>]         # set or get the status of xy swap, 0=normal, 1=swapped" << endl;
 	cout << "rspctl --bitmode[=4|8|16]                      # set or get the number of bits per sample" << endl;
 	cout << endl;
-    if (gHasAartfaac) {
-        cout << "--- Subband Data Output (SDO) --------------------------------------------------------------------------------" << endl;
-        cout << "rspctl --sdoenable[=0|1]                       # enable (or disable) sdo output" << endl;
-        cout << "rspctl --sdomode[=4|5|8|16]                    # set or get the number of bits per sample" << endl;
-        cout << "rspctl --sdo                 [--select=<set>]  # get sdo selection" << endl;
-        cout << "rspctl --sdo=<set>           [--select=<set>]  # set sdo selection" << endl;
-    }
+    cout << "--- Subband Data Output (SDO) --------------------------------------------------------------------------------" << endl;
+    cout << "rspctl --sdoenable[=0|1]                       # enable (or disable) sdo output" << endl;
+    cout << "rspctl --sdomode[=4|5|8|16]                    # set or get the number of bits per sample" << endl;
+    cout << "rspctl --sdo                 [--select=<set>]  # get sdo selection" << endl;
+    cout << "rspctl --sdo=<set>           [--select=<set>]  # set sdo selection" << endl;
+
     if (exportMode) {
 	cout << endl;
 	cout << "--- Raw register control -------------------------------------------------------------------------------------" << endl;

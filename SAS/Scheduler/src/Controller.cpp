@@ -3373,9 +3373,9 @@ std::pair<unscheduled_reasons, QString> Controller::checkPredecessorDependencies
 			predTask = data.getTask(predit->second, predit->first);
 			if (predTask) {
 				predState = predTask->getStatus();
-				if ((predState < newState) || (predState > Task::ABORTED)) {
+				if ((predState < newState) || (predState > Task::FINISHED)) {
 					error.first = PREDECESSOR_UNSCHEDULED;
-					error.second = "The task cannot be scheduled because not all its predecessors are (pre)scheduled..aborted.\nThe predecessors may not have a lower state.";
+					error.second = "The task cannot be scheduled because not all its predecessors are (pre)scheduled..finished.\nThe predecessors may not have a lower state.";
 					return error; // not all predecessors in correct state, cannot schedule the current task
 				}
                 else if (pTask->getScheduledStart() < predTask->getRealEnd() + theSchedulerSettings.getMinimumTimeBetweenTasks()) {

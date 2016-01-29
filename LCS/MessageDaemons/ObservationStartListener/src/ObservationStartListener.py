@@ -191,22 +191,27 @@ def getModuleName():
     return name
 
 def initLogger(logfilename, quiet):
-    # Log to file. Optional to stderr. File-only is better for a system service.
+    # RootLogger may have already been set up by an imported LOFAR pkg (broken).
+    # If so, reuse its log format. Else, set up something reasonable.
     global logger
-    logger = logging.getLogger(getModuleName())
-    logger.setLevel(logging.INFO)
-    fmt = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    logger = logging.getLogger()
+    if logger.handlers:
+        sh = logger.handlers[0]
+        fmt = sh.formatter
+    else:
+        logger = logging.getLogger(getModuleName())
+        logger.setLevel(logging.INFO)
+        sh = logging.StreamHandler()  # stderr by default
+        fmt = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+        sh.setFormatter(fmt)
 
+    # Always make fh handler 0 to easily hook up created processes to it.
     fh = logging.FileHandler(logfilename)  # appends or creates, may raise
     fh.setLevel(logging.INFO)
     fh.setFormatter(fmt)
-    logger.addHandler(fh)  # created process logic expects file logger first
+    logger.handlers[0] = fh
     if not quiet:
-        sh = logging.StreamHandler()  # stderr by default
-        sh.setLevel(logging.INFO)
-        sh.setFormatter(fmt)
         logger.addHandler(sh)
-
     return fh
 
 def registerCmdOptions(parser):
@@ -311,7 +316,7 @@ def main(args):
             logger.info('Exiting due to SIGTERM (status was %d)', status)
             os.kill(os.getpid(), signal.SIGTERM)
         else:
-            logger.info('KeyboardInterrupt')
+            logger.warn('KeyboardInterrupt')
             status = 1  # maybe need os.kill() too, but Python exits 1 on kbint
 
     logger.info('Exiting with status %d', status)

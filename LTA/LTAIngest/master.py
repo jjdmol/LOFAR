@@ -133,8 +133,6 @@ class jobHandler(Process):
     jobname = job['filename']
     if job['Type'] == 'MoM':
       Dir = 'A_%s/' % job['job_group']  
-    elif job['Type'].lower() == 'eor':
-      Dir = 'EoR_%s/' % job['job_group']
     else: ## tier0-ingest
       Dir = 'B_%s/' % job['job_group']
     if job['Status'] == JobProduced:

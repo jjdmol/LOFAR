@@ -53,7 +53,7 @@ class FromBusInitFailed(unittest.TestCase):
         regexp = re.escape(self.error)
         regexp += '.*' + 'No address associated with hostname'
         with self.assertRaisesRegexp(MessageBusError, regexp):
-            with FromBus(QUEUE, broker="foo.bar", broker_options={'reconnect': False}):
+            with FromBus(QUEUE, broker="foo.bar"):
                 pass
 
     def test_connection_refused(self):
@@ -62,7 +62,7 @@ class FromBusInitFailed(unittest.TestCase):
         """
         regexp = re.escape(self.error) + '.*' + 'Connection refused'
         with self.assertRaisesRegexp(MessageBusError, regexp):
-            with FromBus("fake" + QUEUE, broker="localhost:4", broker_options={'reconnect': False}):
+            with FromBus("fake" + QUEUE, broker="localhost:4"):
                 pass
 
 
@@ -164,7 +164,7 @@ class ToBusInitFailed(unittest.TestCase):
         regexp = re.escape(self.error)
         regexp += '.*' + 'No address associated with hostname'
         with self.assertRaisesRegexp(MessageBusError, regexp):
-            with ToBus(QUEUE, broker="foo.bar",  broker_options={'reconnect': False}):
+            with ToBus(QUEUE, broker="foo.bar"):
                 pass
 
     def test_connection_refused(self):
@@ -173,7 +173,7 @@ class ToBusInitFailed(unittest.TestCase):
         """
         regexp = re.escape(self.error) + '.*' + 'Connection refused'
         with self.assertRaisesRegexp(MessageBusError, regexp):
-            with ToBus(QUEUE, broker="localhost:4", broker_options={'reconnect': False}):
+            with ToBus(QUEUE, broker="localhost:4"):
                 pass
 
 

@@ -52,19 +52,6 @@ private:
     bool itsSplitClock;
 };
 
-// Configuration options specific to TEC.
-class TECConfig
-{
-public:
-    TECConfig();
-    TECConfig(bool splitTEC);
-
-    bool splitTEC() const;
-
-private:
-    bool itsSplitTEC;
-};
-
 // Configuration options specific to the direction independent gain model.
 class GainConfig
 {
@@ -188,9 +175,7 @@ public:
     void clearGainConfig();
 
     bool useTEC() const;
-    void setTECConfig(const TECConfig &config);
-    const TECConfig &getTECConfig() const;
-    void clearTECConfig();
+    void setTEC(bool value = true);
 
     bool useCommonRotation() const;
     void setCommonRotation(bool value = true);
@@ -266,7 +251,6 @@ private:
     bool                    itsModelOptions[N_ModelOptions];
 
     ClockConfig             itsConfigClock;
-    TECConfig               itsConfigTEC;
     GainConfig              itsConfigGain;
     DirectionalGainConfig   itsConfigDirectionalGain;
     ElevationCutConfig      itsConfigElevationCut;

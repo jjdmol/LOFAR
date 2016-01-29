@@ -19,26 +19,33 @@
 
 # $Id$
 
-'''ResourceAssignementEditor webservice serves a interactive html5 website for
+'''ResourceAssignmentEditor webservice serves a interactive html5 website for
 viewing and editing lofar resources.'''
 
 import sys
 import os
+import json
 import time
+from collections import deque
+from threading import Condition
 from datetime import datetime
-from datetime import timedelta
+from dateutil import parser
 from flask import Flask
 from flask import render_template
+from flask import request
+from flask import abort
 from flask import url_for
 from flask.json import jsonify
-from resourceassignementeditor.utils import gzipped
-from resourceassignementeditor.fakedata import *
+from lofar.sas.resourceassignment.resourceassignmenteditor.utils import gzipped
+from lofar.sas.resourceassignment.resourceassignmenteditor.fakedata import *
+from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC
+from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 
 __root_path = os.path.dirname(os.path.abspath(__file__))
 print '__root_path=%s' % __root_path
 
 '''The flask webservice app'''
-app = Flask('ResourceAssignementEditor',
+app = Flask('ResourceAssignmentEditor',
             instance_path=__root_path,
             template_folder=os.path.join(__root_path, 'templates'),
             static_folder=os.path.join(__root_path, 'static'),
@@ -48,61 +55,139 @@ print 'app.template_folder= %s' % app.template_folder
 print 'app.static_folder= %s' % app.static_folder
 
 # Load the default configuration
-app.config.from_object('resourceassignementeditor.config.default')
+app.config.from_object('lofar.sas.resourceassignment.resourceassignmenteditor.config.default')
+
+rpc = RARPC(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker='10.149.96.6')
 
 @app.route('/')
 @app.route('/index.htm')
 @app.route('/index.html')
 def index():
-    '''Serves the ResourceAssignementEditor's index page'''
-    return render_template('index.html', title='Resource Assignement Editor')
+    '''Serves the ResourceAssignmentEditor's index page'''
+    return render_template('index.html', title='Resource Assignment Editor')
 
 @app.route('/rest/resourceitems')
 @gzipped
 def resourcesitems():
-    data = {'resourceitems': resourceItems}
-    return jsonify(data)
+    result = rpc.getResources()
+    return jsonify({'resourceitems': result})
 
 @app.route('/rest/resourcegroups')
 @gzipped
 def resourcegroups():
-    data = {'resourcegroups': resourceGroups}
-    return jsonify(data)
+    result = rpc.getResourceGroups()
+    return jsonify({'resourcegroups': result})
 
 @app.route('/rest/resourceclaims')
 @gzipped
 def resourceclaims():
-    data = {'resourceclaims': resourceClaims}
-    return jsonify(data)
+    result = rpc.getResourceClaims()
+    return jsonify({'resourceclaims': result})
 
 @app.route('/rest/resourcegroupclaims')
 @gzipped
 def resourcegroupclaims():
-    data = {'resourcegroupclaims': resourceGroupClaims}
+    abort(500)
 
-    return jsonify(data)
 
 @app.route('/rest/tasks')
 @gzipped
-def tasks():
-    data = {'tasks': allTasks}
+def getTasks():
+    tasks = rpc.getTasks()
 
-    return jsonify(data)
+    # there are no task names in the database yet.
+    # will they come from spec/MoM?
+    # add Task <id> as name for now
+    for task in tasks:
+        task['name'] = 'Task %d' % task['id']
 
-def _task(task_id):
-    for task in allTasks:
-        if task['id'] == task_id:
-            return task
+    return jsonify({'tasks': tasks})
 
-    return None
+@app.route('/rest/tasks/<int:task_id>', methods=['GET'])
+def getTask(task_id):
+    try:
+        task = rpc.getTask(task_id)
 
-@app.route('/rest/tasks/<int:task_id>')
-def task(task_id):
-    for task in allTasks:
-        if task['id'] == task_id:
-            return jsonify({'task': task})
+        if not task:
+            abort(404)
+
+        task['name'] = 'Task %d' % task['id']
+        return jsonify({'task': task})
+    except Exception as e:
+        abort(404)
 
     return jsonify({'task': None})
+
+_changes = []
+changedCondition = Condition()
+
+@app.route('/rest/tasks/<int:task_id>', methods=['PUT'])
+def putTask(task_id):
+    if 'Content-Type' in request.headers and \
+            request.headers['Content-Type'].startswith('application/json'):
+        updatedTask = json.loads(request.data)
+
+        try:
+            if task_id != updatedTask['id']:
+                abort(404)
+
+            task = tasks[task_id]
+
+            if 'from' in updatedTask:
+                task['from'] = parser.parse(updatedTask['from'])
+
+            if 'to' in updatedTask:
+                task['to'] = parser.parse(updatedTask['to'])
+
+            taskResourceClaims = [rc for rc in resourceClaims if rc['taskId'] == task_id]
+
+            for rc in taskResourceClaims:
+                rc['startTime'] = task['from']
+                rc['endTime'] = task['to']
+
+            taskResourceGroupClaims = [rgc for rgc in resourceGroupClaims if rgc['taskId'] == task_id]
+
+            for rgc in taskResourceGroupClaims:
+                rgc['startTime'] = task['from']
+                rgc['endTime'] = task['to']
+
+
+            with changedCondition:
+                now = datetime.utcnow()
+
+                # remove old obsolete changes
+                threshold = (now - timedelta(seconds=10)).isoformat()
+                global _changes
+                _changes = [c for c in _changes if c['timestamp'] >= threshold]
+
+                now = now.isoformat()
+
+                _changes.append({'changeType': 'update',
+                                'timestamp': now,
+                                'objectType': 'task',
+                                'value': task
+                                })
+
+                for rc in taskResourceClaims:
+                    _changes.append({'changeType': 'update',
+                                    'timestamp': now,
+                                    'objectType': 'resourceClaim',
+                                    'value': rc
+                                    })
+
+                for rgc in taskResourceGroupClaims:
+                    _changes.append({'changeType': 'update',
+                                    'timestamp': now,
+                                    'objectType': 'resourceGroupClaim',
+                                    'value': rgc
+                                    })
+
+                changedCondition.notifyAll()
+
+            return "", 204
+        except KeyError:
+            abort(404)
+    abort(406)
 
 @app.route('/rest/tasks/<int:task_id>/resourceclaims')
 def taskResourceClaims(task_id):
@@ -110,12 +195,34 @@ def taskResourceClaims(task_id):
 
 @app.route('/rest/tasktypes')
 def tasktypes():
-    return jsonify({'tasktypes': ['Observation', 'Pipeline', 'Ingest']})
+    result = rpc.getTaskTypes()
+    result = [x['name'] for x in result]
+    return jsonify({'tasktypes': result})
 
 @app.route('/rest/taskstatustypes')
-def taskstatustypes():
-    return jsonify({'taskstatustypes': ['scheduled', 'approved', 'prescheduled', 'running', 'finished', 'aborted']})
+def getTaskStatusTypes():
+    result = rpc.getTaskStatuses()
+    result = sorted(result, key=lambda q: q['id'])
+    result = [x['name'] for x in result]
+    return jsonify({'taskstatustypes': result})
 
+
+@app.route('/rest/updates/<since>')
+def getUpdateEventsSince(since):
+    with changedCondition:
+        while True:
+            changesSince = [c for c in _changes if c['timestamp'] > since]
+
+            if changesSince:
+                return jsonify({'changes': changesSince})
+
+            changedCondition.wait()
+
+    return jsonify({'changes': []})
+
+@app.route('/rest/updates')
+def getUpdateEvents():
+    return getUpdateEventsSince(datetime.utcnow().isoformat())
 
 def main(argv=None, debug=False):
     '''Start the webserver'''

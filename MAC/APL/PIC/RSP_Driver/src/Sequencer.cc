@@ -554,8 +554,11 @@ GCFEvent::TResult Sequencer::setAll_state(GCFEvent& event, GCFPortInterface& /*p
             Cache::getInstance().getState().sdoState().write();
             Cache::getInstance().getState().sdoSelectState().reset();
             Cache::getInstance().getState().sdoSelectState().write();
-            Cache::getInstance().getState().bypasssettings_bp().reset();
-            Cache::getInstance().getState().bypasssettings_bp().write();
+
+            for (int blp_nr = 0; blp_nr < StationSettings::instance()->nrBlps(); blp_nr += 4) {
+                Cache::getInstance().getState().bypasssettings().reset(blp_nr);
+                Cache::getInstance().getState().bypasssettings().write(blp_nr);
+            }
         }
         itsTimer = 0;
         break;

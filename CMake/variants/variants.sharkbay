@@ -6,6 +6,7 @@
 ## $Id: variants.fs5 24757 2013-05-01 10:50:49Z loose $
 
 option(USE_LOG4CPLUS "Use Log4Cplus" ON)
+option(USE_OPENMP    "Use OpenMP"    ON)
 option(USE_MPI       "Use MPI"       ON)
 
 # Refer to symlink that go may through ccache.

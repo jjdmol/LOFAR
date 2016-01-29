@@ -326,7 +326,7 @@ def write_ascii_list(img, filename=None, sort_by='indx', format = 'ascii',
         if incl_empty:
             # Append the dummy sources for islands without any unflagged Gaussians
             outl[0] += img.dsources
-    outstr_list = make_ascii_str(img, outl, objtype=objtype, incl_chan=incl_chan,
+    outstr_list = make_ascii_str(img, outl, objtype=objtype,
                                  incl_empty=incl_empty, format=format)
     if filename is None:
         if objtype == 'gaul':
@@ -409,7 +409,7 @@ def write_fits_list(img, filename=None, sort_by='index', objtype='gaul',
         cvals, cnames, cformats, cunits = make_output_columns(outl[0][0], fits=True,
                                                               objtype=objtype,
                                                               incl_spin=img.opts.spectralindex_do,
-                                                              incl_chan=incl_chan,
+                                                              incl_chan=img.opts.incl_chan,
                                                               incl_pol=img.opts.polarisation_do,
                                                               incl_aper=incl_aper,
                                                               incl_empty=incl_empty,
@@ -791,8 +791,7 @@ def make_ds9_str(img, glist, gnames, deconvolve=False, objtype='gaul', incl_empt
     return outstr_list
 
 
-def make_ascii_str(img, glist, objtype='gaul', format='ascii', incl_empty=False,
-    incl_chan=False):
+def make_ascii_str(img, glist, objtype='gaul', format='ascii', incl_empty=False):
     """Makes a list of string entries for an ascii region file."""
     from _version import __version__, __revision__
     outstr_list = []
@@ -816,7 +815,7 @@ def make_ascii_str(img, glist, objtype='gaul', format='ascii', incl_empty=False,
         cvals, cnames, cformats, cunits = make_output_columns(g, fits=False,
                                                               objtype=objtype,
                                                               incl_spin=img.opts.spectralindex_do,
-                                                              incl_chan=incl_chan,
+                                                              incl_chan=img.opts.incl_chan,
                                                               incl_pol=img.opts.polarisation_do,
                                                               incl_aper=incl_aper,
                                                               incl_empty=incl_empty,
@@ -834,8 +833,7 @@ def make_ascii_str(img, glist, objtype='gaul', format='ascii', incl_empty=False,
     return outstr_list
 
 
-def make_fits_list(img, glist, objtype='gaul', nmax=30, incl_empty=False,
-    incl_chan=False):
+def make_fits_list(img, glist, objtype='gaul', nmax=30, incl_empty=False):
     import functions as func
 
     out_list = []
@@ -846,7 +844,7 @@ def make_fits_list(img, glist, objtype='gaul', nmax=30, incl_empty=False,
     for g in glist[0]:
         cvals, ext1, ext2, ext3 = make_output_columns(g, fits=True, objtype=objtype,
                                                       incl_spin=img.opts.spectralindex_do,
-                                                      incl_chan=incl_chan,
+                                                      incl_chan=img.opts.incl_chan,
                                                       incl_pol=img.opts.polarisation_do,
                                                       incl_aper=incl_aper,
                                                       incl_empty=incl_empty,
@@ -1226,7 +1224,7 @@ def make_output_columns(obj, fits=False, objtype='gaul', incl_spin=False,
             if isinstance(v, int):
                 cformats.append('%4d')
             if isinstance(v, float):
-                cformats.append('%.14f')
+                cformats.append('%10f')
             if isinstance(v, str):
                 cformats.append('%4s')
 
