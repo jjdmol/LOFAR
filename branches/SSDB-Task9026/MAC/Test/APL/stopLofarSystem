@@ -1,0 +1,6 @@
+#!/bin/sh
+
+PVSS_II=$LOFARHOME/$1/config/config
+export PVSS_II
+kill_pvss2
+
