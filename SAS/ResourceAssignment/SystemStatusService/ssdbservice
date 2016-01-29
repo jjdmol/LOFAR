@@ -6,9 +6,11 @@ runs the resourceassignment database service
 '''
 import logging
 from optparse import OptionParser
-from lofar.sas.resourceassignment.systemstatus.DataMonitorQueryService import *
+from lofar.sas.systemstatus.service.SSDBQueryService import runservice
 
 logger = logging.getLogger(__name__)
+DEFAULT_BUSNAME="amq.topic"
+DEFAULT_SERVICENAME="SSDBQueryService"
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
