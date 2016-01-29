@@ -10,6 +10,6 @@ set(_py_files
   ssdb.py
 )
 
-python_install(${_py_files} DESTINATION lofar/sas/resourceassignment/database)
+python_install(${_py_files} DESTINATION lofar/sas/systemstatus/database)
 
 # add_subdirectory(test)
