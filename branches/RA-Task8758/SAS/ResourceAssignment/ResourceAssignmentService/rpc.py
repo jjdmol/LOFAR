@@ -112,6 +112,22 @@ class RARPC:
                                                     username=username,
                                                     user_id=user_id)
 
+    def getResourceClaimsForTask(self, task_id):
+        claims = self._rpc('GetResourceClaimsForTask', task_id=task_id)
+        for claim in claims:
+            claim['starttime'] = claim['starttime'].datetime()
+            claim['endtime'] = claim['endtime'].datetime()
+        return claims
+
+    def updateResourceClaimsForTask(self, task_id, starttime=None, endtime=None, status=None, session_id=None, username=None, user_id=None):
+        return self._rpc('UpdateResourceClaimsForTask', task_id=task_id,
+                                                        starttime=starttime,
+                                                        endtime=endtime,
+                                                        status=status,
+                                                        session_id=session_id,
+                                                        username=username,
+                                                        user_id=user_id)
+
     def getResourceGroupTypes(self):
         return self._rpc('GetResourceGroupTypes')
 
@@ -167,20 +183,29 @@ class RARPC:
 
 def do_tests(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME):
     with RARPC(busname=busname, servicename=servicename) as rpc:
-        for i in range(0, 10):
-            taskId = rpc.insertTask(1234, 5678, 'active', 'OBSERVATION', 1)['id']
-            rcId = rpc.insertResourceClaim(1, taskId, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1)['id']
-            print rpc.getResourceClaim(rcId)
-            rpc.updateResourceClaim(rcId, starttime=datetime.datetime.utcnow(), endtime=datetime.datetime.utcnow() + datetime.timedelta(hours=2), status='ALLOCATED')
-            print rpc.getResourceClaim(rcId)
-            print
+        #for i in range(0, 10):
+            #taskId = rpc.insertTask(1234, 5678, 'active', 'OBSERVATION', 1)['id']
+            #rcId = rpc.insertResourceClaim(1, taskId, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1)['id']
+            #print rpc.getResourceClaim(rcId)
+            #rpc.updateResourceClaim(rcId, starttime=datetime.datetime.utcnow(), endtime=datetime.datetime.utcnow() + datetime.timedelta(hours=2), status='ALLOCATED')
+            #print rpc.getResourceClaim(rcId)
+            #print
 
         tasks = rpc.getTasks()
         for t in tasks:
             print rpc.getTask(t['id'])
+            for i in range(4,9):
+                rcId = rpc.insertResourceClaim(i, t['id'], datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1)['id']
             #print rpc.deleteTask(t['id'])
             #print rpc.getTasks()
             #print rpc.getResourceClaims()
+
+        print
+        taskId = tasks[0]['id']
+        print 'taskId=', taskId
+        print rpc.getResourceClaimsForTask(taskId)
+        print rpc.updateResourceClaimsForTask(taskId, starttime=datetime.datetime.utcnow(), endtime=datetime.datetime.utcnow() + datetime.timedelta(hours=3))
+        print rpc.getResourceClaimsForTask(taskId)
 
         #print rpc.getTasks()
         #print rpc.getResourceClaims()
