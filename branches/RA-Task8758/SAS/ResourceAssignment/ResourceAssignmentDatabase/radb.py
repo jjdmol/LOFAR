@@ -553,25 +553,26 @@ if __name__ == '__main__':
     #tasks = db.getTasks()
     #for t in tasks:
         #db.deleteTask(t['id'])
-        ##resultPrint(db.getTasks)
-        ##resultPrint(db.getResourceClaims)
+        ###resultPrint(db.getTasks)
+        ###resultPrint(db.getResourceClaims)
 
     import random
 
-    for i in range(10):
-        taskId = db.insertTask(1234, 5678, 600, 0, 1)
-        for j in range(10*i):
-            rcId = db.insertResourceClaim(random.randint(1, 10), taskId, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 0, 1, 10, 'einstein', -1)
+    #for i in range(20):
+        #taskId = db.insertTask(1234, 5678, 600, 0, 1)
+        #for j in range(2*i):
+            #rcId = db.insertResourceClaim(j, taskId, datetime.datetime.utcnow() + datetime.timedelta(hours=4*i), datetime.datetime.utcnow() + datetime.timedelta(hours=4*i+3.5), 0, 1, 10, 'einstein', -1)
 
-        time.sleep(0.5)
+        #time.sleep(0.5)
 
-    resultPrint(db.getTasks)
-    resultPrint(db.getResourceClaims)
+    #resultPrint(db.getTasks)
+    #resultPrint(db.getResourceClaims)
 
     ts = db.getTaskStatuses()
 
-    tasks = db.getTasks()
+    tasks = sorted(db.getTasks(), key=lambda x: x['id'])
     for t in tasks:
-        db.updateTask(t['id'], task_status=ts[random.randint(0, len(ts)-1)])
+        db.updateTask(t['id'], task_status=ts[random.randint(0, len(ts)-1)]['id'])
+        time.sleep(0.01)
 
     #db.commit()
