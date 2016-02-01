@@ -205,7 +205,7 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
             //and update again
             self.subscribeToUpdates();
         }).error(function() {
-            self.subscribeToUpdates();
+            setTimeout(self.subscribeToUpdates, 1000);
         });
     };
 
