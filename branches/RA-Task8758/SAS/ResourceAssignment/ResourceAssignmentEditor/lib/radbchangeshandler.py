@@ -33,8 +33,8 @@ from lofar.common.util import waitForInterrupt
 
 import qpid.messaging
 import logging
-from datetime import datetime
-from threading import Lock
+from datetime import datetime, timedelta
+from threading import Lock, Condition
 
 logger = logging.getLogger(__name__)
 
@@ -59,8 +59,7 @@ class RADBChangesHandler(RADBBusListener):
 
         self._changes = []
         self._lock = Lock()
-
-        self.onChangedCallback = None
+        self._changedCondition = Condition()
 
     def _handleChange(self, change):
         '''_handleChange appends a change in the changes list and calls the onChangedCallback.
@@ -69,8 +68,10 @@ class RADBChangesHandler(RADBBusListener):
         with self._lock:
             self._changes.append(change)
 
-        if self.onChangedCallback:
-            self.onChangedCallback()
+        self.clearChangesBefore(datetime.utcnow()-timedelta(minutes=5))
+
+        with self._changedCondition:
+            self._changedCondition.notifyAll()
 
     def onTaskUpdated(self, task):
         '''onTaskUpdated is called upon receiving a TaskUpdated message.
@@ -119,11 +120,13 @@ class RADBChangesHandler(RADBBusListener):
     def getChangesSince(self, timestamp):
         if isinstance(timestamp, datetime):
             timestamp = timestamp.isoformat()
-        print
-        print 'getChangesSince: '
-        with self._lock:
-            changesSince = [x for x in self._changes if x['timestamp'] > timestamp]
-            for x in changesSince:
-                print x['timestamp']
-            return changesSince
 
+        with self._changedCondition:
+            while True:
+                with self._lock:
+                    changesSince = [x for x in self._changes if x['timestamp'] > timestamp]
+
+                    if changesSince:
+                        return changesSince
+
+                self._changedCondition.wait()
