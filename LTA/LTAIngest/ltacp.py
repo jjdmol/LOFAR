@@ -8,6 +8,7 @@
 # adler32  is used between localhost and the SRM.
 
 import logging
+from optparse import OptionParser
 from subprocess import Popen, PIPE
 import socket
 import os, sys, getpass
@@ -79,7 +80,7 @@ def createNetCatCmd(user, host):
 
     # nc has no version option or other ways to check it's version
     # so, just try the variants and pick the first one that does not fail
-    nc_variants = ['nc --send-only', 'nc -q 0']
+    nc_variants = ['nc --send-only', 'nc -q 0', 'nc']
 
     for nc_variant in nc_variants:
         cmd = ['ssh', '-n', '-x', '%s@%s' % (user, host), nc_variant]
@@ -233,6 +234,25 @@ class LtaCp:
             if p_remote_mkfifo.returncode != 0:
                 raise LtacpException('ltacp %s: remote fifo creation failed: \nstdout: %s\nstderr: %s' % (self.logId, output_remote_mkfifo[0],output_remote_mkfifo[1]))
 
+
+            # get input filetype
+            cmd_remote_filetype = self.ssh_cmd + ['ls -l %s' % (self.src_path_data,)]
+            logger.info('ltacp %s: remote getting file info. executing: %s' % (self.logId, ' '.join(cmd_remote_filetype)))
+            p_remote_filetype = Popen(cmd_remote_filetype, stdout=PIPE, stderr=PIPE)
+            self.started_procs[p_remote_filetype] = cmd_remote_filetype
+
+            # block until ls is finished
+            output_remote_filetype = p_remote_filetype.communicate()
+            del self.started_procs[p_remote_filetype]
+            if p_remote_filetype.returncode != 0:
+                raise LtacpException('ltacp %s: remote file listing failed: \nstdout: %s\nstderr: %s' % (self.logId,
+                                                                                                         output_remote_filetype[0],
+                                                                                                         output_remote_filetype[1]))
+
+            # determine if input is file
+            input_is_file = (output_remote_filetype[0][0] == '-')
+
+
             # get input datasize
             cmd_remote_du = self.ssh_cmd + ['du -b --max-depth=0 %s' % (self.src_path_data,)]
             logger.info('ltacp %s: remote getting datasize. executing: %s' % (self.logId, ' '.join(cmd_remote_du)))
@@ -243,9 +263,9 @@ class LtaCp:
             output_remote_du = p_remote_du.communicate()
             del self.started_procs[p_remote_du]
             if p_remote_du.returncode != 0:
-                raise LtacpException('ltacp %s: remote fifo creation failed: \nstdout: %s\nstderr: %s' % (self.logId,
-                                                                                                          output_remote_du[0],
-                                                                                                          output_remote_du[1]))
+                raise LtacpException('ltacp %s: remote du failed: \nstdout: %s\nstderr: %s' % (self.logId,
+                                                                                               output_remote_du[0],
+                                                                                               output_remote_du[1]))
             # compute various parameters for progress logging
             input_datasize = int(output_remote_du[0].split()[0])
             logger.info('ltacp %s: input datasize: %d bytes, %s' % (self.logId, input_datasize, humanreadablesize(input_datasize)))
@@ -255,13 +275,20 @@ class LtaCp:
 
             with open(os.devnull, 'r') as devnull:
                 # start sending remote data, tee to fifo
-                src_path_parent, src_path_child = os.path.split(self.src_path_data)
-                cmd_remote_data = self.ssh_cmd + ['cd %s && tar c --blocking-factor=20 --checkpoint=1000 --checkpoint-action="ttyout=checkpoint %%u\\n" -O %s | tee %s | %s %s %s' % (src_path_parent,
-                    src_path_child,
-                    self.remote_data_fifo,
-                    self.remoteNetCatCmd,
-                    self.localIPAddress,
-                    port_data)]
+                if input_is_file:
+                    cmd_remote_data = self.ssh_cmd + ['cat %s | tee %s | %s %s %s' % (self.src_path_data,
+                        self.remote_data_fifo,
+                        self.remoteNetCatCmd,
+                        self.localIPAddress,
+                        port_data)]
+                else:
+                    src_path_parent, src_path_child = os.path.split(self.src_path_data)
+                    cmd_remote_data = self.ssh_cmd + ['cd %s && tar c --blocking-factor=20 --checkpoint=1000 --checkpoint-action="ttyout=checkpoint %%u\\n" -O %s | tee %s | %s %s %s' % (src_path_parent,
+                        src_path_child,
+                        self.remote_data_fifo,
+                        self.remoteNetCatCmd,
+                        self.localIPAddress,
+                        port_data)]
                 logger.info('ltacp %s: remote starting transfer. executing: %s' % (self.logId, ' '.join(cmd_remote_data)))
                 p_remote_data = Popen(cmd_remote_data, stdin=devnull, stdout=PIPE, stderr=PIPE)
                 self.started_procs[p_remote_data] = cmd_remote_data
@@ -555,12 +582,18 @@ def create_missing_directories(surl):
 # limited standalone mode for testing:
 # usage: ltacp.py <remote-host> <remote-path> <surl>
 if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-    if len(sys.argv) < 4:
-        print 'example: ./ltacp.py 10.196.232.11 /home/users/ingest/1M.txt srm://lofar-srm.fz-juelich.de:8443/pnfs/fz-juelich.de/data/lofar/ops/test/eor/1M.txt'
-        sys.exit()
+    # Check the invocation arguments
+    parser = OptionParser("%prog [options] <source_host> <source_path> <lta-detination-srm-url>",
+                          description='copy a file/directory from <source_host>:<source_path> to the LTA <lta-detination-srm-url>')
+    parser.add_option("-u", "--user", dest="user", type="string", default=getpass.getuser(), help="username for to login on <host>, default: %s" % getpass.getuser())
+    (options, args) = parser.parse_args()
 
-    # transfer test:
-    cp = LtaCp(sys.argv[1], sys.argv[2], sys.argv[3], 'ingest')
+    if len(args) != 3:
+        parser.print_help()
+        sys.exit(1)
+
+    cp = LtaCp(args[0], args[1], args[2], options.user)
     cp.transfer()
 
