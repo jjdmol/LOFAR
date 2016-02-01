@@ -439,6 +439,61 @@ class RADatabase:
 
         return self.cursor.rowcount > 0
 
+    def getResourceClaimsForTask(self, task_id):
+        query = '''SELECT * from resource_allocation.resource_claim_view
+        WHERE resource_allocation.resource_claim_view.task_id = %s'''
+        self.cursor.execute(query, [task_id])
+        print query
+        print task_id
+
+        return list(self.cursor.fetchall())
+
+    def updateResourceClaimsForTask(self, task_id, starttime=None, endtime=None, status=None, session_id=None, username=None, user_id=None, commit=True):
+        if status and isinstance(status, basestring):
+            #convert status string to status.id
+            status = self.getResourceClaimStatusId(status)
+
+        fields = []
+        values = []
+
+        if starttime:
+            fields.append('starttime')
+            values.append(starttime)
+
+        if endtime:
+            fields.append('endtime')
+            values.append(endtime)
+
+        if status:
+            fields.append('status_id')
+            values.append(status)
+
+        if session_id:
+            fields.append('session_id')
+            values.append(session_id)
+
+        if username:
+            fields.append('username')
+            values.append(username)
+
+        if user_id:
+            fields.append('user_id')
+            values.append(user_id)
+
+        values.append(task_id)
+
+        query = '''UPDATE resource_allocation.resource_claim
+        SET ({fields}) = ({value_placeholders})
+        WHERE resource_allocation.resource_claim.task_id = {task_id_placeholder};'''.format(fields=', '.join(fields),
+                                                                                            value_placeholders=', '.join('%s' for x in fields),
+                                                                                            task_id_placeholder='%s')
+
+        self.cursor.execute(query, values)
+        if commit:
+            self.conn.commit()
+
+        return self.cursor.rowcount > 0
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
@@ -501,20 +556,22 @@ if __name__ == '__main__':
         ##resultPrint(db.getTasks)
         ##resultPrint(db.getResourceClaims)
 
-    #for i in range(10):
-        #taskId = db.insertTask(1234, 5678, 600, 0, 1, False)
-        #for j in range(100*i):
-            #rcId = db.insertResourceClaim(1, taskId, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 0, 1, 10, 'einstein', -1, False)
+    import random
 
-        #db.commit()
+    for i in range(10):
+        taskId = db.insertTask(1234, 5678, 600, 0, 1)
+        for j in range(10*i):
+            rcId = db.insertResourceClaim(random.randint(1, 10), taskId, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 0, 1, 10, 'einstein', -1)
+
+        time.sleep(0.5)
 
     resultPrint(db.getTasks)
     resultPrint(db.getResourceClaims)
 
-    #tasks = db.getTasks()
-    #for t in tasks:
-        #db.deleteTask(t['id'], False)
-        ##resultPrint(db.getTasks)
-        ##resultPrint(db.getResourceClaims)
+    ts = db.getTaskStatuses()
+
+    tasks = db.getTasks()
+    for t in tasks:
+        db.updateTask(t['id'], task_status=ts[random.randint(0, len(ts)-1)])
 
     #db.commit()

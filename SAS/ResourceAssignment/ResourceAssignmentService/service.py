@@ -40,6 +40,8 @@ class RADBHandler(MessageHandlerInterface):
             'InsertResourceClaim': self._insertResourceClaim,
             'DeleteResourceClaim': self._deleteResourceClaim,
             'UpdateResourceClaim': self._updateResourceClaim,
+            'GetResourceClaimsForTask': self._getResourceClaimsForTask,
+            'UpdateResourceClaimsForTask': self._updateResourceClaimsForTask,
             'GetResourceGroupTypes': self._getResourceGroupTypes,
             'GetResourceGroups': self._getResourceGroups,
             'GetResourceTypes': self._getResourceTypes,
@@ -108,6 +110,22 @@ class RADBHandler(MessageHandlerInterface):
                                                 user_id=kwargs.get('user_id'))
         return {'id': id, 'updated': updated}
 
+    def _getResourceClaimsForTask(self, task_id):
+        claims = self.radb.getResourceClaimsForTask(task_id)
+        return claims
+
+    def _updateResourceClaimsForTask(self, **kwargs):
+        logger.info('UpdateResourceClaimsForTask: %s' % kwargs)
+        task_id = kwargs['task_id']
+        updated = self.radb.updateResourceClaimsForTask(task_id,
+                                                        starttime=kwargs['starttime'].datetime() if 'starttime' in kwargs else None,
+                                                        endtime=kwargs['endtime'].datetime() if 'endtime' in kwargs else None,
+                                                        status=kwargs.get('status_id', kwargs.get('status')),
+                                                        session_id=kwargs.get('session_id'),
+                                                        username=kwargs.get('username'),
+                                                        user_id=kwargs.get('user_id'))
+        return {'task_id': task_id, 'updated': updated}
+
     def _getResourceGroupTypes(self):
         return self.radb.getResourceGroupTypes()
 
@@ -163,7 +181,7 @@ def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, radb
                    busname=busname,
                    use_service_methods=True,
                    handler_args={'password': radb_password},
-                   verbose=False)
+                   verbose=True)
 
 def main(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME):
     from lofar.sas.resourceassignment.database.config import radb_password
