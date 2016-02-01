@@ -44,8 +44,15 @@ from lofar.sas.resourceassignment.database.config import DEFAULT_BUSNAME as DEFA
 from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 
+
+def asDatetime(isoString):
+    if isoString[-1] == 'Z':
+        isoString = isoString[:-1]
+    if isoString[-4] == '.':
+        isoString += '000'
+    return datetime.strptime(isoString, '%Y-%m-%dT%H:%M:%S.%f')
+
 __root_path = os.path.dirname(os.path.abspath(__file__))
-print '__root_path=%s' % __root_path
 
 '''The flask webservice app'''
 app = Flask('ResourceAssignmentEditor',
@@ -53,9 +60,6 @@ app = Flask('ResourceAssignmentEditor',
             template_folder=os.path.join(__root_path, 'templates'),
             static_folder=os.path.join(__root_path, 'static'),
             instance_relative_config=True)
-
-print 'app.template_folder= %s' % app.template_folder
-print 'app.static_folder= %s' % app.static_folder
 
 # Load the default configuration
 app.config.from_object('lofar.sas.resourceassignment.resourceassignmenteditor.config.default')
@@ -122,16 +126,6 @@ def getTask(task_id):
 
     return jsonify({'task': None})
 
-_changes = []
-changedCondition = Condition()
-
-def notifyChanges():
-    with changedCondition:
-        print "WAKE UP!"
-        changedCondition.notifyAll()
-
-radbchangeshandler.onChangedCallback = notifyChanges
-
 @app.route('/rest/tasks/<int:task_id>', methods=['PUT'])
 def putTask(task_id):
     if 'Content-Type' in request.headers and \
@@ -142,58 +136,22 @@ def putTask(task_id):
             if task_id != updatedTask['id']:
                 abort(404)
 
-            task = tasks[task_id]
+            if 'starttime' in updatedTask:
+                try:
+                    updatedTask['starttime'] = asDatetime(updatedTask['starttime'])
+                except ValueError:
+                    abort(400, 'timestamp not in iso format: ' + updatedTask['starttime'])
 
-            if 'from' in updatedTask:
-                task['from'] = parser.parse(updatedTask['from'])
+            if 'endtime' in updatedTask:
+                try:
+                    updatedTask['endtime'] = asDatetime(updatedTask['endtime'])
+                except ValueError:
+                    abort(400, 'timestamp not in iso format: ' + updatedTask['endtime'])
 
-            if 'to' in updatedTask:
-                task['to'] = parser.parse(updatedTask['to'])
-
-            taskResourceClaims = [rc for rc in resourceClaims if rc['taskId'] == task_id]
-
-            for rc in taskResourceClaims:
-                rc['startTime'] = task['from']
-                rc['endTime'] = task['to']
-
-            taskResourceGroupClaims = [rgc for rgc in resourceGroupClaims if rgc['taskId'] == task_id]
-
-            for rgc in taskResourceGroupClaims:
-                rgc['startTime'] = task['from']
-                rgc['endTime'] = task['to']
-
-
-            with changedCondition:
-                now = datetime.utcnow()
-
-                # remove old obsolete changes
-                threshold = (now - timedelta(seconds=10)).isoformat()
-                global _changes
-                _changes = [c for c in _changes if c['timestamp'] >= threshold]
-
-                now = now.isoformat()
-
-                _changes.append({'changeType': 'update',
-                                'timestamp': now,
-                                'objectType': 'task',
-                                'value': task
-                                })
-
-                for rc in taskResourceClaims:
-                    _changes.append({'changeType': 'update',
-                                    'timestamp': now,
-                                    'objectType': 'resourceClaim',
-                                    'value': rc
-                                    })
-
-                for rgc in taskResourceGroupClaims:
-                    _changes.append({'changeType': 'update',
-                                    'timestamp': now,
-                                    'objectType': 'resourceGroupClaim',
-                                    'value': rgc
-                                    })
-
-                changedCondition.notifyAll()
+            rpc.updateResourceClaimsForTask(task_id,
+                                            starttime=updatedTask.get('starttime', None),
+                                            endtime=updatedTask.get('endtime', None),
+                                            status=updatedTask.get('status', None))
 
             return "", 204
         except KeyError:
@@ -220,28 +178,13 @@ def getTaskStatusTypes():
 
 @app.route('/rest/updates/<since>')
 def getUpdateEventsSince(since):
-    print since
     try:
-        if since[-1] == 'Z': since = since[:-1]
-        if since[-4] == '.': since += '000'
-        datetime.strptime(since, '%Y-%m-%dT%H:%M:%S.%f')
+        since = asDatetime(since)
     except ValueError:
         abort(400, 'timestamp not in iso format: ' + since)
 
-    with changedCondition:
-        while True:
-            changesSince = radbchangeshandler.getChangesSince(since)
-
-            if changesSince:
-                return jsonify({'changes': changesSince})
-
-            print "WAITING!"
-            changedCondition.wait()
-
-            radbchangeshandler.clearChangesBefore(datetime.utcnow()-timedelta(minutes=1))
-
-    print "DOES THIS HAPPEN?"
-    return jsonify({'changes': []})
+    changesSince = radbchangeshandler.getChangesSince(since)
+    return jsonify({'changes': changesSince})
 
 @app.route('/rest/updates')
 def getUpdateEvents():
