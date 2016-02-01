@@ -88,9 +88,12 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
         }
         if(task_id) {
             var task = $scope.dataService.taskDict[task_id];
-            task.starttime = item.model.starttime._d.toISOString();
-            task.endtime = item.model.endtime._d.toISOString();
-            $scope.dataService.putTask(task);
+            var updatedTask = {
+                id: task.id,
+                starttime: item.model.from._d.toISOString(),
+                endtime: item.model.to._d.toISOString()
+            };
+            $scope.dataService.putTask(updatedTask);
         }
     };
 
@@ -132,10 +135,10 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
         for(var i = 0; i < numResources; i++)
         {
             var resource = resources[i];
-            var groupIds = resourceIdToGroupIdsDict[resource.id];
-            var numGroups = groupIds.length;
 
-            if(numGroups > 0) {
+            if(resourceIdToGroupIdsDict && resourceIdToGroupIdsDict[resource.id] && resourceIdToGroupIdsDict[resource.id].length > 0) {
+                var groupIds = resourceIdToGroupIdsDict[resource.id];
+                var numGroups = groupIds.length;
                 for(var j = 0; j < numGroups; j++) {
                     var parentRowId = 'group_' + groupIds[j];
                     var resourceRowId = 'resource_' + resource.id + '_group_' + groupIds[j];
@@ -191,10 +194,9 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
 
             if(task)
             {
-                var groupIds = resourceIdToGroupIdsDict[claim.resource_id];
-                var numGroups = groupIds.length;
-
-                if(numGroups > 0) {
+                if(resourceIdToGroupIdsDict && resourceIdToGroupIdsDict[claim.resource_id] && resourceIdToGroupIdsDict[claim.resource_id].length> 0) {
+                    var groupIds = resourceIdToGroupIdsDict[claim.resource_id];
+                    var numGroups = groupIds.length;
                     for(var j = 0; j < numGroups; j++) {
                         var resourceRowId = 'resource_' + claim.resource_id + '_group_' + groupIds[j];
                         var ganntRow = ganntRowsDict[resourceRowId];
@@ -218,6 +220,7 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
                     if(ganntRow)
                     {
                         var claimTask = {
+                            id: claim.id,
                             name: task ? task.name : '<unknown>',
                             'from': claim.starttime,
                             'to': claim.endtime,
