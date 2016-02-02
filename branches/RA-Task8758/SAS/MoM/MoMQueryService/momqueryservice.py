@@ -98,7 +98,7 @@ class MoMDatabaseWrapper:
         left join lofar_mom3.mom2objectstatus as status on project.currentstatusid = status.id
         left join lofar_mom3.status as statustype on status.statusid=statustype.id
         where project.mom2objecttype='PROJECT'
-        order by project_mom2id;
+        order by mom2id;
         '''
         cursor.execute(query)
 
