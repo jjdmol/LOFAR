@@ -49,14 +49,13 @@ set(web_files
     ${utils_files}
     ${app_files})
 
-install(FILES ${web_files}
-  DESTINATION ${PYTHON_INSTALL_DIR}/lofar/sas/resourceassignment/resourceassignmenteditor)
-
 foreach(web_file ${web_files})
     get_filename_component(web_file_path ${web_file} PATH)
     get_filename_component(web_file_abs ${web_file} ABSOLUTE)
 
     file(MAKE_DIRECTORY ${_build_dir}/${web_file_path})
     execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${web_file_abs} ${_build_dir}/${web_file})
+
+    install(FILES ${web_file_abs} DESTINATION ${PYTHON_INSTALL_DIR}/lofar/sas/resourceassignment/resourceassignmenteditor/${web_file_path})
 endforeach(web_file ${web_files})
 

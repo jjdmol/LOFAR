@@ -26,10 +26,11 @@ import sys
 import os
 import json
 import time
-from collections import deque
+from optparse import OptionParser
 from threading import Condition
 from datetime import datetime
 import time
+import logging
 from dateutil import parser, tz
 from flask import Flask
 from flask import render_template
@@ -55,7 +56,7 @@ def asDatetime(isoString):
         isoString += '000'
     return datetime.strptime(isoString, '%Y-%m-%dT%H:%M:%S.%f')
 
-__root_path = os.path.dirname(os.path.abspath(__file__))
+__root_path = os.path.dirname(os.path.realpath(__file__))
 
 '''The flask webservice app'''
 app = Flask('ResourceAssignmentEditor',
@@ -208,10 +209,26 @@ def getUpdateEventsSince(since):
 def getUpdateEvents():
     return getUpdateEventsSince(datetime.utcnow().isoformat())
 
-def main(argv=None, debug=False):
-    with radbchangeshandler:
+def main():
+    # Check the invocation arguments
+    parser = OptionParser('%prog [options]',
+                          description='run the resource assignment editor web service')
+    parser.add_option('-p', '--port', dest='port', type='int', default=5000, help='port number on which to host the webservice, default: 5000')
+    parser.add_option('-q', '--broker', dest='broker', type='string', default=None, help='Address of the qpid broker, default: localhost')
+    parser.add_option('--radb_busname', dest='radb_busname', type='string', default=DEFAULT_BUSNAME, help='Name of the bus exchange on the qpid broker on which the radbservice listens, default: %s' % DEFAULT_BUSNAME)
+    parser.add_option('--radb_servicename', dest='radb_servicename', type='string', default=DEFAULT_SERVICENAME, help='Name of the radbservice, default: %s' % DEFAULT_SERVICENAME)
+    parser.add_option('--radb_notifications_busname', dest='radb_notifications_busname', type='string', default=DEFAULT_RADB_CHANGES_BUSNAME, help='Name of the notification bus exchange on the qpid broker on which the radb notifications are published, default: %s' % DEFAULT_RADB_CHANGES_BUSNAME)
+    parser.add_option('--mom_busname', dest='mom_busname', type='string', default=DEFAULT_MOM_BUSNAME, help='Name of the bus exchange on the qpid broker on which the momservice listens, default: %s' % DEFAULT_MOM_BUSNAME)
+    parser.add_option('--mom_servicename', dest='mom_servicename', type='string', default=DEFAULT_MOM_SERVICENAME, help='Name of the momservice, default: %s' % DEFAULT_MOM_SERVICENAME)
+    parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
+    (options, args) = parser.parse_args()
+
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                        level=logging.DEBUG if options.verbose else logging.INFO)
+
+    with radbchangeshandler, rarpc, momrpc:
         '''Start the webserver'''
-        app.run(debug=debug, threaded=True, host='0.0.0.0', port=5001)
+        app.run(debug=options.verbose, threaded=True, host='0.0.0.0', port=options.port)
 
 if __name__ == '__main__':
-    main(sys.argv[1:], True)
+    main()
