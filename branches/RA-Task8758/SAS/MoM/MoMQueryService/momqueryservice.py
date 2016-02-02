@@ -91,7 +91,7 @@ class MoMDatabaseWrapper:
         '''
         cursor = self.conn.cursor(dictionary=True)
         # TODO: make a view for this query in momdb!
-        query = '''SELECT project.mom2id as project_mom2id, project.name as project_name, project.description as project_description,
+        query = '''SELECT project.mom2id as mom2id, project.name as name, project.description as description,
                 lofar_mom3.statustype.code as status_name,  lofar_mom3.statustype.id as status_id,
         lofar_mom3.status.userid as last_user_id, lofar_mom3.status.name as last_user_name, lofar_mom3.status.statustime as statustime
         FROM lofar_mom3.mom2object as project
