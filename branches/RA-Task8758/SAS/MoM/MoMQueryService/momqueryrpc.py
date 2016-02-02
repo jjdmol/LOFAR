@@ -78,7 +78,11 @@ class MoMRPC:
         '''get all projects
         :rtype dict with all projects'''
         logger.info("Requesting all projects")
-        return self._rpc('GetProjects')
+        projects = self._rpc('GetProjects')
+        for project in projects:
+            project['statustime'] = project['statustime'].datetime()
+
+        return projects
 
 
 def main():
