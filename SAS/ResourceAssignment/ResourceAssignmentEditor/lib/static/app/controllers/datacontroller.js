@@ -16,6 +16,7 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
     self.resourceClaimDict = {};
     self.resourceGroupClaimDict = {};
     self.resourceIdToGroupIdsDict = {};
+    self.momProjectsDict = {};
 
     self.resourcesWithClaims = [];
 
@@ -61,6 +62,8 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
                 var task = result.tasks[i];
                 task.starttime = new Date(task.starttime);
                 task.endtime = new Date(task.endtime);
+
+                self.getMoMObjectDetailsForTask(task);
             }
 
             self.tasks = result.tasks;
@@ -133,6 +136,31 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
         });
     };
 
+    self.getMoMProjects = function() {
+        $http.get('/rest/momprojects').success(function(result) {
+            //convert datetime strings to Date objects
+            var dict = {};
+            for(var i = result.momprojects.length-1; i >=0; i--) {
+                var momproject = result.momprojects[i];
+                momproject.statustime = new Date(momproject.statustime);
+                dict[momproject.mom2id] = momproject;
+            }
+            self.momProjectsDict = dict;
+        });
+    };
+
+    self.getMoMObjectDetailsForTask = function(task) {
+        $http.get('/rest/momobjectdetails/'+task.mom_id).success(function(result) {
+            if(result.momobjectdetails) {
+                task.name = result.momobjectdetails.object_name;
+                task.projectName = result.momobjectdetails.project_name;
+                task.projectId = result.momobjectdetails.project_mom2id;
+            }
+        });
+    };
+
+
+
     self.lastUpdateTimestamp = undefined;
 
     self.subscribeToUpdates = function() {
@@ -155,9 +183,13 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
                             if(change.changeType == 'update') {
                                 var task = self.taskDict[changedTask.id];
                                 task.status = changedTask.status;
+                                task.mom_id = changedTask.mom_id;
+                                task.otdb_id = changedTask.otdb_id;
                                 task.starttime = new Date(changedTask.starttime);
                                 task.endtime = new Date(changedTask.endtime);
+                                self.getMoMObjectDetailsForTask(task);
                             } else if(change.changeType == 'insert') {
+                                self.getMoMObjectDetailsForTask(changedTask);
                                 self.tasks.push(changedTask);
                                 self.taskDict[changedTask.id] = changedTask;
                             } else if(change.changeType == 'delete') {
@@ -228,6 +260,7 @@ dataControllerMod.controller('DataController',
 //     dataService.getResourceGroupClaims();
     dataService.getResources();
     dataService.getResourceClaims();
+    dataService.getMoMProjects();
 
     dataService.subscribeToUpdates();
 }
