@@ -22,6 +22,15 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         enableCellEdit: false,
         width: '*'
     },
+    { field: 'projectName',
+        displayName:'Project',
+        enableCellEdit: false,
+        width: '*',
+        filter: {
+            type: uiGridConstants.filter.SELECT,
+            selectOptions: []
+        }
+    },
     { field: 'starttime',
         width: '*',
         enableCellEditOnFocus: true,
@@ -95,7 +104,7 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     function fillColumFilterSelectOptions(options, columnDef) {
         var columnSelectOptions = [];
 
-        for(var i = options.length-1; i >=0; i--)
+        for(var i = 0; i < options.length; i++)
         {
             var option = options[i];
             columnSelectOptions.push({ value: option, label: option })
@@ -105,11 +114,26 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     };
 
     $scope.$watch('dataService.taskstatustypes', function() {
-        fillColumFilterSelectOptions($scope.dataService.taskstatustypes, $scope.columns[3]);
+        fillColumFilterSelectOptions($scope.dataService.taskstatustypes, $scope.columns[4]);
     });
 
     $scope.$watch('dataService.tasktypes', function() {
-        fillColumFilterSelectOptions($scope.dataService.tasktypes, $scope.columns[4]);
+        fillColumFilterSelectOptions($scope.dataService.tasktypes, $scope.columns[5]);
+    });
+
+    $scope.$watch('dataService.momProjectsDict', function() {
+        var projectNames = [];
+        var momProjectsDict = $scope.dataService.momProjectsDict;
+        for(var key in momProjectsDict) {
+            if(momProjectsDict.hasOwnProperty(key)) {
+                var projectName = momProjectsDict[key].name;
+                if(!(projectName in projectNames)) {
+                    projectNames.push(projectName);
+                }
+            }
+        }
+        projectNames.sort();
+        fillColumFilterSelectOptions(projectNames, $scope.columns[1]);
     });
 }
 ]);

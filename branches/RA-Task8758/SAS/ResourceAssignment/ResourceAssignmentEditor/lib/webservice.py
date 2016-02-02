@@ -43,6 +43,9 @@ from lofar.sas.resourceassignment.resourceassignmenteditor.radbchangeshandler im
 from lofar.sas.resourceassignment.database.config import DEFAULT_BUSNAME as DEFAULT_RADB_CHANGES_BUSNAME
 from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
+from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
+from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
+from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
 
 
 def asDatetime(isoString):
@@ -64,8 +67,9 @@ app = Flask('ResourceAssignmentEditor',
 # Load the default configuration
 app.config.from_object('lofar.sas.resourceassignment.resourceassignmenteditor.config.default')
 
-rpc = RARPC(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker='10.149.96.6')
+rarpc = RARPC(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker='10.149.96.6')
 radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker='10.149.96.6')
+momrpc = MoMRPC(busname=DEFAULT_MOM_BUSNAME, servicename=DEFAULT_MOM_SERVICENAME, broker='10.149.96.6')
 
 @app.route('/')
 @app.route('/index.htm')
@@ -77,19 +81,19 @@ def index():
 @app.route('/rest/resourceitems')
 @gzipped
 def resourcesitems():
-    result = rpc.getResources()
+    result = rarpc.getResources()
     return jsonify({'resourceitems': result})
 
 @app.route('/rest/resourcegroups')
 @gzipped
 def resourcegroups():
-    result = rpc.getResourceGroups()
+    result = rarpc.getResourceGroups()
     return jsonify({'resourcegroups': result})
 
 @app.route('/rest/resourceclaims')
 @gzipped
 def resourceclaims():
-    result = rpc.getResourceClaims()
+    result = rarpc.getResourceClaims()
     return jsonify({'resourceclaims': result})
 
 @app.route('/rest/resourcegroupclaims')
@@ -101,7 +105,7 @@ def resourcegroupclaims():
 @app.route('/rest/tasks')
 @gzipped
 def getTasks():
-    tasks = rpc.getTasks()
+    tasks = rarpc.getTasks()
 
     # there are no task names in the database yet.
     # will they come from spec/MoM?
@@ -114,7 +118,7 @@ def getTasks():
 @app.route('/rest/tasks/<int:task_id>', methods=['GET'])
 def getTask(task_id):
     try:
-        task = rpc.getTask(task_id)
+        task = rarpc.getTask(task_id)
 
         if not task:
             abort(404)
@@ -148,7 +152,7 @@ def putTask(task_id):
                 except ValueError:
                     abort(400, 'timestamp not in iso format: ' + updatedTask['endtime'])
 
-            rpc.updateResourceClaimsForTask(task_id,
+            rarpc.updateResourceClaimsForTask(task_id,
                                             starttime=updatedTask.get('starttime', None),
                                             endtime=updatedTask.get('endtime', None),
                                             status=updatedTask.get('status', None))
@@ -164,17 +168,31 @@ def taskResourceClaims(task_id):
 
 @app.route('/rest/tasktypes')
 def tasktypes():
-    result = rpc.getTaskTypes()
+    result = rarpc.getTaskTypes()
     result = [x['name'] for x in result]
     return jsonify({'tasktypes': result})
 
 @app.route('/rest/taskstatustypes')
 def getTaskStatusTypes():
-    result = rpc.getTaskStatuses()
+    result = rarpc.getTaskStatuses()
     result = sorted(result, key=lambda q: q['id'])
     result = [x['name'] for x in result]
     return jsonify({'taskstatustypes': result})
 
+@app.route('/rest/momprojects')
+def getMoMProjects():
+    projects = momrpc.getProjects()
+    projects = [x for x in projects if x['status_id'] in [1, 7]]
+
+    for project in projects:
+        project['statustime'] = project['statustime'].isoformat()
+
+    return jsonify({'momprojects': projects})
+
+@app.route('/rest/momobjectdetails/<int:mom2id>')
+def getMoMObjectDetails(mom2id):
+    details = momrpc.getProjectDetails(mom2id)
+    return jsonify({'momobjectdetails': details.values()[0] if details else None})
 
 @app.route('/rest/updates/<since>')
 def getUpdateEventsSince(since):
