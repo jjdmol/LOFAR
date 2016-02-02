@@ -4,7 +4,6 @@
 from os import stat, path, chmod
 import logging
 
-logging
 logger = logging.getLogger(__name__)
 
 # make sure config.py is mode 600 to hide passwords
