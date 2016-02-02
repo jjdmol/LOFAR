@@ -21,13 +21,14 @@ with RPC(busname, 'GetProjectDetails') as getProjectDetails:
 from os import stat
 import sys
 import logging
+from optparse import OptionParser
 from mysql import connector
 from lofar.messaging import Service
 from lofar.messaging.Service import MessageHandlerInterface
 from lofar.common.util import waitForInterrupt
+from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
-logger=logging.getLogger("momqueryservice")
+logger=logging.getLogger(__file__)
 
 class MoMDatabaseWrapper:
     '''handler class for details query in mom db'''
@@ -37,13 +38,28 @@ class MoMDatabaseWrapper:
                                         passwd=passwd,
                                         database="lofar_mom3")
 
-    def getProjectDetails(self, mom_ids_str):
+    def getProjectDetails(self, mom_ids):
         ''' get the project details (project_mom2id, project_name,
         project_description, object_mom2id, object_name, object_description,
         object_type, object_group_id) for given mom object mom_ids
-        :param string mom_ids_str comma seperated string of mom2object id's
+        :param mixed mom_ids comma seperated string of mom2object id's, or list of ints
         :rtype list of dict's key value pairs with the project details
         '''
+
+        if isinstance(mom_ids, basestring):
+            # parse text: it should contain a list of ints
+            # filter out everything else to prevent sql injection
+            mom_ids_orig = mom_ids
+            mom_ids = [x.strip() for x in mom_ids.split(',')]
+            mom_ids = [x for x in mom_ids if x.isdigit()]
+            mom_ids = ', '.join(mom_ids)
+
+            if not mom_ids:
+                raise KeyError("Could not find proper ids in: " + mom_ids_orig)
+
+        logger.info("Query for mom id%s: %s" %
+                    ('\'s' if len(mom_ids) > 1 else '', mom_ids))
+
         cursor = self.conn.cursor(dictionary=True)
         # TODO: make a view for this query in momdb!
         query = '''SELECT project.mom2id as project_mom2id, project.name as project_name, project.description as project_description,
@@ -52,7 +68,38 @@ class MoMDatabaseWrapper:
         inner join lofar_mom3.mom2object as project on project.id = object.ownerprojectid
         where object.mom2id in (%s)
         order by project_mom2id
-        ''' % (mom_ids_str)
+        ''' % (mom_ids)
+        cursor.execute(query)
+
+        rows = cursor.fetchall()
+
+        logger.info("Found %d results for mom id%s: %s" %
+                    (len(rows), '\'s' if len(mom_ids) > 1 else '', mom_ids))
+
+        result = {}
+        for row in rows:
+            object_mom2id = row['object_mom2id']
+            result[str(object_mom2id)] = dict(row)
+
+        return result
+
+    def getProjects(self):
+        ''' get the list of all projects with columns (project_mom2id, project_name,
+        project_description, status_name, status_id, last_user_id,
+        last_user_name, statustime)
+        :rtype list of dict's key value pairs with all projects
+        '''
+        cursor = self.conn.cursor(dictionary=True)
+        # TODO: make a view for this query in momdb!
+        query = '''SELECT project.mom2id as project_mom2id, project.name as project_name, project.description as project_description,
+                lofar_mom3.statustype.code as status_name,  lofar_mom3.statustype.id as status_id,
+        lofar_mom3.status.userid as last_user_id, lofar_mom3.status.name as last_user_name, lofar_mom3.status.statustime as statustime
+        FROM lofar_mom3.mom2object as project
+        left join lofar_mom3.mom2objectstatus as status on project.currentstatusid = status.id
+        left join lofar_mom3.status as statustype on status.statusid=statustype.id
+        where project.mom2objecttype='PROJECT'
+        order by project_mom2id;
+        '''
         cursor.execute(query)
 
         return cursor.fetchall()
@@ -65,47 +112,28 @@ class ProjectDetailsQueryHandler(MessageHandlerInterface):
     def __init__(self, **kwargs):
         MessageHandlerInterface.__init__(self, **kwargs)
         self.momreadonly_passwd = kwargs.pop("momreadonly_passwd", '')
-        self.kwargs = kwargs
+
+        self.service2MethodMap = {
+            'GetProjects': self.getProjects,
+            'GetProjectDetails': self.getProjectDetails
+            }
 
     def prepare_loop(self):
         self.momdb = MoMDatabaseWrapper(self.momreadonly_passwd)
 
-    def handle_message(self, text):
-        '''The actual handler function.
-        Parses the message text, converts it to csv id string,
-        looks up the project(s) details via the momdb wrapper
-        and returns the result
-        :param string text The message's text content
-        :rtype dict of momid -> details dict
-        '''
+    def getProjectDetails(self, mom_ids):
+        return self.momdb.getProjectDetails(mom_ids)
 
-        # parse text: it should contain a list of ints
-        # filter out everything else to prevent sql injection
-        mom_ids = [x.strip() for x in text.split(',')]
-        mom_ids = [x for x in mom_ids if x.isdigit()]
-        mom_ids_str = ', '.join(mom_ids)
+    def getProjects(self):
+        return self.momdb.getProjects()
 
-        if not mom_ids_str:
-            raise KeyError("Could not find proper ids in: " + text)
-
-        logger.info("Query for mom id%s: %s" %
-                    ('\'s' if len(mom_ids) > 1 else '', mom_ids_str))
-
-        result = {}
-        rows = self.momdb.getProjectDetails(mom_ids_str)
-        for row in rows:
-            object_mom2id = row['object_mom2id']
-            result[str(object_mom2id)] = row
-            logger.info("Result for %s: %s" % (object_mom2id, str(row)))
-
-        return result
-
-
-def createService(busname='momqueryservice',
+def createService(busname=DEFAULT_BUSNAME,
+                  servicename=DEFAULT_SERVICENAME,
                   momreadonly_passwd='',
                   handler=None):
     '''create the GetProjectDetails on given busname
     :param string busname: name of the bus on which this service listens
+    :param string servicename: name of the service
     :param string momreadonly_passwd: the momreadonly passwd.
     :param ProjectDetailsQueryHandler handler: ProjectDetailsQueryHandler class Type, or mock like type
     :rtype: lofar.messaging.Service'''
@@ -113,27 +141,34 @@ def createService(busname='momqueryservice',
     if not handler:
         handler = ProjectDetailsQueryHandler
 
-    return Service('GetProjectDetails',
+    return Service(servicename,
                    handler,
                    busname=busname,
                    numthreads=1,
+                   use_service_methods=True,
+                   verbose=False,
                    handler_args={'momreadonly_passwd':momreadonly_passwd})
 
 
-def main():
+def main(busname=DEFAULT_BUSNAME,
+         servicename=DEFAULT_SERVICENAME,
+         momreadonly_passwd=None):
     '''Starts the momqueryservice.GetProjectDetails service'''
 
-    # make sure config.py is mode 600 to hide passwords
-    if oct(stat('config.py').st_mode & 0777) != '0600':
-        print 'Please change permissions of config.py to 600'
-        exit(-1)
+    if not momreadonly_passwd:
+        from lofar.mom.momqueryservice.config import momreadonly_passwd
 
-    # safely import momreadonly_passwd
-    from lofar.mom.momqueryservice.config import momreadonly_passwd
+    # Check the invocation arguments
+    parser = OptionParser("%prog [options]",
+                          description='runs the momqueryservice')
+    parser.add_option("-b", "--busname", dest="busname", type="string", default=busname, help="Name of the bus exchange on the qpid broker, default: %s" % busname)
+    parser.add_option("-s", "--servicename", dest="servicename", type="string", default=servicename, help="Name for this service, default: %s" % servicename)
+    (options, args) = parser.parse_args()
 
     # start the service and listen.
-    with createService('momqueryservice', momreadonly_passwd):
+    with createService(busname=options.busname, servicename=options.servicename, momreadonly_passwd=momreadonly_passwd):
         waitForInterrupt()
 
 if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
     main()
