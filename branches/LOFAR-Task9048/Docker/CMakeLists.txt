@@ -15,6 +15,7 @@ lofar_find_package(Subversion REQUIRED)
 
 # Directories with Dockerfile.tmpl to parse
 set(DOCKER_TEMPLATE_DIRS
+  lofar-base
   lofar-pipeline
   lofar-outputproc)
 

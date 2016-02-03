@@ -10,6 +10,7 @@
 #       ${BRANCH_URL}   = Full subversion URL for this branch
 #       ${REVISION}     = SVN revision number of this checkout
 #       ${NOW}          = now in UTC (format: 2016-01-01 10:11:12)
+#       ${BUILD_UID}    = uid of building user (=caller)
 #
 
 # ----- BRANCH_NAME = branches/LOFAR-Task1234 -----
@@ -50,8 +51,12 @@ export REVISION=`echo "$SVN_INFO" | perl -ne 'print "$1" if /Revision: +(.+)/;'`
 
 export NOW="`date -u +'%F %T'`"
 
+# ----- BUILD_UID = 1001 ----
+
+export BUILD_UID=`id -u`
+
 # ----- Process input -----
 
 # Insert our knowledge when processing stdin -> stdout
-envsubst '$BRANCH_NAME $BRANCH_URL $REVISION $NOW'
+envsubst '$BRANCH_NAME $BRANCH_URL $REVISION $NOW $BUILD_UID'
 
