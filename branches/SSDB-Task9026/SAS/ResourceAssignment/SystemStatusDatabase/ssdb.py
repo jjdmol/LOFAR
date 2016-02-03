@@ -20,7 +20,7 @@ class SSDB:
         self.username = kwargs.pop("username", USER)
         self.password = kwargs.pop("password", PASSWORD)
         self.database = kwargs.pop("database", DATABASE)
-        self.conn = pg.connect("dbname=%s user=%s password=%s" % (self.database,self.username,self.password))
+        self.conn = None #pg.connect("dbname=%s user=%s password=%s" % (self.database,self.username,self.password))
         self.DBconnected = (self.conn and self.conn.status==1)
         self.Qlistall="select * from hosts inner join datapaths on hosts.id = datapaths.hostid;"
         self.Qgetstatenames="select statename,id from states;"
