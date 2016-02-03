@@ -1,0 +1,732 @@
+ppstune.py@CS103 2014-09-02 09:07:21,397     INFO - Installing termination signal handlers
+ppstune.py@CS103 2014-09-02 09:07:21,398     INFO - Using rising flank of clock pulse
+ppstune.py@CS103 2014-09-02 09:07:21,398     INFO - Using boards rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11
+ppstune.py@CS103 2014-09-02 09:07:21,398     INFO - Resetting sync delay to 0
+ppstune.py@CS103 2014-09-02 09:07:21,399     INFO - Delay step:   5
+ppstune.py@CS103 2014-09-02 09:07:24,789     INFO - Diff errors   5: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-09-02 09:07:24,790     INFO - Delay step:   6
+ppstune.py@CS103 2014-09-02 09:07:28,127     INFO - Diff errors   6: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-09-02 09:07:30,359     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2014-09-02 09:07:30,372     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2014-09-02 09:07:30,373     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-09-02 09:07:30,398     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 09:07:31,571     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 09:07:31,611     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 09:07:32,631     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-09-02 09:07:32,632     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-09-02 09:07:33,642     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 09:07:34,777     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 09:07:35,917     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2014-09-02 09:07:35,917     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-09-02 09:07:35,934     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 09:07:37,056     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 09:07:37,086     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 09:07:38,099     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-09-02 09:07:38,100     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-09-02 09:07:39,111     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 09:07:40,250     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 09:07:40,250     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 09:07:41,369     INFO - Switching clock to 160 MHz
+ppstune.py@CS103 2014-09-02 09:07:42,419     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 09:07:43,534     INFO - Backing up /usr/bin/md5sum to /usr/bin/md5sum.2012-03-20_1232
+ppstune.py@CS103 2014-09-02 09:07:43,536     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2014-09-02 09:07:43,536     INFO - testdata/PPSdelays-test-nonexistent.conf not found
+ppstune.py@CS103 2014-09-02 09:07:43,554     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 09:07:44,562     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-09-02 09:07:44,563     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-09-02 09:07:45,608     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 09:07:46,625    ERROR - Malformed RemoteStation.conf at test/Broken-RemoteStation.conf
+ppstune.py@CS103 2014-09-02 09:07:46,883  WARNING - No AD10 info in testdata/rubidium_log.empty
+ppstune.py@CS103 2014-09-02 09:07:46,885     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 09:07:47,998     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 09:07:49,111     INFO - Switching clock to 160 MHz
+ppstune.py@CS103 2014-09-02 09:07:50,157     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 09:07:51,307     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-09-02 09:07:51,327     INFO - Going to swlevel 6
+ppstune.py@CS103 2014-09-02 09:07:51,344     INFO - Going to swlevel '6-broken-rsp'
+ppstune.py@CS103 2014-09-02 09:07:51,358    ERROR - Broken RSP boards:
+No RSP board 4 found
+No RSP board 5 found
+No RSP board 6 found
+ppstune.py@CS103 2014-09-02 09:07:51,373     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 09:07:52,497     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 09:07:53,632     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 09:07:54,775     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 09:07:59,062  WARNING - wait_for_clocks_to_lock timed out after 4.0 s
+ppstune.py@CS103 2014-09-02 09:08:00,132    ERROR - test/rspctl-not-locked --tdstatus:
+RSP |   10MHz input | output clock | PPS input | PLL 160MHZ | PLL 200MHz | V3.3 | V5.0 | Temperature
+  0 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  1 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  2 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  3 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  4 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  5 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  6 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  7 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  8 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  9 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+ 10 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+ 11 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+
+
+ppstune.py@CS103 2014-09-02 09:08:00,134     INFO - Writing 'testdata/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2014-09-02 09:08:00,135     INFO - Renaming testdata/PPSdelays-output-test-temp.conf to testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-09-02 09:08:00,135     INFO - Done writing testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-09-02 09:08:00,136     INFO - Writing 'testdata/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2014-09-02 09:08:00,137     INFO - Removing testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-09-02 09:08:00,137     INFO - Renaming testdata/PPSdelays-output-test-temp.conf to testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-09-02 09:08:00,137     INFO - Done writing testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-09-02 09:08:00,139     INFO - Writing 'testdata/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2014-09-02 09:08:00,139     INFO - Renaming testdata/PPSdelays-output-test-temp.conf to testdata/unwritable-dir/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-09-02 09:08:00,141     INFO - Writing 'testdata/unwritable-dir/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2014-09-02 13:52:03,534     INFO - Installing termination signal handlers
+ppstune.py@CS103 2014-09-02 13:52:03,535     INFO - Using rising flank of clock pulse
+ppstune.py@CS103 2014-09-02 13:52:03,583     INFO - Using boards rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11
+ppstune.py@CS103 2014-09-02 13:52:03,583     INFO - Resetting sync delay to 0
+ppstune.py@CS103 2014-09-02 13:52:03,586     INFO - Delay step:   5
+ppstune.py@CS103 2014-09-02 13:52:07,004     INFO - Diff errors   5: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-09-02 13:52:07,005     INFO - Delay step:   6
+ppstune.py@CS103 2014-09-02 13:52:10,431     INFO - Diff errors   6: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-09-02 13:52:11,392     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2014-09-02 13:52:11,397     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2014-09-02 13:52:11,397     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-09-02 13:52:11,412     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:52:12,508     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:52:12,537     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:52:13,552     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-09-02 13:52:13,553     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-09-02 13:52:14,563     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:52:15,700     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:52:16,854     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2014-09-02 13:52:16,854     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-09-02 13:52:16,872     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:52:18,001     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:52:18,025     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:52:19,036     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-09-02 13:52:19,037     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-09-02 13:52:20,046     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:52:21,185     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:52:21,185     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:52:22,305     INFO - Switching clock to 160 MHz
+ppstune.py@CS103 2014-09-02 13:52:32,362     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:52:33,505     INFO - Backing up /usr/bin/md5sum to /usr/bin/md5sum.2012-03-20_1232
+ppstune.py@CS103 2014-09-02 13:52:33,507     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2014-09-02 13:52:33,507     INFO - testdata/PPSdelays-test-nonexistent.conf not found
+ppstune.py@CS103 2014-09-02 13:52:33,525     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:52:34,535     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-09-02 13:52:34,536     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-09-02 13:52:35,579     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:52:36,597    ERROR - Malformed RemoteStation.conf at test/Broken-RemoteStation.conf
+ppstune.py@CS103 2014-09-02 13:53:32,939     INFO - Installing termination signal handlers
+ppstune.py@CS103 2014-09-02 13:53:32,940     INFO - Using rising flank of clock pulse
+ppstune.py@CS103 2014-09-02 13:53:32,941     INFO - Using boards rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11
+ppstune.py@CS103 2014-09-02 13:53:32,941     INFO - Resetting sync delay to 0
+ppstune.py@CS103 2014-09-02 13:53:32,942     INFO - Delay step:   5
+ppstune.py@CS103 2014-09-02 13:53:36,358     INFO - Diff errors   5: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-09-02 13:53:36,359     INFO - Delay step:   6
+ppstune.py@CS103 2014-09-02 13:53:39,748     INFO - Diff errors   6: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-09-02 13:53:40,345     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2014-09-02 13:53:40,350     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2014-09-02 13:53:40,350     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-09-02 13:53:40,358     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:53:41,526     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:53:41,565     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:53:42,584     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-09-02 13:53:42,585     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-09-02 13:53:43,596     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:53:44,766     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:53:45,894     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2014-09-02 13:53:45,895     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-09-02 13:53:45,912     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:53:47,015     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:53:47,038     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:53:48,049     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-09-02 13:53:48,050     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-09-02 13:53:49,060     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:53:50,198     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:53:50,199     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:53:51,316     INFO - Switching clock to 160 MHz
+ppstune.py@CS103 2014-09-02 13:54:01,374     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:54:02,506     INFO - Backing up /usr/bin/md5sum to /usr/bin/md5sum.2012-03-20_1232
+ppstune.py@CS103 2014-09-02 13:54:02,508     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2014-09-02 13:54:02,508     INFO - testdata/PPSdelays-test-nonexistent.conf not found
+ppstune.py@CS103 2014-09-02 13:54:02,541     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:54:03,554     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-09-02 13:54:03,555     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-09-02 13:54:04,602     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:54:05,621    ERROR - Malformed RemoteStation.conf at test/Broken-RemoteStation.conf
+ppstune.py@CS103 2014-09-02 13:55:59,627     INFO - Installing termination signal handlers
+ppstune.py@CS103 2014-09-02 13:55:59,630     INFO - Using rising flank of clock pulse
+ppstune.py@CS103 2014-09-02 13:55:59,631     INFO - Using boards rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11
+ppstune.py@CS103 2014-09-02 13:55:59,631     INFO - Resetting sync delay to 0
+ppstune.py@CS103 2014-09-02 13:55:59,633     INFO - Delay step:   5
+ppstune.py@CS103 2014-09-02 13:56:03,075     INFO - Diff errors   5: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-09-02 13:56:03,076     INFO - Delay step:   6
+ppstune.py@CS103 2014-09-02 13:56:06,537     INFO - Diff errors   6: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-09-02 13:56:08,534     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2014-09-02 13:56:08,547     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2014-09-02 13:56:08,548     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-09-02 13:56:08,572     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:56:09,742     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:56:09,781     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:56:10,801     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-09-02 13:56:10,802     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-09-02 13:56:11,812     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:56:12,965     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:56:14,115     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2014-09-02 13:56:14,116     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-09-02 13:56:14,133     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:56:15,268     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:56:15,300     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:56:16,313     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-09-02 13:56:16,314     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-09-02 13:56:17,322     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:56:18,459     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:56:18,460     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:56:19,575     INFO - Switching clock to 160 MHz
+ppstune.py@CS103 2014-09-02 13:56:29,623     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:56:30,763     INFO - Backing up /usr/bin/md5sum to /usr/bin/md5sum.2012-03-20_1232
+ppstune.py@CS103 2014-09-02 13:56:30,764     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2014-09-02 13:56:30,765     INFO - testdata/PPSdelays-test-nonexistent.conf not found
+ppstune.py@CS103 2014-09-02 13:56:30,791     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:56:31,804     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-09-02 13:56:31,805     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-09-02 13:56:32,852     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:56:33,872    ERROR - Malformed RemoteStation.conf at test/Broken-RemoteStation.conf
+ppstune.py@CS103 2014-09-02 13:57:32,303     INFO - Installing termination signal handlers
+ppstune.py@CS103 2014-09-02 13:57:32,304     INFO - Using rising flank of clock pulse
+ppstune.py@CS103 2014-09-02 13:57:32,304     INFO - Using boards rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11
+ppstune.py@CS103 2014-09-02 13:57:32,305     INFO - Resetting sync delay to 0
+ppstune.py@CS103 2014-09-02 13:57:32,305     INFO - Delay step:   5
+ppstune.py@CS103 2014-09-02 13:57:35,686     INFO - Diff errors   5: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-09-02 13:57:35,687     INFO - Delay step:   6
+ppstune.py@CS103 2014-09-02 13:57:39,117     INFO - Diff errors   6: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-09-02 13:57:39,812     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2014-09-02 13:57:39,816     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2014-09-02 13:57:39,816     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-09-02 13:57:39,824     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:57:40,933     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:57:40,964     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:57:41,978     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-09-02 13:57:41,979     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-09-02 13:57:42,989     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:57:44,126     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:57:45,265     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2014-09-02 13:57:45,266     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-09-02 13:57:45,283     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:57:46,417     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:57:46,448     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:57:47,461     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-09-02 13:57:47,462     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-09-02 13:57:48,472     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:57:49,610     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-09-02 13:57:49,610     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:57:50,729     INFO - Switching clock to 160 MHz
+ppstune.py@CS103 2014-09-02 13:58:00,784     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:58:01,919     INFO - Backing up /usr/bin/md5sum to /usr/bin/md5sum.2012-03-20_1232
+ppstune.py@CS103 2014-09-02 13:58:01,921     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2014-09-02 13:58:01,922     INFO - testdata/PPSdelays-test-nonexistent.conf not found
+ppstune.py@CS103 2014-09-02 13:58:01,946     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:58:02,957     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-09-02 13:58:02,958     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-09-02 13:58:04,004     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-09-02 13:58:05,026    ERROR - Malformed RemoteStation.conf at test/Broken-RemoteStation.conf
+ppstune.py@CS103 2014-09-02 13:58:05,437  WARNING - No AD10 info in testdata/rubidium_log.empty
+ppstune.py@CS103 2014-09-02 13:58:05,438     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:58:06,536     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:58:07,645     INFO - Switching clock to 160 MHz
+ppstune.py@CS103 2014-09-02 13:58:17,700     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:58:18,844     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-09-02 13:58:18,855     INFO - Going to swlevel 6
+ppstune.py@CS103 2014-09-02 13:58:18,866     INFO - Going to swlevel '6-broken-rsp'
+ppstune.py@CS103 2014-09-02 13:58:18,874    ERROR - Broken RSP boards:
+No RSP board 4 found
+No RSP board 5 found
+No RSP board 6 found
+ppstune.py@CS103 2014-09-02 13:58:18,884     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:58:19,987     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:58:21,122     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:58:22,255     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-09-02 13:58:26,579  WARNING - wait_for_clocks_to_lock timed out after 4.0 s
+ppstune.py@CS103 2014-09-02 13:58:27,648    ERROR - test/rspctl-not-locked --tdstatus:
+RSP |   10MHz input | output clock | PPS input | PLL 160MHZ | PLL 200MHz | V3.3 | V5.0 | Temperature
+  0 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  1 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  2 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  3 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  4 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  5 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  6 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  7 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  8 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  9 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+ 10 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+ 11 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+
+
+ppstune.py@CS103 2014-09-02 13:58:27,650     INFO - Writing 'testdata/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2014-09-02 13:58:27,651     INFO - Renaming testdata/PPSdelays-output-test-temp.conf to testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-09-02 13:58:27,651     INFO - Done writing testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-09-02 13:58:27,652     INFO - Writing 'testdata/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2014-09-02 13:58:27,652     INFO - Removing testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-09-02 13:58:27,653     INFO - Renaming testdata/PPSdelays-output-test-temp.conf to testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-09-02 13:58:27,653     INFO - Done writing testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-09-02 13:58:27,655     INFO - Writing 'testdata/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2014-09-02 13:58:27,655     INFO - Renaming testdata/PPSdelays-output-test-temp.conf to testdata/unwritable-dir/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-09-02 13:58:27,656     INFO - Writing 'testdata/unwritable-dir/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2014-12-03 17:11:07,757     INFO - Installing termination signal handlers
+ppstune.py@CS103 2014-12-03 17:11:07,791     INFO - Using rising flank of clock pulse
+ppstune.py@CS103 2014-12-03 17:11:07,811     INFO - Using boards rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11
+ppstune.py@CS103 2014-12-03 17:11:07,811     INFO - Resetting sync delay to 0
+ppstune.py@CS103 2014-12-03 17:11:07,813     INFO - Delay step:   5
+ppstune.py@CS103 2014-12-03 17:11:11,237     INFO - Diff errors   5: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-12-03 17:11:11,238     INFO - Delay step:   6
+ppstune.py@CS103 2014-12-03 17:11:14,832     INFO - Diff errors   6: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-12-03 17:11:16,768     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2014-12-03 17:11:16,780     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2014-12-03 17:11:16,781     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-12-03 17:11:16,802     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-03 17:11:17,943     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-12-03 17:11:17,976     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-12-03 17:11:19,006     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-12-03 17:11:19,007     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-12-03 17:11:20,017     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-03 17:11:21,159     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-12-03 17:11:22,337     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2014-12-03 17:11:22,338     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-12-03 17:11:22,359     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-03 17:11:23,498     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-12-03 17:11:23,529     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-12-03 17:11:24,544     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-12-03 17:11:24,544     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-12-03 17:11:25,554     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-03 17:11:26,695     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-12-03 17:11:26,696     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-03 17:11:27,828     INFO - Switching clock to 160 MHz
+ppstune.py@CS103 2014-12-03 17:11:37,907     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-03 17:11:39,050     INFO - Backing up /usr/bin/md5sum to /usr/bin/md5sum.2012-03-20_1232
+ppstune.py@CS103 2014-12-03 17:11:39,054     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2014-12-03 17:11:39,055     INFO - testdata/PPSdelays-test-nonexistent.conf not found
+ppstune.py@CS103 2014-12-03 17:11:39,089     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-12-03 17:11:40,105     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-12-03 17:11:40,106     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-12-03 17:11:41,152     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-12-03 17:11:42,720    ERROR - Malformed RemoteStation.conf at test/Broken-RemoteStation.conf
+ppstune.py@CS103 2014-12-03 17:11:43,395  WARNING - No AD10 info in testdata/rubidium_log.empty
+ppstune.py@CS103 2014-12-03 17:11:43,398     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-03 17:11:44,532     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-03 17:11:45,665     INFO - Switching clock to 160 MHz
+ppstune.py@CS103 2014-12-03 17:11:55,739     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-03 17:11:56,886     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-12-03 17:11:56,905     INFO - Going to swlevel 6
+ppstune.py@CS103 2014-12-03 17:11:56,923     INFO - Going to swlevel '6-broken-rsp'
+ppstune.py@CS103 2014-12-03 17:11:56,940    ERROR - Broken RSP boards:
+No RSP board 4 found
+No RSP board 5 found
+No RSP board 6 found
+ppstune.py@CS103 2014-12-03 17:11:57,025     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-03 17:11:58,162     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-03 17:11:59,298     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-03 17:12:00,449     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-03 17:12:04,801  WARNING - wait_for_clocks_to_lock timed out after 4.0 s
+ppstune.py@CS103 2014-12-03 17:12:05,874    ERROR - test/rspctl-not-locked --tdstatus:
+RSP |   10MHz input | output clock | PPS input | PLL 160MHZ | PLL 200MHz | V3.3 | V5.0 | Temperature
+  0 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  1 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  2 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  3 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  4 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  5 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  6 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  7 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  8 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  9 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+ 10 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+ 11 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+
+
+ppstune.py@CS103 2014-12-03 17:12:05,877     INFO - Writing 'testdata/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2014-12-03 17:12:05,877     INFO - Renaming testdata/PPSdelays-output-test-temp.conf to testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-12-03 17:12:05,878     INFO - Done writing testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-12-03 17:12:05,879     INFO - Writing 'testdata/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2014-12-03 17:12:05,880     INFO - Removing testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-12-03 17:12:05,880     INFO - Renaming testdata/PPSdelays-output-test-temp.conf to testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-12-03 17:12:05,880     INFO - Done writing testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-12-03 17:12:05,959     INFO - Writing 'testdata/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2014-12-03 17:12:05,960     INFO - Renaming testdata/PPSdelays-output-test-temp.conf to testdata/unwritable-dir/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-12-03 17:12:05,962     INFO - Writing 'testdata/unwritable-dir/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2014-12-04 10:45:29,181     INFO - Installing termination signal handlers
+ppstune.py@CS103 2014-12-04 10:45:29,182     INFO - Using rising flank of clock pulse
+ppstune.py@CS103 2014-12-04 10:45:29,182     INFO - Using boards rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11
+ppstune.py@CS103 2014-12-04 10:45:29,183     INFO - Resetting sync delay to 0
+ppstune.py@CS103 2014-12-04 10:45:29,183     INFO - Delay step:   5
+ppstune.py@CS103 2014-12-04 10:45:32,604     INFO - Diff errors   5: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-12-04 10:45:32,605     INFO - Delay step:   6
+ppstune.py@CS103 2014-12-04 10:45:36,035     INFO - Diff errors   6: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-12-04 10:45:36,778     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2014-12-04 10:46:57,492     INFO - Installing termination signal handlers
+ppstune.py@CS103 2014-12-04 10:46:57,493     INFO - Using rising flank of clock pulse
+ppstune.py@CS103 2014-12-04 10:46:57,493     INFO - Using boards rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11
+ppstune.py@CS103 2014-12-04 10:46:57,493     INFO - Resetting sync delay to 0
+ppstune.py@CS103 2014-12-04 10:46:57,494     INFO - Delay step:   5
+ppstune.py@CS103 2014-12-04 10:47:00,923     INFO - Diff errors   5: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-12-04 10:47:00,923     INFO - Delay step:   6
+ppstune.py@CS103 2014-12-04 10:47:04,331     INFO - Diff errors   6: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2014-12-04 10:47:04,984     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2014-12-04 10:47:04,988     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2014-12-04 10:47:04,989     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-12-04 10:47:04,997     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-04 10:47:06,092     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-12-04 10:47:06,117     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-12-04 10:47:07,129     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-12-04 10:47:07,130     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-12-04 10:47:08,141     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-04 10:47:09,279     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-12-04 10:47:10,410     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2014-12-04 10:47:10,411     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-12-04 10:47:10,421     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-04 10:47:11,522     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-12-04 10:47:11,544     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-12-04 10:47:12,555     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-12-04 10:47:12,556     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-12-04 10:47:13,567     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-04 10:47:14,704     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2014-12-04 10:47:14,705     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-04 10:47:15,845     INFO - Switching clock to 160 MHz
+ppstune.py@CS103 2014-12-04 10:47:25,901     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-04 10:47:27,036     INFO - Backing up /usr/bin/md5sum to /usr/bin/md5sum.2012-03-20_1232
+ppstune.py@CS103 2014-12-04 10:47:27,038     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2014-12-04 10:47:27,038     INFO - testdata/PPSdelays-test-nonexistent.conf not found
+ppstune.py@CS103 2014-12-04 10:47:27,064     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-12-04 10:47:28,075     INFO - Starting RSPDriver
+ppstune.py@CS103 2014-12-04 10:47:28,077     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2014-12-04 10:47:29,124     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2014-12-04 10:47:30,145    ERROR - Malformed RemoteStation.conf at test/Broken-RemoteStation.conf
+ppstune.py@CS103 2014-12-04 10:47:30,569  WARNING - No AD10 info in testdata/rubidium_log.empty
+ppstune.py@CS103 2014-12-04 10:47:30,571     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-04 10:47:31,693     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-04 10:47:32,805     INFO - Switching clock to 160 MHz
+ppstune.py@CS103 2014-12-04 10:47:42,858     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-04 10:47:44,003     INFO - Going to swlevel 2
+ppstune.py@CS103 2014-12-04 10:47:44,020     INFO - Going to swlevel 6
+ppstune.py@CS103 2014-12-04 10:47:44,036     INFO - Going to swlevel '6-broken-rsp'
+ppstune.py@CS103 2014-12-04 10:47:44,049    ERROR - Broken RSP boards:
+No RSP board 4 found
+No RSP board 5 found
+No RSP board 6 found
+ppstune.py@CS103 2014-12-04 10:47:44,063     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-04 10:47:45,169     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-04 10:47:46,304     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-04 10:47:47,453     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2014-12-04 10:47:51,776  WARNING - wait_for_clocks_to_lock timed out after 4.0 s
+ppstune.py@CS103 2014-12-04 10:47:52,848    ERROR - test/rspctl-not-locked --tdstatus:
+RSP |   10MHz input | output clock | PPS input | PLL 160MHZ | PLL 200MHz | V3.3 | V5.0 | Temperature
+  0 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  1 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  2 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  3 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  4 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  5 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  6 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  7 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  8 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  9 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+ 10 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+ 11 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+
+
+ppstune.py@CS103 2014-12-04 10:47:52,852     INFO - Writing 'testdata/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2014-12-04 10:47:52,852     INFO - Renaming testdata/PPSdelays-output-test-temp.conf to testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-12-04 10:47:52,853     INFO - Done writing testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-12-04 10:47:52,853     INFO - Writing 'testdata/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2014-12-04 10:47:52,854     INFO - Removing testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-12-04 10:47:52,854     INFO - Renaming testdata/PPSdelays-output-test-temp.conf to testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-12-04 10:47:52,854     INFO - Done writing testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-12-04 10:47:52,856     INFO - Writing 'testdata/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2014-12-04 10:47:52,857     INFO - Renaming testdata/PPSdelays-output-test-temp.conf to testdata/unwritable-dir/PPSdelays-output-test.conf
+ppstune.py@CS103 2014-12-04 10:47:52,858     INFO - Writing 'testdata/unwritable-dir/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2015-09-03 15:04:55,632     INFO - Installing termination signal handlers
+ppstune.py@CS103 2015-09-03 15:04:55,654     INFO - Using rising flank of clock pulse
+ppstune.py@CS103 2015-09-03 15:04:55,687     INFO - Using boards rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11
+ppstune.py@CS103 2015-09-03 15:04:55,688     INFO - Resetting sync delay to 0
+ppstune.py@CS103 2015-09-03 15:04:55,690     INFO - Delay step:   5
+ppstune.py@CS103 2015-09-03 15:04:59,339     INFO - Diff errors   5: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2015-09-03 15:04:59,340     INFO - Delay step:   6
+ppstune.py@CS103 2015-09-03 15:05:02,797     INFO - Diff errors   6: [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ppstune.py@CS103 2015-09-03 15:05:05,182     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2015-09-03 15:05:05,200     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2015-09-03 15:05:05,200     INFO - Going to swlevel 2
+ppstune.py@CS103 2015-09-03 15:05:05,226     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2015-09-03 15:05:06,394     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2015-09-03 15:05:06,434     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2015-09-03 15:05:07,465     INFO - Starting RSPDriver
+ppstune.py@CS103 2015-09-03 15:05:07,466     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2015-09-03 15:05:08,477     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2015-09-03 15:05:09,616     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2015-09-03 15:05:10,784     INFO - Backing up testdata/PPSdelays-test.conf to testdata/PPSdelays-test.conf.2012-03-20_1232
+ppstune.py@CS103 2015-09-03 15:05:10,785     INFO - Going to swlevel 2
+ppstune.py@CS103 2015-09-03 15:05:10,804     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2015-09-03 15:05:11,933     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2015-09-03 15:05:11,953     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2015-09-03 15:05:12,964     INFO - Starting RSPDriver
+ppstune.py@CS103 2015-09-03 15:05:12,965     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2015-09-03 15:05:13,976     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2015-09-03 15:05:15,106     INFO - Clocks locked to 200 MHz
+ppstune.py@CS103 2015-09-03 15:05:15,106     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2015-09-03 15:05:16,219     INFO - Switching clock to 160 MHz
+ppstune.py@CS103 2015-09-03 15:05:26,287     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2015-09-03 15:05:27,461     INFO - Backing up /usr/bin/md5sum to /usr/bin/md5sum.2012-03-20_1232
+ppstune.py@CS103 2015-09-03 15:05:27,465     INFO - Reading testdata/PPSdelays-test.conf:
+#
+# PPSdelays.conf for CS001
+#
+# 2012-03-30 07:48:24
+#
+
+48 [
+ 47  51  56  60  47  51  56  60  47  52  58  62  46  50  56  60
+ 41  45  52  55  42  47  51  56  43  48  53  58  45  48  54  58
+ 47  51  56  60  44  49  56  60  47  49  58  61  47  52  60  63
+]
+
+ppstune.py@CS103 2015-09-03 15:05:27,466     INFO - testdata/PPSdelays-test-nonexistent.conf not found
+ppstune.py@CS103 2015-09-03 15:05:27,507     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2015-09-03 15:05:28,527     INFO - Starting RSPDriver
+ppstune.py@CS103 2015-09-03 15:05:28,528     INFO - $ test/sudo -b test/RSPDriver < /dev/null 1>> test/RSPDriver.stdout 2>&1
+ppstune.py@CS103 2015-09-03 15:05:29,580     INFO - Killing RSPDriver with PID 18372
+ppstune.py@CS103 2015-09-03 15:05:30,661    ERROR - Malformed RemoteStation.conf at test/Broken-RemoteStation.conf
+ppstune.py@CS103 2015-09-03 15:05:31,158  WARNING - No AD10 info in testdata/rubidium_log.empty
+ppstune.py@CS103 2015-09-03 15:05:31,159     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2015-09-03 15:05:32,286     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2015-09-03 15:05:33,403     INFO - Switching clock to 160 MHz
+ppstune.py@CS103 2015-09-03 15:05:43,466     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2015-09-03 15:05:44,609     INFO - Going to swlevel 2
+ppstune.py@CS103 2015-09-03 15:05:44,627     INFO - Going to swlevel 6
+ppstune.py@CS103 2015-09-03 15:05:44,652     INFO - Going to swlevel '6-broken-rsp'
+ppstune.py@CS103 2015-09-03 15:05:44,671    ERROR - Broken RSP boards:
+No RSP board 4 found
+No RSP board 5 found
+No RSP board 6 found
+ppstune.py@CS103 2015-09-03 15:05:44,711     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2015-09-03 15:05:45,846     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2015-09-03 15:05:46,963     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2015-09-03 15:05:48,102     INFO - Waiting for clocks to lock...
+ppstune.py@CS103 2015-09-03 15:05:52,446  WARNING - wait_for_clocks_to_lock timed out after 4.0 s
+ppstune.py@CS103 2015-09-03 15:05:53,516    ERROR - test/rspctl-not-locked --tdstatus:
+RSP |   10MHz input | output clock | PPS input | PLL 160MHZ | PLL 200MHz | V3.3 | V5.0 | Temperature
+  0 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  1 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  2 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  3 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  4 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  5 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  6 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  7 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  8 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+  9 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+ 10 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+ 11 |        ?      |        ?     |      ?    |          ? |          ? |  0.0 |  0.0 | 167223960
+
+
+ppstune.py@CS103 2015-09-03 15:05:53,518     INFO - Writing 'testdata/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2015-09-03 15:05:53,518     INFO - Renaming testdata/PPSdelays-output-test-temp.conf to testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2015-09-03 15:05:53,518     INFO - Done writing testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2015-09-03 15:05:53,519     INFO - Writing 'testdata/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2015-09-03 15:05:53,520     INFO - Removing testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2015-09-03 15:05:53,520     INFO - Renaming testdata/PPSdelays-output-test-temp.conf to testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2015-09-03 15:05:53,520     INFO - Done writing testdata/PPSdelays-output-test.conf
+ppstune.py@CS103 2015-09-03 15:05:53,523     INFO - Writing 'testdata/PPSdelays-output-test-temp.conf'
+ppstune.py@CS103 2015-09-03 15:05:53,523     INFO - Renaming testdata/PPSdelays-output-test-temp.conf to testdata/unwritable-dir/PPSdelays-output-test.conf
+ppstune.py@CS103 2015-09-03 15:05:53,526     INFO - Writing 'testdata/unwritable-dir/PPSdelays-output-test-temp.conf'
