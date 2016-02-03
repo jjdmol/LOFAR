@@ -60,12 +60,15 @@ class RADBChangesHandler(RADBBusListener):
         self._changes = []
         self._lock = Lock()
         self._changedCondition = Condition()
+        self._changeNumber = 0L
 
     def _handleChange(self, change):
         '''_handleChange appends a change in the changes list and calls the onChangedCallback.
         :param change: dictionary with the change'''
-        change['timestamp'] = datetime.utcnow().isoformat()
         with self._lock:
+            change['timestamp'] = datetime.utcnow().isoformat()
+            self._changeNumber += 1
+            change['changeNumber'] = self._changeNumber
             self._changes.append(change)
 
         self.clearChangesBefore(datetime.utcnow()-timedelta(minutes=5))
@@ -124,14 +127,11 @@ class RADBChangesHandler(RADBBusListener):
         with self._lock:
             self._changes = [x for x in self._changes if x['timestamp'] >= timestamp]
 
-    def getChangesSince(self, timestamp):
-        if isinstance(timestamp, datetime):
-            timestamp = timestamp.isoformat()
-
+    def getChangesSince(self, changeNumber):
         with self._changedCondition:
             while True:
                 with self._lock:
-                    changesSince = [x for x in self._changes if x['timestamp'] > timestamp]
+                    changesSince = [x for x in self._changes if x['changeNumber'] > changeNumber]
 
                     if changesSince:
                         return changesSince

@@ -213,19 +213,14 @@ def getMoMObjectDetails(mom2id):
     details = momrpc.getProjectDetails(mom2id)
     return jsonify({'momobjectdetails': details.values()[0] if details else None})
 
-@app.route('/rest/updates/<since>')
-def getUpdateEventsSince(since):
-    try:
-        since = asDatetime(since)
-    except ValueError:
-        abort(400, 'timestamp not in iso format: ' + since)
-
-    changesSince = radbchangeshandler.getChangesSince(since)
+@app.route('/rest/updates/<int:sinceChangeNumber>')
+def getUpdateEventsSince(sinceChangeNumber):
+    changesSince = radbchangeshandler.getChangesSince(sinceChangeNumber)
     return jsonify({'changes': changesSince})
 
 @app.route('/rest/updates')
 def getUpdateEvents():
-    return getUpdateEventsSince(asIsoFormat(datetime.utcnow()))
+    return getUpdateEventsSince(-1L)
 
 def main():
     # Check the invocation arguments
