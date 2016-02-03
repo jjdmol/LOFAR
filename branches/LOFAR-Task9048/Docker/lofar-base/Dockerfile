@@ -1,0 +1,210 @@
+#
+# base
+#
+FROM ubuntu:14.04
+
+#
+# common-environment
+#
+ENV USER=lofar
+ENV INSTALLDIR=/opt
+
+#
+# environment
+#
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHON_VERSION=2.7
+
+#
+# versions
+#
+ENV CFITSIO_VERSION=3370 \
+    WCSLIB_VERSION=4.25.1 \
+    CASACORE_VERSION=latest \
+    CASAREST_VERSION=latest \
+    PYTHON_CASACORE_VERSION=latest \
+    BOOST_VERSION=1.54
+
+#
+# set-uid
+#
+ENV UID=1001
+
+#
+# set-build-options
+#
+ENV J=4
+
+#
+# Base and runtime dependencies
+#
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get install -y sudo python2.7 libpython2.7 && \
+    apt-get install -y libblas3 liblapacke python-numpy libfftw3-bin libhdf5-7 libboost-python${BOOST_VERSION}.0
+
+#
+# setup-account
+#
+RUN (getent group sudo &>/dev/null || groupadd sudo) && \
+    echo "useradd -m ${USERADD_FLAGS} ${USER}" && \
+    useradd -m -u ${UID} ${USER} && \
+    usermod -a -G sudo ${USER} && \
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+    sed -i 's/requiretty/!requiretty/g' /etc/sudoers
+
+#
+# setup install dir
+#
+RUN mkdir -p ${INSTALLDIR} && chown ${USER}.${USER} ${INSTALLDIR}
+
+USER ${USER}
+
+#
+# *******************
+#   cfitsio
+# *******************
+#
+RUN sudo apt-get install -y wget cmake g++ && \
+    mkdir -p ${INSTALLDIR}/cfitsio/build && \
+    cd ${INSTALLDIR}/cfitsio && wget --retry-connrefused ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${CFITSIO_VERSION}.tar.gz && \
+    cd ${INSTALLDIR}/cfitsio && tar xf cfitsio${CFITSIO_VERSION}.tar.gz && \
+    cd ${INSTALLDIR}/cfitsio/build && cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}/cfitsio/ ../cfitsio && \
+    cd ${INSTALLDIR}/cfitsio/build && make -j ${J} && \
+    cd ${INSTALLDIR}/cfitsio/build && make install && \
+    bash -c "strip ${INSTALLDIR}/cfitsio/lib/* || true" && \
+    bash -c "rm -rf ${INSTALLDIR}/cfitsio/{build,cfitsio} ${INSTALLDIR}/cfitsio/cfitsio${CFITSIO_VERSION}.tar.gz" && \
+    sudo apt-get purge -y wget cmake g++ && \
+    sudo apt-get autoremove -y
+
+#
+# *******************
+#   wcslib
+# *******************
+#
+RUN sudo apt-get install -y wget automake autotools-dev make g++ gfortran flex && \
+    mkdir ${INSTALLDIR}/wcslib && \
+    cd ${INSTALLDIR}/wcslib && wget --retry-connrefused ftp://ftp.atnf.csiro.au/pub/software/wcslib/wcslib-${WCSLIB_VERSION}.tar.bz2 && \
+    cd ${INSTALLDIR}/wcslib && tar xf wcslib-*.tar.bz2 && \
+    cd ${INSTALLDIR}/wcslib/wcslib* && ./configure --prefix=${INSTALLDIR}/wcslib --with-cfitsiolib=${INSTALLDIR}/cfitsio/lib/ --with-cfitsioinc=${INSTALLDIR}/cfitsio/include/ --without-pgplot && \
+    cd ${INSTALLDIR}/wcslib/wcslib* && make && \
+    cd ${INSTALLDIR}/wcslib/wcslib* && make install && \
+    bash -c "strip ${INSTALLDIR}/wcslib/{lib,bin}/* || true" && \
+    bash -c "rm -rf ${INSTALLDIR}/wcslib/wcslib* ${INSTALLDIR}/wcslib/wcslib-*.tar.bz2" && \
+    sudo apt-get purge -y wget automake autotools-dev make g++ gfortran flex && \
+    sudo apt-get autoremove -y
+
+#
+# *******************
+#   Casacore
+# *******************
+#
+RUN sudo apt-get install -y wget git cmake g++ gfortran flex bison libblas-dev liblapacke-dev libfftw3-dev libhdf5-dev libboost-python-dev && \
+    mkdir -p ${INSTALLDIR}/casacore/build && \
+    mkdir -p ${INSTALLDIR}/casacore/data && \
+    cd ${INSTALLDIR}/casacore && git clone https://github.com/casacore/casacore.git src && \
+    if [ "${CASACORE_VERSION}" != "latest" ]; then cd ${INSTALLDIR}/casacore/src && git checkout tags/${CASACORE_VERSION}; fi && \
+    cd ${INSTALLDIR}/casacore/data && wget --retry-connrefused ftp://ftp.astron.nl/outgoing/Measures/WSRT_Measures.ztar && \
+    cd ${INSTALLDIR}/casacore/data && tar xf WSRT_Measures.ztar  && rm -f WSRT_Measures.ztar && \
+    cd ${INSTALLDIR}/casacore/build && cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}/casacore/ -DDATA_DIR=${INSTALLDIR}/casacore/data -DWCSLIB_ROOT_DIR=${INSTALLDIR}/wcslib/ -DCFITSIO_ROOT_DIR=${INSTALLDIR}/cfitsio/ -DBUILD_PYTHON=True -DUSE_OPENMP=True -DUSE_FFTW3=TRUE ../src/ && \
+    cd ${INSTALLDIR}/casacore/build && make -j ${J} && \
+    cd ${INSTALLDIR}/casacore/build && make install && \
+    bash -c "strip ${INSTALLDIR}/casacore/{lib,bin}/* || true" && \
+    bash -c "rm -rf ${INSTALLDIR}/casacore/{build,src}" && \
+    sudo apt-get purge -y wget git cmake g++ gfortran flex bison libblas-dev liblapacke-dev libfftw3-dev libhdf5-dev libboost-python-dev && \
+    sudo apt-get autoremove -y
+
+#
+# *******************
+#   Casarest
+# *******************
+#
+RUN sudo apt-get install -y git cmake g++ gfortran libboost-system-dev libboost-thread-dev libhdf5-dev && \
+    mkdir -p ${INSTALLDIR}/casarest/build && \
+    cd ${INSTALLDIR}/casarest && git clone https://github.com/casacore/casarest.git src && \
+    if [ "${CASAREST_VERSION}" != "latest" ]; then cd ${INSTALLDIR}/casarest/src && git checkout tags/${CASAREST_VERSION}; fi && \
+    cd ${INSTALLDIR}/casarest/build && cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}/casarest -DCASACORE_ROOT_DIR=${INSTALLDIR}/casacore -DWCSLIB_ROOT_DIR=${INSTALLDIR}/wcslib -DCFITSIO_ROOT_DIR=${INSTALLDIR}/cfitsio ../src/ && \
+    cd ${INSTALLDIR}/casarest/build && make -j ${J} && \
+    cd ${INSTALLDIR}/casarest/build && make install && \
+    bash -c "strip ${INSTALLDIR}/casarest/{lib,bin}/* || true" && \
+    bash -c "rm -rf ${INSTALLDIR}/casarest/{build,src}" && \
+    sudo apt-get purge -y git cmake g++ gfortran libboost-system-dev libboost-thread-dev libhdf5-dev && \
+    sudo apt-get autoremove -y
+
+#
+# *******************
+#   Pyrap
+# *******************
+#
+RUN sudo apt-get install -y git make g++ python-setuptools libboost-python-dev && \
+    mkdir ${INSTALLDIR}/python-casacore && \
+    cd ${INSTALLDIR}/python-casacore && git clone https://github.com/casacore/python-casacore && \
+    if [ "$PYTHON_CASACORE_VERSION" != "latest" ]; then cd ${INSTALLDIR}/python-casacore/python-casacore && git checkout tags/${PYTHON_CASACORE_VERSION}; fi && \
+    cd ${INSTALLDIR}/python-casacore/python-casacore && ./setup.py build_ext -I${INSTALLDIR}/wcslib/include:${INSTALLDIR}/casacore/include/:${INSTALLDIR}/cfitsio/include -L${INSTALLDIR}/wcslib/lib:${INSTALLDIR}/casacore/lib/:${INSTALLDIR}/cfitsio/lib/ && \
+    mkdir -p ${INSTALLDIR}/python-casacore/lib/python${PYTHON_VERSION}/site-packages/ && \
+    mkdir -p ${INSTALLDIR}/python-casacore/lib64/python${PYTHON_VERSION}/site-packages/ && \
+    export PYTHONPATH=${INSTALLDIR}/python-casacore/lib/python${PYTHON_VERSION}/site-packages:${INSTALLDIR}/python-casacore/lib64/python${PYTHON_VERSION}/site-packages:$PYTHONPATH && cd ${INSTALLDIR}/python-casacore/python-casacore && ./setup.py install --prefix=${INSTALLDIR}/python-casacore/ && \
+    bash -c "find ${INSTALLDIR}/python-casacore/lib -name '*.so' | xargs strip || true" && \
+    bash -c "rm -rf ${INSTALLDIR}/python-casacore/python-casacore" && \
+    sudo apt-get purge -y git make g++ python-setuptools libboost-python-dev && \
+    sudo apt-get autoremove -y
+
+#
+# *******************
+#   casa
+# *******************
+#
+
+#
+# *******************
+#   QPID client
+# *******************
+#
+
+ENV LOFAR_BRANCH=trunk
+
+# Allow auto-checkout from lofar repo
+RUN mkdir /home/${USER}/.subversion
+COPY subversion_servers /home/${USER}/.subversion/servers
+
+# Run-time dependencies
+# QPID daemon legacy store would require: libaio1 libdb5.1++
+RUN sudo apt-get install -y sasl2-bin libuuid1 libnss3 libnspr4 xqilla libboost-program-options${BOOST_VERSION}.0 libboost-filesystem${BOOST_VERSION}.0
+
+# Install
+# QPID daemon legacy store would require: libaio-dev libdb5.1++-dev
+RUN sudo apt-get install -y subversion swig ruby ruby-dev python-dev libsasl2-dev pkg-config cmake libtool uuid-dev libxerces-c-dev libnss3-dev libnspr4-dev help2man fakeroot build-essential debhelper libsslcommon2-dev libxqilla-dev python-setuptools libboost-program-options${BOOST_VERSION}-dev libboost-filesystem${BOOST_VERSION}-dev && \
+    mkdir /opt/qpid && \
+    svn --non-interactive -q --username lofar-guest --password lofar-guest co https://svn.astron.nl/LOFAR/${LOFAR_BRANCH}/LCS/MessageBus/qpid/ /opt/qpid; \
+    /opt/qpid/local/sbin/build_qpid && \
+    bash -c "strip /opt/qpid/{bin,lib}/* || true" && \
+    bash -c "rm -rf ~/sources" && \
+    sudo apt-get purge -y subversion swig ruby ruby-dev python-dev libsasl2-dev pkg-config cmake libtool uuid-dev libxerces-c-dev libnss3-dev libnspr4-dev help2man fakeroot build-essential debhelper libsslcommon2-dev libxqilla-dev python-setuptools libboost-program-options${BOOST_VERSION}-dev libboost-filesystem${BOOST_VERSION}-dev && \
+    sudo apt-get autoremove -y
+#
+# *******************
+#   DAL
+# *******************
+#
+RUN sudo apt-get install -y git cmake g++ swig python-dev libhdf5-dev && \
+    mkdir ${INSTALLDIR}/DAL && \
+    cd ${INSTALLDIR}/DAL && git clone https://github.com/nextgen-astrodata/DAL.git src && \
+    mkdir ${INSTALLDIR}/DAL/build && cd ${INSTALLDIR}/DAL/build && cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}/DAL ../src && \
+    make -j ${J} && \
+    make install && \
+    bash -c "find ${INSTALLDIR}/DAL/lib -name '*.so' | xargs strip || true" && \
+    bash -c "rm -rf ${INSTALLDIR}/DAL/{src,build}" && \
+    sudo apt-get purge -y git cmake g++ swig python-dev libhdf5-dev && \
+    sudo apt-get autoremove -y
+
+#
+# config
+#
+COPY bashrc /home/${USER}/.bashrc
+
+#
+# entry
+#
+COPY chuser.sh /usr/local/bin/chuser.sh
+WORKDIR /home/${USER}
+ENTRYPOINT ["sudo","-E","/usr/local/bin/chuser.sh"]
+

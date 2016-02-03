@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# lofar
+source ${INSTALLDIR}/lofar/lofarinit.sh
+
+# python-casacore
+export PYTHONPATH=${PYTHONPATH}:${INSTALLDIR}/python-casacore/lib/python2.7/site-packages
+
+# casacore
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${INSTALLDIR}/casacore/lib
