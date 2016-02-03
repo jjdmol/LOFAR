@@ -35,7 +35,7 @@ try:
     # the system under test is the service and the rpc, not the RADatabase
     # so, patch (mock) the RADatabase class during these tests.
     # when the service instantiates an RADatabase it will get the mocked class.
-    with patch('lofar.sas.systemstatus.database.ssdb', autospec=True) as MockSSDBDatabase:
+    with patch('lofar.sas.systemstatus.database.ssdb.SSDB', autospec=True) as MockSSDBDatabase:
         mock = MockSSDBDatabase.return_value
         # modify the return values of the various RADatabase methods with pre-cooked answers
         def ensure_connected(self):
