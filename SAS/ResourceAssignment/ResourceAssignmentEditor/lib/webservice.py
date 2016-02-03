@@ -38,6 +38,7 @@ from flask import request
 from flask import abort
 from flask import url_for
 from flask.json import jsonify
+from flask.json import JSONEncoder
 from lofar.sas.resourceassignment.resourceassignmenteditor.utils import gzipped
 from lofar.sas.resourceassignment.resourceassignmenteditor.fakedata import *
 from lofar.sas.resourceassignment.resourceassignmenteditor.radbchangeshandler import RADBChangesHandler, CHANGE_DELETE_TYPE
@@ -56,6 +57,23 @@ def asDatetime(isoString):
         isoString += '000'
     return datetime.strptime(isoString, '%Y-%m-%dT%H:%M:%S.%f')
 
+def asIsoFormat(timestamp):
+    return datetime.strftime(timestamp, '%Y-%m-%dT%H:%M:%S.%fZ')
+
+
+class CustomJSONEncoder(JSONEncoder):
+    def default(self, obj):
+        try:
+            if isinstance(obj, datetime):
+                return asIsoFormat(obj)
+            iterable = iter(obj)
+        except TypeError:
+            pass
+        else:
+            return list(iterable)
+        return JSONEncoder.default(self, obj)
+
+
 __root_path = os.path.dirname(os.path.realpath(__file__))
 
 '''The flask webservice app'''
@@ -67,6 +85,7 @@ app = Flask('ResourceAssignmentEditor',
 
 # Load the default configuration
 app.config.from_object('lofar.sas.resourceassignment.resourceassignmenteditor.config.default')
+app.json_encoder = CustomJSONEncoder
 
 rarpc = RARPC(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker='10.149.96.6')
 radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker='10.149.96.6')
@@ -94,8 +113,8 @@ def resourcegroups():
 @app.route('/rest/resourceclaims')
 @gzipped
 def resourceclaims():
-    result = rarpc.getResourceClaims()
-    return jsonify({'resourceclaims': result})
+    claims = rarpc.getResourceClaims()
+    return jsonify({'resourceclaims': claims})
 
 @app.route('/rest/resourcegroupclaims')
 @gzipped
@@ -185,9 +204,6 @@ def getMoMProjects():
     projects = momrpc.getProjects()
     projects = [x for x in projects if x['status_id'] in [1, 7]]
 
-    for project in projects:
-        project['statustime'] = project['statustime'].isoformat()
-
     return jsonify({'momprojects': projects})
 
 @app.route('/rest/momobjectdetails/<int:mom2id>')
@@ -207,7 +223,7 @@ def getUpdateEventsSince(since):
 
 @app.route('/rest/updates')
 def getUpdateEvents():
-    return getUpdateEventsSince(datetime.utcnow().isoformat())
+    return getUpdateEventsSince(asIsoFormat(datetime.utcnow()))
 
 def main():
     # Check the invocation arguments
