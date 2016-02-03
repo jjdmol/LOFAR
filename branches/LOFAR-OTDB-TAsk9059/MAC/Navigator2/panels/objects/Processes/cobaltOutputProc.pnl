@@ -1,0 +1,267 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 400 400 N "_3DFace" 2
+"$locusNode"
+"$outputProcs"
+"main()
+{
+  
+    
+  locusNode      = $locusNode;
+  
+  LocusNr.text = $locusNode;
+  
+  outputProcs = $outputProcs;
+  strreplace(outputProcs[1],\" \",\"\");
+  outputProcs = strsplit(outputProcs[1],\"|\");
+  
+
+  for (int i = 1; i <= dynlen(outputProcs); i++) {
+    // connect to the outputProc values  
+    // check if the requiered datapoint for this view are enabled and accessible
+      
+    baseDP = CEPDBName + outputProcs[i];
+
+    if (dpExists(baseDP + \".locusNode\")) {
+       if (!dpConnect(\"updateBuffer\", baseDP + \".locusNode\",
+                                   baseDP + \".dataProductType\",
+  	                                baseDP + \".fileName\",
+  	                                baseDP + \".directory\",
+  	                                baseDP + \".dropping\", 
+  	                                baseDP + \".written\",
+  	                                baseDP + \".dropped\", 
+                                   baseDP + \".locusNode:_online.._invalid\") == -1) {
+        LOG_ERROR(\"cobaltOutputProc.pnl:updateTrigger|Couldn't connect to: \"+baseDP+\" \"+getLastError());
+      }
+    } else {
+      LOG_ERROR(\"cobaltOutputProc.pnl:updateTrigger|Couldn't find DP to connect to: \"+baseDP);
+      setValue(\"outputProcObject\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    }    
+  }
+}
+
+
+updateBuffer(string dp1, dyn_int node,
+             string dp2, dyn_string dataProductType,
+             string dp3, dyn_string fileName,
+             string dp4, dyn_string directory,
+             string dp5, dyn_bool dropping,
+             string dp6, dyn_float written,
+             string dp7, dyn_float dropped,
+             string dp8, bool invalid)
+{  
+    
+  if (!invalid) {
+    int index = dynContains(node, locusNode);
+    if (index <= 0) {
+      droppingObject.backCol = \"Lofar_off\";
+      outputProcObject.backCol = \"Lofar_off\";
+      outputProcObject.toolTipText = \"\";
+      return;
+    }
+
+    // to keep totals    
+    int totdropped = 0;
+    int totwritten = 0;
+    string nodes = \"\";
+    string dpts = \"\";
+    string dirs = \"\";
+    string files = \"\";
+    string writestr = \"\";
+    string droppedstr = \"\";
+    bool totdropping = false;
+    
+    
+    // since the same locusnode can be used for multiple files 
+    // we need to collect the info for this node in total
+    for (int i = index; i <= dynlen(node); i++) {
+      
+      if (node[i] == locusNode) {
+        if (i <= dynlen(dropped)) {
+          totdropped  += dropped[i];
+          droppedstr  += \" \" + dropped[i];
+        }
+        if (i <= dynlen(written)) {
+          totwritten  += written[i];
+          writestr    += \" \" + written[i];
+        }
+        if (i <= dynlen(dataProductType)) dpts        += \" \" + dataProductType[i];
+        if (i <= dynlen(directory)) dirs        += \" \" + directory[i];
+        if (i <= dynlen(fileName)) files       += \" \" + fileName[i];
+        if (i <= dynlen(dropping)) if (dropping[i]) totdropping = true;
+      }
+    }
+    
+    string tooltext = \"Locusnode        : \" + node[index] + 
+                      \"<br>DataproductType  : \" + dpts +
+                      \"<br>Directory        : \" + dirs + 
+                      \"<br>Filename         : \" + files + 
+                      \"<br>Written          : \" + writestr + 
+                      \"<br>Dropped          : \" + droppedstr;
+    
+    outputProcObject.toolTipText = tooltext;
+    
+    // calc % dropped
+    float percdropped = 0;
+    float total = totwritten + totdropped;
+    if (total > 0.0) { 
+      percdropped = totdropped / (totwritten + totdropped) * 100;
+    }
+    outputProcObject.backCol(getColor(percdropped));
+    if (totdropping) {
+      droppingObject.backCol=\"Lofar_broken\";
+    } else {
+      droppingObject.backCol=\"Lofar_operational\";
+    }
+    
+  } else {
+    setValue(\"outputProcObject\", \"backCol\", \"Lofar_invalid\");
+    outputProcObject.toolTipText = \"\";
+
+  }
+}
+
+string getColor(float val) {
+  string color = \"Lofar_off\";
+  if (val <= 0.1) color = \"Lofar_operational\";
+  if (val > 0.1 && val <= 0.5) {
+    color = \"Lofar_test\";
+  } else if (val > 0.5 && val <= 5.0) {
+    color = \"Lofar_suspicious\";
+  } else if (val > 5.0) {
+    color = \"Lofar_broken\";
+  }
+  return color;
+}" 0
+ E E E E 1 -1 -1 0  80 80
+""0  1
+E "#uses \"navPanel.ctl\"
+
+int locusNode=-1;
+string database=\"\";
+string baseDP = \"\";
+string outputProcDP=\"\";
+string observation = \"\";
+
+dyn_string outputProcs;
+
+bool   bDoubleClicked  = false;
+
+// routine for single mouse click
+void click(string dp) {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    if (dp == stationDP) {
+      navPanel_setEvent(station,\"EventClick\");
+    } else {  
+      navPanel_setEvent(\"cobaltOutputProc\",\"EventClick\");
+    }
+  }
+}
+
+// routine for double mouse click
+void dblClick(string dp) {
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+
+  if (dpExists(dp) ) {
+    LOG_DEBUG(\"cobaltOutputProc.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+dp);
+    g_currentDatapoint=dp;
+    navPanel_setEvent(\"cobaltOutputProc.pnl\",\"ChangePanel\");  
+  }
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;
+}
+
+// routine for right mouse click
+void rClick(string dp) {
+  navPanel_setEvent(\"cobaltOutputProc.pnl\",\"EventRightClick\");
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 0
+"outputProcObject"
+""
+1 80 80 E E E 1 E 1 E N {0,0,0} E N "Lofar_off" E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 2 1 E 1 0 1 -50 -50 1 E 50 50 124 124
+6 2
+"droppingObject"
+""
+1 100 230 E E E 1 E 1 E N {0,0,0} E N "Lofar_off" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 2 0 1 E 20 60 49 69
+2 4
+"LocusNr"
+""
+1 30 30 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 30 30 38 46
+0 2 2 "0s" 0 0 0 192 0 0  30 30 1
+1
+LANG:1 35 MS Shell Dlg 2,10,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 1 1
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

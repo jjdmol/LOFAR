@@ -1,0 +1,4899 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TaskDialogClass</class>
+ <widget class="QDialog" name="TaskDialogClass">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>850</width>
+    <height>613</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>850</width>
+    <height>600</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Task Properties</string>
+  </property>
+  <property name="sizeGripEnabled">
+   <bool>true</bool>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="4" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButtonCancelClose">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButtonApply">
+       <property name="text">
+        <string>Apply</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButtonOk">
+       <property name="text">
+        <string>Ok</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0">
+    <widget class="QTabWidget" name="tabWidgetMain">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tab_TaskSettings">
+      <attribute name="title">
+       <string>Schedule</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="2" column="0">
+        <widget class="QFrame" name="frame_3">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="5" column="3">
+           <widget class="QLineEdit" name="lineEditModificationDate">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="palette">
+             <palette>
+              <active>
+               <colorrole role="Text">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>31</red>
+                  <green>28</green>
+                  <blue>27</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </active>
+              <inactive>
+               <colorrole role="Text">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>48</red>
+                  <green>48</green>
+                  <blue>48</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </inactive>
+              <disabled>
+               <colorrole role="Text">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>88</red>
+                  <green>88</green>
+                  <blue>88</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </disabled>
+             </palette>
+            </property>
+            <property name="toolTip">
+             <string>the last modification date in SAS</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="labelFirstPossibleDate">
+            <property name="text">
+             <string>First possible date:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="2">
+           <widget class="QLabel" name="labelModificationDate">
+            <property name="text">
+             <string>Last modified:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="labelLastPossibleTime">
+            <property name="text">
+             <string>Last possible time:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="DateTimeEdit" name="dateTimeEditScheduledStart">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string>the planned start time of the task</string>
+            </property>
+            <property name="displayFormat">
+             <string>yyyy-MM-dd hh:mm:ss</string>
+            </property>
+            <property name="calendarPopup">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="DateTimeEdit" name="dateTimeEditScheduledEnd">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>the planned end time of the task</string>
+            </property>
+            <property name="displayFormat">
+             <string>yyyy-MM-dd hh:mm:ss</string>
+            </property>
+            <property name="calendarPopup">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="labelFirstPossibleTime">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>First possible time:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="labelScheduledStart">
+            <property name="text">
+             <string>Scheduled start:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="labelCreationDate">
+            <property name="text">
+             <string>Creation date:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="labelScheduledEnd">
+            <property name="text">
+             <string>Scheduled end:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="labelDuration">
+            <property name="text">
+             <string>Duration:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="LineEdit" name="lineEditDuration">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>The duration of the task (hhhh:mm:ss)</string>
+            </property>
+            <property name="inputMask">
+             <string>0000:00:00; </string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="labelLastPossibleDate">
+            <property name="text">
+             <string>Last possible date:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="4">
+           <widget class="CheckBox" name="checkBoxFixedTime">
+            <property name="toolTip">
+             <string>fix the task's start date</string>
+            </property>
+            <property name="text">
+             <string>Fixed time</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLineEdit" name="lineEditCreationDate">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="palette">
+             <palette>
+              <active>
+               <colorrole role="WindowText">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>34</red>
+                  <green>31</green>
+                  <blue>30</blue>
+                 </color>
+                </brush>
+               </colorrole>
+               <colorrole role="Text">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>31</red>
+                  <green>28</green>
+                  <blue>27</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </active>
+              <inactive>
+               <colorrole role="WindowText">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>34</red>
+                  <green>31</green>
+                  <blue>30</blue>
+                 </color>
+                </brush>
+               </colorrole>
+               <colorrole role="Text">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>48</red>
+                  <green>48</green>
+                  <blue>48</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </inactive>
+              <disabled>
+               <colorrole role="WindowText">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>0</red>
+                  <green>0</green>
+                  <blue>0</blue>
+                 </color>
+                </brush>
+               </colorrole>
+               <colorrole role="Text">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>88</red>
+                  <green>88</green>
+                  <blue>88</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </disabled>
+             </palette>
+            </property>
+            <property name="toolTip">
+             <string>the date this task was created in SAS</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <widget class="CheckBox" name="checkBoxFixedDate">
+            <property name="toolTip">
+             <string>fix the task's start date</string>
+            </property>
+            <property name="text">
+             <string>Fixed date</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <spacer name="verticalSpacer_6">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="2" column="1">
+           <widget class="DateEdit" name="dateEditFirstPossibleDate">
+            <property name="toolTip">
+             <string>The earliest date at which this task may be scheduled</string>
+            </property>
+            <property name="displayFormat">
+             <string>yyyy-MM-dd</string>
+            </property>
+            <property name="calendarPopup">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="DateEdit" name="dateEditLastPossibleDate">
+            <property name="toolTip">
+             <string>The latest date at which this task may be scheduled</string>
+            </property>
+            <property name="displayFormat">
+             <string>yyyy-MM-dd</string>
+            </property>
+            <property name="calendarPopup">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="TimeEdit" name="timeEditFirstPossibleTime">
+            <property name="toolTip">
+             <string>the earliest time on any given date that this task may be scheduled</string>
+            </property>
+            <property name="displayFormat">
+             <string>hh:mm:ss</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="3">
+           <widget class="TimeEdit" name="timeEditLastPossibleTime">
+            <property name="toolTip">
+             <string>the latest time on any given date that this task may be scheduled</string>
+            </property>
+            <property name="displayFormat">
+             <string>hh:mm:ss</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QFrame" name="frameScheduleGeneral">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="5" column="4">
+           <widget class="LineEdit" name="lineEditPredecessors">
+            <property name="toolTip">
+             <string>comma separates list of predecessor task(s) that have to be scheduled before this task</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="4">
+           <widget class="LineEdit" name="lineEditPriority">
+            <property name="toolTip">
+             <string>The priority of this task (floating point from low 0.0 to high 10.0)</string>
+            </property>
+            <property name="inputMask">
+             <string>00.00; </string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="4">
+           <widget class="LineEdit" name="lineEditMinPredDistance">
+            <property name="toolTip">
+             <string>The minimum distance to all predecessors (hhhh:mm:ss)</string>
+            </property>
+            <property name="inputMask">
+             <string>0000:00:00; </string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="ComboBox" name="comboBoxReservation">
+            <property name="toolTip">
+             <string>the reservation to which this task belongs</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="ComboBox" name="comboBoxProcessType">
+            <property name="toolTip">
+             <string>the task's ProcessType</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="ComboBox" name="comboBoxProcessSubType">
+            <property name="toolTip">
+             <string>the task's ProcessSubType</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="ComboBox" name="comboBoxStrategies">
+            <property name="toolTip">
+             <string>the task's strategy</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="4">
+           <widget class="LineEdit" name="lineEditGroupID">
+            <property name="toolTip">
+             <string>the group ID (to assign grouped storage resources)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>ID:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QLineEdit" name="lineEditTaskID">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>50</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="palette">
+             <palette>
+              <active>
+               <colorrole role="Text">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>31</red>
+                  <green>28</green>
+                  <blue>27</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </active>
+              <inactive>
+               <colorrole role="Text">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>31</red>
+                  <green>28</green>
+                  <blue>27</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </inactive>
+              <disabled>
+               <colorrole role="Text">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>88</red>
+                  <green>88</green>
+                  <blue>88</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </disabled>
+             </palette>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>SAS ID:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QPushButton" name="pushButtonUnBindReservation">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Unbind from reservation</string>
+            </property>
+            <property name="text">
+             <string>unbind</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="labelTaskName">
+            <property name="text">
+             <string>Task name:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Strategy:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="3">
+           <widget class="QLabel" name="label_13">
+            <property name="text">
+             <string>Group ID:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="4">
+           <widget class="QLineEdit" name="lineEditOriginalTreeID">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="palette">
+             <palette>
+              <active>
+               <colorrole role="Text">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>31</red>
+                  <green>28</green>
+                  <blue>27</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </active>
+              <inactive>
+               <colorrole role="Text">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>31</red>
+                  <green>28</green>
+                  <blue>27</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </inactive>
+              <disabled>
+               <colorrole role="Text">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>88</red>
+                  <green>88</green>
+                  <blue>88</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </disabled>
+             </palette>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="3">
+           <widget class="QLabel" name="labelPriority">
+            <property name="text">
+             <string>Priority:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="labelStatus">
+            <property name="text">
+             <string>Status:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="LineEdit" name="lineEditTaskName">
+            <property name="toolTip">
+             <string>The name of the task</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="ComboBox" name="comboBoxTaskStatus">
+            <property name="toolTip">
+             <string>The status of the task</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="ComboBox" name="comboBoxProjectID">
+            <property name="toolTip">
+             <string>The project to which this task belongs</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="labelBindToReservation">
+            <property name="text">
+             <string>Bind to reservation:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="labelProjectName">
+            <property name="text">
+             <string>Project ID:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="3">
+           <widget class="QLabel" name="labelMaxPredDistance">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>Max. distance:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <widget class="QLineEdit" name="lineEditSASID">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="palette">
+             <palette>
+              <active>
+               <colorrole role="Text">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>31</red>
+                  <green>28</green>
+                  <blue>27</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </active>
+              <inactive>
+               <colorrole role="Text">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>31</red>
+                  <green>28</green>
+                  <blue>27</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </inactive>
+              <disabled>
+               <colorrole role="Text">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>88</red>
+                  <green>88</green>
+                  <blue>88</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </disabled>
+             </palette>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QLabel" name="label_11">
+            <property name="text">
+             <string>Parent template ID:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="3">
+           <widget class="QLabel" name="labelMinPredDistance">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>Min. distance:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="labelTaskType">
+            <property name="text">
+             <string>Process Type:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="3">
+           <widget class="QLabel" name="labelPredecessor">
+            <property name="text">
+             <string>Predecessors:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>Process Subtype:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QPushButton" name="pushButtonUpdateCampaigns">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="statusTip">
+             <string>fetches all defined projects from the SAS database</string>
+            </property>
+            <property name="text">
+             <string>update</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="4">
+           <widget class="LineEdit" name="lineEditMaxPredDistance">
+            <property name="toolTip">
+             <string>The maximum distance to all predecessors (hhhh:mm:ss)</string>
+            </property>
+            <property name="inputMask">
+             <string>0000:00:00; </string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_StationSettings">
+      <attribute name="title">
+       <string>Station settings</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="1" column="0">
+        <widget class="QLabel" name="labelStationFilter">
+         <property name="maximumSize">
+          <size>
+           <width>120</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Station filter:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="labelStationClock">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Station clock frequency:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="labelStations">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>20</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Available stations</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2">
+        <widget class="QLabel" name="labelAssignedStations">
+         <property name="text">
+          <string>Assigned stations</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="4">
+        <widget class="QPushButton" name="pushButtonAddSuperStation">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Adds a superstation (a collection of beamformed stations)</string>
+         </property>
+         <property name="text">
+          <string>Add Super station</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="labelStationAntennaMode">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Station antenna mode:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="2" colspan="3">
+        <widget class="StationTreeWidget" name="treeWidgetUsedStations">
+         <property name="toolTip">
+          <string>the list of used stations.
+Drag them back to available stations (or push delete) to remove them from this task</string>
+         </property>
+         <property name="headerHidden">
+          <bool>true</bool>
+         </property>
+         <column>
+          <property name="text">
+           <string notr="true">1</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="SpinBox" name="spinBoxDataslotsPerRSPboard">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="toolTip">
+          <string>the number of dataslots per RSP board for all stations used by this task</string>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QLabel" name="labelDataslotsPerRPSBoard">
+         <property name="text">
+          <string># dataslots per RSP board:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="ComboBox" name="comboBoxStationClock">
+         <property name="toolTip">
+          <string>the station clock frequency for all stations used by this task</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="CheckBox" name="checkBoxTBBPiggybackAllowed">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>is TBB piggybacking allowed during this observation?</string>
+         </property>
+         <property name="text">
+          <string>TBB Piggyback allowed</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="ComboBox" name="comboBoxStationFilter">
+         <property name="toolTip">
+          <string>the station bandpass filter for all stations used by this task</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="1">
+        <widget class="ComboBox" name="comboBoxStationAntennaMode">
+         <property name="toolTip">
+          <string>the antenna mode for all stations used by this task</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="4">
+        <widget class="QPushButton" name="pushButtonShowDataSlots">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>show the task's assigned dataslots for every station individually</string>
+         </property>
+         <property name="whatsThis">
+          <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Shows task's assigned dataslots for every station individually.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Dataslots are only assigned to (PRE)SCHEDULED tasks. They are determined automatically by the scheduler when the scheduler is uploaded to SAS. After the upload you can view the assigned dataslots for each scheduled task.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Show dataslots</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="CheckBox" name="checkBoxAartfaacPiggybackAllowed">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>is AARTFAAC piggybacking allowed during this observation?</string>
+         </property>
+         <property name="text">
+          <string>Aartfaac Piggyback allowed</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="StationListWidget" name="listWidgetAvailableStations">
+         <property name="toolTip">
+          <string>the list of available stations.
+Drag them to the used station list to assign them to this task</string>
+         </property>
+         <property name="dragDropMode">
+          <enum>QAbstractItemView::DragDrop</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_StationBeams">
+      <attribute name="title">
+       <string>Station beams</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_8">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBoxAnalogBeam">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>90</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>Analog Beam</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_20">
+          <property name="topMargin">
+           <number>9</number>
+          </property>
+          <item row="0" column="4">
+           <widget class="QLabel" name="labelBeamStartTime">
+            <property name="text">
+             <string>Start time</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="labelAngleNotation">
+            <property name="text">
+             <string>Units</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLabel" name="labelBeamAngle2">
+            <property name="text">
+             <string>Declination</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="5">
+           <widget class="QLabel" name="labelBeamDuration">
+            <property name="text">
+             <string>Duration</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="labelBeamAngle1">
+            <property name="text">
+             <string>Right Ascension</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="labelBeamCoordinateSystem">
+            <property name="text">
+             <string>Coordinates</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <widget class="TimeEdit" name="timeEditAnalogBeamStartTime">
+            <property name="toolTip">
+             <string>the start time of the analog beam relative to the observation start time</string>
+            </property>
+            <property name="displayFormat">
+             <string>hh:mm:ss</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="5">
+           <widget class="LineEdit" name="lineEditAnalogBeamDuration">
+            <property name="toolTip">
+             <string>the duration of the analog beam
+(leave at zero means equal to observation duration)</string>
+            </property>
+            <property name="inputMask">
+             <string>0000:00:00; </string>
+            </property>
+            <property name="text">
+             <string>0000:00:00</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="LineEdit" name="lineEditAnalogBeamAngle1">
+            <property name="toolTip">
+             <string>The right ascension or azimuth angle of the analog HBA beam</string>
+            </property>
+            <property name="inputMask">
+             <string>00:00:00.000000; </string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="LineEdit" name="lineEditAnalogBeamAngle2">
+            <property name="toolTip">
+             <string>The declination or elevation angle of the analog HBA beam</string>
+            </property>
+            <property name="inputMask">
+             <string>#00:00:00.000000; </string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="ComboBox" name="comboBoxAnalogBeamCoordinates">
+            <property name="minimumSize">
+             <size>
+              <width>110</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="ComboBox" name="comboBoxAnalogBeamUnits">
+            <property name="minimumSize">
+             <size>
+              <width>110</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupBoxDigitalBeams">
+         <property name="title">
+          <string>Digital beams and Tied Array Beams</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_9">
+          <item row="1" column="0" rowspan="8">
+           <widget class="QTableWidget" name="tableWidgetDigitalBeams">
+            <property name="toolTip">
+             <string>This task's digital station beams</string>
+            </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="showDropIndicator" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLineEdit" name="lineEditTotalSubbands">
+            <property name="maximumSize">
+             <size>
+              <width>75</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>the total number of subbands over all beams</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QPushButton" name="pushButtonDeleteBeams">
+            <property name="maximumSize">
+             <size>
+              <width>75</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Delete</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="QPushButton" name="pushButtonAddTiedArrayBeam">
+            <property name="maximumSize">
+             <size>
+              <width>75</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Add</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QPushButton" name="pushButtonClearAllBeams">
+            <property name="maximumSize">
+             <size>
+              <width>75</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Clear all</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QPushButton" name="pushButtonAddBeam">
+            <property name="maximumSize">
+             <size>
+              <width>75</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Add</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLabel" name="labelTotalSubbands">
+            <property name="text">
+             <string>Subbands:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0" rowspan="4">
+           <widget class="QTableWidget" name="tableWidgetTiedArrayBeams">
+            <property name="toolTip">
+             <string>Shows the tied array beams of the currently selected digital beam</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="1">
+           <widget class="QPushButton" name="pushButtonDeleteTiedArrayBeam">
+            <property name="maximumSize">
+             <size>
+              <width>75</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Delete</string>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="1">
+           <widget class="QPushButton" name="pushButtonClearAllTiedArrayBeam">
+            <property name="maximumSize">
+             <size>
+              <width>75</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Clear all</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QPushButton" name="pushButtonEditBeam">
+            <property name="maximumSize">
+             <size>
+              <width>75</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Edit</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="1">
+           <widget class="QPushButton" name="pushButtonEditTiedArrayBeam">
+            <property name="maximumSize">
+             <size>
+              <width>75</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Edit</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_Processing">
+      <attribute name="title">
+       <string>Processing</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QGroupBox" name="groupBox_Correlated">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>90</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>Correlated data</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_17">
+          <item row="0" column="3">
+           <spacer name="horizontalSpacer_6">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="2">
+           <widget class="LineEdit" name="lineEditCorrelatorIntegrationTime">
+            <property name="maximumSize">
+             <size>
+              <width>100</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>the correlator integration time in seconds</string>
+            </property>
+            <property name="inputMask">
+             <string>00.00; </string>
+            </property>
+            <property name="text">
+             <string>1.0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="labelChannelsPerSubband">
+            <property name="text">
+             <string>Channels per subband:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="CheckBox" name="checkBoxCorrelatedData">
+            <property name="minimumSize">
+             <size>
+              <width>200</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Store correlated visibilities</string>
+            </property>
+            <property name="text">
+             <string>Correlated Visibilities</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_CorrelatorIntTime">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
+            <property name="text">
+             <string>Integration time:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="SpinBox" name="spinBoxChannelsPerSubband">
+            <property name="maximumSize">
+             <size>
+              <width>100</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>number of channels per subband used for the correlator</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>4096</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_Stokes">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>210</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>Complex Voltages data, Coherent Stokes, Incoherent Stokes</string>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_21">
+          <item row="1" column="4">
+           <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="4" column="3">
+           <widget class="SpinBox" name="spinBoxIncoherentSubbandsPerFile">
+            <property name="toolTip">
+             <string>incoherent Stokes number of subbands per file</string>
+            </property>
+            <property name="maximum">
+             <number>512</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="3">
+           <widget class="SpinBox" name="spinBoxIncoherentChannelsPerSubband">
+            <property name="toolTip">
+             <string>incoherent Stokes number of channels per subband</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>4096</number>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="SpinBox" name="spinBoxCoherentSubbandsPerFile">
+            <property name="toolTip">
+             <string>coherent Stokes number of subbands per file</string>
+            </property>
+            <property name="maximum">
+             <number>512</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="CheckBox" name="checkBoxCoherentStokes">
+            <property name="toolTip">
+             <string>Store coherent Stokes data</string>
+            </property>
+            <property name="text">
+             <string>Coherent</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="ComboBox" name="comboBoxIncoherentStokesType">
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>which Incoherent Stokes parameters to produce</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="label_StokesChannelsPerSubband">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
+            <property name="text">
+             <string>Channels per subband:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="SpinBox" name="spinBoxCoherentTimeIntegration">
+            <property name="toolTip">
+             <string>coherent Stokes time integration factor</string>
+            </property>
+            <property name="maximum">
+             <number>99999</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_Coherent">
+            <property name="text">
+             <string>Coherent</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLabel" name="label_Incoherent">
+            <property name="text">
+             <string>Incoherent</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="SpinBox" name="spinBoxIncoherentTimeIntegration">
+            <property name="toolTip">
+             <string>incoherent Stokes time integration factor</string>
+            </property>
+            <property name="maximum">
+             <number>99999</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="SpinBox" name="spinBoxCoherentChannelsPerSubband">
+            <property name="toolTip">
+             <string>coherent Stokes number of channels per subband</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>4096</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="label_StokesTimeIntegration">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
+            <property name="text">
+             <string>Time integration:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="CheckBox" name="checkBoxIncoherentStokes">
+            <property name="toolTip">
+             <string>Store incoherent Stokes data</string>
+            </property>
+            <property name="text">
+             <string>Incoherent</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLabel" name="label_StokesSubbandsPerFile">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
+            <property name="text">
+             <string>Subbands per file:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="ComboBox" name="comboBoxCoherentStokesType">
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>which Coherent Stokes parameters to produce</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="CheckBox" name="checkBoxPencilFlysEye">
+            <property name="toolTip">
+             <string>tranforms every station into its own beam</string>
+            </property>
+            <property name="text">
+             <string>Fly's eye</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="label_StokesType">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
+            <property name="text">
+             <string>(Stokes) type:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="CheckBox" name="checkBox_CoherentDedispersion">
+            <property name="minimumSize">
+             <size>
+              <width>200</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>turn on online coherent dedispersion</string>
+            </property>
+            <property name="text">
+             <string>Coherent Dedispersion</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_ProcessingGeneric">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>120</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>Central Processing generic settings</string>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_22">
+          <item row="2" column="5">
+           <spacer name="horizontalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="2" column="3">
+           <widget class="QLabel" name="label_BitsPerSample">
+            <property name="minimumSize">
+             <size>
+              <width>146</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Bits per sample:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="CheckBox" name="checkBox_DelayCompensation">
+            <property name="toolTip">
+             <string>perform delay compensation between stations</string>
+            </property>
+            <property name="text">
+             <string>Delay compensation</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="CheckBox" name="checkBox_BandpassCorrection">
+            <property name="minimumSize">
+             <size>
+              <width>200</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Apply the bandpass filter</string>
+            </property>
+            <property name="text">
+             <string>Bandpass correction</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="4">
+           <widget class="ComboBox" name="comboBoxBitsPerSample">
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>100</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>number of bits per sample</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <spacer name="verticalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>30</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_Storage">
+      <attribute name="title">
+       <string>Storage</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_12">
+       <item row="1" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Total storage size:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="6">
+        <widget class="QLineEdit" name="lineEditStorageConflict">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="acceptDrops">
+          <bool>false</bool>
+         </property>
+         <property name="frame">
+          <bool>false</bool>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Total bandwidth required:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="lineEditTotalBandwidth">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Total network bandwidth required
+(Total storage size / observation duration)</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="lineEditTotalStorageSize">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>the total size of all dataproducts written to the storage nodes</string>
+         </property>
+         <property name="statusTip">
+          <string/>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string># Nodes Minimum:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QLineEdit" name="lineEditMinNrStorageNodes">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;the most optimistic minimum number of storage nodes required to obtain the required total network bandwidth. The automatic selection might select more nodes depending on storage space available.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="4">
+        <widget class="QLabel" name="label_12">
+         <property name="text">
+          <string># Nodes Selected:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="5">
+        <widget class="QLineEdit" name="lineEditAssignedStorageNodes">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>the selected nodes for the displayed data produkt type</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2" rowspan="4" colspan="4">
+        <widget class="QTreeWidget" name="treeWidgetStorageNodes">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="baseSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>the storage nodes and raid arrays used</string>
+         </property>
+         <property name="autoFillBackground">
+          <bool>true</bool>
+         </property>
+         <property name="animated">
+          <bool>false</bool>
+         </property>
+         <column>
+          <property name="text">
+           <string notr="true">1</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+       <item row="1" column="4" colspan="2">
+        <widget class="QComboBox" name="comboBoxStorageDataType">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Select the data product type for which to display the storage selection</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="lineEditNrOfDataFiles">
+         <property name="minimumSize">
+          <size>
+           <width>250</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>the number of data products that are written</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string># of data files:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_DataProducts">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>14</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Data products:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLineEdit" name="lineEditStorageAssigned">
+         <property name="text">
+          <string>Storage not assigned</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" rowspan="2" colspan="2">
+        <widget class="QTabWidget" name="tabWidgetDataProdukts">
+         <property name="currentIndex">
+          <number>1</number>
+         </property>
+         <widget class="QWidget" name="tabInput">
+          <attribute name="title">
+           <string>Input</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_6">
+           <item row="0" column="0">
+            <widget class="QTreeWidget" name="treeWidgetInputDataProducts">
+             <column>
+              <property name="text">
+               <string notr="true">1</string>
+              </property>
+             </column>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabOutput">
+          <attribute name="title">
+           <string>Output</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_10">
+           <item row="0" column="0">
+            <widget class="QTreeWidget" name="treeWidgetOutputDataProducts">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <column>
+              <property name="text">
+               <string notr="true">1</string>
+              </property>
+             </column>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+       <item row="1" column="2" colspan="2">
+        <widget class="ComboBox" name="comboBoxStorageSelectionMode">
+         <property name="toolTip">
+          <string>the method for selecting storage nodes</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_Pipeline">
+      <attribute name="title">
+       <string>Imaging Pipeline</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_11">
+       <item row="0" column="0" rowspan="4">
+        <widget class="QGroupBox" name="groupBoxDemixing">
+         <property name="title">
+          <string>Demixing</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_14">
+          <item row="7" column="0">
+           <widget class="QLabel" name="labelDemixFreqStep">
+            <property name="text">
+             <string>Demix freq. step:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="QLabel" name="label_15">
+            <property name="text">
+             <string>Demix time step:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <spacer name="verticalSpacer_5">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="5" column="0">
+           <widget class="QPushButton" name="pushButtonClearDemixIfNeeded">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Clear</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="QLabel" name="label_14">
+            <property name="text">
+             <string>Demixing SkyModel:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <spacer name="verticalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="labelDemixAlways">
+            <property name="minimumSize">
+             <size>
+              <width>130</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Demix always:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1" rowspan="3">
+           <widget class="ListWidget" name="listWidgetDemixIfNeeded">
+            <property name="toolTip">
+             <string>mark the sources for which the pipeline has to decide if demixing is needed</string>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::NoSelection</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="labelDemixIfNeeded">
+            <property name="text">
+             <string>Demix if needed:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" rowspan="3">
+           <widget class="ListWidget" name="listWidgetDemixAlways">
+            <property name="toolTip">
+             <string>mark the sources thatmust be demixed</string>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::NoSelection</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QPushButton" name="pushButtonClearDemixAlways">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Clear</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="1">
+           <widget class="LineEdit" name="lineEditDemixSkyModel">
+            <property name="toolTip">
+             <string>the (user-supplied) SkyModel used for demixing
+specified as a SkyModel file name omitting the extension .skymodel, e.g. 3C295
+or as a fully specified path to a SkyModel file</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="SpinBox" name="spinBoxDemixFreqStep">
+            <property name="toolTip">
+             <string>the number of frequency channels to average in the demixing result</string>
+            </property>
+            <property name="maximum">
+             <number>999999</number>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="SpinBox" name="spinBoxDemixTimeStep">
+            <property name="toolTip">
+             <string>the number of time steps to average in the demixing result</string>
+            </property>
+            <property name="maximum">
+             <number>999999</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QGroupBox" name="groupBoxCalibration">
+         <property name="title">
+          <string>Calibration</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_13">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_18">
+            <property name="text">
+             <string>Calibration SkyModel:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="LineEdit" name="lineEditCalibrationSkyModel">
+            <property name="toolTip">
+             <string>the SkyModel used by BBS for calibration (e.g. 3C295)</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QGroupBox" name="groupBoxAveraging">
+         <property name="title">
+          <string>Averaging</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_15">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_16">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>130</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Averaging freq. step:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_17">
+            <property name="text">
+             <string>Averaging time step:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="SpinBox" name="spinBoxAveragingFreqStep">
+            <property name="toolTip">
+             <string>the number of frequency channels to average</string>
+            </property>
+            <property name="maximum">
+             <number>999999</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="SpinBox" name="spinBoxAveragingTimeStep">
+            <property name="toolTip">
+             <string>the number of time steps to average</string>
+            </property>
+            <property name="maximum">
+             <number>999999</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="2" rowspan="3">
+        <widget class="QGroupBox" name="groupBoxImaging">
+         <property name="title">
+          <string>Imaging</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_2">
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_19">
+            <property name="text">
+             <string>Slices per Image:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_21">
+            <property name="text">
+             <string>Subbands per Image:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="CheckBox" name="checkBoxSpecifyFOV">
+            <property name="toolTip">
+             <string>Specify Field Of View instead of Cell size &amp; npix</string>
+            </property>
+            <property name="text">
+             <string>Specify FOV</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="labelFOV">
+            <property name="text">
+             <string>Field Of View (degrees):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="labelCellSize">
+            <property name="text">
+             <string>Cell size:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="labelNpix">
+            <property name="text">
+             <string>Number of pixels:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="SpinBox" name="spinBoxSlicesPerImage">
+            <property name="toolTip">
+             <string>the number of slices that are grouped in to a single image</string>
+            </property>
+            <property name="maximum">
+             <number>99999</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="SpinBox" name="spinBoxSubbandsPerImage">
+            <property name="toolTip">
+             <string>the number of subbands that are grouped in to a single image</string>
+            </property>
+            <property name="maximum">
+             <number>99999</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="LineEdit" name="lineEditFieldOfView">
+            <property name="toolTip">
+             <string>field of view in degrees</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="LineEdit" name="lineEditCellSize">
+            <property name="toolTip">
+             <string>the pixel width in x and y direction, specify units (arcsec/arcmin/rad/deg)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="SpinBox" name="spinBoxNumberOfPixels">
+            <property name="toolTip">
+             <string>the number of image pixels in x and y direction</string>
+            </property>
+            <property name="maximum">
+             <number>99999999</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_LongBaselinePipeline">
+      <attribute name="title">
+       <string>Long-Baseline Pipeline</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_19">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBoxConcatenation">
+         <property name="title">
+          <string>Concatenation</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_18">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_SubbandsPerSubbandGroup_2">
+            <property name="text">
+             <string>Subbands per Subband Group:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_SubbandGroupsPerMS_2">
+            <property name="text">
+             <string>Subband Groups per MS:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="SpinBox" name="spinBoxSubbandGroupsPerMS">
+            <property name="minimumSize">
+             <size>
+              <width>75</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>the number of subband-groups to write to a single measurement set</string>
+            </property>
+            <property name="maximum">
+             <number>99999</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="SpinBox" name="spinBoxSubbandsPerSubbandGroup">
+            <property name="minimumSize">
+             <size>
+              <width>75</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>the number of subbands concatenated into a single subband-group</string>
+            </property>
+            <property name="maximum">
+             <number>99999</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <spacer name="horizontalSpacer_5">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_PulsarPipeline">
+      <attribute name="title">
+       <string>Pulsar Pipeline</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_16">
+       <item row="1" column="1">
+        <widget class="QGroupBox" name="groupBoxPulsarCV">
+         <property name="title">
+          <string>CV specific settings</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_4">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_34">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>Digifil extra options:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="LineEdit" name="lineEditDigifilExtraOptions">
+            <property name="toolTip">
+             <string>Additional options for digifil.
+Only for CV data and only when Single pulse analysis is enabled</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QGroupBox" name="groupBoxPulsarCSIS">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>CS/IS specific settings</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_3">
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_35">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>2bf2fits extra options:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_36">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>Decode sigma:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_37">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>Decode nblocks:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_38">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="statusTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>RFI find extra options:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_39">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>Prepfold extra options:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="label_40">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>Prepsubband extra options:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="QLabel" name="label_41">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>Dynamic spectrum time avg.:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="CheckBox" name="checkBox_rrats">
+            <property name="toolTip">
+             <string>Run rrats analysis i.e. running prepsubband for a range of DMs around nominal DM of the RRAT followed by single pulse search.
+Zero-DM time series is also created with prepdata.</string>
+            </property>
+            <property name="text">
+             <string>rrats</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="CheckBox" name="checkBox_Skip_dynamic_spectrum">
+            <property name="toolTip">
+             <string>Skip creation of the dynamic spectrum of the observation</string>
+            </property>
+            <property name="text">
+             <string>Skip dynamic spectrum</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="CheckBox" name="checkBox_Skip_prepfold">
+            <property name="toolTip">
+             <string>Skip execxution of prepfold.</string>
+            </property>
+            <property name="text">
+             <string>Skip prepfold</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_23">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>rrats DM range:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="LineEdit" name="lineEdit2bf2fitsExtraOptions">
+            <property name="toolTip">
+             <string>Additional options for 2bf2fits</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="LineEdit" name="lineEditRfiFindExtraOptions">
+            <property name="toolTip">
+             <string>Additional options for rfifind</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="LineEdit" name="lineEditPrepfoldExtraOptions">
+            <property name="toolTip">
+             <string>Additional options for prepfold</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="LineEdit" name="lineEditPrepsubbandExtraOptions">
+            <property name="toolTip">
+             <string>Additional options for prepsubband
+Only used when rrats is enabled</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="SpinBox" name="spinBoxDecodeSigma">
+            <property name="toolTip">
+             <string>Sigma limit value used for packing in 2bf2fits</string>
+            </property>
+            <property name="maximum">
+             <number>9999999</number>
+            </property>
+            <property name="value">
+             <number>3</number>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="SpinBox" name="spinBoxDecodeNblocks">
+            <property name="toolTip">
+             <string>Number of blocks to read at a time in 2bf2fits</string>
+            </property>
+            <property name="maximum">
+             <number>9999999</number>
+            </property>
+            <property name="value">
+             <number>100</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="DoubleSpinBox" name="doubleSpinBoxRratsDmRange">
+            <property name="toolTip">
+             <string>The range between the lowest DM value in the prepsubband and the nominal DM of a RRAT</string>
+            </property>
+            <property name="decimals">
+             <number>5</number>
+            </property>
+            <property name="maximum">
+             <double>99999.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>5.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="1">
+           <widget class="DoubleSpinBox" name="doubleSpinBoxDynamicSpectrumTimeAverage">
+            <property name="toolTip">
+             <string>Averaging time in seconds for dynamic spectrum of the observation</string>
+            </property>
+            <property name="decimals">
+             <number>5</number>
+            </property>
+            <property name="maximum">
+             <double>99999.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.500000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBoxPulsarCSISCV">
+         <property name="title">
+          <string>General CS/IS/CV</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout">
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_22">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>Pulsar:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="CheckBox" name="checkBox_RawTo8Bit">
+            <property name="toolTip">
+             <string>Convert raw 32-bit data to 8 bits</string>
+            </property>
+            <property name="text">
+             <string>Raw to 8 bit</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_25">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>DSPSR extra options:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_26">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>Prepdata extra options:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_27">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>8 bit conversion sigma:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_28">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>tsubint:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="CheckBox" name="checkBox_NoRFI">
+            <property name="toolTip">
+             <string>Skip all RFI excision or inspection tools.</string>
+            </property>
+            <property name="text">
+             <string>No RFI</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="CheckBox" name="checkBox_No_fold">
+            <property name="toolTip">
+             <string>No data folding.</string>
+            </property>
+            <property name="text">
+             <string>No Folding</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="1">
+           <widget class="CheckBox" name="checkBox_No_DSPSR">
+            <property name="toolTip">
+             <string>Skip execution of DSPSR.</string>
+            </property>
+            <property name="text">
+             <string>No DSPSR</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="CheckBox" name="checkBox_No_pdmp">
+            <property name="toolTip">
+             <string>Skip execution of PDMP</string>
+            </property>
+            <property name="text">
+             <string>No PDMP</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="CheckBox" name="checkBox_Single_pulse">
+            <property name="toolTip">
+             <string>Do single pulse analysis.</string>
+            </property>
+            <property name="text">
+             <string>Single pulse analysis</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="LineEdit" name="lineEditPulsarName">
+            <property name="toolTip">
+             <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Pulsar name or comma separated list of pulsars. In addition to pulsar names can also have several special keywords: &lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;parset - to take pulsar name from the source field for each SAP separately from the parset file.&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;meta - same as 'parset' but only from the HDF5 metadata&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;sapfind - to find the best (brightest) pulsars in FOV of the particular SAP&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;sapfind3 - to find 3 best (brighters) pulsars in FOV of the particular SAP&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;tabfind - to find the brightest pulsar for each TAB individually&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;tabfind+ - to first get pulsar from the parset (meta) if pulsar name there is legitimate, then find the brightest one in the SAP (same as 'sapfind'), and then get another pulsar from the TAB (same as 'tabfind')&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;By default (i.e. when pulsar option is empty), pipeline will take pulsar name from the parset (or meta). If pulsar names are not legitimate (i.e. not known, not in the catalog), then find the brightest pulsar in the SAP (same as 'sapfind').&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="LineEdit" name="lineEditDSPSRextraOptions">
+            <property name="toolTip">
+             <string>Additional options for dspsr</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="LineEdit" name="lineEditPrepdataExtraOptions">
+            <property name="toolTip">
+             <string>Additional options for prepdata</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="SpinBox" name="spinBoxTsubint">
+            <property name="toolTip">
+             <string>Set the length (in seconds) of each subintegration. Default is 60 secs for CS/IS and 5 secs for CV mode</string>
+            </property>
+            <property name="minimum">
+             <number>-1</number>
+            </property>
+            <property name="maximum">
+             <number>99999999</number>
+            </property>
+            <property name="value">
+             <number>-1</number>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="DoubleSpinBox" name="doubleSpinBox8BitConversionSigma">
+            <property name="toolTip">
+             <string>Clip raw data above this threshold (in sigmas) for conversion raw data from 32 to 8 bits</string>
+            </property>
+            <property name="decimals">
+             <number>5</number>
+            </property>
+            <property name="maximum">
+             <double>99999.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>5.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <spacer name="verticalSpacer_8">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_ExtraInfo">
+      <attribute name="title">
+       <string>Extra Info</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_7">
+       <item row="6" column="0">
+        <widget class="QLabel" name="labelContactName">
+         <property name="minimumSize">
+          <size>
+           <width>80</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Contact name:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QLineEdit" name="lineEdit_ContactName">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Contact person for this task</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLabel" name="labelContactPhone">
+         <property name="text">
+          <string>Phone:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="1">
+        <widget class="QLineEdit" name="lineEdit_ContactPhone">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Phone number of the contact person</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="QLabel" name="labelContactEmail">
+         <property name="text">
+          <string>E-mail:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="1">
+        <widget class="QLineEdit" name="lineEdit_ContactEmail">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>E-mail of the contact person</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="2">
+        <spacer name="horizontalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="10" column="1">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="labelDescription">
+         <property name="text">
+          <string>Description</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" colspan="2">
+        <widget class="LineEdit" name="lineEditTaskDescription">
+         <property name="toolTip">
+          <string>The task description</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Principal Investigator(s):</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="lineEdit_ProjectPI">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Co Investigator(s):</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="lineEdit_ProjectCOI">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Project name:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="lineEdit_ProjectName">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>CheckBox</class>
+   <extends>QCheckBox</extends>
+   <header>CheckBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>LineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>LineEdit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ComboBox</class>
+   <extends>QComboBox</extends>
+   <header>ComboBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DateTimeEdit</class>
+   <extends>QDateTimeEdit</extends>
+   <header>DateTimeEdit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DateEdit</class>
+   <extends>QDateEdit</extends>
+   <header>DateEdit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>TimeEdit</class>
+   <extends>QTimeEdit</extends>
+   <header>TimeEdit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SpinBox</class>
+   <extends>QSpinBox</extends>
+   <header>SpinBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>StationListWidget</class>
+   <extends>QListWidget</extends>
+   <header>stationlistwidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>StationTreeWidget</class>
+   <extends>QTreeWidget</extends>
+   <header>stationtreewidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ListWidget</class>
+   <extends>QListWidget</extends>
+   <header>ListWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DoubleSpinBox</class>
+   <extends>QDoubleSpinBox</extends>
+   <header>doublespinbox.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>tabWidgetMain</tabstop>
+  <tabstop>lineEditTaskName</tabstop>
+  <tabstop>comboBoxTaskStatus</tabstop>
+  <tabstop>comboBoxProjectID</tabstop>
+  <tabstop>pushButtonUpdateCampaigns</tabstop>
+  <tabstop>comboBoxReservation</tabstop>
+  <tabstop>pushButtonUnBindReservation</tabstop>
+  <tabstop>comboBoxProcessType</tabstop>
+  <tabstop>comboBoxProcessSubType</tabstop>
+  <tabstop>comboBoxStrategies</tabstop>
+  <tabstop>lineEditTaskID</tabstop>
+  <tabstop>lineEditSASID</tabstop>
+  <tabstop>lineEditOriginalTreeID</tabstop>
+  <tabstop>lineEditGroupID</tabstop>
+  <tabstop>lineEditPriority</tabstop>
+  <tabstop>lineEditPredecessors</tabstop>
+  <tabstop>lineEditMinPredDistance</tabstop>
+  <tabstop>lineEditMaxPredDistance</tabstop>
+  <tabstop>lineEditDuration</tabstop>
+  <tabstop>dateTimeEditScheduledStart</tabstop>
+  <tabstop>dateEditFirstPossibleDate</tabstop>
+  <tabstop>timeEditFirstPossibleTime</tabstop>
+  <tabstop>dateTimeEditScheduledEnd</tabstop>
+  <tabstop>dateEditLastPossibleDate</tabstop>
+  <tabstop>timeEditLastPossibleTime</tabstop>
+  <tabstop>checkBoxFixedDate</tabstop>
+  <tabstop>checkBoxFixedTime</tabstop>
+  <tabstop>lineEditCreationDate</tabstop>
+  <tabstop>lineEditModificationDate</tabstop>
+  <tabstop>pushButtonCancelClose</tabstop>
+  <tabstop>pushButtonApply</tabstop>
+  <tabstop>pushButtonOk</tabstop>
+  <tabstop>comboBoxStationAntennaMode</tabstop>
+  <tabstop>comboBoxStationFilter</tabstop>
+  <tabstop>comboBoxStationClock</tabstop>
+  <tabstop>checkBoxTBBPiggybackAllowed</tabstop>
+  <tabstop>checkBoxAartfaacPiggybackAllowed</tabstop>
+  <tabstop>pushButtonShowDataSlots</tabstop>
+  <tabstop>listWidgetAvailableStations</tabstop>
+  <tabstop>treeWidgetUsedStations</tabstop>
+  <tabstop>pushButtonAddSuperStation</tabstop>
+  <tabstop>comboBoxAnalogBeamCoordinates</tabstop>
+  <tabstop>comboBoxAnalogBeamUnits</tabstop>
+  <tabstop>lineEditAnalogBeamAngle1</tabstop>
+  <tabstop>lineEditAnalogBeamAngle2</tabstop>
+  <tabstop>timeEditAnalogBeamStartTime</tabstop>
+  <tabstop>lineEditAnalogBeamDuration</tabstop>
+  <tabstop>tableWidgetDigitalBeams</tabstop>
+  <tabstop>pushButtonAddBeam</tabstop>
+  <tabstop>pushButtonEditBeam</tabstop>
+  <tabstop>pushButtonDeleteBeams</tabstop>
+  <tabstop>pushButtonClearAllBeams</tabstop>
+  <tabstop>lineEditTotalSubbands</tabstop>
+  <tabstop>tableWidgetTiedArrayBeams</tabstop>
+  <tabstop>pushButtonAddTiedArrayBeam</tabstop>
+  <tabstop>pushButtonEditTiedArrayBeam</tabstop>
+  <tabstop>pushButtonDeleteTiedArrayBeam</tabstop>
+  <tabstop>pushButtonClearAllTiedArrayBeam</tabstop>
+  <tabstop>checkBoxCorrelatedData</tabstop>
+  <tabstop>checkBoxCoherentStokes</tabstop>
+  <tabstop>checkBoxIncoherentStokes</tabstop>
+  <tabstop>checkBox_CoherentDedispersion</tabstop>
+  <tabstop>checkBoxPencilFlysEye</tabstop>
+  <tabstop>checkBox_DelayCompensation</tabstop>
+  <tabstop>checkBox_BandpassCorrection</tabstop>
+  <tabstop>lineEditCorrelatorIntegrationTime</tabstop>
+  <tabstop>spinBoxChannelsPerSubband</tabstop>
+  <tabstop>comboBoxCoherentStokesType</tabstop>
+  <tabstop>comboBoxIncoherentStokesType</tabstop>
+  <tabstop>spinBoxCoherentTimeIntegration</tabstop>
+  <tabstop>spinBoxIncoherentTimeIntegration</tabstop>
+  <tabstop>spinBoxCoherentChannelsPerSubband</tabstop>
+  <tabstop>spinBoxIncoherentChannelsPerSubband</tabstop>
+  <tabstop>spinBoxCoherentSubbandsPerFile</tabstop>
+  <tabstop>spinBoxIncoherentSubbandsPerFile</tabstop>
+  <tabstop>comboBoxBitsPerSample</tabstop>
+  <tabstop>lineEditStorageConflict</tabstop>
+  <tabstop>lineEditTotalStorageSize</tabstop>
+  <tabstop>comboBoxStorageSelectionMode</tabstop>
+  <tabstop>lineEditTotalBandwidth</tabstop>
+  <tabstop>lineEditNrOfDataFiles</tabstop>
+  <tabstop>lineEditStorageAssigned</tabstop>
+  <tabstop>tabWidgetDataProdukts</tabstop>
+  <tabstop>treeWidgetOutputDataProducts</tabstop>
+  <tabstop>listWidgetDemixAlways</tabstop>
+  <tabstop>listWidgetDemixIfNeeded</tabstop>
+  <tabstop>pushButtonClearDemixAlways</tabstop>
+  <tabstop>pushButtonClearDemixIfNeeded</tabstop>
+  <tabstop>spinBoxDemixFreqStep</tabstop>
+  <tabstop>spinBoxDemixTimeStep</tabstop>
+  <tabstop>lineEditDemixSkyModel</tabstop>
+  <tabstop>spinBoxAveragingFreqStep</tabstop>
+  <tabstop>spinBoxAveragingTimeStep</tabstop>
+  <tabstop>lineEditCalibrationSkyModel</tabstop>
+  <tabstop>spinBoxSlicesPerImage</tabstop>
+  <tabstop>spinBoxSubbandsPerImage</tabstop>
+  <tabstop>checkBoxSpecifyFOV</tabstop>
+  <tabstop>lineEditFieldOfView</tabstop>
+  <tabstop>lineEditCellSize</tabstop>
+  <tabstop>spinBoxNumberOfPixels</tabstop>
+  <tabstop>spinBoxSubbandsPerSubbandGroup</tabstop>
+  <tabstop>spinBoxSubbandGroupsPerMS</tabstop>
+  <tabstop>lineEditPulsarName</tabstop>
+  <tabstop>checkBox_Single_pulse</tabstop>
+  <tabstop>checkBox_RawTo8Bit</tabstop>
+  <tabstop>lineEditDSPSRextraOptions</tabstop>
+  <tabstop>lineEditPrepdataExtraOptions</tabstop>
+  <tabstop>doubleSpinBox8BitConversionSigma</tabstop>
+  <tabstop>spinBoxTsubint</tabstop>
+  <tabstop>checkBox_NoRFI</tabstop>
+  <tabstop>checkBox_No_fold</tabstop>
+  <tabstop>checkBox_No_pdmp</tabstop>
+  <tabstop>checkBox_No_DSPSR</tabstop>
+  <tabstop>checkBox_rrats</tabstop>
+  <tabstop>doubleSpinBoxRratsDmRange</tabstop>
+  <tabstop>lineEdit2bf2fitsExtraOptions</tabstop>
+  <tabstop>spinBoxDecodeSigma</tabstop>
+  <tabstop>spinBoxDecodeNblocks</tabstop>
+  <tabstop>lineEditRfiFindExtraOptions</tabstop>
+  <tabstop>lineEditPrepfoldExtraOptions</tabstop>
+  <tabstop>lineEditPrepsubbandExtraOptions</tabstop>
+  <tabstop>checkBox_Skip_dynamic_spectrum</tabstop>
+  <tabstop>doubleSpinBoxDynamicSpectrumTimeAverage</tabstop>
+  <tabstop>checkBox_Skip_prepfold</tabstop>
+  <tabstop>lineEditDigifilExtraOptions</tabstop>
+  <tabstop>lineEditTaskDescription</tabstop>
+  <tabstop>lineEdit_ProjectName</tabstop>
+  <tabstop>lineEdit_ProjectPI</tabstop>
+  <tabstop>lineEdit_ProjectCOI</tabstop>
+  <tabstop>lineEdit_ContactName</tabstop>
+  <tabstop>lineEdit_ContactPhone</tabstop>
+  <tabstop>lineEdit_ContactEmail</tabstop>
+  <tabstop>lineEditAssignedStorageNodes</tabstop>
+  <tabstop>spinBoxDataslotsPerRSPboard</tabstop>
+  <tabstop>comboBoxStorageDataType</tabstop>
+  <tabstop>treeWidgetStorageNodes</tabstop>
+  <tabstop>treeWidgetInputDataProducts</tabstop>
+  <tabstop>lineEditMinNrStorageNodes</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>pushButtonApply</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>applyClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>748</x>
+     <y>589</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>507</x>
+     <y>386</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEdit_ContactEmail</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>202</x>
+     <y>227</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>5</x>
+     <y>104</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEdit_ContactPhone</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>202</x>
+     <y>196</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1</x>
+     <y>71</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonCancelClose</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>cancelClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>657</x>
+     <y>589</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>346</x>
+     <y>397</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonOk</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>okClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>839</x>
+     <y>589</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>618</x>
+     <y>386</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEdit_ContactName</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>202</x>
+     <y>165</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>132</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_DelayCompensation</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>130</x>
+     <y>422</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>5</x>
+     <y>319</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_BandpassCorrection</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>163</x>
+     <y>451</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>30</x>
+     <y>373</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBoxPencilFlysEye</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>130</x>
+     <y>358</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>618</x>
+     <y>168</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditTaskDescription</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>208</x>
+     <y>41</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>374</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonShowDataSlots</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>showDataSlots()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>829</x>
+     <y>66</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>619</x>
+     <y>145</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>comboBoxStorageDataType</sender>
+   <signal>currentIndexChanged(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>updateStorageTree()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>660</x>
+     <y>68</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>626</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonUnBindReservation</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>unbindReservation()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>450</x>
+     <y>171</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>736</x>
+     <y>75</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_CoherentDedispersion</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>216</x>
+     <y>331</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>5</x>
+     <y>183</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBoxTBBPiggybackAllowed</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>639</x>
+     <y>95</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>447</x>
+     <y>527</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_Single_pulse</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>285</x>
+     <y>118</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>182</x>
+     <y>7</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_RawTo8Bit</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>285</x>
+     <y>145</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>199</x>
+     <y>-5</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_NoRFI</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>285</x>
+     <y>296</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>6</x>
+     <y>232</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_No_fold</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>285</x>
+     <y>323</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>4</x>
+     <y>265</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_No_pdmp</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>285</x>
+     <y>356</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>4</x>
+     <y>296</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_No_DSPSR</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>285</x>
+     <y>383</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>4</x>
+     <y>344</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_rrats</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>724</x>
+     <y>87</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>849</x>
+     <y>95</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_Skip_dynamic_spectrum</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>724</x>
+     <y>331</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>852</x>
+     <y>242</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_Skip_prepfold</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>724</x>
+     <y>389</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>851</x>
+     <y>293</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBoxAartfaacPiggybackAllowed</sender>
+   <signal>clicked()</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>639</x>
+     <y>126</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>480</x>
+     <y>580</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditTaskName</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>292</x>
+     <y>62</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>184</x>
+     <y>-4</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>comboBoxProjectID</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>198</x>
+     <y>122</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>3</x>
+     <y>136</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>comboBoxReservation</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>bindToReservation(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>186</x>
+     <y>162</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>5</x>
+     <y>164</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>comboBoxProcessType</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>processTypeChanged(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>179</x>
+     <y>190</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>4</x>
+     <y>215</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>comboBoxProcessSubType</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>updateStrategiesComboBox()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>197</x>
+     <y>221</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-5</x>
+     <y>242</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>comboBoxStrategies</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>strategyChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>371</x>
+     <y>251</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>841</x>
+     <y>263</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditGroupID</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>808</x>
+     <y>159</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>845</x>
+     <y>156</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditPriority</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>814</x>
+     <y>188</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>844</x>
+     <y>189</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditPredecessors</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>808</x>
+     <y>218</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>846</x>
+     <y>219</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditMinPredDistance</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>814</x>
+     <y>248</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>845</x>
+     <y>139</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditMaxPredDistance</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>800</x>
+     <y>281</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>848</x>
+     <y>325</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditDuration</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>updateScheduledEnd()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>168</x>
+     <y>332</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-6</x>
+     <y>328</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dateTimeEditScheduledStart</sender>
+   <signal>dateTimeChanged(QDateTime)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>updateScheduledEnd()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>161</x>
+     <y>363</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-8</x>
+     <y>355</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dateTimeEditScheduledEnd</sender>
+   <signal>dateTimeChanged(QDateTime)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>updateDuration()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>724</x>
+     <y>370</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>848</x>
+     <y>370</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBoxFixedDate</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>801</x>
+     <y>374</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>848</x>
+     <y>355</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBoxFixedTime</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>767</x>
+     <y>398</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>846</x>
+     <y>405</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dateEditFirstPossibleDate</sender>
+   <signal>dateChanged(QDate)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>167</x>
+     <y>400</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>4</x>
+     <y>395</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dateEditLastPossibleDate</sender>
+   <signal>dateChanged(QDate)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>701</x>
+     <y>397</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>843</x>
+     <y>436</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>timeEditFirstPossibleTime</sender>
+   <signal>timeChanged(QTime)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>162</x>
+     <y>433</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>3</x>
+     <y>438</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>timeEditLastPossibleTime</sender>
+   <signal>timeChanged(QTime)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>690</x>
+     <y>433</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>847</x>
+     <y>481</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>timeEditAnalogBeamStartTime</sender>
+   <signal>timeChanged(QTime)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>663</x>
+     <y>119</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>845</x>
+     <y>89</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditAnalogBeamAngle1</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>362</x>
+     <y>119</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>274</x>
+     <y>4</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditAnalogBeamAngle2</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>517</x>
+     <y>119</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>487</x>
+     <y>-2</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditAnalogBeamDuration</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>769</x>
+     <y>119</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>713</x>
+     <y>-2</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditCorrelatorIntegrationTime</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>488</x>
+     <y>91</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>849</x>
+     <y>55</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxChannelsPerSubband</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>488</x>
+     <y>122</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>851</x>
+     <y>127</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxCoherentTimeIntegration</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>488</x>
+     <y>242</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>844</x>
+     <y>288</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxIncoherentTimeIntegration</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>594</x>
+     <y>242</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>843</x>
+     <y>215</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxCoherentChannelsPerSubband</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>488</x>
+     <y>273</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>845</x>
+     <y>350</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxIncoherentChannelsPerSubband</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>594</x>
+     <y>273</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>856</x>
+     <y>176</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxCoherentSubbandsPerFile</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>488</x>
+     <y>304</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>423</x>
+     <y>602</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxIncoherentSubbandsPerFile</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>594</x>
+     <y>304</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>546</x>
+     <y>599</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>listWidgetDemixAlways</sender>
+   <signal>clicked(QModelIndex)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>266</x>
+     <y>96</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>6</x>
+     <y>131</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>listWidgetDemixIfNeeded</sender>
+   <signal>clicked(QModelIndex)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>266</x>
+     <y>243</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>5</x>
+     <y>290</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxAveragingFreqStep</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>266</x>
+     <y>516</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>4</x>
+     <y>489</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxAveragingTimeStep</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>266</x>
+     <y>547</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>3</x>
+     <y>536</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxDemixFreqStep</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>266</x>
+     <y>386</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>7</x>
+     <y>391</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxDemixTimeStep</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>266</x>
+     <y>417</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>3</x>
+     <y>425</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditCalibrationSkyModel</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>689</x>
+     <y>110</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>849</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxSlicesPerImage</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>703</x>
+     <y>198</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>445</x>
+     <y>594</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxSubbandsPerImage</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>703</x>
+     <y>229</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>295</x>
+     <y>592</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditFieldOfView</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>703</x>
+     <y>287</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>581</x>
+     <y>574</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditCellSize</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>703</x>
+     <y>318</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>321</x>
+     <y>578</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxNumberOfPixels</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>703</x>
+     <y>349</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>847</x>
+     <y>318</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxSubbandsPerSubbandGroup</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>305</x>
+     <y>91</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>360</x>
+     <y>584</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxSubbandGroupsPerMS</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>305</x>
+     <y>122</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>195</x>
+     <y>576</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditPulsarName</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>285</x>
+     <y>91</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>132</x>
+     <y>593</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditDSPSRextraOptions</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>285</x>
+     <y>176</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>501</x>
+     <y>584</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditPrepdataExtraOptions</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>285</x>
+     <y>207</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>72</x>
+     <y>573</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEdit2bf2fitsExtraOptions</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>724</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>845</x>
+     <y>123</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditRfiFindExtraOptions</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>724</x>
+     <y>242</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>843</x>
+     <y>184</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditPrepfoldExtraOptions</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>724</x>
+     <y>273</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>770</x>
+     <y>571</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditPrepsubbandExtraOptions</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>724</x>
+     <y>304</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>355</x>
+     <y>574</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditDigifilExtraOptions</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>668</x>
+     <y>457</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>156</x>
+     <y>588</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxTsubint</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>285</x>
+     <y>269</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>457</x>
+     <y>600</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxDecodeSigma</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>724</x>
+     <y>180</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>845</x>
+     <y>27</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxDecodeNblocks</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>724</x>
+     <y>211</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>844</x>
+     <y>396</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>doubleSpinBoxRratsDmRange</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>724</x>
+     <y>118</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>753</x>
+     <y>4</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>doubleSpinBoxDynamicSpectrumTimeAverage</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>724</x>
+     <y>362</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>846</x>
+     <y>466</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>doubleSpinBox8BitConversionSigma</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>285</x>
+     <y>238</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>5</x>
+     <y>210</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditDemixSkyModel</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>TaskDialogClass</receiver>
+   <slot>detectChanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>266</x>
+     <y>448</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>13</x>
+     <y>591</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <signal>applied()</signal>
+  <slot>apply()</slot>
+  <slot>applyClicked()</slot>
+  <slot>cancelClicked()</slot>
+  <slot>okClicked()</slot>
+  <slot>detectChanges()</slot>
+  <slot>updateScheduledStart()</slot>
+  <slot>updateScheduledEnd()</slot>
+  <slot>updateDuration()</slot>
+  <slot>checkForSpecialType(QString)</slot>
+  <slot>ApplyFirstPossibleDateChange()</slot>
+  <slot>ApplyLastPossibleDateChange()</slot>
+  <slot>ApplyFirstPossibleTimeChange()</slot>
+  <slot>ApplyLastPossibleTimeChange()</slot>
+  <slot>AnalogBeamDirectionTypeChanged()</slot>
+  <slot>calculateAnalogAngle1()</slot>
+  <slot>calculateAnalogAngle2()</slot>
+  <slot>AnalogBeamAngleUnitChanged(QString)</slot>
+  <slot>analogBeamStartTimeChanged(QTime)</slot>
+  <slot>analogBeamDurationChanged(QTime)</slot>
+  <slot>AntennaModeChanged(int)</slot>
+  <slot>showDataSlots()</slot>
+  <slot>FilterTypeChanged(int)</slot>
+  <slot>setStorageEditable(int)</slot>
+  <slot>detectStorageLocationChanges(QTreeWidgetItem*,int)</slot>
+  <slot>outputDataTypesChanged()</slot>
+  <slot>updateStorageTree()</slot>
+  <slot>applyProjectChange(QString)</slot>
+  <slot>bindToReservation(int)</slot>
+  <slot>unbindReservation()</slot>
+  <slot>processTypeChanged(int)</slot>
+  <slot>updateStrategiesComboBox()</slot>
+  <slot>strategyChanged()</slot>
+ </slots>
+</ui>
