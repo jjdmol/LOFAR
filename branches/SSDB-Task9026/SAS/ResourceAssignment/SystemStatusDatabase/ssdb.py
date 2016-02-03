@@ -42,6 +42,7 @@ class SSDB:
         self.DBconnected = (self.conn and self.conn.status==1)
         if not self.DBconnected:
             try:
+                logger.info("trying to reconnect")
                 self.conn= pg.connect("dbname=%s user=%s password=%s" % (DATABASE,USER,PASSWORD))
                 self.DBconnected = (self.conn and self.conn.status==1)
             except Exception as e:
