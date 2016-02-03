@@ -4,8 +4,8 @@ import unittest
 import uuid
 import datetime
 from lofar.messaging import Service
-from lofar.sas.systemstatus.SSDBQueryService import runservice
-from lofar.sas.systemstatus.ssdbrpc import SSDBrpc
+from lofar.sas.systemstatus.service.SSDBQueryService import runservice
+from lofar.sas.systemstatus.service.SSDBrpc import SSDBrpc
 
 try:
     from qpid.messaging import Connection
