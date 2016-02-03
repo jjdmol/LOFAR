@@ -65,6 +65,7 @@ class SSDB:
         
 
     def getstatenames(self):
+        logger.info("[SSDB] getstatenames()")
         return self._doquery(self.Qgetstatenames)
 
     def getactivegroupnames(self):
