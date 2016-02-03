@@ -74,11 +74,11 @@ try:
 
             def test(self):
                 '''basic test '''
-                rpc = SSDBrpc(busname=busname)
+                rpc = SSDBrpc(busname=busname,timeout=1000)
                 self.assertEqual((retvalues_getstatenames,'OK')      , rpc.getstatenames())
                 self.assertEqual((retvalues_getactivegroupnames,'OK'), rpc.getactivegroupnames())
                 self.assertEqual((retvalues_gethostsforgid,'OK')     , rpc.gethostsforgid("4"))
-                #self.assertEqual((retvalues_listall,'OK')            , rpc.listall())
+                self.assertEqual((retvalues_listall,'OK')            , rpc.listall())
                 self.assertEqual((retvalues_countactivehosts,'OK')   , rpc.countactivehosts())
                 self.assertEqual((retvalues_getArchivingStatus,'OK') , rpc.getArchivingStatus())
 
