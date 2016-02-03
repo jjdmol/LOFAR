@@ -8,7 +8,7 @@
 #   Variables replaced:
 #       ${BRANCH_NAME}  = Name of this branch, relative to root
 #       ${BRANCH_URL}   = Full subversion URL for this branch
-#       ${REVISION}     = SVN revision number of this checkout
+#       ${REVISION}     = SVN revision number of this checkout (or HEAD if trunk)
 #       ${NOW}          = now in UTC (format: 2016-01-01 10:11:12)
 #       ${BUILD_UID}    = uid of building user (=caller)
 #
@@ -45,7 +45,15 @@ export BRANCH_URL="$URL"
 
 # ----- REVISION = 12345 -----
 
-export REVISION=`echo "$SVN_INFO" | perl -ne 'print "$1" if /Revision: +(.+)/;'`
+if [ "{$BRANCH}" == "trunk" ]; then
+  # Friendly special case to be able to export the output to 3rd parties.
+  # They'll want the HEAD instead of the revision we happened to build with,
+  # and we'll don't care that much for the race condition it causes for us
+  # (between generating the output and using it)
+  export REVISION=HEAD
+else
+  export REVISION=`echo "$SVN_INFO" | perl -ne 'print "$1" if /Revision: +(.+)/;'`
+fi
 
 # ----- NOW = 2016-01-01 10:11:12 -----
 
