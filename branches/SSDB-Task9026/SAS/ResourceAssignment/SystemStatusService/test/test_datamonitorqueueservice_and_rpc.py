@@ -4,7 +4,7 @@ import unittest
 import uuid
 import datetime
 from lofar.messaging import Service
-from lofar.sas.systemstatus.service.SSDBQueryService import runservice
+from lofar.sas.systemstatus.service.SSDBQueryService import createService
 from lofar.sas.systemstatus.service.SSDBrpc import SSDBrpc
 
 try:
@@ -83,7 +83,7 @@ try:
                 self.assertEqual(retvalues_getArchivingStatus , rpc.getArchivingStatus())
 
         # create and run the service
-        with createService(busname=busname):
+        with createService(busname=busname) as testservice:
 
             # and run all tests
             unittest.main(verbosity=2)
