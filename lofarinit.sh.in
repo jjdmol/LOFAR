@@ -62,8 +62,8 @@ fi
 # Now define the new LOFARROOT (if possible)
 # Do it only if the bin directory exists.
 lfr_nroot=`cd $lfr_root > /dev/null; pwd`      # make path absolute
-if [ "$lfr_nroot" = ""  -o  ! -d $lfr_nroot/bin ]; then
-    echo "LOFAR root directory $lfr_nroot/bin does not exist; keeping old LOFARROOT $LOFARROOT"
+if [ "$lfr_nroot" = "" -o ! -d $lfr_nroot ]; then
+    echo "LOFAR root directory $lfr_nroot does not exist; keeping old LOFARROOT $LOFARROOT"
 else
     LOFARROOT=$lfr_nroot
     export LOFARROOT
@@ -84,9 +84,9 @@ else
     export PYTHONPATH
 fi
 
-# Add to the paths if the bin directory exists.
-if [ "$LOFARROOT" = ""  -o  ! -d $LOFARROOT/bin ]; then
-    echo "No LOFARROOT defined"
+# Add to the paths
+if [ "$LOFARROOT" = "" -o ! -d $LOFARROOT ]; then
+    echo "LOFARROOT is empty or does not point to a directory."
 else
     # Add the path to the standard paths.
     if [ "$PATH" = "" ]; then
