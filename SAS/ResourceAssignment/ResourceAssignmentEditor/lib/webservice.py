@@ -49,6 +49,7 @@ from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
 from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
 from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
 
+logger = logging.getLogger(__name__)
 
 def asDatetime(isoString):
     if isoString[-1] == 'Z':
@@ -172,6 +173,7 @@ def putTask(task_id):
                 except ValueError:
                     abort(400, 'timestamp not in iso format: ' + updatedTask['endtime'])
 
+            logger.info('putTask: ' + str(updatedTask))
             rarpc.updateResourceClaimsForTask(task_id,
                                             starttime=updatedTask.get('starttime', None),
                                             endtime=updatedTask.get('endtime', None),
