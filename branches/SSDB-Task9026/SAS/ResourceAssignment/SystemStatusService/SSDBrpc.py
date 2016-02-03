@@ -48,7 +48,7 @@ class SSDBrpc:
         with RPC(servicename,busname=self.busname) as ssdb:
             return ssdb()
 
-    def getArchivingStatus(self,*args,**kwargs)
+    def getArchivingStatus(self,*args,**kwargs):
         servicename="%s.GetArchivingStatus" %(self.servicename)
         with RPC(servicename,busname=self.busname) as ssdb:
             return ssdb(*args,**kwargs)
