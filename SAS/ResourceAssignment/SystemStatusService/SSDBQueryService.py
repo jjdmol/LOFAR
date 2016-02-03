@@ -99,6 +99,9 @@ class DataMonitorQueryService(MessageHandlerInterface):
         jobinfo  = self.ssdb.getIngestJobs()
         return { "main" : maininfo, "jobs" : jobinfo };
 
+def createService(busname=BUSNAME,servicename=SERVICENAME):
+    return Service(servicename,DataMonitorQueryService,busname=busname,numthreads=4,use_service_methods=True)
+
 def runservice(busname=BUSNAME,servicename=SERVICENAME):
-    with Service(servicename,DataMonitorQueryService,busname=busname,numthreads=4,use_service_methods=True) as GetServerState:
+    with createService(busname,servicename) as GetServerState:
         waitForInterrupt()
