@@ -161,18 +161,18 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
 
 
 
-    self.lastUpdateTimestamp = undefined;
+    self.lastUpdateChangeNumber = undefined;
 
     self.subscribeToUpdates = function() {
         var url = '/rest/updates';
-        if(self.lastUpdateTimestamp) {
-            url += '/' + self.lastUpdateTimestamp;
+        if(self.lastUpdateChangeNumber) {
+            url += '/' + self.lastUpdateChangeNumber;
         }
         $http.get(url, {timeout:300000}).success(function(result) {
 
             try {
-                var changeTimestamps = result.changes.map(function(item) { return item.timestamp; });
-                self.lastUpdateTimestamp = changeTimestamps.reduce(function(a, b, idx, arr) { return a > b ? a : b; }, undefined);
+                var changeNumbers = result.changes.map(function(item) { return item.changeNumber; });
+                self.lastUpdateChangeNumber = changeNumbers.reduce(function(a, b, idx, arr) { return a > b ? a : b; }, undefined);
 
                 for(var i = result.changes.length-1; i >=0; i--) {
                     try {
