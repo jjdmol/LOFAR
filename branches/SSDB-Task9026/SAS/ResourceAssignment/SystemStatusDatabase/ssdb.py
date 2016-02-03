@@ -17,6 +17,7 @@ PASSWORD    = "welkom001"
 
 class SSDB:
     def __init__(self,**kwargs):
+        logger.info("[SSDBconnector]: create new instance")
         self.username = kwargs.pop("username", USER)
         self.password = kwargs.pop("password", PASSWORD)
         self.database = kwargs.pop("database", DATABASE)
