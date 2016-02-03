@@ -1,0 +1,57 @@
+#!/bin/bash
+
+#
+# Template engine for LOFAR
+#
+#   Reads stdin, replaces variables, writes stdout.
+#
+#   Variables replaced:
+#       ${BRANCH_NAME}  = Name of this branch, relative to root
+#       ${BRANCH_URL}   = Full subversion URL for this branch
+#       ${REVISION}     = SVN revision number of this checkout
+#       ${NOW}          = now in UTC (format: 2016-01-01 10:11:12)
+#
+
+# ----- BRANCH_NAME = branches/LOFAR-Task1234 -----
+# ----- BRANCH_NAME = trunk -----
+# ----- BRANCH_NAME = tags/LOFAR-Release-2_15_1 -----
+# ----- BRANCH_NAME = UNKNOWN -----
+
+# Make sure we obtain info about the project source!
+SVN_INFO=`@Subversion_SVN_EXECUTABLE@ info @PROJECT_SOURCE_DIR@`
+
+# Extract repository root, e.g. https://svn.astron.nl/LOFAR
+REPO=`echo "$SVN_INFO" | perl -ne 'print "$1" if /Repository Root: +(.+)/;'`
+
+# Extract branch URL, e.g. https://svn.astron.nl/LOFAR/branches/LOFAR-Task1234
+URL=`echo "$SVN_INFO" | perl -ne 'print "$1" if /URL: +(.+)/;'`
+
+# Extract branch name w.r.t. repository root, e.g. branches/LOFAR-Task1234
+BRANCH=`echo "$URL" | perl -ne 'print "$1" if m|^\Q'"$REPO"'\E/?(.+)|;'`
+
+# Define $BRANCH_NAME if all the above succeeded
+if [ -n "$REPO" -a -n "$BRANCH" ]; then
+  export BRANCH_NAME=${BRANCH}
+else
+  export BRANCH_NAME=UNKNOWN
+fi
+
+# ----- BRANCH_URL = https://svn.astron.nl/LOFAR/branches/LOFAR-Task1234 -----
+# ----- BRANCH_URL = https://svn.astron.nl/LOFAR/trunk -----
+# ----- BRANCH_URL = https://svn.astron.nl/LOFAR/tags/LOFAR-Release-2_15_1 -----
+
+export BRANCH_URL="$URL"
+
+# ----- REVISION = 12345 -----
+
+export REVISION=`echo "$SVN_INFO" | perl -ne 'print "$1" if /Revision: +(.+)/;'`
+
+# ----- NOW = 2016-01-01 10:11:12 -----
+
+export NOW="`date -u +'%F %T'`"
+
+# ----- Process input -----
+
+# Insert our knowledge when processing stdin -> stdout
+envsubst '$BRANCH_NAME $BRANCH_URL $REVISION $NOW'
+
