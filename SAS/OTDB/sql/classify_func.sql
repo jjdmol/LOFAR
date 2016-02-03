@@ -34,7 +34,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION classify(INT4, INT4, INT2)
-  RETURNS BOOLEAN AS '
+  RETURNS BOOLEAN AS $$
     --  $Id$
 	DECLARE
 		vFunction				INT2 := 1;
@@ -52,7 +52,7 @@ CREATE OR REPLACE FUNCTION classify(INT4, INT4, INT2)
 		SELECT isAuthorized(vAuthToken, $2, vFunction, $3::int4) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized.\';
+			RAISE EXCEPTION 'Not authorized.';
 			RETURN FALSE;
 		END IF;
 
@@ -62,7 +62,7 @@ CREATE OR REPLACE FUNCTION classify(INT4, INT4, INT2)
 		FROM	classification
 		WHERE	id = $3;
 		IF NOT FOUND THEN
-			RAISE EXCEPTION \'Classification % does not exist\', $3;
+			RAISE EXCEPTION 'Classification % does not exist', $3;
 			RETURN FALSE;
 		END IF;
 
@@ -83,7 +83,7 @@ CREATE OR REPLACE FUNCTION classify(INT4, INT4, INT2)
 			AND		classif  = $3
 			AND		state    = TSactive;
 			IF FOUND THEN
-				RAISE EXCEPTION \'Already an active hardware tree with same classification.\';
+				RAISE EXCEPTION 'Already an active hardware tree with same classification.';
 				RETURN FALSE;
 			END IF;
 		END IF;
@@ -95,5 +95,5 @@ CREATE OR REPLACE FUNCTION classify(INT4, INT4, INT2)
 
 		RETURN TRUE;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

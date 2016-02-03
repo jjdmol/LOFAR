@@ -37,7 +37,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(150), INT2)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
     --  $Id$
 	DECLARE
 		vParRefID	PICparamref.paramID%TYPE;
@@ -58,13 +58,13 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(150), INT2)
 	  FROM	 param_type m, pvss_type s
 	  WHERE	 s.id = $3 and s.name = m.name;
 	  IF NOT FOUND THEN
-		RAISE EXCEPTION \'Parametertype %d can not be converted\', $3;
+		RAISE EXCEPTION 'Parametertype %d can not be converted', $3;
 	  END IF;
 
 	  -- be sure NODE exists in reference table.
 	  -- name has format like xxx:aaa.bbb.ccc.ddd or xxx:aaa.bbb.ccc.ddd_eee
-	  vNodename := rtrim($2, \'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890_\');			-- xxx:aaa_bbb_ccc.
-	  vNodename := rtrim(vNodename, \'.\');				-- xxx:aaa.bbb.ccc
+	  vNodename := rtrim($2, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890_');			-- xxx:aaa_bbb_ccc.
+	  vNodename := rtrim(vNodename, '.');				-- xxx:aaa.bbb.ccc
 	  vFullname := $2;									-- xxx:aaa.bbb.ccc.ddd_eee
 	  IF length(vNodename) > 0 THEN
 	    SELECT paramID 
@@ -99,16 +99,16 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(150), INT2)
 	  END IF;
 
 	  -- add record to the PIC hierachical tree
-	  vBasename := \'\';
+	  vBasename := '';
 	  vFieldnr  := 1;
 	  vParentID := 0;
 	  vNodeID   := 0;
 	  vParamIndex := -1;		-- TODO
 	  LOOP
-		vNodename := split_part(vFullname, \'.\', vFieldnr);
+		vNodename := split_part(vFullname, '.', vFieldnr);
 		EXIT WHEN length(vNodename) <= 0;
 		IF vFieldnr != 1 THEN
-		  vBasename := vBasename || \'.\';
+		  vBasename := vBasename || '.';
 		END IF;
 		vBasename := vBasename || vNodename;
 
@@ -119,8 +119,8 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(150), INT2)
 		AND		parentID = vParentID
 		AND		name     = vBasename;
 		IF NOT FOUND THEN
-		  vNodeID  := nextval(\'PIChierarchID\');
-		  IF length(split_part(vFullname, \'.\', vFieldnr+1)) <= 0 THEN
+		  vNodeID  := nextval('PIChierarchID');
+		  IF length(split_part(vFullname, '.', vFieldnr+1)) <= 0 THEN
 			vLeaf := TRUE;
 		  ELSE
 			vLeaf := FALSE;
@@ -142,5 +142,5 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(150), INT2)
 
 	  RETURN vNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

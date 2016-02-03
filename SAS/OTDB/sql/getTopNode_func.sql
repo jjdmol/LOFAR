@@ -34,7 +34,7 @@
 -- Types:	OTDBnode
 --
 CREATE OR REPLACE FUNCTION getTopNode(INT4)
-  RETURNS OTDBnode AS '
+  RETURNS OTDBnode AS $$
     --  $Id$
 	DECLARE
 		TThardware CONSTANT	INT2 := 10;
@@ -49,7 +49,7 @@ CREATE OR REPLACE FUNCTION getTopNode(INT4)
 		FROM	OTDBtree
 		WHERE	treeID = $1;
 		IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Tree % does not exist\', $1;
+		  RAISE EXCEPTION 'Tree % does not exist', $1;
 		END IF;
 
 		IF vTreeType = TThardware THEN
@@ -60,7 +60,7 @@ CREATE OR REPLACE FUNCTION getTopNode(INT4)
 				 h.index,
 				 h.leaf,
 				 1::int2,
-				 \'1\'::text,		-- limits
+				 '1'::text,		-- limits
 				 r.description
 		  INTO	 vNode
 		  FROM	 PIChierarchy h
@@ -92,7 +92,7 @@ CREATE OR REPLACE FUNCTION getTopNode(INT4)
 				 h.index,
 				 h.leaf,
 				 1::int2,
-				 \'1\'::text,		--	limits,
+				 '1'::text,		--	limits,
 				 n.description
 		  INTO	 vNode
 		  FROM	 VIChierarchy h
@@ -104,5 +104,5 @@ CREATE OR REPLACE FUNCTION getTopNode(INT4)
 
 		RETURN vNode;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

@@ -36,7 +36,7 @@
 -- TODO: we should also use the index??
 --
 CREATE OR REPLACE FUNCTION getVTChildren(INT4, TEXT)
-  RETURNS SETOF OTDBnode AS '
+  RETURNS SETOF OTDBnode AS $$
     --  $Id$
 	DECLARE
 		vRecord		RECORD;
@@ -44,7 +44,7 @@ CREATE OR REPLACE FUNCTION getVTChildren(INT4, TEXT)
 	BEGIN
 
 	  -- get result
-	  FOR vRecord IN EXECUTE \'
+	  FOR vRecord IN EXECUTE '
 	    SELECT t.nodeid,
 			   t.parentid, 
 			   t.originid,
@@ -53,15 +53,15 @@ CREATE OR REPLACE FUNCTION getVTChildren(INT4, TEXT)
 			   t.leaf,
 			   t.instances,
 			   t.limits,
-			   \\\'\\\'::text 
+			   \'\'::text 
 		FROM   VICtemplate t
-		WHERE  t.treeID = \' || $1 || \'
-		AND	   t.parentID in (\' || $2 || \')
-		ORDER BY t.leaf, t.name, t.index \'
+		WHERE  t.treeID = ' || $1 || '
+		AND	   t.parentID in (' || $2 || ')
+		ORDER BY t.leaf, t.name, t.index '
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

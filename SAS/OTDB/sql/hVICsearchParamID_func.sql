@@ -35,7 +35,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION hVICsearchParamID(VARCHAR(150))
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
     --  $Id$
 	DECLARE
 	  vDotPos		INT4;
@@ -51,7 +51,7 @@ CREATE OR REPLACE FUNCTION hVICsearchParamID(VARCHAR(150))
 	  vParentID := 0;
 	  vNodeID   := 0;
 	  LOOP
-		vNodename := split_part(vKey, \'.\', vFieldnr);
+		vNodename := split_part(vKey, '.', vFieldnr);
 		EXIT WHEN length(vNodename) <= 0;
 
 		-- TODO: this will not work for shared VIs (does not start at top)
@@ -70,6 +70,6 @@ CREATE OR REPLACE FUNCTION hVICsearchParamID(VARCHAR(150))
 		
 	  RETURN vNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 

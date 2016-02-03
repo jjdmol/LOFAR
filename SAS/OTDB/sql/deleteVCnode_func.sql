@@ -37,7 +37,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION removeVCnode(INT4, INT4)
-  RETURNS BOOLEAN AS '
+  RETURNS BOOLEAN AS $$
     --  $Id$
 	DECLARE
 		vFunction		INT2 := 1;
@@ -51,7 +51,7 @@ CREATE OR REPLACE FUNCTION removeVCnode(INT4, INT4)
 		SELECT isAuthorized(vAuthToken, 0, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized\';
+			RAISE EXCEPTION 'Not authorized';
 			RETURN FALSE;
 		END IF;
 
@@ -60,7 +60,7 @@ CREATE OR REPLACE FUNCTION removeVCnode(INT4, INT4)
 		INTO	vCount
 		WHERE	n.nodeID=$2 AND t.originID = n.nodeID AND t.leaf = false;
 		IF vCount <> 0 THEN
-			RAISE EXCEPTION \'There are template trees that use this component\';
+			RAISE EXCEPTION 'There are template trees that use this component';
 			RETURN FALSE;
 		END IF;
 
@@ -68,7 +68,7 @@ CREATE OR REPLACE FUNCTION removeVCnode(INT4, INT4)
 		INTO	vCount
 		WHERE	n.nodeID=$2 AND h.paramRefID = n.nodeID AND h.leaf = false;
 		IF vCount <> 0 THEN
-			RAISE EXCEPTION \'There are runtime trees that use this component\';
+			RAISE EXCEPTION 'There are runtime trees that use this component';
 			RETURN FALSE;
 		END IF;
 
@@ -77,7 +77,7 @@ CREATE OR REPLACE FUNCTION removeVCnode(INT4, INT4)
 		INTO	vCount
 		WHERE	p.nodeid=$2 and t.originID = p.paramID AND t.leaf = true;
 		IF vCount <> 0 THEN
-			RAISE EXCEPTION \'There are template trees that use its parameters\';
+			RAISE EXCEPTION 'There are template trees that use its parameters';
 			RETURN FALSE;
 		END IF;
 
@@ -85,7 +85,7 @@ CREATE OR REPLACE FUNCTION removeVCnode(INT4, INT4)
 		INTO	vCount
 		WHERE	p.nodeid=$2 and h.paramRefID = p.paramID AND h.leaf = true;
 		IF vCount <> 0 THEN
-			RAISE EXCEPTION \'There are runtime trees that use its parameters \';
+			RAISE EXCEPTION 'There are runtime trees that use its parameters ';
 			RETURN FALSE;
 		END IF;
 
@@ -98,5 +98,5 @@ CREATE OR REPLACE FUNCTION removeVCnode(INT4, INT4)
 
 		RETURN TRUE;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

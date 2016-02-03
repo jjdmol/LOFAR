@@ -36,7 +36,7 @@
 --
 CREATE OR REPLACE FUNCTION saveVICparamDef(INT4, INT4, VARCHAR(150), INT2, 
 							INT2, INT2, INT2, BOOLEAN, TEXT, TEXT)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
     --  $Id$
 	DECLARE
 		vParamID		VICparamDef.paramID%TYPE;
@@ -54,19 +54,19 @@ CREATE OR REPLACE FUNCTION saveVICparamDef(INT4, INT4, VARCHAR(150), INT2,
 		SELECT isAuthorized(vAuthToken, 0, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized\';
+			RAISE EXCEPTION 'Not authorized';
 			RETURN FALSE;
 		END IF;
 
 		-- assure clean input.
-		if substr($3,1,1) = \'#\' THEN
+		if substr($3,1,1) = '#' THEN
 		  vVersionNr := getVersionNr($3);
-		  vName		 := childNodeName(translate(cleanNodeName($3), \'.\', \' \'), vVersionNr);
+		  vName		 := childNodeName(translate(cleanNodeName($3), '.', ' '), vVersionNr);
 		ELSE
-		  vName        := rtrim(translate($3, \'.\', \' \'));	
+		  vName        := rtrim(translate($3, '.', ' '));	
 		END IF;
-	    vLimits      := replace($9, \'\\\'\', \'\');
-		vDescription := replace($10, \'\\\'\', \'\');
+	    vLimits      := replace($9, '\'', '');
+		vDescription := replace($10, '\'', '');
 
 		-- check if node exists
 		SELECT	paramID
@@ -75,7 +75,7 @@ CREATE OR REPLACE FUNCTION saveVICparamDef(INT4, INT4, VARCHAR(150), INT2,
 		WHERE	name = vName
 		AND		nodeID = $2;
 		IF NOT FOUND THEN
-		  vParamID     := nextval(\'VICparamdefID\');
+		  vParamID     := nextval('VICparamdefID');
 		  -- create new param
 		  INSERT INTO VICparamdef
 		  VALUES	(vParamID, $2, vName, $4, $5, $6, $7, $8, vLimits, vDescription);
@@ -93,11 +93,11 @@ CREATE OR REPLACE FUNCTION saveVICparamDef(INT4, INT4, VARCHAR(150), INT2,
 		END IF;
 
 		IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Parameter % could not be saved\', $3;
+		  RAISE EXCEPTION 'Parameter % could not be saved', $3;
 		  RETURN 0;
 		END IF;
 
 		RETURN vParamID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

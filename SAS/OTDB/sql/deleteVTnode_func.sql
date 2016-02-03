@@ -30,7 +30,7 @@
 -- Tables:	VICtemplate	delete
 --
 CREATE OR REPLACE FUNCTION removeVTparameters(INT4)
-  RETURNS VOID AS '
+  RETURNS VOID AS $$
     --  $Id$
 	BEGIN
 		DELETE
@@ -39,7 +39,7 @@ CREATE OR REPLACE FUNCTION removeVTparameters(INT4)
 				AND leaf = TRUE;
 	  RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- helper function
 -- removeVTleafNode(nodeID)
@@ -49,7 +49,7 @@ CREATE OR REPLACE FUNCTION removeVTparameters(INT4)
 -- Tables:	VICtemplate	delete
 --
 CREATE OR REPLACE FUNCTION removeVTleafNode(INT4)
-  RETURNS VOID AS '
+  RETURNS VOID AS $$
     --  $Id$
 	BEGIN
 		-- remove parameters
@@ -62,7 +62,7 @@ CREATE OR REPLACE FUNCTION removeVTleafNode(INT4)
 	
 		RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- recursive helper function
 -- removeVTsubTree(nodeID)
@@ -72,7 +72,7 @@ CREATE OR REPLACE FUNCTION removeVTleafNode(INT4)
 -- Tables:	VICtemplate	delete
 --
 CREATE OR REPLACE FUNCTION removeVTsubTree(INT4)
-  RETURNS VOID AS '
+  RETURNS VOID AS $$
     --  $Id$
 	DECLARE
 		vChild		RECORD;
@@ -92,7 +92,7 @@ CREATE OR REPLACE FUNCTION removeVTsubTree(INT4)
 
 		RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- removeNode (authToken, treeID, nodeID)
@@ -107,7 +107,7 @@ CREATE OR REPLACE FUNCTION removeVTsubTree(INT4)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION removeVTnode(INT4, INT4, INT4)
-  RETURNS BOOLEAN AS '
+  RETURNS BOOLEAN AS $$
     --  $Id$
 	DECLARE
 		vFunction		INT2 := 1;
@@ -120,7 +120,7 @@ CREATE OR REPLACE FUNCTION removeVTnode(INT4, INT4, INT4)
 		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized\';
+			RAISE EXCEPTION 'Not authorized';
 			RETURN FALSE;
 		END IF;
 
@@ -129,5 +129,5 @@ CREATE OR REPLACE FUNCTION removeVTnode(INT4, INT4, INT4)
 
 		RETURN TRUE;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

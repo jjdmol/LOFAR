@@ -34,7 +34,7 @@
 -- Types:	OTDBnodeDef
 --
 CREATE OR REPLACE FUNCTION getVCNodeList(VARCHAR(150), INT4, BOOLEAN)
-  RETURNS SETOF OTDBnodeDef AS '
+  RETURNS SETOF OTDBnodeDef AS $$
     --  $Id$
 	DECLARE
 		vRecord			RECORD;
@@ -42,18 +42,18 @@ CREATE OR REPLACE FUNCTION getVCNodeList(VARCHAR(150), INT4, BOOLEAN)
 
 	BEGIN
 	  IF $2 <> 0 THEN
-		vRestriction := \' AND version = \' || $2;
+		vRestriction := ' AND version = ' || $2;
 	  ELSE
-		vRestriction := \'\';
+		vRestriction := '';
 	  END IF;
 
 	  IF $3 = TRUE THEN
-		vRestriction := \' EXCEPT SELECT n.* FROM VICnodeDEF n, VICparamDef p \' ||
-						\' WHERE cleanNodeName(p.name) = n.name\';
+		vRestriction := ' EXCEPT SELECT n.* FROM VICnodeDEF n, VICparamDef p ' ||
+						' WHERE cleanNodeName(p.name) = n.name';
 	  END IF;
 
 	  -- do selection
-	  FOR vRecord IN EXECUTE \'
+	  FOR vRecord IN EXECUTE '
 		SELECT nodeID,
 			   name,
 			   version,
@@ -61,11 +61,11 @@ CREATE OR REPLACE FUNCTION getVCNodeList(VARCHAR(150), INT4, BOOLEAN)
 			   constraints,
 			   description
 		FROM   VICnodedef 
-		WHERE  name LIKE \' || chr(39) || $1 || chr(39) || vRestriction
+		WHERE  name LIKE ' || chr(39) || $1 || chr(39) || vRestriction
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

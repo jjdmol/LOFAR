@@ -35,7 +35,7 @@
 -- Types:	treeState
 --
 CREATE OR REPLACE FUNCTION getStateList(INT4, BOOLEAN, TIMESTAMP, TIMESTAMP)
-  RETURNS SETOF stateInfo AS '
+  RETURNS SETOF stateInfo AS $$
     --  $Id$
 	DECLARE
 		vRecord		RECORD;
@@ -45,36 +45,36 @@ CREATE OR REPLACE FUNCTION getStateList(INT4, BOOLEAN, TIMESTAMP, TIMESTAMP)
 	BEGIN
 	  -- Construct where clause
 	  IF $2 = TRUE THEN
-		vKeyField := \'s.momID\';
+		vKeyField := 's.momID';
 	  ELSE
-		vKeyField := \'s.treeID\';
+		vKeyField := 's.treeID';
 	  END IF;
 	
 	  -- create query for treeID (when filled)
-	  vQuery := \'\';
+	  vQuery := '';
 	  IF $1 > 0 THEN
 	    -- add selection on treeID
-	    vQuery := \'WHERE \' || vKeyField || \' =\' || chr(39) || $1 || chr(39);
+	    vQuery := 'WHERE ' || vKeyField || ' =' || chr(39) || $1 || chr(39);
 	    IF $3 IS NOT NULL THEN
-		    vQuery := vQuery || \' AND \';
+		    vQuery := vQuery || ' AND ';
 	    END IF;
 	  END IF;
 
 	  -- append query with timestamp restriction(s)
 	  IF $3 IS NOT NULL THEN
-		IF vQuery = \'\' THEN
-		  vQuery := \'WHERE \';
+		IF vQuery = '' THEN
+		  vQuery := 'WHERE ';
 		END IF;
 	    IF $4 IS NULL THEN
-		  vQuery := vQuery || \'s.timestamp >=\' || chr(39) || $3 || chr(39);
+		  vQuery := vQuery || 's.timestamp >=' || chr(39) || $3 || chr(39);
 		ELSE
-		  vQuery := vQuery || \'s.timestamp >=\' || chr(39) || $3 || chr(39)
-					   || \' AND s.timestamp <\' || chr(39) || $4 || chr(39);
+		  vQuery := vQuery || 's.timestamp >=' || chr(39) || $3 || chr(39)
+					   || ' AND s.timestamp <' || chr(39) || $4 || chr(39);
 		END IF;
 	  END IF;
 
 	  -- do selection
-	  FOR vRecord IN  EXECUTE \'
+	  FOR vRecord IN  EXECUTE '
 		SELECT s.treeID, 
 			   s.momID,
 			   s.state, 
@@ -82,14 +82,11 @@ CREATE OR REPLACE FUNCTION getStateList(INT4, BOOLEAN, TIMESTAMP, TIMESTAMP)
 			   s.timestamp 
 		FROM   StateHistory s 
 			   INNER JOIN OTDBuser u ON s.userid = u.userid
-		\' || vQuery || \'
-		ORDER BY s.timestamp ASC\'
+		' || vQuery || '
+		ORDER BY s.timestamp ASC'
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
-
-
-
+$$ LANGUAGE plpgsql;
