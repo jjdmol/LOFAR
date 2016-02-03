@@ -83,7 +83,8 @@ try:
                 self.assertEqual((retvalues_getArchivingStatus,'OK') , rpc.getArchivingStatus())
 
         # create and run the service
-        with createService(busname=busname) as testservice:
+        with Service("GetServerState",DataMonitorQueryService,busname=busname,numthreads=4,use_service_methods=True) as testservice:
+            #with createService(busname=busname) as testservice:
 
             # and run all tests
             unittest.main(verbosity=2)
