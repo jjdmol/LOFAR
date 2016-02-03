@@ -174,6 +174,7 @@ def check_output(args, stderr = None, execute = True, timeout_s = None):
 
     '''
     logging.debug(' '.join(args))
+    logging.debug(' '.join(args))
     if execute:
         if timeout_s is None:
             return subprocess.Popen(args,
@@ -184,35 +185,34 @@ def check_output(args, stderr = None, execute = True, timeout_s = None):
         else:
             start_date = time.time()
             process = subprocess.Popen(args,
-                                       shell  = False,
-                                       stdout = subprocess.PIPE,
-                                       stdin  = subprocess.PIPE,
-                                       stderr = stderr)
-            
-            proc_ready = True
-            while process.poll() == None:  # while poll() returns None, process is still running.
+                shell  = False,
+                stdout = subprocess.PIPE,
+                stdin  = subprocess.PIPE,
+                stderr = stderr)
+            stdout = []
+            out = ''
+            while True:
+                out = process.stdout.read(1)
+                if out == '' and process.poll() != None:
+                    break
+                if out != '':
+                    stdout.append(out)
                 if time.time() - start_date > timeout_s:
-                    proc_ready = False
                     logging.error('timeout after %6.3f s: terminating command %s ',
                                   timeout_s, ' '.join(args))
-                    break
-                time.sleep(1.0)
-            
+                    os.kill(process.pid, signal.SIGTERM)
+                    raise RuntimeError('%s killed with signal %d; output:\n%r' %
+                                       (' '.join(args), signal.SIGTERM,
+                                        ''.join(stdout)))
             logging.debug('process.poll(): %r', process.poll())
             if process.poll() < 0:
                 raise RuntimeError('%s killed with signal %d' %
                                    (' '.join(args), process.poll()))
-            
-            if proc_ready:
-                return process.communicate()[0]
-            
-            os.kill(process.pid, signal.SIGTERM)
-            raise RuntimeError('%s killed with signal %d; output:\n%s' %
-                              (' '.join(args), signal.SIGTERM,
-                               ''.join(stdout)))
-            return ''
+            return ''.join(stdout)
     else:
         return ''
+
+
 
 def gmtime_tuple(date_s):
     r'''
