@@ -74,7 +74,8 @@ CalibrationControl::CalibrationControl(const string&	cntlrName) :
 	itsState			(CTState::NOSTATE)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
-	LOG_INFO(Version::getInfo<StationCUVersion>("CalibrationControl"));
+
+    LOG_INFO(Version::getInfo<StationCUVersion>("CalibrationControl"));
 
 	// First readin our observation related config file.
 	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);
@@ -153,17 +154,17 @@ void    CalibrationControl::setState(CTState::CTstateNr     newState)
 //
 // convertFilterSelection2int(string)
 //
-int32 CalibrationControl::convertFilterSelection2int(const string&	filterselection)
+int32 CalibrationControl::convertFilterSelection2int(const string&	bandselection)
 {
-    if (filterselection == "LBA_10_70")   { return(BAND_10_70);   }  // 160 Mhz
-    if (filterselection == "LBA_10_90")   { return(BAND_10_90);   }  // 200 Mhz
-    if (filterselection == "LBA_30_70")   { return(BAND_30_70);   }  // 160 Mhz
-    if (filterselection == "LBA_30_90")   { return(BAND_30_90);   }  // 200 Mhz
-	if (filterselection == "HBA_110_190") { return(BAND_110_190); }  // 200 Mhz
-	if (filterselection == "HBA_170_230") { return(BAND_170_230); }  // 160 Mhz
-	if (filterselection == "HBA_210_250") { return(BAND_210_250); }  // 200 Mhz
+    if (bandselection == "LBA_10_70")   { return(BAND_10_70);   }  // 160 Mhz
+    if (bandselection == "LBA_10_90")   { return(BAND_10_90);   }  // 200 Mhz
+    if (bandselection == "LBA_30_70")   { return(BAND_30_70);   }  // 160 Mhz
+    if (bandselection == "LBA_30_90")   { return(BAND_30_90);   }  // 200 Mhz
+	if (bandselection == "HBA_110_190") { return(BAND_110_190); }  // 200 Mhz
+	if (bandselection == "HBA_170_230") { return(BAND_170_230); }  // 160 Mhz
+	if (bandselection == "HBA_210_250") { return(BAND_210_250); }  // 200 Mhz
 
-	LOG_WARN_STR ("filterselection value '" << filterselection << "' not recognized");
+	LOG_WARN_STR ("bandselection value '" << bandselection << "' not recognized");
 	return (BAND_UNDEFINED);
 }
 
@@ -631,9 +632,7 @@ bool	CalibrationControl::startCalibration()
 		CALStartEvent calStartEvent;
 		calStartEvent.name   = itsObsPar->beams[i].name;
 		StationConfig		config;
-		// TODO: As long as the AntennaArray.conf uses different names as SAS we have to use this dirty hack.
-//		calStartEvent.parent = itsObsPar->getAntennaArrayName(config.hasSplitters);
-		calStartEvent.antennaSet = AS->antennaField(itsObsPar->beams[i].antennaSet);
+		calStartEvent.antennaSet = itsObsPar->beams[i].antennaSet;
 		calStartEvent.band = convertFilterSelection2int(itsObsPar->filter);
 		calStartEvent.rcuMask = itsObsPar->getRCUbitset(0, 0, itsObsPar->beams[i].antennaSet) &
 								AS->RCUallocation(itsObsPar->beams[i].antennaSet);
