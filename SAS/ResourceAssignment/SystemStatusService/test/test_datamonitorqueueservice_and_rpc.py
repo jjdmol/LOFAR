@@ -47,7 +47,7 @@ try:
                 except Exception as e:
                     logger.error("DB connection could not be restored.")
             return self.DBconnected
-        mock.ensure_connected.returnvalue=None
+        mock.ensure_connected.returnvalue=True
 
         mock.getstatenames.return_value=[{'statename': 'Inactive', 'id': 0L}, {'statename': 'Active', 'id': 1L}]
         mock.getactivegroupnames.return_value=[{'groupname': 'storagenodes', 'id': 0L}, {'groupname': 'computenodes', 'id': 1L},
