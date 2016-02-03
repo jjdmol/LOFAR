@@ -34,7 +34,7 @@
 -- Types:	OTDBnode
 --
 CREATE OR REPLACE FUNCTION getNode(INT4, INT4)
-  RETURNS OTDBnode AS '
+  RETURNS OTDBnode AS $$
     --  $Id$
 	DECLARE
 		TThardware CONSTANT	INT2 := 10;
@@ -50,7 +50,7 @@ CREATE OR REPLACE FUNCTION getNode(INT4, INT4)
 		FROM	OTDBtree
 		WHERE	treeID = $1;
 		IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Tree % does not exist\', $1;
+		  RAISE EXCEPTION 'Tree % does not exist', $1;
 		END IF;
 
 		IF vTreeType = TThardware THEN
@@ -61,7 +61,7 @@ CREATE OR REPLACE FUNCTION getNode(INT4, INT4)
 				 h.index,
 				 h.leaf,
 				 1::int2,
-				 \'1\'::text,		-- limits
+				 '1'::text,		-- limits
 				 r.description
 		  INTO	 vNode
 		  FROM	 PIChierarchy h
@@ -127,7 +127,7 @@ CREATE OR REPLACE FUNCTION getNode(INT4, INT4)
 				   h.index,
 				   h.leaf,
 				   1::int2,
-				   \'1\'::text,		--	limits,
+				   '1'::text,		--	limits,
 				   n.description
 		    INTO   vNode
 		    FROM   VIChierarchy h
@@ -144,7 +144,7 @@ CREATE OR REPLACE FUNCTION getNode(INT4, INT4)
 			  	   h.leaf,
 				   1::int2,
 				   h.value,
---				   \'1\'::text,		--	limits,
+--				   '1'::text,		--	limits,
 				   p.description
 		    INTO   vNode
 		    FROM   VIChierarchy h
@@ -156,10 +156,10 @@ CREATE OR REPLACE FUNCTION getNode(INT4, INT4)
 
 		-- be sure 0 rows are returned when nothing is found
 		IF NOT FOUND THEN
-			RAISE EXCEPTION \'Node %,% not found\', $1, $2;
+			RAISE EXCEPTION 'Node %,% not found', $1, $2;
 		END IF;
 
 		RETURN vNode;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

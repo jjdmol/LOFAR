@@ -142,7 +142,7 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2, BOOLEAN)
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
-  RETURNS BOOLEAN AS '
+  RETURNS BOOLEAN AS $$ 
         DECLARE
                 vFunction                               INT2 := 1;
                 vTreeState                              OTDBtree.state%TYPE;
@@ -166,7 +166,7 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
                 SELECT isAuthorized(vAuthToken, $2, vFunction, $3::int4)
                 INTO   vIsAuth;
                 IF NOT vIsAuth THEN
-                        RAISE EXCEPTION \'Not authorized.\';
+                        RAISE EXCEPTION 'Not authorized.';
                         RETURN FALSE;
                 END IF;
 
@@ -176,7 +176,7 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
                 FROM    treeState
                 WHERE   id = $3;
                 IF NOT FOUND THEN
-                        RAISE EXCEPTION \'TreeState % does not exist\', $3;
+                        RAISE EXCEPTION 'TreeState % does not exist', $3;
                         RETURN FALSE;
                 END IF;
 
@@ -198,7 +198,7 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
             AND     state    = TSactive
                         AND             treeID  <> $2;
             IF FOUND THEN
-                RAISE EXCEPTION \'Already an active hardware tree of the same classification.\';
+                RAISE EXCEPTION 'Already an active hardware tree of the same classification.';
                 RETURN FALSE;
             END IF;
         END IF;
@@ -210,7 +210,7 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
 
                 SELECT  whoIs($1)
                 INTO    vUserID;
-                PERFORM addTreeState ($2, vMomID, $3, vUserID, \'\');
+                PERFORM addTreeState ($2, vMomID, $3, vUserID, '');
 
                 -- (temp?) add extra timeinfo on PIC trees.
                 IF vTreeType = TThardware THEN
@@ -246,5 +246,5 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
 
                 RETURN TRUE;
         END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

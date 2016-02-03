@@ -46,7 +46,7 @@ CREATE TYPE stateChange AS (
 );
 
 CREATE OR REPLACE FUNCTION getStateChanges(TIMESTAMP(6), TIMESTAMP(6))
-  RETURNS SETOF stateChange AS '
+  RETURNS SETOF stateChange AS $$
     --  $Id: getStateList_func.sql 30919 2015-02-05 15:26:22Z amesfoort $
 	DECLARE
 		vRecord		RECORD;
@@ -55,18 +55,18 @@ CREATE OR REPLACE FUNCTION getStateChanges(TIMESTAMP(6), TIMESTAMP(6))
 
 	BEGIN
 	  -- create query for treeID (when filled)
-	  vQuery := \'WHERE \';
+	  vQuery := 'WHERE ';
 	  IF $1 IS NOT NULL THEN
 	    IF $2 IS NULL THEN
-		  vQuery := vQuery || \'s.creation >\' || chr(39) || $1 || chr(39);
+		  vQuery := vQuery || 's.creation >' || chr(39) || $1 || chr(39);
 		ELSE
-		  vQuery := vQuery || \'s.creation >\' || chr(39) || $1 || chr(39)
-					   || \' AND s.creation <=\' || chr(39) || $2 || chr(39);
+		  vQuery := vQuery || 's.creation >' || chr(39) || $1 || chr(39)
+					   || ' AND s.creation <=' || chr(39) || $2 || chr(39);
 		END IF;
 	  END IF;
 
 	  -- do selection
-	  FOR vRecord IN  EXECUTE \'
+	  FOR vRecord IN  EXECUTE '
 		SELECT s.treeID, 
 			   s.momID,
 			   s.state, 
@@ -75,14 +75,14 @@ CREATE OR REPLACE FUNCTION getStateChanges(TIMESTAMP(6), TIMESTAMP(6))
                s.creation
 		FROM   StateHistory s 
 			   INNER JOIN OTDBuser u ON s.userid = u.userid
-		\' || vQuery || \'
-		ORDER BY s.creation ASC\'
+		' || vQuery || '
+		ORDER BY s.creation ASC'
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 
 

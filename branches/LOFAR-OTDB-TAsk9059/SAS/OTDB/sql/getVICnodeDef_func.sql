@@ -34,7 +34,7 @@
 -- Types:	OTDBnodeDef
 --
 CREATE OR REPLACE FUNCTION getVICnodedef(INT4)
-  RETURNS OTDBnodeDef AS '
+  RETURNS OTDBnodeDef AS $$
     --  $Id$
 	DECLARE
 		vRecord		RECORD;
@@ -51,12 +51,12 @@ CREATE OR REPLACE FUNCTION getVICnodedef(INT4)
 		WHERE  nodeID = $1;
 
 		IF NOT FOUND THEN
-			RAISE EXCEPTION \'Component % does not exist.\', $1;
+			RAISE EXCEPTION 'Component % does not exist.', $1;
 		END IF;
 
 		RETURN vRecord;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- getVICnodedef (name, version, classif)
@@ -70,7 +70,7 @@ CREATE OR REPLACE FUNCTION getVICnodedef(INT4)
 -- Types:	OTDBnodeDef
 --
 CREATE OR REPLACE FUNCTION getVICnodedef(VARCHAR(150), INT4, INT2)
-  RETURNS OTDBnodeDef AS '
+  RETURNS OTDBnodeDef AS $$
     --  $Id$
 	DECLARE
 		vRecord		RECORD;
@@ -84,17 +84,17 @@ CREATE OR REPLACE FUNCTION getVICnodedef(VARCHAR(150), INT4, INT2)
 			   description
 		INTO   vRecord
 		FROM   VICnodeDef
-		WHERE  name = rtrim(translate($1, \'.\', \' \'))
+		WHERE  name = rtrim(translate($1, '.', ' '))
 		AND	   version = $2
 		AND	   classif = $3;
 
 		IF NOT FOUND THEN
-			RAISE EXCEPTION \'Component %,%,% does not exist.\', $1, $2, $3;
+			RAISE EXCEPTION 'Component %,%,% does not exist.', $1, $2, $3;
 		END IF;
 
 		RETURN vRecord;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- getVICnodedef (treeID, nodename, paramname)
@@ -109,14 +109,14 @@ CREATE OR REPLACE FUNCTION getVICnodedef(VARCHAR(150), INT4, INT2)
 -- Types:	OTDBnodeDef
 --
 CREATE OR REPLACE FUNCTION getVICnodedef(INT4, VARCHAR(150), VARCHAR(150))
-  RETURNS OTDBnode AS '
+  RETURNS OTDBnode AS $$
     --  $Id$
 	DECLARE
 		vNodeID		VICtemplate.nodeID%TYPE;
 		vRecord		RECORD;
 
 	BEGIN
---RAISE WARNING \'GVND:%,%,%\', $1, $2, $3;
+--RAISE WARNING 'GVND:%,%,%', $1, $2, $3;
 		SELECT nodeid
 		INTO   vNodeID
 	 	FROM   VICtemplate
@@ -124,7 +124,7 @@ CREATE OR REPLACE FUNCTION getVICnodedef(INT4, VARCHAR(150), VARCHAR(150))
 		AND	   name = $2;
 
 		IF NOT FOUND THEN
-			RAISE EXCEPTION \'Component % does not exist in tree %.\', $2, $1;
+			RAISE EXCEPTION 'Component % does not exist in tree %.', $2, $1;
 		END IF;
 
 	    SELECT t.nodeid,
@@ -135,7 +135,7 @@ CREATE OR REPLACE FUNCTION getVICnodedef(INT4, VARCHAR(150), VARCHAR(150))
 			   t.leaf,
 			   t.instances,
 			   t.limits,
-			   \'\'::text
+			   ''::text
 --			   n.description	-- TODO: join depends on t.leaf
 		INTO   vRecord
 		FROM   VICtemplate t
@@ -144,10 +144,10 @@ CREATE OR REPLACE FUNCTION getVICnodedef(INT4, VARCHAR(150), VARCHAR(150))
 		AND	   t.name = $3;
 
 		IF NOT FOUND THEN
-			RAISE EXCEPTION \'Parameter % of component % does not exist.\', $3, $2;
+			RAISE EXCEPTION 'Parameter % of component % does not exist.', $3, $2;
 		END IF;
 
 		RETURN vRecord;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

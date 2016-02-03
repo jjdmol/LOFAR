@@ -34,7 +34,7 @@
 -- Types:	OTDBparamDef
 --
 CREATE OR REPLACE FUNCTION getVICParamDef(INT4)
-  RETURNS OTDBparamDef AS '
+  RETURNS OTDBparamDef AS $$
     --  $Id$
 	DECLARE
 		vRecord		RECORD;
@@ -55,11 +55,11 @@ CREATE OR REPLACE FUNCTION getVICParamDef(INT4)
 		WHERE	paramID = $1;
 		
 		IF NOT FOUND THEN
-			RAISE EXCEPTION \'Parameter % does not exist\', $1;
+			RAISE EXCEPTION 'Parameter % does not exist', $1;
 		END IF;
 
 	  	RETURN vRecord;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 

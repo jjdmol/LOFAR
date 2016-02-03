@@ -35,7 +35,7 @@
 -- Types:	OTDBvalue
 --
 CREATE OR REPLACE FUNCTION searchPICinPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTAMP)
-  RETURNS SETOF OTDBvalue AS '
+  RETURNS SETOF OTDBvalue AS $$
     --  $Id$
 	DECLARE
 		vRecord		RECORD;
@@ -53,16 +53,16 @@ CREATE OR REPLACE FUNCTION searchPICinPeriod(INT4, INT4, INT4, TIMESTAMP, TIMEST
 	  WHERE	 nodeID = $2;
 
 	  -- TEMP SQUIRM FOR CDR 2005-10-12
-	  vFullname := ltrim (vFullname, \'.\');
+	  vFullname := ltrim (vFullname, '.');
 	  -- END OF SQUIRM
 
 	  IF vLeaf = TRUE AND $3 = 0 THEN
-		vQuery := \'=\' || chr(39) || vFullname || chr(39);
+		vQuery := '=' || chr(39) || vFullname || chr(39);
 	  ELSE
 	    -- construct query
-	    vQuery := \'similar to \' || chr(39) || vFullname;
+	    vQuery := 'similar to ' || chr(39) || vFullname;
 	    FOR i in 1..$3 LOOP
-		  vQuery := vQuery || \'.[^\\\\\\\\.]+\';
+		  vQuery := vQuery || '.[^\\\\.]+';
 	    END LOOP;
 	    vQuery := vQuery || chr(39);
 	  END IF;
@@ -70,28 +70,28 @@ CREATE OR REPLACE FUNCTION searchPICinPeriod(INT4, INT4, INT4, TIMESTAMP, TIMEST
 	  -- append query with one or two time limits
 	  IF $5 IS NULL
 	  THEN
-	    vQuery := vQuery || \' AND k.time > \' || chr(39) || $4 || chr(39);
+	    vQuery := vQuery || ' AND k.time > ' || chr(39) || $4 || chr(39);
 	  ELSE
-	    vQuery := vQuery || \' AND k.time BETWEEN \' 
+	    vQuery := vQuery || ' AND k.time BETWEEN ' 
 						 || chr(39) || $4 || chr(39) 
-				   		 || \' AND \' || chr(39) || $5 || chr(39);
+				   		 || ' AND ' || chr(39) || $5 || chr(39);
 	  END IF;
 
 	  -- get record in paramref table
-	  FOR vRecord IN EXECUTE \'
+	  FOR vRecord IN EXECUTE '
 	    SELECT k.paramid,
 			   r.pvssname,
 			   k.value,
 			   k.time
 		FROM   PICparamref r
 			   INNER JOIN PICkvt k ON r.paramid = k.paramid
-	    WHERE  r.pvssname \' || vQuery || \'
-		ORDER BY k.paramid, k.time\'
+	    WHERE  r.pvssname ' || vQuery || '
+		ORDER BY k.paramid, k.time'
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 

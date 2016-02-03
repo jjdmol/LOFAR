@@ -25,7 +25,7 @@
 -- OTDBlogin (username, passwd)
 -- Check is to given combination of username and password is valid
 CREATE OR REPLACE FUNCTION OTDBlogin(VARCHAR(80), VARCHAR(80))
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
     --  $Id$
 	DECLARE
 		vUserNr		INT4;
@@ -42,13 +42,13 @@ CREATE OR REPLACE FUNCTION OTDBlogin(VARCHAR(80), VARCHAR(80))
 	  END IF;
 
 	  UPDATE OTDBuser
-	  SET	 lastLogin = \'now\'
+	  SET	 lastLogin = 'now'
 	  WHERE	 username = $1;
 
 	  RETURN vUserNr;
 	  -- TODO: return authToken instead.
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 
 -- OTDBauthenticate (userID, task, value)

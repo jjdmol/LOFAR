@@ -35,7 +35,7 @@
 -- Types:	OTDBvalue
 --
 CREATE OR REPLACE FUNCTION searchVHinPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTAMP)
-  RETURNS SETOF OTDBvalue AS '
+  RETURNS SETOF OTDBvalue AS $$
     --  $Id$
 	DECLARE
 		vRecord		RECORD;
@@ -46,7 +46,7 @@ CREATE OR REPLACE FUNCTION searchVHinPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTA
 		vQuery		TEXT;
 
 	BEGIN
---RAISE WARNING \'searchVH:%,%,%,%,%\', $1, $2, $3, $4, $5;
+--RAISE WARNING 'searchVH:%,%,%,%,%', $1, $2, $3, $4, $5;
 	  -- Is topNode a node or a parameter?
 	  SELECT leaf, paramRefID, name
 	  INTO	 vLeaf, vParamRefID, vFullname
@@ -55,18 +55,18 @@ CREATE OR REPLACE FUNCTION searchVHinPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTA
 	  AND	 treeID = $1;
 
 	  IF NOT FOUND THEN
-		RAISE EXCEPTION \'Parameter % not found in tree %\', $2, $1;
+		RAISE EXCEPTION 'Parameter % not found in tree %', $2, $1;
 	  END IF;
 
 	  IF vLeaf = TRUE AND $3 = 0 THEN
-		vQuery := \'=\' || chr(39) || vFullname || chr(39);
+		vQuery := '=' || chr(39) || vFullname || chr(39);
 	  ELSE
 	    -- construct query
-		vFullname = replace(vFullname, \'[\', \'\\\\\\\\[\');
-		vFullname = replace(vFullname, \']\', \'\\\\\\\\]\');
-	    vQuery := \'similar to \' || chr(39) || vFullname;
+		vFullname = replace(vFullname, '[', '\\\\[');
+		vFullname = replace(vFullname, ']', '\\\\]');
+	    vQuery := 'similar to ' || chr(39) || vFullname;
 	    FOR i in 1..$3 LOOP
-		  vQuery := vQuery || \'.[^\\\\\\\\.]+\';
+		  vQuery := vQuery || '.[^\\\\.]+';
 	    END LOOP;
 	    vQuery := vQuery || chr(39);
 	  END IF;
@@ -74,29 +74,29 @@ CREATE OR REPLACE FUNCTION searchVHinPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTA
 	  -- append query with one or two time limits
 	  IF $5 IS NULL
 	  THEN
-	    vQuery := vQuery || \' AND k.time > \' || chr(39) || $4 || chr(39);
+	    vQuery := vQuery || ' AND k.time > ' || chr(39) || $4 || chr(39);
 	  ELSE
-	    vQuery := vQuery || \' AND k.time BETWEEN \' 
+	    vQuery := vQuery || ' AND k.time BETWEEN ' 
 						 || chr(39) || $4 || chr(39) 
-				   		 || \' AND \' || chr(39) || $5 || chr(39);
+				   		 || ' AND ' || chr(39) || $5 || chr(39);
 	  END IF;
---RAISE WARNING \'Query:%\', vQuery;
+--RAISE WARNING 'Query:%', vQuery;
 	  -- get record in paramref table
-	  FOR vRecord IN EXECUTE \'
+	  FOR vRecord IN EXECUTE '
 	    SELECT h.nodeID,
 			   k.paramname,
 			   k.value,
 			   k.time
 		FROM   VICkvt k
 			   INNER JOIN VIChierarchy h ON k.paramname = h.name
-	    WHERE  k.paramname \' || vQuery || \'
-		AND	   k.treeID = \' || $1 || \'
-		ORDER BY h.nodeID, k.time\'
+	    WHERE  k.paramname ' || vQuery || '
+		AND	   k.treeID = ' || $1 || '
+		ORDER BY h.nodeID, k.time'
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 

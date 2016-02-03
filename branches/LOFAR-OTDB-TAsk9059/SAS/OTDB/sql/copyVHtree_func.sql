@@ -37,7 +37,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION copyVHparams(INT4, INT4, INT4)
-  RETURNS VOID AS '
+  RETURNS VOID AS $$
     --  $Id$
 	DECLARE
 		vParam	RECORD;
@@ -57,7 +57,7 @@ CREATE OR REPLACE FUNCTION copyVHparams(INT4, INT4, INT4)
 	  END LOOP;
 	  RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- helper function
@@ -73,7 +73,7 @@ CREATE OR REPLACE FUNCTION copyVHparams(INT4, INT4, INT4)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION copyVHleafNode(INT4, INT4, INT4)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
     --  $Id$
 	DECLARE
 		vRow		RECORD;
@@ -85,10 +85,10 @@ CREATE OR REPLACE FUNCTION copyVHleafNode(INT4, INT4, INT4)
 	  FROM	 VIChierarchy
 	  WHERE	 nodeID = $1;
 --	  IF NOT FOUND THEN
---		RAISE EXCEPTION \'node % does not exist\', $1;
+--		RAISE EXCEPTION 'node % does not exist', $1;
 --	  END IF;
 
-	  vNewNodeID := NEXTVAL(\'VIChierarchID\');
+	  vNewNodeID := NEXTVAL('VIChierarchID');
 
 	  INSERT INTO VIChierarchy (treeID, nodeID, parentID, paramRefID,
 								name, index, leaf, value)
@@ -99,7 +99,7 @@ CREATE OR REPLACE FUNCTION copyVHleafNode(INT4, INT4, INT4)
 
 	  RETURN vNewNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- recursive helper function
@@ -115,7 +115,7 @@ CREATE OR REPLACE FUNCTION copyVHleafNode(INT4, INT4, INT4)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION copyVHsubTree(INT4, INT4, INT4)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
     --  $Id$
 	DECLARE
 	  vNewNodeID	VIChierarchy.nodeID%TYPE;
@@ -138,5 +138,5 @@ CREATE OR REPLACE FUNCTION copyVHsubTree(INT4, INT4, INT4)
 
 	  RETURN vNewNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
