@@ -174,7 +174,6 @@ def check_output(args, stderr = None, execute = True, timeout_s = None):
 
     '''
     logging.debug(' '.join(args))
-    logging.debug(' '.join(args))
     if execute:
         if timeout_s is None:
             return subprocess.Popen(args,
