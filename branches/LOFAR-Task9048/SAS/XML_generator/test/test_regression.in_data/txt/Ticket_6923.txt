@@ -1,0 +1,368 @@
+projectName=LC2_040                  # be careful! Don't make typos here. Or otherwise a non-valid project will be created in mom
+mainFolderName=20141116-gr5                         # the name of the folder that will contain all blocks, if left unspecified no main folder will be created
+mainFolderDescription=Group 5
+
+BLOCK
+
+split_targets = F                       # true:create a separate target observation for every target (beam) line or false:combine them in a multi-beam observation
+calibration = none                  # internal / external / none
+create_calibrator_observations = F      # create calibration observations before target observations? (ignored if calibration = none)
+create_target_cal_beam = F              # create a calibration beam in the target observation(s)? (ignored if calibration = none)
+processing=none                      # can be one of Calibration, Preprocessing, Imaging, Pulsar, LongBaseline, none
+imagingPipeline=none                    # can be one of MSSS, standard, none
+repeat=1                                # the number of repeats of this block
+
+packageName=HBA_110-150          # the name that will be given to the package folder that contains this block's observation and pipelines
+packageDescription=HBA 110-150
+packageTag=                             # optional tag that will be prepended before every observation and pipeline name/description (Max 8 characters).
+
+antennaMode=HBA Dual
+clock=200 MHz
+instrumentFilter=110-190 MHz
+numberOfBitsPerSample=8
+integrationTime=1.0
+channelsPerSubband=1
+stationList=core                        # comma-separated list of station names and/or the following aliasses: core, superterp, remote, international, all, nl
+tbbPiggybackAllowed=false
+###### Which data types should be produced: ######
+correlatedData=F
+coherentStokesData=T
+incoherentStokesData=F
+flysEye=F
+coherentDedisperseChannels=False
+###### Coherent Stokes parameters ######
+subbandsPerFileCS=34
+numberCollapsedChannelsCS=1
+stokesDownsamplingStepsCS=1
+whichCS=XXYY
+###### Incoherent Stokes parameters ######
+subbandsPerFileIS=34
+numberCollapsedChannelsIS=1
+stokesDownsamplingStepsIS=1
+whichIS=I
+
+targetDuration_s=720                    # duration of target observations in seconds
+
+Global_Subbands=55..258;204
+
+
+# startTimeUTC, the start time of the first observation. format: yyyy-MM-dd hh:mm:ss
+# un-comment the startTimeUTC to have the observation start times generated
+startTimeUTC=2014-11-16 05:00:00
+
+startTimeUTC=2014-11-16 05:00:00
+# timeStep's in seconds
+timeStep1=60
+timeStep2=60
+
+targetBeams=
+2.1478470106493823;0.51756269982438086;Tile Beam;116;1;;;F
+TAB:
+c;2.1478470106493823;0.51756269982438086
+
+2.2245199428269369;0.46733003925315525;GJ 1111;;;;;F
+TAB:
+c;2.2245199428269369;0.46733003925315525
+c;2.2115821806921634;0.46465915220255471
+
+2.0711740784718282;0.56779536039560641;PSR B0751+32;;;;;F
+TAB:
+c;2.0711740784718282;0.56779536039560641
+c;2.0886045362673911;0.57229612820418674
+
+2.0557911129638931;0.31638263544495809;PSR J0751+1807;55..122;68;;;F
+TAB:
+c;2.0557911129638931;0.31638263544495809
+
+BLOCK
+
+split_targets = F                       # true:create a separate target observation for every target (beam) line or false:combine them in a multi-beam observation
+calibration = none                  	# internal / external / none
+create_calibrator_observations = F      # create calibration observations before target observations? (ignored if calibration = none)
+create_target_cal_beam = F              # create a calibration beam in the target observation(s)? (ignored if calibration = none)
+processing=none                      	# can be one of Calibration, Preprocessing, Imaging, Pulsar, LongBaseline, none
+imagingPipeline=none                    # can be one of MSSS, standard, none
+repeat=1                                # the number of repeats of this block
+
+packageName=HBA_150-190          	# the name that will be given to the package folder that contains this block's observation and pipelines
+packageDescription=HBA 150-190
+packageTag=                             # optional tag that will be prepended before every observation and pipeline name/description (Max 8 characters).
+
+antennaMode=HBA Dual
+clock=200 MHz
+instrumentFilter=110-190 MHz
+numberOfBitsPerSample=8
+integrationTime=1.0
+channelsPerSubband=1
+stationList=core                        # comma-separated list of station names and/or the following aliasses: core, superterp, remote, international, all, nl
+tbbPiggybackAllowed=false
+###### Which data types should be produced: ######
+correlatedData=F
+coherentStokesData=T
+incoherentStokesData=F
+flysEye=F
+coherentDedisperseChannels=False
+###### Coherent Stokes parameters ######
+subbandsPerFileCS=34
+numberCollapsedChannelsCS=1
+stokesDownsamplingStepsCS=1
+whichCS=XXYY
+###### Incoherent Stokes parameters ######
+subbandsPerFileIS=34
+numberCollapsedChannelsIS=1
+stokesDownsamplingStepsIS=1
+whichIS=I
+
+targetDuration_s=720                    # duration of target observations in seconds
+
+Global_Subbands=256..459;204
+
+
+# startTimeUTC, the start time of the first observation. format: yyyy-MM-dd hh:mm:ss
+# un-comment the startTimeUTC to have the observation start times generated
+startTimeUTC=2014-11-16 05:15:00
+
+startTimeUTC=2014-11-16 05:15:00
+# timeStep's in seconds
+timeStep1=60
+timeStep2=60
+
+targetBeams=
+2.1478470106493823;0.51756269982438086;Tile Beam;256;1;;;F
+TAB:
+c;2.1478470106493823;0.51756269982438086
+
+2.2245199428269369;0.46733003925315525;GJ 1111;;;;;F
+TAB:
+c;2.2245199428269369;0.46733003925315525
+c;2.2115821806921634;0.46465915220255471
+
+2.0711740784718282;0.56779536039560641;PSR B0751+32;;;;;F
+TAB:
+c;2.0711740784718282;0.56779536039560641
+c;2.0886045362673911;0.57229612820418674
+
+2.0557911129638931;0.31638263544495809;PSR J0751+1807;256..323;68;;;F
+TAB:
+c;2.0557911129638931;0.31638263544495809
+
+
+BLOCK
+
+split_targets = F                       # true:create a separate target observation for every target (beam) line or false:combine them in a multi-beam observation
+calibration = none                  # internal / external / none
+create_calibrator_observations = F      # create calibration observations before target observations? (ignored if calibration = none)
+create_target_cal_beam = F              # create a calibration beam in the target observation(s)? (ignored if calibration = none)
+processing=none                      # can be one of Calibration, Preprocessing, Imaging, Pulsar, LongBaseline, none
+imagingPipeline=none                    # can be one of MSSS, standard, none
+repeat=1                                # the number of repeats of this block
+
+packageName=HBA_210-250 A          # the name that will be given to the package folder that contains this block's observation and pipelines
+packageDescription=HBA 210-250 part A
+packageTag=                             # optional tag that will be prepended before every observation and pipeline name/description (Max 8 characters).
+
+antennaMode=HBA Dual
+clock=200 MHz
+instrumentFilter=210-250 MHz
+numberOfBitsPerSample=8
+integrationTime=1.0
+channelsPerSubband=1
+stationList=core                        # comma-separated list of station names and/or the following aliasses: core, superterp, remote, international, all, nl
+tbbPiggybackAllowed=false
+###### Which data types should be produced: ######
+correlatedData=F
+coherentStokesData=T
+incoherentStokesData=F
+flysEye=F
+coherentDedisperseChannels=False
+###### Coherent Stokes parameters ######
+subbandsPerFileCS=34
+numberCollapsedChannelsCS=1
+stokesDownsamplingStepsCS=1
+whichCS=XXYY
+###### Incoherent Stokes parameters ######
+subbandsPerFileIS=34
+numberCollapsedChannelsIS=1
+stokesDownsamplingStepsIS=1
+whichIS=I
+
+targetDuration_s=720                    # duration of target observations in seconds
+
+Global_Subbands=52..255;204
+
+
+# startTimeUTC, the start time of the first observation. format: yyyy-MM-dd hh:mm:ss
+# un-comment the startTimeUTC to have the observation start times generated
+startTimeUTC=2014-11-16 05:30:00
+
+startTimeUTC=2014-11-16 05:30:00
+# timeStep's in seconds
+timeStep1=60
+timeStep2=60
+
+targetBeams=
+2.1478470106493823;0.51756269982438086;Tile Beam;52;1;;;F
+TAB:
+c;2.1478470106493823;0.51756269982438086
+
+2.2245199428269369;0.46733003925315525;GJ 1111;;;;;F
+TAB:
+c;2.2245199428269369;0.46733003925315525
+c;2.2115821806921634;0.46465915220255471
+
+2.0711740784718282;0.56779536039560641;PSR B0751+32;;;;;F
+TAB:
+c;2.0711740784718282;0.56779536039560641
+c;2.0886045362673911;0.57229612820418674
+
+2.0557911129638931;0.31638263544495809;PSR J0751+1807;52..119;68;;;F
+TAB:
+c;2.0557911129638931;0.31638263544495809
+
+BLOCK
+
+
+split_targets = F                       # true:create a separate target observation for every target (beam) line or false:combine them in a multi-beam observation
+calibration = none                  # internal / external / none
+create_calibrator_observations = F      # create calibration observations before target observations? (ignored if calibration = none)
+create_target_cal_beam = F              # create a calibration beam in the target observation(s)? (ignored if calibration = none)
+processing=none                      # can be one of Calibration, Preprocessing, Imaging, Pulsar, LongBaseline, none
+imagingPipeline=none                    # can be one of MSSS, standard, none
+repeat=1                                # the number of repeats of this block
+
+packageName=LBA_10-50          # the name that will be given to the package folder that contains this block's observation and pipelines
+packageDescription=Test LBA 10-50
+packageTag=                             # optional tag that will be prepended before every observation and pipeline name/description (Max 8 characters).
+
+antennaMode=LBA Outer
+clock=200 MHz
+instrumentFilter=10-90 MHz
+numberOfBitsPerSample=8
+integrationTime=1.0
+channelsPerSubband=1
+stationList=core                        # comma-separated list of station names and/or the following aliasses: core, superterp, remote, international, all, nl
+tbbPiggybackAllowed=false
+###### Which data types should be produced: ######
+correlatedData=F
+coherentStokesData=T
+incoherentStokesData=F
+flysEye=F
+coherentDedisperseChannels=False
+###### Coherent Stokes parameters ######
+subbandsPerFileCS=34
+numberCollapsedChannelsCS=1
+stokesDownsamplingStepsCS=1
+whichCS=XXYY
+###### Incoherent Stokes parameters ######
+subbandsPerFileIS=34
+numberCollapsedChannelsIS=1
+stokesDownsamplingStepsIS=1
+whichIS=I
+
+targetDuration_s=720                    # duration of target observations in seconds
+
+Global_Subbands=54..257;204
+
+
+# startTimeUTC, the start time of the first observation. format: yyyy-MM-dd hh:mm:ss
+# un-comment the startTimeUTC to have the observation start times generated
+startTimeUTC=2014-11-16 05:45:00
+
+startTimeUTC=2014-11-16 05:45:00
+# timeStep's in seconds
+timeStep1=60
+timeStep2=60
+
+targetBeams=
+2.1478470106493823;0.51756269982438086;Tile Beam;54;1;;;F
+TAB:
+c;2.1478470106493823;0.51756269982438086
+
+2.2245199428269369;0.46733003925315525;GJ 1111;;;;;F
+TAB:
+c;2.2245199428269369;0.46733003925315525
+c;2.2115821806921634;0.46465915220255471
+
+2.0711740784718282;0.56779536039560641;PSR B0751+32;;;;;F
+TAB:
+c;2.0711740784718282;0.56779536039560641
+c;2.0886045362673911;0.57229612820418674
+
+2.0557911129638931;0.31638263544495809;PSR J0751+1807;154..221;68;;;F
+TAB:
+c;2.0557911129638931;0.31638263544495809
+
+
+BLOCK
+
+split_targets = F                       # true:create a separate target observation for every target (beam) line or false:combine them in a multi-beam observation
+calibration = none                  # internal / external / none
+create_calibrator_observations = F      # create calibration observations before target observations? (ignored if calibration = none)
+create_target_cal_beam = F              # create a calibration beam in the target observation(s)? (ignored if calibration = none)
+processing=none                      # can be one of Calibration, Preprocessing, Imaging, Pulsar, LongBaseline, none
+imagingPipeline=none                    # can be one of MSSS, standard, none
+repeat=1                                # the number of repeats of this block
+
+packageName=LBA_50-90          # the name that will be given to the package folder that contains this block's observation and pipelines
+packageDescription=Test LBA 50-90
+packageTag=                             # optional tag that will be prepended before every observation and pipeline name/description (Max 8 characters).
+
+antennaMode=LBA Outer
+clock=200 MHz
+instrumentFilter=30-90 MHz
+numberOfBitsPerSample=8
+integrationTime=1.0
+channelsPerSubband=1
+stationList=core                        # comma-separated list of station names and/or the following aliasses: core, superterp, remote, international, all, nl
+tbbPiggybackAllowed=false
+###### Which data types should be produced: ######
+correlatedData=F
+coherentStokesData=T
+incoherentStokesData=F
+flysEye=F
+coherentDedisperseChannels=False
+###### Coherent Stokes parameters ######
+subbandsPerFileCS=34
+numberCollapsedChannelsCS=1
+stokesDownsamplingStepsCS=1
+whichCS=XXYY
+###### Incoherent Stokes parameters ######
+subbandsPerFileIS=34
+numberCollapsedChannelsIS=1
+stokesDownsamplingStepsIS=1
+whichIS=I
+
+targetDuration_s=720                    # duration of target observations in seconds
+
+Global_Subbands=256..459;204
+
+
+# startTimeUTC, the start time of the first observation. format: yyyy-MM-dd hh:mm:ss
+# un-comment the startTimeUTC to have the observation start times generated
+startTimeUTC=2014-11-16 06:00:00
+
+startTimeUTC=2014-11-16 06:00:00
+# timeStep's in seconds
+timeStep1=60
+timeStep2=60
+
+targetBeams=
+2.1478470106493823;0.51756269982438086;Tile Beam;256;1;;;F
+TAB:
+c;2.1478470106493823;0.51756269982438086
+
+2.2245199428269369;0.46733003925315525;GJ 1111;;;;;F
+TAB:
+c;2.2245199428269369;0.46733003925315525
+c;2.2115821806921634;0.46465915220255471
+
+2.0711740784718282;0.56779536039560641;PSR B0751+32;;;;;F
+TAB:
+c;2.0711740784718282;0.56779536039560641
+c;2.0886045362673911;0.57229612820418674
+
+2.0557911129638931;0.31638263544495809;PSR J0751+1807;256..323;68;;;F
+TAB:
+c;2.0557911129638931;0.31638263544495809
+
+BLOCK

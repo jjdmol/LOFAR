@@ -1,0 +1,6 @@
+Crude, but effective md5sum / adler32 binary. The a32 command calculates 
+the adler32 sum of just one file. It does not really do any decent CLI 
+argument checking yet, intended just for testing purposes.
+The md5a32 binary works just like the regular md5sum binary, but if you
+specify a file (or files) as it's argument, it will also display the
+adler32 sum (as last argument).
