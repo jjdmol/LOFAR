@@ -13,8 +13,6 @@ BUSNAME     = "simpletest"
 class SSDBrpc:
 
     def __init__(self,**kwargs):
-        super(DBlistener,self).__init__(**kwargs)
-
         self.servicename = kwargs.pop("servicename", SERVICENAME)
         self.busname = kwargs.pop("busname",BUSNAME)
 
