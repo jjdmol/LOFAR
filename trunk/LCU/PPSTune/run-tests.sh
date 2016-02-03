@@ -3,10 +3,10 @@
 cd doc && make html && make latexpdf && cd ..
 
 PYTHONPATH="`pwd`:`pwd`/modules/:$PYTHONPATH"
-NOSETESTS=`which nosetests`
+NOSETESTS=`which nosetests2`
 
 if [[ ! -f "$NOSETESTS" ]] ; then
-    NOSETESTS=`which nosetests2`
+    NOSETESTS=`which nosetests`
 fi
 
 if [[ ! -f "$NOSETESTS" ]] ; then
