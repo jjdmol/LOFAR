@@ -4,7 +4,7 @@ import unittest
 import uuid
 import datetime
 from lofar.messaging import Service
-from lofar.sas.systemstatus.service.SSDBQueryService import createService
+from lofar.sas.systemstatus.service.SSDBQueryService import DataMonitorQueryService
 from lofar.sas.systemstatus.service.SSDBrpc import SSDBrpc
 
 try:
