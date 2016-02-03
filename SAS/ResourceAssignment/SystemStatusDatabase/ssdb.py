@@ -43,11 +43,11 @@ class SSDB:
         self.DBconnected = (self.conn and self.conn.status==1)
         if not self.DBconnected:
             try:
-                logger.info("trying to reconnect")
+                logger.info("[SSDBconnector]: trying to reconnect")
                 self.conn= pg.connect("dbname=%s user=%s password=%s" % (DATABASE,USER,PASSWORD))
                 self.DBconnected = (self.conn and self.conn.status==1)
             except Exception as e:
-                logger.error("DB connection could not be restored.")
+                logger.error("[SSDBconnector]: DB connection could not be restored.")
         return self.DBconnected
 
     def _doquery(self,q):
