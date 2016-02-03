@@ -58,23 +58,19 @@ class RADBPGListener(PostgresListener):
         self.subscribe('resource_claim_delete', self.onResourceClaimDeleted)
 
     def onTaskUpdated(self, payload = None):
-        payload = self._formatTimestampsAsIso(['starttime', 'endtime'], payload)
-        self._sendNotification('RADB.TaskUpdated', payload)
+        self._sendNotification('RADB.TaskUpdated', payload, ['starttime', 'endtime'])
 
     def onTaskInserted(self, payload = None):
-        payload = self._formatTimestampsAsIso(['starttime', 'endtime'], payload)
-        self._sendNotification('RADB.TaskInserted', payload)
+        self._sendNotification('RADB.TaskInserted', payload, ['starttime', 'endtime'])
 
     def onTaskDeleted(self, payload = None):
         self._sendNotification('RADB.TaskDeleted', payload)
 
     def onResourceClaimUpdated(self, payload = None):
-        payload = self._formatTimestampsAsIso(['starttime', 'endtime'], payload)
-        self._sendNotification('RADB.ResourceClaimUpdated', payload)
+        self._sendNotification('RADB.ResourceClaimUpdated', payload, ['starttime', 'endtime'])
 
     def onResourceClaimInserted(self, payload = None):
-        payload = self._formatTimestampsAsIso(['starttime', 'endtime'], payload)
-        self._sendNotification('RADB.ResourceClaimInserted', payload)
+        self._sendNotification('RADB.ResourceClaimInserted', payload, ['starttime', 'endtime'])
 
     def onResourceClaimDeleted(self, payload = None):
         self._sendNotification('RADB.ResourceClaimDeleted', payload)
@@ -88,37 +84,36 @@ class RADBPGListener(PostgresListener):
         super(RADBPGListener, self).__exit__(exc_type, exc_val, exc_tb)
         self.event_bus.close()
 
-    def _formatTimestampsAsIso(self, fields, payload):
-        '''convert all requested fields in the json payload to proper isoformat datetime strings.
-        in postgres we use timestamps without timezone
-        by convention we only enter utc values
-        but, if they are json encoded, they are not properly formatted with the in isoformat with a 'Z' at the end.
-        So, parse the requested fields, and properly format them.
+    def _formatTimestampsAsIso(self, fields, contentDict):
+        '''convert all requested fields in the contentDict to proper isoformat datetime strings.
+        In postgres we use timestamps without timezone.
+        By convention we only enter utc values.
+        But, if they are json encoded by postgress, they are not properly formatted with the in isoformat with a 'Z' at the end.
+        So, parse the requested fields, and return them as datetime.
         '''
         try:
-            obj = json.loads(payload)
             for field in fields:
                 try:
-                    timestampStr = obj[field]
+                    timestampStr = contentDict[field]
                     if timestampStr.rfind('.') > -1:
                         timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S.%f')
                     else:
                         timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S')
 
-                    timestampStr = datetime.strftime(timestamp, '%Y-%m-%dT%H:%M:%S.%fZ')
-
-                    obj[field] = timestampStr
+                    contentDict[field] = timestamp
                 except Exception as e:
                     logger.error('Could not convert field \'%s\' to datetime: %s' % (field, e))
 
-            return json.dumps(obj)
+            return contentDict
         except Exception as e:
-            logger.error('Could not parse payload: %s\n%s' % (payload, e))
+            logger.error('Could not parse payload: %s\n%s' % (contentDict, e))
 
 
-    def _sendNotification(self, subject, payload):
+    def _sendNotification(self, subject, payload, timestampFields = None):
         try:
             content = json.loads(payload)
+            if timestampFields:
+                content = self._formatTimestampsAsIso(timestampFields, content)
         except Exception as e:
             logger.error('Could not parse payload: %s\n%s' % (payload, e))
             content=None
