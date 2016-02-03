@@ -79,8 +79,8 @@ try:
                 self.assertEqual((retvalues_getactivegroupnames,'OK'), rpc.getactivegroupnames())
                 self.assertEqual((retvalues_gethostsforgid,'OK')     , rpc.gethostsforgid("4"))
                 self.assertEqual((retvalues_listall,'OK')            , rpc.listall())
-                self.assertEqual((retvalues_countactivehosts,'OK')   , rpc.countactivehosts())
-                self.assertEqual((retvalues_getArchivingStatus,'OK') , rpc.getArchivingStatus())
+                #self.assertEqual((retvalues_countactivehosts,'OK')   , rpc.countactivehosts())
+                #self.assertEqual((retvalues_getArchivingStatus,'OK') , rpc.getArchivingStatus())
 
         # create and run the service
         with Service("GetServerState",DataMonitorQueryService,busname=busname,numthreads=4,use_service_methods=True) as testservice:
@@ -88,6 +88,7 @@ try:
 
             # and run all tests
             unittest.main(verbosity=2)
+            print "done testing"
 
 finally:
     # cleanup test bus and exit
