@@ -20,35 +20,35 @@ class SSDBrpc:
 
     def getstatenames(self):
         servicename="%s.GetStateNames" %(self.servicename)
-        with RPC(servicename,busname=self.busname) as ssdb
+        with RPC(servicename,busname=self.busname) as ssdb:
             return ssdb()
 
     def getactivegroupnames(self):
         servicename="%s.GetActiveGroupNames" %(self.servicename)
-        with RPC(servicename,busname=self.busname) as ssdb
+        with RPC(servicename,busname=self.busname) as ssdb:
             return ssdb()
 
     def gethostsforgid(self,gid):
         servicename="%s.GetHostForGID" %(self.servicename)
-        with RPC(servicename,busname=self.busname) as ssdb
+        with RPC(servicename,busname=self.busname) as ssdb:
             return ssdb(gid)
 
     def counthostsforgroups(self,groups,states):
         servicename="%s.CountHostsForGroups" %(self.servicename)
-        with RPC(servicename,busname=self.busname) as ssdb
+        with RPC(servicename,busname=self.busname) as ssdb:
             return ssdb(groups,states)
 
     def listall(self):
         servicename="%s.ListAll" %(self.servicename)
-        with RPC(servicename,busname=self.busname) as ssdb
+        with RPC(servicename,busname=self.busname) as ssdb:
             return ssdb()
 
     def countactivehosts(self):
         servicename="%s.CountActiveHosts" %(self.servicename)
-        with RPC(servicename,busname=self.busname) as ssdb
+        with RPC(servicename,busname=self.busname) as ssdb:
             return ssdb()
 
     def getArchivingStatus(self,*args,**kwargs)
         servicename="%s.GetArchivingStatus" %(self.servicename)
-        with RPC(servicename,busname=self.busname) as ssdb
+        with RPC(servicename,busname=self.busname) as ssdb:
             return ssdb(*args,**kwargs)
