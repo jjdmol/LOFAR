@@ -11,7 +11,7 @@ ENV AOFLAGGER_VERSION=2.7.1
 # *******************
 #
 
-RUN sudo apt-get install -y wget cmake g++ && \
+RUN sudo apt-get install -y wget cmake g++ libxml++2.6-dev && \
     mkdir -p ${INSTALLDIR}/aoflagger/build && \
     bash -c "cd ${INSTALLDIR}/aoflagger && wget --retry-connrefused http://downloads.sourceforge.net/project/aoflagger/aoflagger-${AOFLAGGER_VERSION%%.?}.0/aoflagger-${AOFLAGGER_VERSION}.tar.bz2" && \
     cd ${INSTALLDIR}/aoflagger && tar xf aoflagger-${AOFLAGGER_VERSION}.tar.bz2 && \
@@ -21,7 +21,7 @@ RUN sudo apt-get install -y wget cmake g++ && \
     bash -c "strip ${INSTALLDIR}/aoflagger/{lib,bin}/* || true" && \
     bash -c "rm -rf ${INSTALLDIR}/aoflagger/{build,aoflagger-${AOFLAGGER_VERSION}}" && \
     bash -c "rm -rf ${INSTALLDIR}/aoflagger/aoflagger-${AOFLAGGER_VERSION}.tar.bz2" && \
-    sudo apt-get -y purge wget cmake g++ && \
+    sudo apt-get -y purge wget cmake g++ libxml++2.6-dev && \
     sudo apt-get -y autoremove
 
 #
