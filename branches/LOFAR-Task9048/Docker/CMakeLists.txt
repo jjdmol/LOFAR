@@ -27,6 +27,7 @@ configure_file(
 # Note: "template" only works as long as the sources are still around,
 # since it uses svn to query information from them.
 lofar_add_bin_scripts(${CMAKE_CURRENT_BINARY_DIR}/template)
+lofar_add_sbin_scripts(docker-build-all.sh)
 
 # Convert Dockerfile.tmpl -> Dockerfile in ${DOCKER_TEMPLATE_DIRS}
 foreach(_dir ${DOCKER_TEMPLATE_DIRS})
