@@ -24,6 +24,10 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/template.in
   ${CMAKE_CURRENT_BINARY_DIR}/template @ONLY)
 
+# Note: "template" only works as long as the sources are still around,
+# since it uses svn to query information from them.
+lofar_add_bin_scripts(${CMAKE_CURRENT_BINARY_DIR}/template)
+
 # Convert Dockerfile.tmpl -> Dockerfile in ${DOCKER_TEMPLATE_DIRS}
 foreach(_dir ${DOCKER_TEMPLATE_DIRS})
   # _src -> _dst

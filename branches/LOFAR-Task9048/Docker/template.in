@@ -43,6 +43,17 @@ fi
 
 export BRANCH_URL="$URL"
 
+# ----- VERSION = 1234 -----
+# ----- VERSION = trunk -----
+# ----- VERSION = 2_15_1 -----
+
+case "${BRANCH_NAME}" in
+  trunk)      export VERSION=trunk ;;
+  tags/*)     export VERSION=${BRANCH##tags/LOFAR-Release-} ;;
+  branches/*) export VERSION=${BRANCH##branches/LOFAR*Task} ;;
+  *)          export VERSION=latest ;;
+esac
+
 # ----- REVISION = 12345 -----
 
 export REVISION=`echo "$SVN_INFO" | perl -ne 'print "$1" if /Revision: +(.+)/;'`
@@ -58,5 +69,5 @@ export BUILD_UID=`id -u`
 # ----- Process input -----
 
 # Insert our knowledge when processing stdin -> stdout
-envsubst '$BRANCH_NAME $BRANCH_URL $REVISION $NOW $BUILD_UID'
+envsubst '$BRANCH_NAME $BRANCH_URL $VERSION $REVISION $NOW $BUILD_UID'
 
