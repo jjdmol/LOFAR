@@ -15,7 +15,7 @@ RUN sudo apt-get install -y wget cmake g++ && \
     mkdir -p ${INSTALLDIR}/aoflagger/build && \
     bash -c "cd ${INSTALLDIR}/aoflagger && wget --retry-connrefused http://downloads.sourceforge.net/project/aoflagger/aoflagger-${AOFLAGGER_VERSION%%.?}.0/aoflagger-${AOFLAGGER_VERSION}.tar.bz2" && \
     cd ${INSTALLDIR}/aoflagger && tar xf aoflagger-${AOFLAGGER_VERSION}.tar.bz2 && \
-    cd ${INSTALLDIR}/aoflagger/build && cmake -DCASACORE_ROOT_DIR=${INSTALLDIR}/casacore/ -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}/aoflagger ../aoflagger-${AOFLAGGER_VERSION} && \
+    cd ${INSTALLDIR}/aoflagger/build && cmake -DCFITSIO_ROOT_DIR=${INSTALLDIR}/cfitsio/ -DCASACORE_ROOT_DIR=${INSTALLDIR}/casacore/ -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}/aoflagger ../aoflagger-${AOFLAGGER_VERSION} && \
     cd ${INSTALLDIR}/aoflagger/build && make -j ${J} && \
     cd ${INSTALLDIR}/aoflagger/build && make install && \
     bash -c "strip ${INSTALLDIR}/aoflagger/{lib,bin}/* || true" && \
