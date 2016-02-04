@@ -45,15 +45,7 @@ export BRANCH_URL="$URL"
 
 # ----- REVISION = 12345 -----
 
-if [ "{$BRANCH}" == "trunk" ]; then
-  # Friendly special case to be able to export the output to 3rd parties.
-  # They'll want the HEAD instead of the revision we happened to build with,
-  # and we'll don't care that much for the race condition it causes for us
-  # (between generating the output and using it)
-  export REVISION=HEAD
-else
-  export REVISION=`echo "$SVN_INFO" | perl -ne 'print "$1" if /Revision: +(.+)/;'`
-fi
+export REVISION=`echo "$SVN_INFO" | perl -ne 'print "$1" if /Revision: +(.+)/;'`
 
 # ----- NOW = 2016-01-01 10:11:12 -----
 
