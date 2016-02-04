@@ -48,7 +48,7 @@ export LOFAR_BRANCH_URL="$URL"
 # ----- LOFAR_TAG = trunk -----
 # ----- LOFAR_TAG = 2_15_1 -----
 
-case "${BRANCH_NAME}" in
+case "${LOFAR_BRANCH_NAME}" in
   trunk)      export LOFAR_TAG=trunk ;;
   tags/*)     export LOFAR_TAG=${BRANCH##tags/LOFAR-Release-} ;;
   branches/*) export LOFAR_TAG=${BRANCH##branches/LOFAR*Task} ;;
