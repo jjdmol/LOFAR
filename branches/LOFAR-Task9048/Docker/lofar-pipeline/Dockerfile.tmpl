@@ -5,13 +5,20 @@ FROM lofar-base:${LOFAR_TAG}
 
 ENV AOFLAGGER_VERSION=2.7.1
 
+# Run-time dependencies
+RUN sudo apt-get install -y python-xmlrunner python-scipy liblog4cplus-1.0-4 libxml2 libboost-thread${BOOST_VERSION}.0 libboost-filesystem${BOOST_VERSION}.0 libboost-date-time${BOOST_VERSION}.0 libboost-signals${BOOST_VERSION}.0 libpng12-0 libfftw3-bin libsigc++-2.0-dev libxml++2.6-2 libgsl0ldbl openssh-client libboost-regex${BOOST_VERSION}.0 && \
+    sudo apt-get -y install python-pip python-dev && \
+    sudo pip install pyfits pywcs python-monetdb && \
+    sudo apt-get -y purge python-pip python-dev && \
+    sudo apt-get -y autoremove
+
 #
 # *******************
 #   AOFlagger
 # *******************
 #
 
-RUN sudo apt-get install -y wget cmake g++ libxml++2.6-dev && \
+RUN sudo apt-get install -y wget cmake g++ libxml++2.6-dev libpng12-dev libfftw3-dev libboost-filesystem${BOOST_VERSION}-dev libboost-date-time${BOOST_VERSION}-dev libboost-signals${BOOST_VERSION}-dev libboost-thread${BOOST_VERSION}-dev && \
     mkdir -p ${INSTALLDIR}/aoflagger/build && \
     bash -c "cd ${INSTALLDIR}/aoflagger && wget --retry-connrefused http://downloads.sourceforge.net/project/aoflagger/aoflagger-${AOFLAGGER_VERSION%%.?}.0/aoflagger-${AOFLAGGER_VERSION}.tar.bz2" && \
     cd ${INSTALLDIR}/aoflagger && tar xf aoflagger-${AOFLAGGER_VERSION}.tar.bz2 && \
@@ -21,7 +28,7 @@ RUN sudo apt-get install -y wget cmake g++ libxml++2.6-dev && \
     bash -c "strip ${INSTALLDIR}/aoflagger/{lib,bin}/* || true" && \
     bash -c "rm -rf ${INSTALLDIR}/aoflagger/{build,aoflagger-${AOFLAGGER_VERSION}}" && \
     bash -c "rm -rf ${INSTALLDIR}/aoflagger/aoflagger-${AOFLAGGER_VERSION}.tar.bz2" && \
-    sudo apt-get -y purge wget cmake g++ libxml++2.6-dev && \
+    sudo apt-get -y purge wget cmake g++ libxml++2.6-dev libpng12-dev libfftw3-dev libboost-filesystem${BOOST_VERSION}-dev libboost-date-time${BOOST_VERSION}-dev libboost-signals${BOOST_VERSION}-dev libboost-thread${BOOST_VERSION}-dev && \
     sudo apt-get -y autoremove
 
 #
@@ -29,13 +36,6 @@ RUN sudo apt-get install -y wget cmake g++ libxml++2.6-dev && \
 #   LOFAR
 # *******************
 #
-
-# Run-time dependencies
-RUN sudo apt-get install -y python-xmlrunner python-scipy liblog4cplus-1.0-4 libxml2 libboost-thread${BOOST_VERSION}.0 libboost-filesystem${BOOST_VERSION}.0 libboost-date-time${BOOST_VERSION}.0 libpng12-0 libsigc++-2.0-dev libxml++2.6-2 libgsl0ldbl openssh-client libboost-regex${BOOST_VERSION}.0 && \
-    sudo apt-get -y install python-pip python-dev && \
-    sudo pip install pyfits pywcs python-monetdb && \
-    sudo apt-get -y purge python-pip python-dev && \
-    sudo apt-get -y autoremove
 
 # Tell image build information
 ENV LOFAR_BRANCH=${LOFAR_BRANCH_NAME} \
