@@ -4,8 +4,10 @@ TAG=`echo '${LOFAR_TAG}' | template`
 
 function build {
   IMAGE=$1
-  docker build --rm --force-rm -t ${IMAGE}:${TAG} ${IMAGE} && \
+  docker build -t ${IMAGE}:${TAG} ${IMAGE}
 }
+
+cd ${LOFARROOT}/share/docker
 
 build lofar-base && \
 build lofar-pipeline && \
