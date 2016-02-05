@@ -33,6 +33,7 @@ StatusUpdateCommand     : finction to update the status of a tree.
 import sys, time, pg
 import logging
 from lofar.messaging.Service import *
+from lofar.common.util import waitForInterrupt
 
 QUERY_EXCEPTIONS = (TypeError, ValueError, MemoryError, pg.ProgrammingError, pg.InternalError)
 

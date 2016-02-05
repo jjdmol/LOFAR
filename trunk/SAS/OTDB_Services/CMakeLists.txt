@@ -17,11 +17,6 @@ install(FILES
   OTDB_Services.ini
   DESTINATION etc/supervisord.d)
 
-set(_py_files
-  factory.py
-  util.py
-  datetimeutils.py)
-
 python_install(OTDBBusListener.py
     DESTINATION lofar/sas/otdb)
 

@@ -37,6 +37,9 @@ def _args_as_content(*args,**kwargs):
     :return: Qpid message
     :raise InvalidMessage if `msg` cannot be converted into a Qpid message.
     """
+    if len(args) == 0 and len(kwargs) == 0:
+        return None
+
     HasMultipleArgs,HasKwArgs = _analyze_args(args, kwargs)
     if HasMultipleArgs:
         # convert arguments to list
@@ -74,6 +77,7 @@ class RPC():
         Initialize an Remote procedure call using:
             service= <str>    Service Name
             busname= <str>    Bus Name
+            broker= <str>     qpid broker, default None which is localhost
             timeout= <float>  Time to wait in seconds before the call is considered a failure.
             Verbose= <bool>   If True output extra logging to stdout.
 
