@@ -22,6 +22,7 @@
 
 from .messagebus import ToBus, FromBus, AbstractBusListener
 from .messages import ReplyMessage, RequestMessage
+from .exceptions import MessageBusError, MessageFactoryError
 import threading
 import time
 import uuid
@@ -100,17 +101,20 @@ class Service(AbstractBusListener):
         """
         Initialize Service object with servicename (str) and servicehandler function.
         additional parameters:
-            busname= <string>  Name of the bus in case exchanges are used in stead of queues
-            options=   <dict>  Dictionary of options passed to QPID
-            exclusive= <bool>  Create an exclusive binding so no other services can consume duplicate messages (default: True)
-            numthreads= <int>  Number of parallel threads processing messages (default: 1)
-            verbose=   <bool>  Output extra logging over stdout (default: False)
+            busname             = <string> Name of the bus in case exchanges are used in stead of queues
+            options             = <dict>   Dictionary of options passed to QPID
+            exclusive           = <bool>   Create an exclusive binding so no other services can consume duplicate messages (default: True)
+            numthreads          = <int>    Number of parallel threads processing messages (default: 1)
+            verbose             = <bool>   Output extra logging over stdout (default: False)
+            use_service_methods = <bool>   Listen to <servicename>.* and map 2nd subject part to method. (default: False)
+                                           Example: MyService.foo calls the method foo in the handler.
         """
-        self.service_name     = servicename
-        self.service_handler  = servicehandler
-        self.busname          = kwargs.pop("busname", None)
-        self.parsefullmessage = kwargs.pop("parsefullmessage", False)
-        self.handler_args     = kwargs.pop("handler_args", {})
+        self.service_name        = servicename
+        self.service_handler     = servicehandler
+        self.busname             = kwargs.pop("busname", None)
+        self.use_service_methods = kwargs.pop("use_service_methods", False)
+        self.parsefullmessage    = kwargs.pop("parsefullmessage", False)
+        self.handler_args        = kwargs.pop("handler_args", {})
 
         address = self.busname+"/"+self.service_name if self.busname else self.service_name
         kwargs["exclusive"] = True #set binding to exclusive for services
@@ -122,6 +126,11 @@ class Service(AbstractBusListener):
         options["node"]["type"] = "topic"
         kwargs["options"] = options
 
+        # if the service_handler wants to map the 2nd part of the subject to a method
+        # then we need to listen to <servicename>.*
+        servicename = self.service_name+'.*' if self.use_service_methods else self.service_name
+        address = self.busname+"/"+servicename if self.busname else self.servicename
+
         super(Service, self).__init__(address, broker, **kwargs)
 
     def start_listening(self, numthreads=None):
@@ -131,8 +140,8 @@ class Service(AbstractBusListener):
         if self.isListening():
             return
 
-        # Usually a service will be listening on a 'bus' implemented by a topic exchange
-        if self.busname != None:
+        # only on a 'bus' we already connect the reply_bus
+        if self.busname:
             self.reply_bus = ToBus(self.busname)
             self.reply_bus.open()
         else:
@@ -147,6 +156,7 @@ class Service(AbstractBusListener):
         """
         if isinstance(self.reply_bus, ToBus):
             self.reply_bus.close()
+            self.reply_bus=None
 
         # close the listeners
         super(Service, self).stop_listening()
@@ -182,7 +192,7 @@ class Service(AbstractBusListener):
         reply_msg.backtrace = backtrace
 
         # show the message content if required by the verbose flag.
-        if self.verbose == True:
+        if self.verbose:
             reply_msg.show()
 
         # send the result to the RPC client
@@ -201,7 +211,7 @@ class Service(AbstractBusListener):
                     reply_msg.subject=subject
                     dest.send(reply_msg)
             except  MessageBusError as e:
-                logger.error("Failed to send reply message to reply address %s on messagebus %s." %(subject,reply_busname))
+                logger.error("Failed to send reply message to reply address %s on messagebus %s" %(subject,reply_busname))
             return
 
         if isinstance(self.reply_bus,ToBus):
@@ -209,7 +219,7 @@ class Service(AbstractBusListener):
             try:
                 self.reply_bus.send(reply_msg)
             except MessageBusError as e:
-                logger.error("Failed to send reply message to reply address %s on messagebus %s." %(reply_to,self.busname))
+                logger.error("Failed to send reply message to reply address %s on messagebus %s" %(reply_to,self.busname))
             return
         else:
             # the reply address is not in a default known format
@@ -238,12 +248,15 @@ class Service(AbstractBusListener):
         service_handler = self._getServiceHandlerForCurrentThread()
 
         try:
-            self._debug("Running handler")
-
             # determine which handler method has to be called
-            if hasattr(service_handler, 'service2MethodMap') and lofar_msg.subject in service_handler.service2MethodMap:
-                # pass the handling of this message on to the specific method for this service
-                serviceHandlerMethod = service_handler.service2MethodMap[lofar_msg.subject]
+            if hasattr(service_handler, 'service2MethodMap') and '.' in lofar_msg.subject:
+                subject_parts = lofar_msg.subject.split('.')
+                method_name = subject_parts[-1]
+                if method_name in service_handler.service2MethodMap:
+                    # pass the handling of this message on to the specific method for this service
+                    serviceHandlerMethod = service_handler.service2MethodMap[method_name]
+                else:
+                    raise ValueError('Unknown method %s on service %s' % (method_name, lofar_msg.subject))
             else:
                 serviceHandlerMethod = service_handler.handle_message
 
@@ -297,7 +310,7 @@ class Service(AbstractBusListener):
             del rawbacktrace[-1]
             backtrace = ''.join(rawbacktrace).encode('latin-1').decode('unicode_escape')
             self._debug(backtrace)
-            if self.verbose is True:
+            if self.verbose:
                 logger.info("[Service:] Status: %s", str(status))
                 logger.info("[Service:] ERRTXT: %s", str(errtxt))
                 logger.info("[Service:] BackTrace: %s", str( backtrace ))
