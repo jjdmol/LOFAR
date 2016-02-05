@@ -58,5 +58,5 @@ install(DIRECTORY
   lofar-pipeline
   lofar-outputproc
   DESTINATION share/docker
+  USE_SOURCE_PERMISSIONS
   PATTERN Dockerfile.tmpl EXCLUDE)
-
