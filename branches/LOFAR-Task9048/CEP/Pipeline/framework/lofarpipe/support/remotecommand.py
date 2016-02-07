@@ -191,6 +191,17 @@ def run_via_custom_cmdline(logger, host, command, environment, arguments, config
 
     We return a Popen object pointing at the running executable, to which we add a
     kill method for shutting down the connection if required.
+
+    The command line is taken from the "remote.cmdline" configuration option,
+    with the following strings replaced:
+
+      {host}         := host to execute command on
+      {command}      := bash command line to be executed
+      {uid}          := uid of the calling user
+
+      {image}        := docker.image configuration option
+      {slurm_job_id} := the SLURM job id to allocate resources in
+
     """
     commandArray = ["%s=%s" % (key, value) for key, value in environment.items()]
     commandArray.append(command)
@@ -215,8 +226,7 @@ def run_via_custom_cmdline(logger, host, command, environment, arguments, config
     # Fill in {command} somewhere
     full_command_line = [x.format(command = commandStr) for x in full_command_line]
 
-    logger.debug("Dispatching command to %s with slurm+docker" % host)
-    logger.debug("slurm+docker command line = %s" % (full_command_line,))
+    logger.debug("Dispatching command to %s with custom_cmdline: %s" % (host, full_command_line))
 
     process = spawn_process(full_command_line, logger)
     process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
