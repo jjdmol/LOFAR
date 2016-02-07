@@ -1,0 +1,269 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 703 349 N "_3DFace" 0
+E E E E E 1 -1 -1 0  40 40
+""0  1
+E "#uses \"navPanel.ctl\"
+
+dyn_string emailAddresses;
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+25 0
+"emailTable"
+""
+1 40 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 35 MS Shell Dlg 2,14,-1,5,50,0,0,0,0,0
+0  38 38 312 252
+"main()
+{
+  this.tableMode(TABLE_SELECT_MULTIPLE);
+  this.selectByClick(TABLE_SELECT_LINE);
+
+  dyn_string emails;
+  dpGet(\"__navigator.alarmSettings.emails\",emails);
+  this.deleteAllLines();
+  
+  for(int i=1;i<=dynlen(emails);i++) {
+    this.appendLine(\"Email\",emails[i]);
+    this.lineVisible(-1);
+    dynAppend(emailAddresses,emails[i]);
+  }
+  
+  DebugN(\"in init emails: \", emailAddresses);
+}
+" 0
+E 1 0 1 1 0 "Email" 16 1 0 "[0s,,,ALIGNMENT_BEGINNING]" 1
+LANG:1 5 Email
+E
+1
+LANG:1 0 
+
+250 
+20 20 10 10
+1
+LANG:1 35 MS Shell Dlg 2,14,-1,5,50,0,0,0,0,0
+0 0 1 1 1 7
+1 0
+13 1
+"deleteEmail"
+""
+1 40 270 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  38 268 112 294
+
+T 
+1
+LANG:1 6 Delete
+"main()
+{
+  dyn_int lines;
+  getValue(\"emailTable\",\"getSelectedLines\",lines);
+  DebugN(\"deleting lines: \", lines);
+
+  for (int i=dynlen(lines);i>0;i--) {
+    // Tables start with 0 dyn_arrays start with 1!!!!!!
+    emailTable.deleteLineN(lines[i]);
+    dynRemove(emailAddresses,lines[i]+1);
+  }
+  if (dynlen(lines) > 0) {
+    saveEmail.enabled(TRUE);
+    txtSaved.visible(FALSE);
+  }
+  DebugN(\"after delete emails: \", emailAddresses);
+
+}" 0
+ E E E
+14 2
+"emailInput"
+""
+1 340 140 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  338 138 562 159
+3 "0s" 0 0 0 0 0 -1  E E E
+13 3
+"applyEmail"
+""
+1 400 170 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  398 168 452 194
+
+T 
+1
+LANG:1 5 Apply
+"main()
+{
+  if (emailInput.text() != \"\"  && navFunct_checkEmailAddress(emailInput.text()) && !dynContains(emailAddresses,emailInput.text())) {
+    emailTable.appendLine(\"Email\",emailInput.text());
+    dynAppend(emailAddresses,emailInput.text());
+    saveEmail.enabled(TRUE);
+    txtSaved.visible(FALSE);
+  }
+  DebugN(\"after apply emails: \", emailAddresses);
+
+  emailInput.text = \"\";
+}" 0
+ E E E
+13 4
+"saveEmail"
+""
+1 120 270 E E E 0 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  118 268 192 294
+
+T 
+1
+LANG:1 4 Save
+"main()
+{
+  dyn_string emails;
+  string aLine;
+  for (int i = 0; i < emailTable.lineCount(); i++) {
+    aLine = emailTable.getLineN(i);
+    dynAppend(emails,aLine);
+  }
+  dpSet(\"__navigator.alarmSettings.emails\", emails);
+  saveEmail.enabled(FALSE);
+  txtSaved.visible(TRUE);
+
+}" 0
+ E E E
+2 5
+"PRIMITIVE_TEXT1"
+""
+1 390 120 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 390 120 483 133
+0 2 2 "0s" 0 0 0 192 0 0  390 120 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 18 New email address:
+2 6
+"txtSaved"
+""
+1 260 270 E E E 1 E 0 E N "green" E N "_Window" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 260 270 299 286
+0 2 2 "0s" 0 0 0 192 0 0  260 270 1
+1
+LANG:1 35 MS Shell Dlg 2,10,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 5 saved
+2 7
+"PRIMITIVE_TEXT3"
+""
+1 20 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 20 10 369 26
+0 2 2 "0s" 0 0 0 192 0 0  20 10 1
+1
+LANG:1 35 MS Shell Dlg 2,10,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 64 All alarm mails will be send to the email addresses in this list
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

@@ -1,0 +1,682 @@
+V 11
+1
+LANG:1 10 URI Detail
+PANEL,-1 -1 1200 748 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+
+  baseDP         = g_currentDatapoint;
+
+  reload();
+}
+
+
+void prepareHardwareList() {
+  
+  dyn_dyn_anytype tab;
+  int z;
+  
+  dynAppend(g_stationList,navFunct_bareDBName(sysName));
+  // For this panel URIboards, UniBoard and FPGA's  should be selectable so we get them for the treelist
+  
+  dpQuery(\"SELECT '_original.._value' FROM 'LOFAR_PIC_Cabinet*_**.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"FPGA\\\" OR _DPT=\\\"URIboard\\\" OR _DPT=\\\"UniBoard\\\"  \", tab);
+  LOG_TRACE(\"Station_AARTFAAC.pnl:prepareHardwareList|tab: \"+tab);
+  
+  dyn_string aDS=navFunct_getDynString(tab, 2,1);
+  dynSortAsc(aDS);  
+
+
+  for(z=1;z<=dynlen(aDS);z++){
+    
+    // strip .status.state from result
+    string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
+    //keep Path
+    string path=aS;
+
+    if (strpos(aS,\"FPGA\") > -1) {   // RSPBoard
+      int p = strpos(aS,\"FPGA\");
+      int f = substr(aS,p+4);
+      dynAppend(g_FPGAList,f);
+    }
+  }
+    
+  dynAppend(g_uriBoardList,0);
+  dynAppend(g_uriBoardList,1);
+  dynAppend(g_uriBoardList,2);
+  dynAppend(g_uniBoardList,0);
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"Station_AARTFAAC.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"Station_AARTFAAC.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  } else if (actionString[1] == \"DistChanged\") {
+    // for dist system bound hardware only, if the distsystem went offline we need to replace 
+    // the screen with a broken connection screen.
+    if (!g_initializing) {
+    
+      // check if this syst is in the connectionlist and down
+      int iPos=dynContains(g_connections[\"NAME\"],sysName);
+      if (iPos > 0) {
+        if (!g_connections[\"UP\"][iPos]) {
+          navPanel_setEvent(\"invalid DP\",\"ChangePanel\");
+        }
+      }
+    }
+    return;
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
+  
+  // set panel to ready
+  g_objectReady=true;
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"Station_AARTFAAC.pnl\",\"Update\");
+
+}" 0
+ E E E E 1 0 0 0  107 694
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP = \"\";
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+1 374 11 "" 5
+0
+1 375 11 "" 0
+0
+1 376 11 "" 3
+0
+1 377 11 "0" 1
+0
+1 378 12 "" 5
+0
+1 379 12 "" 0
+0
+1 380 12 "" 3
+0
+1 381 12 "0" 1
+0
+1 382 13 "" 5
+0
+1 383 13 "" 0
+0
+1 384 13 "" 3
+0
+1 385 13 "0" 1
+0
+1 386 14 "" 59
+0
+1 387 14 "" 0
+0
+1 388 14 "" 1
+0
+1 389 14 "0" 1
+0
+1 390 14 "" 38
+0
+1 391 14 "" 40
+0
+1 392 14 "" 41
+0
+1 393 14 "" 42
+0
+1 394 14 "" 43
+0
+1 395 14 "" 44
+0
+1 396 14 "" 45
+0
+1 397 14 "" 46
+0
+1 398 14 "" 47
+0
+1 399 14 "" 61
+0
+1 400 14 "" 62
+0
+1 401 14 "" 63
+0
+1 402 14 "" 64
+0
+1 403 14 "" 65
+0
+1 404 14 "" 66
+0
+1 405 14 "" 67
+0
+1 406 14 "" 69
+0
+1 407 14 "1" 5
+0
+1 408 14 "1" 0
+0
+1 409 14 "1" 3
+0
+1 410 14 "1.0" 1
+0
+1 411 14 "1" 7
+0
+1 412 14 "1" 8
+0
+1 413 14 "1" 9
+0
+1 414 14 "1" 10
+0
+1 415 14 "1" 13
+0
+1 416 14 "1" 14
+0
+1 417 14 "1" 15
+0
+1 418 14 "1" 16
+0
+1 419 14 "1" 17
+0
+1 420 14 "1" 18
+0
+1 421 14 "1" 19
+0
+1 422 14 "1" 20
+0
+1 423 14 "1" 21
+0
+1 424 14 "1" 22
+0
+1 425 14 "2" 5
+0
+1 426 14 "2" 0
+0
+1 427 14 "2" 3
+0
+1 428 14 "2.0" 1
+0
+1 429 14 "2" 7
+0
+1 430 14 "2" 8
+0
+1 431 14 "2" 9
+0
+1 432 14 "2" 10
+0
+1 433 14 "2" 13
+0
+1 434 14 "2" 14
+0
+1 435 14 "2" 15
+0
+1 436 14 "2" 16
+0
+1 437 14 "2" 17
+0
+1 438 14 "2" 18
+0
+1 439 14 "2" 19
+0
+1 440 14 "2" 20
+0
+1 441 14 "2" 21
+0
+1 442 14 "2" 22
+0
+1 443 14 "3" 5
+0
+1 444 14 "3" 0
+0
+1 445 14 "3" 3
+0
+1 446 14 "3.0" 1
+0
+1 447 14 "3" 7
+0
+1 448 14 "3" 8
+0
+1 449 14 "3" 9
+0
+1 450 14 "3" 10
+0
+1 451 14 "3" 13
+0
+1 452 14 "3" 14
+0
+1 453 14 "3" 15
+0
+1 454 14 "3" 16
+0
+1 455 14 "3" 17
+0
+1 456 14 "3" 18
+0
+1 457 14 "3" 19
+0
+1 458 14 "3" 20
+0
+1 459 14 "3" 21
+0
+1 460 14 "3" 22
+0
+1 461 14 "4" 5
+0
+1 462 14 "4" 0
+0
+1 463 14 "4" 3
+0
+1 464 14 "4.0" 1
+0
+1 465 14 "4" 7
+0
+1 466 14 "4" 8
+0
+1 467 14 "4" 9
+0
+1 468 14 "4" 10
+0
+1 469 14 "4" 13
+0
+1 470 14 "4" 14
+0
+1 471 14 "4" 15
+0
+1 472 14 "4" 16
+0
+1 473 14 "4" 17
+0
+1 474 14 "4" 18
+0
+1 475 14 "4" 19
+0
+1 476 14 "4" 20
+0
+1 477 14 "4" 21
+0
+1 478 14 "4" 22
+0
+1 479 14 "5" 5
+0
+1 480 14 "5" 0
+0
+1 481 14 "5" 3
+0
+1 482 14 "5.0" 1
+0
+1 483 14 "5" 7
+0
+1 484 14 "5" 8
+0
+1 485 14 "5" 9
+0
+1 486 14 "5" 10
+0
+1 487 14 "5" 13
+0
+1 488 14 "5" 14
+0
+1 489 14 "5" 15
+0
+1 490 14 "5" 16
+0
+1 491 14 "5" 17
+0
+1 492 14 "5" 18
+0
+1 493 14 "5" 19
+0
+1 494 14 "5" 20
+0
+1 495 14 "5" 21
+0
+1 496 14 "5" 22
+0
+1 497 14 "6" 5
+0
+1 498 14 "6" 0
+0
+1 499 14 "6" 3
+0
+1 500 14 "6.0" 1
+0
+1 501 14 "6" 7
+0
+1 502 14 "6" 8
+0
+1 503 14 "6" 9
+0
+1 504 14 "6" 10
+0
+1 505 14 "6" 13
+0
+1 506 14 "6" 14
+0
+1 507 14 "6" 15
+0
+1 508 14 "6" 16
+0
+1 509 14 "6" 17
+0
+1 510 14 "6" 18
+0
+1 511 14 "6" 19
+0
+1 512 14 "6" 20
+0
+1 513 14 "6" 21
+0
+1 514 14 "6" 22
+0
+1 515 14 "7" 5
+0
+1 516 14 "7" 0
+0
+1 517 14 "7" 3
+0
+1 518 14 "7.0" 1
+0
+1 519 14 "7" 7
+0
+1 520 14 "7" 8
+0
+1 521 14 "7" 9
+0
+1 522 14 "7" 10
+0
+1 523 14 "7" 13
+0
+1 524 14 "7" 14
+0
+1 525 14 "7" 15
+0
+1 526 14 "7" 16
+0
+1 527 14 "7" 17
+0
+1 528 14 "7" 18
+0
+1 529 14 "7" 19
+0
+1 530 14 "7" 20
+0
+1 531 14 "7" 21
+0
+1 532 14 "7" 22
+0
+1 533 14 "8" 5
+0
+1 534 14 "8" 0
+0
+1 535 14 "8" 3
+0
+1 536 14 "8.0" 1
+0
+1 537 14 "8" 7
+0
+1 538 14 "8" 8
+0
+1 539 14 "8" 9
+0
+1 540 14 "8" 10
+0
+1 541 14 "8" 13
+0
+1 542 14 "8" 14
+0
+1 543 14 "8" 15
+0
+1 544 14 "8" 16
+0
+1 545 14 "8" 17
+0
+1 546 14 "8" 18
+0
+1 547 14 "8" 19
+0
+1 548 14 "8" 20
+0
+1 549 14 "8" 21
+0
+1 550 14 "8" 22
+0
+4 362
+"LINE1"
+""
+1 280 115 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+116 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  280 115 280 165
+4 363
+"LINE2"
+""
+1 480 115 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+117 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  480 115 480 165
+4 364
+"LINE3"
+""
+1 710 115 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+118 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  710 115 710 165
+4 365
+"LINE4"
+""
+1 260 115 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+119 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  260 115 260 165
+4 366
+"LINE5"
+""
+1 240 115 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+120 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  240 115 240 165
+4 367
+"LINE6"
+""
+1 300 115 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+121 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  300 115 300 165
+4 368
+"LINE7"
+""
+1 460 115 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+122 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  460 115 460 165
+4 369
+"LINE8"
+""
+1 500 115 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+123 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  500 115 500 165
+4 370
+"LINE9"
+""
+1 520 115 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+124 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  520 115 520 165
+4 371
+"LINE10"
+""
+1 690 115 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+125 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  690 115 690 165
+4 372
+"LINE11"
+""
+1 670 115 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+126 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  670 115 670 165
+4 373
+"LINE12"
+""
+1 730 115 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+127 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  730 115 730 165
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 11 "PANEL_REF11" -1
+"objects\\Hardware\\AARTFAAC-URI_small.pnl" 205 125 T 112 U 
+2
+"$CabinetNr""0"
+"$uriNr""0"
+3 12 "PANEL_REF12" -1
+"objects\\Hardware\\AARTFAAC-URI_small.pnl" 385 125 T 113 1 0 1 40 0
+2
+"$CabinetNr""0"
+"$uriNr""1"
+3 13 "PANEL_REF13" -1
+"objects\\Hardware\\AARTFAAC-URI_small.pnl" 655 125 T 114 1 0 1 -10 0
+2
+"$CabinetNr""1"
+"$uriNr""2"
+3 14 "PANEL_REF14" -1
+"objects\\Hardware\\AARTFAAC-UNIBoard.pnl" 175 345 T 115 U 
+0
+0
