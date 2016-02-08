@@ -20,7 +20,7 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
-# $Id: SpecifiedTaskListener.py 1580 2015-09-30 14:18:57Z loose $
+# $Id: raservice.py 1580 2015-09-30 14:18:57Z loose $
 
 """
 TaskSpecifiedListener listens to a bus on which specified tasks get published. It will then try
@@ -31,20 +31,25 @@ import qpid.messaging
 import logging
 from datetime import datetime
 
-from lofar.messaging.messagebus import AbstractBusListener
+from lofar.sas.resourceassignment.rataskspecified.RABusListener import RATaskSpecifiedBusListener
 from lofar.messaging.RPC import RPC
 
 import lofar.sas.resourceassignment.resourceassignmentservice.rpc as rarpc
 from lofar.sas.resourceassignment.resourceassigner.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
+from lofar.sas.resourceassignment.resourceassigner.config import RATASKSPECIFIED_NOTIFICATION_BUSNAME, RATASKSPECIFIED_NOTIFICATIONNAME
 
 logger = logging.getLogger(__name__)
 
 
-class SpecifiedTaskListener(AbstractBusListener):
-    def __init__(self, busname='lofar.?.?', subject='?.?', broker=None, **kwargs):
+class SpecifiedTaskListener(RATaskSpecifiedBusListener):
+    def __init__(self,
+                 busname=RATASKSPECIFIED_NOTIFICATION_BUSNAME,
+                 subject=RATASKSPECIFIED_NOTIFICATIONNAME,
+                 broker=None,
+                 **kwargs):
         """
         SpecifiedTaskListener listens on the lofar ?? bus and calls onTaskSpecified
-        :param address: valid Qpid address (default: lofar.otdb.status)
+        :param busname: valid Qpid address (default: lofar.otdb.status)
         :param broker: valid Qpid broker host (default: None, which means localhost)
         additional parameters in kwargs:
                 options=     <dict>    Dictionary of options passed to QPID
@@ -52,24 +57,10 @@ class SpecifiedTaskListener(AbstractBusListener):
                 numthreads= <int>    Number of parallel threads processing messages (default: 1)
                 verbose=     <bool>    Output extra logging over stdout (default: False)
         """
-        address = "%s/%s" % (busname, subject)
-        super(SpecifiedTaskListener, self).__init__(address, broker, **kwargs)
+        super(SpecifiedTaskListener, self).__init__(busname=busname, subject=subject, broker=broker, **kwargs)
 
-    def _handleMessage(self, msg):
-        logger.debug("SpecifiedTaskListener.handleMessage: %s" %str(msg))
-
-        taskId =    msg.content['treeID']
-        modificationTime = datetime.utcnow()
-        if 'time_of_change' in msg.content:
-            try:
-                modificationTime = datetime.strptime(msg.content['time_of_change'], '%Y-%m-%d %H:%M:%S.%f')
-            except ValueError as e:
-                logger.error('could not parse time_of_change %s : %s' % (msg.content['time_of_change'], e))
-
-        if msg.content['specification']:
-            self.onTaskSpecified(treeId, modificationTime, msg.content['specification'])
-        else:
-            logger.error("Task %s not properly received:" % (taskId, ))
+    def onTaskSpecified(self, sasId, modificationTime, resourceIndicators):
+        logger.info('onTaskSpecified: sasId=%s' % sasId)
 
 __all__ = ["SpecifiedTaskListener"]
 
@@ -152,7 +143,7 @@ def main():
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                         level=logging.DEBUG if options.verbose else logging.INFO)
 
-    with SpecifiedTaskListener() as service:
+    with SpecifiedTaskListener() as listener:
         waitForInterrupt()
 
 if __name__ == '__main__':
