@@ -33,6 +33,7 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
+#include <Common/SystemUtil.h>
 #include <Common/Exceptions.h>
 #include <MessageBus/ToBus.h>
 #include <MessageBus/Protocols/TaskFeedbackDataproducts.h>
@@ -96,14 +97,12 @@ size_t getMaxRunTime(const Parset &parset)
     return 0;
 }
 
-bool process(Stream &controlStream, unsigned myRank)
+bool process(Stream &controlStream)
 {
   bool success(true);
   Parset parset(&controlStream);
 
-  const vector<string> &hostnames = parset.settings.outputProcHosts;
-  ASSERT(myRank < hostnames.size());
-  string myHostName = hostnames[myRank];
+  string myHostName = myHostname(false);
 
   if (parset.settings.realTime) {
     /*
