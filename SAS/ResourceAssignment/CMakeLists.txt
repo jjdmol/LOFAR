@@ -5,4 +5,5 @@ lofar_add_package(Services)
 lofar_add_package(ResourceAssignmentService)
 lofar_add_package(ResourceAssignmentDatabase)
 lofar_add_package(ResourceAssignmentEstimator)
+lofar_add_package(ResourceAssigner)
 
