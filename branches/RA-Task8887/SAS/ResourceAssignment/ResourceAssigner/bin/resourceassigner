@@ -17,11 +17,11 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 
-'''Startup script for resourceassignementeditor webservice'''
+'''Startup script for resourceassigner service'''
 
 import sys
-from lofar.sas.resourceassignement.resourceassigner.ramodule1 import main
+from lofar.sas.resourceassignment.resourceassigner.raservice import main
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    main()
 
