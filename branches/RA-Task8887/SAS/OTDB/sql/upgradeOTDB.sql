@@ -10,7 +10,7 @@ CREATE TABLE otdb_admin (
 INSERT INTO otdb_admin VALUES(now());
 
 -- Load new functions
-\i getStateChanges.sql
+\i getStateChanges_func.sql
 
 -- Load modified/improved functions
 \i exportTree_func.sql

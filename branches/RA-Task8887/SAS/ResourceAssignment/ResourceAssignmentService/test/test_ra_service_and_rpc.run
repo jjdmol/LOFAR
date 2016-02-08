@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Run the unit test
+source python-coverage.sh
+python_coverage_test "ResourceAssignmentService*" test_ra_service_and_rpc.py
+

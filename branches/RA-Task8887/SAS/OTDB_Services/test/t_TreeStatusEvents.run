@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/bash -x
 # constants
 DBHOST=sas099.control.lofar
 

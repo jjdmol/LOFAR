@@ -33,6 +33,7 @@ StatusUpdateCommand     : finction to update the status of a tree.
 import sys, time, pg
 import logging
 from lofar.messaging.Service import *
+from lofar.common.util import waitForInterrupt
 
 QUERY_EXCEPTIONS = (TypeError, ValueError, MemoryError, pg.ProgrammingError, pg.InternalError)
 
@@ -239,7 +240,7 @@ class PostgressTaskSpecificationRequest(PostgressMessageHandlerInterface):
     def __init__(self, **kwargs):
         super(PostgressTaskSpecificationRequest, self).__init__(**kwargs)
 
-    def handle_message(self, msg):
+    def handle_message(self, **msg):
         " Connect to the right function"
         return TaskSpecificationRequest(msg, self.connection)
 
@@ -251,7 +252,7 @@ class PostgressStatusUpdateCommand(PostgressMessageHandlerInterface):
     def __init__(self, **kwargs):
         super(PostgressStatusUpdateCommand, self).__init__(**kwargs)
 
-    def handle_message(self, msg):
+    def handle_message(self, **msg):
         " Connect to the right function"
         return StatusUpdateCommand(msg, self.connection)
 
@@ -263,7 +264,7 @@ class PostgressKeyUpdateCommand(PostgressMessageHandlerInterface):
     def __init__(self, **kwargs):
         super(PostgressKeyUpdateCommand, self).__init__(**kwargs)
 
-    def handle_message(self, msg):
+    def handle_message(self, **msg):
         " Connect to the right function"
         return KeyUpdateCommand(msg, self.connection)
 

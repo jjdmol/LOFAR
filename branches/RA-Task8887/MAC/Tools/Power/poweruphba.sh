@@ -36,7 +36,7 @@ HandleArgs()
     SyntaxError
   fi
 
-  while getopts  "am:" flag
+  while getopts  "ham:" flag
     do
       case "$flag" in
       a)
@@ -48,8 +48,9 @@ HandleArgs()
       h)
         SyntaxError
         ;;
-      *)
-        SyntaxError
+      \?)
+        echo "Invalid option; try -h for help"
+        exit
         ;;
       esac
     done
@@ -69,9 +70,13 @@ fi
 checkbroken=1
 hbamode=0
 
-if [ "$#" -eq 1 ]; then
-   hbamode=$1
-   checkbroken=0
+if [ $# -eq 1 ]; then
+   if [[ $1 =~ ^[0-9] ]]; then 
+     hbamode=$1
+     checkbroken=0
+   else 
+     HandleArgs $*
+   fi
 else 
    HandleArgs $* 
 fi     
