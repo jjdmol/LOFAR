@@ -132,7 +132,7 @@ def onTaskSpecified(treeId, modificationTime, specification):
     else:
       SetTaskToCONFLICT(Task.)
 
-def main(args=None):
+def main():
   print "SpecifiedTaskListener started"
   
   service = SpecifiedTaskListener()
