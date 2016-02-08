@@ -4,5 +4,9 @@
 DEFAULT_BUSNAME = 'lofar.ra.command'
 DEFAULT_SERVICENAME = 'RAService'
 
-# TODO: should try to import config from RATaskSpecified (which is currently non-existent)
-RATASKSPECIFIED_SERVICENAME = 'OTDB.TaskSpecified'
+try:
+    from lofar.sas.resourceassignment.rataskspecified.config import DEFAULT_NOTIFICATION_BUSNAME as RATASKSPECIFIED_NOTIFICATION_BUSNAME
+    from lofar.sas.resourceassignment.rataskspecified.config import RATASKSPECIFIED_NOTIFICATIONNAME as RATASKSPECIFIED_NOTIFICATIONNAME
+except ImportError:
+    RATASKSPECIFIED_NOTIFICATION_BUSNAME = 'lofar.ra.notification'
+    RATASKSPECIFIED_NOTIFICATIONNAME = 'OTDB.TaskSpecified'
