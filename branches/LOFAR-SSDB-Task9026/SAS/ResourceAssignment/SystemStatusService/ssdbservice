@@ -1,0 +1,25 @@
+#!/usr/bin/python
+# $Id: $
+
+'''
+runs the resourceassignment database service
+'''
+import logging
+from optparse import OptionParser
+from lofar.sas.systemstatus.service.SSDBQueryService import runservice
+
+logger = logging.getLogger(__name__)
+DEFAULT_BUSNAME="amq.topic"
+DEFAULT_SERVICENAME="SSDBQueryService"
+
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+
+    # Check the invocation arguments
+    parser = OptionParser("%prog [options]",
+                          description='runs the resourceassignment database service')
+    parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_BUSNAME, help="Name of the bus exchange on the qpid broker, default: %s" % DEFAULT_BUSNAME)
+    parser.add_option("-s", "--servicename", dest="servicename", type="string", default=DEFAULT_SERVICENAME, help="Name for this service, default: %s" % DEFAULT_SERVICENAME)
+    (options, args) = parser.parse_args()
+
+    runservice(busname=options.busname, servicename=options.servicename)
