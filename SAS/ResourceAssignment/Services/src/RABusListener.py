@@ -28,6 +28,7 @@ Typical usage is to derive your own subclass from RABusListener and implement th
 """
 
 from lofar.messaging.messagebus import AbstractBusListener
+from .config import DEFAULT_NOTIFICATION_BUSNAME, RATASKSPECIFIED_NOTIFICATIONNAME
 
 import qpid.messaging
 import logging
@@ -37,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 class RATaskSpecifiedBusListener(AbstractBusListener):
-    def __init__(self, busname='lofar.ra.notification', subject='OTDB.TaskSpecified', broker=None, **kwargs):
+    def __init__(self, busname=DEFAULT_NOTIFICATION_BUSNAME, subject=RATASKSPECIFIED_NOTIFICATIONNAME, broker=None, **kwargs):
         """
         RATaskSpecifiedBusListener listens on the lofar ra message bus and calls (empty) on<SomeMessage> methods when such a message is received.
         Typical usage is to derive your own subclass from RATaskSpecifiedBusListener and implement the specific on<SomeMessage> methods that you are interested in.

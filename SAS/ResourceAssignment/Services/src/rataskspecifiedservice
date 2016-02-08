@@ -19,30 +19,36 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
-# $Id: JobsToSchedule.py 33364 2016-01-21 21:21:12Z mol $
+# $Id: rataskspecifiedservice.py 33364 2016-01-21 21:21:12Z mol $
 """
 Daemon that listens to OTDB status changes to PRESCHEDULED, requests
 the parset of such jobs (+ their predecessors), and posts them on the bus.
 """
 
-from lofar.sas.resourceassignment.RATaskSpecified import RATaskSpecified
+from lofar.sas.resourceassignment.rataskspecified.RATaskSpecified import RATaskSpecified
+from lofar.sas.resourceassignment.rataskspecified.config import DEFAULT_NOTIFICATION_BUSNAME, RATASKSPECIFIED_NOTIFICATIONNAME
+
+DEFAULT_OTDB_BUSNAME = 'lofar.otdb.status'
 
 if __name__ == "__main__":
     import sys
+    import logging
     from optparse import OptionParser
+    from lofar.common.util import waitForInterrupt
+
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
     # Check the invocation arguments
-    parser = OptionParser("%prog -O otdb_bus -B my_bus [options]")
-    parser.add_option("-O", "--otdb_bus", dest="otdb_busname", type="string", default="",
+    parser = OptionParser("%prog [options]",
+                          description="run the rataskspecified service")
+    parser.add_option("-o", "--otdb_bus", dest="otdb_busname", type="string", default=DEFAULT_OTDB_BUSNAME,
                       help="Bus or queue OTDB operates on")
-    parser.add_option("-B", "--my_bus", dest="my_busname", type="string", default="",
+    parser.add_option("-b", "--notification_bus", dest="notification_bus", type="string", default=DEFAULT_NOTIFICATION_BUSNAME,
                       help="Bus or queue we publish resource requests on")
+    parser.add_option("-s", "--notification_subject", dest="notification_subject", type="string", default=RATASKSPECIFIED_NOTIFICATIONNAME,
+                      help="The subject of the event messages which this service publishes")
     (options, args) = parser.parse_args()
 
-    if not options.statusbus or not options.parsetbus or not options.busname:
-        parser.print_help()
-        sys.exit(1)
-
-    with RATaskSpecified("OTDB.TaskSpecified", otdb_busname=options.otdb_busname, my_busname=options.my_busname) as jts:
+    with RATaskSpecified(RATASKSPECIFIED_NOTIFICATIONNAME, otdb_busname=options.otdb_busname, my_busname=options.notification_bus) as jts:
         waitForInterrupt()
 
