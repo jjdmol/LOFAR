@@ -2,9 +2,9 @@ option(BUILD_SHARED_LIBS        "Build shared libraries"      ON)
 
 set(CASACORE_ROOT_DIR /opt/cep/casacore/builds/casacore-2.0.3/build/gnu_opt)
 set(CASAREST_ROOT_DIR /opt/cep/casarest/builds/casarest-svn8765-2.0.3)
-set(PYRAP_ROOT_DIR /opt/cep/pyrap/builds/python-casacore-2.0.0-2.0.3)
+set(PYRAP_ROOT_DIR /opt/cep/pyrap/builds/python-casacore-2.0.1-2.0.3)
 set(WCSLIB_ROOT_DIR /opt/cep/wcslib/builds/wcslib-4.23)
-
+set(AOFLAGGER_ROOT_DIR /opt/cep/aoflagger/aoflagger-2.7.1/install)
 set(DAL_ROOT_DIR /opt/cep/dal/current)
 set(QPID_ROOT_DIR /opt/qpid)
 

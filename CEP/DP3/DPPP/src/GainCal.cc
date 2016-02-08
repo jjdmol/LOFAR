@@ -50,6 +50,7 @@
 #include <vector>
 #include <algorithm>
 
+#include <limits>
 #include <iostream>
 #include <iomanip>
 
@@ -823,6 +824,13 @@ namespace LOFAR {
         itsParmDB->putDefValue("Gain:1:1:Ampl",pvset);
       }
 
+      // Write out default gains
+      if (itsMode=="diagonal" || itsMode=="fulljones") {
+        ParmValueSet pvset(ParmValue(1.0));
+        itsParmDB->putDefValue("Gain:0:0:Real",pvset);
+        itsParmDB->putDefValue("Gain:1:1:Real",pvset);
+      }
+
       // Write the solutions per parameter.
       const char* str0101[] = {"0:0:","1:0:","0:1:","1:1:"}; // Conjugate transpose!
       const char* strri[] = {"Real:","Imag:"};
@@ -856,11 +864,12 @@ namespace LOFAR {
             // Collect its solutions for all times in a single array.
             for (uint ts=0; ts<ntime; ++ts) {
               if (itsAntMaps[ts][st]==-1) {
+                // No solution found, insert NaN
                 if (itsMode!="phaseonly" && itsMode!="scalarphase" &&
                     realim==0 && (pol==0||pol==3)) {
-                  values(0, ts) = 1;
+                  values(0, ts) = std::numeric_limits<double>::quiet_NaN();
                 } else {
-                  values(0, ts) = 0;
+                  values(0, ts) = std::numeric_limits<double>::quiet_NaN();
                 }
               } else {
                 int rst=itsAntMaps[ts][st]; // Real station

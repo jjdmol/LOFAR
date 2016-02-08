@@ -24,7 +24,7 @@
 Daemon that watches the OTDB database for status changes of trees and publishes those on the messagebus.
 """
 
-import sys, time, pg
+import sys, time, pg, datetime
 import logging
 from lofar.messaging import EventMessage, ToBus
 
@@ -47,8 +47,8 @@ def PollForStatusChanges(start_time, end_time, otdb_connection):
     """
     Function that asked the database for status changes in the given period
 
-    Input : start_time (string) - Oldest time of change to include in the selection.
-            end_time (string)   - Most recent time of change to include in the selection
+    Input : start_time (datetime) - Oldest time of change to include in the selection.
+            end_time (datetime)   - Most recent time of change to include in the selection
     The times must be specified in the format YYYY-Mon-DD HH24:MI:SS.US.
     The selection delivers changes the match:  startime <= time_of_change < end_time
 
@@ -64,7 +64,7 @@ def PollForStatusChanges(start_time, end_time, otdb_connection):
     record_list = []
     try:
         record_list = otdb_connection.query("select treeid,state,modtime,creation from getStateChanges('%s','%s')" %
-                      (start_time, end_time)).getresult()
+                      (start_time.strftime("%F %T.%f"), end_time.strftime("%F %T.%f"))).getresult()
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("Error while polling for state changes: %s"% exc_info)
     return record_list
@@ -122,23 +122,23 @@ if __name__ == "__main__":
             # When we are connected we can poll the database
             if connected:
                 # Get start_time (= creation time of last retrieved record if any)
-                start_time = ''
                 try:
                     start_time = otdb_connection.query("select treestatusevent from otdb_admin").getresult()[0][0]
+                    start_time = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S.%f")
                 except IndexError, QUERY_EXCEPTIONS:
-                    start_time = "2015-01-01 00:00:00.00"
+                    start_time = datetime.datetime.datetime(2015, 1, 1)
  
                 try:
                     logger.info("start_time=%s, polling database" % (start_time,))
-                    record_list = PollForStatusChanges(start_time, "now", otdb_connection)
+                    record_list = PollForStatusChanges(start_time, datetime.datetime.utcnow(), otdb_connection)
                 except FunctionError, exc_info:
                     logger.error(exc_info)
                 else:
                     for (treeid, state, modtime, creation) in record_list:
-                        content = { "treeID" : treeid, "state" : allowed_states.get(state, "unknwon_state"), 
+                        content = { "treeID" : treeid, "state" : allowed_states.get(state, "unknown_state"), 
                                     "time_of_change" : modtime }
                         msg = EventMessage(context="otdb.treestatus", content=content)
-                        logger.info("sending message treeid %s state %s modtime %s" % (treeid, allowed_states.get(state, "unknwon_state"), modtime))
+                        logger.info("sending message treeid %s state %s modtime %s" % (treeid, allowed_states.get(state, "unknown_state"), modtime))
                         send_bus.send(msg)
 
                         start_time = creation
