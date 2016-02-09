@@ -329,6 +329,24 @@ else
   # Derive host list from parset
   NODE_LIST=$(getOutputProcHosts $PARSET)
 fi
+
+# Replace any cluster-name place holders in the locations keys
+if $GLOBALFS; then
+  if $SLURM; then
+    POSSIBLE_NODES="$NODE_LIST"
+  else
+    POSSIBLE_NODES="$COMPUTENODES"
+  fi
+
+  # Update locations in parset
+  mv -fT "$PARSET" "$PARSET.generate_globalfs"
+
+  generate_globalfs_locations.py --cluster "$CLUSTER_NAME" --hosts "$POSSIBLE_NODES" < "$PARSET.generate_globalfs" > "$PARSET"
+
+  # Derive updated host list from parset
+  NODE_LIST=$(getOutputProcHosts $PARSET)
+fi
+
 echo "Node list: $NODE_LIST"
 
 # If parameters are found in the parset create a key_string for ssh command
@@ -347,18 +365,6 @@ ssh -l $SSH_USER_NAME $KEY_STRING "localhost" "/bin/true" || error "Failed to cr
 # Create a helper function for delete child processes and
 # a file containing the PID of these processes
 PID_LIST_FILE="$LOFARROOT/var/run/outputProc-$OBSERVATIONID.pids"
-
-# If we're using a global file system, we need to specify which nodes
-# process which files. We also support a preallocation.
-#
-# We replace the clustername in the parset by going round-robin over
-# the node list for this job.
-
-if $GLOBALFS; then
-  # Update locations in parset
-  mv -fT "$PARSET" "$PARSET.generate_globalfs"
-  generate_globalfs_locations.py --cluster "$CLUSTER_NAME" --hosts "$COMPUTENODES" < "$PARSET.generate_globalfs" > "$PARSET"
-fi
 
 
 # Function clean_up will clean op all PID in the

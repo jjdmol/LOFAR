@@ -45,7 +45,7 @@ function parse_cluster_description {
       CLUSTER_NAME=cep4
 
       HEADNODE=head01.cep4.control.lofar
-      COMPUTENODES="`seq -f "cpu%02.0f" 1 50`"
+      COMPUTENODES="`seq -f "cpu%02.0f.cep4" 1 50`"
       NRCOMPUTENODES=50
 
       #SLURM=true

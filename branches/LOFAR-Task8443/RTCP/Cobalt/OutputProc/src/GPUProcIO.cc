@@ -174,7 +174,7 @@ bool process(Stream &controlStream)
       {
         struct ObservationSettings::BeamFormer::File &file = parset.settings.beamFormer.files[fileIdx];
 
-        if (file.location.host != myHostName) 
+        if (file.location.host != myHostName && file.location.host.find(myHostName + ".") != 0)
           continue;
 
         const unsigned allFileIdx = fileIdx + parset.settings.correlator.files.size();
