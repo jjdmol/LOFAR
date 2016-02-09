@@ -371,7 +371,7 @@ if $GLOBALFS; then
           ($host, $dir) = split /:/, $loc, 2;
 
           # replace hostname iff it matches our cluster
-          if ($host =~ /^\s*'"$CLUSTER_NAME"'\s$*/) {
+          if ($host =~ /^\s*'"$CLUSTER_NAME"'\s$*/i) {
             # determine new host (rotate @hosts)
             $host = shift @hosts;
             push @hosts, $host;
