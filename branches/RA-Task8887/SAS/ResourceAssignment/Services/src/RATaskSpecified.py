@@ -226,3 +226,31 @@ class RATaskSpecified(OTDBBusListener):
 
     logger.info("Result sent")
 
+
+def main():
+    import sys
+    import logging
+    from optparse import OptionParser
+    from lofar.common.util import waitForInterrupt
+    from lofar.sas.resourceassignment.rataskspecified.config import DEFAULT_NOTIFICATION_BUSNAME, RATASKSPECIFIED_NOTIFICATIONNAME
+    DEFAULT_OTDB_BUSNAME = 'lofar.otdb.status'
+
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+
+    # Check the invocation arguments
+    parser = OptionParser("%prog [options]",
+                          description="run the rataskspecified service")
+    parser.add_option("-o", "--otdb_bus", dest="otdb_busname", type="string", default=DEFAULT_OTDB_BUSNAME,
+                      help="Bus or queue OTDB operates on")
+    parser.add_option("-b", "--notification_bus", dest="notification_bus", type="string", default=DEFAULT_NOTIFICATION_BUSNAME,
+                      help="Bus or queue we publish resource requests on")
+    parser.add_option("-s", "--notification_subject", dest="notification_subject", type="string", default=RATASKSPECIFIED_NOTIFICATIONNAME,
+                      help="The subject of the event messages which this service publishes")
+    (options, args) = parser.parse_args()
+
+    with RATaskSpecified(RATASKSPECIFIED_NOTIFICATIONNAME, otdb_busname=options.otdb_busname, my_busname=options.notification_bus) as jts:
+        waitForInterrupt()
+
+
+if __name__ == "__main__":
+    main()
