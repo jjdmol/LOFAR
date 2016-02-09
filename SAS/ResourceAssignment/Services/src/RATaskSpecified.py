@@ -66,13 +66,13 @@ def resourceIndicatorsFromParset( parset ):
 
   """ Some conversion functions for common parameter-value types."""
   def strvector(value):
-    return PyParameterValue(value, True).getStringVector()
+    return PyParameterValue(str(value), True).getStringVector()
 
   def intvector(value):
-    return PyParameterValue(value, True).getIntVector()
+    return PyParameterValue(str(value), True).getIntVector()
 
   def bool(value):
-    return PyParameterValue(value, True).getBool()
+    return PyParameterValue(str(value), True).getBool()
 
   # =====================================
   # Parset meta info
