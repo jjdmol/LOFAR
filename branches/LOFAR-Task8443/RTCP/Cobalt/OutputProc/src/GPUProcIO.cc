@@ -151,6 +151,8 @@ bool process(Stream &controlStream)
     if (parset.settings.correlator.enabled) {
       for (size_t fileIdx = 0; fileIdx < parset.settings.correlator.files.size(); ++fileIdx)
       {
+        struct ObservationSettings::Correlator::File &file = parset.settings.correlator.files[fileIdx];
+
         if (file.location.host != myHostName
          && file.location.host.find(myHostName + ".") != 0
          && file.location.host != "localhost")
