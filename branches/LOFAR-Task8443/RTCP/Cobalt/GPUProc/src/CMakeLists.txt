@@ -126,6 +126,7 @@ lofar_add_bin_program(gpu_load gpu_load.cc)
 lofar_add_bin_scripts(
   scripts/cobalt_functions.sh
   scripts/CobaltControl.sh
+  scripts/generate_globalfs_locations.py
   scripts/runObservation.sh
   scripts/startstopkeys.sh
   scripts/startBGL.sh
