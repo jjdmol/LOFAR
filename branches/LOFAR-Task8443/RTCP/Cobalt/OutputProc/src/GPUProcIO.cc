@@ -151,7 +151,9 @@ bool process(Stream &controlStream)
     if (parset.settings.correlator.enabled) {
       for (size_t fileIdx = 0; fileIdx < parset.settings.correlator.files.size(); ++fileIdx)
       {
-        if (parset.settings.correlator.files[fileIdx].location.host != myHostName) 
+        if (file.location.host != myHostName
+         && file.location.host.find(myHostName + ".") != 0
+         && file.location.host != "localhost")
           continue;
 
         mdLogger.log(mdKeyPrefix + PN_COP_LOCUS_NODE + '[' + lexical_cast<string>(fileIdx) + ']',
@@ -174,7 +176,9 @@ bool process(Stream &controlStream)
       {
         struct ObservationSettings::BeamFormer::File &file = parset.settings.beamFormer.files[fileIdx];
 
-        if (file.location.host != myHostName && file.location.host.find(myHostName + ".") != 0)
+        if (file.location.host != myHostName
+         && file.location.host.find(myHostName + ".") != 0
+         && file.location.host != "localhost")
           continue;
 
         const unsigned allFileIdx = fileIdx + parset.settings.correlator.files.size();
