@@ -10,35 +10,12 @@
 
 ########  Functions  ########
 
+source cobalt_functions.sh
+
 function error {
   echo -e "$@" >&2
   sendback_state 1
   exit 1
-}
-
-function getkey {
-  KEY=$1
-  DEFAULT=$2
-
-  # grab the last key matching "^$KEY=", ignoring spaces.
-  VALUE=`<$PARSET perl -ne '/^'$KEY'\s*=\s*"?(.*?)"?\s*$/ || next; print "$1\n";' | tail -n 1`
-
-  if [ "$VALUE" == "" ]
-  then
-    echo "$DEFAULT"
-  else
-    echo "$VALUE"
-  fi
-}
-
-function setkey {
-  KEY=$1
-  VAL=$2
-
-  # In case already there, comment all out to avoid stale warnings. Then append.
-  KEYESC=`echo "$KEY" | sed -r -e "s/([\.[])/\\\\\\\\\1/g"`  # escape '.' '[' chars in keys with enough '\'
-  sed -i --follow-symlinks -r -e "s/^([[:blank:]]*$KEYESC[[:blank:]]*=)/#\1/g" "$PARSET"
-  echo "$KEY = $VAL" >> "$PARSET"
 }
 
 function usage {
@@ -273,6 +250,7 @@ then
     setkey Cobalt.OutputProc.StaticMetaDataDirectory  "$LOFARROOT/etc"
     setkey Cobalt.FinalMetaDataGatherer.database.host localhost
     setkey Cobalt.PVSSGateway.host                    ""
+    setkey Observation.Cluster.ProcessingCluster.clusterName ""
 
     # Redirect UDP/TCP input streams to any interface on the local machine
     sed 's/udp:[^:]*:/udp:0:/g' -i $PARSET
@@ -335,6 +313,18 @@ SSH_PRIVATE_KEY=$(getkey Cobalt.OutputProc.sshPrivateKey)
 OUTPUT_PROC_EXECUTABLE=$(getkey Cobalt.OutputProc.executable)
 OBSERVATIONID=$(getkey Observation.ObsID 0)
 
+parse_cluster_description
+
+# Determine list of outputProc hosts for various purposes
+if $SLURM; then
+  # Expand node list into something usable
+  NODE_LIST="`ssh $HEADNODE scontrol show hostnames $SLURM_JOB_NODELIST`"
+else
+  # Derive host list from parset
+  NODE_LIST=$(getOutputProcHosts $PARSET)
+fi
+echo "Node list: $NODE_LIST"
+
 # If parameters are found in the parset create a key_string for ssh command
 if [ "$SSH_PRIVATE_KEY" != "" ] 
 then
@@ -351,6 +341,55 @@ ssh -l $SSH_USER_NAME $KEY_STRING "localhost" "/bin/true" || error "Failed to cr
 # Create a helper function for delete child processes and
 # a file containing the PID of these processes
 PID_LIST_FILE="$LOFARROOT/var/run/outputProc-$OBSERVATIONID.pids"
+
+# If we're using a global file system, we need to specify which nodes
+# process which files. We also support a preallocation.
+#
+# We replace the clustername in the parset by going round-robin over
+# the node list for this job.
+
+if $GLOBALFS; then
+  # Update locations in parset
+  mv -fT "$PARSET" "$PARSET.allocate-globalFS"
+
+  <$PARSET.allocate-outputProc >$PARSET perl -e '
+    @hosts = qw('"$NODE_LIST"');
+
+    while (<>) {
+      if (/^
+            (Observation.DataProducts.Output_[A-Za-z]+.locations)  # key
+            \s*=\s*
+            \[(.*?)\] # value
+          /x) {
+
+        # output location key -> replace hostnames
+        $key, $locations = $1, $2;
+
+        # locations are of the format "locus001:/dir, locus002:/dir, ..."
+        foreach $loc (split /,/, $locations) {
+          # split off directory
+          ($host, $dir) = split /:/, $loc, 2;
+
+          # replace hostname iff it matches our cluster
+          if ($host =~ /^\s*'"$CLUSTER_NAME"'\s$*/) {
+            # determine new host (rotate @hosts)
+            $host = shift @hosts;
+            push @hosts, $host;
+          }
+
+          # add new location to the list
+          push @newlocations, join(":", $host, $dir);
+        }
+
+        # print key with new value
+        printf "%s=[%s]\n", $key, join(",", @newlocations);
+      } else {
+        # print any other parset key verbatim
+        print;
+      }
+    }
+  '
+fi
 
 
 # Function clean_up will clean op all PID in the
@@ -391,21 +430,40 @@ trap 'clean_up 1' SIGTERM SIGINT SIGQUIT SIGHUP
 echo "outputProc processes are appended to the file: $PID_LIST_FILE"
 touch $PID_LIST_FILE
 
-LIST_OF_HOSTS=$(getOutputProcHosts $PARSET)
-RANK=0
-VARS="QUEUE_PREFIX=$QUEUE_PREFIX" # Variables to forward to outputProc
-for HOST in $LIST_OF_HOSTS
-do
-  COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $VARS $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID $RANK"
+# Construct full command line for outputProc
+OUTPUTPROC_VARS="QUEUE_PREFIX=$QUEUE_PREFIX" # Variables to forward to outputProc
+OUTPUTPROC_CMDLINE="$OUTPUTPROC_VARS $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID"
+
+# Wrap command line with Docker if required
+if $DOCKER; then
+  # TODO: Derive these
+  DATADIR="/data"
+  TAG="9048"
+
+  OUTPUTPROC_CMDLINE="docker run -it -e LUSER=`id -u $SSH_USER_NAME` --net=host -v $DATADIR:$DATADIR lofar-outputproc:$TAG bash -c \"$OUTPUTPROC_CMDLINE\""
+fi
+
+if $SLURM; then
+  # The nodes we need (and can use) are part of this job
+  COMMAND="srun -N $SLURM_JOB_NUM_NODES $OUTPUTPROC_CMDLINE"
   echo "Starting $COMMAND"
-  # keep a counter to allow determination of the rank (needed for binding to rtcp)
-  RANK=$(($RANK + 1))
-  
-  command_retry "$COMMAND" &  # Start retrying function in the background
-  PID=$!                      # get the pid 
-  
+
+  $COMMAND &
+  PID=$!
+
   echo -n "$PID " >> $PID_LIST_FILE  # Save the pid for cleanup
-done
+else
+  for HOST in $NODE_LIST
+  do
+    COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $OUTPUTPROC_CMDLINE"
+    echo "Starting $COMMAND"
+    
+    command_retry "$COMMAND" &  # Start retrying function in the background
+    PID=$!                      # get the pid 
+    
+    echo -n "$PID " >> $PID_LIST_FILE  # Save the pid for cleanup
+  done
+fi
 
 # ************************************
 # Start rtcp 

@@ -124,6 +124,7 @@ lofar_add_bin_program(gpu_load gpu_load.cc)
 
 # install scripts used to run an observation under bin
 lofar_add_bin_scripts(
+  scripts/cobalt_functions.sh
   scripts/CobaltControl.sh
   scripts/runObservation.sh
   scripts/startstopkeys.sh
