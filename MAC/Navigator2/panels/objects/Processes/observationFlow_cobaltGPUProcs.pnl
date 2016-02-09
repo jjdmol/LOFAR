@@ -6,6 +6,7 @@ PANEL,-1 -1 177 78 N "_3DFace" 0
 {
   baseDP = \"LOFAR_PermSW\";
   database=dpSubStr(baseDP,DPSUB_SYS);
+  
   dyn_string obslist;
   int i = dpGet(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\",obslist);
   // remove all pipelines
@@ -14,15 +15,41 @@ PANEL,-1 -1 177 78 N "_3DFace" 0
     dynAppend(observationsList,obslist[i]);
   }
   
-  
   activeObsDP =MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\";  
-  dyn_string obslist;
-  int i = dpGet(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\",obslist);
-  // remove all pipelines
-  for (i=1; i<=dynlen(obslist); i++) {
-    if (!navFunct_isObservation(obslist[i])) continue;
-    dynAppend(observationsList,obslist[i]);
-  } 
+  
+  // because CobaltProcesses claim their datapoints when the observation is actually running we need to connect to all these observations
+  // and give a signal when the runstate of one of them changes to running to trigger the Cobalt point collection
+  
+  LOG_DEBUG(\"ObservationFlow_cobaltGPUProcs.pnl:main|observationList: \"+observationsList);
+
+  dyn_string obsConnections = makeDynString();  
+  for (int i = 1; i <= dynlen(observationsList) ; i++) {
+    // compose the WinCC OA DP name 
+    string obsName = \"LOFAR_ObsSW_\"+observationsList[i]; 
+
+    // Ask the claimmanager for the temp obs representation
+    string obsDP=MainDBName+claimManager_nameToRealName(obsName);
+
+    // add DP to list with all connects
+    if (! dynContains(obsConnections,obsDP+\".runState\")) dynAppend(obsConnections,obsDP+\".runState\");
+  }
+  
+  if (dynlen(oldObsConnections) > 0) {
+    // disconnect old observations
+    if (dpDisconnect(\"monitorRunStates\",oldObsConnections) < 0) {
+      navFunct_printLastError(\"ObservationFlow_cobaltGPUProcs.pnl:main\", getLastError());
+    }
+    dynClear(oldObsConnections);
+  }
+  
+  // connect to runState for all active observations  
+  if (dynlen(obsConnections) > 0 && dpConnect(\"monitorRunStates\",obsConnections) == -1) {
+    LOG_ERROR(\"ObservationFlow_cobaltGPUProcs.pnl:main|ERROR: couldn't connect to : \"+obsConnections+ \" \" + getLastError());
+  } else if (dynlen(obsConnections) > 0) {
+    oldObsConnections = obsConnections;
+  }  else {
+    setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_off\");
+  }       	
 }" 0
  E "main(int x, int y)
 {
