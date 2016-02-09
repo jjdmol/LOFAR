@@ -89,11 +89,11 @@ function sendback_state {
 
   if [ $OBSRESULT -eq 0 ]
   then
-    echo "Signalling success"
+    echo "[cobalt] Signalling success"
     SUCCESS=1
   else
     # ***** Observation or sending feedback failed for some reason
-    echo "Signalling failure"
+    echo "[cobalt] Signalling failure"
     SUCCESS=0
   fi
 
@@ -182,8 +182,8 @@ PARSET="$1"
 [ -n "$PARSET" ] || usage
 
 # Check if LOFARROOT is set.
-[ -n "$LOFARROOT" ] || error "LOFARROOT is not set!"
-echo "LOFARROOT is set to $LOFARROOT"
+[ -n "$LOFARROOT" ] || error "[cobalt] LOFARROOT is not set!"
+echo "[cobalt] LOFARROOT = $LOFARROOT"
 
 # ******************************
 # Preprocess: initialise
@@ -203,10 +203,10 @@ fi
 timeout -k2 1 /bin/true 2> /dev/null && KILLOPT=-k2
 
 # Read parset
-[ -f "$PARSET" -a -r "$PARSET" ] || error "Cannot read parset: $PARSET"
+[ -f "$PARSET" -a -r "$PARSET" ] || error "[parset] Cannot read: $PARSET"
 
 OBSID=`getkey Observation.ObsID`
-echo "Observation ID: $OBSID"
+echo "[cobalt] ObsID = $OBSID"
 
 # Remove stale feedback file (useful for testing)
 FEEDBACK_FILE=$LOFARROOT/var/run/Observation${OBSID}_feedback
@@ -226,8 +226,8 @@ then
   DOT_COBALT_DEFAULT=$HOME/.cobalt/default/*.parset
   DOT_COBALT_OVERRIDE=$HOME/.cobalt/override/*.parset
   if [ "$USER" == "lofarsys" ]; then
-    ls -U -- $DOT_COBALT_DEFAULT >/dev/null 2>&1 && echo "WARN: ignoring augmentation parset(s) $DOT_COBALT_DEFAULT" >&2
-    ls -U -- $DOT_COBALT_OVERRIDE >/dev/null 2>&1 && echo "WARN: ignoring augmentation parset(s) $DOT_COBALT_OVERRIDE" >&2
+    ls -U -- $DOT_COBALT_DEFAULT >/dev/null 2>&1 && echo "[parset] WARN: ignoring augmentation parset(s) $DOT_COBALT_DEFAULT" >&2
+    ls -U -- $DOT_COBALT_OVERRIDE >/dev/null 2>&1 && echo "[parset] WARN: ignoring augmentation parset(s) $DOT_COBALT_OVERRIDE" >&2
     unset DOT_COBALT_DEFAULT DOT_COBALT_OVERRIDE
   fi
 
@@ -239,7 +239,7 @@ then
       $PARSET \
       $LOFARROOT/etc/parset-additions.d/override/*.parset \
       $DOT_COBALT_OVERRIDE \
-      > $AUGMENTED_PARSET || error "Could not create parset $AUGMENTED_PARSET"
+      > $AUGMENTED_PARSET || error "[parset] Could not create $AUGMENTED_PARSET"
   eval $nullglob_state
 
   # Use the new one from now on
@@ -288,7 +288,7 @@ if [ -z "$HOSTS" ]; then
   HOSTS=localhost
 fi
 
-echo "Hosts: $HOSTS"
+echo "[cobalt] Hosts = $HOSTS"
 
 # Copy parset to all hosts
 cksumline=`md5sum $PARSET`
@@ -306,7 +306,7 @@ do
 
   # Copy parset to remote node
   echo "Copying parset to $h:$PARSET"
-  timeout $KILLOPT 30s scp -Bq $PARSET $h:$PARSET || error "Could not copy parset to $h"
+  timeout $KILLOPT 30s scp -Bq $PARSET $h:$PARSET || error "[parset] Could not scp parset to $h"
 done
 
 # ************************************
@@ -347,7 +347,7 @@ if $GLOBALFS; then
   NODE_LIST=$(getOutputProcHosts $PARSET)
 fi
 
-echo "Node list: $NODE_LIST"
+echo "[outputProc] Hosts: $NODE_LIST"
 
 # If parameters are found in the parset create a key_string for ssh command
 if [ "$SSH_PRIVATE_KEY" != "" ] 
@@ -360,7 +360,7 @@ then
 fi
 
 # test the connection with local host: minimal test for valid credentials
-ssh -l $SSH_USER_NAME $KEY_STRING "localhost" "/bin/true" || error "Failed to create a connection to localhost, ssh error"
+ssh -l $SSH_USER_NAME $KEY_STRING "localhost" "/bin/true" || error "[cobalt] Failed to ssh to localhost"
 
 # Create a helper function for delete child processes and
 # a file containing the PID of these processes
@@ -376,20 +376,20 @@ function clean_up {
   EXIT_STATE=$1
   PID_LIST=$2
   
-  echo "Cleaning up child processes. Sending SIGTERM" 
+  echo "[children] Sending SIGTERM" 
   # THe kill statements might be called with an empty argument. This will 
   # result in an exit state 1. But the error is redirected to dev/null.
   kill $(cat $PID_LIST_FILE)  2> /dev/null
   kill $PID_LIST              2> /dev/null 
   
-  echo "Waiting 2 seconds for soft shutdown"
+  echo "[children] Waiting 2 seconds for soft shutdown"
   sleep 2
   
-  echo "Sending SIGKILL"
+  echo "[children] Sending SIGKILL"
   kill -9 $(cat $PID_LIST_FILE) 2> /dev/null
   kill -9 $PID_LIST             2> /dev/null
   
-  echo "removing Childprocess pid list file"
+  echo "[children] Removing pid file"
   rm -f $PID_LIST_FILE
   
   exit $EXIT_STATE 
@@ -402,7 +402,7 @@ trap 'clean_up 1' SIGTERM SIGINT SIGQUIT SIGHUP
 # Start output procs in a seperate function
 # Save file for started child processes
 # Use helper program to get the list of hosts from parset
-echo "outputProc processes are appended to the file: $PID_LIST_FILE"
+echo "[outputProc] pid file = $PID_LIST_FILE"
 touch $PID_LIST_FILE
 
 # Construct full command line for outputProc
@@ -424,7 +424,7 @@ if ! $DUMMY_RUN; then
   if $SLURM; then
     # The nodes we need (and can use) are part of this job
     COMMAND="srun -N $SLURM_JOB_NUM_NODES $OUTPUTPROC_CMDLINE"
-    echo "Starting $COMMAND"
+    echo "[outputProc] Starting $COMMAND"
 
     $COMMAND &
     PID=$!
@@ -434,7 +434,7 @@ if ! $DUMMY_RUN; then
     for HOST in $NODE_LIST
     do
       COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $OUTPUTPROC_CMDLINE"
-      echo "Starting $COMMAND"
+      echo "[outputProc] Starting $COMMAND"
       
       command_retry "$COMMAND" &  # Start retrying function in the background
       PID=$!                      # get the pid 
@@ -448,7 +448,6 @@ fi
 # Start rtcp 
 # ***********************************
 
-echo "[cobalt] LOFARROOT = $LOFARROOT"
 echo "[cobalt] parset = $PARSET"
 
 # Run in the background to allow signals to propagate
@@ -470,7 +469,7 @@ fi
 PID=$!
 
 # Propagate SIGTERM
-trap "echo runObservation.sh: Received signal cleaning up child processes; clean_up 1 $PID" SIGTERM SIGINT SIGQUIT SIGHUP
+trap "echo '[cobalt] runObservation.sh: Received signal.'; clean_up 1 $PID" SIGTERM SIGINT SIGQUIT SIGHUP
 
 # Wait for $COMMAND to finish. We use 'wait' because it will exit immediately if it
 # receives a signal.
@@ -481,7 +480,7 @@ trap "echo runObservation.sh: Received signal cleaning up child processes; clean
 wait $PID
 OBSRESULT=$?
 
-echo "Result code of observation: $OBSRESULT"
+echo "[cobalt] Exit code of observation: $OBSRESULT"
 
 # Return codes of rtcp:
 #  0 = success
@@ -495,7 +494,7 @@ then
   #
   # Note that we might miss failures detected by rtcp, such as
   # missing final meta data!
-  echo "Found feed-back file $FEEDBACK_FILE, considering the observation succesful."
+  echo "[cobalt] Found feed-back file $FEEDBACK_FILE, considering the observation succesful."
 
   OBSRESULT=0
 fi
@@ -507,16 +506,16 @@ fi
 sendback_state "$OBSRESULT"
 
 # clean up outputProc children
-echo "Allowing 120 second for normal end of outputProc"
+echo "[outputProc] Waiting up to 120 seconds for normal end"
 #    Set trap to kill the sleep in case of signals                    save the pid of sleep
-( trap 'kill $SLEEP_PID' SIGTERM SIGINT SIGQUIT SIGHUP; sleep 120&  SLEEP_PID=$!; echo 'Starting forced cleanup outputProc:'; clean_up 0 ) & 
+( trap 'kill $SLEEP_PID' SIGTERM SIGINT SIGQUIT SIGHUP; sleep 120 & SLEEP_PID=$!; echo '[outputProc] Killing'; wait $SLEEP_PID; clean_up 0 ) & 
 KILLER_PID=$!
 
 # Waiting for the child processes to finish
 LIST_OF_PIDS_TO_WAIT_FOR=$(cat $PID_LIST_FILE)
 if [ "$LIST_OF_PIDS_TO_WAIT_FOR" != "" ] # if there are outputProc pid working
 then
-  echo "waiting for output procs"
+  echo "[outputProc] Waiting..."
   wait $(cat $PID_LIST_FILE)        2> /dev/null
 fi
 
