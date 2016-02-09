@@ -30,6 +30,7 @@ function usage {
     "LOFAR_CHECKTOOL"\
     "\n    -F: do NOT send data points to a PVSS gateway"\
     "\n    -P: create PID file"\
+    "\n    -d: dummy run: don't execute anything"\
     "\n    -l: run solely on localhost using 'nprocs' MPI processes (isolated test)"\
     "\n    -p: enable profiling" \
     "\n    -o: add option KEY=VALUE to the parset" \
@@ -116,6 +117,9 @@ AUGMENT_PARSET=1
 # Extra parset keys to add
 EXTRA_PARSET_KEYS=""
 
+# Whether to execute anything
+DUMMY_RUN=false
+
 # File to write PID to
 PIDFILE=""
 
@@ -136,7 +140,7 @@ RTCP_PARAMS=""
 # ******************************
 # Parse command-line options
 # ******************************
-while getopts ":ABCFP:l:o:px:" opt; do
+while getopts ":ABCFP:dl:o:px:" opt; do
   case $opt in
       A)  AUGMENT_PARSET=0
           ;;
@@ -147,6 +151,8 @@ while getopts ":ABCFP:l:o:px:" opt; do
       F)  STATUS_FEEDBACK=0
           ;;
       P)  PIDFILE="$OPTARG"
+          ;;
+      d)  DUMMY_RUN=true
           ;;
       l)  FORCE_LOCALHOST=1
           MPIRUN_PARAMS="$MPIRUN_PARAMS -np $OPTARG"
@@ -350,45 +356,8 @@ PID_LIST_FILE="$LOFARROOT/var/run/outputProc-$OBSERVATIONID.pids"
 
 if $GLOBALFS; then
   # Update locations in parset
-  mv -fT "$PARSET" "$PARSET.allocate-globalFS"
-
-  <$PARSET.allocate-outputProc >$PARSET perl -e '
-    @hosts = qw('"$NODE_LIST"');
-
-    while (<>) {
-      if (/^
-            (Observation.DataProducts.Output_[A-Za-z]+.locations)  # key
-            \s*=\s*
-            \[(.*?)\] # value
-          /x) {
-
-        # output location key -> replace hostnames
-        $key, $locations = $1, $2;
-
-        # locations are of the format "locus001:/dir, locus002:/dir, ..."
-        foreach $loc (split /,/, $locations) {
-          # split off directory
-          ($host, $dir) = split /:/, $loc, 2;
-
-          # replace hostname iff it matches our cluster
-          if ($host =~ /^\s*'"$CLUSTER_NAME"'\s$*/i) {
-            # determine new host (rotate @hosts)
-            $host = shift @hosts;
-            push @hosts, $host;
-          }
-
-          # add new location to the list
-          push @newlocations, join(":", $host, $dir);
-        }
-
-        # print key with new value
-        printf "%s=[%s]\n", $key, join(",", @newlocations);
-      } else {
-        # print any other parset key verbatim
-        print;
-      }
-    }
-  '
+  mv -fT "$PARSET" "$PARSET.generate_globalfs"
+  generate_globalfs_locations.py --cluster "$CLUSTER_NAME" --hosts "$COMPUTENODES" < "$PARSET.generate_globalfs" > "$PARSET"
 fi
 
 
@@ -443,43 +412,55 @@ if $DOCKER; then
   OUTPUTPROC_CMDLINE="docker run -it -e LUSER=`id -u $SSH_USER_NAME` --net=host -v $DATADIR:$DATADIR lofar-outputproc:$TAG bash -c \"$OUTPUTPROC_CMDLINE\""
 fi
 
-if $SLURM; then
-  # The nodes we need (and can use) are part of this job
-  COMMAND="srun -N $SLURM_JOB_NUM_NODES $OUTPUTPROC_CMDLINE"
-  echo "Starting $COMMAND"
+echo "[outputProc] command line = $OUTPUTPROC_CMDLINE"
 
-  $COMMAND &
-  PID=$!
-
-  echo -n "$PID " >> $PID_LIST_FILE  # Save the pid for cleanup
-else
-  for HOST in $NODE_LIST
-  do
-    COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $OUTPUTPROC_CMDLINE"
+if ! $DUMMY_RUN; then
+  if $SLURM; then
+    # The nodes we need (and can use) are part of this job
+    COMMAND="srun -N $SLURM_JOB_NUM_NODES $OUTPUTPROC_CMDLINE"
     echo "Starting $COMMAND"
-    
-    command_retry "$COMMAND" &  # Start retrying function in the background
-    PID=$!                      # get the pid 
-    
+
+    $COMMAND &
+    PID=$!
+
     echo -n "$PID " >> $PID_LIST_FILE  # Save the pid for cleanup
-  done
+  else
+    for HOST in $NODE_LIST
+    do
+      COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $OUTPUTPROC_CMDLINE"
+      echo "Starting $COMMAND"
+      
+      command_retry "$COMMAND" &  # Start retrying function in the background
+      PID=$!                      # get the pid 
+      
+      echo -n "$PID " >> $PID_LIST_FILE  # Save the pid for cleanup
+    done
+  fi
 fi
 
 # ************************************
 # Start rtcp 
 # ***********************************
 
+echo "[cobalt] LOFARROOT = $LOFARROOT"
+echo "[cobalt] parset = $PARSET"
+
 # Run in the background to allow signals to propagate
 #
 # -x LOFARROOT    Propagate $LOFARROOT for rtcp to find GPU kernels, config files, etc.
 # -x QUEUE_PREFIX Propagate $QUEUE_PREFIX for test-specific interaction over the message bus
 # -H              The host list to run on, derived earlier.
-mpirun.sh -x LOFARROOT="$LOFARROOT" \
-          -x QUEUE_PREFIX="$QUEUE_PREFIX" \
-          -H "$HOSTS" \
-          $MPIRUN_PARAMS \
-          $CHECK_TOOL \
-          `which rtcp` $RTCP_PARAMS "$PARSET" &
+if $DUMMY_RUN; then
+  # Just return success
+  true &
+else
+  mpirun.sh -x LOFARROOT="$LOFARROOT" \
+            -x QUEUE_PREFIX="$QUEUE_PREFIX" \
+            -H "$HOSTS" \
+            $MPIRUN_PARAMS \
+            $CHECK_TOOL \
+            `which rtcp` $RTCP_PARAMS "$PARSET" &
+fi
 PID=$!
 
 # Propagate SIGTERM
