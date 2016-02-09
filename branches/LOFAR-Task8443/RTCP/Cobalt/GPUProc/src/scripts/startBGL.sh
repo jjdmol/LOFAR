@@ -81,8 +81,8 @@ fi
 
 # Start observation in the background
 PARAMS="-P $PIDFILE -o Cobalt.commandStream=file:$COMMANDPIPE $PARSET"
-echo "Starting $CMDLINE"
-$CMDLINE > $LOGFILE 2>&1 </dev/null &
+echo "Starting $COMMAND"
+$COMMAND > $LOGFILE 2>&1 </dev/null &
 PID=$!
 echo "PID: $PID"
 
