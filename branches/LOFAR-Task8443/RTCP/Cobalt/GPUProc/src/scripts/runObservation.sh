@@ -508,7 +508,7 @@ sendback_state "$OBSRESULT"
 # clean up outputProc children
 echo "[outputProc] Waiting up to 120 seconds for normal end"
 #    Set trap to kill the sleep in case of signals                    save the pid of sleep
-( trap 'kill $SLEEP_PID' SIGTERM SIGINT SIGQUIT SIGHUP; sleep 120 & SLEEP_PID=$!; echo '[outputProc] Killing'; wait $SLEEP_PID; clean_up 0 ) & 
+( trap 'kill $SLEEP_PID' SIGTERM SIGINT SIGQUIT SIGHUP; sleep 120 & SLEEP_PID=$!; wait $SLEEP_PID; echo '[outputProc] Killing'; clean_up 0 ) & 
 KILLER_PID=$!
 
 # Waiting for the child processes to finish
