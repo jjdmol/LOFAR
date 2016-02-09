@@ -6,7 +6,7 @@ FROM lofar-base:${LOFAR_TAG}
 ENV AOFLAGGER_VERSION=2.7.1
 
 # Run-time dependencies
-RUN sudo apt-get install -y python-xmlrunner python-scipy liblog4cplus-1.0-4 libxml2 libboost-thread${BOOST_VERSION}.0 libboost-filesystem${BOOST_VERSION}.0 libboost-date-time${BOOST_VERSION}.0 libboost-signals${BOOST_VERSION}.0 libpng12-0 libfftw3-bin libsigc++-2.0-dev libxml++2.6-2 libgsl0ldbl openssh-client libboost-regex${BOOST_VERSION}.0 && \
+RUN sudo apt-get install -y python-xmlrunner python-scipy liblog4cplus-1.0-4 libxml2 libboost-thread${BOOST_VERSION}.0 libboost-filesystem${BOOST_VERSION}.0 libboost-date-time${BOOST_VERSION}.0 libboost-signals${BOOST_VERSION}.0 libpng12-0 libsigc++-2.0-dev libxml++2.6-2 libgsl0ldbl openssh-client libboost-regex${BOOST_VERSION}.0 && \
     sudo apt-get -y install python-pip python-dev && \
     sudo pip install pyfits pywcs python-monetdb && \
     sudo apt-get -y purge python-pip python-dev && \
