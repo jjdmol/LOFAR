@@ -38,7 +38,8 @@ ENV J=4
 #
 # Base and runtime dependencies
 #
-RUN sed -i 's/archive.ubuntu.com/osmirror.rug.nl/' /etc/apt/sources.list && apt-get update && apt-get upgrade -y
+#RUN sed -i 's/archive.ubuntu.com/osmirror.rug.nl/' /etc/apt/sources.list 
+RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y sudo python2.7 libpython2.7 && \
     apt-get install -y libblas3 liblapacke python-numpy libfftw3-bin libhdf5-7 libboost-python${BOOST_VERSION}.0
 
