@@ -8,6 +8,7 @@ set(_py_files
     calibration_pipeline.py
     image_pipeline.py
     pulsar_pipeline.py
+    parameterset.py
 )
 
 python_install(${_py_files} DESTINATION lofar/sas/resourceassignment/resourceassignmentestimator/resource_estimators)

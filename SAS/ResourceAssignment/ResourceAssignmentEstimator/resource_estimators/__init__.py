@@ -1,7 +1,7 @@
 """ resource_estimators __init__()
 """
 
-from parameterset import Parameterset
+from parameterset import ParameterSet
 from observation import ObservationResourceEstimator
 from longbaseline_pipeline import LongBaselinePipelineResourceEstimator
 from calibration_pipeline import CalibrationPipelineResourceEstimator
