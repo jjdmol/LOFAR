@@ -4,6 +4,7 @@
 import logging
 from math import ceil
 from base_resource_estimator import BaseResourceEstimator
+from .parameterset import ParameterSet
 
 logger = logging.getLogger(__name__)
 

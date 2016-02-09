@@ -18,27 +18,29 @@ class ResourceEstimatorHandler(MessageHandlerInterface):
     def __init__(self, **kwargs):
         super(ResourceEstimatorHandler, self).__init__(**kwargs)
 
-        self.service2MethodMap = {'ResourceEstimation': self._get_estimated_resources}
+    def handle_message(self, msg):
+        return self._get_estimated_resources(msg)
 
-    def _get_estimated_resources(self):
+    def _get_estimated_resources(self, parset_str):
+        logger.info('get_estimated_resources on: %s' % parset_str)
         result = {}
 
-        observation = ObservationResourceEstimator(self.kwargs)
+        observation = ObservationResourceEstimator(parset_str)
         result.update(observation.result_as_dict())
 
         pipeline_input_files = result['observation']['output_files']
 
-        longbaseline = LongBaselinePipelineResourceEstimator(self.kwargs, input_files=pipeline_input_files)
+        longbaseline = LongBaselinePipelineResourceEstimator(parset_str, input_files=pipeline_input_files)
         result.update(longbaseline.result_as_dict())
 
-        calibration = CalibrationPipelineResourceEstimator(self.kwargs, input_files=pipeline_input_files)
+        calibration = CalibrationPipelineResourceEstimator(parset_str, input_files=pipeline_input_files)
         result.update(calibration.result_as_dict())
 
-        pulsar = PulsarPipelineResourceEstimator(self.kwargs, input_files=pipeline_input_files)
+        pulsar = PulsarPipelineResourceEstimator(parset_str, input_files=pipeline_input_files)
         result.update(pulsar.result_as_dict())
 
-        image = ImagePipelineResourceEstimator(self.kwargs, input_files=pipeline_input_files)
-        result.update(image.result_as_dict)
+        image = ImagePipelineResourceEstimator(parset_str, input_files=pipeline_input_files)
+        result.update(image.result_as_dict())
 
         return result
 
@@ -48,7 +50,8 @@ def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, brok
                    servicehandler=ResourceEstimatorHandler,
                    busname=busname,
                    broker=broker,
-                   numthreads=4)
+                   numthreads=1,
+                   verbose=True)
 
 def main():
     from optparse import OptionParser

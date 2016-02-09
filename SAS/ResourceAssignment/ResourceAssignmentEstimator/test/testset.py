@@ -2,7 +2,6 @@
 """
 
 from lofar.sas.resourceassignment.resourceassignmentestimator.resource_estimators import ParameterSet
-#from parameterset import ParameterSet
 
 class TestSet(object):
     def __init__(self):
@@ -70,7 +69,7 @@ class TestSet(object):
         observation.output_files.dp_incoherent_stokes.nr_files=
         observation.output_files.dp_incoherent_stokes.file_size=
         """
-        self.valid_set.import_string(valid_response)
+        self.valid_set.import_string(validset)
 
 
     def add_observation_beams(self):
@@ -97,7 +96,7 @@ class TestSet(object):
         observation.output_files.dp_incoherent_stokes.nr_files=
         observation.output_files.dp_incoherent_stokes.file_size=
         """
-        self.valid_set.import_string(valid_response)
+        self.valid_set.import_string(validset)
 
 
     def enable_observations_coherent_stokes(self):
@@ -119,7 +118,7 @@ class TestSet(object):
         observation.output_files.dp_incoherent_stokes.nr_files=
         observation.output_files.dp_incoherent_stokes.file_size=
         """
-        self.valid_set.import_string(valid_response)
+        self.valid_set.import_string(validset)
 
 
     def enable_observations_incoherent_stokes(self):
@@ -140,7 +139,7 @@ class TestSet(object):
         observation.output_files.dp_incoherent_stokes.nr_files=
         observation.output_files.dp_incoherent_stokes.file_size=
         """
-        self.valid_set.import_string(valid_response)
+        self.valid_set.import_string(validset)
 
 
     def enabble_flys_eye(self):
@@ -159,7 +158,7 @@ class TestSet(object):
         observation.output_files.dp_incoherent_stokes.nr_files=
         observation.output_files.dp_incoherent_stokes.file_size=
         """
-        self.valid_set.import_string(valid_response)
+        self.valid_set.import_string(validset)
 
     # for all pipelines
     def enable_calibration_pipeline(self):
@@ -180,7 +179,7 @@ class TestSet(object):
         calibration_pipeline.dp_instrument_model.nr_files=
         calibration_pipeline.dp_instrument_model.file_size=
         """
-        self.valid_set.import_string(valid_response)
+        self.valid_set.import_string(validset)
 
 
     def enable_longbaseline_pipeline(self):
@@ -198,7 +197,7 @@ class TestSet(object):
         longbaseline_pipeline.dp_correlated_uv.nr_files=
         longbaseline_pipeline.dp_correlated_uv.file_size=
         """
-        self.valid_set.import_string(valid_response)
+        self.valid_set.import_string(validset)
 
 
     def enable_pulsar_pipeline(self):
@@ -214,7 +213,7 @@ class TestSet(object):
         pulsar_pipeline.dp_pulsar.nr_files=
         pulsar_pipeline.dp_pulsar.file_size=
         """
-        self.valid_set.import_string(valid_response)
+        self.valid_set.import_string(validset)
 
 
     def enable_image_pipeline(self):
@@ -232,5 +231,5 @@ class TestSet(object):
         image_pipeline.dp_sky_image.nr_files=
         image_pipeline.dp_sky_image.file_size=
         """
-        self.valid_set.import_string(valid_response)
+        self.valid_set.import_string(validset)
 
