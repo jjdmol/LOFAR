@@ -8,13 +8,11 @@ Simple Service listening
 import logging
 from lofar.messaging import Service
 from lofar.messaging.Service import MessageHandlerInterface
-from lofar.common.util import waitForInterrupt
 
 from lofar.sas.resourceassignment.resourceassignmentestimator.resource_estimators import *
+from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 class ResourceEstimatorHandler(MessageHandlerInterface):
     def __init__(self, **kwargs):
@@ -45,14 +43,32 @@ class ResourceEstimatorHandler(MessageHandlerInterface):
         return result
 
 
-def createService(busname='lofarbus'):
-    return Service('ResourceEstimation',
-                   ResourceEstimatorHandler,
+def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker=None):
+    return Service(servicename=servicename,
+                   servicehandler=ResourceEstimatorHandler,
                    busname=busname,
-                   numthreads=1)
+                   broker=broker,
+                   numthreads=4)
 
 def main():
-    with createService(busname='lofarbus'):
+    from optparse import OptionParser
+    from lofar.messaging import setQpidLogLevel
+    from lofar.common.util import waitForInterrupt
+
+    # Check the invocation arguments
+    parser = OptionParser("%prog [options]",
+                          description='runs the resourceassigner service')
+    parser.add_option('-q', '--broker', dest='broker', type='string', default=None, help='Address of the qpid broker, default: localhost')
+    parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_BUSNAME, help="Name of the bus exchange on the qpid broker, default: %s" % DEFAULT_BUSNAME)
+    parser.add_option("-s", "--servicename", dest="servicename", type="string", default=DEFAULT_SERVICENAME, help="Name for this service, default: %s" % DEFAULT_SERVICENAME)
+    parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
+    (options, args) = parser.parse_args()
+
+    setQpidLogLevel(logging.INFO)
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                        level=logging.DEBUG if options.verbose else logging.INFO)
+
+    with createService(busname=options.busname, servicename=options.servicename, broker=options.broker):
         waitForInterrupt()
 
 if __name__ == '__main__':
