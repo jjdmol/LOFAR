@@ -22,11 +22,18 @@ class ParameterSet(object):
         self.import_string(data)
 
     def import_string(self, data):
+        if isinstance(data, basestring):
+            data = data.split('\n')
+
         for line in data:
             if line.strip() == '' or line.strip()[0] == '#':
                 continue
             ps = self.parset
-            key, value = line.strip().split('=')
+            #key, value = line.strip().split('=')
+            items = [x.strip() for x in line.strip().split('=')]
+            if len(items) != 2:
+                continue
+            key, value = items[0], items[1]
             key_list = key.strip().split('.')
             #print key_list, key_list[-1]
 
