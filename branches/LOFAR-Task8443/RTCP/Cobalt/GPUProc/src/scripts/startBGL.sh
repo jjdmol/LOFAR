@@ -60,7 +60,7 @@ ln -sfT $TBB_PARSET /globalhome/lofarsystem/log/latest || true
 mkfifo -m 0660 "$COMMANDPIPE" || true
 
 # Construct command line
-CMDLINE="runObservation.sh $PARAMS"
+COMMAND="runObservation.sh -P $PIDFILE -o Cobalt.commandStream=file:$COMMANDPIPE $PARSET"
 
 # Process cluster requirements
 parse_cluster_description
@@ -74,13 +74,10 @@ if $SLURM; then
     SLURM_VARS+=" $s=\$$s"
   done
 
-  COMMAND="ssh -tt $HEADNODE salloc -N $NRCOMPUTENODES bash -c 'ssh `hostname -f` -tt $SLURM_VARS $CMDLINE'"
-else
-  COMMAND="$CMDLINE"
+  COMMAND="ssh -tt $HEADNODE salloc -N $NRCOMPUTENODES bash -c 'ssh `hostname -f` -tt $SLURM_VARS $COMMAND'"
 fi
 
 # Start observation in the background
-PARAMS="-P $PIDFILE -o Cobalt.commandStream=file:$COMMANDPIPE $PARSET"
 echo "Starting $COMMAND"
 $COMMAND > $LOGFILE 2>&1 </dev/null &
 PID=$!
