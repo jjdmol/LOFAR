@@ -59,6 +59,7 @@ dyn_string stationList;
 dyn_string observationsList;
 dyn_string backLinesRefNames;
 dyn_string observationRefNames;
+string observationFlowRefName = \"MainObservationFlowRefName1\";
 
 string strPanelName;
 string strModuleName;
@@ -84,6 +85,7 @@ void clearObservationRefNames() {
   for (int i=1; i <= dynlen(observationRefNames); i++) {
     removeSymbol(strModuleName,\"\",observationRefNames[i]);
   }
+  removeSymbol(strModuleName,\"\",observationFlowRefName);
   dynClear(observationRefNames);
 }
 
@@ -91,9 +93,19 @@ void redrawObservations() {
   if (dynlen(observationRefNames) > 0) {
     clearObservationRefNames();
   }
+  dynClear(observationsList);
+  dyn_string obslist;
+  int i = dpGet(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\",obslist);
+  
+  // remove all pipelines
+  for (i=1; i<=dynlen(obslist); i++) {
+    if (!navFunct_isObservation(obslist[i])) continue;
+    dynAppend(observationsList,obslist[i]);
+  }
 
   addObservations();
-
+  addObservationFlow();
+  
   // trigger that the panel values are calculated and ready
   dynClear(highlight);
   dynClear(strHighlight);
@@ -220,10 +232,10 @@ void addObservations() {
   int yPos_AddSymbol = 685; 
   int ref = 1;
   string addPanelName    = \"objects/Observations/observation_smallCEPView.pnl\";
-  int i = dpGet(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\",observationsList);
+
   //loop over list and prepare panel with all stations and swlevel objects   
   for (int i=1; i<= dynlen(observationsList); i++) {
-    if (!navFunct_isObservation(observationsList[i])) continue;
+
     observationRefNames[ref]=\"stationObs\"+(ref);
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                       \"\",                              // Name of this panel
@@ -242,6 +254,23 @@ void addObservations() {
   }
 }
 
+void addObservationFlow() {
+  int xPos_AddSymbol = 0; 
+  int yPos_AddSymbol = 756; 
+  string addPanelName    = \"Observations/MainObservationFlow.pnl\";
+  if (  addSymbol(  strModuleName,                   // Stay in this modul
+                    \"\",                              // Name of this panel
+                    addPanelName,                    // Panel to add
+                    observationFlowRefName,          // Ref of the addedPanel
+                    makeDynString() , // Define all $values
+                    xPos_AddSymbol,                  // Xpos of the AddedSymbol
+                    yPos_AddSymbol,                  // Ypos of the AddedSymbol
+                    0,                               // angle
+                    1    ,1                          // zoomX , zoomY
+      ) < 0 ) {
+    LOG_ERROR(\"swlevel.pnl:addObservationFlow|Error Appending observationFlow panel.\");
+  }
+}
 " 0
  2
 "CBRef" "1"
@@ -726,32 +755,6 @@ E E 0 1 1 2 1 E U  0 E 950 10 997 23
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
 LANG:1 7 streams
-1 173 0 "" 1
-0
-1 174 0 "" 2
-0
-1 175 1 "" 1
-0
-1 176 1 "" 2
-0
-4 127
-"LINE5"
-""
-1 130 786 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
-61 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 2 1 2 1 E  130 786 160 786
-1 177 3 "" 1
-0
-1 178 3 "" 2
-0
 2 172
 "PRIMITIVE_TEXT40"
 ""
@@ -771,28 +774,6 @@ E E 0 1 1 2 1 E U  0 E 790 10 823 23
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
 LANG:1 5 AardF
-1 179 4 "" 0
-0
-1 180 4 "" 1
-0
-1 181 4 "" 2
-0
-1 182 4 "" 3
-0
-1 183 4 "" 4
-0
-1 184 5 "" 0
-0
-1 185 5 "" 1
-0
-1 186 6 "" 1
-0
-1 187 6 "" 2
-0
-1 188 7 "" 0
-0
-1 189 7 "" 1
-0
 0
 LAYER, 1 
 1
@@ -863,26 +844,5 @@ LANG:1 0
 LAYER, 7 
 1
 LANG:1 0 
-0
-3 0 "PANEL_REF0" -1
-"objects\\Observations\\observationFlow.pnl" 110 740 T 60 1 0 1 -49.99999999999997 79.99999999999989
-0
-3 1 "PANEL_REF1" -1
-"objects\\Hardware\\observationFlow_stations.pnl" 220 810 T 60 1 0 1 0 10
-0
-3 3 "PANEL_REF3" -1
-"objects\\Processes\\observationFlow_cobaltLocusNodeProcesses.pnl" 500 810 T 64 1 0 1 0 10
-0
-3 4 "PANEL_REF4" -1
-"objects\\Processes\\observationFlow_cobaltInputStreams.pnl" 280 750 T 66 1 0 1 0 10
-0
-3 5 "PANEL_REF5" -1
-"objects\\Processes\\observationFlow_cobaltGPUProcs.pnl" 430 750 T 66 1 0 1 0 5
-0
-3 6 "PANEL_REF6" -1
-"objects\\Processes\\observationFlow_cobaltNodeProcesses.pnl" 340 810 T 66 1 0 1 0 10
-0
-3 7 "PANEL_REF7" -1
-"objects\\Processes\\observationFlow_cobaltOutputProc.pnl" 590 750 T 66 1 0 1 0 14
 0
 0
