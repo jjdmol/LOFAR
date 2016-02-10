@@ -48,6 +48,7 @@ class RADBHandler(MessageHandlerInterface):
             'GetResourceGroups': self._getResourceGroups,
             'GetResourceTypes': self._getResourceTypes,
             'GetResources': self._getResources,
+            'GetTasks': self._getTasks,
             'GetTask': self._getTask,
             'InsertTask': self._insertTask,
             'DeleteTask': self._deleteTask,
@@ -55,7 +56,11 @@ class RADBHandler(MessageHandlerInterface):
             'GetTaskStatuses': self._getTaskStatuses,
             'GetTaskTypes': self._getTaskTypes,
             'GetTaskTypes': self._getTaskTypes,
-            'GetTasks': self._getTasks,
+            'GetSpecifications': self._getSpecifications,
+            'GetSpecification': self._getSpecification,
+            'InsertSpecification': self._insertSpecification,
+            'DeleteSpecification': self._deleteSpecification,
+            'UpdateSpecification': self._updateSpecification,
             'GetUnits': self._getUnits}
 
     def prepare_loop(self):
@@ -172,6 +177,36 @@ class RADBHandler(MessageHandlerInterface):
                                        task_status=kwargs.get('status_id', kwargs.get('status', 'prepared')),
                                        task_type=kwargs.get('type_id', kwargs.get('type')),
                                        specification_id=kwargs.get('specification_id'))
+        return {'id': id, 'updated': updated}
+
+    def _getSpecifications(self):
+        return self.radb.getSpecifications()
+
+    def _getSpecification(self, **kwargs):
+        logger.info('GetSpecification: %s' % kwargs)
+        specification = self.radb.getSpecification(kwargs['id'])
+        return specification
+
+    def _insertSpecification(self, **kwargs):
+        logger.info('InsertSpecification: %s' % kwargs)
+        specification_id = self.radb.insertSpecification(kwargs['starttime'],
+                                                         kwargs['endtime'],
+                                                         kwargs['content'])
+        return {'id':specification_id}
+
+    def _deleteSpecification(self, **kwargs):
+        logger.info('DeleteSpecification: %s' % kwargs)
+        id = kwargs['id']
+        deleted = self.radb.deleteSpecification(id)
+        return {'id': id, 'deleted': deleted}
+
+    def _updateSpecification(self, **kwargs):
+        logger.info('UpdateSpecification: %s' % kwargs)
+        id = kwargs['id']
+        updated = self.radb.updateSpecification(id,
+                                                starttime=kwargs.get('starttime'),
+                                                endtime=kwargs.get('endtime'),
+                                                content=kwargs.get('content'))
         return {'id': id, 'updated': updated}
 
     def _getUnits(self):
