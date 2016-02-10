@@ -143,8 +143,9 @@ class RARPC:
     def getResources(self):
         return self._rpc('GetResources')
 
-    def getTask(self, id):
-        task = self._rpc('GetTask', id=id)
+    def getTask(self, id=None, mom_id=None, otdb_id=None):
+        '''get a task for either the given (task)id, or for the given mom_id, or for the given otdb_id'''
+        task = self._rpc('GetTask', id=id, mom_id=mom_id, otdb_id=otdb_id)
         if task:
             task['starttime'] = task['starttime'].datetime()
             task['endtime'] = task['endtime'].datetime()
