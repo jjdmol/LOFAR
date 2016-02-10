@@ -181,6 +181,33 @@ class RARPC:
     def getTaskStatuses(self):
         return self._rpc('GetTaskStatuses')
 
+    def getSpecification(self, id):
+        specification = self._rpc('GetSpecification', id=id)
+        if specification:
+            specification['starttime'] = specification['starttime'].datetime()
+            specification['endtime'] = specification['endtime'].datetime()
+        return specification
+
+    def insertSpecification(self, starttime, endtime, content):
+        return self._rpc('InsertSpecification', starttime=starttime,
+                                           endtime=endtime,
+                                           content=content)
+
+    def deleteSpecification(self, id):
+        return self._rpc('DeleteSpecification', id=id)
+
+    def updateSpecification(self, specification_id, starttime=None, endtime=None, content=None):
+        return self._rpc('UpdateSpecification', starttime=starttime,
+                                           endtime=endtime,
+                                           content=content)
+
+    def getSpecifications(self):
+        specifications = self._rpc('GetSpecifications')
+        for specification in specifications:
+            specification['starttime'] = specification['starttime'].datetime()
+            specification['endtime'] = specification['endtime'].datetime()
+        return specifications
+
     def getUnits(self):
         return self._rpc('GetUnits')
 
