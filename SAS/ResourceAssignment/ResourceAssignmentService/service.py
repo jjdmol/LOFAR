@@ -150,7 +150,7 @@ class RADBHandler(MessageHandlerInterface):
 
     def _getTask(self, **kwargs):
         logger.info('GetTask: %s' % kwargs)
-        task = self.radb.getTask(kwargs['id'])
+        task = self.radb.getTask(id=kwargs.get('id'), mom_id=kwargs.get('mom_id'), otdb_id=kwargs.get('otdb_id'))
         return task
 
     def _insertTask(self, **kwargs):
