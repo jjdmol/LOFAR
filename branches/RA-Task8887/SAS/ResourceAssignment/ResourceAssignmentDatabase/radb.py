@@ -117,7 +117,7 @@ class RADatabase:
         validIds = [x for x in ids if x != None]
 
         if len(validIds) != 1:
-            raise KeyError("Provide only one and one id: id=%s, mom_id=%s, otdb_id=%s" % ids)
+            raise KeyError("Provide one and only one id: id=%s, mom_id=%s, otdb_id=%s" % (id, mom_id, otdb_id))
 
         query = '''SELECT * from resource_allocation.task_view tv '''
         if id:
