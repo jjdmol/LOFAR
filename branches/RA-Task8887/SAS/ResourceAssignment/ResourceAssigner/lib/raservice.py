@@ -68,7 +68,7 @@ class SpecifiedTaskListener(RATaskSpecifiedBusListener):
     def onTaskSpecified(self, sasId, modificationTime, resourceIndicators):
         logger.info('onTaskSpecified: sasId=%s' % sasId)
 
-        self.assigner.doAssignment(sasId, resourceIndicators)
+        self.assigner.doAssignment(sasId, resourceIndicators, 'prescheduled')
 
 __all__ = ["SpecifiedTaskListener"]
 
