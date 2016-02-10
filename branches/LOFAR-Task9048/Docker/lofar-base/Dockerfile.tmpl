@@ -100,7 +100,7 @@ RUN sudo apt-get install -y git cmake g++ gfortran libboost-system-dev libboost-
 #   Pyrap
 # *******************
 #
-RUN sudo apt-get install -y git make g++ python-setuptools libboost-python-dev && \
+RUN sudo apt-get install -y git make g++ python-setuptools libboost-python-dev libcfitsio3-dev wcslib-dev && \
     mkdir ${INSTALLDIR}/python-casacore && \
     cd ${INSTALLDIR}/python-casacore && git clone https://github.com/casacore/python-casacore && \
     if [ "$PYTHON_CASACORE_VERSION" != "latest" ]; then cd ${INSTALLDIR}/python-casacore/python-casacore && git checkout tags/v${PYTHON_CASACORE_VERSION}; fi && \
@@ -110,14 +110,8 @@ RUN sudo apt-get install -y git make g++ python-setuptools libboost-python-dev &
     export PYTHONPATH=${INSTALLDIR}/python-casacore/lib/python${PYTHON_VERSION}/site-packages:${INSTALLDIR}/python-casacore/lib64/python${PYTHON_VERSION}/site-packages:$PYTHONPATH && cd ${INSTALLDIR}/python-casacore/python-casacore && ./setup.py install --prefix=${INSTALLDIR}/python-casacore/ && \
     bash -c "find ${INSTALLDIR}/python-casacore/lib -name '*.so' | xargs strip || true" && \
     bash -c "rm -rf ${INSTALLDIR}/python-casacore/python-casacore" && \
-    sudo apt-get purge -y git make g++ python-setuptools libboost-python-dev && \
+    sudo apt-get purge -y git make g++ python-setuptools libboost-python-dev libcfitsio3-dev wcslib-dev && \
     sudo apt-get autoremove -y
-
-#
-# *******************
-#   casa
-# *******************
-#
 
 #
 # *******************
