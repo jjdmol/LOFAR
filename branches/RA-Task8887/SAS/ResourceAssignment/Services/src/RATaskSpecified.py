@@ -82,6 +82,7 @@ def resourceIndicatorsFromParset( parset ):
   # =====================================
   # Observation settings
   # =====================================
+  add("Observation.momID")
   add("Observation.sampleClock")
   add("Observation.nrBitsPerSample")
   add("Observation.antennaSet")
@@ -179,6 +180,7 @@ class RATaskSpecified(OTDBBusListener):
     # Request the parset
     main_obsID  = treeId
     main_parset,_ = self.parset_rpc( OtdbID=main_obsID )
+    logger.info("main_parset [%s]: %s" % (main_obsID, main_parset))
 
     # Construct a dict of all the parsets we retrieved
     parsets = {}
@@ -203,6 +205,7 @@ class RATaskSpecified(OTDBBusListener):
 
         # Request predecessor parset
         parsets[obsID],_ = self.parset_rpc( OtdbID=obsID )
+        logger.info("predecessor parset [%s]: %s" % (obsID, parsets[obsID]))
 
         # Add the list of predecessors
         request_obsIDs = request_obsIDs.union(predecessors(parsets[obsID]))
