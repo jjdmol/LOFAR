@@ -47,7 +47,32 @@ def predecessors( parset ):
 
   return result
 
-def resourceIndicatorsFromParset( parset ):
+def convertSchedulerProcessSubtype(processSubType):
+    '''convert scheduler processSubType as defined in SAS/Scheduler/src/OTDBTree.h to RA (type, subtype) tuple'''
+    if processSubType == "Averaging Pipeline":
+        return "Pipeline", "Averaging Pipeline"
+    elif processSubType == "Calibration Pipeline":
+        return "Pipeline", "Calibration Pipeline"
+    elif processSubType == "Imaging Pipeline":
+        return "Pipeline", "Imaging Pipeline"
+    elif processSubType == "Imaging Pipeline MSSS":
+        return "Pipeline", "Imaging Pipeline MSSS"
+    elif processSubType == "Long Baseline  Pipeline":
+        return "Pipeline", "Long Baseline  Pipeline"
+    elif processSubType == "Pulsar Pipeline":
+        return "Pipeline", "Pulsar Pipeline"
+    elif processSubType == "Beam Observation":
+        return "Observation", "BFMeasurement"
+    elif processSubType == "Interferometer":
+        return "Observation", "Interferometer"
+    elif processSubType == "TBB (piggyback)":
+        return "Observation", "TBBMeasurement"
+    elif processSubType == "TBB (standalone)":
+        return "Observation", "TBBMeasurement"
+
+    return "unknown", "unknown"
+
+def resourceIndicatorsFromParset( parsetDict ):
   """ Extract the parset keys that are required for resource assignment. """
 
   subset = {}
@@ -55,7 +80,7 @@ def resourceIndicatorsFromParset( parset ):
   def get(key, default=None):
     """ Return the value of parset key `key', or `default' if the key
         is not defined. """
-    return parset.get(PARSET_PREFIX + key, default)
+    return parsetDict.get(PARSET_PREFIX + key, default)
 
   def add(key, conversion=lambda x: x):
     """ Add the given key to our subset selection, using an optional
@@ -77,7 +102,7 @@ def resourceIndicatorsFromParset( parset ):
   # =====================================
   # Parset meta info
   # =====================================
-  subset["Version.number"] = parset.get("Version.number")
+  subset["Version.number"] = parsetDict.get("Version.number")
 
   # =====================================
   # Observation settings
@@ -90,6 +115,11 @@ def resourceIndicatorsFromParset( parset ):
   add("Observation.startTime")
   add("Observation.stopTime")
   add("Observation.nrBeams")
+
+  taskType, subType = convertSchedulerProcessSubtype(get("Observation.processSubtype", ""))
+  subset['Task.type'] = taskType
+  subset['Task.subtype'] = subType
+
   nrSAPs = int(get("Observation.nrBeams", 0))
   for sap in xrange(0, nrSAPs):
     add("Observation.Beam[%d].subbandList" % (sap,), intvector)
@@ -215,13 +245,14 @@ class RATaskSpecified(OTDBBusListener):
     resourceIndicators = dict([(str(obsID), resourceIndicatorsFromParset(parset)) for (obsID,parset) in parsets.iteritems()])
 
     # Construct and send result message
-    logger.info("Sending result")
     result = {
       "sasID": main_obsID,
       "state": "prescheduled",
       "time_of_change": modificationTime,
       "resource_indicators": resourceIndicators,
     }
+
+    logger.info("Sending result: %s" % result)
 
     # Put result on bus
     msg = EventMessage(content=result)
