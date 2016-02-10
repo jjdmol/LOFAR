@@ -189,8 +189,8 @@ class RADBHandler(MessageHandlerInterface):
 
     def _insertSpecification(self, **kwargs):
         logger.info('InsertSpecification: %s' % kwargs)
-        specification_id = self.radb.insertSpecification(kwargs['starttime'],
-                                                         kwargs['endtime'],
+        specification_id = self.radb.insertSpecification(kwargs['starttime'].datetime(),
+                                                         kwargs['endtime'].datetime(),
                                                          kwargs['content'])
         return {'id':specification_id}
 
@@ -204,8 +204,8 @@ class RADBHandler(MessageHandlerInterface):
         logger.info('UpdateSpecification: %s' % kwargs)
         id = kwargs['id']
         updated = self.radb.updateSpecification(id,
-                                                starttime=kwargs.get('starttime'),
-                                                endtime=kwargs.get('endtime'),
+                                                starttime=kwargs['starttime'].datetime() if 'starttime' in kwargs else None,
+                                                endtime=kwargs['endtime'].datetime() if 'endtime' in kwargs else None,
                                                 content=kwargs.get('content'))
         return {'id': id, 'updated': updated}
 
