@@ -197,10 +197,12 @@ class RARPC:
     def deleteSpecification(self, id):
         return self._rpc('DeleteSpecification', id=id)
 
-    def updateSpecification(self, specification_id, starttime=None, endtime=None, content=None):
-        return self._rpc('UpdateSpecification', starttime=starttime,
-                                           endtime=endtime,
-                                           content=content)
+    def updateSpecification(self, id, starttime=None, endtime=None, content=None):
+        return self._rpc('UpdateSpecification',
+                         id=id,
+                         starttime=starttime,
+                         endtime=endtime,
+                         content=content)
 
     def getSpecifications(self):
         specifications = self._rpc('GetSpecifications')
