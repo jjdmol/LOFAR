@@ -111,11 +111,22 @@ class RADatabase:
 
         return list(self.cursor.fetchall())
 
-    def getTask(self, id):
-        query = '''SELECT * from resource_allocation.task_view tv
-        where tv.id = (%s);
-        '''
-        self.cursor.execute(query, (id,))
+    def getTask(self, id=None, mom_id=None, otdb_id=None):
+        '''get a task for either the given (task)id, or for the given mom_id, or for the given otdb_id'''
+        ids = [id, mom_id, otdb_id]
+        validIds = [x for x in ids if x != None]
+
+        if len(validIds) != 1:
+            raise KeyError("Provide only one and one id: id=%s, mom_id=%s, otdb_id=%s" % ids)
+
+        query = '''SELECT * from resource_allocation.task_view tv '''
+        if id:
+            query += '''where tv.id = (%s);'''
+        elif mom_id:
+            query += '''where tv.mom_id = (%s);'''
+        elif otdb_id:
+            query += '''where tv.otdb_id = (%s);'''
+        self.cursor.execute(query, validIds)
 
         result = self.cursor.fetchone()
         return dict(result) if result else None
