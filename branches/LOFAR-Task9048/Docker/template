@@ -1,5 +1,4 @@
-#!/bin/bash
-
+#!/bin/bash 
 #
 # Template engine for LOFAR
 #
@@ -20,29 +19,17 @@
 # ----- LOFAR_BRANCH_NAME = UNKNOWN -----
 
 # Make sure we obtain info about the project source!
-SVN_INFO=`@Subversion_SVN_EXECUTABLE@ info @PROJECT_SOURCE_DIR@`
-
-# Extract repository root, e.g. https://svn.astron.nl/LOFAR
-REPO=`echo "$SVN_INFO" | perl -ne 'print "$1" if /Repository Root: +(.+)/;'`
-
-# Extract branch URL, e.g. https://svn.astron.nl/LOFAR/branches/LOFAR-Task1234
-URL=`echo "$SVN_INFO" | perl -ne 'print "$1" if /URL: +(.+)/;'`
+#PATH=$PATH:.
+VERSION_INFO=`versiondocker`
 
 # Extract branch name w.r.t. repository root, e.g. branches/LOFAR-Task1234
-BRANCH=`echo "$URL" | perl -ne 'print "$1" if m|^\Q'"$REPO"'\E/?(.+)|;'`
-
-# Define $LOFAR_BRANCH_NAME if all the above succeeded
-if [ -n "$REPO" -a -n "$BRANCH" ]; then
-  export LOFAR_BRANCH_NAME=${BRANCH}
-else
-  export LOFAR_BRANCH_NAME=UNKNOWN
-fi
+export LOFAR_BRANCH_NAME=`echo "$VERSION_INFO" | perl -ne 'print "$1" if /branch += +(.+)/;'`
 
 # ----- LOFAR_BRANCH_URL = https://svn.astron.nl/LOFAR/branches/LOFAR-Task1234 -----
 # ----- LOFAR_BRANCH_URL = https://svn.astron.nl/LOFAR/trunk -----
 # ----- LOFAR_BRANCH_URL = https://svn.astron.nl/LOFAR/tags/LOFAR-Release-2_15_1 -----
 
-export LOFAR_BRANCH_URL="$URL"
+export LOFAR_BRANCH_URL="https://svn.astron.nl/LOFAR/${LOFAR_BRANCH_NAME}"
 
 # ----- LOFAR_TAG = 1234 -----
 # ----- LOFAR_TAG = trunk -----
@@ -50,14 +37,14 @@ export LOFAR_BRANCH_URL="$URL"
 
 case "${LOFAR_BRANCH_NAME}" in
   trunk)      export LOFAR_TAG=trunk ;;
-  tags/*)     export LOFAR_TAG=${BRANCH##tags/LOFAR-Release-} ;;
-  branches/*) export LOFAR_TAG=${BRANCH##branches/LOFAR*Task} ;;
+  tags/*)     export LOFAR_TAG=${LOFAR_BRANCH_NAME##tags/LOFAR-Release-} ;;
+  branches/*) export LOFAR_TAG=${LOFAR_BRANCH_NAME##branches/LOFAR*Task} ;;
   *)          export LOFAR_TAG=latest ;;
 esac
 
 # ----- LOFAR_REVISION = 12345 -----
 
-export LOFAR_REVISION=`echo "$SVN_INFO" | perl -ne 'print "$1" if /Revision: +(.+)/;'`
+export LOFAR_REVISION=`echo "$VERSION_INFO" | perl -ne 'print "$1" if /overall revision += +([0-9]+)/;'`
 
 # ----- NOW = 2016-01-01 10:11:12 -----
 

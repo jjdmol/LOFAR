@@ -1,9 +1,17 @@
 # $Id$
 
-lofar_package(Docker 1.0)
+lofar_package(Docker 1.0 DEPENDS Common)
 
-include(LofarFindPackage)
-lofar_find_package(Subversion REQUIRED)
+include(LofarPackageVersion)
+
+# Build version info
+set(docker_LIB_SRCS
+  Package__Version.cc
+)
+
+lofar_add_library(docker ${docker_LIB_SRCS})
+
+lofar_add_bin_program(versiondocker versiondocker.cc)
 
 #
 # For given directories, we generate the Dockerfile
@@ -19,14 +27,9 @@ set(DOCKER_TEMPLATE_DIRS
   lofar-pipeline
   lofar-outputproc)
 
-# Create our template engine, using build-specific info
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/template.in
-  ${CMAKE_CURRENT_BINARY_DIR}/template @ONLY)
-
 # Note: "template" only works as long as the sources are still around,
 # since it uses svn to query information from them.
-lofar_add_bin_scripts(${CMAKE_CURRENT_BINARY_DIR}/template)
+lofar_add_bin_scripts(template)
 lofar_add_sbin_scripts(docker-build-all.sh)
 
 # Convert Dockerfile.tmpl -> Dockerfile in ${DOCKER_TEMPLATE_DIRS}
@@ -39,8 +42,8 @@ foreach(_dir ${DOCKER_TEMPLATE_DIRS})
   # when "all" is build.
   add_custom_command(
     OUTPUT ${_dst}
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/template < ${_src} > ${_dst}
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/template ${_src}
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/template < ${_src} > ${_dst}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/template ${_src} ${CMAKE_CURRENT_BINARY_DIR}/versiondocker
   )
   add_custom_target(${_dir}_Dockerfile_target ALL DEPENDS ${_dst})
 
