@@ -25,9 +25,19 @@ fi
 PVSSGatewayStub &
 gwPid=$!
 
-# Wait until both services allow connections. This is faster than delaying ~RTmetadata(),
-# since we do binary backoff connection attempts. This also keeps the delay in testing only.
-sleep 2  # often 2 is enough, but when idle, even 5 may not be enough :((((
+# Wait until PVSSGatewayStub (and ServiceBroker if we started it) are listening.
+# Just sleep X secs has proven both long and still unreliable.
+# (Remaining risk: both services started but PVSSGatewayStub not yet registered at ServiceBroker.)
+NETSTAT=/bin/netstat
+gwReady=0
+sbReady=$((1-$sbPid))
+while [ $gwReady -eq 0 -o $sbReady -eq 0 ]; do
+  echo 'Waiting for PVSSGatewayStub and ServiceBroker listening sockets to show up in netstat...' >&2
+  sleep 0.1
+  netstatout=`"$NETSTAT" -l -p -A inet -n 2>/dev/null`
+  gwReady=`echo "$netstatout" | grep $gwPid/ | wc -l`
+  [ $sbPid -ne 0 ] && sbReady=`echo "$netstatout" | grep $sbPid/ | wc -l`
+done
 
 ../../../MAC/MACIO/test/tRTmetadata > /dev/null  # logging disrupts output verif
 
