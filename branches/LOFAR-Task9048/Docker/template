@@ -20,7 +20,7 @@
 
 # Make sure we obtain info about the project source!
 #PATH=$PATH:.
-VERSION_INFO=`versiondocker`
+VERSION_INFO=`(versiondocker || ./versiondocker) 2>/dev/null` # in cmake, executable is in .
 
 # Extract branch name w.r.t. repository root, e.g. branches/LOFAR-Task1234
 export LOFAR_BRANCH_NAME=`echo "$VERSION_INFO" | perl -ne 'print "$1" if /branch += +(.+)/;'`
