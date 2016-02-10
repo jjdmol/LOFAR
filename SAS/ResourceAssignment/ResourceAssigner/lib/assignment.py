@@ -29,6 +29,7 @@ from datetime import datetime
 import time
 
 from lofar.messaging.RPC import RPC, RPCException
+from lofar.parameterset import parameterset
 
 from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME as RADB_BUSNAME
@@ -96,11 +97,26 @@ class ResourceAssigner():
         self.ssdbGetActiveGroupNames.close()
         self.ssdbGetHostForGID.close()
 
-    def doAssignment(self, sasId, parset):
-        logger.info('doAssignment: sasId=%s parset==%s' % (sasId, parset))
+    def doAssignment(self, sasId, parsets, status='prescheduled'):
+        logger.info('doAssignment: sasId=%s parset=%s' % (sasId, parsets))
 
-        cluster = self.parseSpecification(parset)
-        needed = self.getNeededResouces(parset)
+        #parse main parset...
+        mainParsetDict = parsets[sasId]
+        mainParset = parameterset(mainParsetDict)
+        momId = mainParset.getInt('Observation.momID', -1)
+        taskType = mainParset.getString('Task.type', '')
+        startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
+        endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
+
+        #and insert it as a specification in the radb
+        specificationId = self.radbrpc.insertSpecification(startTime, endTime, str(mainParsetDict))['id']
+
+        #and also the task for the specification in the radb
+        taskId = self.radbrpc.insertTask(momId, sasId, status, taskType, specificationId)['id']
+
+        #analyze the parset for needed and available resources and claim these in the radb
+        cluster = self.parseSpecification(mainParset)
+        needed = self.getNeededResouces(mainParset)
         available = self.getAvailableResources(cluster)
         #if checkResources(needed, available):
             #result = claimResources(needed)
@@ -111,14 +127,14 @@ class ResourceAssigner():
                 ##SetTaskToCONFLICT(Task.)
                 #pass
 
-    def parseSpecification(self, specification):
+    def parseSpecification(self, parset):
         # TODO: cluster is not part of specification yet. For now return CEP4. Add logic later.
         default = "cep2"
         cluster ="cep4"
         return cluster
 
-    def getNeededResouces(self, specification):
-        replymessage, status = self.rerpc(specification)
+    def getNeededResouces(self, parset):
+        replymessage, status = self.rerpc(parset.dict())
         print replymessage
 
     def getAvailableResources(self, cluster):
