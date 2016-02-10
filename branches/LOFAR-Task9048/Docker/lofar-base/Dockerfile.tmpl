@@ -18,9 +18,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 #
 # versions
 #
-ENV CFITSIO_VERSION=3370 \
-    WCSLIB_VERSION=4.25.1 \
-    CASACORE_VERSION=2.0.3 \
+ENV CASACORE_VERSION=2.0.3 \
     CASAREST_VERSION=1.4.1 \
     PYTHON_CASACORE_VERSION=2.0.1 \
     BOOST_VERSION=1.54
@@ -41,7 +39,7 @@ ENV J=4
 #RUN sed -i 's/archive.ubuntu.com/osmirror.rug.nl/' /etc/apt/sources.list 
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y sudo python2.7 libpython2.7 && \
-    apt-get install -y libblas3 liblapacke python-numpy libfftw3-bin libhdf5-7 libboost-python${BOOST_VERSION}.0
+    apt-get install -y libblas3 liblapacke python-numpy libcfitsio3 libwcs4 libfftw3-bin libhdf5-7 libboost-python${BOOST_VERSION}.0
 
 #
 # setup-account
@@ -62,56 +60,22 @@ USER ${USER}
 
 #
 # *******************
-#   cfitsio
-# *******************
-#
-RUN sudo apt-get install -y wget cmake g++ && \
-    mkdir -p ${INSTALLDIR}/cfitsio/build && \
-    cd ${INSTALLDIR}/cfitsio && wget --retry-connrefused ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${CFITSIO_VERSION}.tar.gz && \
-    cd ${INSTALLDIR}/cfitsio && tar xf cfitsio${CFITSIO_VERSION}.tar.gz && \
-    cd ${INSTALLDIR}/cfitsio/build && cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}/cfitsio/ ../cfitsio && \
-    cd ${INSTALLDIR}/cfitsio/build && make -j ${J} && \
-    cd ${INSTALLDIR}/cfitsio/build && make install && \
-    bash -c "strip ${INSTALLDIR}/cfitsio/lib/* || true" && \
-    bash -c "rm -rf ${INSTALLDIR}/cfitsio/{build,cfitsio} ${INSTALLDIR}/cfitsio/cfitsio${CFITSIO_VERSION}.tar.gz" && \
-    sudo apt-get purge -y wget cmake g++ && \
-    sudo apt-get autoremove -y
-
-#
-# *******************
-#   wcslib
-# *******************
-#
-RUN sudo apt-get install -y wget automake autotools-dev make g++ gfortran flex && \
-    mkdir ${INSTALLDIR}/wcslib && \
-    cd ${INSTALLDIR}/wcslib && wget --retry-connrefused ftp://ftp.atnf.csiro.au/pub/software/wcslib/wcslib-${WCSLIB_VERSION}.tar.bz2 && \
-    cd ${INSTALLDIR}/wcslib && tar xf wcslib-*.tar.bz2 && \
-    cd ${INSTALLDIR}/wcslib/wcslib* && ./configure --prefix=${INSTALLDIR}/wcslib --with-cfitsiolib=${INSTALLDIR}/cfitsio/lib/ --with-cfitsioinc=${INSTALLDIR}/cfitsio/include/ --without-pgplot && \
-    cd ${INSTALLDIR}/wcslib/wcslib* && make && \
-    cd ${INSTALLDIR}/wcslib/wcslib* && make install && \
-    bash -c "strip ${INSTALLDIR}/wcslib/{lib,bin}/* || true" && \
-    bash -c "rm -rf ${INSTALLDIR}/wcslib/wcslib* ${INSTALLDIR}/wcslib/wcslib-*.tar.bz2" && \
-    sudo apt-get purge -y wget automake autotools-dev make g++ gfortran flex && \
-    sudo apt-get autoremove -y
-
-#
-# *******************
 #   Casacore
 # *******************
 #
-RUN sudo apt-get install -y wget git cmake g++ gfortran flex bison libblas-dev liblapacke-dev libfftw3-dev libhdf5-dev libboost-python-dev && \
+RUN sudo apt-get install -y wget git cmake g++ gfortran flex bison libblas-dev liblapacke-dev libfftw3-dev libhdf5-dev libboost-python-dev libcfitsio3-dev wcslib-dev && \
     mkdir -p ${INSTALLDIR}/casacore/build && \
     mkdir -p ${INSTALLDIR}/casacore/data && \
     cd ${INSTALLDIR}/casacore && git clone https://github.com/casacore/casacore.git src && \
     if [ "${CASACORE_VERSION}" != "latest" ]; then cd ${INSTALLDIR}/casacore/src && git checkout tags/v${CASACORE_VERSION}; fi && \
     cd ${INSTALLDIR}/casacore/data && wget --retry-connrefused ftp://ftp.astron.nl/outgoing/Measures/WSRT_Measures.ztar && \
     cd ${INSTALLDIR}/casacore/data && tar xf WSRT_Measures.ztar  && rm -f WSRT_Measures.ztar && \
-    cd ${INSTALLDIR}/casacore/build && cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}/casacore/ -DDATA_DIR=${INSTALLDIR}/casacore/data -DWCSLIB_ROOT_DIR=${INSTALLDIR}/wcslib/ -DCFITSIO_ROOT_DIR=${INSTALLDIR}/cfitsio/ -DBUILD_PYTHON=True -DUSE_OPENMP=True -DUSE_FFTW3=TRUE ../src/ && \
+    cd ${INSTALLDIR}/casacore/build && cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}/casacore/ -DDATA_DIR=${INSTALLDIR}/casacore/data -DBUILD_PYTHON=True -DUSE_OPENMP=True -DUSE_FFTW3=TRUE ../src/ && \
     cd ${INSTALLDIR}/casacore/build && make -j ${J} && \
     cd ${INSTALLDIR}/casacore/build && make install && \
     bash -c "strip ${INSTALLDIR}/casacore/{lib,bin}/* || true" && \
     bash -c "rm -rf ${INSTALLDIR}/casacore/{build,src}" && \
-    sudo apt-get purge -y wget git cmake g++ gfortran flex bison libblas-dev liblapacke-dev libfftw3-dev libhdf5-dev libboost-python-dev && \
+    sudo apt-get purge -y wget git cmake g++ gfortran flex bison libblas-dev liblapacke-dev libfftw3-dev libhdf5-dev libboost-python-dev libcfitsio3-dev wcslib-dev && \
     sudo apt-get autoremove -y
 
 #
@@ -119,16 +83,16 @@ RUN sudo apt-get install -y wget git cmake g++ gfortran flex bison libblas-dev l
 #   Casarest
 # *******************
 #
-RUN sudo apt-get install -y git cmake g++ gfortran libboost-system-dev libboost-thread-dev libhdf5-dev && \
+RUN sudo apt-get install -y git cmake g++ gfortran libboost-system-dev libboost-thread-dev libhdf5-dev libcfitsio3-dev wcslib-dev && \
     mkdir -p ${INSTALLDIR}/casarest/build && \
     cd ${INSTALLDIR}/casarest && git clone https://github.com/casacore/casarest.git src && \
     if [ "${CASAREST_VERSION}" != "latest" ]; then cd ${INSTALLDIR}/casarest/src && git checkout tags/v${CASAREST_VERSION}; fi && \
-    cd ${INSTALLDIR}/casarest/build && cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}/casarest -DCASACORE_ROOT_DIR=${INSTALLDIR}/casacore -DWCSLIB_ROOT_DIR=${INSTALLDIR}/wcslib -DCFITSIO_ROOT_DIR=${INSTALLDIR}/cfitsio ../src/ && \
+    cd ${INSTALLDIR}/casarest/build && cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}/casarest -DCASACORE_ROOT_DIR=${INSTALLDIR}/casacore ../src/ && \
     cd ${INSTALLDIR}/casarest/build && make -j ${J} && \
     cd ${INSTALLDIR}/casarest/build && make install && \
     bash -c "strip ${INSTALLDIR}/casarest/{lib,bin}/* || true" && \
     bash -c "rm -rf ${INSTALLDIR}/casarest/{build,src}" && \
-    sudo apt-get purge -y git cmake g++ gfortran libboost-system-dev libboost-thread-dev libhdf5-dev && \
+    sudo apt-get purge -y git cmake g++ gfortran libboost-system-dev libboost-thread-dev libhdf5-dev libcfitsio3-dev wcslib-dev && \
     sudo apt-get autoremove -y
 
 #
