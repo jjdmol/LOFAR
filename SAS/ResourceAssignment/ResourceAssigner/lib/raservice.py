@@ -31,7 +31,6 @@ import qpid.messaging
 import logging
 from datetime import datetime
 import time
-import pprint
 
 from lofar.sas.resourceassignment.rataskspecified.RABusListener import RATaskSpecifiedBusListener
 from lofar.messaging.RPC import RPC, RPCException
@@ -39,6 +38,7 @@ from lofar.messaging.RPC import RPC, RPCException
 import lofar.sas.resourceassignment.resourceassignmentservice.rpc as rarpc
 from lofar.sas.resourceassignment.resourceassigner.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 from lofar.sas.resourceassignment.resourceassigner.config import RATASKSPECIFIED_NOTIFICATION_BUSNAME, RATASKSPECIFIED_NOTIFICATIONNAME
+from lofar.sas.resourceassignment.resourceassigner.assignment import ResourceAssigner
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ class SpecifiedTaskListener(RATaskSpecifiedBusListener):
                  busname=RATASKSPECIFIED_NOTIFICATION_BUSNAME,
                  subject=RATASKSPECIFIED_NOTIFICATIONNAME,
                  broker=None,
+                 assigner=None,
                  **kwargs):
         """
         SpecifiedTaskListener listens on the lofar ?? bus and calls onTaskSpecified
@@ -60,82 +61,28 @@ class SpecifiedTaskListener(RATaskSpecifiedBusListener):
         """
         super(SpecifiedTaskListener, self).__init__(busname=busname, subject=subject, broker=broker, **kwargs)
 
+        self.assigner = assigner
+        if not self.assigner:
+            self.assigner = ResourceAssigner()
+
     def onTaskSpecified(self, sasId, modificationTime, resourceIndicators):
-        logger.info('onTaskSpecified: sasId=%s resourceIndicators==%s' % (sasId, pprint.pformat(resourceIndicators)))
+        logger.info('onTaskSpecified: sasId=%s' % sasId)
 
-        cluster = parseSpecification(resourceIndicators)
-        needed = getNeededResouces(resourceIndicators)
-        available = getAvailableResources(cluster)
-        #if checkResources(needed, available):
-            #result = claimResources(needed)
-            #if result.success:
-                #commitResources(result.id)
-                ##SetTaskToSCHEDULED(Task.)
-            #else:
-                ##SetTaskToCONFLICT(Task.)
-                #pass
-
-def parseSpecification(specification):
-    # TODO: cluster is not part of specification yet. For now return CEP4. Add logic later.
-    default = "cep2"
-    cluster ="cep4"
-    return cluster
-
-def getNeededResouces(specification):
-    with RPC('ResourceEstimation', busname='lofar.ra.command', broker='10.149.96.6') as rpc:
-        replymessage, status = rpc(specification)
-        print replymessage
-
-def getAvailableResources(cluster):
-    # Used settings
-    groupnames = {}
-    available    = {}
-    while True:
-        try:
-            with RPC('SSDBService.GetActiveGroupNames', busname='lofar.system', timeout=10, broker='10.149.96.6') as ssdbGetActiveGroupNames:
-                replymessage, status = ssdbGetActiveGroupNames()
-                if status == 'OK':
-                    groupnames = replymessage
-                    logger.info('SSDBService ActiveGroupNames: %s' % groupnames)
-                else:
-                    logger.error("Could not get active group names from SSDBService: %s" % status)
-
-            groupnames = {v:k for k,v in groupnames.items()} #swap key/value for name->id lookup
-            logger.info('groupnames: %s' % groupnames)
-            if cluster in groupnames.keys():
-                groupId = groupnames[cluster]
-                with RPC('SSDBService.GetHostForGID', busname='lofar.system', timeout=10, broker='10.149.96.6') as ssdbGetHostForGID:
-                    replymessage, status = ssdbGetHostForGID(groupId)
-                    if status == 'OK':
-                        available = replymessage
-                        logger.info('available: %s' % available)
-                    else:
-                        logger.error("Could not get hosts for group %s (gid=%s) from SSDBService: %s" % (cluster, groupId, status))
-            else:
-                logger.error("group \'%s\' not known in SSDBService active groups (%s)" % (cluster, ', '.join(groupnames.keys())))
-            return available
-        except KeyboardInterrupt:
-            break
-        except Exception as e:
-            logger.warning("Exception while getting available resources. Trying again... " + str(e))
-            time.sleep(0.25)
-
-def checkResources(needed, available):
-    return True
-
-def claimResources(needed):
-    rarpc.InsertTask()
-
-def commitResources(result_id):
-    pass
+        self.assigner.doAssignment(sasId, resourceIndicators)
 
 __all__ = ["SpecifiedTaskListener"]
-
 
 def main():
     from optparse import OptionParser
     from lofar.messaging import setQpidLogLevel
     from lofar.common.util import waitForInterrupt
+
+    from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME as RADB_BUSNAME
+    from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
+    from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_BUSNAME as RE_BUSNAME
+    from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_SERVICENAME as RE_SERVICENAME
+    SSDB_BUSNAME = 'lofar.system' #TODO, import from future ssdb config
+    SSDB_SERVICENAME = 'SSDBService' #TODO, import from future ssdb config
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]",
@@ -143,8 +90,14 @@ def main():
     parser.add_option('-q', '--broker', dest='broker', type='string', default=None, help='Address of the qpid broker, default: localhost')
     parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_BUSNAME, help="Name of the bus exchange on the qpid broker, default: %s" % DEFAULT_BUSNAME)
     parser.add_option("-s", "--servicename", dest="servicename", type="string", default=DEFAULT_SERVICENAME, help="Name for this service, default: %s" % DEFAULT_SERVICENAME)
-    parser.add_option("-n", "--notification_busname", dest="notification_busname", type="string", default=RATASKSPECIFIED_NOTIFICATION_BUSNAME, help="Name of the notification bus on which taskspecified messages are published, default: %s" % RATASKSPECIFIED_NOTIFICATION_BUSNAME)
-    parser.add_option("-m", "--notification_subject", dest="notification_subject", type="string", default=RATASKSPECIFIED_NOTIFICATIONNAME, help="Subject of the published taskspecified messages to listen for, default: %s" % RATASKSPECIFIED_NOTIFICATIONNAME)
+    parser.add_option("--notification_busname", dest="notification_busname", type="string", default=RATASKSPECIFIED_NOTIFICATION_BUSNAME, help="Name of the notification bus on which taskspecified messages are published, default: %s" % RATASKSPECIFIED_NOTIFICATION_BUSNAME)
+    parser.add_option("--notification_subject", dest="notification_subject", type="string", default=RATASKSPECIFIED_NOTIFICATIONNAME, help="Subject of the published taskspecified messages to listen for, default: %s" % RATASKSPECIFIED_NOTIFICATIONNAME)
+    parser.add_option("--radb_busname", dest="radb_busname", type="string", default=RADB_BUSNAME, help="Name of the bus on which the radb service listens, default: %s" % RADB_BUSNAME)
+    parser.add_option("--radb_servicename", dest="radb_servicename", type="string", default=RADB_SERVICENAME, help="Name of the radb service, default: %s" % RADB_SERVICENAME)
+    parser.add_option("--re_busname", dest="re_busname", type="string", default=RE_BUSNAME, help="Name of the bus on which the resource estimator service listens, default: %s" % RE_BUSNAME)
+    parser.add_option("--re_servicename", dest="re_servicename", type="string", default=RE_SERVICENAME, help="Name of the resource estimator service, default: %s" % RE_SERVICENAME)
+    parser.add_option("--ssdb_busname", dest="ssdb_busname", type="string", default=SSDB_BUSNAME, help="Name of the bus on which the ssdb service listens, default: %s" % SSDB_BUSNAME)
+    parser.add_option("--ssdb_servicename", dest="ssdb_servicename", type="string", default=SSDB_SERVICENAME, help="Name of the ssdb service, default: %s" % SSDB_SERVICENAME)
     parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
     (options, args) = parser.parse_args()
 
@@ -152,10 +105,18 @@ def main():
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                         level=logging.DEBUG if options.verbose else logging.INFO)
 
-    with SpecifiedTaskListener(busname=options.notification_busname,
-                               subject=options.notification_subject,
-                               broker=options.broker) as listener:
-        waitForInterrupt()
+    with ResourceAssigner(radb_busname=options.radb_busname,
+                          radb_servicename=options.radb_servicename,
+                          re_busname=options.re_busname,
+                          re_servicename=options.re_servicename,
+                          ssdb_busname=options.ssdb_busname,
+                          ssdb_servicename=options.ssdb_servicename,
+                          broker=options.broker) as assigner:
+        with SpecifiedTaskListener(busname=options.notification_busname,
+                                   subject=options.notification_subject,
+                                   broker=options.broker,
+                                   assigner=assigner) as listener:
+            waitForInterrupt()
 
 if __name__ == '__main__':
     main()

@@ -3,6 +3,7 @@
 python_install(
     __init__.py
     raservice.py
+    assignment.py
     config.py
     DESTINATION lofar/sas/resourceassignment/resourceassigner)
 
