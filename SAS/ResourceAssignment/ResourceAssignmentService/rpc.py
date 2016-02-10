@@ -29,15 +29,18 @@ class RARPC:
         self._serviceRPCs = {} #cache of rpc's for each service
 
     def __enter__(self):
-        """
-        Internal use only. (handles scope 'with')
-        """
+        """Internal use only. (handles scope 'with')"""
+        self.open()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Internal use only. (handles scope 'with')
-        """
+        """Internal use only. (handles scope 'with')"""
+        self.close()
+
+    def open(self):
+        pass
+
+    def close(self):
         for rpc in self._serviceRPCs.values():
             rpc.__exit__(None, None, None)
 
