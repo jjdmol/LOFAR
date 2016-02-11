@@ -63,6 +63,7 @@ namespace LOFAR {
 
     // Construct a Version object from the relevant package info.
     Version (const std::string& packageName,
+	     const std::string& branch,
 	     const std::string& version,
 	     const std::string& confVersion,
 	     const std::string& revision,
@@ -75,6 +76,9 @@ namespace LOFAR {
     // Get the package name.
     const std::string& packageName() const
       { return itsPackageName; }
+    // Get the LOFAR branch version (relative to repository root)
+    const std::string& branch() const
+      { return itsBranch; }
     // Get the package version (as in repository)
     const std::string& version() const
       { return itsVersion; }
@@ -195,6 +199,7 @@ namespace LOFAR {
 
     //# Data members.
     std::string itsPackageName;
+    std::string itsBranch;
     std::string itsVersion;
     std::string itsConfVersion;
     std::string itsRevision;
