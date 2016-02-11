@@ -41,7 +41,7 @@ with patch('lofar.sas.resourceassignment.resourceassignmentservice.rpc.RARPC', a
         elif servicename == 'SSDBService.GetActiveGroupNames':
             return {0:'storagenodes', 1:'computenodes', 2:'archivenodes', 3:'locusnodes', 4:'cep4'}, "OK"
         elif servicename == 'SSDBService.GetHostForGID':
-            return {}, "OK"
+            return {u'groupname': u'cep4', u'nodes': [{u'claimedspace': 0, u'totalspace': 702716, u'statename': u'Active', u'usedspace': 23084, u'id': 1, u'groupname': u'cep4', u'path': u'/lustre', u'hostname': u'lustre001'}]}, "OK"
 
         return None, None
 
