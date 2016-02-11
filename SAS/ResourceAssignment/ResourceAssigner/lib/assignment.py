@@ -108,11 +108,19 @@ class ResourceAssigner():
         startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
         endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
 
-        #and insert it as a specification in the radb
-        specificationId = self.radbrpc.insertSpecification(startTime, endTime, str(mainParsetDict))['id']
+        #check if task already present in radb
+        existingTask = self.radbrpc.getTask(otdb_id=sasId)
 
-        #and also the task for the specification in the radb
-        taskId = self.radbrpc.insertTask(momId, sasId, status, taskType, specificationId)['id']
+        if existingTask:
+            #present, so update task and specification in radb
+            taskId = existingTask['id']
+            specificationId = existingTask['specification_id']
+            self.radbrpc.updateSpecification(specificationId, startTime, endTime, str(mainParsetDict))
+            self.radbrpc.updateTask(taskId, momId, sasId, status, taskType, specificationId)
+        else:
+            #insert new task and specification in the radb
+            specificationId = self.radbrpc.insertSpecification(startTime, endTime, str(mainParsetDict))['id']
+            taskId = self.radbrpc.insertTask(momId, sasId, status, taskType, specificationId)['id']
 
         #analyze the parset for needed and available resources and claim these in the radb
         cluster = self.parseSpecification(mainParset)
