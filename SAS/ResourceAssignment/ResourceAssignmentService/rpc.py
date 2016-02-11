@@ -162,12 +162,13 @@ class RARPC:
         return self._rpc('DeleteTask', id=id)
 
     def updateTask(self, task_id, mom_id=None, otdb_id=None, status=None, task_type=None, specification_id=None):
-        return self._rpc('UpdateTask', task_id=task_id,
-                                           mom_id=mom_id,
-                                           otdb_id=otdb_id,
-                                           status=status,
-                                           task_type=task_type,
-                                           specification_id=specification_id)
+        return self._rpc('UpdateTask',
+                         id=task_id,
+                         mom_id=mom_id,
+                         otdb_id=otdb_id,
+                         status=status,
+                         task_type=task_type,
+                         specification_id=specification_id)
 
     def getTasks(self):
         tasks = self._rpc('GetTasks')
