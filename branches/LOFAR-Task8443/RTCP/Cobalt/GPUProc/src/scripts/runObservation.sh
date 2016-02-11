@@ -319,7 +319,7 @@ SSH_PRIVATE_KEY=$(getkey Cobalt.OutputProc.sshPrivateKey)
 OUTPUT_PROC_EXECUTABLE=$(getkey Cobalt.OutputProc.executable)
 OBSERVATIONID=$(getkey Observation.ObsID 0)
 
-parse_cluster_description
+read_cluster_model
 
 # Determine list of outputProc hosts for various purposes
 if $SLURM; then
@@ -411,11 +411,9 @@ OUTPUTPROC_CMDLINE="$OUTPUTPROC_VARS $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID"
 
 # Wrap command line with Docker if required
 if $DOCKER; then
-  # TODO: Derive these
-  DATADIR="/data"
-  TAG="9048"
+  TAG="`echo ${LOFAR_TAG} | docker-template`"
 
-  OUTPUTPROC_CMDLINE="docker run -it -e LUSER=`id -u $SSH_USER_NAME` --net=host -v $DATADIR:$DATADIR lofar-outputproc:$TAG bash -c \"$OUTPUTPROC_CMDLINE\""
+  OUTPUTPROC_CMDLINE="docker run -it -e LUSER=`id -u $SSH_USER_NAME` --net=host -v $GLOBALFS_DIR:$GLOBALFS_DIR lofar-outputproc:$TAG bash -c \"$OUTPUTPROC_CMDLINE\""
 fi
 
 echo "[outputProc] command line = $OUTPUTPROC_CMDLINE"

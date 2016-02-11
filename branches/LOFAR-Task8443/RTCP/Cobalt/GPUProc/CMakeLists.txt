@@ -2,7 +2,7 @@
 
 # Handle options USE_CUDA and USE_OPENCL.
 if(USE_CUDA AND NOT USE_OPENCL)
-  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO BrokenAntennaInfo MessageBus)
+  set(_gpuproc_deps "")
 
   # We use runtime compilation, except for 2 tests compiled by nvcc.
   # nvcc passes our C++ flags to GCC for C compilation printing spurious warnings. Suppress.
@@ -38,7 +38,7 @@ if(USE_CUDA AND NOT USE_OPENCL)
   endif()
 
 elseif(USE_OPENCL AND NOT USE_CUDA)
-  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO BrokenAntennaInfo OpenCL_FFT MessageBus)
+  set(_gpuproc_deps OpenCL_FFT)
   lofar_find_package(OpenCL REQUIRED)
   add_definitions(-DUSE_OPENCL)
 else()
@@ -46,7 +46,7 @@ else()
     "Either CUDA or OpenCL must be enabled to build GPUProc.")
 endif()
 
-lofar_package(GPUProc 1.0 DEPENDS ${_gpuproc_deps})
+lofar_package(GPUProc 1.0 DEPENDS Common Stream ApplCommon CoInterface InputProc MACIO BrokenAntennaInfo MessageBus Docker ${_gpuproc_deps})
 
 lofar_find_package(OpenMP REQUIRED)
 lofar_find_package(Boost REQUIRED)

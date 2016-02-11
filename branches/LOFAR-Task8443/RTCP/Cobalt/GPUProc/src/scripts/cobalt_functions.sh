@@ -36,17 +36,17 @@ function setkey {
   echo "$KEY = $VAL" >> "$PARSET"
 }
 
-function parse_cluster_description {
-  PROCESSING_CLUSTER=$(getkey Observation.Cluster.ProcessingCluster.clusterName "")
+function read_cluster_model {
+  CLUSTER_NAME=$(getkey Observation.Cluster.ProcessingCluster.clusterName "")
 
   # Hack to derive required properties (cluster model) from cluster name.
-  case "${PROCESSING_CLUSTER}" in
-    CEP4|cep4)
-      CLUSTER_NAME=cep4
-
+  case "${CLUSTER_NAME}" in
+    CEP4)
       HEADNODE=head01.cep4.control.lofar
       COMPUTENODES="`seq -f "cpu%02.0f.cep4" 1 50`"
       NRCOMPUTENODES=50
+
+      GLOBALFS_DIR=/data
 
       #SLURM=true
       SLURM=false # Don't use SLURM for now, let's get it working without it first
@@ -54,8 +54,6 @@ function parse_cluster_description {
       DOCKER=true
       ;;
     *)
-      CLUSTER_NAME=cep2
-
       HEADNODE=lhn001.cep2.lofar
       COMPUTENODES="`seq -f "locus%02.0f" 1 94`"
       NRCOMPUTENODES=94

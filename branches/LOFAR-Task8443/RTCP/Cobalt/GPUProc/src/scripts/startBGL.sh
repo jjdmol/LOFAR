@@ -63,7 +63,7 @@ mkfifo -m 0660 "$COMMANDPIPE" || true
 COMMAND="runObservation.sh -P $PIDFILE -o Cobalt.commandStream=file:$COMMANDPIPE $PARSET"
 
 # Process cluster requirements
-parse_cluster_description
+read_cluster_model
 
 if $SLURM; then
   # We need to issue "salloc" on the target cluster, and once the resources
