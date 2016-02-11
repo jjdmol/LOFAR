@@ -1,0 +1,1348 @@
+\documentclass[a4paper,twoside, 10pt]{report}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{xspace}
+\usepackage{listings}
+
+%
+%  P R E A M B L E
+%
+
+\title{Cobalt commissioning report}
+\author{M.A. Brentjens}
+
+\newcommand{\cobalt}{Cobalt\xspace}
+\newcommand{\bgp}{BG/P\xspace}
+\newcommand{\cep}{CEP-2\xspace}
+
+\newcommand{\hms}[3]{\ensuremath{#1^\mathrm{h} #2^\mathrm{m} #3^\mathrm{s}}}
+\newcommand{\dms}[3]{\ensuremath{#1^\circ #2' #3''}}
+
+
+\newcounter{experimentc}
+\newenvironment{experiment}[4][TODO]{\hspace{1ex}\linebreak
+\noindent%\begin{minipage}{\columnwidth}%
+\noindent\refstepcounter{experimentc}\textbf{Exp. \arabic{experimentc}
+  [#1]:\ %
+    #2  [#3]}\\%
+\textbf{Aim: } \emph{#4}%
+\addcontentsline{toc}{section}{Exp.~\arabic{experimentc} [{\footnotesize
+    #1}]:~#2}%
+\ignorespaces%\begin{center}%\begin{minipage}{0.9\columnwidth}%
+\setlength{\parindent}{2em}}%
+{%\end{minipage}
+%\end{center}
+\ \linebreak
+\noindent\rule{0.1\textwidth}{0.4pt}
+%\end{minipage}
+\linebreak
+\par\noindent\ignorespacesafterend}
+
+
+
+%
+%  D O C U M E N T
+%
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\chapter{Introduction}
+
+\cobalt is the correlator that was supposed to succeed the \bgp at
+2013-12-31 at the latest \citep{CobaltRequirements2013}. Due to some
+delays, it has actually replaced the \bgp at the end of April 2014. In
+the scenario-1 design \citep{CobaltHardwareDesign2013}, \cobalt
+comprises 8 PC nodes, equipped with 2 NVIDIA GPU units each,
+interconnected by an infiniband switch.
+
+This document describes in as much detail as possible, from a
+technical-scientific point of view, \emph{what} must be tested,
+\emph{how} it should be tested, and when and how it was tested. At the
+end of commissioning, we want the correlator to
+
+\begin{description}
+\item[be feature complete:] it must be able to perform the same types of
+  observations as the \bgp;
+\item[be correct:] the \cobalt output must be the same as the \bgp output,
+  within the expected numerical precision;
+\item[perform well:] support all \bgp observation types with an
+  execution speed the same or better than the \bgp;
+\item[be robust:] the correlator should not crash on errors in the
+  specification, and if it does, it should leave clear error messages.
+\item[well integrated:] we must be able to simply specify and
+  observation in MoM, schedule it, have it run on \cobalt, get data
+  written to \cep, pipelines started, and obtain pipeline products
+  that can be ingested into, and retrieved from the long term archive
+  (LTA).
+\end{description}
+
+Because \cobalt is built from commodity hardware, and all interesting
+functionality is implemented in software
+\citep{CobaltSoftwareDesign2013} running on CPUs and GPUs, many
+experiments described in this document can be conducted with
+synthetic or pre-recorded data.
+
+In this document, the word ``pipeline'' refers to specific \cobalt
+code that processes incoming data during an observation, not post
+processing software that usually runs after an observation has
+completed, unless explicitly stated otherwise.
+
+%% This document is subject to change and new suggestions. Please notify
+%% me if I have forgotten to test important functionality, or if errors
+%% or mistakes are found. New experiments and tests will ony be added if
+%% they test specific \cobalt functionality that is not yet covered by
+%% the current experiments.
+
+
+
+%% \chapter{Test data sets}
+
+%% \begin{table}
+%% \caption{Summary of test data sets \cobalt. Both sets must be
+%%   taken in 8-bit as well as 16-bit mode close to transit.}
+%% \label{tab:test-data-sets}
+%% \begin{tabular}{lp{12em}p{12em}}
+%% \hline
+%% \hline
+%% Data set:     & 3C~295                 & PSR B0329+54\\
+%% \hline
+%% RA            & \hms {14}{11}{20.6} & \hms{03}{32}{59.37}\\
+%% Dec           & \dms{+52}{12}{09.0}  & \dms{+54}{34}{44.9}\\
+%% Stations      & all (minus CS013)      & core (minus CS013)\\
+%% Antenna field & HBA\_DUAL              & HBA\_DUAL \\
+%% Sub bands     &
+%% 77,92,108,124,139,155,
+%% 170,186,201,217,233,248,
+%% 264,279,295,311,326,342,
+%% 357,373,388,404,420,435        & 256..291\\
+%% Duration      & 60 s                   & 60 s\\
+%% Clock         & 200 MHz                & 200 MHz\\ 
+%% Data volume   & $2\times 150$ GB       & $2\times 150$ GB\\
+%% \hline
+%% \hline
+%% \end{tabular}
+%% \end{table}
+
+
+%% Many of the commissioning tests can be implemented as regression tests
+%% if done with either pre-recorded UDP packets from the stations or
+%% simulated time series.
+
+%% The pre-recorded test data are stored on CEP2. One station producing
+%% 244 sub bands of 16 bit data at a clock frequency of 200~MHz, produces
+%% $3.05\cdot 10^9$ bits per second. For 70 antenna fields, this amounts
+%% to 1.5~TB per minute. For 48 core fields, it is about 1~TB per minute.
+
+%% I propose to record 4 test data sets: 8 bit and 16 bit data of 3C~295
+%% to test the correlator, and 8 bit and 16 bit data of PSR~B0329+64 to
+%% test the beamformed pipelines.  Table~\ref{tab:test-data-sets} lists
+%% the specifications of the test data sets. The total data volume is
+%% 600~GB. One can easily extract a much smaller sub set of data for
+%% specific experiments.
+
+%% It has been agreed with the \cobalt developers, that they will provide
+%% a utility that can read time series data, and convert those to
+%% simulated station series to feed to \cobalt. These synthetic data are
+%% invaluable to directly test the mathematical operations that \cobalt
+%% %% implements.
+
+
+
+\chapter{Basic sanity}
+
+
+\begin{experiment}[PASSED 2013-11-21]
+{Reproducibility (correlator)}
+{recorded data}
+{Running the same input UDP streams through cobalt using the same
+  parset must produce bit-for-bit the same output data.}
+
+\noindent This is a very simple experiment. Just play back the same
+observation twice and compare the output. After some initial issues
+with the circular buffer code, this test passed on data set
+L189429. We used the following function for validation.
+
+{\small
+\begin{lstlisting}[language=Python]
+def are_they_identical(ms_file_name, ms_ref_file_name):
+    tab     = table(ms_file_name).query('ANTENNA1 != ANTENNA2')
+    tab_ref = table(ms_ref_file_name).query('ANTENNA1 != ANTENNA2')
+    data     = tab.getcol('DATA')
+    data_ref = tab_ref.getcol('DATA')
+    uvw     = tab.getcol('UVW')
+    uvw_ref = tab_ref.getcol('UVW')
+    if len(uvw) != len(uvw_ref) or abs((uvw - uvw_ref)).max() != 0.0:
+        raise ValueError('Uvw coordinates differ.')
+    uv_distance = sqrt(uvw[:,0]**2 + uvw[:,1]**2)
+    diff        = data - data_ref
+    if abs(diff).max() != 0.0:
+        raise ValueError('Data sets are not identical')
+    return True
+\end{lstlisting}
+}
+\end{experiment}
+
+
+
+
+\begin{experiment}[PASSED 2014-03-10]
+{Reproducibility (beam former)}
+{recorded data}
+{Running the same input UDP streams through cobalt using the same
+  parset must produce bit-for-bit the same output data.}
+
+\noindent Repeat the previous experiment for the beam formed modes. Do this for
+both coherent stokes, incoherent stokes, with, and without coherent
+dedispersion.
+
+This test has been incorporated in the automated test suite, and runs
+daily. Coherent dedispersion is not yet included.
+\end{experiment}
+
+
+
+
+
+
+
+\chapter{Channels}
+
+The channelization of the input sub bands is the first stage in both
+the correlator pipeline and the beam former pipeline. 
+
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.7\columnwidth]{correlator-channel-bandpass-80-81-20130605.png}
+\end{center}
+\caption{Measurement of channel band pass and channel separation by
+  injecting a sinusoidal signal at various frequencies.}
+\label{fig:channel-bandpass-corr}
+\end{figure}
+
+
+\begin{experiment}[PASSED 2013-06-05]
+{Channel isolation}
+{synthetic data}
+{Measure the band pass of individual correlator output channels.}
+
+\noindent Generate synthetic CW input signals at a prime number of
+frequencies, beginning at the centre of one channel, and increasing
+the frequency until at the centre of a neighbouring channel. Use
+e.g. 44 frequencies, where the first and last should be precisely at
+channel centres. This leaves 43 intervals and avoids resonances with
+other constants in the code base. Plot the real part of the output as
+a function of frequency.
+
+
+This experiment has been conducted on 2013-06-05 by Wouter Kleijn. The
+bandpass is plotted in Fig.\ref{fig:channel-bandpass-corr}.
+\end{experiment}
+
+
+
+
+
+
+
+
+
+
+\begin{experiment}[PASSED 2013-11-21]
+{Frequency labelling: coarse}
+{recorded data}
+{Determine the correctness of frequency labelling in the output MS.}
+
+\noindent There are two strong transmitters in the HBA\_LOW band at sub band 357
+that can help verify the labelling of channel frequencies, as well as
+the order in which channels are written. A channel's frequency label
+represents the channel's \emph{centre}. The transmitters to look for
+are
+\begin{itemize}
+  \item P2000 at 169.650 MHz;
+  \item KPN ERMES at 169.750 MHz.
+\end{itemize}
+
+The central frequency (middle of channel 128, counting from 0) of sub
+band 357 is 169\,726\,562.5 Hz. When operating at 256 channels per sub
+band, the channel width is 762.939453 Hz. The P2000 peak should
+therefore show up in channel 28 (counting from 0). In fact, the peak
+must be 0.148 channel widths, or 113 Hz, from the lower boundary of
+channel 28. KPN ERMES, if within reach, should peak in channel 159,
+about 0.22 channel widths, or 168 Hz, from the lower boundary of the
+channel, but the exact position within a channel is not easy to
+extract from this test because the carriers are so narrow.
+
+For this experiment, pre-recorded station data of this sub band should
+be fed to \cobalt. The auto-correlated visibilities must be averaged
+to 1 second, and the MS stored. Only 10 seconds of data from one
+station are required.
+
+Considering that the beam forming pipeline and the cross correlating
+pipelines have different approaches to split a sub band into channels,
+this should be conducted for \emph{both} pipelines. Ideally, this
+experiment is conducted for 200~MHz as well 160~MHz data. 
+
+
+This sub band ends up being SB018 in the test data sets. This was
+tested with data set L189429 (16 bit, 3C~295) on 2013-11-20. The
+associated plot is shown in
+Fig.~\ref{fig:frequencies-of-P2000-and-ERMES}.
+
+We did not yet conduct the 160~MHz experiment.
+\end{experiment}
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=\columnwidth]{L189429-SB018-spectrum.pdf}
+\end{center}
+\caption{Spectrum of sub band 357 containing the ERMES and P2000
+ signals for data set L189249. This is the average spectrum over all
+ baselines, both cross correlations and auto correlations. The
+ vertical black lines are at the listed carrier frequencies for these
+ transmitters.}
+\label{fig:frequencies-of-P2000-and-ERMES}
+\end{figure}
+
+
+
+
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=\columnwidth]{cobalt-detailed-frequency-verification.pdf}
+\end{center}
+\caption{Spectral response of the 64 bit float precision time series
+  (red) and the autocorrelation spectrum of the corresponding 8-bit
+  integer time series, as processed by \cobalt without correcting for
+  the station sub band bandpass. Channel width is about 3~kHz, so
+  frequency labelling is approximately good to 1\% of the channel
+  width.}
+\label{fig:detailed-frequency-labels}
+\end{figure}
+
+
+\begin{experiment}[PASSED 2014-01-21]
+{Frequency labelling: fine}
+{synthetic data}
+{Determine correctness of frequency labelling within a channel}
+
+\noindent Prepare a timeseries by taking a spectrum with a gaussian
+amplitude as a function of frequency, where the peak of the gaussian
+is about 1/3 of a channel away from the channel edge with a $\sigma$
+of about 2 channels, and Fourier transforming this spectrum to a time
+series at a time interval of 5.12~$\mu$s.
+
+Feed the time series to \cobalt, and look at the generated sub
+band. Fit a gaussian to the channel amplitudes and determine its
+peak. It should correspond to the exact frequency that was originally
+put in.
+
+We have done this experiment slightly differently, generating the time
+series from a complex Gaussian noise time series, FIR filtered with a
+filter response in the frequency domain that had a 12 kHz standard
+deviation. The exact procedure is described in ipython notebook
+frequency-scale-cobalt.ipynb, which is available from M.A. Brentjens
+upon request.
+
+The results are shown in Fig.~\ref{fig:detailed-frequency-labels}. We
+have verified that the labelled central frequency of the channels is
+good to about 1\% of the channel width. This is good enough for all
+science cases we are aware of. The current experiment gives no reason
+to believe that the frequency labelling is less than perfect.
+\end{experiment}
+
+
+
+
+
+
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{L189598-Cyg-A-station-bandpass-correction-16-64-256.pdf}
+\includegraphics[width=\columnwidth]{L189598-Cyg-A-station-bandpass-correction-16-64-256-zoom.pdf}
+\caption{Station sub band band pass correction on / off (correlator). Note
+  the scale in the bottom panel.}
+\label{fig:station-subband-bandpass-corr}
+\end{figure}
+
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{cs-station-bandpass-correction}
+\caption{Station sub band band pass correction on / off (beamformer
+  coherent stokes). Note the scale in the bottom panel.}
+\label{fig:station-subband-bandpass-cs}
+\end{figure}
+
+
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{is-station-bandpass-correction}
+\caption{Station sub band band pass correction on / off (beamformer
+  incoherent stokes). Note the scale in the bottom panel.}
+\label{fig:station-subband-bandpass-is}
+\end{figure}
+
+
+\begin{experiment}[PASSED (corr) 2013-11-22 / INSUFFICIENT
+    (beamformer) 2014-08-28]
+{Station band pass correction}
+{recorded data}
+{Verify that station band pass correction works.}
+
+\noindent The stations use a poly phase filter (PPF) to separate the antenna's
+time series into 512 sub bands. This leaves a distinctive wobbly
+pattern in a sub band's band pass. \cobalt must be able to correct
+this. 
+
+Pre-record 24 adjacent HBA sub bands in an area of spectrum that is
+relatively free of interference. 10 seconds of data would suffice. Use
+two core stations and two remote stations. Produce plots of the
+amplitude and phase of the concatenated ten sub band spectrum for all
+combinations of settings in the following grid:
+
+
+\begin{center}
+\begin{tabular}{l|l|l|l}
+\hline
+\hline
+ Correction        & 16 ch/sb& 64 ch/sb& 256 ch/sb\\
+\hline
+on  (cross-corr)   & DONE   & DONE   &  DONE   \\
+off (cross-corr)   & DONE   & DONE   &  DONE   \\
+\hline
+on  (beam formed)  & DONE   & DONE   & DONE    \\
+off (beam formed)  & DONE   & DONE   & DONE    \\
+\hline
+\hline
+\end{tabular}
+\end{center}
+
+
+In reality, we have averaged all baselines, and in the beam former
+case, all core stations. Plotting the phase was therefore deemed not
+very useful, and meaningless in the beam former case, because the
+output spectra there are real valued anyway.
+
+We used sub bands 113\ldots136 (122.07~--126.56~MHz central
+frequencies), which are generally very clean. in terms of RFI. In
+fact, we used all Dutch stations except for CS013, CS401, and RS210 in
+HBA\_DUAL\_INNER mode. The observation lasted for 16 seconds. The
+first and last three seconds were discarded to avoid potential
+start/end effects. We observed Cyg A near
+transit. Figure~\ref{fig:station-subband-bandpass-corr} shows the
+results for the correlator. It is clear that the correction works the
+same way it did on the \bgp. The residual slope is due to the mean
+antenna and receiver band pass in the lower part of the HBA band.
+
+For the beamformer (Figs.~\ref{fig:station-subband-bandpass-cs}
+and~\ref{fig:station-subband-bandpass-is}) the correction is
+reasonable, but there is some residual from the station band
+pass. Additionally, there appears to be small ripple as a function of
+frequency. These things needs to be investigated further during the
+regular operational phase for \cobalt. Given that the residual shape
+is bigger in the IS case, I suspect that it has something to do with
+the station's autocorrelations, which are not included in the
+correlator plot. They are included (along with all cross correlations)
+in the CS plot, and exclusively make up the IS plot.
+\end{experiment}
+
+
+
+
+
+
+
+
+
+
+\chapter{Delay compensation}
+
+
+\begin{experiment}[PASSED 2013-11-15]
+{Order of antennas and sign of baseline vector}
+{recorded data}
+{Verify that ANTENNA1$\le$ANTENNA2 and that UVW = ANTENNA2 - ANTENNA1}
+
+\noindent Run the test case \texttt{test\_ant\_columns} from the
+program \texttt{verify-ms-format.py} listed in appendix
+\ref{sec:verify-ms-format}. This was done for L188487, which passed
+the test case on 2013-11-15.
+
+\end{experiment}
+
+
+
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.8\textwidth]{L189429-1x1-single-vs-double-sincos.pdf}
+\end{center}
+\caption{Effect of single precision in sin cos calculations for
+  fringe stopping. Histogram of differences and ratios.}
+\label{fig:single-vs-double-diff-ratio-histograms}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=\textwidth]{L189429-1x1-single-vs-double-sincos-cum-pdf.pdf}
+\end{center}
+\caption{Effect of single precision in sin cos calculations for
+  fringe stopping. Cumulative PDF.}
+\label{fig:single-vs-double-cumulative-pdf}
+\end{figure}
+
+
+\begin{experiment}[PASSED 2013-11-20]
+{Single precision versus double precision}
+{recorded data}
+{Can the sin and cos calculations in fringe stopping be done in single
+precision?}
+
+\noindent Assess the difference between doing fringe stopping in
+single precision versus double precision. Use the double precision as
+a proxy for the truth. The main aim is to determine the effect of
+rounding error in the sin and cos calculation in the fringe stopping
+routines on the visibilities that are produced.
+
+Our conclusion, based on experiments with data set L189429, is that
+the RMS fractional error on the visibilities at 1~s and 3.052~kHz
+time- and frequency resolution is about $3 \cdot 10^{-5}$. As can be
+seen in the right panel of
+Fig.~\ref{fig:single-vs-double-diff-ratio-histograms}, the histogram
+of deviations in the ratio of double / single precision data is nicely
+symmetrical. Given sufficiently large integration times and frequency
+ranges, these rounding errors will behave stochastically, leading to
+an increase of the noise level of the visibilities. 
+
+The noise contribution due to this problem at the given time- and
+frequency resolution is exactly the visibility amplitude multiplied by
+$3\cdot10^{-5}$. In case of noise-limited data, this leads to an
+imperceptibly small increase of the total noise, because the thermal
+noise and numerical noise add in quadrature. For the rounding noise to
+become dominant, the total field flux has to be about 1.4~MJy in the
+HBA, and much more in the LBA. Keep in mind that this just raises the
+noise level, but that the noise still averages down with the square
+root of the time-frequency window.
+
+Figure ~\ref{fig:single-vs-double-cumulative-pdf} shows the cumulative
+probability density function. That is, the probability that a
+visibility at the 1~s~--~3~kHz resolution has a fractional error
+\emph{larger} than $x$.
+\end{experiment}
+
+
+
+
+\begin{experiment}[PASSED 2013-12-19]
+{Setting of static phase/delays per pol and antenna field}
+{recorded data}
+{Verify that phases and delays are applied per polarization and
+  antenna field}
+
+\noindent Use prerecorded data of 3C~196 in the HBA, and Cyg~A in the
+LBA. Two minutes of data should suffice. The experiment consists of
+the following steps. For both data sets:
+\begin{enumerate}
+\item Correlate the data, applying the current delay values in use
+  for the BG/P.: PASSED 2013-11-01
+\item Derive the delays with respect to the mean delay for all core
+  stations and verify that it is less than 1~ns for all stations. If
+  this is the case, the delays are applied with the correct sign.
+\item For one station, and 100~ns to the delay of the Y polarization
+  only.
+\item For another station, add 70 degrees of phase to the X
+  polarization only. 
+\item Re-correlate the data again, and fit for delays and phase at
+  0~MHz frequency, and verify that the 100~ns and 70$^\circ$ changes
+  show up in the appropriate stations and polarizations. PASSED 2013-12-19
+\end{enumerate}
+\end{experiment}
+
+
+
+
+\begin{experiment}[PASSED 2013-11-15]
+{Station UVW coordinates}
+{recorded data}
+{Verify the J2000 UVW coordinates in the MS}
+
+\noindent For core--core, remote--remote, and ILT--ILT baselines,
+verify that the J2000 UVW coordinates in the measurement set are equal
+(to within 5 cm) to the UVW coordinates derived from the station's
+ITRF positions, transformed using casacore for the epoch of the
+observation.
+
+Run the test case \texttt{test\_uvw\_casacore} from the program
+\texttt{verify-ms-format.py} listed in appendix
+\ref{sec:verify-ms-format}. This was done for L188487, which passed
+the test case on 2013-11-15.
+\end{experiment}
+
+
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=\columnwidth]{L203421-EU-clock-tec.png}
+  \end{center}
+  \caption{Clock delay and TEC difference between CS002HBA0 and four
+    international stations during observation L203395.}
+  \label{fig:clock-tec-eu}
+\end{figure}
+
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=\columnwidth]{L203421-EU-scatter-around-360s-avg.png}
+  \end{center}
+  \caption{Clock delay difference between CS002HBA0 and four
+    international stations during observation L203395 after
+    subtracting a 360~s running mean.}
+  \label{fig:clock-tec-eu-minus-360-avg}
+\end{figure}
+
+\begin{experiment}[PASSED 2014-01-31]
+{Baseline phases}
+{10~h observation on 3C~48 or 3C~147}
+{Ensure that there are no sudden jumps in the visibility phases or delays}
+
+\noindent To test if the delays are compensated in a smooth way, and
+no major interpolation accidents occur, make plots of the baseline
+delays and phase offsets for all international and remote baselines
+from a long HBA observation of a compact source.
+
+All delay- and phase structure should be attributable to station
+clocks, the ionosphere, and slow moving differences between the
+casacore and CALC delay models.
+
+An observation of 3C~48 was conducted on January 31st (L203395). This
+observation involved all Dutch and international stations
+simultaneously in HBA\_DUAL mode and lasted for about 5 hours. We
+fitted for phase 0 offsets and delays for the XX and YY correlations
+of between CS002HBA0 and the international stations. DE601, DE604,
+DE605, and SE607 provided good data.
+
+Figure~\ref{fig:clock-tec-eu} shows the clock and TEC
+differences. Uncertainties for the delays are typically a bit less
+than a ns. TEC uncertainties are typically a few mTECU. It is clear
+that there are fairly large systematic delay variations of up to
+150~ns. The \bgp showed similar behaviour. This is most likely due to
+the way we invoke the casacore delay model or problems in the actual
+casacore delay model. Because decorrelation due to this problem is
+rather benign at  4 channels per sub band resolution, we intend to
+solve this after April 1st.
+
+Figure~\ref{fig:clock-tec-eu-minus-360-avg} shows the delays again,
+but after subtracting a 360~s running mean. This figure will highlight
+any sudden delay jumps, if any. Based on this figure, we can
+confidently state that there are no sudden jumps in delay larger than
+about half a ns on timescales smaller than 6 minutes. The structure in
+the CS002HBA0--SE607HBA baseline is due to the central source being
+partially resolved out, and other sources beginning to contribute to
+the visibility in a significant way.
+\end{experiment}
+
+
+
+
+
+
+\chapter{Correlator}
+
+\begin{experiment}
+{MS $uvw$ coordinates versus delay compensation $uvw$s}
+{recorded data}
+{Verify that the $uvw$ coordinates in the MS correspond to
+  $\left\langle\vec{u}_j - \vec{u}_i\right\rangle$}
+
+\noindent The $uvw$ coordinates in the MS for a given visibility must
+be equal to the mean of the difference between the $uvw$ coordinates
+for the stations in J2000, averaged over the integration time of the
+visibility. Testing this requires an experiment in which the
+correlator logs the offset between a station and CS002LBA in the J2000
+frame for at least 2 stations, at \emph{every} 5~$\mu$s time step for
+one full integration. Obviously, this is an experiment that may not be
+possible to run in real time, but it needs to be done to ensure that
+at the very least the delay model and the MS are consistent.
+
+A way to store correlator-computed station UVWs in the MS is currently
+[2014-03-11] being worked on. It has not yet been installed.
+\end{experiment}
+
+
+
+
+\begin{experiment}[PASSED? 2013-11-22]
+{Flux scale 16-bit versus 8-bit mode}
+{recorded data}
+{Verify that 16-bit and 8-bit data have the same flux scale}
+
+\noindent At the stations, 8-bit data are normalized differently than
+16-bit data, leading to a voltage amplitude that is a factor 16 lower
+for 8-bit data. The \bgp does not correct for this difference. In
+\cobalt, we do want to correct this to ensure a uniform flux density
+scale, independent of bit mode.
+
+The experiment is very simple: correlate 8-bit data and 16-bit data,
+recorded within minutes of each other, straddling transit of 3C~196,
+and compare the visibility amplitudes. They must be the same to within
+a couple percent. In the \bgp, they would be different by a factor
+256.
+
+This experiment has not yet been done properly, but a preliminary test
+with L189429 (16 bit) and L189430 (8 bit) observations of 3C 295 was
+done, while 3C 295 was a fair distance away from transit. We ran the
+following code on locus004:
+
+{\small
+\begin{lstlisting}[language=Python]
+from pyrap.tables import table
+ms16 = '/data/L189429-reference-single/L189429_SAP000_SB000_uv.MS/'
+ms08 = '/data/L189430-reference-single/L189430_SAP000_SB000_uv.MS/'
+sel16  = table(ms16).query('SQRT(SUMSQUARE(UVW[1:2])) > 1000.0')
+sel08  = table(ms08).query('SQRT(SUMSQUARE(UVW[1:2])) > 1000.0')
+data16 = sel16.getcol('DATA')
+data08 = sel08.getcol('DATA')
+median16 = median(abs(data16)[:,6:-6,0::3]) # avg xx and yy
+median08 = median(abs(data08)[:,6:-6,0::3]) # avg xx and yy
+print '8 bit: %.3f; 16 bit: %.3f' % (median08, median16)
+\end{lstlisting}
+}
+
+Which gave ``8 bit: 0.027; 16 bit: 0.020'' as an answer. These numbers
+are within 25\% of each other, and certainly not a factor of 256
+off. We are therefore fairly confident that this actually works.
+\end{experiment}
+
+
+
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=\columnwidth]{flux-scale-channel-independent.pdf}
+\end{center}
+\caption{Flux scale is independent of the number of channels.}
+\label{fig:flux-scale-channel-independent}
+\end{figure}
+
+
+\begin{experiment}[PASSED 2014-01-29]
+{Flux scale independent of nr channels}
+{recorded data L189598 Cyg A}
+{Ensure that the mean amplitude in each channel is the same,
+  independent of the number of channels specified.}
+
+\noindent In the \bgp, Fourier transforms from the time to the
+frequency domain were not normalized, leading to a flux scale that is
+proportional to the number of output channels. This is clearly not
+desirable. For \cobalt, the time to frequency transforms should be
+normalized, ensuring a uniform flux scale.
+
+This can be tested with the same data sets that were used for the
+station sub band band pass correction
+test. Fig.~\ref{fig:flux-scale-channel-independent} shows the
+results for 16, 64, and 256 channels.
+\end{experiment}
+
+
+
+
+
+\begin{experiment}[CANCELLED]
+{Equivalence to \bgp in 16 bit mode}
+{recorded data: 3C~295 all stations}
+{Assert that \cobalt output is equal to \bgp output}
+
+\noindent This is one of the most important validations. The
+prerecorded data should be fed through both \cobalt \emph{and} the
+\bgp. The output data sets are subsequently subtracted. Because the
+Fourier transforms in \cobalt may at some point all be normalized to
+ensure that the flux scale is independent of the number of channels,
+one may need to apply a constant multiplication factor between \cobalt
+and the \bgp before subtracting the data sets.
+
+Any deviations must be minor
+and consistent with numerical noise, expected to be at a level of
+about $10^{-5}$ of the visibility amplitude. The difference must also
+be un-biased. If \cobalt passes this test, we have conclusively shown
+that \cobalt is no worse than the \bgp.
+
+Because the BG/P apparently can not digest offline UDP packets
+anymore, we cannot do this experiment and will have to independently
+verify \cobalt's functionality and performance.
+\end{experiment}
+
+
+
+
+
+
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.8\columnwidth]{cobalt-performance-subband-completeness-202756-202772.pdf}
+\end{center}
+\caption{Fraction of sub bands without any data loss in the final
+  Measurement Sets.}
+\label{fig:data-completeness-correlator}
+\end{figure}
+
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[angle=0,width=\columnwidth]{correlator-input-loss-as-function-of-field.pdf}
+  \end{center}
+  \caption{Data loss at the input of Cobalt per antenna field as a
+    function of the total number of antenna fields in the
+    observation. These are the statistics for three days in a period
+    in which we were finalizing the input optimizations. Note the
+    scale of the colorbars. It goes down by a factor 10 each day.}
+  \label{fig:correlator-input-loss}
+\end{figure}
+
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[angle=0,width=1.1\columnwidth]{correlator-input-loss-as-function-of-field-20140313.pdf}
+  \end{center}
+  \caption{Data loss at the input of Cobalt per antenna field as a
+    function of the total number of antenna fields in the
+    observation. This is an enlargement of the third panel in Fig.~\ref{fig:correlator-input-loss}}
+  \label{fig:correlator-input-loss-20140313}
+\end{figure}
+
+
+\begin{experiment}[PASSED 2014-03-13]
+{Correlator capacity}
+{real time data}
+{Find the maximum correlator capacity}
+
+\noindent In 8 bit mode with 488 sub bands, in HBA\_DUAL
+configuration, with 256 channels per sub band and 1 second integration
+time, conduct a series of 1 minute observations in which the number of
+correlated fields is increased every time until the correlator can not
+keep up anymore.
+
+Estimate, from the processing power / network capacity that is used as
+a function of the number of stations, at which point the correlator
+can not keep up anymore. Once all stations are being correlated, one
+can try to decrease the integration time in steps of a factor of two
+until data writing breaks down, to establish the maximum obtained
+throughput to CEP2.
+
+We tested 48 to 62 antenna fields (2014-01-29). SAS IDs
+202756..202772. We find that Cobalt's percentage of complete data sets
+(Fig.~\ref{fig:data-completeness-correlator}) roughly follows the
+shape of the \bgp's curve, but looses a bit more, and behaves more
+erratically. At the data rates of typical observations (4 Gbit/s),
+however, we do not loose data. Although the erratic behaviour must be
+solved, the performance is adequate for regular operations.
+
+We also tested the input loss before and after optimizing the input
+section of Cobalt, after pretty much having rewritten the entire
+initial data distribution before correlating. We observed in 8~bit
+mode, using 488 sub bands, 64 channels per sub band, and 1~s
+correlator integration time. The result is shown in
+Fig.~\ref{fig:correlator-input-loss}. We have shown that we typically
+loose less than one percent of data per station on 120~s long
+observations. Most loss is incurred in the first 5--15 seconds. The
+international stations drop way more data, but those data simply do
+not arrive at Cobalt due to issues in the long haul network
+connections towards those stations. These connection problems have
+been resolved after this experiment was conducted. The left hand graph
+is before basic optimization, the right hand graph is the current
+situation. That panel is enlarged in
+Fig.~\ref{fig:correlator-input-loss-20140313}.
+\end{experiment}
+
+
+
+
+
+\begin{experiment}[PASSED 2014-03-14]
+{Long, deep integration}
+{real data (12h integration on 3C~48 or 3C~147)}
+{Establish long term stable operation of \cobalt}
+
+\noindent Observe 12~h of 3C~48 HBA\_DUAL\_INNER data in 8-bit mode
+with all Dutch LOFAR stations. This is basically an EoR type
+experiment. Flag the data and calibrate with the best source model
+there is for this field, obtainable from V.~Pandey. If we reach the
+thermal noise on the inner 8~h of data -- expected to be around
+$100$--$150\ \mu$Jy/beam. -- and there are no artifacts visible in the
+residual map, the correlator pipeline is good enough.
+
+
+We have taken a 5h EoR type observation of 3C~196, which showed
+correlator capacity problems that had appeared during the
+2014-02-03 stop day. These data curently reside on the EoR cluster and
+still need to be imaged.
+
+
+On 2014-03-13, we performed an 11h 8 bit observation of 3C~196 with
+all stations, except DE604, in HBA\_DUAL\_INNER mode. That is, we used
+69 antenna fields. The observation ran fine and lost no data at the
+output. Input losses were benign, and most likely due to data not
+arriving at \cobalt in the first place. The only stations that lost
+0.01~\% or more of their input data were:
+
+\begin{description}
+  \item[CS004HBA0] 0.01\%
+  \item[CS004HBA1] 0.01\%
+  \item[CS401HBA0] 0.03\%
+  \item[CS401HBA1] 0.03\%
+  \item[DE601HBA] 2.65\%
+  \item[DE602HBA] 0.06\%
+  \item[DE603HBA] 32.57\%
+  \item[DE605HBA] 2.63\%
+  \item[FR606HBA] 2.64\%
+  \item[SE607HBA] 38.98\%
+  \item[UK608HBA] 2.52\%.
+\end{description}
+
+The input losses were likely due to data that never even arrived at \cobalt.
+
+The data are currently [2014-03-14] at the EoR cluster, and will be
+imaged by V.~Pandey.
+\end{experiment}
+
+
+
+
+
+
+
+
+
+
+\chapter{Beamformed modes}
+
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=\columnwidth]{dailyimage-20140206-cobalt-offline-pulsar.png}
+  \end{center}
+  \caption{Detection of LGM-1 with incoherent and coherent beam
+    forming by \cobalt in offline mode.}
+  \label{fig:lgm-1}
+\end{figure}
+
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=0.48\columnwidth]{cs-snr-vs-stations-2014-07-08.png}%
+    \includegraphics[width=0.48\columnwidth]{is-snr-vs-stations-2014-07-08.png}
+  \end{center}
+  \caption{Coherent Stokes (left) and incoherent Stokes (right)
+    signal-to noise ratio as a function of the number of stations in
+    the (in)coherent sum. The SNR falls well below the theoretically
+    optimal (green) curves. Cause is being investigated.}
+  \label{fig:cs-is-snr-scaling}
+\end{figure}
+
+\begin{experiment}[IN PROGRESS]
+{Coherent stokes}
+{recorded data: PSR~B0329+54}
+{Verify that coherent addition increases SNR linearly}
+
+\noindent Take the PSR~B0329+54 test data sets, and coherently add 1,
+2, 4, 8, 16, 32, and 46 antenna fields. Do this in 8-bit and 16-bit
+mode. The SNR increase must be linear in the number of stations, and
+the flux scale the same in both bit modes.
+
+The data must be processed using the pulsar pipeline and the PRESTO
+package. Repeat this in Stokes $I$, $IQUV$, and for complex
+voltages. Use 1, 16, and 64 channels.
+
+We have shown that coherent and incoherent addition work in offline
+mode in the daily image of [2014-02-14] (see
+Fig~\ref{fig:lgm-1}). On-line addition works too, however, as
+Fig.~\ref{fig:cs-is-snr-scaling} shows, its signal to noise ratio
+(SNR) falls well below the theoretically expected curve. The cause may
+be the station-delay calibration table at \cobalt, something at the
+stations, local interference, or a problem in \cobalt's addition
+kernels. These things are currently (2014-08-29) under investigation.
+\end{experiment}
+
+
+
+\begin{experiment}[IN PROGRESS]
+{Incoherent stokes}
+{recorded data: PSR~B0329+54}
+{Verify that incoherent addition increases the SNR $\propto \sqrt{N}$}
+
+\noindent \ldots where $N$ is the number of stations. Take the
+PSR~B0329+54 test data sets, and coherently add 1, 2, 4, 8, 16, 32,
+and 46 antenna fields. Do this in 8-bit and 16-bit mode. The SNR
+increase must be proportional to the square root of the number of
+stations, and the flux scale must be the same in both bit modes.
+
+The data must be processed using the LOFAR pulsar pipeline. Repeat
+this in Stokes $I$, $IQUV$, and for complex voltages. Use 1, 16, and
+64 channels.
+
+We have shown that coherent and incoherent addition work in offline
+mode in the daily image of [2014-02-14] (see
+Fig~\ref{fig:lgm-1}). On-line addition works too, however, as
+Fig.~\ref{fig:cs-is-snr-scaling} shows, its signal to noise ratio
+(SNR) falls well below the theoretically expected curve. The cause may
+be the station-delay calibration table at \cobalt, something at the
+stations, local interference, or a problem in \cobalt's addition
+kernels. These things are currently (2014-08-29) under investigation.
+\end{experiment}
+
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=\columnwidth]{L212698_combined-FE-2014-03-20-cobalt.png}
+  \end{center}
+  \caption{One of the first successful poor man's Fly's Eye
+    observations with \cobalt.}
+  \label{fig:fe-hba}
+\end{figure}
+
+\begin{experiment}[PASSED 2014-04-24]
+{Fly's eye}
+{recorded data: PSR~B0329+54}
+{Ensure we can separately record data from individual stations}
+
+\noindent Set up parallel observations of 1, 2, 4, 8, 16, 32, and 46
+antenna fields. process the resulting data and recover the pulsar SNR
+per station. Do this only in 16 bit mode for Stokes $IQUV$.
+
+We have done several poor-man's fly's eye observations (all stations
+looking in the same direction), which is a useful system debugging
+tool. This seems to work d.d. [2014-03-13] for 69 antenna fields in
+16-bit mode. Proper fly's eye observing (every station observing a
+different direction) is not yet possible [2014-03-14].
+
+In fact, this can be done without resorting to parallel
+observations. Specifying ``poor-man's Fly's Eye'' observations (all
+stations pointing in the same direction) works the same way as with
+BG/P. See Fig.~\ref{fig:fe-hba} for first results. A full fly's eye
+observation (all stations in independent directions) must (and can) be
+specified by multiple parallel observations.
+\end{experiment}
+
+
+
+\begin{experiment}[CANCELLED]
+{Equivalence to BG/P in 16 bit mode}
+{recorded data: PSR~B0329+54}
+{Assert that \bgp and \cobalt data are equivalent}
+
+\noindent The prerecorded data should be fed through both \cobalt
+\emph{and} the \bgp. The output data sets are subsequently
+subtracted. Because the Fourier transforms in \cobalt may at some
+point all be normalized to ensure that the flux scale is independent
+of the number of channels, one may need to apply a constant
+multiplication factor between \cobalt and the \bgp before subtracting
+the data sets.
+
+Any deviations must be minor and consistent with numerical noise,
+expected to be at a level of about $10^{-5}$ of the timeseries
+amplitude. The difference must also be un-biased. If \cobalt passes
+this test, we have conclusively shown that \cobalt is no worse than
+the \bgp.
+\end{experiment}
+
+
+
+
+\begin{experiment}
+{Coherent dedispersion}
+{synthetic and recorded data}
+{Verify that coherent dedispersion works in HBA and LBA.}
+
+\noindent Using synthetic data of a highly dispersed pulse, verify
+that correcting for the exact dispersion measure yields the shape and
+amplitude of the pulse that went in.
+
+Using prerecorded station data of a highly dispersed pulsar, perform
+coherent stokes beam forming, applying coherent dedispersion, and
+verify that the signal-to-noise ratio and pulse profile in the output
+correspond with what the pulsar group expects.
+
+This functionality will be implemented during regular operations.
+\end{experiment}
+
+
+
+
+
+
+\begin{experiment}[PASSED]
+{Coherent beam forming capacity}
+{real time data}
+{Find the maximum number of coherent beams}
+
+\noindent In 8 bit mode with 488 subbands, in HBA\_DUAL configuration,
+with 16 channels per sub band and no time integration, conduct a
+series of 5 minute coherent stokes observations in which the number of
+tied array beams is increased every time until the correlator can not
+keep up anymore. Beam form the entire core in HBA\_DUAL mode with the
+following tied array beam numbers: 1, 2, 4, 8, 16, 32, 64, 128, 256,
+512 and 17, 31, 67, 127, 257, 509.
+
+Do not use coherent dedispersion.
+
+We have been probing the maximum capacity using tied array beam
+rings. We can do 5 tied array rings with 488 sub bands and all
+superterp HBA fields, loosing about 2\% of data in that case. 4 tied
+array rings plus 12 separate tied array beams can be done with
+37~Gbit/s data output rate, dropping only 0.8\% of the data enroute to CEP2.
+
+For the full core, we can do 6 tied array beams with 162 sub bands
+each. Beamformer performance is a function of approcimately 7
+variables, making this a very hard parameter space to fully
+explore. We can computationally support al types of pulsar
+observations that were requested for LOFAR Cycle 2.
+\end{experiment}
+
+
+
+
+\begin{experiment}
+{Coherent dedispersion capacity}
+{real time data}
+{Find the maximum dispersion that can be handled in a single tied
+  array beam}
+
+\noindent For both LBA and HBA\_DUAL, in 8-bit mode with 488 sub bands
+of 16 channels each, and one tied array beam, do coherent
+dedispersion, increasing the dispersion measure in factors of 2,
+beginning at 1, until \cobalt runs out of memory.
+
+Coherent dedispersion will be implemented later.
+\end{experiment}
+
+
+
+
+\begin{experiment}[IN PROGRESS]
+{Long, deep integration}
+{real time data}
+{Establish long term stability}
+
+\noindent Observe a weak pulsar and its environment using the maximum
+number of tied array beams in 8 bit mode with 46 antenna fields for
+several hours. The system may not crash, and must yield thermal noise
+limited data.
+
+The beamformer is stable over several hours of observing. However, the
+coherent stokes sensitivity with the core is currently (2014-08-29)
+subpar. Cause is yet unknown. It may be the delay calibration table,
+something in the coherent stokes kernel, or something with the
+stations themselves. This is actively being investigated.
+\end{experiment}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=\columnwidth]{resids-postfit-Cobalt-points-fitted.png}
+  \end{center}
+  \caption{Timing residuals on J0034-0534 after jointly fitting BG/P
+    and Cobalt data.}
+  \label{fig:timing-residuals}
+\end{figure}
+
+
+\begin{experiment}[PASSED 2014-05-28]
+{Millisecond pulsars}
+{real time data}
+{Establish absolute time}
+
+\noindent Observe a group of known millisecond pulsars to find out if
+the time scale in the output files is reproducably close enough to
+UTC.
+
+Timing residuals on J0034-0534 are approximately 24~$\mu$s RMS and
+comparable to BG/P era. See Fig.~\ref{fig:timing-residuals}.
+\end{experiment}
+
+
+
+
+
+
+
+
+
+\chapter{Parallel observations}
+
+\begin{experiment}[PASSED 2014-06-17]
+{Multiple simultaneous identical pipelines}
+{real time data}
+{Ensure we can run multiple simultaneous pipelines at all}
+
+\noindent \cobalt's fly's eye mode will be implemented with multiple
+parallel observations where each antenna field take part in at most
+one observation. This is obviously the simplest case.
+
+In this experiment, run multiple simultaneous coherent stokes
+observations of the same pulsar in 8-bit HBA\_DUAL mode. Every
+observation uses one antenna field.  Use progressively more antenna
+fields in approximate powers of two:
+\begin{itemize}
+\item superterp stations (6 stations, 12 fields)
+\item half of the core stations (12 stations, 24 fields)
+\item all core stations (24 stations, 48 fields)
+\item all Dutch stations (38 stations, 62 fields)
+\item all stations       (46 stations, 70 fields)
+\end{itemize}
+
+Repeat this experiment for the correlator pipeline by executing
+parallel observations with the core only, remote stations only, and
+international stations only.
+
+We have, technically, not strictly tried this experiment, but
+discovered on June 17, that we can schedule and run arbitrary
+observations simultaneously, using different start and stop times,
+provided that the station sets do not overlap.
+\end{experiment}
+
+
+
+\begin{experiment}[IN PROGRESS]
+{Multiple different, simultaneous  pipelines, overlapping data}
+{real time data}
+{Run interferometric and beam formed observations at the same time}
+
+\noindent Produce correlated data and beam formed data from the
+\emph{same} set of stations.
+
+Code is ready for commissioning as of 2014-08-29.
+\end{experiment}
+
+
+
+
+
+\begin{experiment}[PASSED 2014-06-17]
+{Truly independent scheduling}
+{real time data}
+{Independently schedule and run different observations}
+
+\noindent Run a set of independent observations in different beam
+forming modes and interferometric modes, that may not start and end at
+the same time.
+
+This is mostly a long term wish, testing the observatory software more
+that \cobalt itself.
+
+It works! On June 17, we scheduled and ran arbitrary observations
+simultaneously, using different start and stop times, provided that
+the station sets do not overlap. This possibility has since been used
+regularly for solar observations and interplanetary scintillation
+experiments.
+\end{experiment}
+
+
+
+
+
+
+
+\chapter{Observatory software integration}
+
+
+\begin{experiment}[PASSED 2013-11-01]
+{Switch data streams to \cobalt or \bgp}
+{real data}
+{Ensure easy switching between the two correlators}
+
+\noindent The switching is done by regenerating the configuration
+files for the stations. This is done by the createFiles script. This
+works beautifully for the Dutch stations. Switching between BG/P and
+Cobalt operations takes about 2 minutes now.
+
+International stations still have routing issues, but I consider that
+separate from this experiment. In fact, most of those issues have been
+solved on 2013-11-26/27, and the final remaining connection issues to
+the international stations were resolved at the end of spring 2014.
+\end{experiment}
+
+
+
+
+\begin{experiment}[PASSED 2014-03-14]
+{System validation observations}
+{real data}
+{Verify seamless integration into observatory software}
+
+\noindent Run the standard suite of system validation observations
+from MoM through the Scheduler until all validation plots have
+appeared. At no point should it be necessary to specify anything
+\cobalt specific. This assumes the switch to \cobalt has already been
+made by the script used in the first experiment.
+
+Finally, export the raw data of this validation run to the LTA.
+
+On 2014-03-14 we have performed a successful system validation
+run. We have also ingested raw data from a previous, incomplete run
+into the LTA. The data and metadata of those observations appeared
+fine in the LTA.
+\end{experiment}
+
+
+
+
+
+\begin{experiment}[PASSED 2014-04-24]
+{CEP-2 pipeline processing}
+{real data}
+{Verify that current processing pipelines are not broken}
+
+\noindent Run observations with attached pipelines. Observations need
+not be longer than 10--20 minutes. Use the following combinations:
+\begin{itemize}
+\item LBA\_INNER, flagging and demixing [PASSED 2014-01-27]
+\item HBA\_DUAL\_INNER, flagging and averaging [PASSED 2014-01-27]
+\item HBA\_DUAL, target/calibrator pipelines
+\item HBA\_DUAL\_INNER, MSSS observation all the way to automatic imaging
+\end{itemize}
+
+Finally, export the processed data to the LTA.
+
+Raw data as well as processed data has been exported to the LTA
+successfully. We run all pipelines that ran for BG/P data successfully
+in production as of 2014-04-24.
+\end{experiment}
+
+
+\chapter{Conclusions}
+
+\cobalt is sufficently well tested to use in regular observations,
+although some issues remain, primarily in the beam former
+pipeline. The highest priority issues to solve in the near future are
+
+\begin{itemize}
+\item poor scaling of coherent- and incoherent Stokes sensitivity as a
+  function of number of input stations;
+\item residual station band pass in beam formed modes;
+\item delay model errors, particularly affecting long baselines.
+\end{itemize}
+
+
+\appendix
+
+
+\chapter{verify-ms-format.py}
+\label{sec:verify-ms-format}
+
+{\scriptsize
+\lstinputlisting[language=Python]{verify-ms-format.py}
+}
+
+
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliographystyle{aa}
+\bibliography{cobalt}
+
+\vspace{12cm}
+
+
+\end{document}
