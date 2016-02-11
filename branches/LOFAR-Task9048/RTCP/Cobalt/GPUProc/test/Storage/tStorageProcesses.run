@@ -1,4 +1,0 @@
-#!/bin/bash
-
-# Defer to the .run2, which is constructed by CMake but won't be cleaned up by assay
-bash ./tStorageProcesses.run2
