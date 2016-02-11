@@ -23,6 +23,9 @@
 from .messagebus import ToBus, FromBus
 from .messages import RequestMessage, ReplyMessage
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 def _analyze_args(args,kwargs):
     HasKwArgs=(len(kwargs)>0)
@@ -134,6 +137,10 @@ class RPC():
                 result=myrpc(request)
 
         """
+        return self.execute(*args, **kwargs)
+
+    def execute(self, *args, **kwargs):
+        '''execute the remote procedure call'''
         timeout = kwargs.pop("timeout", self.timeout)
         Content = _args_as_content(*args, **kwargs)
         HasArgs, HasKwArgs = _analyze_args(args, kwargs)
