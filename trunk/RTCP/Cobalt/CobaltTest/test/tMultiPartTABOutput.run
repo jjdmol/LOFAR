@@ -10,8 +10,7 @@ outPid=none
 trap 'kill -9 $outPid' SIGTERM SIGINT SIGQUIT SIGHUP  # don't linger on e.g. Ctrl-C
 
 obsID=123881
-rank=0
-./outputProc $obsID $rank &
+./outputProc $obsID &
 outPid=$!
 
 ./tMultiPartTABOutput
