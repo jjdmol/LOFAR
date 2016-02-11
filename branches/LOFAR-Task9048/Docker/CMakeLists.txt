@@ -15,9 +15,9 @@ lofar_add_bin_program(versiondocker versiondocker.cc)
 
 #
 # For given directories, we generate the Dockerfile
-# by parsing their Dockerfile.tmpl through "template".
+# by parsing their Dockerfile.tmpl through "docker-template".
 #
-# "template" is a script that fills in variables with
+# "docker-template" is a script that fills in variables with
 # respect to the build info (branch name, build time, etc)
 #
 
@@ -27,9 +27,9 @@ set(DOCKER_TEMPLATE_DIRS
   lofar-pipeline
   lofar-outputproc)
 
-# Note: "template" only works as long as the sources are still around,
+# Note: "docker-template" only works as long as the sources are still around,
 # since it uses svn to query information from them.
-lofar_add_bin_scripts(template)
+lofar_add_bin_scripts(docker-template)
 lofar_add_sbin_scripts(docker-build-all.sh)
 
 # Convert Dockerfile.tmpl -> Dockerfile in ${DOCKER_TEMPLATE_DIRS}
@@ -42,8 +42,8 @@ foreach(_dir ${DOCKER_TEMPLATE_DIRS})
   # when "all" is build.
   add_custom_command(
     OUTPUT ${_dst}
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/template < ${_src} > ${_dst}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/template ${_src} ${CMAKE_CURRENT_BINARY_DIR}/versiondocker
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/docker-template < ${_src} > ${_dst}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/docker-template ${_src} ${CMAKE_CURRENT_BINARY_DIR}/versiondocker
   )
   add_custom_target(${_dir}_Dockerfile_target ALL DEPENDS ${_dst})
 

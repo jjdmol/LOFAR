@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TAG=`echo '${LOFAR_TAG}' | template`
+TAG=`echo '${LOFAR_TAG}' | docker-template`
 
 function build {
   IMAGE=$1
