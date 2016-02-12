@@ -124,9 +124,17 @@ class RADBHandler(MessageHandlerInterface):
     def _updateResourceClaimsForTask(self, **kwargs):
         logger.info('UpdateResourceClaimsForTask: %s' % kwargs)
         task_id = kwargs['task_id']
+        starttime = kwargs.get('starttime')
+        if starttime:
+            starttime = starttime.datetime();
+
+        endtime = kwargs.get('endtime')
+        if endtime:
+            endtime = endtime.datetime();
+
         updated = self.radb.updateResourceClaimsForTask(task_id,
-                                                        starttime=kwargs['starttime'].datetime() if 'starttime' in kwargs else None,
-                                                        endtime=kwargs['endtime'].datetime() if 'endtime' in kwargs else None,
+                                                        starttime=starttime,
+                                                        endtime=endtime,
                                                         status=kwargs.get('status_id', kwargs.get('status')),
                                                         session_id=kwargs.get('session_id'),
                                                         username=kwargs.get('username'),
@@ -212,10 +220,11 @@ class RADBHandler(MessageHandlerInterface):
     def _getUnits(self):
         return self.radb.getUnits()
 
-def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, radb_password=''):
+def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker=None, radb_password=''):
     return Service(servicename,
                    RADBHandler,
                    busname=busname,
+                   broker=broker,
                    use_service_methods=True,
                    numthreads=2,
                    handler_args={'password': radb_password},
@@ -225,6 +234,7 @@ def main():
     # Check the invocation arguments
     parser = OptionParser("%prog [options]",
                           description='runs the resourceassignment database service')
+    parser.add_option('-q', '--broker', dest='broker', type='string', default=None, help='Address of the qpid broker, default: localhost')
     parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_BUSNAME, help="Name of the bus exchange on the qpid broker, default: %s" % DEFAULT_BUSNAME)
     parser.add_option("-s", "--servicename", dest="servicename", type="string", default=DEFAULT_SERVICENAME, help="Name for this service, default: %s" % DEFAULT_SERVICENAME)
     parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
@@ -238,6 +248,7 @@ def main():
 
     with createService(busname=options.busname,
                        servicename=options.servicename,
+                       broker=options.broker,
                        radb_password=radb_password):
         waitForInterrupt()
 
