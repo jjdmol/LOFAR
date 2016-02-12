@@ -18,9 +18,9 @@ class LongBaselinePipelineResourceEstimator(BaseResourceEstimator):
         self.parset = ParameterSet(kwargs).make_subset('dp.output')
         self.duration = int(kwargs.get('observation.duration', 1))
         self.input_files = input_files
-        self.used_keys = ('correlated.enabled', 'longbaseline.subband_groups_per_ms',
+        self.required_keys = ('correlated.enabled', 'longbaseline.subband_groups_per_ms',
                           'longbaseline.subbands_per_subband_group')
-        if self.check_parset():
+        if self.checkParsetForRequiredKeys():
             self.estimate()
         return
 

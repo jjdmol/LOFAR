@@ -18,8 +18,8 @@ class PulsarPipelineResourceEstimator(BaseResourceEstimator):
         self.duration = int(kwargs.get('observation.duration', 1))
         self.coherent_stokes_type = kwargs.get('observation.coherent_stokes.type')
         self.input_files = input_files
-        self.used_keys = ('pulsar.enabled',)
-        if self.check_parset():
+        self.required_keys = ('pulsar.enabled',)
+        if self.checkParsetForRequiredKeys():
             self.estimate()
         return
 

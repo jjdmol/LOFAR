@@ -17,8 +17,8 @@ class ImagePipelineResourceEstimator(BaseResourceEstimator):
         self.parset = ParameterSet(kwargs).make_subset('dp.output')
         self.duration = int(kwargs.get('observation.duration', 1))
         self.input_files = input_files
-        self.used_keys = ('skyimage.enabled', 'skyimage.slices_per_image', 'skyimage.subbands_per_image')
-        if self.check_parset():
+        self.required_keys = ('skyimage.enabled', 'skyimage.slices_per_image', 'skyimage.subbands_per_image')
+        if self.checkParsetForRequiredKeys():
             self.estimate()
         return
 
