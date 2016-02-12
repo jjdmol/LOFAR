@@ -1,0 +1,2478 @@
+>>>
+### READING AND SHOWING TWO PARSETS ###
+
+Observation  : 
+ObsID        : 5025
+starttime    : 2008-Dec-16 15:30:00
+stoptime     : 2008-Dec-16 15:34:00
+stations     : [CS016,CS017,CS018]
+antennaArray : HBA
+antenna set  : HBA_DUAL
+receiver set : 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111
+sampleClock  : 160
+bits/sample  : 16
+filter       : HB_210_240
+splitter     : ON
+nyquistZone  : 3
+
+(Receivers)  : [0..11]
+Stations     : [CS016,CS017,CS018]
+BLG nodes    : [bgl001..bgl003]
+Storage nodes: [list001,list002]
+
+nrBeams      : 1
+Beam[0].name       : observation[5025]beam[0]
+Beam[0].target     : 3C381
+Beam[0].antennaSet : HBA_ZERO
+Beam[0].momID      : 0
+Beam[0].subbandList: [2,3,4,5]
+Beam[0].beamletList: []
+nrPointings : 1
+Beam[0].pointing[0]: 6.000000, 0.500000, J2000, 2008-Dec-16 15:30:00
+nrTABs      : 2
+nrTABrings  : 3
+TABringsize : 0.023
+Beam[0].TAB[0]: 6.010000, 0.510000, J2000, 0.000000, coherent
+Beam[0].TAB[1]: 5.990000, 0.490000, J2000, 20.000000, incoherent
+beamlet2beams   : []
+nrAnaBeams   : 0
+nrStreamsToStorage: 0
+
+
+Observation  : 
+ObsID        : 5025
+starttime    : 2008-Dec-16 15:30:00
+stoptime     : 2008-Dec-16 15:34:00
+stations     : [CS016,CS017,CS018]
+antennaArray : HBA
+antenna set  : HBA_JOINED
+receiver set : 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111
+sampleClock  : 160
+bits/sample  : 16
+filter       : HB_210_240
+splitter     : OFF
+nyquistZone  : 3
+
+(Receivers)  : [0..11]
+Stations     : [CS016,CS017,CS018]
+BLG nodes    : [bgl001..bgl003]
+Storage nodes: [list001,list002]
+
+nrBeams      : 1
+Beam[0].name       : observation[5025]beam[0]
+Beam[0].target     : 3C381
+Beam[0].antennaSet : HBA_JOINED
+Beam[0].momID      : 0
+Beam[0].subbandList: [2,3,4,5]
+Beam[0].beamletList: []
+nrPointings : 1
+Beam[0].pointing[0]: 6.000000, 0.500000, J2000, 2008-Dec-16 15:30:00
+nrTABs      : 2
+nrTABrings  : 0
+TABringsize : 0.023
+Beam[0].TAB[0]: 6.010000, 0.510000, J2000, 0.000000, coherent
+Beam[0].TAB[1]: 5.990000, 0.490000, J2000, 20.000000, coherent
+beamlet2beams   : []
+nrAnaBeams   : 0
+nrStreamsToStorage: 0
+
+<<<
+### ADDING AN EXTRA BEAM ###
+
+Observation  : 
+ObsID        : 5025
+starttime    : 2008-Dec-16 15:30:00
+stoptime     : 2008-Dec-16 15:34:00
+stations     : [CS016,CS017,CS018]
+antennaArray : HBA
+antenna set  : HBA_JOINED
+receiver set : 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111
+sampleClock  : 160
+bits/sample  : 16
+filter       : HB_210_240
+splitter     : OFF
+nyquistZone  : 3
+
+(Receivers)  : [0..11]
+Stations     : [CS016,CS017,CS018]
+BLG nodes    : [bgl001..bgl003]
+Storage nodes: [list001,list002]
+
+nrBeams      : 2
+Beam[0].name       : observation[5025]beam[0]
+Beam[0].target     : 3C381
+Beam[0].antennaSet : HBA_JOINED
+Beam[0].momID      : 0
+Beam[0].subbandList: [2,3,4,5]
+Beam[0].beamletList: []
+nrPointings : 1
+Beam[0].pointing[0]: 6.000000, 0.500000, J2000, 2008-Dec-16 15:30:00
+nrTABs      : 2
+nrTABrings  : 0
+TABringsize : 0.023
+Beam[0].TAB[0]: 6.010000, 0.510000, J2000, 0.000000, coherent
+Beam[0].TAB[1]: 5.990000, 0.490000, J2000, 20.000000, coherent
+Beam[1].name       : observation[5025]beam[1]
+Beam[1].target     : 
+Beam[1].antennaSet : HBA_JOINED
+Beam[1].momID      : 0
+Beam[1].subbandList: [4,3,102]
+Beam[1].beamletList: []
+nrPointings : 1
+Beam[1].pointing[0]: 0.234568, 0.123457, AZEL, 2008-Dec-16 15:30:00
+nrTABs      : 0
+nrTABrings  : 0
+TABringsize : 0
+beamlet2beams   : []
+nrAnaBeams   : 0
+nrStreamsToStorage: 0
+
+### ADDING NODE ASSIGNMENT ###
+Exception on wrong specified locations works OK
+>>>
+### TESTING CONFLICT ROUTINE ###
+No conflict found in file 5 which is oke.
+<<<
+### SHOWING RCU BITSETS FOR ALL STATIONTYPES ###
+getRCUbitset(96,48,'') = 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111
+getRCUbitset(96,96,'') = 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111
+getRCUbitset(96,48,LBA_XXX) = 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111
+getRCUbitset(96,96,LBA_XXX) = 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111
+getRCUbitset(96,48,HBA_XXX) = 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111
+getRCUbitset(96,96,HBA_XXX) = 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111
+HBA_ZERO(false) = HBA
+HBA_ZERO(true)  = HBA0
+HBA_ONE(false) = HBA
+HBA_ONE(true)  = HBA1
+HBA_DUAL(false) = HBA
+HBA_DUAL(true)  = HBA0
+HBA_JOINED(false) = HBA
+HBA_JOINED(true)  = HBA
+LBA_INNER(false) = LBA
+LBA_INNER(true)  = LBA
+LBA_OUTER(false) = LBA
+LBA_OUTER(true)  = LBA
+LBA_X(false) = LBA
+LBA_X(true)  = LBA
+>>>
+### SHOW DIFFERENT BETWEEN OLD AND NEW DATASLOT SYNTAX ###
+OLD SYNTAX
+
+Observation  : 
+ObsID        : 5025
+starttime    : 2008-Dec-16 15:30:00
+stoptime     : 2008-Dec-16 15:34:00
+stations     : [CS001,CS004,RS005]
+antennaArray : HBA
+antenna set  : HBA_DUAL
+receiver set : 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111
+sampleClock  : 160
+bits/sample  : 16
+filter       : HBA_210_250
+splitter     : ON
+nyquistZone  : 3
+
+(Receivers)  : [0..11]
+Stations     : [CS001,RS005,CS004]
+BLG nodes    : [bgl001..bgl003]
+Storage nodes: [list001,list002]
+
+nrBeams      : 4
+Beam[0].name       : observation[5025]beam[0]_0
+Beam[0].target     : 
+Beam[0].antennaSet : HBA_ZERO
+Beam[0].momID      : 0
+Beam[0].subbandList: [2,3,4,5]
+Beam[0].beamletList: []
+nrPointings : 1
+Beam[0].pointing[0]: 6.000000, 0.500000, J2000, 2008-Dec-16 15:30:00
+nrTABs      : 0
+nrTABrings  : 0
+TABringsize : 0
+Beam[1].name       : observation[5025]beam[0]_1
+Beam[1].target     : 
+Beam[1].antennaSet : HBA_ONE
+Beam[1].momID      : 0
+Beam[1].subbandList: [2,3,4,5]
+Beam[1].beamletList: []
+nrPointings : 1
+Beam[1].pointing[0]: 6.000000, 0.500000, J2000, 2008-Dec-16 15:30:00
+nrTABs      : 0
+nrTABrings  : 0
+TABringsize : 0
+Beam[2].name       : observation[5025]beam[1]_0
+Beam[2].target     : 
+Beam[2].antennaSet : HBA_ZERO
+Beam[2].momID      : 0
+Beam[2].subbandList: [20,21,22,23,24,25,40,41,42,43,44]
+Beam[2].beamletList: []
+nrPointings : 1
+Beam[2].pointing[0]: 1.000000, 1.500000, J2000, 2008-Dec-16 15:30:00
+nrTABs      : 0
+nrTABrings  : 0
+TABringsize : 0
+Beam[3].name       : observation[5025]beam[1]_1
+Beam[3].target     : 
+Beam[3].antennaSet : HBA_ONE
+Beam[3].momID      : 0
+Beam[3].subbandList: [20,21,22,23,24,25,40,41,42,43,44]
+Beam[3].beamletList: []
+nrPointings : 1
+Beam[3].pointing[0]: 1.000000, 1.500000, J2000, 2008-Dec-16 15:30:00
+nrTABs      : 0
+nrTABrings  : 0
+TABringsize : 0
+beamlet2beams   : []
+nrAnaBeams   : 0
+nrStreamsToStorage: 0
+
+NEW SYNTAX
+
+Observation  : 
+ObsID        : 5025
+starttime    : 2008-Dec-16 15:30:00
+stoptime     : 2008-Dec-16 15:34:00
+stations     : [CS001,CS004,RS005]
+antennaArray : HBA
+antenna set  : HBA_DUAL
+receiver set : 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111
+sampleClock  : 160
+bits/sample  : 16
+filter       : HBA_210_250
+splitter     : ON
+nyquistZone  : 3
+
+(Receivers)  : [0..11]
+Stations     : [CS001,RS005,CS004]
+BLG nodes    : [bgl001..bgl003]
+Storage nodes: [list001,list002]
+
+nrBeams      : 4
+Beam[0].name       : observation[5025]beam[0]_0
+Beam[0].target     : 
+Beam[0].antennaSet : HBA_ZERO
+Beam[0].momID      : 0
+Beam[0].subbandList: [2,3,4,5]
+Beam[0].beamletList: []
+nrPointings : 1
+Beam[0].pointing[0]: 6.000000, 0.500000, J2000, 2008-Dec-16 15:30:00
+nrTABs      : 0
+nrTABrings  : 0
+TABringsize : 0
+Beam[1].name       : observation[5025]beam[0]_1
+Beam[1].target     : 
+Beam[1].antennaSet : HBA_ONE
+Beam[1].momID      : 0
+Beam[1].subbandList: [2,3,4,5]
+Beam[1].beamletList: []
+nrPointings : 1
+Beam[1].pointing[0]: 6.000000, 0.500000, J2000, 2008-Dec-16 15:30:00
+nrTABs      : 0
+nrTABrings  : 0
+TABringsize : 0
+Beam[2].name       : observation[5025]beam[1]_0
+Beam[2].target     : 
+Beam[2].antennaSet : HBA_ZERO
+Beam[2].momID      : 0
+Beam[2].subbandList: [20,21,22,23,24,25,40,41,42,43,44]
+Beam[2].beamletList: []
+nrPointings : 1
+Beam[2].pointing[0]: 1.000000, 1.500000, J2000, 2008-Dec-16 15:30:00
+nrTABs      : 0
+nrTABrings  : 0
+TABringsize : 0
+Beam[3].name       : observation[5025]beam[1]_1
+Beam[3].target     : 
+Beam[3].antennaSet : HBA_ONE
+Beam[3].momID      : 0
+Beam[3].subbandList: [20,21,22,23,24,25,40,41,42,43,44]
+Beam[3].beamletList: []
+nrPointings : 1
+Beam[3].pointing[0]: 1.000000, 1.500000, J2000, 2008-Dec-16 15:30:00
+nrTABs      : 0
+nrTABrings  : 0
+TABringsize : 0
+beamlet2beams   : []
+nrAnaBeams   : 0
+nrStreamsToStorage: 0
+
+<<<
+OBS 103821
+
+Observation  : 
+ObsID        : 0
+starttime    : 2013-Mar-19 09:04:00
+stoptime     : 2013-Mar-19 10:04:00
+stations     : [CS002,CS003,CS004,CS005,CS006,CS007]
+antennaArray : HBA
+antenna set  : HBA_DUAL
+receiver set : 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+sampleClock  : 200
+bits/sample  : 8
+filter       : HBA_110_190
+splitter     : ON
+nyquistZone  : 2
+
+(Receivers)  : []
+Stations     : [CS002,CS006,CS003,CS007,CS004,CS005]
+BLG nodes    : []
+Storage nodes: []
+
+nrBeams      : 6
+Beam[0].name       : observation[0]beam[0]_0
+Beam[0].target     : LOTAAS-P0236A-SAP0
+Beam[0].antennaSet : HBA_ZERO
+Beam[0].momID      : 227189
+Beam[0].subbandList: [100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261]
+Beam[0].beamletList: []
+nrPointings : 1
+Beam[0].pointing[0]: 5.718766, 0.300128, J2000, 2013-Mar-19 09:04:00
+nrTABs      : 13
+nrTABrings  : 4
+TABringsize : 0.0042799
+Beam[0].TAB[0]: 0.000000, 0.035002, J2000, 0.000000, coherent
+Beam[0].TAB[1]: 0.017501, 0.030312, J2000, 0.000000, coherent
+Beam[0].TAB[2]: 0.030312, 0.017501, J2000, 0.000000, coherent
+Beam[0].TAB[3]: 0.035002, 0.000000, J2000, 0.000000, coherent
+Beam[0].TAB[4]: 0.030312, -0.017501, J2000, 0.000000, coherent
+Beam[0].TAB[5]: 0.017501, -0.030312, J2000, 0.000000, coherent
+Beam[0].TAB[6]: 0.000000, -0.035002, J2000, 0.000000, coherent
+Beam[0].TAB[7]: -0.017501, -0.030312, J2000, 0.000000, coherent
+Beam[0].TAB[8]: -0.030312, -0.017501, J2000, 0.000000, coherent
+Beam[0].TAB[9]: -0.035002, 0.000000, J2000, 0.000000, coherent
+Beam[0].TAB[10]: -0.030312, 0.017501, J2000, 0.000000, coherent
+Beam[0].TAB[11]: -0.017501, 0.030312, J2000, 0.000000, coherent
+Beam[0].TAB[12]: 0.000000, 0.000000, J2000, 0.000000, incoherent
+Beam[1].name       : observation[0]beam[0]_1
+Beam[1].target     : LOTAAS-P0236A-SAP0
+Beam[1].antennaSet : HBA_ONE
+Beam[1].momID      : 227189
+Beam[1].subbandList: [100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261]
+Beam[1].beamletList: []
+nrPointings : 1
+Beam[1].pointing[0]: 5.718766, 0.300128, J2000, 2013-Mar-19 09:04:00
+nrTABs      : 13
+nrTABrings  : 4
+TABringsize : 0.0042799
+Beam[1].TAB[0]: 0.000000, 0.035002, J2000, 0.000000, coherent
+Beam[1].TAB[1]: 0.017501, 0.030312, J2000, 0.000000, coherent
+Beam[1].TAB[2]: 0.030312, 0.017501, J2000, 0.000000, coherent
+Beam[1].TAB[3]: 0.035002, 0.000000, J2000, 0.000000, coherent
+Beam[1].TAB[4]: 0.030312, -0.017501, J2000, 0.000000, coherent
+Beam[1].TAB[5]: 0.017501, -0.030312, J2000, 0.000000, coherent
+Beam[1].TAB[6]: 0.000000, -0.035002, J2000, 0.000000, coherent
+Beam[1].TAB[7]: -0.017501, -0.030312, J2000, 0.000000, coherent
+Beam[1].TAB[8]: -0.030312, -0.017501, J2000, 0.000000, coherent
+Beam[1].TAB[9]: -0.035002, 0.000000, J2000, 0.000000, coherent
+Beam[1].TAB[10]: -0.030312, 0.017501, J2000, 0.000000, coherent
+Beam[1].TAB[11]: -0.017501, 0.030312, J2000, 0.000000, coherent
+Beam[1].TAB[12]: 0.000000, 0.000000, J2000, 0.000000, incoherent
+Beam[2].name       : observation[0]beam[1]_0
+Beam[2].target     : LOTAAS-P0236A-SAP1
+Beam[2].antennaSet : HBA_ZERO
+Beam[2].momID      : 227190
+Beam[2].subbandList: [100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261]
+Beam[2].beamletList: []
+nrPointings : 1
+Beam[2].pointing[0]: 5.665004, 0.333475, J2000, 2013-Mar-19 09:04:00
+nrTABs      : 13
+nrTABrings  : 4
+TABringsize : 0.0042799
+Beam[2].TAB[0]: 0.000000, 0.035002, J2000, 0.000000, coherent
+Beam[2].TAB[1]: 0.017501, 0.030312, J2000, 0.000000, coherent
+Beam[2].TAB[2]: 0.030312, 0.017501, J2000, 0.000000, coherent
+Beam[2].TAB[3]: 0.035002, 0.000000, J2000, 0.000000, coherent
+Beam[2].TAB[4]: 0.030312, -0.017501, J2000, 0.000000, coherent
+Beam[2].TAB[5]: 0.017501, -0.030312, J2000, 0.000000, coherent
+Beam[2].TAB[6]: 0.000000, -0.035002, J2000, 0.000000, coherent
+Beam[2].TAB[7]: -0.017501, -0.030312, J2000, 0.000000, coherent
+Beam[2].TAB[8]: -0.030312, -0.017501, J2000, 0.000000, coherent
+Beam[2].TAB[9]: -0.035002, 0.000000, J2000, 0.000000, coherent
+Beam[2].TAB[10]: -0.030312, 0.017501, J2000, 0.000000, coherent
+Beam[2].TAB[11]: -0.017501, 0.030312, J2000, 0.000000, coherent
+Beam[2].TAB[12]: 0.000000, 0.000000, J2000, 0.000000, incoherent
+Beam[3].name       : observation[0]beam[1]_1
+Beam[3].target     : LOTAAS-P0236A-SAP1
+Beam[3].antennaSet : HBA_ONE
+Beam[3].momID      : 227190
+Beam[3].subbandList: [100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261]
+Beam[3].beamletList: []
+nrPointings : 1
+Beam[3].pointing[0]: 5.665004, 0.333475, J2000, 2013-Mar-19 09:04:00
+nrTABs      : 13
+nrTABrings  : 4
+TABringsize : 0.0042799
+Beam[3].TAB[0]: 0.000000, 0.035002, J2000, 0.000000, coherent
+Beam[3].TAB[1]: 0.017501, 0.030312, J2000, 0.000000, coherent
+Beam[3].TAB[2]: 0.030312, 0.017501, J2000, 0.000000, coherent
+Beam[3].TAB[3]: 0.035002, 0.000000, J2000, 0.000000, coherent
+Beam[3].TAB[4]: 0.030312, -0.017501, J2000, 0.000000, coherent
+Beam[3].TAB[5]: 0.017501, -0.030312, J2000, 0.000000, coherent
+Beam[3].TAB[6]: 0.000000, -0.035002, J2000, 0.000000, coherent
+Beam[3].TAB[7]: -0.017501, -0.030312, J2000, 0.000000, coherent
+Beam[3].TAB[8]: -0.030312, -0.017501, J2000, 0.000000, coherent
+Beam[3].TAB[9]: -0.035002, 0.000000, J2000, 0.000000, coherent
+Beam[3].TAB[10]: -0.030312, 0.017501, J2000, 0.000000, coherent
+Beam[3].TAB[11]: -0.017501, 0.030312, J2000, 0.000000, coherent
+Beam[3].TAB[12]: 0.000000, 0.000000, J2000, 0.000000, incoherent
+Beam[4].name       : observation[0]beam[2]_0
+Beam[4].target     : LOTAAS-P0236A-SAP2
+Beam[4].antennaSet : HBA_ZERO
+Beam[4].momID      : 227191
+Beam[4].subbandList: [100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261]
+Beam[4].beamletList: []
+nrPointings : 1
+Beam[4].pointing[0]: 5.665004, 0.266780, J2000, 2013-Mar-19 09:04:00
+nrTABs      : 13
+nrTABrings  : 4
+TABringsize : 0.0042799
+Beam[4].TAB[0]: 0.000000, 0.035002, J2000, 0.000000, coherent
+Beam[4].TAB[1]: 0.017501, 0.030312, J2000, 0.000000, coherent
+Beam[4].TAB[2]: 0.030312, 0.017501, J2000, 0.000000, coherent
+Beam[4].TAB[3]: 0.035002, 0.000000, J2000, 0.000000, coherent
+Beam[4].TAB[4]: 0.030312, -0.017501, J2000, 0.000000, coherent
+Beam[4].TAB[5]: 0.017501, -0.030312, J2000, 0.000000, coherent
+Beam[4].TAB[6]: 0.000000, -0.035002, J2000, 0.000000, coherent
+Beam[4].TAB[7]: -0.017501, -0.030312, J2000, 0.000000, coherent
+Beam[4].TAB[8]: -0.030312, -0.017501, J2000, 0.000000, coherent
+Beam[4].TAB[9]: -0.035002, 0.000000, J2000, 0.000000, coherent
+Beam[4].TAB[10]: -0.030312, 0.017501, J2000, 0.000000, coherent
+Beam[4].TAB[11]: -0.017501, 0.030312, J2000, 0.000000, coherent
+Beam[4].TAB[12]: 0.000000, 0.000000, J2000, 0.000000, incoherent
+Beam[5].name       : observation[0]beam[2]_1
+Beam[5].target     : LOTAAS-P0236A-SAP2
+Beam[5].antennaSet : HBA_ONE
+Beam[5].momID      : 227191
+Beam[5].subbandList: [100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261]
+Beam[5].beamletList: []
+nrPointings : 1
+Beam[5].pointing[0]: 5.665004, 0.266780, J2000, 2013-Mar-19 09:04:00
+nrTABs      : 13
+nrTABrings  : 4
+TABringsize : 0.0042799
+Beam[5].TAB[0]: 0.000000, 0.035002, J2000, 0.000000, coherent
+Beam[5].TAB[1]: 0.017501, 0.030312, J2000, 0.000000, coherent
+Beam[5].TAB[2]: 0.030312, 0.017501, J2000, 0.000000, coherent
+Beam[5].TAB[3]: 0.035002, 0.000000, J2000, 0.000000, coherent
+Beam[5].TAB[4]: 0.030312, -0.017501, J2000, 0.000000, coherent
+Beam[5].TAB[5]: 0.017501, -0.030312, J2000, 0.000000, coherent
+Beam[5].TAB[6]: 0.000000, -0.035002, J2000, 0.000000, coherent
+Beam[5].TAB[7]: -0.017501, -0.030312, J2000, 0.000000, coherent
+Beam[5].TAB[8]: -0.030312, -0.017501, J2000, 0.000000, coherent
+Beam[5].TAB[9]: -0.035002, 0.000000, J2000, 0.000000, coherent
+Beam[5].TAB[10]: -0.030312, 0.017501, J2000, 0.000000, coherent
+Beam[5].TAB[11]: -0.017501, 0.030312, J2000, 0.000000, coherent
+Beam[5].TAB[12]: 0.000000, 0.000000, J2000, 0.000000, incoherent
+beamlet2beams   : []
+nrAnaBeams   : 2
+AnaBeam[0].name      : observation[0]anabeam_0
+AnaBeam[0].antennaSet: HBA_ZERO
+AnaBeam[0].rank      : 1
+nrPointings : 1
+anaBeam[0].pointing[0]: 5.718766, 0.300128, J2000
+AnaBeam[1].name      : observation[0]beam[0]_1
+AnaBeam[1].antennaSet: HBA_ONE
+AnaBeam[1].rank      : 1
+nrPointings : 1
+anaBeam[1].pointing[0]: 5.718766, 0.300128, J2000
+nrStreamsToStorage: 222
+streamsToStorage[0].dataProduct:     Beamformed
+streamsToStorage[0].dataProductNr:   2
+streamsToStorage[0].streamNr:        0
+streamsToStorage[0].filename:        L103821_SAP000_B000_S0_P000_bf.raw
+streamsToStorage[0].sourcePset:      0
+streamsToStorage[0].destStorageNode: locus001
+streamsToStorage[0].destDirectory:   /data/L103821/
+streamsToStorage[0].adderNr:         0
+streamsToStorage[0].writerNr:        0
+streamsToStorage[1].dataProduct:     Beamformed
+streamsToStorage[1].dataProductNr:   2
+streamsToStorage[1].streamNr:        1
+streamsToStorage[1].filename:        L103821_SAP000_B001_S0_P000_bf.raw
+streamsToStorage[1].sourcePset:      0
+streamsToStorage[1].destStorageNode: locus003
+streamsToStorage[1].destDirectory:   /data/L103821/
+streamsToStorage[1].adderNr:         1
+streamsToStorage[1].writerNr:        0
+streamsToStorage[2].dataProduct:     Beamformed
+streamsToStorage[2].dataProductNr:   2
+streamsToStorage[2].streamNr:        2
+streamsToStorage[2].filename:        L103821_SAP000_B002_S0_P000_bf.raw
+streamsToStorage[2].sourcePset:      0
+streamsToStorage[2].destStorageNode: locus004
+streamsToStorage[2].destDirectory:   /data/L103821/
+streamsToStorage[2].adderNr:         2
+streamsToStorage[2].writerNr:        0
+streamsToStorage[3].dataProduct:     Beamformed
+streamsToStorage[3].dataProductNr:   2
+streamsToStorage[3].streamNr:        3
+streamsToStorage[3].filename:        L103821_SAP000_B003_S0_P000_bf.raw
+streamsToStorage[3].sourcePset:      0
+streamsToStorage[3].destStorageNode: locus005
+streamsToStorage[3].destDirectory:   /data/L103821/
+streamsToStorage[3].adderNr:         3
+streamsToStorage[3].writerNr:        0
+streamsToStorage[4].dataProduct:     Beamformed
+streamsToStorage[4].dataProductNr:   2
+streamsToStorage[4].streamNr:        4
+streamsToStorage[4].filename:        L103821_SAP000_B004_S0_P000_bf.raw
+streamsToStorage[4].sourcePset:      1
+streamsToStorage[4].destStorageNode: locus006
+streamsToStorage[4].destDirectory:   /data/L103821/
+streamsToStorage[4].adderNr:         0
+streamsToStorage[4].writerNr:        0
+streamsToStorage[5].dataProduct:     Beamformed
+streamsToStorage[5].dataProductNr:   2
+streamsToStorage[5].streamNr:        5
+streamsToStorage[5].filename:        L103821_SAP000_B005_S0_P000_bf.raw
+streamsToStorage[5].sourcePset:      1
+streamsToStorage[5].destStorageNode: locus007
+streamsToStorage[5].destDirectory:   /data/L103821/
+streamsToStorage[5].adderNr:         1
+streamsToStorage[5].writerNr:        0
+streamsToStorage[6].dataProduct:     Beamformed
+streamsToStorage[6].dataProductNr:   2
+streamsToStorage[6].streamNr:        6
+streamsToStorage[6].filename:        L103821_SAP000_B006_S0_P000_bf.raw
+streamsToStorage[6].sourcePset:      1
+streamsToStorage[6].destStorageNode: locus008
+streamsToStorage[6].destDirectory:   /data/L103821/
+streamsToStorage[6].adderNr:         2
+streamsToStorage[6].writerNr:        0
+streamsToStorage[7].dataProduct:     Beamformed
+streamsToStorage[7].dataProductNr:   2
+streamsToStorage[7].streamNr:        7
+streamsToStorage[7].filename:        L103821_SAP000_B007_S0_P000_bf.raw
+streamsToStorage[7].sourcePset:      1
+streamsToStorage[7].destStorageNode: locus009
+streamsToStorage[7].destDirectory:   /data/L103821/
+streamsToStorage[7].adderNr:         3
+streamsToStorage[7].writerNr:        0
+streamsToStorage[8].dataProduct:     Beamformed
+streamsToStorage[8].dataProductNr:   2
+streamsToStorage[8].streamNr:        8
+streamsToStorage[8].filename:        L103821_SAP000_B008_S0_P000_bf.raw
+streamsToStorage[8].sourcePset:      2
+streamsToStorage[8].destStorageNode: locus010
+streamsToStorage[8].destDirectory:   /data/L103821/
+streamsToStorage[8].adderNr:         0
+streamsToStorage[8].writerNr:        0
+streamsToStorage[9].dataProduct:     Beamformed
+streamsToStorage[9].dataProductNr:   2
+streamsToStorage[9].streamNr:        9
+streamsToStorage[9].filename:        L103821_SAP000_B009_S0_P000_bf.raw
+streamsToStorage[9].sourcePset:      2
+streamsToStorage[9].destStorageNode: locus011
+streamsToStorage[9].destDirectory:   /data/L103821/
+streamsToStorage[9].adderNr:         1
+streamsToStorage[9].writerNr:        0
+streamsToStorage[10].dataProduct:     Beamformed
+streamsToStorage[10].dataProductNr:   2
+streamsToStorage[10].streamNr:        10
+streamsToStorage[10].filename:        L103821_SAP000_B010_S0_P000_bf.raw
+streamsToStorage[10].sourcePset:      2
+streamsToStorage[10].destStorageNode: locus012
+streamsToStorage[10].destDirectory:   /data/L103821/
+streamsToStorage[10].adderNr:         2
+streamsToStorage[10].writerNr:        0
+streamsToStorage[11].dataProduct:     Beamformed
+streamsToStorage[11].dataProductNr:   2
+streamsToStorage[11].streamNr:        11
+streamsToStorage[11].filename:        L103821_SAP000_B011_S0_P000_bf.raw
+streamsToStorage[11].sourcePset:      2
+streamsToStorage[11].destStorageNode: locus013
+streamsToStorage[11].destDirectory:   /data/L103821/
+streamsToStorage[11].adderNr:         3
+streamsToStorage[11].writerNr:        0
+streamsToStorage[12].dataProduct:     Beamformed
+streamsToStorage[12].dataProductNr:   2
+streamsToStorage[12].streamNr:        12
+streamsToStorage[12].filename:        L103821_SAP000_B012_S0_P000_bf.raw
+streamsToStorage[12].sourcePset:      3
+streamsToStorage[12].destStorageNode: locus003
+streamsToStorage[12].destDirectory:   /data/L103821/
+streamsToStorage[12].adderNr:         0
+streamsToStorage[12].writerNr:        1
+streamsToStorage[13].dataProduct:     Beamformed
+streamsToStorage[13].dataProductNr:   2
+streamsToStorage[13].streamNr:        13
+streamsToStorage[13].filename:        L103821_SAP000_B013_S0_P000_bf.raw
+streamsToStorage[13].sourcePset:      3
+streamsToStorage[13].destStorageNode: locus014
+streamsToStorage[13].destDirectory:   /data/L103821/
+streamsToStorage[13].adderNr:         1
+streamsToStorage[13].writerNr:        0
+streamsToStorage[14].dataProduct:     Beamformed
+streamsToStorage[14].dataProductNr:   2
+streamsToStorage[14].streamNr:        14
+streamsToStorage[14].filename:        L103821_SAP000_B014_S0_P000_bf.raw
+streamsToStorage[14].sourcePset:      3
+streamsToStorage[14].destStorageNode: locus015
+streamsToStorage[14].destDirectory:   /data/L103821/
+streamsToStorage[14].adderNr:         2
+streamsToStorage[14].writerNr:        0
+streamsToStorage[15].dataProduct:     Beamformed
+streamsToStorage[15].dataProductNr:   2
+streamsToStorage[15].streamNr:        15
+streamsToStorage[15].filename:        L103821_SAP000_B015_S0_P000_bf.raw
+streamsToStorage[15].sourcePset:      3
+streamsToStorage[15].destStorageNode: locus017
+streamsToStorage[15].destDirectory:   /data/L103821/
+streamsToStorage[15].adderNr:         3
+streamsToStorage[15].writerNr:        0
+streamsToStorage[16].dataProduct:     Beamformed
+streamsToStorage[16].dataProductNr:   2
+streamsToStorage[16].streamNr:        16
+streamsToStorage[16].filename:        L103821_SAP000_B016_S0_P000_bf.raw
+streamsToStorage[16].sourcePset:      4
+streamsToStorage[16].destStorageNode: locus019
+streamsToStorage[16].destDirectory:   /data/L103821/
+streamsToStorage[16].adderNr:         0
+streamsToStorage[16].writerNr:        0
+streamsToStorage[17].dataProduct:     Beamformed
+streamsToStorage[17].dataProductNr:   2
+streamsToStorage[17].streamNr:        17
+streamsToStorage[17].filename:        L103821_SAP000_B017_S0_P000_bf.raw
+streamsToStorage[17].sourcePset:      4
+streamsToStorage[17].destStorageNode: locus020
+streamsToStorage[17].destDirectory:   /data/L103821/
+streamsToStorage[17].adderNr:         1
+streamsToStorage[17].writerNr:        0
+streamsToStorage[18].dataProduct:     Beamformed
+streamsToStorage[18].dataProductNr:   2
+streamsToStorage[18].streamNr:        18
+streamsToStorage[18].filename:        L103821_SAP000_B018_S0_P000_bf.raw
+streamsToStorage[18].sourcePset:      4
+streamsToStorage[18].destStorageNode: locus023
+streamsToStorage[18].destDirectory:   /data/L103821/
+streamsToStorage[18].adderNr:         2
+streamsToStorage[18].writerNr:        0
+streamsToStorage[19].dataProduct:     Beamformed
+streamsToStorage[19].dataProductNr:   2
+streamsToStorage[19].streamNr:        19
+streamsToStorage[19].filename:        L103821_SAP000_B019_S0_P000_bf.raw
+streamsToStorage[19].sourcePset:      4
+streamsToStorage[19].destStorageNode: locus025
+streamsToStorage[19].destDirectory:   /data/L103821/
+streamsToStorage[19].adderNr:         3
+streamsToStorage[19].writerNr:        0
+streamsToStorage[20].dataProduct:     Beamformed
+streamsToStorage[20].dataProductNr:   2
+streamsToStorage[20].streamNr:        20
+streamsToStorage[20].filename:        L103821_SAP000_B020_S0_P000_bf.raw
+streamsToStorage[20].sourcePset:      5
+streamsToStorage[20].destStorageNode: locus026
+streamsToStorage[20].destDirectory:   /data/L103821/
+streamsToStorage[20].adderNr:         0
+streamsToStorage[20].writerNr:        0
+streamsToStorage[21].dataProduct:     Beamformed
+streamsToStorage[21].dataProductNr:   2
+streamsToStorage[21].streamNr:        21
+streamsToStorage[21].filename:        L103821_SAP000_B021_S0_P000_bf.raw
+streamsToStorage[21].sourcePset:      5
+streamsToStorage[21].destStorageNode: locus027
+streamsToStorage[21].destDirectory:   /data/L103821/
+streamsToStorage[21].adderNr:         1
+streamsToStorage[21].writerNr:        0
+streamsToStorage[22].dataProduct:     Beamformed
+streamsToStorage[22].dataProductNr:   2
+streamsToStorage[22].streamNr:        22
+streamsToStorage[22].filename:        L103821_SAP000_B022_S0_P000_bf.raw
+streamsToStorage[22].sourcePset:      5
+streamsToStorage[22].destStorageNode: locus028
+streamsToStorage[22].destDirectory:   /data/L103821/
+streamsToStorage[22].adderNr:         2
+streamsToStorage[22].writerNr:        0
+streamsToStorage[23].dataProduct:     Beamformed
+streamsToStorage[23].dataProductNr:   2
+streamsToStorage[23].streamNr:        23
+streamsToStorage[23].filename:        L103821_SAP000_B023_S0_P000_bf.raw
+streamsToStorage[23].sourcePset:      5
+streamsToStorage[23].destStorageNode: locus029
+streamsToStorage[23].destDirectory:   /data/L103821/
+streamsToStorage[23].adderNr:         3
+streamsToStorage[23].writerNr:        0
+streamsToStorage[24].dataProduct:     Beamformed
+streamsToStorage[24].dataProductNr:   2
+streamsToStorage[24].streamNr:        24
+streamsToStorage[24].filename:        L103821_SAP000_B024_S0_P000_bf.raw
+streamsToStorage[24].sourcePset:      6
+streamsToStorage[24].destStorageNode: locus030
+streamsToStorage[24].destDirectory:   /data/L103821/
+streamsToStorage[24].adderNr:         0
+streamsToStorage[24].writerNr:        0
+streamsToStorage[25].dataProduct:     Beamformed
+streamsToStorage[25].dataProductNr:   2
+streamsToStorage[25].streamNr:        25
+streamsToStorage[25].filename:        L103821_SAP000_B025_S0_P000_bf.raw
+streamsToStorage[25].sourcePset:      6
+streamsToStorage[25].destStorageNode: locus031
+streamsToStorage[25].destDirectory:   /data/L103821/
+streamsToStorage[25].adderNr:         1
+streamsToStorage[25].writerNr:        0
+streamsToStorage[26].dataProduct:     Beamformed
+streamsToStorage[26].dataProductNr:   2
+streamsToStorage[26].streamNr:        26
+streamsToStorage[26].filename:        L103821_SAP000_B026_S0_P000_bf.raw
+streamsToStorage[26].sourcePset:      6
+streamsToStorage[26].destStorageNode: locus032
+streamsToStorage[26].destDirectory:   /data/L103821/
+streamsToStorage[26].adderNr:         2
+streamsToStorage[26].writerNr:        0
+streamsToStorage[27].dataProduct:     Beamformed
+streamsToStorage[27].dataProductNr:   2
+streamsToStorage[27].streamNr:        27
+streamsToStorage[27].filename:        L103821_SAP000_B027_S0_P000_bf.raw
+streamsToStorage[27].sourcePset:      6
+streamsToStorage[27].destStorageNode: locus034
+streamsToStorage[27].destDirectory:   /data/L103821/
+streamsToStorage[27].adderNr:         3
+streamsToStorage[27].writerNr:        0
+streamsToStorage[28].dataProduct:     Beamformed
+streamsToStorage[28].dataProductNr:   2
+streamsToStorage[28].streamNr:        28
+streamsToStorage[28].filename:        L103821_SAP000_B028_S0_P000_bf.raw
+streamsToStorage[28].sourcePset:      7
+streamsToStorage[28].destStorageNode: locus037
+streamsToStorage[28].destDirectory:   /data/L103821/
+streamsToStorage[28].adderNr:         0
+streamsToStorage[28].writerNr:        0
+streamsToStorage[29].dataProduct:     Beamformed
+streamsToStorage[29].dataProductNr:   2
+streamsToStorage[29].streamNr:        29
+streamsToStorage[29].filename:        L103821_SAP000_B029_S0_P000_bf.raw
+streamsToStorage[29].sourcePset:      7
+streamsToStorage[29].destStorageNode: locus038
+streamsToStorage[29].destDirectory:   /data/L103821/
+streamsToStorage[29].adderNr:         1
+streamsToStorage[29].writerNr:        0
+streamsToStorage[30].dataProduct:     Beamformed
+streamsToStorage[30].dataProductNr:   2
+streamsToStorage[30].streamNr:        30
+streamsToStorage[30].filename:        L103821_SAP000_B030_S0_P000_bf.raw
+streamsToStorage[30].sourcePset:      7
+streamsToStorage[30].destStorageNode: locus040
+streamsToStorage[30].destDirectory:   /data/L103821/
+streamsToStorage[30].adderNr:         2
+streamsToStorage[30].writerNr:        0
+streamsToStorage[31].dataProduct:     Beamformed
+streamsToStorage[31].dataProductNr:   2
+streamsToStorage[31].streamNr:        31
+streamsToStorage[31].filename:        L103821_SAP000_B031_S0_P000_bf.raw
+streamsToStorage[31].sourcePset:      7
+streamsToStorage[31].destStorageNode: locus041
+streamsToStorage[31].destDirectory:   /data/L103821/
+streamsToStorage[31].adderNr:         3
+streamsToStorage[31].writerNr:        0
+streamsToStorage[32].dataProduct:     Beamformed
+streamsToStorage[32].dataProductNr:   2
+streamsToStorage[32].streamNr:        32
+streamsToStorage[32].filename:        L103821_SAP000_B032_S0_P000_bf.raw
+streamsToStorage[32].sourcePset:      8
+streamsToStorage[32].destStorageNode: locus042
+streamsToStorage[32].destDirectory:   /data/L103821/
+streamsToStorage[32].adderNr:         0
+streamsToStorage[32].writerNr:        0
+streamsToStorage[33].dataProduct:     Beamformed
+streamsToStorage[33].dataProductNr:   2
+streamsToStorage[33].streamNr:        33
+streamsToStorage[33].filename:        L103821_SAP000_B033_S0_P000_bf.raw
+streamsToStorage[33].sourcePset:      8
+streamsToStorage[33].destStorageNode: locus043
+streamsToStorage[33].destDirectory:   /data/L103821/
+streamsToStorage[33].adderNr:         1
+streamsToStorage[33].writerNr:        0
+streamsToStorage[34].dataProduct:     Beamformed
+streamsToStorage[34].dataProductNr:   2
+streamsToStorage[34].streamNr:        34
+streamsToStorage[34].filename:        L103821_SAP000_B034_S0_P000_bf.raw
+streamsToStorage[34].sourcePset:      8
+streamsToStorage[34].destStorageNode: locus044
+streamsToStorage[34].destDirectory:   /data/L103821/
+streamsToStorage[34].adderNr:         2
+streamsToStorage[34].writerNr:        0
+streamsToStorage[35].dataProduct:     Beamformed
+streamsToStorage[35].dataProductNr:   2
+streamsToStorage[35].streamNr:        35
+streamsToStorage[35].filename:        L103821_SAP000_B035_S0_P000_bf.raw
+streamsToStorage[35].sourcePset:      8
+streamsToStorage[35].destStorageNode: locus045
+streamsToStorage[35].destDirectory:   /data/L103821/
+streamsToStorage[35].adderNr:         3
+streamsToStorage[35].writerNr:        0
+streamsToStorage[36].dataProduct:     Beamformed
+streamsToStorage[36].dataProductNr:   2
+streamsToStorage[36].streamNr:        36
+streamsToStorage[36].filename:        L103821_SAP000_B036_S0_P000_bf.raw
+streamsToStorage[36].sourcePset:      9
+streamsToStorage[36].destStorageNode: locus046
+streamsToStorage[36].destDirectory:   /data/L103821/
+streamsToStorage[36].adderNr:         0
+streamsToStorage[36].writerNr:        0
+streamsToStorage[37].dataProduct:     Beamformed
+streamsToStorage[37].dataProductNr:   2
+streamsToStorage[37].streamNr:        37
+streamsToStorage[37].filename:        L103821_SAP000_B037_S0_P000_bf.raw
+streamsToStorage[37].sourcePset:      9
+streamsToStorage[37].destStorageNode: locus047
+streamsToStorage[37].destDirectory:   /data/L103821/
+streamsToStorage[37].adderNr:         1
+streamsToStorage[37].writerNr:        0
+streamsToStorage[38].dataProduct:     Beamformed
+streamsToStorage[38].dataProductNr:   2
+streamsToStorage[38].streamNr:        38
+streamsToStorage[38].filename:        L103821_SAP000_B038_S0_P000_bf.raw
+streamsToStorage[38].sourcePset:      9
+streamsToStorage[38].destStorageNode: locus049
+streamsToStorage[38].destDirectory:   /data/L103821/
+streamsToStorage[38].adderNr:         2
+streamsToStorage[38].writerNr:        0
+streamsToStorage[39].dataProduct:     Beamformed
+streamsToStorage[39].dataProductNr:   2
+streamsToStorage[39].streamNr:        39
+streamsToStorage[39].filename:        L103821_SAP000_B039_S0_P000_bf.raw
+streamsToStorage[39].sourcePset:      9
+streamsToStorage[39].destStorageNode: locus050
+streamsToStorage[39].destDirectory:   /data/L103821/
+streamsToStorage[39].adderNr:         3
+streamsToStorage[39].writerNr:        0
+streamsToStorage[40].dataProduct:     Beamformed
+streamsToStorage[40].dataProductNr:   2
+streamsToStorage[40].streamNr:        40
+streamsToStorage[40].filename:        L103821_SAP000_B040_S0_P000_bf.raw
+streamsToStorage[40].sourcePset:      10
+streamsToStorage[40].destStorageNode: locus051
+streamsToStorage[40].destDirectory:   /data/L103821/
+streamsToStorage[40].adderNr:         0
+streamsToStorage[40].writerNr:        0
+streamsToStorage[41].dataProduct:     Beamformed
+streamsToStorage[41].dataProductNr:   2
+streamsToStorage[41].streamNr:        41
+streamsToStorage[41].filename:        L103821_SAP000_B041_S0_P000_bf.raw
+streamsToStorage[41].sourcePset:      10
+streamsToStorage[41].destStorageNode: locus052
+streamsToStorage[41].destDirectory:   /data/L103821/
+streamsToStorage[41].adderNr:         1
+streamsToStorage[41].writerNr:        0
+streamsToStorage[42].dataProduct:     Beamformed
+streamsToStorage[42].dataProductNr:   2
+streamsToStorage[42].streamNr:        42
+streamsToStorage[42].filename:        L103821_SAP000_B042_S0_P000_bf.raw
+streamsToStorage[42].sourcePset:      10
+streamsToStorage[42].destStorageNode: locus054
+streamsToStorage[42].destDirectory:   /data/L103821/
+streamsToStorage[42].adderNr:         2
+streamsToStorage[42].writerNr:        0
+streamsToStorage[43].dataProduct:     Beamformed
+streamsToStorage[43].dataProductNr:   2
+streamsToStorage[43].streamNr:        43
+streamsToStorage[43].filename:        L103821_SAP000_B043_S0_P000_bf.raw
+streamsToStorage[43].sourcePset:      10
+streamsToStorage[43].destStorageNode: locus056
+streamsToStorage[43].destDirectory:   /data/L103821/
+streamsToStorage[43].adderNr:         3
+streamsToStorage[43].writerNr:        0
+streamsToStorage[44].dataProduct:     Beamformed
+streamsToStorage[44].dataProductNr:   2
+streamsToStorage[44].streamNr:        44
+streamsToStorage[44].filename:        L103821_SAP000_B044_S0_P000_bf.raw
+streamsToStorage[44].sourcePset:      11
+streamsToStorage[44].destStorageNode: locus057
+streamsToStorage[44].destDirectory:   /data/L103821/
+streamsToStorage[44].adderNr:         0
+streamsToStorage[44].writerNr:        0
+streamsToStorage[45].dataProduct:     Beamformed
+streamsToStorage[45].dataProductNr:   2
+streamsToStorage[45].streamNr:        45
+streamsToStorage[45].filename:        L103821_SAP000_B045_S0_P000_bf.raw
+streamsToStorage[45].sourcePset:      11
+streamsToStorage[45].destStorageNode: locus058
+streamsToStorage[45].destDirectory:   /data/L103821/
+streamsToStorage[45].adderNr:         1
+streamsToStorage[45].writerNr:        0
+streamsToStorage[46].dataProduct:     Beamformed
+streamsToStorage[46].dataProductNr:   2
+streamsToStorage[46].streamNr:        46
+streamsToStorage[46].filename:        L103821_SAP000_B046_S0_P000_bf.raw
+streamsToStorage[46].sourcePset:      11
+streamsToStorage[46].destStorageNode: locus060
+streamsToStorage[46].destDirectory:   /data/L103821/
+streamsToStorage[46].adderNr:         2
+streamsToStorage[46].writerNr:        0
+streamsToStorage[47].dataProduct:     Beamformed
+streamsToStorage[47].dataProductNr:   2
+streamsToStorage[47].streamNr:        47
+streamsToStorage[47].filename:        L103821_SAP000_B047_S0_P000_bf.raw
+streamsToStorage[47].sourcePset:      11
+streamsToStorage[47].destStorageNode: locus061
+streamsToStorage[47].destDirectory:   /data/L103821/
+streamsToStorage[47].adderNr:         3
+streamsToStorage[47].writerNr:        0
+streamsToStorage[48].dataProduct:     Beamformed
+streamsToStorage[48].dataProductNr:   2
+streamsToStorage[48].streamNr:        48
+streamsToStorage[48].filename:        L103821_SAP000_B048_S0_P000_bf.raw
+streamsToStorage[48].sourcePset:      12
+streamsToStorage[48].destStorageNode: locus062
+streamsToStorage[48].destDirectory:   /data/L103821/
+streamsToStorage[48].adderNr:         0
+streamsToStorage[48].writerNr:        0
+streamsToStorage[49].dataProduct:     Beamformed
+streamsToStorage[49].dataProductNr:   2
+streamsToStorage[49].streamNr:        49
+streamsToStorage[49].filename:        L103821_SAP000_B049_S0_P000_bf.raw
+streamsToStorage[49].sourcePset:      12
+streamsToStorage[49].destStorageNode: locus063
+streamsToStorage[49].destDirectory:   /data/L103821/
+streamsToStorage[49].adderNr:         1
+streamsToStorage[49].writerNr:        0
+streamsToStorage[50].dataProduct:     Beamformed
+streamsToStorage[50].dataProductNr:   2
+streamsToStorage[50].streamNr:        50
+streamsToStorage[50].filename:        L103821_SAP000_B050_S0_P000_bf.raw
+streamsToStorage[50].sourcePset:      12
+streamsToStorage[50].destStorageNode: locus064
+streamsToStorage[50].destDirectory:   /data/L103821/
+streamsToStorage[50].adderNr:         2
+streamsToStorage[50].writerNr:        0
+streamsToStorage[51].dataProduct:     Beamformed
+streamsToStorage[51].dataProductNr:   2
+streamsToStorage[51].streamNr:        51
+streamsToStorage[51].filename:        L103821_SAP000_B051_S0_P000_bf.raw
+streamsToStorage[51].sourcePset:      12
+streamsToStorage[51].destStorageNode: locus065
+streamsToStorage[51].destDirectory:   /data/L103821/
+streamsToStorage[51].adderNr:         3
+streamsToStorage[51].writerNr:        0
+streamsToStorage[52].dataProduct:     Beamformed
+streamsToStorage[52].dataProductNr:   2
+streamsToStorage[52].streamNr:        52
+streamsToStorage[52].filename:        L103821_SAP000_B052_S0_P000_bf.raw
+streamsToStorage[52].sourcePset:      13
+streamsToStorage[52].destStorageNode: locus067
+streamsToStorage[52].destDirectory:   /data/L103821/
+streamsToStorage[52].adderNr:         0
+streamsToStorage[52].writerNr:        0
+streamsToStorage[53].dataProduct:     Beamformed
+streamsToStorage[53].dataProductNr:   2
+streamsToStorage[53].streamNr:        53
+streamsToStorage[53].filename:        L103821_SAP000_B053_S0_P000_bf.raw
+streamsToStorage[53].sourcePset:      13
+streamsToStorage[53].destStorageNode: locus068
+streamsToStorage[53].destDirectory:   /data/L103821/
+streamsToStorage[53].adderNr:         1
+streamsToStorage[53].writerNr:        0
+streamsToStorage[54].dataProduct:     Beamformed
+streamsToStorage[54].dataProductNr:   2
+streamsToStorage[54].streamNr:        54
+streamsToStorage[54].filename:        L103821_SAP000_B054_S0_P000_bf.raw
+streamsToStorage[54].sourcePset:      13
+streamsToStorage[54].destStorageNode: locus069
+streamsToStorage[54].destDirectory:   /data/L103821/
+streamsToStorage[54].adderNr:         2
+streamsToStorage[54].writerNr:        0
+streamsToStorage[55].dataProduct:     Beamformed
+streamsToStorage[55].dataProductNr:   2
+streamsToStorage[55].streamNr:        55
+streamsToStorage[55].filename:        L103821_SAP000_B055_S0_P000_bf.raw
+streamsToStorage[55].sourcePset:      13
+streamsToStorage[55].destStorageNode: locus070
+streamsToStorage[55].destDirectory:   /data/L103821/
+streamsToStorage[55].adderNr:         3
+streamsToStorage[55].writerNr:        0
+streamsToStorage[56].dataProduct:     Beamformed
+streamsToStorage[56].dataProductNr:   2
+streamsToStorage[56].streamNr:        56
+streamsToStorage[56].filename:        L103821_SAP000_B056_S0_P000_bf.raw
+streamsToStorage[56].sourcePset:      14
+streamsToStorage[56].destStorageNode: locus071
+streamsToStorage[56].destDirectory:   /data/L103821/
+streamsToStorage[56].adderNr:         0
+streamsToStorage[56].writerNr:        0
+streamsToStorage[57].dataProduct:     Beamformed
+streamsToStorage[57].dataProductNr:   2
+streamsToStorage[57].streamNr:        57
+streamsToStorage[57].filename:        L103821_SAP000_B057_S0_P000_bf.raw
+streamsToStorage[57].sourcePset:      14
+streamsToStorage[57].destStorageNode: locus073
+streamsToStorage[57].destDirectory:   /data/L103821/
+streamsToStorage[57].adderNr:         1
+streamsToStorage[57].writerNr:        0
+streamsToStorage[58].dataProduct:     Beamformed
+streamsToStorage[58].dataProductNr:   2
+streamsToStorage[58].streamNr:        58
+streamsToStorage[58].filename:        L103821_SAP000_B058_S0_P000_bf.raw
+streamsToStorage[58].sourcePset:      14
+streamsToStorage[58].destStorageNode: locus074
+streamsToStorage[58].destDirectory:   /data/L103821/
+streamsToStorage[58].adderNr:         2
+streamsToStorage[58].writerNr:        0
+streamsToStorage[59].dataProduct:     Beamformed
+streamsToStorage[59].dataProductNr:   2
+streamsToStorage[59].streamNr:        59
+streamsToStorage[59].filename:        L103821_SAP000_B059_S0_P000_bf.raw
+streamsToStorage[59].sourcePset:      14
+streamsToStorage[59].destStorageNode: locus075
+streamsToStorage[59].destDirectory:   /data/L103821/
+streamsToStorage[59].adderNr:         3
+streamsToStorage[59].writerNr:        0
+streamsToStorage[60].dataProduct:     Beamformed
+streamsToStorage[60].dataProductNr:   2
+streamsToStorage[60].streamNr:        60
+streamsToStorage[60].filename:        L103821_SAP000_B060_S0_P000_bf.raw
+streamsToStorage[60].sourcePset:      15
+streamsToStorage[60].destStorageNode: locus076
+streamsToStorage[60].destDirectory:   /data/L103821/
+streamsToStorage[60].adderNr:         0
+streamsToStorage[60].writerNr:        0
+streamsToStorage[61].dataProduct:     Beamformed
+streamsToStorage[61].dataProductNr:   2
+streamsToStorage[61].streamNr:        61
+streamsToStorage[61].filename:        L103821_SAP000_B061_S0_P000_bf.raw
+streamsToStorage[61].sourcePset:      15
+streamsToStorage[61].destStorageNode: locus077
+streamsToStorage[61].destDirectory:   /data/L103821/
+streamsToStorage[61].adderNr:         1
+streamsToStorage[61].writerNr:        0
+streamsToStorage[62].dataProduct:     Beamformed
+streamsToStorage[62].dataProductNr:   2
+streamsToStorage[62].streamNr:        62
+streamsToStorage[62].filename:        L103821_SAP000_B062_S0_P000_bf.raw
+streamsToStorage[62].sourcePset:      15
+streamsToStorage[62].destStorageNode: locus078
+streamsToStorage[62].destDirectory:   /data/L103821/
+streamsToStorage[62].adderNr:         2
+streamsToStorage[62].writerNr:        0
+streamsToStorage[63].dataProduct:     Beamformed
+streamsToStorage[63].dataProductNr:   2
+streamsToStorage[63].streamNr:        63
+streamsToStorage[63].filename:        L103821_SAP000_B063_S0_P000_bf.raw
+streamsToStorage[63].sourcePset:      15
+streamsToStorage[63].destStorageNode: locus079
+streamsToStorage[63].destDirectory:   /data/L103821/
+streamsToStorage[63].adderNr:         3
+streamsToStorage[63].writerNr:        0
+streamsToStorage[64].dataProduct:     Beamformed
+streamsToStorage[64].dataProductNr:   2
+streamsToStorage[64].streamNr:        64
+streamsToStorage[64].filename:        L103821_SAP000_B064_S0_P000_bf.raw
+streamsToStorage[64].sourcePset:      16
+streamsToStorage[64].destStorageNode: locus081
+streamsToStorage[64].destDirectory:   /data/L103821/
+streamsToStorage[64].adderNr:         0
+streamsToStorage[64].writerNr:        0
+streamsToStorage[65].dataProduct:     Beamformed
+streamsToStorage[65].dataProductNr:   2
+streamsToStorage[65].streamNr:        65
+streamsToStorage[65].filename:        L103821_SAP000_B065_S0_P000_bf.raw
+streamsToStorage[65].sourcePset:      16
+streamsToStorage[65].destStorageNode: locus082
+streamsToStorage[65].destDirectory:   /data/L103821/
+streamsToStorage[65].adderNr:         1
+streamsToStorage[65].writerNr:        0
+streamsToStorage[66].dataProduct:     Beamformed
+streamsToStorage[66].dataProductNr:   2
+streamsToStorage[66].streamNr:        66
+streamsToStorage[66].filename:        L103821_SAP000_B066_S0_P000_bf.raw
+streamsToStorage[66].sourcePset:      16
+streamsToStorage[66].destStorageNode: locus084
+streamsToStorage[66].destDirectory:   /data/L103821/
+streamsToStorage[66].adderNr:         2
+streamsToStorage[66].writerNr:        0
+streamsToStorage[67].dataProduct:     Beamformed
+streamsToStorage[67].dataProductNr:   2
+streamsToStorage[67].streamNr:        67
+streamsToStorage[67].filename:        L103821_SAP000_B067_S0_P000_bf.raw
+streamsToStorage[67].sourcePset:      16
+streamsToStorage[67].destStorageNode: locus085
+streamsToStorage[67].destDirectory:   /data/L103821/
+streamsToStorage[67].adderNr:         3
+streamsToStorage[67].writerNr:        0
+streamsToStorage[68].dataProduct:     Beamformed
+streamsToStorage[68].dataProductNr:   2
+streamsToStorage[68].streamNr:        68
+streamsToStorage[68].filename:        L103821_SAP000_B068_S0_P000_bf.raw
+streamsToStorage[68].sourcePset:      17
+streamsToStorage[68].destStorageNode: locus086
+streamsToStorage[68].destDirectory:   /data/L103821/
+streamsToStorage[68].adderNr:         0
+streamsToStorage[68].writerNr:        0
+streamsToStorage[69].dataProduct:     Beamformed
+streamsToStorage[69].dataProductNr:   2
+streamsToStorage[69].streamNr:        69
+streamsToStorage[69].filename:        L103821_SAP000_B069_S0_P000_bf.raw
+streamsToStorage[69].sourcePset:      17
+streamsToStorage[69].destStorageNode: locus087
+streamsToStorage[69].destDirectory:   /data/L103821/
+streamsToStorage[69].adderNr:         1
+streamsToStorage[69].writerNr:        0
+streamsToStorage[70].dataProduct:     Beamformed
+streamsToStorage[70].dataProductNr:   2
+streamsToStorage[70].streamNr:        70
+streamsToStorage[70].filename:        L103821_SAP000_B070_S0_P000_bf.raw
+streamsToStorage[70].sourcePset:      17
+streamsToStorage[70].destStorageNode: locus088
+streamsToStorage[70].destDirectory:   /data/L103821/
+streamsToStorage[70].adderNr:         2
+streamsToStorage[70].writerNr:        0
+streamsToStorage[71].dataProduct:     Beamformed
+streamsToStorage[71].dataProductNr:   2
+streamsToStorage[71].streamNr:        71
+streamsToStorage[71].filename:        L103821_SAP000_B071_S0_P000_bf.raw
+streamsToStorage[71].sourcePset:      17
+streamsToStorage[71].destStorageNode: locus090
+streamsToStorage[71].destDirectory:   /data/L103821/
+streamsToStorage[71].adderNr:         3
+streamsToStorage[71].writerNr:        0
+streamsToStorage[72].dataProduct:     Beamformed
+streamsToStorage[72].dataProductNr:   2
+streamsToStorage[72].streamNr:        72
+streamsToStorage[72].filename:        L103821_SAP000_B072_S0_P000_bf.raw
+streamsToStorage[72].sourcePset:      18
+streamsToStorage[72].destStorageNode: locus093
+streamsToStorage[72].destDirectory:   /data/L103821/
+streamsToStorage[72].adderNr:         0
+streamsToStorage[72].writerNr:        0
+streamsToStorage[73].dataProduct:     Beamformed
+streamsToStorage[73].dataProductNr:   2
+streamsToStorage[73].streamNr:        73
+streamsToStorage[73].filename:        L103821_SAP000_B073_S0_P000_bf.raw
+streamsToStorage[73].sourcePset:      18
+streamsToStorage[73].destStorageNode: locus094
+streamsToStorage[73].destDirectory:   /data/L103821/
+streamsToStorage[73].adderNr:         1
+streamsToStorage[73].writerNr:        0
+streamsToStorage[74].dataProduct:     Beamformed
+streamsToStorage[74].dataProductNr:   2
+streamsToStorage[74].streamNr:        74
+streamsToStorage[74].filename:        L103821_SAP001_B000_S0_P000_bf.raw
+streamsToStorage[74].sourcePset:      18
+streamsToStorage[74].destStorageNode: locus001
+streamsToStorage[74].destDirectory:   /data/L103821/
+streamsToStorage[74].adderNr:         2
+streamsToStorage[74].writerNr:        1
+streamsToStorage[75].dataProduct:     Beamformed
+streamsToStorage[75].dataProductNr:   2
+streamsToStorage[75].streamNr:        75
+streamsToStorage[75].filename:        L103821_SAP001_B001_S0_P000_bf.raw
+streamsToStorage[75].sourcePset:      18
+streamsToStorage[75].destStorageNode: locus003
+streamsToStorage[75].destDirectory:   /data/L103821/
+streamsToStorage[75].adderNr:         3
+streamsToStorage[75].writerNr:        2
+streamsToStorage[76].dataProduct:     Beamformed
+streamsToStorage[76].dataProductNr:   2
+streamsToStorage[76].streamNr:        76
+streamsToStorage[76].filename:        L103821_SAP001_B002_S0_P000_bf.raw
+streamsToStorage[76].sourcePset:      19
+streamsToStorage[76].destStorageNode: locus004
+streamsToStorage[76].destDirectory:   /data/L103821/
+streamsToStorage[76].adderNr:         0
+streamsToStorage[76].writerNr:        1
+streamsToStorage[77].dataProduct:     Beamformed
+streamsToStorage[77].dataProductNr:   2
+streamsToStorage[77].streamNr:        77
+streamsToStorage[77].filename:        L103821_SAP001_B003_S0_P000_bf.raw
+streamsToStorage[77].sourcePset:      19
+streamsToStorage[77].destStorageNode: locus005
+streamsToStorage[77].destDirectory:   /data/L103821/
+streamsToStorage[77].adderNr:         1
+streamsToStorage[77].writerNr:        1
+streamsToStorage[78].dataProduct:     Beamformed
+streamsToStorage[78].dataProductNr:   2
+streamsToStorage[78].streamNr:        78
+streamsToStorage[78].filename:        L103821_SAP001_B004_S0_P000_bf.raw
+streamsToStorage[78].sourcePset:      19
+streamsToStorage[78].destStorageNode: locus006
+streamsToStorage[78].destDirectory:   /data/L103821/
+streamsToStorage[78].adderNr:         2
+streamsToStorage[78].writerNr:        1
+streamsToStorage[79].dataProduct:     Beamformed
+streamsToStorage[79].dataProductNr:   2
+streamsToStorage[79].streamNr:        79
+streamsToStorage[79].filename:        L103821_SAP001_B005_S0_P000_bf.raw
+streamsToStorage[79].sourcePset:      19
+streamsToStorage[79].destStorageNode: locus007
+streamsToStorage[79].destDirectory:   /data/L103821/
+streamsToStorage[79].adderNr:         3
+streamsToStorage[79].writerNr:        1
+streamsToStorage[80].dataProduct:     Beamformed
+streamsToStorage[80].dataProductNr:   2
+streamsToStorage[80].streamNr:        80
+streamsToStorage[80].filename:        L103821_SAP001_B006_S0_P000_bf.raw
+streamsToStorage[80].sourcePset:      20
+streamsToStorage[80].destStorageNode: locus008
+streamsToStorage[80].destDirectory:   /data/L103821/
+streamsToStorage[80].adderNr:         0
+streamsToStorage[80].writerNr:        1
+streamsToStorage[81].dataProduct:     Beamformed
+streamsToStorage[81].dataProductNr:   2
+streamsToStorage[81].streamNr:        81
+streamsToStorage[81].filename:        L103821_SAP001_B007_S0_P000_bf.raw
+streamsToStorage[81].sourcePset:      20
+streamsToStorage[81].destStorageNode: locus009
+streamsToStorage[81].destDirectory:   /data/L103821/
+streamsToStorage[81].adderNr:         1
+streamsToStorage[81].writerNr:        1
+streamsToStorage[82].dataProduct:     Beamformed
+streamsToStorage[82].dataProductNr:   2
+streamsToStorage[82].streamNr:        82
+streamsToStorage[82].filename:        L103821_SAP001_B008_S0_P000_bf.raw
+streamsToStorage[82].sourcePset:      20
+streamsToStorage[82].destStorageNode: locus010
+streamsToStorage[82].destDirectory:   /data/L103821/
+streamsToStorage[82].adderNr:         2
+streamsToStorage[82].writerNr:        1
+streamsToStorage[83].dataProduct:     Beamformed
+streamsToStorage[83].dataProductNr:   2
+streamsToStorage[83].streamNr:        83
+streamsToStorage[83].filename:        L103821_SAP001_B009_S0_P000_bf.raw
+streamsToStorage[83].sourcePset:      20
+streamsToStorage[83].destStorageNode: locus011
+streamsToStorage[83].destDirectory:   /data/L103821/
+streamsToStorage[83].adderNr:         3
+streamsToStorage[83].writerNr:        1
+streamsToStorage[84].dataProduct:     Beamformed
+streamsToStorage[84].dataProductNr:   2
+streamsToStorage[84].streamNr:        84
+streamsToStorage[84].filename:        L103821_SAP001_B010_S0_P000_bf.raw
+streamsToStorage[84].sourcePset:      21
+streamsToStorage[84].destStorageNode: locus012
+streamsToStorage[84].destDirectory:   /data/L103821/
+streamsToStorage[84].adderNr:         0
+streamsToStorage[84].writerNr:        1
+streamsToStorage[85].dataProduct:     Beamformed
+streamsToStorage[85].dataProductNr:   2
+streamsToStorage[85].streamNr:        85
+streamsToStorage[85].filename:        L103821_SAP001_B011_S0_P000_bf.raw
+streamsToStorage[85].sourcePset:      21
+streamsToStorage[85].destStorageNode: locus013
+streamsToStorage[85].destDirectory:   /data/L103821/
+streamsToStorage[85].adderNr:         1
+streamsToStorage[85].writerNr:        1
+streamsToStorage[86].dataProduct:     Beamformed
+streamsToStorage[86].dataProductNr:   2
+streamsToStorage[86].streamNr:        86
+streamsToStorage[86].filename:        L103821_SAP001_B012_S0_P000_bf.raw
+streamsToStorage[86].sourcePset:      21
+streamsToStorage[86].destStorageNode: locus048
+streamsToStorage[86].destDirectory:   /data/L103821/
+streamsToStorage[86].adderNr:         2
+streamsToStorage[86].writerNr:        0
+streamsToStorage[87].dataProduct:     Beamformed
+streamsToStorage[87].dataProductNr:   2
+streamsToStorage[87].streamNr:        87
+streamsToStorage[87].filename:        L103821_SAP001_B013_S0_P000_bf.raw
+streamsToStorage[87].sourcePset:      21
+streamsToStorage[87].destStorageNode: locus014
+streamsToStorage[87].destDirectory:   /data/L103821/
+streamsToStorage[87].adderNr:         3
+streamsToStorage[87].writerNr:        1
+streamsToStorage[88].dataProduct:     Beamformed
+streamsToStorage[88].dataProductNr:   2
+streamsToStorage[88].streamNr:        88
+streamsToStorage[88].filename:        L103821_SAP001_B014_S0_P000_bf.raw
+streamsToStorage[88].sourcePset:      22
+streamsToStorage[88].destStorageNode: locus015
+streamsToStorage[88].destDirectory:   /data/L103821/
+streamsToStorage[88].adderNr:         0
+streamsToStorage[88].writerNr:        1
+streamsToStorage[89].dataProduct:     Beamformed
+streamsToStorage[89].dataProductNr:   2
+streamsToStorage[89].streamNr:        89
+streamsToStorage[89].filename:        L103821_SAP001_B015_S0_P000_bf.raw
+streamsToStorage[89].sourcePset:      22
+streamsToStorage[89].destStorageNode: locus017
+streamsToStorage[89].destDirectory:   /data/L103821/
+streamsToStorage[89].adderNr:         1
+streamsToStorage[89].writerNr:        1
+streamsToStorage[90].dataProduct:     Beamformed
+streamsToStorage[90].dataProductNr:   2
+streamsToStorage[90].streamNr:        90
+streamsToStorage[90].filename:        L103821_SAP001_B016_S0_P000_bf.raw
+streamsToStorage[90].sourcePset:      22
+streamsToStorage[90].destStorageNode: locus019
+streamsToStorage[90].destDirectory:   /data/L103821/
+streamsToStorage[90].adderNr:         2
+streamsToStorage[90].writerNr:        1
+streamsToStorage[91].dataProduct:     Beamformed
+streamsToStorage[91].dataProductNr:   2
+streamsToStorage[91].streamNr:        91
+streamsToStorage[91].filename:        L103821_SAP001_B017_S0_P000_bf.raw
+streamsToStorage[91].sourcePset:      22
+streamsToStorage[91].destStorageNode: locus020
+streamsToStorage[91].destDirectory:   /data/L103821/
+streamsToStorage[91].adderNr:         3
+streamsToStorage[91].writerNr:        1
+streamsToStorage[92].dataProduct:     Beamformed
+streamsToStorage[92].dataProductNr:   2
+streamsToStorage[92].streamNr:        92
+streamsToStorage[92].filename:        L103821_SAP001_B018_S0_P000_bf.raw
+streamsToStorage[92].sourcePset:      23
+streamsToStorage[92].destStorageNode: locus023
+streamsToStorage[92].destDirectory:   /data/L103821/
+streamsToStorage[92].adderNr:         0
+streamsToStorage[92].writerNr:        1
+streamsToStorage[93].dataProduct:     Beamformed
+streamsToStorage[93].dataProductNr:   2
+streamsToStorage[93].streamNr:        93
+streamsToStorage[93].filename:        L103821_SAP001_B019_S0_P000_bf.raw
+streamsToStorage[93].sourcePset:      23
+streamsToStorage[93].destStorageNode: locus025
+streamsToStorage[93].destDirectory:   /data/L103821/
+streamsToStorage[93].adderNr:         1
+streamsToStorage[93].writerNr:        1
+streamsToStorage[94].dataProduct:     Beamformed
+streamsToStorage[94].dataProductNr:   2
+streamsToStorage[94].streamNr:        94
+streamsToStorage[94].filename:        L103821_SAP001_B020_S0_P000_bf.raw
+streamsToStorage[94].sourcePset:      23
+streamsToStorage[94].destStorageNode: locus026
+streamsToStorage[94].destDirectory:   /data/L103821/
+streamsToStorage[94].adderNr:         2
+streamsToStorage[94].writerNr:        1
+streamsToStorage[95].dataProduct:     Beamformed
+streamsToStorage[95].dataProductNr:   2
+streamsToStorage[95].streamNr:        95
+streamsToStorage[95].filename:        L103821_SAP001_B021_S0_P000_bf.raw
+streamsToStorage[95].sourcePset:      23
+streamsToStorage[95].destStorageNode: locus027
+streamsToStorage[95].destDirectory:   /data/L103821/
+streamsToStorage[95].adderNr:         3
+streamsToStorage[95].writerNr:        1
+streamsToStorage[96].dataProduct:     Beamformed
+streamsToStorage[96].dataProductNr:   2
+streamsToStorage[96].streamNr:        96
+streamsToStorage[96].filename:        L103821_SAP001_B022_S0_P000_bf.raw
+streamsToStorage[96].sourcePset:      24
+streamsToStorage[96].destStorageNode: locus028
+streamsToStorage[96].destDirectory:   /data/L103821/
+streamsToStorage[96].adderNr:         0
+streamsToStorage[96].writerNr:        1
+streamsToStorage[97].dataProduct:     Beamformed
+streamsToStorage[97].dataProductNr:   2
+streamsToStorage[97].streamNr:        97
+streamsToStorage[97].filename:        L103821_SAP001_B023_S0_P000_bf.raw
+streamsToStorage[97].sourcePset:      24
+streamsToStorage[97].destStorageNode: locus029
+streamsToStorage[97].destDirectory:   /data/L103821/
+streamsToStorage[97].adderNr:         1
+streamsToStorage[97].writerNr:        1
+streamsToStorage[98].dataProduct:     Beamformed
+streamsToStorage[98].dataProductNr:   2
+streamsToStorage[98].streamNr:        98
+streamsToStorage[98].filename:        L103821_SAP001_B024_S0_P000_bf.raw
+streamsToStorage[98].sourcePset:      24
+streamsToStorage[98].destStorageNode: locus030
+streamsToStorage[98].destDirectory:   /data/L103821/
+streamsToStorage[98].adderNr:         2
+streamsToStorage[98].writerNr:        1
+streamsToStorage[99].dataProduct:     Beamformed
+streamsToStorage[99].dataProductNr:   2
+streamsToStorage[99].streamNr:        99
+streamsToStorage[99].filename:        L103821_SAP001_B025_S0_P000_bf.raw
+streamsToStorage[99].sourcePset:      24
+streamsToStorage[99].destStorageNode: locus031
+streamsToStorage[99].destDirectory:   /data/L103821/
+streamsToStorage[99].adderNr:         3
+streamsToStorage[99].writerNr:        1
+streamsToStorage[100].dataProduct:     Beamformed
+streamsToStorage[100].dataProductNr:   2
+streamsToStorage[100].streamNr:        100
+streamsToStorage[100].filename:        L103821_SAP001_B026_S0_P000_bf.raw
+streamsToStorage[100].sourcePset:      25
+streamsToStorage[100].destStorageNode: locus032
+streamsToStorage[100].destDirectory:   /data/L103821/
+streamsToStorage[100].adderNr:         0
+streamsToStorage[100].writerNr:        1
+streamsToStorage[101].dataProduct:     Beamformed
+streamsToStorage[101].dataProductNr:   2
+streamsToStorage[101].streamNr:        101
+streamsToStorage[101].filename:        L103821_SAP001_B027_S0_P000_bf.raw
+streamsToStorage[101].sourcePset:      25
+streamsToStorage[101].destStorageNode: locus034
+streamsToStorage[101].destDirectory:   /data/L103821/
+streamsToStorage[101].adderNr:         1
+streamsToStorage[101].writerNr:        1
+streamsToStorage[102].dataProduct:     Beamformed
+streamsToStorage[102].dataProductNr:   2
+streamsToStorage[102].streamNr:        102
+streamsToStorage[102].filename:        L103821_SAP001_B028_S0_P000_bf.raw
+streamsToStorage[102].sourcePset:      25
+streamsToStorage[102].destStorageNode: locus037
+streamsToStorage[102].destDirectory:   /data/L103821/
+streamsToStorage[102].adderNr:         2
+streamsToStorage[102].writerNr:        1
+streamsToStorage[103].dataProduct:     Beamformed
+streamsToStorage[103].dataProductNr:   2
+streamsToStorage[103].streamNr:        103
+streamsToStorage[103].filename:        L103821_SAP001_B029_S0_P000_bf.raw
+streamsToStorage[103].sourcePset:      25
+streamsToStorage[103].destStorageNode: locus038
+streamsToStorage[103].destDirectory:   /data/L103821/
+streamsToStorage[103].adderNr:         3
+streamsToStorage[103].writerNr:        1
+streamsToStorage[104].dataProduct:     Beamformed
+streamsToStorage[104].dataProductNr:   2
+streamsToStorage[104].streamNr:        104
+streamsToStorage[104].filename:        L103821_SAP001_B030_S0_P000_bf.raw
+streamsToStorage[104].sourcePset:      26
+streamsToStorage[104].destStorageNode: locus040
+streamsToStorage[104].destDirectory:   /data/L103821/
+streamsToStorage[104].adderNr:         0
+streamsToStorage[104].writerNr:        1
+streamsToStorage[105].dataProduct:     Beamformed
+streamsToStorage[105].dataProductNr:   2
+streamsToStorage[105].streamNr:        105
+streamsToStorage[105].filename:        L103821_SAP001_B031_S0_P000_bf.raw
+streamsToStorage[105].sourcePset:      26
+streamsToStorage[105].destStorageNode: locus041
+streamsToStorage[105].destDirectory:   /data/L103821/
+streamsToStorage[105].adderNr:         1
+streamsToStorage[105].writerNr:        1
+streamsToStorage[106].dataProduct:     Beamformed
+streamsToStorage[106].dataProductNr:   2
+streamsToStorage[106].streamNr:        106
+streamsToStorage[106].filename:        L103821_SAP001_B032_S0_P000_bf.raw
+streamsToStorage[106].sourcePset:      26
+streamsToStorage[106].destStorageNode: locus042
+streamsToStorage[106].destDirectory:   /data/L103821/
+streamsToStorage[106].adderNr:         2
+streamsToStorage[106].writerNr:        1
+streamsToStorage[107].dataProduct:     Beamformed
+streamsToStorage[107].dataProductNr:   2
+streamsToStorage[107].streamNr:        107
+streamsToStorage[107].filename:        L103821_SAP001_B033_S0_P000_bf.raw
+streamsToStorage[107].sourcePset:      26
+streamsToStorage[107].destStorageNode: locus043
+streamsToStorage[107].destDirectory:   /data/L103821/
+streamsToStorage[107].adderNr:         3
+streamsToStorage[107].writerNr:        1
+streamsToStorage[108].dataProduct:     Beamformed
+streamsToStorage[108].dataProductNr:   2
+streamsToStorage[108].streamNr:        108
+streamsToStorage[108].filename:        L103821_SAP001_B034_S0_P000_bf.raw
+streamsToStorage[108].sourcePset:      27
+streamsToStorage[108].destStorageNode: locus044
+streamsToStorage[108].destDirectory:   /data/L103821/
+streamsToStorage[108].adderNr:         0
+streamsToStorage[108].writerNr:        1
+streamsToStorage[109].dataProduct:     Beamformed
+streamsToStorage[109].dataProductNr:   2
+streamsToStorage[109].streamNr:        109
+streamsToStorage[109].filename:        L103821_SAP001_B035_S0_P000_bf.raw
+streamsToStorage[109].sourcePset:      27
+streamsToStorage[109].destStorageNode: locus045
+streamsToStorage[109].destDirectory:   /data/L103821/
+streamsToStorage[109].adderNr:         1
+streamsToStorage[109].writerNr:        1
+streamsToStorage[110].dataProduct:     Beamformed
+streamsToStorage[110].dataProductNr:   2
+streamsToStorage[110].streamNr:        110
+streamsToStorage[110].filename:        L103821_SAP001_B036_S0_P000_bf.raw
+streamsToStorage[110].sourcePset:      27
+streamsToStorage[110].destStorageNode: locus046
+streamsToStorage[110].destDirectory:   /data/L103821/
+streamsToStorage[110].adderNr:         2
+streamsToStorage[110].writerNr:        1
+streamsToStorage[111].dataProduct:     Beamformed
+streamsToStorage[111].dataProductNr:   2
+streamsToStorage[111].streamNr:        111
+streamsToStorage[111].filename:        L103821_SAP001_B037_S0_P000_bf.raw
+streamsToStorage[111].sourcePset:      27
+streamsToStorage[111].destStorageNode: locus047
+streamsToStorage[111].destDirectory:   /data/L103821/
+streamsToStorage[111].adderNr:         3
+streamsToStorage[111].writerNr:        1
+streamsToStorage[112].dataProduct:     Beamformed
+streamsToStorage[112].dataProductNr:   2
+streamsToStorage[112].streamNr:        112
+streamsToStorage[112].filename:        L103821_SAP001_B038_S0_P000_bf.raw
+streamsToStorage[112].sourcePset:      28
+streamsToStorage[112].destStorageNode: locus049
+streamsToStorage[112].destDirectory:   /data/L103821/
+streamsToStorage[112].adderNr:         0
+streamsToStorage[112].writerNr:        1
+streamsToStorage[113].dataProduct:     Beamformed
+streamsToStorage[113].dataProductNr:   2
+streamsToStorage[113].streamNr:        113
+streamsToStorage[113].filename:        L103821_SAP001_B039_S0_P000_bf.raw
+streamsToStorage[113].sourcePset:      28
+streamsToStorage[113].destStorageNode: locus050
+streamsToStorage[113].destDirectory:   /data/L103821/
+streamsToStorage[113].adderNr:         1
+streamsToStorage[113].writerNr:        1
+streamsToStorage[114].dataProduct:     Beamformed
+streamsToStorage[114].dataProductNr:   2
+streamsToStorage[114].streamNr:        114
+streamsToStorage[114].filename:        L103821_SAP001_B040_S0_P000_bf.raw
+streamsToStorage[114].sourcePset:      28
+streamsToStorage[114].destStorageNode: locus051
+streamsToStorage[114].destDirectory:   /data/L103821/
+streamsToStorage[114].adderNr:         2
+streamsToStorage[114].writerNr:        1
+streamsToStorage[115].dataProduct:     Beamformed
+streamsToStorage[115].dataProductNr:   2
+streamsToStorage[115].streamNr:        115
+streamsToStorage[115].filename:        L103821_SAP001_B041_S0_P000_bf.raw
+streamsToStorage[115].sourcePset:      28
+streamsToStorage[115].destStorageNode: locus052
+streamsToStorage[115].destDirectory:   /data/L103821/
+streamsToStorage[115].adderNr:         3
+streamsToStorage[115].writerNr:        1
+streamsToStorage[116].dataProduct:     Beamformed
+streamsToStorage[116].dataProductNr:   2
+streamsToStorage[116].streamNr:        116
+streamsToStorage[116].filename:        L103821_SAP001_B042_S0_P000_bf.raw
+streamsToStorage[116].sourcePset:      29
+streamsToStorage[116].destStorageNode: locus054
+streamsToStorage[116].destDirectory:   /data/L103821/
+streamsToStorage[116].adderNr:         0
+streamsToStorage[116].writerNr:        1
+streamsToStorage[117].dataProduct:     Beamformed
+streamsToStorage[117].dataProductNr:   2
+streamsToStorage[117].streamNr:        117
+streamsToStorage[117].filename:        L103821_SAP001_B043_S0_P000_bf.raw
+streamsToStorage[117].sourcePset:      29
+streamsToStorage[117].destStorageNode: locus056
+streamsToStorage[117].destDirectory:   /data/L103821/
+streamsToStorage[117].adderNr:         1
+streamsToStorage[117].writerNr:        1
+streamsToStorage[118].dataProduct:     Beamformed
+streamsToStorage[118].dataProductNr:   2
+streamsToStorage[118].streamNr:        118
+streamsToStorage[118].filename:        L103821_SAP001_B044_S0_P000_bf.raw
+streamsToStorage[118].sourcePset:      29
+streamsToStorage[118].destStorageNode: locus057
+streamsToStorage[118].destDirectory:   /data/L103821/
+streamsToStorage[118].adderNr:         2
+streamsToStorage[118].writerNr:        1
+streamsToStorage[119].dataProduct:     Beamformed
+streamsToStorage[119].dataProductNr:   2
+streamsToStorage[119].streamNr:        119
+streamsToStorage[119].filename:        L103821_SAP001_B045_S0_P000_bf.raw
+streamsToStorage[119].sourcePset:      29
+streamsToStorage[119].destStorageNode: locus058
+streamsToStorage[119].destDirectory:   /data/L103821/
+streamsToStorage[119].adderNr:         3
+streamsToStorage[119].writerNr:        1
+streamsToStorage[120].dataProduct:     Beamformed
+streamsToStorage[120].dataProductNr:   2
+streamsToStorage[120].streamNr:        120
+streamsToStorage[120].filename:        L103821_SAP001_B046_S0_P000_bf.raw
+streamsToStorage[120].sourcePset:      30
+streamsToStorage[120].destStorageNode: locus060
+streamsToStorage[120].destDirectory:   /data/L103821/
+streamsToStorage[120].adderNr:         0
+streamsToStorage[120].writerNr:        1
+streamsToStorage[121].dataProduct:     Beamformed
+streamsToStorage[121].dataProductNr:   2
+streamsToStorage[121].streamNr:        121
+streamsToStorage[121].filename:        L103821_SAP001_B047_S0_P000_bf.raw
+streamsToStorage[121].sourcePset:      30
+streamsToStorage[121].destStorageNode: locus061
+streamsToStorage[121].destDirectory:   /data/L103821/
+streamsToStorage[121].adderNr:         1
+streamsToStorage[121].writerNr:        1
+streamsToStorage[122].dataProduct:     Beamformed
+streamsToStorage[122].dataProductNr:   2
+streamsToStorage[122].streamNr:        122
+streamsToStorage[122].filename:        L103821_SAP001_B048_S0_P000_bf.raw
+streamsToStorage[122].sourcePset:      30
+streamsToStorage[122].destStorageNode: locus062
+streamsToStorage[122].destDirectory:   /data/L103821/
+streamsToStorage[122].adderNr:         2
+streamsToStorage[122].writerNr:        1
+streamsToStorage[123].dataProduct:     Beamformed
+streamsToStorage[123].dataProductNr:   2
+streamsToStorage[123].streamNr:        123
+streamsToStorage[123].filename:        L103821_SAP001_B049_S0_P000_bf.raw
+streamsToStorage[123].sourcePset:      30
+streamsToStorage[123].destStorageNode: locus063
+streamsToStorage[123].destDirectory:   /data/L103821/
+streamsToStorage[123].adderNr:         3
+streamsToStorage[123].writerNr:        1
+streamsToStorage[124].dataProduct:     Beamformed
+streamsToStorage[124].dataProductNr:   2
+streamsToStorage[124].streamNr:        124
+streamsToStorage[124].filename:        L103821_SAP001_B050_S0_P000_bf.raw
+streamsToStorage[124].sourcePset:      31
+streamsToStorage[124].destStorageNode: locus064
+streamsToStorage[124].destDirectory:   /data/L103821/
+streamsToStorage[124].adderNr:         0
+streamsToStorage[124].writerNr:        1
+streamsToStorage[125].dataProduct:     Beamformed
+streamsToStorage[125].dataProductNr:   2
+streamsToStorage[125].streamNr:        125
+streamsToStorage[125].filename:        L103821_SAP001_B051_S0_P000_bf.raw
+streamsToStorage[125].sourcePset:      31
+streamsToStorage[125].destStorageNode: locus065
+streamsToStorage[125].destDirectory:   /data/L103821/
+streamsToStorage[125].adderNr:         1
+streamsToStorage[125].writerNr:        1
+streamsToStorage[126].dataProduct:     Beamformed
+streamsToStorage[126].dataProductNr:   2
+streamsToStorage[126].streamNr:        126
+streamsToStorage[126].filename:        L103821_SAP001_B052_S0_P000_bf.raw
+streamsToStorage[126].sourcePset:      31
+streamsToStorage[126].destStorageNode: locus067
+streamsToStorage[126].destDirectory:   /data/L103821/
+streamsToStorage[126].adderNr:         2
+streamsToStorage[126].writerNr:        1
+streamsToStorage[127].dataProduct:     Beamformed
+streamsToStorage[127].dataProductNr:   2
+streamsToStorage[127].streamNr:        127
+streamsToStorage[127].filename:        L103821_SAP001_B053_S0_P000_bf.raw
+streamsToStorage[127].sourcePset:      31
+streamsToStorage[127].destStorageNode: locus068
+streamsToStorage[127].destDirectory:   /data/L103821/
+streamsToStorage[127].adderNr:         3
+streamsToStorage[127].writerNr:        1
+streamsToStorage[128].dataProduct:     Beamformed
+streamsToStorage[128].dataProductNr:   2
+streamsToStorage[128].streamNr:        128
+streamsToStorage[128].filename:        L103821_SAP001_B054_S0_P000_bf.raw
+streamsToStorage[128].sourcePset:      32
+streamsToStorage[128].destStorageNode: locus069
+streamsToStorage[128].destDirectory:   /data/L103821/
+streamsToStorage[128].adderNr:         0
+streamsToStorage[128].writerNr:        1
+streamsToStorage[129].dataProduct:     Beamformed
+streamsToStorage[129].dataProductNr:   2
+streamsToStorage[129].streamNr:        129
+streamsToStorage[129].filename:        L103821_SAP001_B055_S0_P000_bf.raw
+streamsToStorage[129].sourcePset:      32
+streamsToStorage[129].destStorageNode: locus070
+streamsToStorage[129].destDirectory:   /data/L103821/
+streamsToStorage[129].adderNr:         1
+streamsToStorage[129].writerNr:        1
+streamsToStorage[130].dataProduct:     Beamformed
+streamsToStorage[130].dataProductNr:   2
+streamsToStorage[130].streamNr:        130
+streamsToStorage[130].filename:        L103821_SAP001_B056_S0_P000_bf.raw
+streamsToStorage[130].sourcePset:      32
+streamsToStorage[130].destStorageNode: locus071
+streamsToStorage[130].destDirectory:   /data/L103821/
+streamsToStorage[130].adderNr:         2
+streamsToStorage[130].writerNr:        1
+streamsToStorage[131].dataProduct:     Beamformed
+streamsToStorage[131].dataProductNr:   2
+streamsToStorage[131].streamNr:        131
+streamsToStorage[131].filename:        L103821_SAP001_B057_S0_P000_bf.raw
+streamsToStorage[131].sourcePset:      32
+streamsToStorage[131].destStorageNode: locus073
+streamsToStorage[131].destDirectory:   /data/L103821/
+streamsToStorage[131].adderNr:         3
+streamsToStorage[131].writerNr:        1
+streamsToStorage[132].dataProduct:     Beamformed
+streamsToStorage[132].dataProductNr:   2
+streamsToStorage[132].streamNr:        132
+streamsToStorage[132].filename:        L103821_SAP001_B058_S0_P000_bf.raw
+streamsToStorage[132].sourcePset:      33
+streamsToStorage[132].destStorageNode: locus074
+streamsToStorage[132].destDirectory:   /data/L103821/
+streamsToStorage[132].adderNr:         0
+streamsToStorage[132].writerNr:        1
+streamsToStorage[133].dataProduct:     Beamformed
+streamsToStorage[133].dataProductNr:   2
+streamsToStorage[133].streamNr:        133
+streamsToStorage[133].filename:        L103821_SAP001_B059_S0_P000_bf.raw
+streamsToStorage[133].sourcePset:      33
+streamsToStorage[133].destStorageNode: locus075
+streamsToStorage[133].destDirectory:   /data/L103821/
+streamsToStorage[133].adderNr:         1
+streamsToStorage[133].writerNr:        1
+streamsToStorage[134].dataProduct:     Beamformed
+streamsToStorage[134].dataProductNr:   2
+streamsToStorage[134].streamNr:        134
+streamsToStorage[134].filename:        L103821_SAP001_B060_S0_P000_bf.raw
+streamsToStorage[134].sourcePset:      33
+streamsToStorage[134].destStorageNode: locus076
+streamsToStorage[134].destDirectory:   /data/L103821/
+streamsToStorage[134].adderNr:         2
+streamsToStorage[134].writerNr:        1
+streamsToStorage[135].dataProduct:     Beamformed
+streamsToStorage[135].dataProductNr:   2
+streamsToStorage[135].streamNr:        135
+streamsToStorage[135].filename:        L103821_SAP001_B061_S0_P000_bf.raw
+streamsToStorage[135].sourcePset:      33
+streamsToStorage[135].destStorageNode: locus077
+streamsToStorage[135].destDirectory:   /data/L103821/
+streamsToStorage[135].adderNr:         3
+streamsToStorage[135].writerNr:        1
+streamsToStorage[136].dataProduct:     Beamformed
+streamsToStorage[136].dataProductNr:   2
+streamsToStorage[136].streamNr:        136
+streamsToStorage[136].filename:        L103821_SAP001_B062_S0_P000_bf.raw
+streamsToStorage[136].sourcePset:      34
+streamsToStorage[136].destStorageNode: locus078
+streamsToStorage[136].destDirectory:   /data/L103821/
+streamsToStorage[136].adderNr:         0
+streamsToStorage[136].writerNr:        1
+streamsToStorage[137].dataProduct:     Beamformed
+streamsToStorage[137].dataProductNr:   2
+streamsToStorage[137].streamNr:        137
+streamsToStorage[137].filename:        L103821_SAP001_B063_S0_P000_bf.raw
+streamsToStorage[137].sourcePset:      34
+streamsToStorage[137].destStorageNode: locus079
+streamsToStorage[137].destDirectory:   /data/L103821/
+streamsToStorage[137].adderNr:         1
+streamsToStorage[137].writerNr:        1
+streamsToStorage[138].dataProduct:     Beamformed
+streamsToStorage[138].dataProductNr:   2
+streamsToStorage[138].streamNr:        138
+streamsToStorage[138].filename:        L103821_SAP001_B064_S0_P000_bf.raw
+streamsToStorage[138].sourcePset:      34
+streamsToStorage[138].destStorageNode: locus081
+streamsToStorage[138].destDirectory:   /data/L103821/
+streamsToStorage[138].adderNr:         2
+streamsToStorage[138].writerNr:        1
+streamsToStorage[139].dataProduct:     Beamformed
+streamsToStorage[139].dataProductNr:   2
+streamsToStorage[139].streamNr:        139
+streamsToStorage[139].filename:        L103821_SAP001_B065_S0_P000_bf.raw
+streamsToStorage[139].sourcePset:      34
+streamsToStorage[139].destStorageNode: locus082
+streamsToStorage[139].destDirectory:   /data/L103821/
+streamsToStorage[139].adderNr:         3
+streamsToStorage[139].writerNr:        1
+streamsToStorage[140].dataProduct:     Beamformed
+streamsToStorage[140].dataProductNr:   2
+streamsToStorage[140].streamNr:        140
+streamsToStorage[140].filename:        L103821_SAP001_B066_S0_P000_bf.raw
+streamsToStorage[140].sourcePset:      35
+streamsToStorage[140].destStorageNode: locus084
+streamsToStorage[140].destDirectory:   /data/L103821/
+streamsToStorage[140].adderNr:         0
+streamsToStorage[140].writerNr:        1
+streamsToStorage[141].dataProduct:     Beamformed
+streamsToStorage[141].dataProductNr:   2
+streamsToStorage[141].streamNr:        141
+streamsToStorage[141].filename:        L103821_SAP001_B067_S0_P000_bf.raw
+streamsToStorage[141].sourcePset:      35
+streamsToStorage[141].destStorageNode: locus085
+streamsToStorage[141].destDirectory:   /data/L103821/
+streamsToStorage[141].adderNr:         1
+streamsToStorage[141].writerNr:        1
+streamsToStorage[142].dataProduct:     Beamformed
+streamsToStorage[142].dataProductNr:   2
+streamsToStorage[142].streamNr:        142
+streamsToStorage[142].filename:        L103821_SAP001_B068_S0_P000_bf.raw
+streamsToStorage[142].sourcePset:      35
+streamsToStorage[142].destStorageNode: locus086
+streamsToStorage[142].destDirectory:   /data/L103821/
+streamsToStorage[142].adderNr:         2
+streamsToStorage[142].writerNr:        1
+streamsToStorage[143].dataProduct:     Beamformed
+streamsToStorage[143].dataProductNr:   2
+streamsToStorage[143].streamNr:        143
+streamsToStorage[143].filename:        L103821_SAP001_B069_S0_P000_bf.raw
+streamsToStorage[143].sourcePset:      35
+streamsToStorage[143].destStorageNode: locus087
+streamsToStorage[143].destDirectory:   /data/L103821/
+streamsToStorage[143].adderNr:         3
+streamsToStorage[143].writerNr:        1
+streamsToStorage[144].dataProduct:     Beamformed
+streamsToStorage[144].dataProductNr:   2
+streamsToStorage[144].streamNr:        144
+streamsToStorage[144].filename:        L103821_SAP001_B070_S0_P000_bf.raw
+streamsToStorage[144].sourcePset:      36
+streamsToStorage[144].destStorageNode: locus088
+streamsToStorage[144].destDirectory:   /data/L103821/
+streamsToStorage[144].adderNr:         0
+streamsToStorage[144].writerNr:        1
+streamsToStorage[145].dataProduct:     Beamformed
+streamsToStorage[145].dataProductNr:   2
+streamsToStorage[145].streamNr:        145
+streamsToStorage[145].filename:        L103821_SAP001_B071_S0_P000_bf.raw
+streamsToStorage[145].sourcePset:      36
+streamsToStorage[145].destStorageNode: locus090
+streamsToStorage[145].destDirectory:   /data/L103821/
+streamsToStorage[145].adderNr:         1
+streamsToStorage[145].writerNr:        1
+streamsToStorage[146].dataProduct:     Beamformed
+streamsToStorage[146].dataProductNr:   2
+streamsToStorage[146].streamNr:        146
+streamsToStorage[146].filename:        L103821_SAP001_B072_S0_P000_bf.raw
+streamsToStorage[146].sourcePset:      36
+streamsToStorage[146].destStorageNode: locus093
+streamsToStorage[146].destDirectory:   /data/L103821/
+streamsToStorage[146].adderNr:         2
+streamsToStorage[146].writerNr:        1
+streamsToStorage[147].dataProduct:     Beamformed
+streamsToStorage[147].dataProductNr:   2
+streamsToStorage[147].streamNr:        147
+streamsToStorage[147].filename:        L103821_SAP001_B073_S0_P000_bf.raw
+streamsToStorage[147].sourcePset:      36
+streamsToStorage[147].destStorageNode: locus094
+streamsToStorage[147].destDirectory:   /data/L103821/
+streamsToStorage[147].adderNr:         3
+streamsToStorage[147].writerNr:        1
+streamsToStorage[148].dataProduct:     Beamformed
+streamsToStorage[148].dataProductNr:   2
+streamsToStorage[148].streamNr:        148
+streamsToStorage[148].filename:        L103821_SAP002_B000_S0_P000_bf.raw
+streamsToStorage[148].sourcePset:      37
+streamsToStorage[148].destStorageNode: locus001
+streamsToStorage[148].destDirectory:   /data/L103821/
+streamsToStorage[148].adderNr:         0
+streamsToStorage[148].writerNr:        2
+streamsToStorage[149].dataProduct:     Beamformed
+streamsToStorage[149].dataProductNr:   2
+streamsToStorage[149].streamNr:        149
+streamsToStorage[149].filename:        L103821_SAP002_B001_S0_P000_bf.raw
+streamsToStorage[149].sourcePset:      37
+streamsToStorage[149].destStorageNode: locus003
+streamsToStorage[149].destDirectory:   /data/L103821/
+streamsToStorage[149].adderNr:         1
+streamsToStorage[149].writerNr:        3
+streamsToStorage[150].dataProduct:     Beamformed
+streamsToStorage[150].dataProductNr:   2
+streamsToStorage[150].streamNr:        150
+streamsToStorage[150].filename:        L103821_SAP002_B002_S0_P000_bf.raw
+streamsToStorage[150].sourcePset:      37
+streamsToStorage[150].destStorageNode: locus004
+streamsToStorage[150].destDirectory:   /data/L103821/
+streamsToStorage[150].adderNr:         2
+streamsToStorage[150].writerNr:        2
+streamsToStorage[151].dataProduct:     Beamformed
+streamsToStorage[151].dataProductNr:   2
+streamsToStorage[151].streamNr:        151
+streamsToStorage[151].filename:        L103821_SAP002_B003_S0_P000_bf.raw
+streamsToStorage[151].sourcePset:      37
+streamsToStorage[151].destStorageNode: locus005
+streamsToStorage[151].destDirectory:   /data/L103821/
+streamsToStorage[151].adderNr:         3
+streamsToStorage[151].writerNr:        2
+streamsToStorage[152].dataProduct:     Beamformed
+streamsToStorage[152].dataProductNr:   2
+streamsToStorage[152].streamNr:        152
+streamsToStorage[152].filename:        L103821_SAP002_B004_S0_P000_bf.raw
+streamsToStorage[152].sourcePset:      38
+streamsToStorage[152].destStorageNode: locus006
+streamsToStorage[152].destDirectory:   /data/L103821/
+streamsToStorage[152].adderNr:         0
+streamsToStorage[152].writerNr:        2
+streamsToStorage[153].dataProduct:     Beamformed
+streamsToStorage[153].dataProductNr:   2
+streamsToStorage[153].streamNr:        153
+streamsToStorage[153].filename:        L103821_SAP002_B005_S0_P000_bf.raw
+streamsToStorage[153].sourcePset:      38
+streamsToStorage[153].destStorageNode: locus007
+streamsToStorage[153].destDirectory:   /data/L103821/
+streamsToStorage[153].adderNr:         1
+streamsToStorage[153].writerNr:        2
+streamsToStorage[154].dataProduct:     Beamformed
+streamsToStorage[154].dataProductNr:   2
+streamsToStorage[154].streamNr:        154
+streamsToStorage[154].filename:        L103821_SAP002_B006_S0_P000_bf.raw
+streamsToStorage[154].sourcePset:      38
+streamsToStorage[154].destStorageNode: locus008
+streamsToStorage[154].destDirectory:   /data/L103821/
+streamsToStorage[154].adderNr:         2
+streamsToStorage[154].writerNr:        2
+streamsToStorage[155].dataProduct:     Beamformed
+streamsToStorage[155].dataProductNr:   2
+streamsToStorage[155].streamNr:        155
+streamsToStorage[155].filename:        L103821_SAP002_B007_S0_P000_bf.raw
+streamsToStorage[155].sourcePset:      38
+streamsToStorage[155].destStorageNode: locus009
+streamsToStorage[155].destDirectory:   /data/L103821/
+streamsToStorage[155].adderNr:         3
+streamsToStorage[155].writerNr:        2
+streamsToStorage[156].dataProduct:     Beamformed
+streamsToStorage[156].dataProductNr:   2
+streamsToStorage[156].streamNr:        156
+streamsToStorage[156].filename:        L103821_SAP002_B008_S0_P000_bf.raw
+streamsToStorage[156].sourcePset:      39
+streamsToStorage[156].destStorageNode: locus010
+streamsToStorage[156].destDirectory:   /data/L103821/
+streamsToStorage[156].adderNr:         0
+streamsToStorage[156].writerNr:        2
+streamsToStorage[157].dataProduct:     Beamformed
+streamsToStorage[157].dataProductNr:   2
+streamsToStorage[157].streamNr:        157
+streamsToStorage[157].filename:        L103821_SAP002_B009_S0_P000_bf.raw
+streamsToStorage[157].sourcePset:      39
+streamsToStorage[157].destStorageNode: locus011
+streamsToStorage[157].destDirectory:   /data/L103821/
+streamsToStorage[157].adderNr:         1
+streamsToStorage[157].writerNr:        2
+streamsToStorage[158].dataProduct:     Beamformed
+streamsToStorage[158].dataProductNr:   2
+streamsToStorage[158].streamNr:        158
+streamsToStorage[158].filename:        L103821_SAP002_B010_S0_P000_bf.raw
+streamsToStorage[158].sourcePset:      39
+streamsToStorage[158].destStorageNode: locus012
+streamsToStorage[158].destDirectory:   /data/L103821/
+streamsToStorage[158].adderNr:         2
+streamsToStorage[158].writerNr:        2
+streamsToStorage[159].dataProduct:     Beamformed
+streamsToStorage[159].dataProductNr:   2
+streamsToStorage[159].streamNr:        159
+streamsToStorage[159].filename:        L103821_SAP002_B011_S0_P000_bf.raw
+streamsToStorage[159].sourcePset:      39
+streamsToStorage[159].destStorageNode: locus013
+streamsToStorage[159].destDirectory:   /data/L103821/
+streamsToStorage[159].adderNr:         3
+streamsToStorage[159].writerNr:        2
+streamsToStorage[160].dataProduct:     Beamformed
+streamsToStorage[160].dataProductNr:   2
+streamsToStorage[160].streamNr:        160
+streamsToStorage[160].filename:        L103821_SAP002_B012_S0_P000_bf.raw
+streamsToStorage[160].sourcePset:      40
+streamsToStorage[160].destStorageNode: locus069
+streamsToStorage[160].destDirectory:   /data/L103821/
+streamsToStorage[160].adderNr:         0
+streamsToStorage[160].writerNr:        2
+streamsToStorage[161].dataProduct:     Beamformed
+streamsToStorage[161].dataProductNr:   2
+streamsToStorage[161].streamNr:        161
+streamsToStorage[161].filename:        L103821_SAP002_B013_S0_P000_bf.raw
+streamsToStorage[161].sourcePset:      40
+streamsToStorage[161].destStorageNode: locus014
+streamsToStorage[161].destDirectory:   /data/L103821/
+streamsToStorage[161].adderNr:         1
+streamsToStorage[161].writerNr:        2
+streamsToStorage[162].dataProduct:     Beamformed
+streamsToStorage[162].dataProductNr:   2
+streamsToStorage[162].streamNr:        162
+streamsToStorage[162].filename:        L103821_SAP002_B014_S0_P000_bf.raw
+streamsToStorage[162].sourcePset:      40
+streamsToStorage[162].destStorageNode: locus015
+streamsToStorage[162].destDirectory:   /data/L103821/
+streamsToStorage[162].adderNr:         2
+streamsToStorage[162].writerNr:        2
+streamsToStorage[163].dataProduct:     Beamformed
+streamsToStorage[163].dataProductNr:   2
+streamsToStorage[163].streamNr:        163
+streamsToStorage[163].filename:        L103821_SAP002_B015_S0_P000_bf.raw
+streamsToStorage[163].sourcePset:      40
+streamsToStorage[163].destStorageNode: locus017
+streamsToStorage[163].destDirectory:   /data/L103821/
+streamsToStorage[163].adderNr:         3
+streamsToStorage[163].writerNr:        2
+streamsToStorage[164].dataProduct:     Beamformed
+streamsToStorage[164].dataProductNr:   2
+streamsToStorage[164].streamNr:        164
+streamsToStorage[164].filename:        L103821_SAP002_B016_S0_P000_bf.raw
+streamsToStorage[164].sourcePset:      41
+streamsToStorage[164].destStorageNode: locus019
+streamsToStorage[164].destDirectory:   /data/L103821/
+streamsToStorage[164].adderNr:         0
+streamsToStorage[164].writerNr:        2
+streamsToStorage[165].dataProduct:     Beamformed
+streamsToStorage[165].dataProductNr:   2
+streamsToStorage[165].streamNr:        165
+streamsToStorage[165].filename:        L103821_SAP002_B017_S0_P000_bf.raw
+streamsToStorage[165].sourcePset:      41
+streamsToStorage[165].destStorageNode: locus020
+streamsToStorage[165].destDirectory:   /data/L103821/
+streamsToStorage[165].adderNr:         1
+streamsToStorage[165].writerNr:        2
+streamsToStorage[166].dataProduct:     Beamformed
+streamsToStorage[166].dataProductNr:   2
+streamsToStorage[166].streamNr:        166
+streamsToStorage[166].filename:        L103821_SAP002_B018_S0_P000_bf.raw
+streamsToStorage[166].sourcePset:      41
+streamsToStorage[166].destStorageNode: locus023
+streamsToStorage[166].destDirectory:   /data/L103821/
+streamsToStorage[166].adderNr:         2
+streamsToStorage[166].writerNr:        2
+streamsToStorage[167].dataProduct:     Beamformed
+streamsToStorage[167].dataProductNr:   2
+streamsToStorage[167].streamNr:        167
+streamsToStorage[167].filename:        L103821_SAP002_B019_S0_P000_bf.raw
+streamsToStorage[167].sourcePset:      41
+streamsToStorage[167].destStorageNode: locus025
+streamsToStorage[167].destDirectory:   /data/L103821/
+streamsToStorage[167].adderNr:         3
+streamsToStorage[167].writerNr:        2
+streamsToStorage[168].dataProduct:     Beamformed
+streamsToStorage[168].dataProductNr:   2
+streamsToStorage[168].streamNr:        168
+streamsToStorage[168].filename:        L103821_SAP002_B020_S0_P000_bf.raw
+streamsToStorage[168].sourcePset:      42
+streamsToStorage[168].destStorageNode: locus026
+streamsToStorage[168].destDirectory:   /data/L103821/
+streamsToStorage[168].adderNr:         0
+streamsToStorage[168].writerNr:        2
+streamsToStorage[169].dataProduct:     Beamformed
+streamsToStorage[169].dataProductNr:   2
+streamsToStorage[169].streamNr:        169
+streamsToStorage[169].filename:        L103821_SAP002_B021_S0_P000_bf.raw
+streamsToStorage[169].sourcePset:      42
+streamsToStorage[169].destStorageNode: locus027
+streamsToStorage[169].destDirectory:   /data/L103821/
+streamsToStorage[169].adderNr:         1
+streamsToStorage[169].writerNr:        2
+streamsToStorage[170].dataProduct:     Beamformed
+streamsToStorage[170].dataProductNr:   2
+streamsToStorage[170].streamNr:        170
+streamsToStorage[170].filename:        L103821_SAP002_B022_S0_P000_bf.raw
+streamsToStorage[170].sourcePset:      42
+streamsToStorage[170].destStorageNode: locus028
+streamsToStorage[170].destDirectory:   /data/L103821/
+streamsToStorage[170].adderNr:         2
+streamsToStorage[170].writerNr:        2
+streamsToStorage[171].dataProduct:     Beamformed
+streamsToStorage[171].dataProductNr:   2
+streamsToStorage[171].streamNr:        171
+streamsToStorage[171].filename:        L103821_SAP002_B023_S0_P000_bf.raw
+streamsToStorage[171].sourcePset:      42
+streamsToStorage[171].destStorageNode: locus029
+streamsToStorage[171].destDirectory:   /data/L103821/
+streamsToStorage[171].adderNr:         3
+streamsToStorage[171].writerNr:        2
+streamsToStorage[172].dataProduct:     Beamformed
+streamsToStorage[172].dataProductNr:   2
+streamsToStorage[172].streamNr:        172
+streamsToStorage[172].filename:        L103821_SAP002_B024_S0_P000_bf.raw
+streamsToStorage[172].sourcePset:      43
+streamsToStorage[172].destStorageNode: locus030
+streamsToStorage[172].destDirectory:   /data/L103821/
+streamsToStorage[172].adderNr:         0
+streamsToStorage[172].writerNr:        2
+streamsToStorage[173].dataProduct:     Beamformed
+streamsToStorage[173].dataProductNr:   2
+streamsToStorage[173].streamNr:        173
+streamsToStorage[173].filename:        L103821_SAP002_B025_S0_P000_bf.raw
+streamsToStorage[173].sourcePset:      43
+streamsToStorage[173].destStorageNode: locus031
+streamsToStorage[173].destDirectory:   /data/L103821/
+streamsToStorage[173].adderNr:         1
+streamsToStorage[173].writerNr:        2
+streamsToStorage[174].dataProduct:     Beamformed
+streamsToStorage[174].dataProductNr:   2
+streamsToStorage[174].streamNr:        174
+streamsToStorage[174].filename:        L103821_SAP002_B026_S0_P000_bf.raw
+streamsToStorage[174].sourcePset:      43
+streamsToStorage[174].destStorageNode: locus032
+streamsToStorage[174].destDirectory:   /data/L103821/
+streamsToStorage[174].adderNr:         2
+streamsToStorage[174].writerNr:        2
+streamsToStorage[175].dataProduct:     Beamformed
+streamsToStorage[175].dataProductNr:   2
+streamsToStorage[175].streamNr:        175
+streamsToStorage[175].filename:        L103821_SAP002_B027_S0_P000_bf.raw
+streamsToStorage[175].sourcePset:      43
+streamsToStorage[175].destStorageNode: locus034
+streamsToStorage[175].destDirectory:   /data/L103821/
+streamsToStorage[175].adderNr:         3
+streamsToStorage[175].writerNr:        2
+streamsToStorage[176].dataProduct:     Beamformed
+streamsToStorage[176].dataProductNr:   2
+streamsToStorage[176].streamNr:        176
+streamsToStorage[176].filename:        L103821_SAP002_B028_S0_P000_bf.raw
+streamsToStorage[176].sourcePset:      44
+streamsToStorage[176].destStorageNode: locus037
+streamsToStorage[176].destDirectory:   /data/L103821/
+streamsToStorage[176].adderNr:         0
+streamsToStorage[176].writerNr:        2
+streamsToStorage[177].dataProduct:     Beamformed
+streamsToStorage[177].dataProductNr:   2
+streamsToStorage[177].streamNr:        177
+streamsToStorage[177].filename:        L103821_SAP002_B029_S0_P000_bf.raw
+streamsToStorage[177].sourcePset:      44
+streamsToStorage[177].destStorageNode: locus038
+streamsToStorage[177].destDirectory:   /data/L103821/
+streamsToStorage[177].adderNr:         1
+streamsToStorage[177].writerNr:        2
+streamsToStorage[178].dataProduct:     Beamformed
+streamsToStorage[178].dataProductNr:   2
+streamsToStorage[178].streamNr:        178
+streamsToStorage[178].filename:        L103821_SAP002_B030_S0_P000_bf.raw
+streamsToStorage[178].sourcePset:      44
+streamsToStorage[178].destStorageNode: locus040
+streamsToStorage[178].destDirectory:   /data/L103821/
+streamsToStorage[178].adderNr:         2
+streamsToStorage[178].writerNr:        2
+streamsToStorage[179].dataProduct:     Beamformed
+streamsToStorage[179].dataProductNr:   2
+streamsToStorage[179].streamNr:        179
+streamsToStorage[179].filename:        L103821_SAP002_B031_S0_P000_bf.raw
+streamsToStorage[179].sourcePset:      44
+streamsToStorage[179].destStorageNode: locus041
+streamsToStorage[179].destDirectory:   /data/L103821/
+streamsToStorage[179].adderNr:         3
+streamsToStorage[179].writerNr:        2
+streamsToStorage[180].dataProduct:     Beamformed
+streamsToStorage[180].dataProductNr:   2
+streamsToStorage[180].streamNr:        180
+streamsToStorage[180].filename:        L103821_SAP002_B032_S0_P000_bf.raw
+streamsToStorage[180].sourcePset:      45
+streamsToStorage[180].destStorageNode: locus042
+streamsToStorage[180].destDirectory:   /data/L103821/
+streamsToStorage[180].adderNr:         0
+streamsToStorage[180].writerNr:        2
+streamsToStorage[181].dataProduct:     Beamformed
+streamsToStorage[181].dataProductNr:   2
+streamsToStorage[181].streamNr:        181
+streamsToStorage[181].filename:        L103821_SAP002_B033_S0_P000_bf.raw
+streamsToStorage[181].sourcePset:      45
+streamsToStorage[181].destStorageNode: locus043
+streamsToStorage[181].destDirectory:   /data/L103821/
+streamsToStorage[181].adderNr:         1
+streamsToStorage[181].writerNr:        2
+streamsToStorage[182].dataProduct:     Beamformed
+streamsToStorage[182].dataProductNr:   2
+streamsToStorage[182].streamNr:        182
+streamsToStorage[182].filename:        L103821_SAP002_B034_S0_P000_bf.raw
+streamsToStorage[182].sourcePset:      45
+streamsToStorage[182].destStorageNode: locus044
+streamsToStorage[182].destDirectory:   /data/L103821/
+streamsToStorage[182].adderNr:         2
+streamsToStorage[182].writerNr:        2
+streamsToStorage[183].dataProduct:     Beamformed
+streamsToStorage[183].dataProductNr:   2
+streamsToStorage[183].streamNr:        183
+streamsToStorage[183].filename:        L103821_SAP002_B035_S0_P000_bf.raw
+streamsToStorage[183].sourcePset:      45
+streamsToStorage[183].destStorageNode: locus045
+streamsToStorage[183].destDirectory:   /data/L103821/
+streamsToStorage[183].adderNr:         3
+streamsToStorage[183].writerNr:        2
+streamsToStorage[184].dataProduct:     Beamformed
+streamsToStorage[184].dataProductNr:   2
+streamsToStorage[184].streamNr:        184
+streamsToStorage[184].filename:        L103821_SAP002_B036_S0_P000_bf.raw
+streamsToStorage[184].sourcePset:      46
+streamsToStorage[184].destStorageNode: locus046
+streamsToStorage[184].destDirectory:   /data/L103821/
+streamsToStorage[184].adderNr:         0
+streamsToStorage[184].writerNr:        2
+streamsToStorage[185].dataProduct:     Beamformed
+streamsToStorage[185].dataProductNr:   2
+streamsToStorage[185].streamNr:        185
+streamsToStorage[185].filename:        L103821_SAP002_B037_S0_P000_bf.raw
+streamsToStorage[185].sourcePset:      46
+streamsToStorage[185].destStorageNode: locus047
+streamsToStorage[185].destDirectory:   /data/L103821/
+streamsToStorage[185].adderNr:         1
+streamsToStorage[185].writerNr:        2
+streamsToStorage[186].dataProduct:     Beamformed
+streamsToStorage[186].dataProductNr:   2
+streamsToStorage[186].streamNr:        186
+streamsToStorage[186].filename:        L103821_SAP002_B038_S0_P000_bf.raw
+streamsToStorage[186].sourcePset:      46
+streamsToStorage[186].destStorageNode: locus049
+streamsToStorage[186].destDirectory:   /data/L103821/
+streamsToStorage[186].adderNr:         2
+streamsToStorage[186].writerNr:        2
+streamsToStorage[187].dataProduct:     Beamformed
+streamsToStorage[187].dataProductNr:   2
+streamsToStorage[187].streamNr:        187
+streamsToStorage[187].filename:        L103821_SAP002_B039_S0_P000_bf.raw
+streamsToStorage[187].sourcePset:      46
+streamsToStorage[187].destStorageNode: locus050
+streamsToStorage[187].destDirectory:   /data/L103821/
+streamsToStorage[187].adderNr:         3
+streamsToStorage[187].writerNr:        2
+streamsToStorage[188].dataProduct:     Beamformed
+streamsToStorage[188].dataProductNr:   2
+streamsToStorage[188].streamNr:        188
+streamsToStorage[188].filename:        L103821_SAP002_B040_S0_P000_bf.raw
+streamsToStorage[188].sourcePset:      47
+streamsToStorage[188].destStorageNode: locus051
+streamsToStorage[188].destDirectory:   /data/L103821/
+streamsToStorage[188].adderNr:         0
+streamsToStorage[188].writerNr:        2
+streamsToStorage[189].dataProduct:     Beamformed
+streamsToStorage[189].dataProductNr:   2
+streamsToStorage[189].streamNr:        189
+streamsToStorage[189].filename:        L103821_SAP002_B041_S0_P000_bf.raw
+streamsToStorage[189].sourcePset:      47
+streamsToStorage[189].destStorageNode: locus052
+streamsToStorage[189].destDirectory:   /data/L103821/
+streamsToStorage[189].adderNr:         1
+streamsToStorage[189].writerNr:        2
+streamsToStorage[190].dataProduct:     Beamformed
+streamsToStorage[190].dataProductNr:   2
+streamsToStorage[190].streamNr:        190
+streamsToStorage[190].filename:        L103821_SAP002_B042_S0_P000_bf.raw
+streamsToStorage[190].sourcePset:      47
+streamsToStorage[190].destStorageNode: locus054
+streamsToStorage[190].destDirectory:   /data/L103821/
+streamsToStorage[190].adderNr:         2
+streamsToStorage[190].writerNr:        2
+streamsToStorage[191].dataProduct:     Beamformed
+streamsToStorage[191].dataProductNr:   2
+streamsToStorage[191].streamNr:        191
+streamsToStorage[191].filename:        L103821_SAP002_B043_S0_P000_bf.raw
+streamsToStorage[191].sourcePset:      47
+streamsToStorage[191].destStorageNode: locus056
+streamsToStorage[191].destDirectory:   /data/L103821/
+streamsToStorage[191].adderNr:         3
+streamsToStorage[191].writerNr:        2
+streamsToStorage[192].dataProduct:     Beamformed
+streamsToStorage[192].dataProductNr:   2
+streamsToStorage[192].streamNr:        192
+streamsToStorage[192].filename:        L103821_SAP002_B044_S0_P000_bf.raw
+streamsToStorage[192].sourcePset:      48
+streamsToStorage[192].destStorageNode: locus057
+streamsToStorage[192].destDirectory:   /data/L103821/
+streamsToStorage[192].adderNr:         0
+streamsToStorage[192].writerNr:        2
+streamsToStorage[193].dataProduct:     Beamformed
+streamsToStorage[193].dataProductNr:   2
+streamsToStorage[193].streamNr:        193
+streamsToStorage[193].filename:        L103821_SAP002_B045_S0_P000_bf.raw
+streamsToStorage[193].sourcePset:      48
+streamsToStorage[193].destStorageNode: locus058
+streamsToStorage[193].destDirectory:   /data/L103821/
+streamsToStorage[193].adderNr:         1
+streamsToStorage[193].writerNr:        2
+streamsToStorage[194].dataProduct:     Beamformed
+streamsToStorage[194].dataProductNr:   2
+streamsToStorage[194].streamNr:        194
+streamsToStorage[194].filename:        L103821_SAP002_B046_S0_P000_bf.raw
+streamsToStorage[194].sourcePset:      48
+streamsToStorage[194].destStorageNode: locus060
+streamsToStorage[194].destDirectory:   /data/L103821/
+streamsToStorage[194].adderNr:         2
+streamsToStorage[194].writerNr:        2
+streamsToStorage[195].dataProduct:     Beamformed
+streamsToStorage[195].dataProductNr:   2
+streamsToStorage[195].streamNr:        195
+streamsToStorage[195].filename:        L103821_SAP002_B047_S0_P000_bf.raw
+streamsToStorage[195].sourcePset:      48
+streamsToStorage[195].destStorageNode: locus061
+streamsToStorage[195].destDirectory:   /data/L103821/
+streamsToStorage[195].adderNr:         3
+streamsToStorage[195].writerNr:        2
+streamsToStorage[196].dataProduct:     Beamformed
+streamsToStorage[196].dataProductNr:   2
+streamsToStorage[196].streamNr:        196
+streamsToStorage[196].filename:        L103821_SAP002_B048_S0_P000_bf.raw
+streamsToStorage[196].sourcePset:      49
+streamsToStorage[196].destStorageNode: locus062
+streamsToStorage[196].destDirectory:   /data/L103821/
+streamsToStorage[196].adderNr:         0
+streamsToStorage[196].writerNr:        2
+streamsToStorage[197].dataProduct:     Beamformed
+streamsToStorage[197].dataProductNr:   2
+streamsToStorage[197].streamNr:        197
+streamsToStorage[197].filename:        L103821_SAP002_B049_S0_P000_bf.raw
+streamsToStorage[197].sourcePset:      49
+streamsToStorage[197].destStorageNode: locus063
+streamsToStorage[197].destDirectory:   /data/L103821/
+streamsToStorage[197].adderNr:         1
+streamsToStorage[197].writerNr:        2
+streamsToStorage[198].dataProduct:     Beamformed
+streamsToStorage[198].dataProductNr:   2
+streamsToStorage[198].streamNr:        198
+streamsToStorage[198].filename:        L103821_SAP002_B050_S0_P000_bf.raw
+streamsToStorage[198].sourcePset:      49
+streamsToStorage[198].destStorageNode: locus064
+streamsToStorage[198].destDirectory:   /data/L103821/
+streamsToStorage[198].adderNr:         2
+streamsToStorage[198].writerNr:        2
+streamsToStorage[199].dataProduct:     Beamformed
+streamsToStorage[199].dataProductNr:   2
+streamsToStorage[199].streamNr:        199
+streamsToStorage[199].filename:        L103821_SAP002_B051_S0_P000_bf.raw
+streamsToStorage[199].sourcePset:      49
+streamsToStorage[199].destStorageNode: locus065
+streamsToStorage[199].destDirectory:   /data/L103821/
+streamsToStorage[199].adderNr:         3
+streamsToStorage[199].writerNr:        2
+streamsToStorage[200].dataProduct:     Beamformed
+streamsToStorage[200].dataProductNr:   2
+streamsToStorage[200].streamNr:        200
+streamsToStorage[200].filename:        L103821_SAP002_B052_S0_P000_bf.raw
+streamsToStorage[200].sourcePset:      50
+streamsToStorage[200].destStorageNode: locus067
+streamsToStorage[200].destDirectory:   /data/L103821/
+streamsToStorage[200].adderNr:         0
+streamsToStorage[200].writerNr:        2
+streamsToStorage[201].dataProduct:     Beamformed
+streamsToStorage[201].dataProductNr:   2
+streamsToStorage[201].streamNr:        201
+streamsToStorage[201].filename:        L103821_SAP002_B053_S0_P000_bf.raw
+streamsToStorage[201].sourcePset:      50
+streamsToStorage[201].destStorageNode: locus068
+streamsToStorage[201].destDirectory:   /data/L103821/
+streamsToStorage[201].adderNr:         1
+streamsToStorage[201].writerNr:        2
+streamsToStorage[202].dataProduct:     Beamformed
+streamsToStorage[202].dataProductNr:   2
+streamsToStorage[202].streamNr:        202
+streamsToStorage[202].filename:        L103821_SAP002_B054_S0_P000_bf.raw
+streamsToStorage[202].sourcePset:      50
+streamsToStorage[202].destStorageNode: locus069
+streamsToStorage[202].destDirectory:   /data/L103821/
+streamsToStorage[202].adderNr:         2
+streamsToStorage[202].writerNr:        3
+streamsToStorage[203].dataProduct:     Beamformed
+streamsToStorage[203].dataProductNr:   2
+streamsToStorage[203].streamNr:        203
+streamsToStorage[203].filename:        L103821_SAP002_B055_S0_P000_bf.raw
+streamsToStorage[203].sourcePset:      50
+streamsToStorage[203].destStorageNode: locus070
+streamsToStorage[203].destDirectory:   /data/L103821/
+streamsToStorage[203].adderNr:         3
+streamsToStorage[203].writerNr:        2
+streamsToStorage[204].dataProduct:     Beamformed
+streamsToStorage[204].dataProductNr:   2
+streamsToStorage[204].streamNr:        204
+streamsToStorage[204].filename:        L103821_SAP002_B056_S0_P000_bf.raw
+streamsToStorage[204].sourcePset:      51
+streamsToStorage[204].destStorageNode: locus071
+streamsToStorage[204].destDirectory:   /data/L103821/
+streamsToStorage[204].adderNr:         0
+streamsToStorage[204].writerNr:        2
+streamsToStorage[205].dataProduct:     Beamformed
+streamsToStorage[205].dataProductNr:   2
+streamsToStorage[205].streamNr:        205
+streamsToStorage[205].filename:        L103821_SAP002_B057_S0_P000_bf.raw
+streamsToStorage[205].sourcePset:      51
+streamsToStorage[205].destStorageNode: locus073
+streamsToStorage[205].destDirectory:   /data/L103821/
+streamsToStorage[205].adderNr:         1
+streamsToStorage[205].writerNr:        2
+streamsToStorage[206].dataProduct:     Beamformed
+streamsToStorage[206].dataProductNr:   2
+streamsToStorage[206].streamNr:        206
+streamsToStorage[206].filename:        L103821_SAP002_B058_S0_P000_bf.raw
+streamsToStorage[206].sourcePset:      51
+streamsToStorage[206].destStorageNode: locus074
+streamsToStorage[206].destDirectory:   /data/L103821/
+streamsToStorage[206].adderNr:         2
+streamsToStorage[206].writerNr:        2
+streamsToStorage[207].dataProduct:     Beamformed
+streamsToStorage[207].dataProductNr:   2
+streamsToStorage[207].streamNr:        207
+streamsToStorage[207].filename:        L103821_SAP002_B059_S0_P000_bf.raw
+streamsToStorage[207].sourcePset:      51
+streamsToStorage[207].destStorageNode: locus075
+streamsToStorage[207].destDirectory:   /data/L103821/
+streamsToStorage[207].adderNr:         3
+streamsToStorage[207].writerNr:        2
+streamsToStorage[208].dataProduct:     Beamformed
+streamsToStorage[208].dataProductNr:   2
+streamsToStorage[208].streamNr:        208
+streamsToStorage[208].filename:        L103821_SAP002_B060_S0_P000_bf.raw
+streamsToStorage[208].sourcePset:      52
+streamsToStorage[208].destStorageNode: locus076
+streamsToStorage[208].destDirectory:   /data/L103821/
+streamsToStorage[208].adderNr:         0
+streamsToStorage[208].writerNr:        2
+streamsToStorage[209].dataProduct:     Beamformed
+streamsToStorage[209].dataProductNr:   2
+streamsToStorage[209].streamNr:        209
+streamsToStorage[209].filename:        L103821_SAP002_B061_S0_P000_bf.raw
+streamsToStorage[209].sourcePset:      52
+streamsToStorage[209].destStorageNode: locus077
+streamsToStorage[209].destDirectory:   /data/L103821/
+streamsToStorage[209].adderNr:         1
+streamsToStorage[209].writerNr:        2
+streamsToStorage[210].dataProduct:     Beamformed
+streamsToStorage[210].dataProductNr:   2
+streamsToStorage[210].streamNr:        210
+streamsToStorage[210].filename:        L103821_SAP002_B062_S0_P000_bf.raw
+streamsToStorage[210].sourcePset:      52
+streamsToStorage[210].destStorageNode: locus078
+streamsToStorage[210].destDirectory:   /data/L103821/
+streamsToStorage[210].adderNr:         2
+streamsToStorage[210].writerNr:        2
+streamsToStorage[211].dataProduct:     Beamformed
+streamsToStorage[211].dataProductNr:   2
+streamsToStorage[211].streamNr:        211
+streamsToStorage[211].filename:        L103821_SAP002_B063_S0_P000_bf.raw
+streamsToStorage[211].sourcePset:      52
+streamsToStorage[211].destStorageNode: locus079
+streamsToStorage[211].destDirectory:   /data/L103821/
+streamsToStorage[211].adderNr:         3
+streamsToStorage[211].writerNr:        2
+streamsToStorage[212].dataProduct:     Beamformed
+streamsToStorage[212].dataProductNr:   2
+streamsToStorage[212].streamNr:        212
+streamsToStorage[212].filename:        L103821_SAP002_B064_S0_P000_bf.raw
+streamsToStorage[212].sourcePset:      53
+streamsToStorage[212].destStorageNode: locus081
+streamsToStorage[212].destDirectory:   /data/L103821/
+streamsToStorage[212].adderNr:         0
+streamsToStorage[212].writerNr:        2
+streamsToStorage[213].dataProduct:     Beamformed
+streamsToStorage[213].dataProductNr:   2
+streamsToStorage[213].streamNr:        213
+streamsToStorage[213].filename:        L103821_SAP002_B065_S0_P000_bf.raw
+streamsToStorage[213].sourcePset:      53
+streamsToStorage[213].destStorageNode: locus082
+streamsToStorage[213].destDirectory:   /data/L103821/
+streamsToStorage[213].adderNr:         1
+streamsToStorage[213].writerNr:        2
+streamsToStorage[214].dataProduct:     Beamformed
+streamsToStorage[214].dataProductNr:   2
+streamsToStorage[214].streamNr:        214
+streamsToStorage[214].filename:        L103821_SAP002_B066_S0_P000_bf.raw
+streamsToStorage[214].sourcePset:      53
+streamsToStorage[214].destStorageNode: locus084
+streamsToStorage[214].destDirectory:   /data/L103821/
+streamsToStorage[214].adderNr:         2
+streamsToStorage[214].writerNr:        2
+streamsToStorage[215].dataProduct:     Beamformed
+streamsToStorage[215].dataProductNr:   2
+streamsToStorage[215].streamNr:        215
+streamsToStorage[215].filename:        L103821_SAP002_B067_S0_P000_bf.raw
+streamsToStorage[215].sourcePset:      53
+streamsToStorage[215].destStorageNode: locus085
+streamsToStorage[215].destDirectory:   /data/L103821/
+streamsToStorage[215].adderNr:         3
+streamsToStorage[215].writerNr:        2
+streamsToStorage[216].dataProduct:     Beamformed
+streamsToStorage[216].dataProductNr:   2
+streamsToStorage[216].streamNr:        216
+streamsToStorage[216].filename:        L103821_SAP002_B068_S0_P000_bf.raw
+streamsToStorage[216].sourcePset:      54
+streamsToStorage[216].destStorageNode: locus086
+streamsToStorage[216].destDirectory:   /data/L103821/
+streamsToStorage[216].adderNr:         0
+streamsToStorage[216].writerNr:        2
+streamsToStorage[217].dataProduct:     Beamformed
+streamsToStorage[217].dataProductNr:   2
+streamsToStorage[217].streamNr:        217
+streamsToStorage[217].filename:        L103821_SAP002_B069_S0_P000_bf.raw
+streamsToStorage[217].sourcePset:      54
+streamsToStorage[217].destStorageNode: locus087
+streamsToStorage[217].destDirectory:   /data/L103821/
+streamsToStorage[217].adderNr:         1
+streamsToStorage[217].writerNr:        2
+streamsToStorage[218].dataProduct:     Beamformed
+streamsToStorage[218].dataProductNr:   2
+streamsToStorage[218].streamNr:        218
+streamsToStorage[218].filename:        L103821_SAP002_B070_S0_P000_bf.raw
+streamsToStorage[218].sourcePset:      54
+streamsToStorage[218].destStorageNode: locus088
+streamsToStorage[218].destDirectory:   /data/L103821/
+streamsToStorage[218].adderNr:         2
+streamsToStorage[218].writerNr:        2
+streamsToStorage[219].dataProduct:     Beamformed
+streamsToStorage[219].dataProductNr:   2
+streamsToStorage[219].streamNr:        219
+streamsToStorage[219].filename:        L103821_SAP002_B071_S0_P000_bf.raw
+streamsToStorage[219].sourcePset:      54
+streamsToStorage[219].destStorageNode: locus090
+streamsToStorage[219].destDirectory:   /data/L103821/
+streamsToStorage[219].adderNr:         3
+streamsToStorage[219].writerNr:        2
+streamsToStorage[220].dataProduct:     Beamformed
+streamsToStorage[220].dataProductNr:   2
+streamsToStorage[220].streamNr:        220
+streamsToStorage[220].filename:        L103821_SAP002_B072_S0_P000_bf.raw
+streamsToStorage[220].sourcePset:      55
+streamsToStorage[220].destStorageNode: locus093
+streamsToStorage[220].destDirectory:   /data/L103821/
+streamsToStorage[220].adderNr:         0
+streamsToStorage[220].writerNr:        2
+streamsToStorage[221].dataProduct:     Beamformed
+streamsToStorage[221].dataProductNr:   2
+streamsToStorage[221].streamNr:        221
+streamsToStorage[221].filename:        L103821_SAP002_B073_S0_P000_bf.raw
+streamsToStorage[221].sourcePset:      55
+streamsToStorage[221].destStorageNode: locus094
+streamsToStorage[221].destDirectory:   /data/L103821/
+streamsToStorage[221].adderNr:         1
+streamsToStorage[221].writerNr:        2
+
+<<<

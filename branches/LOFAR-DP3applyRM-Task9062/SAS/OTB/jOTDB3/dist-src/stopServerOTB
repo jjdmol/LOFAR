@@ -1,0 +1,34 @@
+#!/bin/bash
+#
+# Stop running OTB server 
+#
+# Usage: stopOTBServer [<port>]
+# where is the portnumber used by the server (default 12500)
+#
+# Author: A.P. Schoenmakers
+
+if [ -z $1 ]; then
+  port=12500
+else
+  port=$1
+fi
+
+echo "Finding server using port $port"
+
+user_port=`ps -eaf | grep server | grep java | grep $port | awk '{print $1,$2}'`
+
+if [ "$user_port" == "" ]; then
+  echo "No such server running"
+  exit
+else
+  user=`echo $user_port | awk '{print $1}'`
+  pid=`echo $user_port | awk '{print $2}'`
+  echo "Found server running by user $user with PID $pid; killing it now"
+  if [ "$user" == "lofarsys" ]; then  
+     kill $pid
+  else
+    sudo -u $user kill $pid
+  fi
+fi
+
+

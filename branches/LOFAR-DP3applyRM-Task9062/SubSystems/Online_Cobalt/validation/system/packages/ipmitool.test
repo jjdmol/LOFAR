@@ -1,0 +1,2 @@
+#!/bin/bash
+dpkg -l ipmitool || exit 1

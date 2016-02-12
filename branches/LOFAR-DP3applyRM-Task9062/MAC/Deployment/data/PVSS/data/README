@@ -1,0 +1,30 @@
+
+With the files in this directory the datapointtypes and datapoints can be
+generated for the whole PVSS database.
+There are three types of files:
+ - the base file contain the database structure that has to be generated.
+ - the list files contain the values a variable can have.
+ - the dpdef files define in human-readable format the complex datapointtypes.
+
+The syntax of the lines of the dpdef files is:
+[<structure>.]<parametername>		<parametertype>
+
+With parametertype:
+
+paramtype		PVSS datapoint type
+-----------------------------------
+string			DPEL_STRING
+bool			DPEL_BOOL
+uint			DPEL_UINT
+int				DPEL_INT
+float			DPEL_FLOAT
+double			DPEL_FLOAT
+stringArr		DPEL_DYN_STRING
+boolArr			DPEL_DYN_BOOL
+uintArr			DPEL_DYN_UINT
+intArr			DPEL_DYN_INT
+floatArr		DPEL_DYN_FLOAT
+doubleArr		DPEL_DYN_FLOAT
+
+
+
