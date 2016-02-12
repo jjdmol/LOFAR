@@ -94,7 +94,7 @@ def resourceIndicatorsFromParset( parsetDict ):
     return PyParameterValue(str(value), True).getStringVector()
 
   def intvector(value):
-    return PyParameterValue(str(value), True).getIntVector()
+    return PyParameterValue(str(value), True)._expand().getIntVector()
 
   def bool(value):
     return PyParameterValue(str(value), True).getBool()
