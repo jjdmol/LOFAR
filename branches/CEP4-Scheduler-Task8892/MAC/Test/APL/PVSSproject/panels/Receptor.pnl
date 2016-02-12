@@ -1,0 +1,219 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,258 70 128 139 N "_3DFace" 2
+"$NUMBER"
+"$STATION"
+EEE E E 1 -1 -1 0  29 29
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 1
+"label"
+""
+1 41 50 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 43 52 49 68
+0 2 0 "s" 0 0 0 64 0 0  43 52
+ 1
+1
+LANG:1 119 -microsoft windows-Courier New-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,49,Courier New
+0 ""
+1
+LANG:1 5 Text1
+2 14
+"OBJECTTYPE"
+""
+1 45 55 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 47 57 53 68
+0 2 0 "s" 0 0 0 64 0 0  47 57
+ 1
+1
+LANG:1 119 -microsoft windows-Courier New-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,49,Courier New
+0 ""
+1
+LANG:1 8 RECEPTOR
+7 0
+"Receptor"
+""
+1 30 53 E E E 1 E 1 E N {0,0,0} E N {0,153,0} E "// SimpleCtrlScriptStart {valid}
+main(int iType)
+{
+  dyn_errClass err;
+
+  int          i, iReturnValue = 1, iDpCount = 1;
+  dyn_int      diType = makeDynInt();
+  dyn_string   dsDps;
+
+  dsDps[1] = \"RECEPTOR\"+\"_\"+$STATION+\"_\"+$NUMBER+\".status\" + \":_alert_hdl.._ack\";
+
+  if ( isFunctionDefined(\"isAckable\") )
+  {
+    isAckable( iType, dsDps, iReturnValue );
+    if ( iReturnValue == 0 || dynlen (dsDps ) < 1 ) return;
+  }
+
+  for ( i = 1; i <= dynlen(dsDps); i++ )
+    diType[i] = iType;
+
+  dpSetWait( dsDps, diType );
+
+  err = getLastError();
+  if ( dynlen(err) > 0 )
+    DebugN(err);
+}
+// SimpleCtrlScript {EP_confirm}
+// dpCount {1}
+// dp1 {\"RECEPTOR\" + \"_\" + $STATION + \"_\" + $NUMBER + \".status\"}
+// SimpleCtrlScriptEnd {EP_confirm}
+" 0
+
+ "main()
+{
+	rightClick(true);
+}" 0
+ E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"
+
+main()
+{
+	Initialize();
+}" 0
+ "main()
+{
+	leftClick();
+}" 0
+ 0 1 1 0 1 E U  1 E 40 60 20 20
+2 13
+"ALARMCHAR"
+""
+1 25 53 E E E 1 E 0 E N {255,255,255} E N "_Transparent" E E
+ "main()
+{
+	rightClick(true);
+}" 0
+ E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+	leftClick();
+}" 0
+ 0 1 1 0 1 E U  0 E 27 55 38 68
+0 2 0 "s" 0 0 0 64 0 0  27 55
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 A
+6 31
+"Maintenance"
+""
+1 48 70 E E E 1 E 1 E N "_Transparent" E N {255,255,255} E E
+ "main()
+{
+	rightClick(true);     
+}" 0
+ E
+30 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+	leftClick();
+}" 0
+ 0 1 1 0 1 E U  2 0 1 "31.gif" 16777215 E 48 50 68 70
+10 33
+"ARROW"
+""
+1 38 60 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ "main()
+{
+	rightClick(true); 
+}" 0
+ E
+31 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+	leftClick();
+}" 0
+ 0 3 1 2 1 E U  0 E 5 41 60
+41 44
+32 48
+41 44
+50 48
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
