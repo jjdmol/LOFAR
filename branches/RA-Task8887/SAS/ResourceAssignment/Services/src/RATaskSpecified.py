@@ -128,8 +128,8 @@ def resourceIndicatorsFromParset( parsetDict ):
   # Correlator settings
   # =====================================
   add("Observation.DataProducts.Output_Correlated.enabled", bool)
-  add("Cobalt.Correlator.integrationTime")
-  add("Cobalt.Correlator.nrChannelsPerSubband")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.Correlator.integrationTime")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.Correlator.nrChannelsPerSubband")
   # TODO: We need a service that computes these 3 values
   add("Cobalt.Correlator.nrBlocksPerIntegration")
   add("Cobalt.Correlator.nrIntegrationsPerBlock")
@@ -140,15 +140,15 @@ def resourceIndicatorsFromParset( parsetDict ):
   # =====================================
   add("Observation.DataProducts.Output_IncoherentStokes.enabled", bool)
   add("Observation.DataProducts.Output_CoherentStokes.enabled", bool)
-  add("Cobalt.BeamFormer.flysEye", bool)
-  #add("Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband") # only needed to determine Cobalt.blockSize
-  add("Cobalt.BeamFormer.CoherentStokes.subbandsPerFile")
-  add("Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor")
-  add("Cobalt.BeamFormer.CoherentStokes.which")
-  #add("Cobalt.BeamFormer.IncoherentStokes.nrChannelsPerSubband") # only needed to determine Cobalt.blockSize
-  add("Cobalt.BeamFormer.IncoherentStokes.subbandsPerFile")
-  add("Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor")
-  add("Cobalt.BeamFormer.IncoherentStokes.which")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.flysEye", bool)
+  #add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband") # only needed to determine Cobalt.blockSize
+  add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.CoherentStokes.subbandsPerFile")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.CoherentStokes.which")
+  #add("Observation.ObservationControl.OnlineControl.Cobalt.IncoherentStokes.nrChannelsPerSubband") # only needed to determine Cobalt.blockSize
+  add("Observation.ObservationControl.OnlineControl.Cobalt.IncoherentStokes.subbandsPerFile")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.IncoherentStokes.timeIntegrationFactor")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.IncoherentStokes.which")
   for sap in xrange(0, nrSAPs):
     add("Observation.Beam[%d].nrTabRings" % (sap,))
 
