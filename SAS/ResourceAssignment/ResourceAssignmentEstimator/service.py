@@ -21,26 +21,27 @@ class ResourceEstimatorHandler(MessageHandlerInterface):
     def handle_message(self, msg):
         return self._get_estimated_resources(msg)
 
-    def _get_estimated_resources(self, parset_str):
-        logger.info('get_estimated_resources on: %s' % parset_str)
+    def _get_estimated_resources(self, parsetDict):
+        logger.info('get_estimated_resources on: %s' % parsetDict)
         result = {}
 
-        observation = ObservationResourceEstimator(parset_str)
+        observation = ObservationResourceEstimator(parsetDict)
         result.update(observation.result_as_dict())
 
-        pipeline_input_files = result['observation']['output_files']
+        #TODO: implement properly
+        #pipeline_input_files = result['observation']['output_files']
 
-        longbaseline = LongBaselinePipelineResourceEstimator(parset_str, input_files=pipeline_input_files)
-        result.update(longbaseline.result_as_dict())
+        #longbaseline = LongBaselinePipelineResourceEstimator(parsetDict, input_files=pipeline_input_files)
+        #result.update(longbaseline.result_as_dict())
 
-        calibration = CalibrationPipelineResourceEstimator(parset_str, input_files=pipeline_input_files)
-        result.update(calibration.result_as_dict())
+        #calibration = CalibrationPipelineResourceEstimator(parsetDict, input_files=pipeline_input_files)
+        #result.update(calibration.result_as_dict())
 
-        pulsar = PulsarPipelineResourceEstimator(parset_str, input_files=pipeline_input_files)
-        result.update(pulsar.result_as_dict())
+        #pulsar = PulsarPipelineResourceEstimator(parsetDict, input_files=pipeline_input_files)
+        #result.update(pulsar.result_as_dict())
 
-        image = ImagePipelineResourceEstimator(parset_str, input_files=pipeline_input_files)
-        result.update(image.result_as_dict())
+        #image = ImagePipelineResourceEstimator(parsetDict, input_files=pipeline_input_files)
+        #result.update(image.result_as_dict())
 
         return result
 

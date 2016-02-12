@@ -18,9 +18,9 @@ class CalibrationPipelineResourceEstimator(BaseResourceEstimator):
         self.parset = ParameterSet(kwargs).make_subset('dp.output')
         self.duration = int(kwargs.get('observation.duration', 1))
         self.input_files = input_files
-        self.used_keys = ('correlated.enabled', 'correlated.demixing_settings.freq_step',
+        self.required_keys = ('correlated.enabled', 'correlated.demixing_settings.freq_step',
                           'correlated.demixing_settings.time_step', 'instrument_model.enabled')
-        if self.check_parset():
+        if self.checkParsetForRequiredKeys():
             self.estimate()
         return
 
