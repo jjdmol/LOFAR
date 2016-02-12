@@ -151,11 +151,11 @@ class RARPC:
             task['endtime'] = task['endtime'].datetime()
         return task
 
-    def insertTask(self, mom_id, otdb_id, status, type, specification_id):
+    def insertTask(self, mom_id, otdb_id, status, task_type, specification_id):
         return self._rpc('InsertTask', mom_id=mom_id,
                                            otdb_id=otdb_id,
                                            status=status,
-                                           type=type,
+                                           type=task_type,
                                            specification_id=specification_id)
 
     def deleteTask(self, id):
