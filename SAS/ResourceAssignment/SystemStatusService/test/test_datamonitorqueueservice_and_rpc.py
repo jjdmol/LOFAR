@@ -32,12 +32,12 @@ try:
     busname = 'test-lofarbus-%s' % (uuid.uuid1())
     broker.addExchange('topic', busname)
 
-    # the system under test is the service and the rpc, not the RADatabase
-    # so, patch (mock) the RADatabase class during these tests.
-    # when the service instantiates an RADatabase it will get the mocked class.
+    # the system under test is the service and the rpc, not the SSDatabase
+    # so, patch (mock) the SSDatabase class during these tests.
+    # when the service instantiates an SSDatabase it will get the mocked class.
     with patch('lofar.sas.systemstatus.service.SSDBQueryService.SSDB', autospec=True) as MockSSDB:
         mock = MockSSDB.return_value
-        # modify the return values of the various RADatabase methods with pre-cooked answers
+        # modify the return values of the various SSDatabase methods with pre-cooked answers
         def ensure_connected(self):
             self.DBconnected = (self.conn and self.conn.status==1)
             if not self.DBconnected:
