@@ -6,6 +6,7 @@ python_install(
     utils.py
     radbchangeshandler.py
     fakedata.py
+    mom.py
     DESTINATION lofar/sas/resourceassignment/resourceassignmenteditor)
 
 file(GLOB_RECURSE jquery_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/jquery/*)

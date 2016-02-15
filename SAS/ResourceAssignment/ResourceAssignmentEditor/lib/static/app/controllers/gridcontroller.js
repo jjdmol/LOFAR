@@ -22,7 +22,7 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         enableCellEdit: false,
         width: '*'
     },
-    { field: 'projectName',
+    { field: 'project_name',
         displayName:'Project',
         enableCellEdit: false,
         width: '*',

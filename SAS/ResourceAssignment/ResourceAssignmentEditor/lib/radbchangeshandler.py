@@ -30,6 +30,10 @@ Typical usage is to derive your own subclass from RADBChangesHandler and impleme
 from lofar.sas.resourceassignment.database.config import DEFAULT_BUSNAME
 from lofar.sas.resourceassignment.resourceassignmentservice.radbbuslistener import RADBBusListener
 from lofar.common.util import waitForInterrupt
+from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
+from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
+from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
+from lofar.sas.resourceassignment.resourceassignmenteditor.mom import updateTaskMomDetails
 
 import qpid.messaging
 import logging
@@ -43,7 +47,7 @@ CHANGE_INSERT_TYPE = 'insert'
 CHANGE_DELETE_TYPE = 'delete'
 
 class RADBChangesHandler(RADBBusListener):
-    def __init__(self, busname=DEFAULT_BUSNAME, subject='RADB.*', broker=None, **kwargs):
+    def __init__(self, busname=DEFAULT_BUSNAME, subject='RADB.*', broker=None, momrpc=None, **kwargs):
         """
         RADBChangesHandler listens on the lofar notification message bus and keeps track of all the change notifications.
         :param busname: valid Qpid address (default: lofar.ra.notification)
@@ -81,6 +85,7 @@ class RADBChangesHandler(RADBBusListener):
         :param task: dictionary with the updated task'''
         task['starttime'] = task['starttime'].datetime()
         task['endtime'] = task['endtime'].datetime()
+        updateTaskMomDetails(task, self.momrpc)
         task_change = {'changeType':CHANGE_UPDATE_TYPE, 'objectType':'task', 'value':task}
         self._handleChange(task_change)
 
@@ -89,6 +94,7 @@ class RADBChangesHandler(RADBBusListener):
         :param task: dictionary with the inserted task'''
         task['starttime'] = task['starttime'].datetime()
         task['endtime'] = task['endtime'].datetime()
+        updateTaskMomDetails(task, self.momrpc)
         task_change = {'changeType':CHANGE_INSERT_TYPE, 'objectType':'task', 'value':task}
         self._handleChange(task_change)
 
