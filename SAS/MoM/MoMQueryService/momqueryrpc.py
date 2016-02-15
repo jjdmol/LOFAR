@@ -22,18 +22,19 @@ class MoMRPC:
 
         self._serviceRPCs = {} #cache of rpc's for each service
 
+    def open(self):
+        pass
+
+    def close(self):
+        for rpc in self._serviceRPCs.values():
+            rpc.close()
+
     def __enter__(self):
-        """
-        Internal use only. (handles scope 'with')
-        """
+        self.open()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Internal use only. (handles scope 'with')
-        """
-        for rpc in self._serviceRPCs.values():
-            rpc.__exit__(exc_type, exc_val, exc_tb)
+        self.close()
 
     def _rpc(self, method, timeout=10, **kwargs):
         try:
@@ -42,7 +43,7 @@ class MoMRPC:
 
             if service_method not in self._serviceRPCs:
                 rpc = RPC(service_method, busname=self.busname, broker=self.broker, ForwardExceptions=True, **rpckwargs)
-                rpc.__enter__()
+                rpc.open()
                 self._serviceRPCs[service_method] = rpc #store rpc in cache for reuse
 
             rpc = self._serviceRPCs[service_method]
