@@ -1,6 +1,6 @@
-// $Id: ganttcontroller.js 32761 2015-11-02 11:50:21Z schaap $
+// $Id: ganttresourcecontroller.js 32761 2015-11-02 11:50:21Z schaap $
 
-var ganttControllerMod = angular.module('GanttControllerMod', [
+var ganttResourceControllerMod = angular.module('GanttResourceControllerMod', [
                                         'gantt',
                                         'gantt.sortable',
                                         'gantt.movable',
@@ -16,7 +16,7 @@ var ganttControllerMod = angular.module('GanttControllerMod', [
     $compileProvider.debugInfoEnabled(false); // Remove debug info (angularJS >= 1.3)
 }]);
 
-ganttControllerMod.controller('GanttController', ['$scope', 'dataService', function($scope, dataService) {
+ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dataService', function($scope, dataService) {
 
     var self = this;
     self.doInitialCollapse = true;

@@ -104,21 +104,25 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     function fillColumFilterSelectOptions(options, columnDef) {
         var columnSelectOptions = [];
 
-        for(var i = 0; i < options.length; i++)
-        {
-            var option = options[i];
-            columnSelectOptions.push({ value: option, label: option })
+        if(options) {
+            for(var i = 0; i < options.length; i++)
+            {
+                var option = options[i];
+                columnSelectOptions.push({ value: option, label: option })
+            }
         }
 
         columnDef.filter.selectOptions = columnSelectOptions;
     };
 
     $scope.$watch('dataService.taskstatustypes', function() {
-        fillColumFilterSelectOptions($scope.dataService.taskstatustypes, $scope.columns[4]);
+        taskstatustypenames = $scope.dataService.taskstatustypes.map(function(x) { return x.name; });
+        fillColumFilterSelectOptions(taskstatustypenames, $scope.columns[4]);
     });
 
     $scope.$watch('dataService.tasktypes', function() {
-        fillColumFilterSelectOptions($scope.dataService.tasktypes, $scope.columns[5]);
+        tasktypenames = $scope.dataService.tasktypes.map(function(x) { return x.name; });
+        fillColumFilterSelectOptions(tasktypenames, $scope.columns[5]);
     });
 
     $scope.$watch('dataService.momProjectsDict', function() {
