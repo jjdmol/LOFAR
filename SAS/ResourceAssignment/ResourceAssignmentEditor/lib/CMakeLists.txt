@@ -17,6 +17,7 @@ file(GLOB_RECURSE angular_resource_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} st
 file(GLOB_RECURSE angular_ui_grid_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-ui-grid/*)
 file(GLOB_RECURSE angular_ui_tree_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-ui-tree/*)
 file(GLOB_RECURSE angular_ui_layout_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-ui-layout/*)
+file(GLOB_RECURSE angular_ui_tabs_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-ui-tabs/*)
 file(GLOB_RECURSE angular_gantt_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-gantt/*)
 file(GLOB_RECURSE angular_moment_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-moment/*)
 file(GLOB_RECURSE moment_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/moment/*)
@@ -43,6 +44,7 @@ set(web_files
     ${angular_ui_grid_files}
     ${angular_ui_tree_files}
     ${angular_ui_layout_files}
+    ${angular_ui_tabs_files}
     ${angular_gantt_files}
     ${angular_moment_files}
     ${moment_files}
