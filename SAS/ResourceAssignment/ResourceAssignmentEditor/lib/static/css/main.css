@@ -22,3 +22,8 @@
 .datepicker-wrapper ul {
 /*     visibility: hidden; */
 }
+
+.ui-layout-row > .ui-splitbar {
+    height: 8px;
+    background-color: #888888;
+}

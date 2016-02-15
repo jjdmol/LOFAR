@@ -29,7 +29,8 @@ set(app_files
     static/app/app.js
     static/app/controllers/datacontroller.js
     static/app/controllers/gridcontroller.js
-    static/app/controllers/ganttcontroller.js
+    static/app/controllers/ganttresourcecontroller.js
+    static/app/controllers/ganttprojectcontroller.js
     static/css/main.css
     templates/index.html)
 

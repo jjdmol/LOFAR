@@ -16,6 +16,9 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
     self.resourceClaimDict = {};
     self.resourceGroupClaimDict = {};
     self.resourceIdToGroupIdsDict = {};
+    self.tasktypesDict = {};
+
+    self.momProjects = [];
     self.momProjectsDict = {};
 
     self.resourcesWithClaims = [];
@@ -125,6 +128,7 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
     self.getTaskTypes = function() {
         $http.get('/rest/tasktypes').success(function(result) {
             self.tasktypes = result.tasktypes;
+            self.tasktypesDict = self.toIdBasedDict(self.tasktypes);
         });
     };
 
@@ -138,11 +142,17 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
         $http.get('/rest/momprojects').success(function(result) {
             //convert datetime strings to Date objects
             var dict = {};
+            var list = [];
             for(var i = result.momprojects.length-1; i >=0; i--) {
                 var momproject = result.momprojects[i];
                 momproject.statustime = new Date(momproject.statustime);
                 dict[momproject.mom_id] = momproject;
+                list.push(momproject);
             }
+
+            list.sort(function(a, b) { return ((a.name < b.name) ? -1 : ((a.name > b.name) ? 1 : 0)); });
+
+            self.momProjects = list;
             self.momProjectsDict = dict;
         });
     };

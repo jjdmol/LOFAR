@@ -23,6 +23,8 @@
     <script src="/static/js/angular-ui-grid/ui-grid.js"></script>
     <script src="/static/js/angular-ui-tree/angular-ui-tree.js"></script>
     <script src="/static/js/angular-ui-layout/angular-ui-layout.min.js"></script>
+    <script src="/static/js/angular-ui-layout/angular-ui-layout.min.js"></script>
+    <script src="/static/js/angular-ui-tabs/angular-ui.bootstrap.tabs.min.js"></script>
     <script src="/static/js/angular-moment/angular-moment.js"></script>
     <script src="/static/js/utils/datetimepicker.js"></script>
     <link href="/static/js/angular-gantt/angular-gantt.min.css" rel="stylesheet" type="text/css">
@@ -32,7 +34,8 @@
     <script src="/static/app/app.js"></script>
     <script src="/static/app/controllers/datacontroller.js"></script>
     <script src="/static/app/controllers/gridcontroller.js"></script>
-    <script src="/static/app/controllers/ganttcontroller.js"></script>
+    <script src="/static/app/controllers/ganttresourcecontroller.js"></script>
+    <script src="/static/app/controllers/ganttprojectcontroller.js"></script>
     </head>
     <body>
     {% raw %}
@@ -46,18 +49,37 @@
                 </div>
             </header>
             <header>
-                <div ng-controller="GanttController as ganttCtrl">
-                    <div gantt data=ganttData
-                        api=options.api
-                        show-side='true'>
-                        <gantt-tree enabled="true"></gantt-tree>
-                        <gantt-movable enabled="true"
-                        allow-moving="true"
-                        allow-resizing="true"
-                        allow-row-switching="false"></gantt-movable>
-                        <gantt-tooltips></gantt-tooltips>
-                    </div>
-                </div>
+                <uib-tabset margin-top='10px'>
+                    <uib-tab heading="Projects" index='0' active='true'>
+                        <div class="tab-pane active" ng-controller="GanttProjectController as ganttProjectCtrl">
+                            <div gantt data=ganttData
+                                api=options.api
+                                show-side='true'>
+                                <gantt-tree enabled="true"></gantt-tree>
+                                <gantt-movable enabled="true"
+                                    allow-moving="true"
+                                    allow-resizing="true"
+                                    allow-row-switching="false">
+                                </gantt-movable>
+                                <gantt-tooltips></gantt-tooltips>
+                            </div>
+                        </div>
+                    </uib-tab>
+                    <uib-tab heading="Resources" index='1' active='false'>
+                        <div class="tab-pane active" ng-controller="GanttResourceController as ganttResourceCtrl">
+                            <div gantt data=ganttData
+                                api=options.api
+                                show-side='true'>
+                                <gantt-tree enabled="true"></gantt-tree>
+                                <gantt-movable enabled="true"
+                                    allow-moving="true"
+                                    allow-resizing="true"
+                                    allow-row-switching="false"></gantt-movable>
+                                <gantt-tooltips></gantt-tooltips>
+                            </div>
+                        </div>
+                    </uib-tab>
+                <uib-tabset>
             <header>
         </div>
     </div>
