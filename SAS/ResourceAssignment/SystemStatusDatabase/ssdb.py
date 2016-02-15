@@ -17,11 +17,10 @@ PASSWORD    = "welkom001"
 
 class SSDB:
     def __init__(self,**kwargs):
-        logger.info("[SSDBconnector]: create new instance")
         self.username = kwargs.pop("username", USER)
         self.password = kwargs.pop("password", PASSWORD)
         self.database = kwargs.pop("database", DATABASE)
-        self.conn = None #pg.connect("dbname=%s user=%s password=%s" % (self.database,self.username,self.password))
+        self.conn = None
         self.DBconnected = (self.conn and self.conn.status==1)
         self.Qlistall="select * from hosts inner join datapaths on hosts.id = datapaths.hostid;"
         self.Qgetstatenames="select statename,id from states;"
@@ -43,7 +42,6 @@ class SSDB:
         self.DBconnected = (self.conn and self.conn.status==1)
         if not self.DBconnected:
             try:
-                logger.info("[SSDBconnector]: trying to reconnect")
                 self.conn= pg.connect("dbname=%s user=%s password=%s" % (DATABASE,USER,PASSWORD))
                 self.DBconnected = (self.conn and self.conn.status==1)
             except Exception as e:
@@ -56,16 +54,15 @@ class SSDB:
         cur.execute(q)
         ret= cur.fetchall()
         return ret
-    
+
     def _dolquery(self,q):
         cur = self.conn.cursor()
         cur.execute(q)
         ret= cur.fetchall()
         return ret
-        
+
 
     def getstatenames(self):
-        logger.info("[SSDB] getstatenames()")
         return self._doquery(self.Qgetstatenames)
 
     def getactivegroupnames(self):
@@ -82,8 +79,6 @@ class SSDB:
 
     def getIngestJobs(self):
         return self._doquery(self.QueryIngestJobs)
-        
+
     def getIngestMain(self):
         return self._doquery(self.QueryIngestMain)
-            
-
