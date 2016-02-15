@@ -2,7 +2,7 @@
 # $Id: $
 
 '''
-runs the resourceassignment database service
+runs the systemstatus database service
 '''
 import logging
 from optparse import OptionParser
@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]",
-                          description='runs the resourceassignment database service')
+                          description='runs the systemstatus database service')
     parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_BUSNAME, help="Name of the bus exchange on the qpid broker, default: %s" % DEFAULT_BUSNAME)
     parser.add_option("-s", "--servicename", dest="servicename", type="string", default=DEFAULT_SERVICENAME, help="Name for this service, default: %s" % DEFAULT_SERVICENAME)
     (options, args) = parser.parse_args()
