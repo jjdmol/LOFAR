@@ -62,8 +62,6 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
                 var task = result.tasks[i];
                 task.starttime = new Date(task.starttime);
                 task.endtime = new Date(task.endtime);
-
-                self.getMoMObjectDetailsForTask(task);
             }
 
             self.tasks = result.tasks;
@@ -143,7 +141,7 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
             for(var i = result.momprojects.length-1; i >=0; i--) {
                 var momproject = result.momprojects[i];
                 momproject.statustime = new Date(momproject.statustime);
-                dict[momproject.mom2id] = momproject;
+                dict[momproject.mom_id] = momproject;
             }
             self.momProjectsDict = dict;
         });
@@ -153,8 +151,8 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
         $http.get('/rest/momobjectdetails/'+task.mom_id).success(function(result) {
             if(result.momobjectdetails) {
                 task.name = result.momobjectdetails.object_name;
-                task.projectName = result.momobjectdetails.project_name;
-                task.projectId = result.momobjectdetails.project_mom2id;
+                task.project_name = result.momobjectdetails.project_name;
+                task.project_id = result.momobjectdetails.project_mom_id;
             }
         });
     };
@@ -187,9 +185,7 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
                                 task.otdb_id = changedTask.otdb_id;
                                 task.starttime = new Date(changedTask.starttime);
                                 task.endtime = new Date(changedTask.endtime);
-                                self.getMoMObjectDetailsForTask(task);
                             } else if(change.changeType == 'insert') {
-                                self.getMoMObjectDetailsForTask(changedTask);
                                 self.tasks.push(changedTask);
                                 self.taskDict[changedTask.id] = changedTask;
                             } else if(change.changeType == 'delete') {

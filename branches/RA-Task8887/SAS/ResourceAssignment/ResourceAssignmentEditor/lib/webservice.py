@@ -48,6 +48,7 @@ from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAUL
 from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
 from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
 from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
+from lofar.sas.resourceassignment.resourceassignmenteditor.mom import updateTaskMomDetails
 
 logger = logging.getLogger(__name__)
 
@@ -88,9 +89,9 @@ app = Flask('ResourceAssignmentEditor',
 app.config.from_object('lofar.sas.resourceassignment.resourceassignmenteditor.config.default')
 app.json_encoder = CustomJSONEncoder
 
-rarpc = RARPC(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker=None)
-radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker=None)
-momrpc = MoMRPC(busname=DEFAULT_MOM_BUSNAME, servicename=DEFAULT_MOM_SERVICENAME, broker=None)
+rarpc = RARPC(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker='10.149.96.6')
+momrpc = MoMRPC(busname=DEFAULT_MOM_BUSNAME, servicename=DEFAULT_MOM_SERVICENAME, broker='10.149.96.6')
+radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker='10.149.96.6', momrpc=momrpc)
 
 @app.route('/')
 @app.route('/index.htm')
@@ -133,6 +134,7 @@ def getTasks():
     # add Task <id> as name for now
     for task in tasks:
         task['name'] = 'Task %d' % task['id']
+        updateTaskMomDetails(task, momrpc)
 
     return jsonify({'tasks': tasks})
 
@@ -145,6 +147,7 @@ def getTask(task_id):
             abort(404)
 
         task['name'] = 'Task %d' % task['id']
+        updateTaskMomDetails(task, momrpc)
         return jsonify({'task': task})
     except Exception as e:
         abort(404)
@@ -205,13 +208,20 @@ def getTaskStatusTypes():
 def getMoMProjects():
     projects = momrpc.getProjects()
     projects = [x for x in projects if x['status_id'] in [1, 7]]
+    for project in projects:
+        project['mom_id'] = project.pop('mom2id')
 
     return jsonify({'momprojects': projects})
 
 @app.route('/rest/momobjectdetails/<int:mom2id>')
 def getMoMObjectDetails(mom2id):
     details = momrpc.getProjectDetails(mom2id)
-    return jsonify({'momobjectdetails': details.values()[0] if details else None})
+    details = details.values()[0] if details else None
+    if details:
+        details['project_mom_id'] = details.pop('project_mom2id')
+        details['object_mom_id'] = details.pop('object_mom2id')
+
+    return jsonify({'momobjectdetails': details})
 
 @app.route('/rest/updates/<int:sinceChangeNumber>')
 def getUpdateEventsSince(sinceChangeNumber):
