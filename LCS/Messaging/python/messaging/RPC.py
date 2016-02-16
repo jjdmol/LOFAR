@@ -199,4 +199,153 @@ class RPC():
                 raise RPCException(answer.errmsg)
         return (None, status)
 
-__all__ = ["RPC", "RPCException"]
+class RPCWrapper(object):
+    """
+    RCPWrapper is a helper class to simplify the re-use of rpc calls.
+    It hides the boiler plate code of setting up the rpc connection,
+    and it caches connections per method for faster access.
+
+    Typical Usage:
+    Derive a subclass, define some methods, and in the method call self.rpc(method, *args, **kwargs)
+
+    Example:
+    Suppose you want to do an rpc call on service 'MyService'.
+    Normally you would write:
+
+    with RPC(busname='MyBus', service='MyService') myrpc:
+        result, status = myrpc()
+
+        if status == 'OK':
+            #process result
+            print result
+
+    That's just for one(!) rpc method.
+    Now suppose you want to implement 10 such rpc methods;
+    That would require 10 times the boiler plate.
+
+    So, what's the solution?
+    Define a RPCWrapper-derived class once, like so:
+
+    class MyRPC(RPCWrapper):
+        def doMyServiceCall(self):
+            return self.rpc()
+
+    And use it like so:
+
+    with MyRPC(busname='MyBus', service='MyService') myrpc:
+        result = myrpc.doMyServiceCall()
+
+        #process result
+        print result
+
+    Not a whole lot better than the first solution, right? Wrong!
+    The benefit comes when you want to wrap multiple methods.
+    Of course, the Service should provide these methods,
+    in this case: 'MyBus/MyService.foo', 'MyBus/MyService.bar', ...etc
+    Again, define a RPCWrapper-derived class once, like so:
+
+    class MyRPC(RPCWrapper):
+        def foo(self):
+            return self.rpc('foo')
+
+        def bar(self):
+            return self.rpc('bar')
+
+        def fancyStuff(self):
+            result = self.rpc('bar')
+            #... do complicated result processing...
+            return processed_result
+
+        def methodWithArgs(self, arg1, arg2):
+            return self.rpc('bar', arg1=arg1, arg2=arg2)
+
+
+    And use it like so:
+
+    with MyRPC(busname='MyBus', service='MyService') myrpc:
+        result1 = myrpc.foo()
+        #... process result1 ...
+
+        result2 = myrpc.bar()
+        #... process result2 ...
+
+        result3 = myrpc.fancyStuff()
+        #... process result3 ...
+
+        result4 = myrpc.methodWithArgs('abc', 123)
+        #... process result4 ...
+
+    Now that's nice clean code!
+    And, as a extra benifit, the rpc connections for each
+    method are cached and cleaned automatically!
+    """
+    def __init__(self, busname=None,
+                 servicename=None,
+                 broker=None,
+                 timeout=10):
+        self.busname = busname
+        self.servicename = servicename
+        self.broker = broker
+        self.timeout = timeout
+
+        self._serviceRPCs = {} #cache of rpc's for each service
+
+    def open(self):
+        '''Empty implementation, since each rpc connection is lazily opened on first use and then cached'''
+        pass
+
+    def close(self):
+        '''Close all opened rpc connections'''
+        for rpc in self._serviceRPCs.values():
+            rpc.close()
+
+    def __enter__(self):
+        """Internal use only. (handles scope 'with')"""
+        self.open()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Internal use only. (handles scope 'with')
+        Close all opened rpc connections"""
+        self.close()
+
+    def rpc(self, method=None, *args, **kwargs):
+        '''execute the rpc call on the <bus>/<service>.<method> and return the result'''
+        try:
+            if self.timeout:
+                rpckwargs = {'timeout': self.timeout}
+
+            service_method = (self.servicename + '.' + method) if self.servicename and method \
+                                else self.servicename if self.servicename else method
+
+            #check cache
+            if service_method not in self._serviceRPCs:
+                # not in cache
+                # so, create RPC for this service method, open it, and cache it
+                rpc = RPC(service_method, busname=self.busname, broker=self.broker, ForwardExceptions=True, **rpckwargs)
+                rpc.open()
+                self._serviceRPCs[service_method] = rpc
+
+            rpc = self._serviceRPCs[service_method]
+
+            if args:
+                if kwargs:
+                    res, status = rpc(*args, **kwargs)
+                else:
+                    res, status = rpc(*args)
+            elif kwargs:
+                res, status = rpc(**kwargs)
+            else:
+                res, status = rpc()
+
+            if status != 'OK':
+                logger.error('status: %s' % status)
+                logger.error('result: %s' % res)
+                raise RPCException("%s %s" % (status, res))
+
+            return res
+        except RPCException as e:
+            logger.error(str(e))
+            raise
+
+__all__ = ["RPC", "RPCException", "RPCWrapper"]
