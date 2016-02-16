@@ -288,7 +288,7 @@ def main():
 
     with RATaskSpecified(RATASKSPECIFIED_NOTIFICATIONNAME,
                          otdb_listen_busname=options.otdb_notification_bus,
-                         otdb_request_busname=options.otdb_request_busname,
+                         otdb_request_busname=options.otdb_request_bus,
                          my_busname=options.notification_bus) as jts:
         waitForInterrupt()
 
