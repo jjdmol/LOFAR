@@ -187,8 +187,8 @@ def resourceIndicatorsFromParset( parsetDict ):
   return subset
 
 class RATaskSpecified(OTDBBusListener):
-  def __init__(self, servicename, otdb_listen_busname=None, otdb_request_busname=None, my_busname=None, **kwargs):
-    super(RATaskSpecified, self).__init__(busname=otdb_listen_busname, subject="TaskStatus", **kwargs)
+  def __init__(self, servicename, otdb_listen_busname=None, otdb_listen_subject=None, otdb_request_busname=None, my_busname=None, **kwargs):
+    super(RATaskSpecified, self).__init__(busname=otdb_listen_busname, subject=otdb_listen_subject, **kwargs)
 
     self.parset_rpc = RPC(service="TaskSpecification", busname=otdb_request_busname)
     self.send_bus   = ToBus("%s/%s" % (my_busname, servicename))
@@ -269,6 +269,7 @@ def main():
     from lofar.common.util import waitForInterrupt
     from lofar.sas.resourceassignment.rataskspecified.config import DEFAULT_NOTIFICATION_BUSNAME, RATASKSPECIFIED_NOTIFICATIONNAME
     DEFAULT_OTDB_NOTIFICATION_BUSNAME = 'lofar.otdb.status'
+    DEFAULT_OTDB_NOTIFICATION_SUBJECT = 'otdb.treestatus'
     DEFAULT_OTDB_REQUEST_BUSNAME = 'lofar.otdb.specification'
 
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
@@ -282,12 +283,15 @@ def main():
                       help="The subject of the event messages which this service publishes")
     parser.add_option("--otdb_notification_bus", dest="otdb_notification_bus", type="string", default=DEFAULT_OTDB_NOTIFICATION_BUSNAME,
                       help="Bus or queue where the OTDB notifications are published")
+    parser.add_option("--otdb_notification_subject", dest="otdb_notification_subject", type="string", default=DEFAULT_OTDB_NOTIFICATION_SUBJECT,
+                      help="Subject of OTDB notifications on otdb_notification_bus")
     parser.add_option("--otdb_request_bus", dest="otdb_request_bus", type="string", default=DEFAULT_OTDB_REQUEST_BUSNAME,
                       help="Bus or queue where the OTDB requests are handled")
     (options, args) = parser.parse_args()
 
     with RATaskSpecified(RATASKSPECIFIED_NOTIFICATIONNAME,
                          otdb_listen_busname=options.otdb_notification_bus,
+                         otdb_listen_subject=options.otdb_notification_subject,
                          otdb_request_busname=options.otdb_request_bus,
                          my_busname=options.notification_bus) as jts:
         waitForInterrupt()
