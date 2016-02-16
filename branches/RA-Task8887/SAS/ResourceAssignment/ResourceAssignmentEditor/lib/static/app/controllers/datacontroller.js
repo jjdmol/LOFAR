@@ -190,14 +190,19 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
                             var changedTask = change.value;
                             if(change.changeType == 'update') {
                                 var task = self.taskDict[changedTask.id];
-                                task.status = changedTask.status;
-                                task.mom_id = changedTask.mom_id;
-                                task.otdb_id = changedTask.otdb_id;
-                                task.starttime = new Date(changedTask.starttime);
-                                task.endtime = new Date(changedTask.endtime);
+                                if(task) {
+                                    task.status = changedTask.status;
+                                    task.mom_id = changedTask.mom_id;
+                                    task.otdb_id = changedTask.otdb_id;
+                                    task.starttime = new Date(changedTask.starttime);
+                                    task.endtime = new Date(changedTask.endtime);
+                                }
                             } else if(change.changeType == 'insert') {
-                                self.tasks.push(changedTask);
-                                self.taskDict[changedTask.id] = changedTask;
+                                var task = self.taskDict[changedTask.id];
+                                if(!task) {
+                                    self.tasks.push(changedTask);
+                                    self.taskDict[changedTask.id] = changedTask;
+                                }
                             } else if(change.changeType == 'delete') {
                                 delete self.taskDict[changedTask.id]
                                 for(var k = self.tasks.length-1; k >= 0; k--) {
@@ -211,12 +216,17 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
                             var changedClaim = change.value;
                             if(change.changeType == 'update') {
                                 var claim = self.resourceClaimDict[changedClaim.id];
-                                claim.status = changedClaim.status;
-                                claim.starttime = new Date(changedClaim.starttime);
-                                claim.endtime = new Date(changedClaim.endtime);
+                                if(claim) {
+                                    claim.status = changedClaim.status;
+                                    claim.starttime = new Date(changedClaim.starttime);
+                                    claim.endtime = new Date(changedClaim.endtime);
+                                }
                             } else if(change.changeType == 'insert') {
-                                self.resourceClaims.push(changedClaim);
-                                self.resourceClaimDict[changedClaim.id] = changedClaim;
+                                var claim = self.resourceClaimDict[changedClaim.id];
+                                if(!claim) {
+                                    self.resourceClaims.push(changedClaim);
+                                    self.resourceClaimDict[changedClaim.id] = changedClaim;
+                                }
                             } else if(change.changeType == 'delete') {
                                 delete self.resourceClaimDict[changedClaim.id]
                                 for(var k = self.resourceClaims.length-1; k >= 0; k--) {
@@ -228,9 +238,28 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
                             }
                         } else if(change.objectType == 'resourceGroupClaim') {
                             var changedGroupClaim = change.value;
-                            var claim = self.resourceGroupClaimDict[changedGroupClaim.id];
-                            claim.starttime = new Date(changedGroupClaim.starttime);
-                            claim.endtime = new Date(changedGroupClaim.endtime);
+                            if(change.changeType == 'update') {
+                                var claim = self.resourceGroupClaimDict[changedGroupClaim.id];
+                                if(claim) {
+                                    claim.status = changedGroupClaim.status;
+                                    claim.starttime = new Date(changedGroupClaim.starttime);
+                                    claim.endtime = new Date(changedGroupClaim.endtime);
+                                }
+                            } else if(change.changeType == 'insert') {
+                                var claim = self.resourceGroupClaimDict[changedGroupClaim.id];
+                                if(!claim) {
+                                    self.resourceGroupClaims.push(changedGroupClaim);
+                                    self.resourceGroupClaimDict[changedGroupClaim.id] = changedGroupClaim;
+                                }
+                            } else if(change.changeType == 'delete') {
+                                delete self.resourceGroupClaimDict[changedGroupClaim.id]
+                                for(var k = self.resourceGroupClaims.length-1; k >= 0; k--) {
+                                    if(self.resourceGroupClaims[k].id == changedGroupClaim.id) {
+                                        self.resourceGroupClaims.splice(k, 1);
+                                        break;
+                                    }
+                                }
+                            }
                         }
                     } catch(err) {
                         console.log(err)
