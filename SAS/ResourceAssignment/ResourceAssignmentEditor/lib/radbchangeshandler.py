@@ -65,6 +65,7 @@ class RADBChangesHandler(RADBBusListener):
         self._lock = Lock()
         self._changedCondition = Condition()
         self._changeNumber = 0L
+        self._momrpc = momrpc
 
     def _handleChange(self, change):
         '''_handleChange appends a change in the changes list and calls the onChangedCallback.
@@ -85,7 +86,7 @@ class RADBChangesHandler(RADBBusListener):
         :param task: dictionary with the updated task'''
         task['starttime'] = task['starttime'].datetime()
         task['endtime'] = task['endtime'].datetime()
-        updateTaskMomDetails(task, self.momrpc)
+        updateTaskMomDetails(task, self._momrpc)
         task_change = {'changeType':CHANGE_UPDATE_TYPE, 'objectType':'task', 'value':task}
         self._handleChange(task_change)
 
@@ -94,7 +95,7 @@ class RADBChangesHandler(RADBBusListener):
         :param task: dictionary with the inserted task'''
         task['starttime'] = task['starttime'].datetime()
         task['endtime'] = task['endtime'].datetime()
-        updateTaskMomDetails(task, self.momrpc)
+        updateTaskMomDetails(task, self._momrpc)
         task_change = {'changeType':CHANGE_INSERT_TYPE, 'objectType':'task', 'value':task}
         self._handleChange(task_change)
 
