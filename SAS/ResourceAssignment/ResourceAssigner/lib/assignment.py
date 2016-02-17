@@ -36,6 +36,7 @@ from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAUL
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
 from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_BUSNAME as RE_BUSNAME
 from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_SERVICENAME as RE_SERVICENAME
+from lofar.sas.resourceassignment.resourceassigner.rapublisher import RAPublisher
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,7 @@ class ResourceAssigner():
             ssdb_broker = broker
 
         self.radbrpc = RARPC(servicename=radb_servicename, busname=radb_busname, broker=radb_broker)
+        self.raPublisher = RAPublisher(broker=radb_broker)
         self.rerpc = RPC(re_servicename, busname=re_busname, broker=re_broker, ForwardExceptions=True)
         self.ssdbGetActiveGroupNames = RPC(ssdb_servicename+'.GetActiveGroupNames', busname=ssdb_busname, broker=ssdb_broker, ForwardExceptions=True)
         self.ssdbGetHostForGID = RPC(ssdb_servicename+'.GetHostForGID', busname=ssdb_busname, broker=ssdb_broker, ForwardExceptions=True)
@@ -86,6 +88,7 @@ class ResourceAssigner():
     def open(self):
         """Open rpc connections to radb service and resource estimator service"""
         self.radbrpc.open()
+        self.raPublisher.open()
         self.rerpc.open()
         self.ssdbGetActiveGroupNames.open()
         self.ssdbGetHostForGID.open()
@@ -93,6 +96,7 @@ class ResourceAssigner():
     def close(self):
         """Close rpc connections to radb service and resource estimator service"""
         self.radbrpc.close()
+        self.raPublisher.close()
         self.rerpc.close()
         self.ssdbGetActiveGroupNames.close()
         self.ssdbGetHostForGID.close()
@@ -135,8 +139,11 @@ class ResourceAssigner():
             if claimed:
                 self.commitResourceClaimsForTask(taskId)
                 self.radbrpc.updateTask(taskId, status='scheduled')
+                self.raPublisher.notifyTaskSpecified(taskId, status='scheduled')
             else:
                 self.radbrpc.updateTask(taskId, status='conflict')
+                self.raPublisher.notifyTaskSpecified(taskId, status='conflict')
+
 
     def parseSpecification(self, parset):
         # TODO: cluster is not part of specification yet. For now return CEP4. Add logic later.
