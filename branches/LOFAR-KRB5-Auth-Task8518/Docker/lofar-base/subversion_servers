@@ -1,0 +1,6 @@
+[groups]
+astron = svn.astron.nl
+
+[astron]
+store-passwords = yes
+store-plaintext-passwords = yes

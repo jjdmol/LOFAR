@@ -1,0 +1,6 @@
+## $Id: variants 33283 2016-01-15 14:05:11Z schaap $
+
+option(USE_LOG4CPLUS            "Use Log4Cplus"               OFF)
+
+option(USE_OPENMP               "Use OpenMP"                  OFF)
+
