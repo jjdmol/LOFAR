@@ -24,6 +24,10 @@ import os
 import pwd
 from ConfigParser import SafeConfigParser, NoSectionError, DuplicateSectionError
 from optparse import OptionGroup
+from os import stat, path, chmod
+import logging
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["Credentials", "DBCredentials", "options_group", "parse_options"]
 
@@ -127,9 +131,19 @@ class DBCredentials:
         "{HOME}/.lofar/dbcredentials/*.ini",
         ]
 
-    self.config = SafeConfigParser()
-
     self.files = sum([findfiles(p) for p in filepatterns],[])
+
+    # make sure the files are mode 600 to hide passwords
+    for file in self.files:
+        if oct(stat(file).st_mode & 0777) != '0600':
+            logger.info('Changing permissions of %s to 600' % file)
+            try:
+                chmod(file, 0600)
+            except Exception as e:
+                logger.error('Error: Could not change permissions on %s: %s' % (file, str(e)))
+
+    #read the files into config
+    self.config = SafeConfigParser()
     self.config.read(self.files)
 
   def get(self, database):
