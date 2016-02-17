@@ -81,6 +81,23 @@ class Credentials:
     }
 
 
+  def mysql_connect_options(self):
+    """
+      Returns a dict of options to provide to python's mysql.connector.connect function. Use:
+
+      from mysql import connector
+      conn = connector.connect(**dbcreds.mysql_connect_options())
+    """
+    options = { "host": self.host,
+                "user": self.user,
+                "passwd": self.password,
+                "database": self.database }
+
+    if self.port:
+        options["port"] = self.port
+
+    return options
+
 class DBCredentials:
   def __init__(self, filepatterns=None):
     """
@@ -115,7 +132,6 @@ class DBCredentials:
     self.files = sum([findfiles(p) for p in filepatterns],[])
     self.config.read(self.files)
 
-
   def get(self, database):
     """
       Return credentials for a given database.
@@ -137,6 +153,8 @@ class DBCredentials:
     if "password" in d: creds.password = d["password"]
 
     if "database" in d: creds.database = d["database"]
+
+    if "type" in d:     creds.type = d["type"]
 
     return creds
 
@@ -190,7 +208,7 @@ def options_group(parser):
   group.add_option("-P", "--password", dest="dbPassword", type="string", default="",
                    help="Password of the database server")
   group.add_option("-C", "--dbcredentials", dest="dbcredentials", type="string", default="",
-                   help="Name of database credential set to use")
+                   help="Name of database credential set to use [default=%default]")
 
   return group
 
