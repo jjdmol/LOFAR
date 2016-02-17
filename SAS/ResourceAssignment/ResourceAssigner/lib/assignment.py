@@ -101,7 +101,7 @@ class ResourceAssigner():
         logger.info('doAssignment: sasId=%s parset=%s' % (sasId, parsets))
 
         #parse main parset...
-        mainParsetDict = parsets[sasId]
+        mainParsetDict = parsets[str(sasId)]
         mainParset = parameterset(mainParsetDict)
         momId = mainParset.getInt('Observation.momID', -1)
         taskType = mainParset.getString('Task.type', '')
