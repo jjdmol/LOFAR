@@ -154,7 +154,8 @@ class ProjectDetailsQueryHandler(MessageHandlerInterface):
 def createService(busname=DEFAULT_BUSNAME,
                   servicename=DEFAULT_SERVICENAME,
                   dbcreds=None,
-                  handler=None):
+                  handler=None,
+                  broker=None):
     '''create the GetProjectDetails on given busname
     :param string busname: name of the bus on which this service listens
     :param string servicename: name of the service
@@ -171,18 +172,19 @@ def createService(busname=DEFAULT_BUSNAME,
                    numthreads=1,
                    use_service_methods=True,
                    verbose=False,
+                   broker=broker,
                    handler_args={'dbcreds' : dbcreds})
 
 
-def main(busname=DEFAULT_BUSNAME,
-         servicename=DEFAULT_SERVICENAME):
+def main():
     '''Starts the momqueryservice.GetProjectDetails service'''
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]",
                           description='runs the momqueryservice')
-    parser.add_option("-b", "--busname", dest="busname", type="string", default=busname, help="Name of the bus exchange on the qpid broker, [default: %default]")
-    parser.add_option("-s", "--servicename", dest="servicename", type="string", default=servicename, help="Name for this service, [default: %default]")
+    parser.add_option('-q', '--broker', dest='broker', type='string', default=None, help='Address of the qpid broker, default: localhost')
+    parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_BUSNAME, help="Name of the bus exchange on the qpid broker, [default: %default]")
+    parser.add_option("-s", "--servicename", dest="servicename", type="string", default=DEFAULT_SERVICENAME, help="Name for this service, [default: %default]")
     parser.add_option_group(dbcredentials.options_group(parser))
     parser.set_defaults(dbcredentials="MoM")
     (options, args) = parser.parse_args()
@@ -190,7 +192,10 @@ def main(busname=DEFAULT_BUSNAME,
     dbcreds = dbcredentials.parse_options(options)
 
     # start the service and listen.
-    with createService(busname=options.busname, servicename=options.servicename, dbcreds=dbcreds):
+    with createService(busname=options.busname,
+                       servicename=options.servicename,
+                       broker=options.broker,
+                       dbcreds=dbcreds):
         waitForInterrupt()
 
 if __name__ == '__main__':
