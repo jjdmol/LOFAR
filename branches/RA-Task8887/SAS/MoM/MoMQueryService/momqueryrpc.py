@@ -3,7 +3,7 @@
 import sys
 import logging
 from optparse import OptionParser
-from lofar.messaging.RPC import RPC, RPCException
+from lofar.messaging.RPC import RPC, RPCException, RPCWrapper
 from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 
 ''' Simple RPC client for Service momqueryservice
@@ -12,57 +12,7 @@ from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAM
 logger = logging.getLogger(__file__)
 
 
-class MoMRPC:
-    def __init__(self, busname=DEFAULT_BUSNAME,
-                 servicename=DEFAULT_SERVICENAME,
-                 broker=None):
-        self.busname = busname
-        self.servicename = servicename
-        self.broker = broker
-
-        self._serviceRPCs = {} #cache of rpc's for each service
-
-    def open(self):
-        pass
-
-    def close(self):
-        for rpc in self._serviceRPCs.values():
-            rpc.close()
-
-    def __enter__(self):
-        self.open()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-
-    def _rpc(self, method, timeout=10, **kwargs):
-        try:
-            rpckwargs = {'timeout': timeout}
-            service_method = self.servicename + '.' + method
-
-            if service_method not in self._serviceRPCs:
-                rpc = RPC(service_method, busname=self.busname, broker=self.broker, ForwardExceptions=True, **rpckwargs)
-                rpc.open()
-                self._serviceRPCs[service_method] = rpc #store rpc in cache for reuse
-
-            rpc = self._serviceRPCs[service_method]
-
-            if kwargs:
-                res, status = rpc(**kwargs)
-            else:
-                res, status = rpc()
-
-            if status != 'OK':
-                logger.error('status: %s' % status)
-                logger.error('result: %s' % res)
-                raise Exception("%s %s" % (status, res))
-
-            return res
-        except RPCException as e:
-            logger.error(str(e))
-            raise
-
+class MoMRPC(RPCWrapper):
     def getProjectDetails(self, ids):
         '''get the project details for one or more mom ids
         :param ids single or list of mom ids
@@ -73,13 +23,13 @@ class MoMRPC:
         ids_string = ', '.join(ids)
 
         logger.info("Requesting details for: %s" % (str(ids_string)))
-        return self._rpc('GetProjectDetails', mom_ids=ids_string)
+        return self.rpc('GetProjectDetails', mom_ids=ids_string)
 
     def getProjects(self):
         '''get all projects
         :rtype dict with all projects'''
         logger.info("Requesting all projects")
-        projects = self._rpc('GetProjects')
+        projects = self.rpc('GetProjects')
         for project in projects:
             project['statustime'] = project['statustime'].datetime()
 

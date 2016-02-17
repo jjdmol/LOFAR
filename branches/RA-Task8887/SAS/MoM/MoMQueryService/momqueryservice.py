@@ -27,6 +27,7 @@ from lofar.messaging import Service
 from lofar.messaging.Service import MessageHandlerInterface
 from lofar.common.util import waitForInterrupt
 from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
+from lofar.common import dbcredentials
 
 logger=logging.getLogger(__file__)
 
@@ -54,11 +55,8 @@ def _isListOfInts(items):
 
 class MoMDatabaseWrapper:
     '''handler class for details query in mom db'''
-    def __init__(self, passwd):
-        self.conn = connector.connect(host="mysql1.control.lofar",
-                                        user="momreadonly",
-                                        passwd=passwd,
-                                        database="lofar_mom3")
+    def __init__(self, dbcreds):
+        self.conn = connector.connect(**dbcreds.mysql_connect_options())
 
     def getProjectDetails(self, mom_ids):
         ''' get the project details (project_mom2id, project_name,
@@ -73,15 +71,10 @@ class MoMDatabaseWrapper:
         else:
             ids = _idsFromString(mom_ids)
 
-        logger.info(mom_ids)
-        logger.info(ids)
-
         if not ids:
             raise ValueError("Could not find proper ids in: " + mom_ids)
 
         ids_str = ','.join([str(id) for id in ids])
-        logger.info(ids_str)
-
 
         logger.info("Query for mom id%s: %s" %
                     ('\'s' if len(ids) > 1 else '', ids_str))
@@ -106,6 +99,8 @@ class MoMDatabaseWrapper:
         for row in rows:
             object_mom2id = row['object_mom2id']
             result[str(object_mom2id)] = dict(row)
+
+        logger.info(result)
 
         return result
 
@@ -137,7 +132,7 @@ class ProjectDetailsQueryHandler(MessageHandlerInterface):
     '''
     def __init__(self, **kwargs):
         MessageHandlerInterface.__init__(self, **kwargs)
-        self.momreadonly_passwd = kwargs.pop("momreadonly_passwd", '')
+        self.dbcreds = kwargs.pop("dbcreds", None)
 
         self.service2MethodMap = {
             'GetProjects': self.getProjects,
@@ -145,12 +140,10 @@ class ProjectDetailsQueryHandler(MessageHandlerInterface):
             }
 
     def prepare_loop(self):
-        self.momdb = MoMDatabaseWrapper(self.momreadonly_passwd)
+        self.momdb = MoMDatabaseWrapper(self.dbcreds)
 
     def getProjectDetails(self, mom_ids):
-        logger.info(mom_ids)
         ids = _idsFromString(mom_ids)
-        logger.info(ids)
         if not _isListOfInts(ids):
             raise ValueError("%s is not a proper list of ints" % str(mom_ids))
         return self.momdb.getProjectDetails(ids)
@@ -160,12 +153,12 @@ class ProjectDetailsQueryHandler(MessageHandlerInterface):
 
 def createService(busname=DEFAULT_BUSNAME,
                   servicename=DEFAULT_SERVICENAME,
-                  momreadonly_passwd='',
+                  dbcreds=None,
                   handler=None):
     '''create the GetProjectDetails on given busname
     :param string busname: name of the bus on which this service listens
     :param string servicename: name of the service
-    :param string momreadonly_passwd: the momreadonly passwd.
+    :param Credentials dbcreds: Credentials for the MoM database.
     :param ProjectDetailsQueryHandler handler: ProjectDetailsQueryHandler class Type, or mock like type
     :rtype: lofar.messaging.Service'''
 
@@ -178,26 +171,26 @@ def createService(busname=DEFAULT_BUSNAME,
                    numthreads=1,
                    use_service_methods=True,
                    verbose=False,
-                   handler_args={'momreadonly_passwd':momreadonly_passwd})
+                   handler_args={'dbcreds' : dbcreds})
 
 
 def main(busname=DEFAULT_BUSNAME,
-         servicename=DEFAULT_SERVICENAME,
-         momreadonly_passwd=None):
+         servicename=DEFAULT_SERVICENAME):
     '''Starts the momqueryservice.GetProjectDetails service'''
-
-    if not momreadonly_passwd:
-        from lofar.mom.momqueryservice.config import momreadonly_passwd
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]",
                           description='runs the momqueryservice')
-    parser.add_option("-b", "--busname", dest="busname", type="string", default=busname, help="Name of the bus exchange on the qpid broker, default: %s" % busname)
-    parser.add_option("-s", "--servicename", dest="servicename", type="string", default=servicename, help="Name for this service, default: %s" % servicename)
+    parser.add_option("-b", "--busname", dest="busname", type="string", default=busname, help="Name of the bus exchange on the qpid broker, [default: %default]")
+    parser.add_option("-s", "--servicename", dest="servicename", type="string", default=servicename, help="Name for this service, [default: %default]")
+    parser.add_option_group(dbcredentials.options_group(parser))
+    parser.set_defaults(dbcredentials="MoM")
     (options, args) = parser.parse_args()
 
+    dbcreds = dbcredentials.parse_options(options)
+
     # start the service and listen.
-    with createService(busname=options.busname, servicename=options.servicename, momreadonly_passwd=momreadonly_passwd):
+    with createService(busname=options.busname, servicename=options.servicename, dbcreds=dbcreds):
         waitForInterrupt()
 
 if __name__ == '__main__':
