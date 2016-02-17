@@ -49,6 +49,7 @@ from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
 from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
 from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
 from lofar.sas.resourceassignment.resourceassignmenteditor.mom import updateTaskMomDetails
+#from lofar.sas.resourceassignment.resourceassigner. import updateTaskMomDetails
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +91,7 @@ app.config.from_object('lofar.sas.resourceassignment.resourceassignmenteditor.co
 app.json_encoder = CustomJSONEncoder
 
 rarpc = RARPC(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker='10.149.96.6')
-momrpc = MoMRPC(busname=DEFAULT_MOM_BUSNAME, servicename=DEFAULT_MOM_SERVICENAME, broker='10.149.96.6')
+momrpc = MoMRPC(busname=DEFAULT_MOM_BUSNAME, servicename=DEFAULT_MOM_SERVICENAME, timeout=2, broker='10.149.96.6')
 radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker='10.149.96.6', momrpc=momrpc)
 
 @app.route('/')
@@ -132,9 +133,7 @@ def getTasks():
     # there are no task names in the database yet.
     # will they come from spec/MoM?
     # add Task <id> as name for now
-    for task in tasks:
-        task['name'] = 'Task %d' % task['id']
-        updateTaskMomDetails(task, momrpc)
+    updateTaskMomDetails(tasks, momrpc)
 
     return jsonify({'tasks': tasks})
 
@@ -211,6 +210,7 @@ def getMoMProjects():
     for project in projects:
         project['mom_id'] = project.pop('mom2id')
 
+    projects.append({'name':'OTDB Only', 'mom_id':-42, 'description': 'Container projects for tasks which exists only in OTDB'})
     return jsonify({'momprojects': projects})
 
 @app.route('/rest/momobjectdetails/<int:mom2id>')

@@ -32,21 +32,45 @@ logger = logging.getLogger(__name__)
 
 def updateTaskMomDetails(task, momrpc):
     '''fill in the task propeties with mom object and project details.
-    :param task: dictionary with the task
+    :param task: dictionary or list of dictionaries with the task(s)
     :param momrpc: MoM rpc object the query for details'''
-    logger.info(task)
     if not momrpc:
         return
-    details = momrpc.getProjectDetails(task['mom_id'])
-    if details:
-        logger.info('-----------------------')
-        logger.info(details)
-        details = details[str(task['mom_id'])]
-        logger.info('-----------------------')
-        logger.info(details)
-        logger.info('-----------------------')
-        task['name'] = details['object_name']
-        task['project_name'] = details['project_name']
-        task['project_mom_id'] = details['project_mom2id']
-        logger.info(task)
 
+    def copyValues(t, m):
+        t['name'] = m['object_name']
+        t['project_name'] = m['project_name']
+        t['project_mom_id'] = m['project_mom2id']
+
+
+    if isinstance(task, list):
+        momIds = ','.join([str(t['mom_id']) for t in task])
+    else:
+        momIds = task['mom_id']
+
+    logger.info('-----------------------')
+    logger.info(momIds)
+
+    details = momrpc.getProjectDetails(momIds)
+
+    logger.info('-----------------------')
+    logger.info(details)
+    logger.info('-----------------------')
+
+    if isinstance(task, list):
+        for t in task:
+            mom_id = str(t['mom_id'])
+            if mom_id in details:
+                copyValues(t, details[mom_id])
+            else:
+                print t
+                t['name'] = 'Task (sasId: %d)' % t['otdb_id']
+                t['project_name'] = 'OTDB Only'
+                t['project_mom_id'] = -42
+    else:
+        mom_id = task['mom_id']
+        if mom_id in details:
+            copyValues(task, details[mom_id])
+
+    logger.info(task)
+    logger.info('-----------------------')
