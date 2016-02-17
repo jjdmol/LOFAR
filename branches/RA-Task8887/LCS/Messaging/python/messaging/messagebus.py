@@ -297,18 +297,19 @@ class ToBus(object):
 
     def open(self):
         if (self.opened==0):
-           try:
-             self.connection.open()
-             logger.info("[ToBus] Connected to broker: %s", self.broker)
-             self.session = self.connection.session()
-             logger.debug("[ToBus] Created session: %s", self.session.name)
-             self._add_queue(self.address, self.options)
-           except qpid.messaging.MessagingError:
-             self.__exit__(*sys.exc_info())
-             raise_exception(MessageBusError, "[ToBus] Initialization failed")
-           except MessageBusError:
-             self.__exit__(*sys.exc_info())
-             raise
+            try:
+                logger.debug("[ToBus] Connecting to broker: %s", self.broker)
+                self.connection.open()
+                logger.info("[ToBus] Connected to broker: %s", self.broker)
+                self.session = self.connection.session()
+                logger.debug("[ToBus] Created session: %s", self.session.name)
+                self._add_queue(self.address, self.options)
+            except qpid.messaging.MessagingError:
+                self.__exit__(*sys.exc_info())
+                raise_exception(MessageBusError, "[ToBus] Initialization failed")
+            except MessageBusError:
+                self.__exit__(*sys.exc_info())
+                raise
         self.opened+=1
 
 
