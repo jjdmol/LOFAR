@@ -26,14 +26,14 @@ from lofar.messaging.Service import MessageHandlerInterface
 from lofar.common.util import waitForInterrupt
 from lofar.sas.resourceassignment.database import radb
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
+from lofar.common import dbcredentials
 
 logger = logging.getLogger(__name__)
 
 class RADBHandler(MessageHandlerInterface):
     def __init__(self, **kwargs):
         super(RADBHandler, self).__init__(**kwargs)
-        self.username = kwargs.pop("username", 'resourceassignment')
-        self.password = kwargs.pop("password", '')
+        self.dbcreds = kwargs.pop("dbcreds", None)
 
         self.service2MethodMap = {
             'GetResourceClaimStatuses': self._getResourceClaimStatuses,
@@ -64,8 +64,7 @@ class RADBHandler(MessageHandlerInterface):
             'GetUnits': self._getUnits}
 
     def prepare_loop(self):
-        self.radb = radb.RADatabase(username=self.username,
-                                    password=self.password)
+        self.radb = radb.RADatabase(dbcreds=self.dbcreds)
 
     def _getTaskStatuses(self):
         return self.radb.getTaskStatuses()
@@ -220,15 +219,15 @@ class RADBHandler(MessageHandlerInterface):
     def _getUnits(self):
         return self.radb.getUnits()
 
-def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker=None, radb_password=''):
+def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker=None, dbcreds=None, verbose=False):
     return Service(servicename,
                    RADBHandler,
                    busname=busname,
                    broker=broker,
                    use_service_methods=True,
-                   numthreads=2,
-                   handler_args={'password': radb_password},
-                   verbose=True)
+                   numthreads=4,
+                   handler_args={'dbcreds': dbcreds},
+                   verbose=verbose)
 
 def main():
     # Check the invocation arguments
@@ -238,18 +237,21 @@ def main():
     parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_BUSNAME, help="Name of the bus exchange on the qpid broker, default: %s" % DEFAULT_BUSNAME)
     parser.add_option("-s", "--servicename", dest="servicename", type="string", default=DEFAULT_SERVICENAME, help="Name for this service, default: %s" % DEFAULT_SERVICENAME)
     parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
+    parser.add_option_group(dbcredentials.options_group(parser))
+    parser.set_defaults(dbcredentials="RADB")
     (options, args) = parser.parse_args()
+
+    dbcreds = dbcredentials.parse_options(options)
 
     setQpidLogLevel(logging.INFO)
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                         level=logging.DEBUG if options.verbose else logging.INFO)
 
-    from lofar.sas.resourceassignment.database.config import radb_password
-
     with createService(busname=options.busname,
                        servicename=options.servicename,
                        broker=options.broker,
-                       radb_password=radb_password):
+                       verbose=options.verbose,
+                       dbcreds=dbcreds):
         waitForInterrupt()
 
 if __name__ == '__main__':

@@ -168,7 +168,7 @@ class RARPC(RPCWrapper):
         return self.rpc('GetUnits')
 
 def do_tests(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME):
-    with RARPC(busname=busname, servicename=servicename, broker='10.149.96.6') as rpc:
+    with RARPC(busname=busname, servicename=servicename) as rpc:
         #for i in range(0, 10):
             #taskId = rpc.insertTask(1234, 5678, 'active', 'OBSERVATION', 1)['id']
             #rcId = rpc.insertResourceClaim(1, taskId, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1)['id']
