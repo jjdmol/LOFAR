@@ -27,19 +27,18 @@ import psycopg2
 import psycopg2.extras
 import datetime
 import time
+from optparse import OptionParser
+from lofar.common import dbcredentials
 
 logger = logging.getLogger(__name__)
 
 
 class RADatabase:
-    def __init__(self, password='',
-                 username='resourceassignment',
-                 host='10.149.96.6', #mcu005.control.lofar
-                 database='resourceassignment'):
-        self.conn = psycopg2.connect(host=host,
-                                     user=username,
-                                     password=password,
-                                     database=database)
+    def __init__(self, dbcreds=None):
+        self.conn = psycopg2.connect(host=dbcreds.host,
+                                     user=dbcreds.user,
+                                     password=dbcreds.password,
+                                     database=dbcreds.database)
         self.cursor = self.conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
 
     def commit(self):
@@ -510,8 +509,16 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                         level=logging.INFO)
 
-    db = RADatabase(host='10.149.96.6', password='123456')
-    #db = RADatabase(host='localhost', password='123456')
+    # Check the invocation arguments
+    parser = OptionParser("%prog [options]",
+                          description='runs some test queries on the radb')
+    parser.add_option_group(dbcredentials.options_group(parser))
+    parser.set_defaults(dbcredentials="RADB")
+    (options, args) = parser.parse_args()
+
+    dbcreds = dbcredentials.parse_options(options)
+
+    db = RADatabase(dbcreds=dbcreds)
 
     def resultPrint(method):
         print '\n-- ' + str(method.__name__) + ' --'
