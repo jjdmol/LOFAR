@@ -277,11 +277,11 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& event, GCFPortInterface& port)
         IBSBeamallocEvent   alloc;
         alloc.beamName     = BEAMCTL_BEAM + formatString("_%d", getpid());
         alloc.antennaSet   = itsAntSet;
+        alloc.band         = itsBandStr;
         alloc.rcumask      = getRCUMask() & globalAntennaSets()->RCUallocation(itsAntSet);
         // assume beamletnumbers are right so the ring can be extracted from those numbers.
         // when the user did this wrong the BeamServer will complain.
         alloc.ringNr       = itsBeamlets.front() >= BEAMLET_RING_OFFSET;
-        alloc.rcuMode      = itsRCUmode;
 
         list<int>::iterator its = itsSubbands.begin();
         list<int>::iterator itb = itsBeamlets.begin();
@@ -523,7 +523,7 @@ void beamctl::usage() const
         "       beamctl <rcuspec> <anapointing> [<anapointing> ...] [<dataspec> <digpointing> [<digpointing> ...]] FOR HBA ANTENNAS\n"
         "       beamctl --calinfo\n"
         "where:\n"
-        "  <rcuspec>      = --antennaset [--rcus] --band \n"
+        "  <rcuspec>      = --antennaset --rcus --band \n"
         "  <dataspec>     = --subbands --beamlets \n"
         "  <digpointing>  = --digdir \n"
         "  <anapointing>  = --anadir \n"
@@ -532,7 +532,7 @@ void beamctl::usage() const
         "                    # name = LBA_INNER | LBA_OUTER | LBA_SPARSE_EVEN | LBA_SPARSE_ODD |\n"
         "                    # LBA_X | LBA_Y | HBA_ZERO |  HBA_ONE | HBA_DUAL | HBA_JOINED |\n"
         "                    # HBA_ZERO_INNER | HBA_ONE_INNER | HBA_DUAL_INNER | HBA_JOINED_INNER\n"
-        "  --rcus=<set>      # optional subselection of RCU's\n"
+        "  --rcus=<set>      # subselection of RCU's\n"
         "  --band=name       # name of band selection, may not conflict with antennaset\n"
         "                    # name = 10_90 | 30_90 | 110_190 | 170_230 | 210_250\n"
         "  --subbands=<set>  # set of subbands to use for this beam\n"
@@ -670,22 +670,28 @@ bool beamctl::checkOptions()
                 case 1:
                 case 3: {
                     itsBand = BAND_10_90;
+                    itsBandStr = "10_90";
                 } break;
                 case 2:
                 case 4: {
                     itsBand = BAND_30_90;
+                    itsBandStr = "30_90";
                 } break;
                 case 5: {
                     itsBand = BAND_110_190;
+                    itsBandStr = "110_190";
                 } break;
                 case 6: {
                     itsBand = BAND_170_230;
+                    itsBandStr = "170_230";
                 } break;
                 case 7: {
                     itsBand = BAND_210_250;
+                    itsBandStr = "210_250";
                 } break;
                 default : {
                     itsBand = BAND_UNDEFINED;
+                    itsBandStr = "unknown";
                 } break;
             }
         }
@@ -775,17 +781,17 @@ bool beamctl::parseOptions(int  myArgc, char** myArgv)
         break;
 
         case 'B': {     // band
-            string band (optarg);
+            itsBandStr = optarg;
 
-            if (band == "10_90")        itsBand = BAND_10_90;
-            else if (band == "10_70")   itsBand = BAND_10_70;
-            else if (band == "30_70")   itsBand = BAND_30_70;
-            else if (band == "30_90")   itsBand = BAND_30_90;
-            else if (band == "110_190") itsBand = BAND_110_190;
-            else if (band == "170_230") itsBand = BAND_170_230;
-            else if (band == "210_250") itsBand = BAND_210_250;
+            if (itsBandStr == "10_90")        itsBand = BAND_10_90;
+            else if (itsBandStr == "10_70")   itsBand = BAND_10_70;
+            else if (itsBandStr == "30_70")   itsBand = BAND_30_70;
+            else if (itsBandStr == "30_90")   itsBand = BAND_30_90;
+            else if (itsBandStr == "110_190") itsBand = BAND_110_190;
+            else if (itsBandStr == "170_230") itsBand = BAND_170_230;
+            else if (itsBandStr == "210_250") itsBand = BAND_210_250;
             else itsBand = BAND_UNDEFINED;
-            cout << "band : " << band << endl;
+            cout << "band : " << itsBandStr << endl;
         }
         break;
 

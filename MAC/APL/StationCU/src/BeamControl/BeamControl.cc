@@ -61,7 +61,7 @@ namespace LOFAR {
 	namespace StationCU {
 
 #define MAX2(a,b)	((a)>(b)?(a):(b))
-	
+
 // static pointer to this object for signal handler
 static BeamControl*	thisBeamControl = 0;
 
@@ -155,7 +155,7 @@ void    BeamControl::setState(CTState::CTstateNr     newState)
 		CTState		cts;
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString(cts.name(newState)));
 	}
-}   
+}
 
 
 //
@@ -163,20 +163,20 @@ void    BeamControl::setState(CTState::CTstateNr     newState)
 //
 // Connect to PVSS and report state back to startdaemon
 //
-GCFEvent::TResult BeamControl::initial_state(GCFEvent& event, 
+GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 													GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
+
 	switch (event.signal) {
 	case F_ENTRY:
    		break;
 
     case F_INIT: {
 		// Get access to my own propertyset.
-		string	propSetName(createPropertySetName(PSN_BEAM_CONTROL, getName(), 
+		string	propSetName(createPropertySetName(PSN_BEAM_CONTROL, getName(),
 												  globalParameterSet()->getString("_DPname")));
 		LOG_INFO_STR ("Activating PropertySet" << propSetName);
 		itsPropertySet = new RTDBPropertySet(propSetName,
@@ -201,7 +201,7 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 		itsTimerPort->setTimer(0.0);
 	}
 	break;
-	  
+
 	case F_TIMER:
 		if (!itsPropertySetInitialized) {
 			itsPropertySetInitialized = true;
@@ -226,7 +226,7 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 //			itsPropertySet->setValue(PN_BC_ANGLETIMES,		GCFPVDynArr(LPT_DYNUNSIGNED, dpeValues));
 			itsPropertySet->setValue(PN_BC_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, dpeValues));
 			itsPropertySet->setValue(PN_BC_BEAM_NAME,		GCFPVDynArr(LPT_DYNSTRING, dpeValues));
-		  
+
 			// Start ParentControl task
 			LOG_DEBUG ("Enabling ParentControl task and wait for my name");
 			itsParentPort = itsParentControl->registerTask(this);
@@ -241,7 +241,7 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 	case F_DISCONNECTED:
 	case F_EXIT:
 		break;
-	
+
 	case CONTROL_CONNECT: {
 		CONTROLConnectEvent		msg(event);
 		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
@@ -297,7 +297,7 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 		break;
 
 	case F_CONNECTED: {
-		ASSERTSTR (&port == itsBeamServer, "F_CONNECTED event from port " 
+		ASSERTSTR (&port == itsBeamServer, "F_CONNECTED event from port "
 																	<< port.getName());
 		itsTimerPort->cancelAllTimers();
 		LOG_INFO ("Connected with BeamServer, going to claimed state");
@@ -310,14 +310,14 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 
 	case F_DISCONNECTED: {
 		port.close();
-		ASSERTSTR (&port == itsBeamServer, 
+		ASSERTSTR (&port == itsBeamServer,
 								"F_DISCONNECTED event from port " << port.getName());
 		LOG_WARN ("Connection with BeamServer failed, retry in 2 seconds");
 		itsTimerPort->setTimer(2.0);
 		break;
 	}
 
-	case F_TIMER: 
+	case F_TIMER:
 //		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
 		LOG_DEBUG ("Trying to (re)connect to BeamServer");
 		itsBeamServer->open();		// will result in F_CONN or F_DISCONN
@@ -370,7 +370,7 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 
 	case F_DISCONNECTED: {
 		port.close();
-		ASSERTSTR (&port == itsBeamServer, 
+		ASSERTSTR (&port == itsBeamServer,
 								"F_DISCONNECTED event from port " << port.getName());
 		LOG_WARN("Connection with BeamServer lost, may be due to splitter change, going to reconnect.");
 		setObjectState("Connection with BeamServer lost!", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
@@ -423,11 +423,10 @@ int32 BeamControl::convertFilterSelection(const string&	filterselection, const s
 	if (filterselection == "HBA_170_230")	{ return(6); }	// 160 Mhz
 	if (filterselection == "HBA_210_250")	{ return(7); }	// 200 Mhz
 
-	LOG_WARN_STR ("filterselection value '" << filterselection << 
+	LOG_WARN_STR ("filterselection value '" << filterselection <<
 									"' not recognized, using LBA_10_70");
 	return (1);
 }
-
 
 //
 // allocBeams_state(event, port)
@@ -448,7 +447,7 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 	// Create a new subarray
 	//
 	switch (event.signal) {
-	case F_ENTRY: 
+	case F_ENTRY:
 		itsTimerPort->cancelAllTimers();
 		itsTimerPort->setTimer(0.01);		// give CalControl + CalServer some time to allocated the beams.
 		break;
@@ -464,11 +463,13 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 		IBSBeamallocEvent beamAllocEvent;
 		beamAllocEvent.beamName   = curBeamName;
 		beamAllocEvent.antennaSet = allocatingDigitalBeams ? itsObs->beams[beamIdx].antennaSet : itsObs->anaBeams[beamIdx].antennaSet;
-		LOG_DEBUG_STR("beam@antennaSet : " << beamAllocEvent.beamName << "@" << beamAllocEvent.antennaSet);
-		beamAllocEvent.rcumask = itsObs->getRCUbitset(0, 0, beamAllocEvent.antennaSet) & 
-								 globalAntennaSets()->RCUallocation(beamAllocEvent.antennaSet);	
+
+        beamAllocEvent.band       = itsObs->filter.substr(4, string::npos);
+
+        LOG_DEBUG_STR("beam@antennaSet : " << beamAllocEvent.beamName << "@" << beamAllocEvent.antennaSet);
+		beamAllocEvent.rcumask = itsObs->getRCUbitset(0, 0, beamAllocEvent.antennaSet) &
+								 globalAntennaSets()->RCUallocation(beamAllocEvent.antennaSet);
 		beamAllocEvent.ringNr = 0;
-		beamAllocEvent.rcuMode = convertFilterSelection(itsObs->filter, beamAllocEvent.antennaSet);
 
 		// digital part
 		if (!itsObs->beams.empty()) {			// fill digital part if any
@@ -514,7 +515,7 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 	case IBS_BEAMALLOCACK: {
 		IBSBeamallocackEvent		ack(event);
 		if (ack.status != IBS_NO_ERR) {
-			LOG_ERROR_STR("Beamlet allocation for beam " << ack.beamName 
+			LOG_ERROR_STR("Beamlet allocation for beam " << ack.beamName
 					  << " failed with errorcode: " << errorName(ack.status));
 			setObjectState("Beamlet alloc error", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
 			setState(CTState::CLAIMED);
@@ -575,7 +576,7 @@ GCFEvent::TResult BeamControl::sendPointings_state(GCFEvent& event, GCFPortInter
 												  RTC::Timestamp(ptIter->startTime,0), ptIter->duration);
 		ptEvent.analogue = !sendingDigitalPts;
 		ptEvent.rank	 = sendingDigitalPts ? 0 : itsObs->anaBeams[beamIdx].rank;	// rank not used by digital beams
-		
+
 		// find next pt if any.
 		++ptIter;
 		LOG_DEBUG_STR("sendingDigitalPts=" << sendingDigitalPts);
@@ -666,7 +667,7 @@ GCFEvent::TResult BeamControl::sendPointings_state(GCFEvent& event, GCFPortInter
 //
 // active_state(event, port)
 //
-// Normal operation state. 
+// Normal operation state.
 //
 GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& port)
 {
@@ -695,7 +696,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 //		TRAN(BeamControl::started_state);
 		break;
 	}
-	
+
 	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
 
 	case CONTROL_SCHEDULE: {
@@ -794,7 +795,7 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 		itsTimerPort->setTimer(1.0);		// wait 1 second to let message go away
 		break;
 	}
-	
+
 	case F_TIMER:
 		GCFScheduler::instance()->stop();
 		break;
@@ -876,7 +877,7 @@ bool BeamControl::handleBeamFreeAck(GCFEvent&		event)
 	if (ack.status != IBS_NO_ERR) {
 		LOG_ERROR_STR("Beam de-allocation failed with errorcode: " << errorName(ack.status));
 		itsPropertySet->setValue(PN_FSM_ERROR,GCFPVString("De-allocation of the beam failed."));
-		return (false);	
+		return (false);
 	}
 
 	set<string>::iterator	iter = itsBeamIDs.begin();
@@ -903,7 +904,7 @@ bool BeamControl::handleBeamFreeAck(GCFEvent&		event)
 
 // _defaultEventHandler(event, port)
 //
-GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event, 
+GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 													GCFPortInterface&	port)
 {
 	CTState		cts;
@@ -925,7 +926,7 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 				result = GCFEvent::HANDLED;
 			}
 			break;
-		
+
 		case CONTROL_QUIT:
 			TRAN(BeamControl::quiting_state);
 			break;
@@ -943,7 +944,7 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 			break;
 
 		case DP_CHANGED: {
-			LOG_DEBUG_STR("DP " << DPChangedEvent(event).DPname << " was changed"); 
+			LOG_DEBUG_STR("DP " << DPChangedEvent(event).DPname << " was changed");
 			result = GCFEvent::HANDLED;
 		}
 		break;
@@ -954,7 +955,7 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 	}
 
 	if (result == GCFEvent::NOT_HANDLED) {
-		LOG_WARN_STR("Event " << eventName(event) << " NOT handled in state " << 
+		LOG_WARN_STR("Event " << eventName(event) << " NOT handled in state " <<
 					 cts.name(itsState));
 	}
 
