@@ -212,7 +212,7 @@ class RPCWrapper(object):
     Suppose you want to do an rpc call on service 'MyService'.
     Normally you would write:
 
-    with RPC(busname='MyBus', service='MyService') myrpc:
+    with RPC(busname='MyBus', service='MyService') as myrpc:
         result, status = myrpc()
 
         if status == 'OK':
@@ -232,7 +232,7 @@ class RPCWrapper(object):
 
     And use it like so:
 
-    with MyRPC(busname='MyBus', service='MyService') myrpc:
+    with MyRPC(busname='MyBus', service='MyService') as myrpc:
         result = myrpc.doMyServiceCall()
 
         #process result
@@ -262,7 +262,7 @@ class RPCWrapper(object):
 
     And use it like so:
 
-    with MyRPC(busname='MyBus', service='MyService') myrpc:
+    with MyRPC(busname='MyBus', service='MyService') as myrpc:
         result1 = myrpc.foo()
         #... process result1 ...
 
