@@ -79,11 +79,21 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	itsCalServer			(0),
 	itsBeamsModified		(false),
 	itsAnaBeamMgr			(0),
-	itsCalTableMode1		(0),
-	itsCalTableMode3		(0),
-	itsCalTableMode5		(0),
-	itsCalTableMode6		(0),
-	itsCalTableMode7		(0),
+    itsCalTable_LBA_INNER_10_90       (0),
+    itsCalTable_LBA_INNER_30_90       (0),
+    itsCalTable_LBA_OUTER_10_90       (0),
+    itsCalTable_LBA_OUTER_30_90       (0),
+    itsCalTable_LBA_SPARSE_EVEN_10_90 (0),
+    itsCalTable_LBA_SPARSE_EVEN_30_90 (0),
+    itsCalTable_LBA_SPARSE_ODD_10_90  (0),
+    itsCalTable_LBA_SPARSE_ODD_30_90  (0),
+    itsCalTable_LBA_X_10_90           (0),
+    itsCalTable_LBA_X_30_90           (0),
+    itsCalTable_LBA_Y_10_90           (0),
+    itsCalTable_LBA_Y_30_90           (0),
+    itsCalTable_HBA_110_190           (0),
+    itsCalTable_HBA_170_230           (0),
+    itsCalTable_HBA_210_250           (0),
 	itsUpdateInterval		(0),
 	itsComputeInterval		(0),
 	itsHBAUpdateInterval	(0),
@@ -145,11 +155,21 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	// read static calibrationtables if available
 	StationConfig	SC;
 	if (itsStaticCalEnabled) {
-		_loadCalTable(1, SC.nrRSPs);
-		_loadCalTable(3, SC.nrRSPs);
-		_loadCalTable(5, SC.nrRSPs);
-		_loadCalTable(6, SC.nrRSPs);
-		_loadCalTable(7, SC.nrRSPs);
+        _loadCalTable("LBA_INNER", "10_90", SC.nrRSPs);
+        _loadCalTable("LBA_INNER", "30_90", SC.nrRSPs);
+        _loadCalTable("LBA_OUTER", "10_90", SC.nrRSPs);
+        _loadCalTable("LBA_OUTER", "30_90", SC.nrRSPs);
+        _loadCalTable("LBA_SPARSE_EVEN", "10_90", SC.nrRSPs);
+        _loadCalTable("LBA_SPARSE_EVEN", "30_90", SC.nrRSPs);
+        _loadCalTable("LBA_SPARSE_ODD", "10_90", SC.nrRSPs);
+        _loadCalTable("LBA_SPARSE_ODD", "30_90", SC.nrRSPs);
+        _loadCalTable("LBA_X", "10_90", SC.nrRSPs);
+        _loadCalTable("LBA_X", "30_90", SC.nrRSPs);
+        _loadCalTable("LBA_Y", "10_90", SC.nrRSPs);
+        _loadCalTable("LBA_Y", "30_90", SC.nrRSPs);
+        _loadCalTable("HBA", "110_190", SC.nrRSPs);
+        _loadCalTable("HBA", "170_230", SC.nrRSPs);
+        _loadCalTable("HBA", "210_250", SC.nrRSPs);
 	}
 	else {
 		LOG_WARN("Static calibration is disabled!");
@@ -588,11 +608,21 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 	case IBS_GETCALINFO: {
 		IBSGetcalinfoackEvent	answer;
 		ostringstream	oss;
-		if (itsCalTableMode1)	oss << *itsCalTableMode1 << endl;
-		if (itsCalTableMode3)	oss << *itsCalTableMode3 << endl;
-		if (itsCalTableMode5)	oss << *itsCalTableMode5 << endl;
-		if (itsCalTableMode6)	oss << *itsCalTableMode6 << endl;
-		if (itsCalTableMode7)	oss << *itsCalTableMode7 << endl;
+        if (itsCalTable_LBA_INNER_10_90)        oss << *itsCalTable_LBA_INNER_10_90 << endl;
+        if (itsCalTable_LBA_INNER_30_90)        oss << *itsCalTable_LBA_INNER_30_90 << endl;
+        if (itsCalTable_LBA_OUTER_10_90)        oss << *itsCalTable_LBA_OUTER_10_90 << endl;
+        if (itsCalTable_LBA_OUTER_30_90)        oss << *itsCalTable_LBA_OUTER_30_90 << endl;
+        if (itsCalTable_LBA_SPARSE_EVEN_10_90)  oss << *itsCalTable_LBA_SPARSE_EVEN_10_90 << endl;
+        if (itsCalTable_LBA_SPARSE_EVEN_30_90)  oss << *itsCalTable_LBA_SPARSE_EVEN_30_90 << endl;
+        if (itsCalTable_LBA_SPARSE_ODD_10_90)   oss << *itsCalTable_LBA_SPARSE_ODD_10_90 << endl;
+        if (itsCalTable_LBA_SPARSE_ODD_30_90)   oss << *itsCalTable_LBA_SPARSE_ODD_30_90 << endl;
+        if (itsCalTable_LBA_X_10_90)            oss << *itsCalTable_LBA_X_10_90 << endl;
+        if (itsCalTable_LBA_X_30_90)            oss << *itsCalTable_LBA_X_30_90 << endl;
+        if (itsCalTable_LBA_Y_10_90)            oss << *itsCalTable_LBA_Y_10_90 << endl;
+        if (itsCalTable_LBA_Y_30_90)            oss << *itsCalTable_LBA_Y_30_90 << endl;
+        if (itsCalTable_HBA_110_190)            oss << *itsCalTable_HBA_110_190 << endl;
+        if (itsCalTable_HBA_170_230)            oss << *itsCalTable_HBA_170_230 << endl;
+        if (itsCalTable_HBA_210_250)            oss << *itsCalTable_HBA_210_250 << endl;
 		answer.info = oss.str();
 		port.send(answer);
 	}
@@ -988,7 +1018,7 @@ bool BeamServer::beamalloc_start(IBSBeamallocEvent& ba,
 {
 	// allocate the beam
 	int		beamError(IBS_NO_ERR);
-	DigitalBeam* beam = checkBeam(&port, ba.beamName, ba.antennaSet, ba.allocation, ba.rcumask, ba.ringNr, ba.rcuMode, &beamError);
+	DigitalBeam* beam = checkBeam(&port, ba.beamName, ba.antennaSet, ba.band, ba.allocation, ba.rcumask, ba.ringNr, &beamError);
 
 	if (!beam) {
 		LOG_FATAL_STR("BEAMALLOC: failed to allocate beam " << ba.beamName << " on " << ba.antennaSet);
@@ -1088,7 +1118,7 @@ int BeamServer::beampointto_action(IBSPointtoEvent&		ptEvent,
 
 	// note we don't know if we added the beam before, just do it again and ignore returnvalue.
 	itsAnaBeamMgr->addBeam(AnalogueBeam(ptEvent.beamName, beamIter->second->antennaSetName(),
-									beamIter->second->rcuMask(), ptEvent.rank));
+                                        beamIter->second->bandName(), beamIter->second->rcuMask(), ptEvent.rank));
 	if (!itsAnaBeamMgr->addPointing(ptEvent.beamName, ptEvent.pointing)) {
 		return (IBS_UNKNOWN_BEAM_ERR);
 	}
@@ -1221,10 +1251,10 @@ void BeamServer::destroyAllBeams(GCFPortInterface* port)
 DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 						  std::string 						name,
 						  std::string 						antennaSetName,
+						  std::string 						band,
 						  IBS_Protocol::Beamlet2SubbandMap	allocation,
 						  bitset<LOFAR::MAX_RCUS>		    rcumask,
 						  uint								ringNr,
-						  uint								rcuMode,
 						  int*								beamError)
 {
 	LOG_TRACE_FLOW_STR("checkBeam(port=" << port->getName() << ", name=" << name << ", subarray=" << antennaSetName
@@ -1283,7 +1313,7 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 		return (0);
 	}
 
-	DigitalBeam* beam = new DigitalBeam(name, antennaSetName, allocation, rcumask, ringNr, rcuMode);
+	DigitalBeam* beam = new DigitalBeam(name, antennaSetName, band, allocation, rcumask, ringNr);
 
 	if (beam) { // register new beam
 		itsClientBeams[port].insert(beam);
@@ -1502,58 +1532,61 @@ void BeamServer::_logBeamAdministration()
 //
 // _getCalFactor(rcumode, rcu, subbandNr)
 //
-complex<double>	BeamServer::_getCalFactor(uint rcuMode, uint rcu, uint subbandNr)
+complex<double>	BeamServer::_getCalFactor(const string& antennaSet, const string& band, uint rcu, uint subbandNr)
 {
 	complex<double>	result(1.0, 0.0);
 
-	switch (rcuMode) {
-	case 1:
-	case 2:
-		if (itsCalTableMode1) { result = itsCalTableMode1->calFactor(rcu, subbandNr); } break;
-	case 3:
-	case 4:
-		if (itsCalTableMode3) { result = itsCalTableMode3->calFactor(rcu, subbandNr); } break;
-	case 5:
-		if (itsCalTableMode5) { result = itsCalTableMode5->calFactor(rcu, subbandNr); } break;
-	case 6:
-		if (itsCalTableMode6) { result = itsCalTableMode6->calFactor(rcu, subbandNr); } break;
-	case 7:
-		if (itsCalTableMode7) { result = itsCalTableMode7->calFactor(rcu, subbandNr); } break;
-	default:
-		break;
-	}
+	string name;
+    name = name + antennaSet + "-" + band;;
 
-//	LOG_DEBUG_STR("calFactor(" << rcuMode << "," << rcu << "," << subbandNr << ")=" << result);
+    if      (name == "LBA_INNER-10_90")       result = itsCalTable_LBA_INNER_10_90->calFactor(rcu, subbandNr);
+    else if (name == "LBA_INNER-30_90")       result = itsCalTable_LBA_INNER_30_90->calFactor(rcu, subbandNr);
+    else if (name == "LBA_OUTER-10_90")       result = itsCalTable_LBA_OUTER_10_90->calFactor(rcu, subbandNr);
+    else if (name == "LBA_OUTER-30_90")       result = itsCalTable_LBA_OUTER_30_90->calFactor(rcu, subbandNr);
+    else if (name == "LBA_SPARSE_EVEN-10_90") result = itsCalTable_LBA_SPARSE_EVEN_10_90->calFactor(rcu, subbandNr);
+    else if (name == "LBA_SPARSE_EVEN-30_90") result = itsCalTable_LBA_SPARSE_EVEN_30_90->calFactor(rcu, subbandNr);
+    else if (name == "LBA_SPARSE_ODD-10_90")  result = itsCalTable_LBA_SPARSE_ODD_10_90->calFactor(rcu, subbandNr);
+    else if (name == "LBA_SPARSE_ODD-30_90")  result = itsCalTable_LBA_SPARSE_ODD_30_90->calFactor(rcu, subbandNr);
+    else if (name == "LBA_X-10_90")           result = itsCalTable_LBA_X_10_90->calFactor(rcu, subbandNr);
+    else if (name == "LBA_X-30_90")           result = itsCalTable_LBA_X_30_90->calFactor(rcu, subbandNr);
+    else if (name == "LBA_Y-10_90")           result = itsCalTable_LBA_Y_10_90->calFactor(rcu, subbandNr);
+    else if (name == "LBA_Y-30_90")           result = itsCalTable_LBA_Y_30_90->calFactor(rcu, subbandNr);
+    else if (name == "HBA-110_190")           result = itsCalTable_HBA_110_190->calFactor(rcu, subbandNr);
+    else if (name == "HBA-170_230")           result = itsCalTable_HBA_170_230->calFactor(rcu, subbandNr);
+    else if (name == "HBA-210_250")           result = itsCalTable_HBA_210_250->calFactor(rcu, subbandNr);
+
+//	LOG_DEBUG_STR("calFactor(" << antennaSet << "," << band <<  "," << rcu << "," << subbandNr << ")=" << result);
 	return (result);
 }
 
-void BeamServer::_loadCalTable(uint rcuMode, uint nrRSPBoards)
+void BeamServer::_loadCalTable(const string& antennaSet, const string& band, uint nrRSPBoards)
 {
 	StatCal**	tableHandle(0);
-	switch (rcuMode) {
-		case 1:
-		case 2: tableHandle = &itsCalTableMode1; break;
-		case 3:
-		case 4: tableHandle = &itsCalTableMode3; break;
-		case 5: tableHandle = &itsCalTableMode5; break;
-		case 6: tableHandle = &itsCalTableMode6; break;
-		case 7: tableHandle = &itsCalTableMode7; break;
-		default: return;
-	}
+	string name;
+    name = name + antennaSet + "-" + band;
 
-	(*tableHandle) = new StatCal(rcuMode, nrRSPBoards);
+    if      (name == "LBA_INNER-10_90")       tableHandle = &itsCalTable_LBA_INNER_10_90;
+    else if (name == "LBA_INNER-30_90")       tableHandle = &itsCalTable_LBA_INNER_30_90;
+    else if (name == "LBA_OUTER-10_90")       tableHandle = &itsCalTable_LBA_OUTER_10_90;
+    else if (name == "LBA_OUTER-30_90")       tableHandle = &itsCalTable_LBA_OUTER_30_90;
+    else if (name == "LBA_SPARSE_EVEN-10_90") tableHandle = &itsCalTable_LBA_SPARSE_EVEN_10_90;
+    else if (name == "LBA_SPARSE_EVEN-30_90") tableHandle = &itsCalTable_LBA_SPARSE_EVEN_30_90;
+    else if (name == "LBA_SPARSE_ODD-10_90")  tableHandle = &itsCalTable_LBA_SPARSE_ODD_10_90;
+    else if (name == "LBA_SPARSE_ODD-30_90")  tableHandle = &itsCalTable_LBA_SPARSE_ODD_30_90;
+    else if (name == "LBA_X-10_90")           tableHandle = &itsCalTable_LBA_X_10_90;
+    else if (name == "LBA_X-30_90")           tableHandle = &itsCalTable_LBA_X_30_90;
+    else if (name == "LBA_Y-10_90")           tableHandle = &itsCalTable_LBA_Y_10_90;
+    else if (name == "LBA_Y-30_90")           tableHandle = &itsCalTable_LBA_Y_30_90;
+    else if (name == "HBA-110_190")           tableHandle = &itsCalTable_HBA_110_190;
+    else if (name == "HBA-170_230")           tableHandle = &itsCalTable_HBA_170_230;
+    else if (name == "HBA-210_250")           tableHandle = &itsCalTable_HBA_210_250;
+    else return;
+
+	(*tableHandle) = new StatCal(antennaSet, band, nrRSPBoards);
 	if ((*tableHandle) && !(*tableHandle)->isValid()) {
 		delete (*tableHandle);
 		(*tableHandle) = 0;
-		switch (rcuMode) {
-			case 1:
-			case 2: LOG_WARN ("NO CALIBRATION TABLE FOUND FOR MODE 1 AND 2"); break;
-			case 3:
-			case 4: LOG_WARN ("NO CALIBRATION TABLE FOUND FOR MODE 3 AND 4"); break;
-			case 5:
-			case 6:
-			case 7: LOG_WARN_STR ("NO CALIBRATION TABLE FOUND FOR MODE " << rcuMode); break;
-		}
+        LOG_WARN_STR ("NO CALIBRATION TABLE FOUND FOR ANTENNASET " << antennaSet << ", BAND " << band);
 		return;
 	}
 
@@ -1705,8 +1738,8 @@ void BeamServer::compute_weights(Timestamp weightTime)
 						continue;
 					}
 
-					complex<double>	CalFactor = _getCalFactor(beamIter->second->rcuMode(), rcu,
-																itsBeamletAllocation[beamlet+firstBeamlet].subbandNr);
+					complex<double>	CalFactor = _getCalFactor(beamIter->second->antennaSetName(), beamIter->second->bandName(),
+                                                              rcu, itsBeamletAllocation[beamlet+firstBeamlet].subbandNr);
 					int	bitPlane = beamlet / beamletsPerPlane;
 					itsWeights(rcu, bitPlane, beamlet % beamletsPerPlane) =
 						CalFactor * exp(itsBeamletAllocation[beamlet+firstBeamlet].scaling *
