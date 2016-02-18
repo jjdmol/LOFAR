@@ -297,6 +297,7 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& event, GCFPortInterface& port)
 
         LOG_INFO_STR("name        : " << alloc.beamName);
         LOG_INFO_STR("antennaSet  : " << alloc.antennaSet);
+        LOG_INFO_STR("band        : " << alloc.band);
         LOG_INFO_STR("rcumask     : " << alloc.rcumask);
         LOG_INFO_STR("ringNr      : " << alloc.ringNr);
 //      LOG_INFO_STR(alloc.allocation);

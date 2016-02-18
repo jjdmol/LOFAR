@@ -1534,28 +1534,31 @@ void BeamServer::_logBeamAdministration()
 //
 complex<double>	BeamServer::_getCalFactor(const string& antennaSet, const string& band, uint rcu, uint subbandNr)
 {
-	complex<double>	result(1.0, 0.0);
+    complex<double>	result(1.0, 0.0);
+	//LOG_DEBUG_STR("calFactor(" << antennaSet << "," << band <<  "," << rcu << "," << subbandNr << ")=" << result);
 
-	string name;
-    name = name + antennaSet + "-" + band;;
+    if (band == "10_90") {
+        if      (antennaSet == "LBA_INNER") { if (itsCalTable_LBA_INNER_10_90) result = itsCalTable_LBA_INNER_10_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_OUTER") { if (itsCalTable_LBA_OUTER_10_90) result = itsCalTable_LBA_OUTER_10_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_SPARSE_EVEN") { if(itsCalTable_LBA_SPARSE_EVEN_10_90) result = itsCalTable_LBA_SPARSE_EVEN_10_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_SPARSE_ODD") { if(itsCalTable_LBA_SPARSE_ODD_10_90) result = itsCalTable_LBA_SPARSE_ODD_10_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_X") { if(itsCalTable_LBA_X_10_90) result = itsCalTable_LBA_X_10_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_Y") { if(itsCalTable_LBA_Y_10_90) result = itsCalTable_LBA_Y_10_90->calFactor(rcu, subbandNr); }
+    }
+    else if (band == "30_90") {
+        if      (antennaSet == "LBA_INNER") { if(itsCalTable_LBA_INNER_30_90) result = itsCalTable_LBA_INNER_30_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_OUTER") { if(itsCalTable_LBA_OUTER_30_90) result = itsCalTable_LBA_OUTER_30_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_SPARSE_EVEN") { if(itsCalTable_LBA_SPARSE_EVEN_30_90)result = itsCalTable_LBA_SPARSE_EVEN_30_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_SPARSE_ODD") { if(itsCalTable_LBA_SPARSE_ODD_30_90)  result = itsCalTable_LBA_SPARSE_ODD_30_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_X") { if(itsCalTable_LBA_X_30_90) result = itsCalTable_LBA_X_30_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_Y") { if(itsCalTable_LBA_Y_30_90) result = itsCalTable_LBA_Y_30_90->calFactor(rcu, subbandNr); }
+    }
+    else if (band == "110_190") { if(itsCalTable_HBA_110_190) result = itsCalTable_HBA_110_190->calFactor(rcu, subbandNr); }
+    else if (band == "170_230") { if(itsCalTable_HBA_170_230) result = itsCalTable_HBA_170_230->calFactor(rcu, subbandNr); }
+    else if (band == "210_250") { if(itsCalTable_HBA_210_250) result = itsCalTable_HBA_210_250->calFactor(rcu, subbandNr); }
 
-    if      (name == "LBA_INNER-10_90")       result = itsCalTable_LBA_INNER_10_90->calFactor(rcu, subbandNr);
-    else if (name == "LBA_INNER-30_90")       result = itsCalTable_LBA_INNER_30_90->calFactor(rcu, subbandNr);
-    else if (name == "LBA_OUTER-10_90")       result = itsCalTable_LBA_OUTER_10_90->calFactor(rcu, subbandNr);
-    else if (name == "LBA_OUTER-30_90")       result = itsCalTable_LBA_OUTER_30_90->calFactor(rcu, subbandNr);
-    else if (name == "LBA_SPARSE_EVEN-10_90") result = itsCalTable_LBA_SPARSE_EVEN_10_90->calFactor(rcu, subbandNr);
-    else if (name == "LBA_SPARSE_EVEN-30_90") result = itsCalTable_LBA_SPARSE_EVEN_30_90->calFactor(rcu, subbandNr);
-    else if (name == "LBA_SPARSE_ODD-10_90")  result = itsCalTable_LBA_SPARSE_ODD_10_90->calFactor(rcu, subbandNr);
-    else if (name == "LBA_SPARSE_ODD-30_90")  result = itsCalTable_LBA_SPARSE_ODD_30_90->calFactor(rcu, subbandNr);
-    else if (name == "LBA_X-10_90")           result = itsCalTable_LBA_X_10_90->calFactor(rcu, subbandNr);
-    else if (name == "LBA_X-30_90")           result = itsCalTable_LBA_X_30_90->calFactor(rcu, subbandNr);
-    else if (name == "LBA_Y-10_90")           result = itsCalTable_LBA_Y_10_90->calFactor(rcu, subbandNr);
-    else if (name == "LBA_Y-30_90")           result = itsCalTable_LBA_Y_30_90->calFactor(rcu, subbandNr);
-    else if (name == "HBA-110_190")           result = itsCalTable_HBA_110_190->calFactor(rcu, subbandNr);
-    else if (name == "HBA-170_230")           result = itsCalTable_HBA_170_230->calFactor(rcu, subbandNr);
-    else if (name == "HBA-210_250")           result = itsCalTable_HBA_210_250->calFactor(rcu, subbandNr);
 
-//	LOG_DEBUG_STR("calFactor(" << antennaSet << "," << band <<  "," << rcu << "," << subbandNr << ")=" << result);
+	//LOG_INFO_STR("calFactor(" << antennaSet << "," << band <<  "," << rcu << "," << subbandNr << ")=" << result);
 	return (result);
 }
 
@@ -1563,7 +1566,7 @@ void BeamServer::_loadCalTable(const string& antennaSet, const string& band, uin
 {
 	StatCal**	tableHandle(0);
 	string name;
-    name = name + antennaSet + "-" + band;
+    name = antennaSet + "-" + band;
 
     if      (name == "LBA_INNER-10_90")       tableHandle = &itsCalTable_LBA_INNER_10_90;
     else if (name == "LBA_INNER-30_90")       tableHandle = &itsCalTable_LBA_INNER_30_90;
@@ -1737,7 +1740,7 @@ void BeamServer::compute_weights(Timestamp weightTime)
 					if (!beamletAllocation.test(beamlet)) {
 						continue;
 					}
-
+                    //LOG_DEBUG_STR("get CalFactor for " << beamIter->second->antennaSetName() << ", " <<  beamIter->second->bandName());
 					complex<double>	CalFactor = _getCalFactor(beamIter->second->antennaSetName(), beamIter->second->bandName(),
                                                               rcu, itsBeamletAllocation[beamlet+firstBeamlet].subbandNr);
 					int	bitPlane = beamlet / beamletsPerPlane;
