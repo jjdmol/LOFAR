@@ -1,0 +1,10 @@
+HWMonitor via IPMI en bgpartstatus + swlevel.conf
+
+IPMI -> clustermnachine on/off
+
+bgpartstatus + swlevel.conf geeft status R00 (busy).
+Als busy -> OPER
+	else als swlevel OFF -> OFF
+	else ERROR
+
+
