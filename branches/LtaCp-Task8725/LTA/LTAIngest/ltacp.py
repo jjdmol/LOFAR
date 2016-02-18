@@ -58,7 +58,6 @@ def getLocalIPAddress():
 def convert_surl_to_turl(surl):
     #list of sara doors is based on recent actual transfers using srmcp, which translates the surl to a 'random' turl
     sara_nodes = ['fly%d' % i for i in range(1, 11)]  + \
-                 ['wasp%d' % i for i in range(1, 10)] + \
                  ['by27-%d' % i for i in range(1, 10)] + \
                  ['bw27-%d' % i for i in range(1, 10)] + \
                  ['by32-%d' % i for i in range(1, 10)] + \
@@ -330,8 +329,7 @@ class LtaCp:
                                     prev_bytes_transfered = total_bytes_transfered
                                     percentage_to_go = 100.0 - percentage_done
                                     time_to_go = elapsed_secs_since_start * percentage_to_go / percentage_done
-                                    logger.info('ltacp %s: transfered %d bytes, %s, %.1f%% at avgSpeed=%s curSpeed=%s to_go=%s' % (self.logId,
-                                                                                                            total_bytes_transfered,
+                                    logger.info('ltacp %s: transfered %s %.1f%% at avgSpeed=%s curSpeed=%s to_go=%s to %s' % (self.logId,
                                                                                                             humanreadablesize(total_bytes_transfered),
                                                                                                             percentage_done,
                                                                                                             humanreadablesize(avg_speed, 'Bps'),
@@ -375,12 +373,13 @@ class LtaCp:
             try:
                 md5_checksum_remote = output_md5_receive[0].split(' ')[0]
                 md5_checksum_local = output_md5_local[0].split(' ')[0]
-                if(md5_checksum_remote != md5_checksum_local):
-                    raise LtacpException('md5 checksum reported by client (%s) does not match local checksum of incoming data stream (%s)' % (self.logId, md5_checksum_remote, md5_checksum_local))
-                logger.info('ltacp %s: remote and local md5 checksums are equal: %s' % (self.logId, md5_checksum_local,))
             except Exception as e:
                 logger.error('ltacp %s: error while parsing md5 checksum outputs: local=%s received=%s' % (self.logId, output_md5_local[0], output_md5_receive[0]))
                 raise
+
+            if(md5_checksum_remote != md5_checksum_local):
+                raise LtacpException('md5 checksum reported by client (%s) does not match local checksum of incoming data stream (%s)' % (self.logId, md5_checksum_remote, md5_checksum_local))
+            logger.info('ltacp %s: remote and local md5 checksums are equal: %s' % (self.logId, md5_checksum_local,))
 
             logger.debug('ltacp %s: waiting for local byte count on datastream...' % self.logId)
             output_byte_count = p_byte_count.communicate()
