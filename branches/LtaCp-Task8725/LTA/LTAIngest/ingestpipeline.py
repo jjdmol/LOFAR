@@ -381,10 +381,8 @@ class IngestPipeline():
       self.logger.debug('SIP received for %s from MoM with size %d (%s): %s' % (self.JobId, len(self.SIP), humanreadablesize(len(self.SIP)), self.SIP[0:256]))
     elif self.Type.lower() == "eor":
       try:
-        sip_host = job['SIPLocation'].split(':')[0]
-        for i in range(1, 43):
-            sip_host = sip_host.replace('node%d.intra.dawn.rug.nl' % (i+100,), '10.196.232.%d' % (i+10,))
-        sip_path = job['SIPLocation'].split(':')[1]
+        sip_host = self.job['SIPLocation'].split(':')[0]
+        sip_path = self.job['SIPLocation'].split(':')[1]
         cmd = ['ssh', '-tt', '-n', '-x', '-q', '%s@%s' % (getpass.getuser(), sip_host), 'cat %s' % sip_path]
         self.logger.debug("GetSIP for %s with mom2DPId %s - StorageTicket %s - FileName %s - Uri %s - cmd %s" % (self.JobId, self.ArchiveId, self.ticket, self.FileName, self.PrimaryUri, ' ' .join(cmd)))
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -441,6 +439,7 @@ class IngestPipeline():
 
         self.SIP = sip_dom.toxml("utf-8")
         self.SIP = self.SIP.replace('<stationType>Europe</stationType>','<stationType>International</stationType>')
+        self.SIP = self.SIP.replace('<source>EOR</source>','<source>EoR</source>') #EoR sips sometime contain EOR instead of EoR as source
 
       except:
         self.logger.exception('Getting SIP from EoR failed')
@@ -530,16 +529,18 @@ class IngestPipeline():
       start = time.time()
       self.RetryRun(self.GetStorageTicket, self.ltaRetry, 'Getting storage ticket')
 
-      self.RetryRun(self.TransferFileNew, self.srmRetry , 'Transfering file')
-      #if self.Type.lower() == "eor":
-        #self.RetryRun(self.TransferFileNew, self.srmRetry , 'Transfering file')
-      #else:
-        #self.RetryRun(self.TransferFile, self.srmRetry , 'Transfering file')
+      if self.Type.lower() == "eor":
+        self.RetryRun(self.TransferFileNew, self.srmRetry , 'Transfering file')
+      else:
+        self.RetryRun(self.TransferFile, self.srmRetry , 'Transfering file')
 
       self.RetryRun(self.SendChecksums, self.ltaRetry, 'Sending Checksums')
 #      self.RenameFile()
-      self.RetryRun(self.GetSIP, self.momRetry, 'Get SIP from MoM')
-      self.RetryRun(self.SendSIP, self.ltaRetry, 'Sending SIP')
+      if self.Type.lower() == "eor" and not 'SIPLocation' in self.job:
+          self.logger.info("No SIPLocation specified for eor job %s. Skipping SIP transfer to catalogue." % (self.JobId))
+      else:
+        self.RetryRun(self.GetSIP, self.momRetry, 'Get SIP from MoM')
+        self.RetryRun(self.SendSIP, self.ltaRetry, 'Sending SIP')
       self.RetryRun(self.SendStatus, self.ltaRetry, 'Setting LTA status', IngestSuccessful)
       elapsed = time.time() - start
       try:
