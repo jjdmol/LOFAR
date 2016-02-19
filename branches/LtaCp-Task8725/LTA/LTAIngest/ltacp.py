@@ -34,15 +34,6 @@ logger = logging.getLogger('Slave')
 
 _ingest_init_script = '/globalhome/ingest/service/bin/init.sh'
 
-if __name__ == '__main__':
-    log_handler = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)-15s %(levelname)s %(message)s')
-    formatter.converter = time.gmtime
-    log_handler.setFormatter(formatter)
-    logger.addHandler(log_handler)
-    logger.setLevel(logging.INFO)
-
-
 class LtacpException(Exception):
      def __init__(self, value):
          self.value = value
@@ -153,17 +144,11 @@ class LtaCp:
             self.local_byte_count_fifo = createLocalFifo('local_byte_count')
             self.local_adler32_fifo = createLocalFifo('local_adler32')
 
-            # tee incoming data stream to fifo (and pipe stream in tee_proc.stdout)
-            def teeDataStreams(pipe_in, fifo_out):
-                cmd_tee = ['tee', fifo_out]
-                logger.info('ltacp %s: splitting datastream. executing: %s' % (self.logId, ' '.join(cmd_tee),))
-                tee_proc = Popen(cmd_tee, stdin=pipe_in, stdout=PIPE, stderr=PIPE)
-                self.started_procs[tee_proc] = cmd_tee
-                return tee_proc
-
-            p_tee_data = teeDataStreams(p_data_in.stdout, self.local_data_fifo)
-            p_tee_byte_count = teeDataStreams(p_tee_data.stdout, self.local_byte_count_fifo)
-            p_tee_checksums = teeDataStreams(p_tee_byte_count.stdout, self.local_adler32_fifo)
+            # tee incoming data stream to fifos (and pipe stream in tee_proc.stdout)
+            cmd_tee = ['tee', self.local_data_fifo, self.local_byte_count_fifo, self.local_adler32_fifo]
+            logger.info('ltacp %s: splitting datastream. executing: %s' % (self.logId, ' '.join(cmd_tee),))
+            p_tee_data = Popen(cmd_tee, stdin=p_data_in.stdout, stdout=PIPE, stderr=PIPE)
+            self.started_procs[p_tee_data] = cmd_tee
 
             # start counting number of bytes in incoming data stream
             cmd_byte_count = ['wc', '-c', self.local_byte_count_fifo]
@@ -174,7 +159,7 @@ class LtaCp:
             # start computing md5 checksum of incoming data stream
             cmd_md5_local = ['md5sum']
             logger.info('ltacp %s: computing local md5 checksum. executing on data pipe: %s' % (self.logId, ' '.join(cmd_md5_local)))
-            p_md5_local = Popen(cmd_md5_local, stdin=p_tee_checksums.stdout, stdout=PIPE, stderr=PIPE)
+            p_md5_local = Popen(cmd_md5_local, stdin=p_tee_data.stdout, stdout=PIPE, stderr=PIPE)
             self.started_procs[p_md5_local] = cmd_md5_local
 
             # start computing adler checksum of incoming data stream
@@ -250,7 +235,7 @@ class LtaCp:
 
             # determine if input is file
             input_is_file = (output_remote_filetype[0][0] == '-')
-
+            logger.info('ltacp %s: remote path is a %s' % (self.logId, 'file' if input_is_file else 'directory'))
 
             # get input datasize
             cmd_remote_du = self.ssh_cmd + ['du -b --max-depth=0 %s' % (self.src_path_data,)]
@@ -313,7 +298,7 @@ class LtaCp:
                     try:
                         # read and process tar stdout lines to create progress messages
                         nextline = p_remote_data.stdout.readline().strip()
-                        if len(nextline) > 0:
+                        if len(nextline) > 0 and not input_is_file:
                             record_nr = int(nextline.split()[-1].strip())
                             total_bytes_transfered = record_nr * tar_record_size
                             percentage_done = (100.0*float(total_bytes_transfered))/float(estimated_tar_size)
@@ -329,15 +314,20 @@ class LtaCp:
                                     prev_bytes_transfered = total_bytes_transfered
                                     percentage_to_go = 100.0 - percentage_done
                                     time_to_go = elapsed_secs_since_start * percentage_to_go / percentage_done
-                                    logger.info('ltacp %s: transfered %s %.1f%% at avgSpeed=%s curSpeed=%s to_go=%s to %s' % (self.logId,
+                                    logger.info('ltacp %s: transfered %s %.1f%% at avgSpeed=%s (%s) curSpeed=%s (%s) to_go=%s to %s' % (self.logId,
                                                                                                             humanreadablesize(total_bytes_transfered),
                                                                                                             percentage_done,
                                                                                                             humanreadablesize(avg_speed, 'Bps'),
+                                                                                                            humanreadablesize(avg_speed*8, 'bps'),
                                                                                                             humanreadablesize(current_speed, 'Bps'),
-                                                                                                            timedelta(seconds=int(round(time_to_go)))))
+                                                                                                            humanreadablesize(current_speed*8, 'bps'),
+                                                                                                            timedelta(seconds=int(round(time_to_go))),
+                                                                                                            dst_turl))
                         time.sleep(0.05)
                     except KeyboardInterrupt:
                         self.cleanup()
+                    except Exception as e:
+                        logger.error('ltacp %s: %s' % (self.logId, str(e)))
 
                 logger.info('ltacp %s: waiting for transfer via globus-url-copy to LTA to finish...' % self.logId)
                 output_data_out = p_data_out.communicate()
@@ -455,7 +445,7 @@ class LtaCp:
 
         if hasattr(self, 'remote_data_fifo') and self.remote_data_fifo:
             '''remove a file (or fifo) on a remote host. Test if file exists before deleting.'''
-            cmd_remote_rm = self.ssh_cmd + ['if [ -e "%s" ] ; then rm %s ; fi ;' % (self.remote_data_fifo, self.remote_data_fifo)]
+            cmd_remote_rm = self.ssh_cmd + ['rm %s' % (self.remote_data_fifo,)]
             logger.info('ltacp %s: removing remote fifo. executing: %s' % (self.logId, ' '.join(cmd_remote_rm)))
             p_remote_rm = Popen(cmd_remote_rm, stdout=PIPE, stderr=PIPE)
             p_remote_rm.communicate()
