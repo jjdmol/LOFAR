@@ -636,7 +636,7 @@ if __name__ == '__main__':
     else:
         import ingest_config_test as config
 
-    path = sys.argv[1]
+    path = args[0]
 
     if os.path.isfile(path):
         parser = job_parser.parser(logger)
