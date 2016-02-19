@@ -329,12 +329,6 @@ class LtaCp:
                     except Exception as e:
                         logger.error('ltacp %s: %s' % (self.logId, str(e)))
 
-                logger.info('ltacp %s: waiting for transfer via globus-url-copy to LTA to finish...' % self.logId)
-                output_data_out = p_data_out.communicate()
-                if p_data_out.returncode != 0:
-                    raise LtacpException('ltacp %s: transfer via globus-url-copy to LTA failed: %s' % (self.logId, output_data_out[1]))
-                logger.info('ltacp %s: data transfer via globus-url-copy to LTA complete.' % self.logId)
-
                 logger.info('ltacp %s: waiting for remote data transfer to finish...' % self.logId)
                 output_remote_data = p_remote_data.communicate()
                 if p_remote_data.returncode != 0:
@@ -347,43 +341,49 @@ class LtaCp:
                     raise LtacpException('ltacp %s: Error in remote md5 checksum computation: %s' % (self.logId, output_remote_checksum[1]))
                 logger.debug('ltacp %s: remote md5 checksum computation finished.' % self.logId)
 
-            logger.debug('ltacp %s: waiting to receive remote md5 checksum...' % self.logId)
-            output_md5_receive = p_md5_receive.communicate()
-            if p_md5_receive.returncode != 0:
-                raise LtacpException('ltacp %s: Error while receiving remote md5 checksum: %s' % (self.logId, output_md5_receive[1]))
-            logger.debug('ltacp %s: received md5 checksum.' % self.logId)
+                logger.debug('ltacp %s: waiting to receive remote md5 checksum...' % self.logId)
+                output_md5_receive = p_md5_receive.communicate()
+                if p_md5_receive.returncode != 0:
+                    raise LtacpException('ltacp %s: Error while receiving remote md5 checksum: %s' % (self.logId, output_md5_receive[1]))
+                logger.debug('ltacp %s: received md5 checksum.' % self.logId)
 
-            logger.debug('ltacp %s: waiting for local computation of md5 checksum...' % self.logId)
-            output_md5_local = p_md5_local.communicate()
-            if p_md5_local.returncode != 0:
-                raise LtacpException('ltacp %s: Error while receiving remote md5 checksum: %s' % (self.logId, output_md5_local[1]))
-            logger.debug('ltacp %s: computed local md5 checksum.' % self.logId)
+                logger.debug('ltacp %s: waiting for local computation of md5 checksum...' % self.logId)
+                output_md5_local = p_md5_local.communicate()
+                if p_md5_local.returncode != 0:
+                    raise LtacpException('ltacp %s: Error while receiving remote md5 checksum: %s' % (self.logId, output_md5_local[1]))
+                logger.debug('ltacp %s: computed local md5 checksum.' % self.logId)
 
-            # compare remote and local md5 checksums
-            try:
-                md5_checksum_remote = output_md5_receive[0].split(' ')[0]
-                md5_checksum_local = output_md5_local[0].split(' ')[0]
-            except Exception as e:
-                logger.error('ltacp %s: error while parsing md5 checksum outputs: local=%s received=%s' % (self.logId, output_md5_local[0], output_md5_receive[0]))
-                raise
+                # compare remote and local md5 checksums
+                try:
+                    md5_checksum_remote = output_md5_receive[0].split(' ')[0]
+                    md5_checksum_local = output_md5_local[0].split(' ')[0]
+                except Exception as e:
+                    logger.error('ltacp %s: error while parsing md5 checksum outputs: local=%s received=%s' % (self.logId, output_md5_local[0], output_md5_receive[0]))
+                    raise
 
-            if(md5_checksum_remote != md5_checksum_local):
-                raise LtacpException('md5 checksum reported by client (%s) does not match local checksum of incoming data stream (%s)' % (self.logId, md5_checksum_remote, md5_checksum_local))
-            logger.info('ltacp %s: remote and local md5 checksums are equal: %s' % (self.logId, md5_checksum_local,))
+                if(md5_checksum_remote != md5_checksum_local):
+                    raise LtacpException('md5 checksum reported by client (%s) does not match local checksum of incoming data stream (%s)' % (self.logId, md5_checksum_remote, md5_checksum_local))
+                logger.info('ltacp %s: remote and local md5 checksums are equal: %s' % (self.logId, md5_checksum_local,))
 
-            logger.debug('ltacp %s: waiting for local byte count on datastream...' % self.logId)
-            output_byte_count = p_byte_count.communicate()
-            if p_byte_count.returncode != 0:
-                raise LtacpException('ltacp %s: Error while receiving remote md5 checksum: %s' % (self.logId, output_byte_count[1]))
-            byte_count = int(output_byte_count[0].split()[0].strip())
-            logger.info('ltacp %s: byte count of datastream is %d %s' % (self.logId, byte_count, humanreadablesize(byte_count)))
+                logger.debug('ltacp %s: waiting for local byte count on datastream...' % self.logId)
+                output_byte_count = p_byte_count.communicate()
+                if p_byte_count.returncode != 0:
+                    raise LtacpException('ltacp %s: Error while receiving remote md5 checksum: %s' % (self.logId, output_byte_count[1]))
+                byte_count = int(output_byte_count[0].split()[0].strip())
+                logger.info('ltacp %s: byte count of datastream is %d %s' % (self.logId, byte_count, humanreadablesize(byte_count)))
 
-            logger.debug('ltacp %s: waiting for local adler32 checksum to complete...' % self.logId)
-            output_a32_local = p_a32_local.communicate()
-            if p_a32_local.returncode != 0:
-                raise LtacpException('ltacp %s: local adler32 checksum computation failed: %s' (self.logId, str(output_a32_local)))
-            logger.debug('ltacp %s: finished computation of local adler32 checksum' % self.logId)
-            a32_checksum_local = output_a32_local[0].split()[1].zfill(8)
+                logger.debug('ltacp %s: waiting for local adler32 checksum to complete...' % self.logId)
+                output_a32_local = p_a32_local.communicate()
+                if p_a32_local.returncode != 0:
+                    raise LtacpException('ltacp %s: local adler32 checksum computation failed: %s' (self.logId, str(output_a32_local)))
+                logger.debug('ltacp %s: finished computation of local adler32 checksum' % self.logId)
+                a32_checksum_local = output_a32_local[0].split()[1].zfill(8)
+
+                logger.info('ltacp %s: waiting for transfer via globus-url-copy to LTA to finish...' % self.logId)
+                output_data_out = p_data_out.communicate()
+                if p_data_out.returncode != 0:
+                    raise LtacpException('ltacp %s: transfer via globus-url-copy to LTA failed: %s' % (self.logId, output_data_out[1]))
+                logger.info('ltacp %s: data transfer via globus-url-copy to LTA complete.' % self.logId)
 
             logger.info('ltacp %s: fetching adler32 checksum from LTA...' % self.logId)
             srm_ok, srm_file_size, srm_a32_checksum = get_srm_size_and_a32_checksum(self.dst_surl)
@@ -391,16 +391,17 @@ class LtaCp:
             if not srm_ok:
                 raise LtacpException('ltacp %s: Could not get srm adler32 checksum for: %s'  % (self.logId, self.dst_surl))
 
-            if(srm_a32_checksum != a32_checksum_local):
+            if srm_a32_checksum != a32_checksum_local:
                 raise LtacpException('ltacp %s: adler32 checksum reported by srm (%s) does not match original data checksum (%s)' % (self.logId,
                                                                                                                                      srm_a32_checksum,
                                                                                                                                      a32_checksum_local))
 
             logger.info('ltacp %s: adler32 checksums are equal: %s' % (self.logId, a32_checksum_local))
 
-            if(int(srm_file_size) != int(byte_count)):
+            if int(srm_file_size) != int(byte_count):
                 raise LtacpException('ltacp %s: file size reported by srm (%s) does not match datastream byte count (%s)' % (self.logId,
-                                                                                                                             srm_file_size,                                                                                                                                     byte_count))
+                                                                                                                             srm_file_size,
+                                                                                                                             byte_count))
 
             logger.info('ltacp %s: srm file size and datastream byte count are equal: %s bytes (%s)' % (self.logId,
                                                                                                         srm_file_size,
