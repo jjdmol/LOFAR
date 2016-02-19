@@ -40,7 +40,7 @@ class PipelineError(Exception):
 
 #---------------------- IngestPipeline ------------------------------------------
 class IngestPipeline():
-  def __init__(self, logdir, job, momClient, ltaClient, ltacphost, ltacpport, mailCommand, momRetry, ltaRetry, srmRetry, srmInit):
+  def __init__(self, logdir, job, momClient, ltaClient, ltacphost, ltacpport, mailCommand, momRetry, ltaRetry, srmRetry, srmInit, user=getpass.getuser()):
     self.logdir          = logdir
     self.job             = job
     self.momClient       = momClient
@@ -48,6 +48,7 @@ class IngestPipeline():
     self.ltacphost       = ltacphost
     self.ltacpport       = ltacpport
     self.mailCommand     = mailCommand
+    self.user            = user
 
     self.Project       = job['Project']
     self.DataProduct   = job['DataProduct']
@@ -228,7 +229,8 @@ class IngestPipeline():
 
         cp = ltacp.LtaCp(host,
                          os.path.join(self.LocationDir, self.Source),
-                         self.PrimaryUri)
+                         self.PrimaryUri,
+                         self.user)
 
         self.MD5Checksum, self.Adler32Checksum, self.FileSize = cp.transfer()
 
@@ -384,7 +386,7 @@ class IngestPipeline():
       try:
         sip_host = self.job['SIPLocation'].split(':')[0]
         sip_path = self.job['SIPLocation'].split(':')[1]
-        cmd = ['ssh', '-tt', '-n', '-x', '-q', '%s@%s' % (getpass.getuser(), sip_host), 'cat %s' % sip_path]
+        cmd = ['ssh', '-tt', '-n', '-x', '-q', '%s@%s' % (self.user, sip_host), 'cat %s' % sip_path]
         self.logger.debug("GetSIP for %s with mom2DPId %s - StorageTicket %s - FileName %s - Uri %s - cmd %s" % (self.JobId, self.ArchiveId, self.ticket, self.FileName, self.PrimaryUri, ' ' .join(cmd)))
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
@@ -609,8 +611,19 @@ if __name__ == '__main__':
     import os
     import os.path
     import job_parser
+    from optparse import OptionParser
 
-    if len(sys.argv) != 2:
+    # Check the invocation arguments
+    parser = OptionParser("%prog [options] <jobfile/dir_with_job_files>",
+                          description='Run the ingestpipeline on a single jobfile, or a directory containing many jobfiles.')
+    parser.add_option("-u", "--user", dest="user", type="string", default=getpass.getuser(), help="username for to login on <host>, [default: %default]")
+    parser.add_option("-p", "--parallel", dest="maxParallelJobs", type="int", default=4, help="number of parellel pipelines to run when processing a directory of jobfiles [default: %default]")
+    (options, args) = parser.parse_args()
+
+    if len(args) != 1:
+        parser.print_help()
+        sys.exit(1)
+
         print 'usage: ingestpipeline.py <path_to_jobfile.xml>'
         print 'or'
         print 'usage: ingestpipeline.py <path_to_dir_containing_set_of_jobfiles>'
@@ -618,12 +631,11 @@ if __name__ == '__main__':
     logging.basicConfig(format="%(asctime)-15s %(levelname)s %(message)s", level=logging.DEBUG)
     logger = logging.getLogger('Slave')
 
-    if getpass.getuser() == 'ingest':
+    if options.user == 'ingest':
         import ingest_config as config
     else:
         import ingest_config_test as config
 
-    maxParallelJobs = 4
     path = sys.argv[1]
 
     if os.path.isfile(path):
@@ -680,11 +692,11 @@ if __name__ == '__main__':
                 if not jobQueue:
                     logging.info('no more jobs for host: %s' % host)
                     del hostJobQueues[host]
-                elif len(runningPipelinesPerHost) < maxParallelJobs:
+                elif len(runningPipelinesPerHost) < options.maxParallelJobs:
                     jobToRun = jobQueue.pop(0)
 
                     logging.info('starting job %s on host %s' % (jobToRun['JobId'], host))
-                    jobPipeline = IngestPipeline(None, jobToRun, config.momClient, config.ltaClient, config.ipaddress, config.ltacpport, config.mailCommand, config.momRetry, config.ltaRetry, config.srmRetry, config.srmInit)
+                    jobPipeline = IngestPipeline(None, jobToRun, config.momClient, config.ltaClient, config.ipaddress, config.ltacpport, config.mailCommand, config.momRetry, config.ltaRetry, config.srmRetry, config.srmInit, options.user)
 
                     def runPipeline(pl):
                         try:
