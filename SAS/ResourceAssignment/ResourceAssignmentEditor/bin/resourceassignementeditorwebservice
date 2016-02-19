@@ -20,8 +20,8 @@
 '''Startup script for resourceassignementeditor webservice'''
 
 import sys
-from lofar.sas.resourceassignment.resourceassignmenteditor.webservice import main
+from resourceassignementeditor import webservice
 
 if __name__ == '__main__':
-    main()
+    webservice.main(sys.argv[1:], True)
 

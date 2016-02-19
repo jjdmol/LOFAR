@@ -21,18 +21,13 @@
 
 import unittest
 import uuid
-import logging
 from lofar.mom.momqueryservice.momqueryservice import createService
 from lofar.mom.momqueryservice.momqueryservice import ProjectDetailsQueryHandler
-from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
-from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME
+from lofar.mom.momqueryservice import momprojectdetailsquery
 from qpid.messaging import Connection
 from qpidtoollibs import BrokerAgent
 
 try:
-    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
-    logger = logging.getLogger()
-
     # setup broker connection
     connection = Connection.establish('127.0.0.1')
     broker = BrokerAgent(connection)
@@ -48,19 +43,18 @@ try:
     # and we don't need the momdb passwd
     class MockMoMDatabaseWrapper:
         def getProjectDetails(self, mom_ids_str):
-            return {str(testid): {'project_mom2id': '4567', 'project_name': 'foo', 'project_description': 'bar', 'object_mom2id': testid}}
+            return [{'project_mom2id': '4567', 'project_name': 'foo', 'project_description': 'bar', 'object_mom2id': testid}]
 
     class MockProjectDetailsQueryHandler(ProjectDetailsQueryHandler):
         def prepare_loop(self):
             self.momdb = MockMoMDatabaseWrapper()
 
     # inject the mock into the service
-    with createService(busname, handler=MockProjectDetailsQueryHandler), \
-         MoMRPC(busname, DEFAULT_SERVICENAME) as momrpc:
+    with createService(busname, handler=MockProjectDetailsQueryHandler):
 
         class TestLTAStorageDb(unittest.TestCase):
             def testProjectDetailsQuery(self):
-                result = momrpc.getProjectDetails(testid)
+                result = momprojectdetailsquery.getProjectDetails(testid, busname)
                 self.assertEquals(1, len(result.keys()))
                 self.assertEquals(testid, result.keys()[0])
                 self.assertTrue('project_mom2id' in result[testid])
@@ -69,9 +63,10 @@ try:
 
             def testSqlInjection(self):
                 inj_testid = testid + '; select * from lofar_mom3.mom2object;'
+                result = momprojectdetailsquery.getProjectDetails(inj_testid, busname)
 
-                with self.assertRaises(ValueError) as error:
-                    result = momrpc.getProjectDetails(inj_testid)
+                self.assertTrue('errmsg' in result)
+                self.assertTrue('KeyError' in result['errmsg'])
 
         unittest.main(verbosity=2)
 

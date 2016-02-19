@@ -2,7 +2,7 @@
 #
 
 # Run a program to talk to
-DummyStorage 12345 &                  # Run the command
+DummyStorage 12345 0&                  # Run the command
 PID_ID=$!                              # get the PID
 
 source MessageFuncs.sh

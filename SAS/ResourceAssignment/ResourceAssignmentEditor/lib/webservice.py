@@ -19,170 +19,90 @@
 
 # $Id$
 
-'''ResourceAssignmentEditor webservice serves a interactive html5 website for
+'''ResourceAssignementEditor webservice serves a interactive html5 website for
 viewing and editing lofar resources.'''
 
 import sys
 import os
-import json
 import time
-from optparse import OptionParser
-from threading import Condition
 from datetime import datetime
-import time
-import logging
-from dateutil import parser, tz
+from datetime import timedelta
 from flask import Flask
 from flask import render_template
-from flask import request
-from flask import abort
 from flask import url_for
 from flask.json import jsonify
-from flask.json import JSONEncoder
-from lofar.sas.resourceassignment.resourceassignmenteditor.utils import gzipped
-from lofar.sas.resourceassignment.resourceassignmenteditor.fakedata import *
-from lofar.sas.resourceassignment.resourceassignmenteditor.radbchangeshandler import RADBChangesHandler, CHANGE_DELETE_TYPE
-from lofar.sas.resourceassignment.database.config import DEFAULT_BUSNAME as DEFAULT_RADB_CHANGES_BUSNAME
-from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC
-from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
-from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
-from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
-from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
+from resourceassignementeditor.utils import gzipped
+from resourceassignementeditor.fakedata import *
 
-logger = logging.getLogger(__name__)
-
-def asDatetime(isoString):
-    if isoString[-1] == 'Z':
-        isoString = isoString[:-1]
-    if isoString[-4] == '.':
-        isoString += '000'
-    return datetime.strptime(isoString, '%Y-%m-%dT%H:%M:%S.%f')
-
-def asIsoFormat(timestamp):
-    return datetime.strftime(timestamp, '%Y-%m-%dT%H:%M:%S.%fZ')
-
-
-class CustomJSONEncoder(JSONEncoder):
-    def default(self, obj):
-        try:
-            if isinstance(obj, datetime):
-                return asIsoFormat(obj)
-            iterable = iter(obj)
-        except TypeError:
-            pass
-        else:
-            return list(iterable)
-        return JSONEncoder.default(self, obj)
-
-
-__root_path = os.path.dirname(os.path.realpath(__file__))
+__root_path = os.path.dirname(os.path.abspath(__file__))
+print '__root_path=%s' % __root_path
 
 '''The flask webservice app'''
-app = Flask('ResourceAssignmentEditor',
+app = Flask('ResourceAssignementEditor',
             instance_path=__root_path,
             template_folder=os.path.join(__root_path, 'templates'),
             static_folder=os.path.join(__root_path, 'static'),
             instance_relative_config=True)
 
-# Load the default configuration
-app.config.from_object('lofar.sas.resourceassignment.resourceassignmenteditor.config.default')
-app.json_encoder = CustomJSONEncoder
+print 'app.template_folder= %s' % app.template_folder
+print 'app.static_folder= %s' % app.static_folder
 
-rarpc = RARPC(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker=None)
-radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker=None)
-momrpc = MoMRPC(busname=DEFAULT_MOM_BUSNAME, servicename=DEFAULT_MOM_SERVICENAME, broker=None)
+# Load the default configuration
+app.config.from_object('resourceassignementeditor.config.default')
 
 @app.route('/')
 @app.route('/index.htm')
 @app.route('/index.html')
 def index():
-    '''Serves the ResourceAssignmentEditor's index page'''
-    return render_template('index.html', title='Resource Assignment Editor')
+    '''Serves the ResourceAssignementEditor's index page'''
+    return render_template('index.html', title='Resource Assignement Editor')
 
 @app.route('/rest/resourceitems')
 @gzipped
 def resourcesitems():
-    result = rarpc.getResources()
-    return jsonify({'resourceitems': result})
+    data = {'resourceitems': resourceItems}
+    return jsonify(data)
 
 @app.route('/rest/resourcegroups')
 @gzipped
 def resourcegroups():
-    result = rarpc.getResourceGroups()
-    return jsonify({'resourcegroups': result})
+    data = {'resourcegroups': resourceGroups}
+    return jsonify(data)
 
 @app.route('/rest/resourceclaims')
 @gzipped
 def resourceclaims():
-    claims = rarpc.getResourceClaims()
-    return jsonify({'resourceclaims': claims})
+    data = {'resourceclaims': resourceClaims}
+    return jsonify(data)
 
 @app.route('/rest/resourcegroupclaims')
 @gzipped
 def resourcegroupclaims():
-    abort(500)
+    data = {'resourcegroupclaims': resourceGroupClaims}
 
+    return jsonify(data)
 
 @app.route('/rest/tasks')
 @gzipped
-def getTasks():
-    tasks = rarpc.getTasks()
+def tasks():
+    data = {'tasks': allTasks}
 
-    # there are no task names in the database yet.
-    # will they come from spec/MoM?
-    # add Task <id> as name for now
-    for task in tasks:
-        task['name'] = 'Task %d' % task['id']
+    return jsonify(data)
 
-    return jsonify({'tasks': tasks})
+def _task(task_id):
+    for task in allTasks:
+        if task['id'] == task_id:
+            return task
 
-@app.route('/rest/tasks/<int:task_id>', methods=['GET'])
-def getTask(task_id):
-    try:
-        task = rarpc.getTask(task_id)
+    return None
 
-        if not task:
-            abort(404)
-
-        task['name'] = 'Task %d' % task['id']
-        return jsonify({'task': task})
-    except Exception as e:
-        abort(404)
+@app.route('/rest/tasks/<int:task_id>')
+def task(task_id):
+    for task in allTasks:
+        if task['id'] == task_id:
+            return jsonify({'task': task})
 
     return jsonify({'task': None})
-
-@app.route('/rest/tasks/<int:task_id>', methods=['PUT'])
-def putTask(task_id):
-    if 'Content-Type' in request.headers and \
-            request.headers['Content-Type'].startswith('application/json'):
-        updatedTask = json.loads(request.data)
-
-        try:
-            if task_id != updatedTask['id']:
-                abort(404)
-
-            if 'starttime' in updatedTask:
-                try:
-                    updatedTask['starttime'] = asDatetime(updatedTask['starttime'])
-                except ValueError:
-                    abort(400, 'timestamp not in iso format: ' + updatedTask['starttime'])
-
-            if 'endtime' in updatedTask:
-                try:
-                    updatedTask['endtime'] = asDatetime(updatedTask['endtime'])
-                except ValueError:
-                    abort(400, 'timestamp not in iso format: ' + updatedTask['endtime'])
-
-            logger.info('putTask: ' + str(updatedTask))
-            rarpc.updateResourceClaimsForTask(task_id,
-                                            starttime=updatedTask.get('starttime', None),
-                                            endtime=updatedTask.get('endtime', None),
-                                            status=updatedTask.get('status', None))
-
-            return "", 204
-        except KeyError:
-            abort(404)
-    abort(406)
 
 @app.route('/rest/tasks/<int:task_id>/resourceclaims')
 def taskResourceClaims(task_id):
@@ -190,58 +110,16 @@ def taskResourceClaims(task_id):
 
 @app.route('/rest/tasktypes')
 def tasktypes():
-    result = rarpc.getTaskTypes()
-    result = [x['name'] for x in result]
-    return jsonify({'tasktypes': result})
+    return jsonify({'tasktypes': ['Observation', 'Pipeline', 'Ingest']})
 
 @app.route('/rest/taskstatustypes')
-def getTaskStatusTypes():
-    result = rarpc.getTaskStatuses()
-    result = sorted(result, key=lambda q: q['id'])
-    result = [x['name'] for x in result]
-    return jsonify({'taskstatustypes': result})
+def taskstatustypes():
+    return jsonify({'taskstatustypes': ['scheduled', 'approved', 'prescheduled', 'running', 'finished', 'aborted']})
 
-@app.route('/rest/momprojects')
-def getMoMProjects():
-    projects = momrpc.getProjects()
-    projects = [x for x in projects if x['status_id'] in [1, 7]]
 
-    return jsonify({'momprojects': projects})
-
-@app.route('/rest/momobjectdetails/<int:mom2id>')
-def getMoMObjectDetails(mom2id):
-    details = momrpc.getProjectDetails(mom2id)
-    return jsonify({'momobjectdetails': details.values()[0] if details else None})
-
-@app.route('/rest/updates/<int:sinceChangeNumber>')
-def getUpdateEventsSince(sinceChangeNumber):
-    changesSince = radbchangeshandler.getChangesSince(sinceChangeNumber)
-    return jsonify({'changes': changesSince})
-
-@app.route('/rest/updates')
-def getUpdateEvents():
-    return getUpdateEventsSince(-1L)
-
-def main():
-    # Check the invocation arguments
-    parser = OptionParser('%prog [options]',
-                          description='run the resource assignment editor web service')
-    parser.add_option('-p', '--port', dest='port', type='int', default=5000, help='port number on which to host the webservice, default: 5000')
-    parser.add_option('-q', '--broker', dest='broker', type='string', default=None, help='Address of the qpid broker, default: localhost')
-    parser.add_option('--radb_busname', dest='radb_busname', type='string', default=DEFAULT_BUSNAME, help='Name of the bus exchange on the qpid broker on which the radbservice listens, default: %s' % DEFAULT_BUSNAME)
-    parser.add_option('--radb_servicename', dest='radb_servicename', type='string', default=DEFAULT_SERVICENAME, help='Name of the radbservice, default: %s' % DEFAULT_SERVICENAME)
-    parser.add_option('--radb_notifications_busname', dest='radb_notifications_busname', type='string', default=DEFAULT_RADB_CHANGES_BUSNAME, help='Name of the notification bus exchange on the qpid broker on which the radb notifications are published, default: %s' % DEFAULT_RADB_CHANGES_BUSNAME)
-    parser.add_option('--mom_busname', dest='mom_busname', type='string', default=DEFAULT_MOM_BUSNAME, help='Name of the bus exchange on the qpid broker on which the momservice listens, default: %s' % DEFAULT_MOM_BUSNAME)
-    parser.add_option('--mom_servicename', dest='mom_servicename', type='string', default=DEFAULT_MOM_SERVICENAME, help='Name of the momservice, default: %s' % DEFAULT_MOM_SERVICENAME)
-    parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
-    (options, args) = parser.parse_args()
-
-    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                        level=logging.DEBUG if options.verbose else logging.INFO)
-
-    with radbchangeshandler, rarpc, momrpc:
-        '''Start the webserver'''
-        app.run(debug=options.verbose, threaded=True, host='0.0.0.0', port=options.port)
+def main(argv=None, debug=False):
+    '''Start the webserver'''
+    app.run(debug=debug, threaded=True, host='0.0.0.0', port=5001)
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:], True)

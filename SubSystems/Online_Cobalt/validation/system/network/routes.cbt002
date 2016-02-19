@@ -18,4 +18,3 @@ default via 10.151.255.254 dev eth0  metric 100
 10.175.255.202 dev eth3  scope link 
 10.175.255.203 dev eth4  scope link 
 10.175.255.204 dev eth5  scope link 
-192.168.122.0/24 dev virbr0  proto kernel  scope link  src 192.168.122.1 

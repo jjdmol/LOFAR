@@ -10,12 +10,35 @@
 
 ########  Functions  ########
 
-source cobalt_functions.sh
-
 function error {
   echo -e "$@" >&2
   sendback_state 1
   exit 1
+}
+
+function getkey {
+  KEY=$1
+  DEFAULT=$2
+
+  # grab the last key matching "^$KEY=", ignoring spaces.
+  VALUE=`<$PARSET perl -ne '/^'$KEY'\s*=\s*"?(.*?)"?\s*$/ || next; print "$1\n";' | tail -n 1`
+
+  if [ "$VALUE" == "" ]
+  then
+    echo "$DEFAULT"
+  else
+    echo "$VALUE"
+  fi
+}
+
+function setkey {
+  KEY=$1
+  VAL=$2
+
+  # In case already there, comment all out to avoid stale warnings. Then append.
+  KEYESC=`echo "$KEY" | sed -r -e "s/([\.[])/\\\\\\\\\1/g"`  # escape '.' '[' chars in keys with enough '\'
+  sed -i --follow-symlinks -r -e "s/^([[:blank:]]*$KEYESC[[:blank:]]*=)/#\1/g" "$PARSET"
+  echo "$KEY = $VAL" >> "$PARSET"
 }
 
 function usage {
@@ -30,7 +53,6 @@ function usage {
     "LOFAR_CHECKTOOL"\
     "\n    -F: do NOT send data points to a PVSS gateway"\
     "\n    -P: create PID file"\
-    "\n    -d: dummy run: don't execute anything"\
     "\n    -l: run solely on localhost using 'nprocs' MPI processes (isolated test)"\
     "\n    -p: enable profiling" \
     "\n    -o: add option KEY=VALUE to the parset" \
@@ -89,11 +111,11 @@ function sendback_state {
 
   if [ $OBSRESULT -eq 0 ]
   then
-    echo "[cobalt] Signalling success"
+    echo "Signalling success"
     SUCCESS=1
   else
     # ***** Observation or sending feedback failed for some reason
-    echo "[cobalt] Signalling failure"
+    echo "Signalling failure"
     SUCCESS=0
   fi
 
@@ -117,9 +139,6 @@ AUGMENT_PARSET=1
 # Extra parset keys to add
 EXTRA_PARSET_KEYS=""
 
-# Whether to execute anything
-DUMMY_RUN=false
-
 # File to write PID to
 PIDFILE=""
 
@@ -140,7 +159,7 @@ RTCP_PARAMS=""
 # ******************************
 # Parse command-line options
 # ******************************
-while getopts ":ABCFP:dl:o:px:" opt; do
+while getopts ":ABCFP:l:o:px:" opt; do
   case $opt in
       A)  AUGMENT_PARSET=0
           ;;
@@ -151,8 +170,6 @@ while getopts ":ABCFP:dl:o:px:" opt; do
       F)  STATUS_FEEDBACK=0
           ;;
       P)  PIDFILE="$OPTARG"
-          ;;
-      d)  DUMMY_RUN=true
           ;;
       l)  FORCE_LOCALHOST=1
           MPIRUN_PARAMS="$MPIRUN_PARAMS -np $OPTARG"
@@ -182,8 +199,8 @@ PARSET="$1"
 [ -n "$PARSET" ] || usage
 
 # Check if LOFARROOT is set.
-[ -n "$LOFARROOT" ] || error "[cobalt] LOFARROOT is not set!"
-echo "[cobalt] LOFARROOT = $LOFARROOT"
+[ -n "$LOFARROOT" ] || error "LOFARROOT is not set!"
+echo "LOFARROOT is set to $LOFARROOT"
 
 # ******************************
 # Preprocess: initialise
@@ -203,10 +220,10 @@ fi
 timeout -k2 1 /bin/true 2> /dev/null && KILLOPT=-k2
 
 # Read parset
-[ -f "$PARSET" -a -r "$PARSET" ] || error "[parset] Cannot read: $PARSET"
+[ -f "$PARSET" -a -r "$PARSET" ] || error "Cannot read parset: $PARSET"
 
 OBSID=`getkey Observation.ObsID`
-echo "[cobalt] ObsID = $OBSID"
+echo "Observation ID: $OBSID"
 
 # Remove stale feedback file (useful for testing)
 FEEDBACK_FILE=$LOFARROOT/var/run/Observation${OBSID}_feedback
@@ -226,8 +243,8 @@ then
   DOT_COBALT_DEFAULT=$HOME/.cobalt/default/*.parset
   DOT_COBALT_OVERRIDE=$HOME/.cobalt/override/*.parset
   if [ "$USER" == "lofarsys" ]; then
-    ls -U -- $DOT_COBALT_DEFAULT >/dev/null 2>&1 && echo "[parset] WARN: ignoring augmentation parset(s) $DOT_COBALT_DEFAULT" >&2
-    ls -U -- $DOT_COBALT_OVERRIDE >/dev/null 2>&1 && echo "[parset] WARN: ignoring augmentation parset(s) $DOT_COBALT_OVERRIDE" >&2
+    ls -U -- $DOT_COBALT_DEFAULT >/dev/null 2>&1 && echo "WARN: ignoring augmentation parset(s) $DOT_COBALT_DEFAULT" >&2
+    ls -U -- $DOT_COBALT_OVERRIDE >/dev/null 2>&1 && echo "WARN: ignoring augmentation parset(s) $DOT_COBALT_OVERRIDE" >&2
     unset DOT_COBALT_DEFAULT DOT_COBALT_OVERRIDE
   fi
 
@@ -239,7 +256,7 @@ then
       $PARSET \
       $LOFARROOT/etc/parset-additions.d/override/*.parset \
       $DOT_COBALT_OVERRIDE \
-      > $AUGMENTED_PARSET || error "[parset] Could not create $AUGMENTED_PARSET"
+      > $AUGMENTED_PARSET || error "Could not create parset $AUGMENTED_PARSET"
   eval $nullglob_state
 
   # Use the new one from now on
@@ -256,7 +273,6 @@ then
     setkey Cobalt.OutputProc.StaticMetaDataDirectory  "$LOFARROOT/etc"
     setkey Cobalt.FinalMetaDataGatherer.database.host localhost
     setkey Cobalt.PVSSGateway.host                    ""
-    setkey Observation.Cluster.ProcessingCluster.clusterName ""
 
     # Redirect UDP/TCP input streams to any interface on the local machine
     sed 's/udp:[^:]*:/udp:0:/g' -i $PARSET
@@ -288,7 +304,7 @@ if [ -z "$HOSTS" ]; then
   HOSTS=localhost
 fi
 
-echo "[cobalt] Hosts = $HOSTS"
+echo "Hosts: $HOSTS"
 
 # Copy parset to all hosts
 cksumline=`md5sum $PARSET`
@@ -306,7 +322,7 @@ do
 
   # Copy parset to remote node
   echo "Copying parset to $h:$PARSET"
-  timeout $KILLOPT 30s scp -Bq $PARSET $h:$PARSET || error "[parset] Could not scp parset to $h"
+  timeout $KILLOPT 30s scp -Bq $PARSET $h:$PARSET || error "Could not copy parset to $h"
 done
 
 # ************************************
@@ -319,36 +335,6 @@ SSH_PRIVATE_KEY=$(getkey Cobalt.OutputProc.sshPrivateKey)
 OUTPUT_PROC_EXECUTABLE=$(getkey Cobalt.OutputProc.executable)
 OBSERVATIONID=$(getkey Observation.ObsID 0)
 
-read_cluster_model
-
-# Determine list of outputProc hosts for various purposes
-if $SLURM; then
-  # Expand node list into something usable
-  NODE_LIST="`ssh $HEADNODE scontrol show hostnames $SLURM_JOB_NODELIST`"
-else
-  # Derive host list from parset
-  NODE_LIST=$(getOutputProcHosts $PARSET)
-fi
-
-# Replace any cluster-name place holders in the locations keys
-if $GLOBALFS; then
-  if $SLURM; then
-    POSSIBLE_NODES="$NODE_LIST"
-  else
-    POSSIBLE_NODES="$COMPUTENODES"
-  fi
-
-  # Update locations in parset
-  mv -fT "$PARSET" "$PARSET.generate_globalfs"
-
-  generate_globalfs_locations.py --cluster "$CLUSTER_NAME" --hosts "$POSSIBLE_NODES" < "$PARSET.generate_globalfs" > "$PARSET"
-
-  # Derive updated host list from parset
-  NODE_LIST=$(getOutputProcHosts $PARSET)
-fi
-
-echo "[outputProc] Hosts: $NODE_LIST"
-
 # If parameters are found in the parset create a key_string for ssh command
 if [ "$SSH_PRIVATE_KEY" != "" ] 
 then
@@ -360,7 +346,7 @@ then
 fi
 
 # test the connection with local host: minimal test for valid credentials
-ssh -l $SSH_USER_NAME $KEY_STRING "localhost" "/bin/true" || error "[cobalt] Failed to ssh to localhost"
+ssh -l $SSH_USER_NAME $KEY_STRING "localhost" "/bin/true" || error "Failed to create a connection to localhost, ssh error"
 
 # Create a helper function for delete child processes and
 # a file containing the PID of these processes
@@ -376,20 +362,20 @@ function clean_up {
   EXIT_STATE=$1
   PID_LIST=$2
   
-  echo "[children] Sending SIGTERM" 
+  echo "Cleaning up child processes. Sending SIGTERM" 
   # THe kill statements might be called with an empty argument. This will 
   # result in an exit state 1. But the error is redirected to dev/null.
   kill $(cat $PID_LIST_FILE)  2> /dev/null
   kill $PID_LIST              2> /dev/null 
   
-  echo "[children] Waiting 2 seconds for soft shutdown"
+  echo "Waiting 2 seconds for soft shutdown"
   sleep 2
   
-  echo "[children] Sending SIGKILL"
+  echo "Sending SIGKILL"
   kill -9 $(cat $PID_LIST_FILE) 2> /dev/null
   kill -9 $PID_LIST             2> /dev/null
   
-  echo "[children] Removing pid file"
+  echo "removing Childprocess pid list file"
   rm -f $PID_LIST_FILE
   
   exit $EXIT_STATE 
@@ -402,72 +388,44 @@ trap 'clean_up 1' SIGTERM SIGINT SIGQUIT SIGHUP
 # Start output procs in a seperate function
 # Save file for started child processes
 # Use helper program to get the list of hosts from parset
-echo "[outputProc] pid file = $PID_LIST_FILE"
+echo "outputProc processes are appended to the file: $PID_LIST_FILE"
 touch $PID_LIST_FILE
 
-# Construct full command line for outputProc
-OUTPUTPROC_VARS="QUEUE_PREFIX=$QUEUE_PREFIX" # Variables to forward to outputProc
-OUTPUTPROC_CMDLINE="$OUTPUTPROC_VARS $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID"
-
-# Wrap command line with Docker if required
-if $DOCKER; then
-  TAG="`echo ${LOFAR_TAG} | docker-template`"
-
-  OUTPUTPROC_CMDLINE="docker run -it -e LUSER=`id -u $SSH_USER_NAME` --net=host -v $GLOBALFS_DIR:$GLOBALFS_DIR lofar-outputproc:$TAG bash -c \"$OUTPUTPROC_CMDLINE\""
-fi
-
-echo "[outputProc] command line = $OUTPUTPROC_CMDLINE"
-
-if ! $DUMMY_RUN; then
-  if $SLURM; then
-    # The nodes we need (and can use) are part of this job
-    COMMAND="srun -N $SLURM_JOB_NUM_NODES $OUTPUTPROC_CMDLINE"
-    echo "[outputProc] Starting $COMMAND"
-
-    $COMMAND &
-    PID=$!
-
-    echo -n "$PID " >> $PID_LIST_FILE  # Save the pid for cleanup
-  else
-    for HOST in $NODE_LIST
-    do
-      COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $OUTPUTPROC_CMDLINE"
-      echo "[outputProc] Starting $COMMAND"
-      
-      command_retry "$COMMAND" &  # Start retrying function in the background
-      PID=$!                      # get the pid 
-      
-      echo -n "$PID " >> $PID_LIST_FILE  # Save the pid for cleanup
-    done
-  fi
-fi
+LIST_OF_HOSTS=$(getOutputProcHosts $PARSET)
+RANK=0
+VARS="QUEUE_PREFIX=$QUEUE_PREFIX" # Variables to forward to outputProc
+for HOST in $LIST_OF_HOSTS
+do
+  COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $VARS $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID $RANK"
+  echo "Starting $COMMAND"
+  # keep a counter to allow determination of the rank (needed for binding to rtcp)
+  RANK=$(($RANK + 1))
+  
+  command_retry "$COMMAND" &  # Start retrying function in the background
+  PID=$!                      # get the pid 
+  
+  echo -n "$PID " >> $PID_LIST_FILE  # Save the pid for cleanup
+done
 
 # ************************************
 # Start rtcp 
 # ***********************************
-
-echo "[cobalt] parset = $PARSET"
 
 # Run in the background to allow signals to propagate
 #
 # -x LOFARROOT    Propagate $LOFARROOT for rtcp to find GPU kernels, config files, etc.
 # -x QUEUE_PREFIX Propagate $QUEUE_PREFIX for test-specific interaction over the message bus
 # -H              The host list to run on, derived earlier.
-if $DUMMY_RUN; then
-  # Just return success
-  true &
-else
-  mpirun.sh -x LOFARROOT="$LOFARROOT" \
-            -x QUEUE_PREFIX="$QUEUE_PREFIX" \
-            -H "$HOSTS" \
-            $MPIRUN_PARAMS \
-            $CHECK_TOOL \
-            `which rtcp` $RTCP_PARAMS "$PARSET" &
-fi
+mpirun.sh -x LOFARROOT="$LOFARROOT" \
+          -x QUEUE_PREFIX="$QUEUE_PREFIX" \
+          -H "$HOSTS" \
+          $MPIRUN_PARAMS \
+          $CHECK_TOOL \
+          `which rtcp` $RTCP_PARAMS "$PARSET" &
 PID=$!
 
 # Propagate SIGTERM
-trap "echo '[cobalt] runObservation.sh: Received signal.'; clean_up 1 $PID" SIGTERM SIGINT SIGQUIT SIGHUP
+trap "echo runObservation.sh: Received signal cleaning up child processes; clean_up 1 $PID" SIGTERM SIGINT SIGQUIT SIGHUP
 
 # Wait for $COMMAND to finish. We use 'wait' because it will exit immediately if it
 # receives a signal.
@@ -478,7 +436,7 @@ trap "echo '[cobalt] runObservation.sh: Received signal.'; clean_up 1 $PID" SIGT
 wait $PID
 OBSRESULT=$?
 
-echo "[cobalt] Exit code of observation: $OBSRESULT"
+echo "Result code of observation: $OBSRESULT"
 
 # Return codes of rtcp:
 #  0 = success
@@ -492,7 +450,7 @@ then
   #
   # Note that we might miss failures detected by rtcp, such as
   # missing final meta data!
-  echo "[cobalt] Found feed-back file $FEEDBACK_FILE, considering the observation succesful."
+  echo "Found feed-back file $FEEDBACK_FILE, considering the observation succesful."
 
   OBSRESULT=0
 fi
@@ -504,16 +462,16 @@ fi
 sendback_state "$OBSRESULT"
 
 # clean up outputProc children
-echo "[outputProc] Waiting up to 120 seconds for normal end"
+echo "Allowing 120 second for normal end of outputProc"
 #    Set trap to kill the sleep in case of signals                    save the pid of sleep
-( trap 'kill $SLEEP_PID' SIGTERM SIGINT SIGQUIT SIGHUP; sleep 120 & SLEEP_PID=$!; wait $SLEEP_PID; echo '[outputProc] Killing'; clean_up 0 ) & 
+( trap 'kill $SLEEP_PID' SIGTERM SIGINT SIGQUIT SIGHUP; sleep 120&  SLEEP_PID=$!; echo 'Starting forced cleanup outputProc:'; clean_up 0 ) & 
 KILLER_PID=$!
 
 # Waiting for the child processes to finish
 LIST_OF_PIDS_TO_WAIT_FOR=$(cat $PID_LIST_FILE)
 if [ "$LIST_OF_PIDS_TO_WAIT_FOR" != "" ] # if there are outputProc pid working
 then
-  echo "[outputProc] Waiting..."
+  echo "waiting for output procs"
   wait $(cat $PID_LIST_FILE)        2> /dev/null
 fi
 

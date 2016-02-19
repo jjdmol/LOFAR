@@ -21,36 +21,13 @@ with RPC(busname, 'GetProjectDetails') as getProjectDetails:
 from os import stat
 import sys
 import logging
-from optparse import OptionParser
 from mysql import connector
 from lofar.messaging import Service
 from lofar.messaging.Service import MessageHandlerInterface
 from lofar.common.util import waitForInterrupt
-from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 
-logger=logging.getLogger(__file__)
-
-def _idsFromString(id_string):
-    if not isinstance(id_string, basestring):
-        raise ValueError('Expected a string, got a ' + str(type(id_string)))
-
-    # parse text: it should contain a list of ints
-    # filter out everything else to prevent sql injection
-    ids = [int(y) for y in [x.strip() for x in id_string.split(',')] if y.isdigit()]
-    return ids
-
-def _isListOfInts(items):
-    if not items:
-        return False
-
-    if not isinstance(items, list):
-        return False
-
-    for x in items:
-        if not isinstance(x, int):
-            return False
-
-    return True
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+logger=logging.getLogger("momqueryservice")
 
 class MoMDatabaseWrapper:
     '''handler class for details query in mom db'''
@@ -60,32 +37,13 @@ class MoMDatabaseWrapper:
                                         passwd=passwd,
                                         database="lofar_mom3")
 
-    def getProjectDetails(self, mom_ids):
+    def getProjectDetails(self, mom_ids_str):
         ''' get the project details (project_mom2id, project_name,
         project_description, object_mom2id, object_name, object_description,
         object_type, object_group_id) for given mom object mom_ids
-        :param mixed mom_ids comma seperated string of mom2object id's, or list of ints
+        :param string mom_ids_str comma seperated string of mom2object id's
         :rtype list of dict's key value pairs with the project details
         '''
-
-        if _isListOfInts(mom_ids):
-            ids = mom_ids
-        else:
-            ids = _idsFromString(mom_ids)
-
-        logger.info(mom_ids)
-        logger.info(ids)
-
-        if not ids:
-            raise ValueError("Could not find proper ids in: " + mom_ids)
-
-        ids_str = ','.join([str(id) for id in ids])
-        logger.info(ids_str)
-
-
-        logger.info("Query for mom id%s: %s" %
-                    ('\'s' if len(ids) > 1 else '', ids_str))
-
         cursor = self.conn.cursor(dictionary=True)
         # TODO: make a view for this query in momdb!
         query = '''SELECT project.mom2id as project_mom2id, project.name as project_name, project.description as project_description,
@@ -94,38 +52,7 @@ class MoMDatabaseWrapper:
         inner join lofar_mom3.mom2object as project on project.id = object.ownerprojectid
         where object.mom2id in (%s)
         order by project_mom2id
-        ''' % (ids_str,)
-        cursor.execute(query)
-
-        rows = cursor.fetchall()
-
-        logger.info("Found %d results for mom id%s: %s" %
-                    (len(rows), '\'s' if len(ids) > 1 else '', ids_str))
-
-        result = {}
-        for row in rows:
-            object_mom2id = row['object_mom2id']
-            result[str(object_mom2id)] = dict(row)
-
-        return result
-
-    def getProjects(self):
-        ''' get the list of all projects with columns (project_mom2id, project_name,
-        project_description, status_name, status_id, last_user_id,
-        last_user_name, statustime)
-        :rtype list of dict's key value pairs with all projects
-        '''
-        cursor = self.conn.cursor(dictionary=True)
-        # TODO: make a view for this query in momdb!
-        query = '''SELECT project.mom2id as mom2id, project.name as name, project.description as description,
-                lofar_mom3.statustype.code as status_name,  lofar_mom3.statustype.id as status_id,
-        lofar_mom3.status.userid as last_user_id, lofar_mom3.status.name as last_user_name, lofar_mom3.status.statustime as statustime
-        FROM lofar_mom3.mom2object as project
-        left join lofar_mom3.mom2objectstatus as status on project.currentstatusid = status.id
-        left join lofar_mom3.status as statustype on status.statusid=statustype.id
-        where project.mom2objecttype='PROJECT'
-        order by mom2id;
-        '''
+        ''' % (mom_ids_str)
         cursor.execute(query)
 
         return cursor.fetchall()
@@ -138,33 +65,47 @@ class ProjectDetailsQueryHandler(MessageHandlerInterface):
     def __init__(self, **kwargs):
         MessageHandlerInterface.__init__(self, **kwargs)
         self.momreadonly_passwd = kwargs.pop("momreadonly_passwd", '')
-
-        self.service2MethodMap = {
-            'GetProjects': self.getProjects,
-            'GetProjectDetails': self.getProjectDetails
-            }
+        self.kwargs = kwargs
 
     def prepare_loop(self):
         self.momdb = MoMDatabaseWrapper(self.momreadonly_passwd)
 
-    def getProjectDetails(self, mom_ids):
-        logger.info(mom_ids)
-        ids = _idsFromString(mom_ids)
-        logger.info(ids)
-        if not _isListOfInts(ids):
-            raise ValueError("%s is not a proper list of ints" % str(mom_ids))
-        return self.momdb.getProjectDetails(ids)
+    def handle_message(self, text):
+        '''The actual handler function.
+        Parses the message text, converts it to csv id string,
+        looks up the project(s) details via the momdb wrapper
+        and returns the result
+        :param string text The message's text content
+        :rtype dict of momid -> details dict
+        '''
 
-    def getProjects(self):
-        return self.momdb.getProjects()
+        # parse text: it should contain a list of ints
+        # filter out everything else to prevent sql injection
+        mom_ids = [x.strip() for x in text.split(',')]
+        mom_ids = [x for x in mom_ids if x.isdigit()]
+        mom_ids_str = ', '.join(mom_ids)
 
-def createService(busname=DEFAULT_BUSNAME,
-                  servicename=DEFAULT_SERVICENAME,
+        if not mom_ids_str:
+            raise KeyError("Could not find proper ids in: " + text)
+
+        logger.info("Query for mom id%s: %s" %
+                    ('\'s' if len(mom_ids) > 1 else '', mom_ids_str))
+
+        result = {}
+        rows = self.momdb.getProjectDetails(mom_ids_str)
+        for row in rows:
+            object_mom2id = row['object_mom2id']
+            result[str(object_mom2id)] = row
+            logger.info("Result for %s: %s" % (object_mom2id, str(row)))
+
+        return result
+
+
+def createService(busname='momqueryservice',
                   momreadonly_passwd='',
                   handler=None):
     '''create the GetProjectDetails on given busname
     :param string busname: name of the bus on which this service listens
-    :param string servicename: name of the service
     :param string momreadonly_passwd: the momreadonly passwd.
     :param ProjectDetailsQueryHandler handler: ProjectDetailsQueryHandler class Type, or mock like type
     :rtype: lofar.messaging.Service'''
@@ -172,34 +113,27 @@ def createService(busname=DEFAULT_BUSNAME,
     if not handler:
         handler = ProjectDetailsQueryHandler
 
-    return Service(servicename,
+    return Service('GetProjectDetails',
                    handler,
                    busname=busname,
                    numthreads=1,
-                   use_service_methods=True,
-                   verbose=False,
                    handler_args={'momreadonly_passwd':momreadonly_passwd})
 
 
-def main(busname=DEFAULT_BUSNAME,
-         servicename=DEFAULT_SERVICENAME,
-         momreadonly_passwd=None):
+def main():
     '''Starts the momqueryservice.GetProjectDetails service'''
 
-    if not momreadonly_passwd:
-        from lofar.mom.momqueryservice.config import momreadonly_passwd
+    # make sure config.py is mode 600 to hide passwords
+    if oct(stat('config.py').st_mode & 0777) != '0600':
+        print 'Please change permissions of config.py to 600'
+        exit(-1)
 
-    # Check the invocation arguments
-    parser = OptionParser("%prog [options]",
-                          description='runs the momqueryservice')
-    parser.add_option("-b", "--busname", dest="busname", type="string", default=busname, help="Name of the bus exchange on the qpid broker, default: %s" % busname)
-    parser.add_option("-s", "--servicename", dest="servicename", type="string", default=servicename, help="Name for this service, default: %s" % servicename)
-    (options, args) = parser.parse_args()
+    # safely import momreadonly_passwd
+    from lofar.mom.momqueryservice.config import momreadonly_passwd
 
     # start the service and listen.
-    with createService(busname=options.busname, servicename=options.servicename, momreadonly_passwd=momreadonly_passwd):
+    with createService('momqueryservice', momreadonly_passwd):
         waitForInterrupt()
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
     main()

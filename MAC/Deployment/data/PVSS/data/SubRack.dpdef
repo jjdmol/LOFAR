@@ -1,9 +1,8 @@
 SPU.status			:ObjectStatus
 SPU.Vhba			float
 SPU.Vlba			float
-SPU.Vspu			float
 SPU.Vdig			float
-SPU.temperature			float
+SPU.temperature		float
 clockBoard.status		:ObjectStatus
 clockBoard.Vfsp			float
 clockBoard.Vclock		float
@@ -11,4 +10,4 @@ clockBoard.version		string
 clockBoard.freq			int
 clockBoard.lock160		bool
 clockBoard.lock200		bool
-clockBoard.temperature		float
+clockBoard.temperature	float

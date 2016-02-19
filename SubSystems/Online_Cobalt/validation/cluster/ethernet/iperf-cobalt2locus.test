@@ -124,10 +124,10 @@ run_iperf_clients()
       rm -f /tmp/iperf-$host-*.log; \
       for target in ${IPERF_NODES[$host]}; \
       do \
-        iperf -N -t $IPERF_TIME -yc -r -c \${target} \
+        iperf -N -t $IPERF_TIME -yc -c \${target} \
           > /tmp/iperf-$host-\${target}.log & \
       done"
-    run_command "ssh $host \$(eval $ssh_cmd)" &
+    run_command "ssh $host \$(eval $ssh_cmd)" || exit
   done
 }
 
@@ -137,7 +137,7 @@ run_iperf_clients()
 # wait for one extra second.
 wait_for_results()
 {
-  sleep 5
+  sleep 1
   echo "Waiting $IPERF_TIME seconds for results ..." >&2
   sleep $IPERF_TIME
 }

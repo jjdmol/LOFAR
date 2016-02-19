@@ -54,9 +54,9 @@ namespace LOFAR
     }
 
 
-    string getStorageControlDescription(int observationID )
+    string getStorageControlDescription(int observationID, int rank)
     {
-      return str(format("[obs %d] control") % observationID);
+      return str(format("[obs %d rank %d] control") % observationID % rank);
     }
 
 

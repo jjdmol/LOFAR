@@ -77,11 +77,7 @@ if(_result EQUAL 0)
   endif(_root MATCHES ".+")
   if(_rvers MATCHES "^/trunk/")
     set(_rvers "trunk")
-    set(_branch "trunk")
   elseif(_rvers MATCHES "^/tags/" OR _rvers MATCHES "^/branches/")
-    # branch = directory right under tags/ or branches/
-    string(REGEX REPLACE "^/([^/]*/[^/]*)/.*$" "\\1" _branch "${_rvers}")
-
     # We have a task branch (for a bug) or a release branch.
     # Remove all but version and replace _ in version by .
     string(REGEX REPLACE "^/[^/]*/([^/]*)/.*$" "\\1" _rvers "${_rvers}")
@@ -125,8 +121,6 @@ file(WRITE "${_file}.tmp"
   "    // Get the info for this package.\n"
   "    static Version getInfo();\n"
   "\n"
-  "    // Get the branch that was checked out (relative to repository root).\n"
-  "    static std::string getBranch();\n"
   "    // Get the version number of the package (as given in repository).\n"
   "    static std::string getVersion();\n"
   "    // Get the svn version number of the package according to CMakeLists.txt.\n"
@@ -174,15 +168,12 @@ file(APPEND "${_file}.tmp"
   "  Version ${_pkg}Version::getInfo()\n"
   "  {\n"
   "    return Version (\"@PACKAGE_NAME@\",\n"
-  "                    getBranch(),\n"
   "                    getVersion(), getConfVersion(),\n"
   "                    getRevision(), getPackageRevision(),\n"
   "                    getNrChangedFiles(),\n"
   "                    getBuildTime(), getBuildUser(), getBuildMachine());\n"
   "  }\n"
   "\n"
-  "  std::string ${_pkg}Version::getBranch()\n"
-  "    { return \"${_branch}\"; }\n"
   "  std::string ${_pkg}Version::getVersion()\n"
   "    { return \"${_rvers}\"; }\n"
   "  std::string ${_pkg}Version::getConfVersion()\n"

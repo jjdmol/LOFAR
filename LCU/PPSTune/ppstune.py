@@ -184,34 +184,35 @@ def check_output(args, stderr = None, execute = True, timeout_s = None):
         else:
             start_date = time.time()
             process = subprocess.Popen(args,
-                shell  = False,
-                stdout = subprocess.PIPE,
-                stdin  = subprocess.PIPE,
-                stderr = stderr)
-            stdout = []
-            out = ''
-            while True:
-                out = process.stdout.read(1)
-                if out == '' and process.poll() != None:
-                    break
-                if out != '':
-                    stdout.append(out)
+                                       shell  = False,
+                                       stdout = subprocess.PIPE,
+                                       stdin  = subprocess.PIPE,
+                                       stderr = stderr)
+            
+            proc_ready = True
+            while process.poll() == None:  # while poll() returns None, process is still running.
                 if time.time() - start_date > timeout_s:
+                    proc_ready = False
                     logging.error('timeout after %6.3f s: terminating command %s ',
                                   timeout_s, ' '.join(args))
-                    os.kill(process.pid, signal.SIGTERM)
-                    raise RuntimeError('%s killed with signal %d; output:\n%r' %
-                                       (' '.join(args), signal.SIGTERM,
-                                        ''.join(stdout)))
+                    break
+                time.sleep(1.0)
+            
             logging.debug('process.poll(): %r', process.poll())
             if process.poll() < 0:
                 raise RuntimeError('%s killed with signal %d' %
                                    (' '.join(args), process.poll()))
-            return ''.join(stdout)
+            
+            if proc_ready:
+                return process.communicate()[0]
+            
+            os.kill(process.pid, signal.SIGTERM)
+            raise RuntimeError('%s killed with signal %d; output:\n%s' %
+                              (' '.join(args), signal.SIGTERM,
+                               ''.join(stdout)))
+            return ''
     else:
         return ''
-
-
 
 def gmtime_tuple(date_s):
     r'''
@@ -717,18 +718,17 @@ def rspdriver_down(swlevel_cmd = '/opt/lofar/bin/swlevel'):
     else:
         return True
 
-
+    
 def kill_rspctl():
     r"""
     kill all running rspctl processes.
     """
     logging.info('Killing all rspctl processes')
-    output = check_output(['killall', 'rspctl'], timeout_s = 10.0)
-    #output = subprocess.Popen(['killall', 'rspctl'],
-    #                    stdin  = subprocess.PIPE,
-    #                    stdout = subprocess.PIPE).communicate()[0]
+    output = subprocess.Popen(['killall', 'rspctl'],
+                        stdin  = subprocess.PIPE,
+                        stdout = subprocess.PIPE).communicate()[0]
     logging.debug('%s' % output)
-
+    
 
 def restart_rsp_driver(lofar_log_dir,
                        rspdriver_cmd = '/opt/lofar/bin/RSPDriver',
@@ -2296,11 +2296,11 @@ def prepare_for_tuning(conf_etc_name, start_date, clock_mhz,
             raise IOError('Failed to backup %s' % conf_etc_name)
 
     
-    swlevel(2, swlevel_cmd = swlevel_cmd, timeout_s = 180.0)
-
+    swlevel(2, swlevel_cmd = swlevel_cmd)
+    
     # befor switching clock kill all running rspctl processes
     kill_rspctl()
-
+    
     old_clock_mhz = wait_for_clocks_to_lock(rspctl_cmd = rspctl_cmd,
                                             timeout_s  = timeout_s)
     logging.info('Clocks locked to %d MHz', old_clock_mhz)
@@ -2308,23 +2308,23 @@ def prepare_for_tuning(conf_etc_name, start_date, clock_mhz,
     """
     PD: do not restart driver to reset all, but always change clock,
         kill_rspctl() is used to kill all running rspctl processes                            
-
+    
     restart_rsp_driver(swlevel_cmd = swlevel_cmd, sudo_cmd = sudo_cmd,
                        rspdriver_cmd = rspdriver_cmd,
                        lofar_log_dir = lofar_log_dir)
     old_clock_mhz = wait_for_clocks_to_lock(rspctl_cmd = rspctl_cmd,
                                             timeout_s  = timeout_s)
     logging.info('Clocks locked to %d MHz', old_clock_mhz)
-
+    
     if old_clock_mhz != clock_mhz:
         set_clock_frequency_mhz(clock_mhz, rspctl_cmd = rspctl_cmd,
                                 timeout_s = timeout_s)
-
+                                
     """
     # always switch clock to reset firmware and clear the cache
     set_clock_frequency_mhz(clock_mhz, rspctl_cmd = rspctl_cmd,
                             timeout_s = timeout_s)
-
+    
     time.sleep(1.0)
     rspctl_status = check_output([rspctl_cmd, '--status'], timeout_s = 3.0)
     if 'ERROR' in rspctl_status:
@@ -2387,7 +2387,7 @@ def install_sig_term_handler(start_date, initial_swlevel, lofar_log_dir):
         logging.error('Received signal %d; terminating', signal_number)
         logging.error('Stack frame:\n%s',
                       str(inspect.getframeinfo(stack_frame)))
-
+        
         # restart_rsp_driver(lofar_log_dir = lofar_log_dir)
         # PD: set default clock frequency
         set_clock_frequency_mhz(200)

@@ -31,7 +31,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    // Receive and process a full observation. Will:
+    // Receive and process a full observation, being rank 'myRank'. Will:
     //   * Receive a Parset over the controlStream
     //   * Fulfill roles for parset.settings.outputProcHosts[myRank]:
     //       - Start SubbandWriters/TABWriters
@@ -41,7 +41,7 @@ namespace LOFAR
     //   * Call writeFeedbackLTA to obtain the LTA feedback from all writers,
     //     and write it to GPUProc.
     // \return \c true upon success, \c false upon failure.
-    bool process(Stream &controlStream);
+    bool process(Stream &controlStream, unsigned myRank);
 
   } // namespace Cobalt
 } // namespace LOFAR

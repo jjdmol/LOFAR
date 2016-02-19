@@ -16,7 +16,6 @@ PANEL,-1 -1 114 79 N "_3DFace" 5
     subbandInfo.backCol(\"Lofar_invalid\");
     subbandInfo.toolTipText = \"\";
   } else {
-    if (written + dropped <= 0) return;
     // calc % dropped
     float percdropped = dropped / (written + dropped) * 100;
     subbandInfo.backCol(getColor(percdropped));

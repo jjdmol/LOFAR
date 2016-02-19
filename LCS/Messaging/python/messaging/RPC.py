@@ -37,9 +37,6 @@ def _args_as_content(*args,**kwargs):
     :return: Qpid message
     :raise InvalidMessage if `msg` cannot be converted into a Qpid message.
     """
-    if len(args) == 0 and len(kwargs) == 0:
-        return None
-
     HasMultipleArgs,HasKwArgs = _analyze_args(args, kwargs)
     if HasMultipleArgs:
         # convert arguments to list
@@ -72,12 +69,11 @@ class RPC():
     As a side-effect the sender and session are destroyed.
 
     """
-    def __init__(self, service, broker=None, **kwargs ):
+    def __init__(self, service, **kwargs ):
         """
         Initialize an Remote procedure call using:
             service= <str>    Service Name
             busname= <str>    Bus Name
-            broker= <str>     qpid broker, default None which is localhost
             timeout= <float>  Time to wait in seconds before the call is considered a failure.
             Verbose= <bool>   If True output extra logging to stdout.
 
@@ -88,41 +84,26 @@ class RPC():
         self.ForwardExceptions = kwargs.pop("ForwardExceptions", False)
         self.Verbose           = kwargs.pop("Verbose", False)
         self.BusName           = kwargs.pop("busname", None)
-        self.ServiceName       = service
-        self.broker            = broker
+        self.ServiceName = service
         if self.BusName is None:
-            self.Request = ToBus(self.ServiceName, broker=self.broker)
+            self.Request = ToBus(self.ServiceName)
         else:
-            self.Request = ToBus("%s/%s" % (self.BusName, self.ServiceName), broker=self.broker)
+            self.Request = ToBus("%s/%s" % (self.BusName, self.ServiceName))
         if len(kwargs):
             raise AttributeError("Unexpected argument passed to RPC class: %s" %( kwargs ))
-
-    def open(self):
-        """
-        Start accepting requests.
-        """
-
-        self.Request.open()
-
-    def close(self):
-        """
-        Stop accepting requests.
-        """
-
-        self.Request.close()
 
     def __enter__(self):
         """
         Internal use only. (handles scope 'with')
         """
-        self.open()
+        self.Request.open()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
         Internal use only. (handles scope 'with')
         """
-        self.close()
+        self.Request.close()
 
     def __call__(self, *args, **kwargs):
         """
@@ -141,9 +122,9 @@ class RPC():
         options = {'create':'always','delete':'receiver'}
         ReplyAddress = "reply.%s" % (str(uuid.uuid4()))
         if self.BusName is None:
-            Reply = FromBus("%s ; %s" %(ReplyAddress,str(options)), broker=self.broker)
+            Reply = FromBus("%s ; %s" %(ReplyAddress,str(options)))
         else:
-            Reply = FromBus("%s/%s" % (self.BusName, ReplyAddress), broker=self.broker)
+            Reply = FromBus("%s/%s" % (self.BusName, ReplyAddress))
         with Reply:
             MyMsg = RequestMessage(content=Content, reply_to=ReplyAddress, has_args=HasArgs, has_kwargs=HasKwArgs)
             MyMsg.ttl = timeout

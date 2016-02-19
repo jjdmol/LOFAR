@@ -33,7 +33,6 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
-#include <Common/SystemUtil.h>
 #include <Common/Exceptions.h>
 #include <MessageBus/ToBus.h>
 #include <MessageBus/Protocols/TaskFeedbackDataproducts.h>
@@ -97,12 +96,14 @@ size_t getMaxRunTime(const Parset &parset)
     return 0;
 }
 
-bool process(Stream &controlStream)
+bool process(Stream &controlStream, unsigned myRank)
 {
   bool success(true);
   Parset parset(&controlStream);
 
-  string myHostName = myHostname(false);
+  const vector<string> &hostnames = parset.settings.outputProcHosts;
+  ASSERT(myRank < hostnames.size());
+  string myHostName = hostnames[myRank];
 
   if (parset.settings.realTime) {
     /*
@@ -151,11 +152,7 @@ bool process(Stream &controlStream)
     if (parset.settings.correlator.enabled) {
       for (size_t fileIdx = 0; fileIdx < parset.settings.correlator.files.size(); ++fileIdx)
       {
-        struct ObservationSettings::Correlator::File &file = parset.settings.correlator.files[fileIdx];
-
-        if (file.location.host != myHostName
-         && file.location.host.find(myHostName + ".") != 0
-         && file.location.host != "localhost")
+        if (parset.settings.correlator.files[fileIdx].location.host != myHostName) 
           continue;
 
         mdLogger.log(mdKeyPrefix + PN_COP_LOCUS_NODE + '[' + lexical_cast<string>(fileIdx) + ']',
@@ -178,9 +175,7 @@ bool process(Stream &controlStream)
       {
         struct ObservationSettings::BeamFormer::File &file = parset.settings.beamFormer.files[fileIdx];
 
-        if (file.location.host != myHostName
-         && file.location.host.find(myHostName + ".") != 0
-         && file.location.host != "localhost")
+        if (file.location.host != myHostName) 
           continue;
 
         const unsigned allFileIdx = fileIdx + parset.settings.correlator.files.size();

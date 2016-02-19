@@ -3,7 +3,6 @@ import os
 import sys
 import copy
 import re
-from collections import OrderedDict
 from lofarpipe.support.parset import Parset
 from lofarpipe.support.control import control
 
@@ -505,7 +504,7 @@ class GenericPipeline(control):
         steplist = []
 
     def _replace_values(self):
-        replacedict = OrderedDict()
+        replacedict = {}
         for check in self.parset.keywords():
             if str(check).startswith('!'):
                 replacedict[str(check).lstrip('!').lstrip(' ')] = str(self.parset[check])
@@ -513,7 +512,7 @@ class GenericPipeline(control):
                 replacedict[str(check).replace('pipeline.replace.', '').lstrip(' ')] = str(self.parset[check])
         #print 'REPLACEDICT: ',replacedict
         for check in self.parset.keywords():
-            for k, v in reversed(replacedict.items()):
+            for k, v in replacedict.iteritems():
                 if '{{ '+k+' }}' in str(self.parset[check]):
                     replacestring = str(self.parset[check]).replace('{{ '+k+' }}',v)
                     self.parset.replace(check,replacestring)

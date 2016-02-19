@@ -29,7 +29,6 @@
 namespace LOFAR {
 
   Version::Version (const std::string& packageName,
-		    const std::string& branch,
 		    const std::string& version,
 		    const std::string& confVersion,
 		    const std::string& revision,
@@ -39,7 +38,6 @@ namespace LOFAR {
 		    const std::string& buildUser,
 		    const std::string& buildMachine)
     : itsPackageName     (packageName),
-      itsBranch          (branch),
       itsVersion         (version),
       itsConfVersion     (confVersion),
       itsRevision        (revision),
@@ -131,7 +129,6 @@ namespace LOFAR {
       os << " (in CMakeLists.txt: " << confVersion() << ')';
     }
     os << std::endl;
-    os << indent << " branch = " << branch() << std::endl;
     os << indent << " overall revision  = " << revision();
     if (!sameRev) os << " (note: used packages have different revision)";
     os << std::endl;

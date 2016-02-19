@@ -24,41 +24,27 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
     $scope.dataService = dataService;
     $scope.ganttData = []
 
-    self.taskStatusColors = {'prepared':'#aaff00',
-                             'approved':'#ffaa00',
-                             'on_hold':'#ff0000',
-                             'conflict':'#ffccaa',
-                             'prescheduled': '#6666ff',
-                             'scheduled': '#ff66ff',
-                             'queued': '#bb6644',
-                             'active': '#eeffee',
-                             'completing': '#776688',
-                             'finished': '#66ff33',
-                             'aborted': '#ff3366',
-                             'error': '#ff4488',
-                             'obsolete': '#555555'}
-
     $scope.options = {
         mode: 'custom',
         scale: 'day',
         sideMode: 'Tree',
-        columns: ['model.name', 'starttime', 'endtime'],
-        treeTableColumns: ['starttime', 'endtime'],
-        columnsHeaders: {'model.name' : 'Name', 'starttime': 'From', 'endtime': 'To'},
-        columnsClasses: {'model.name' : 'gantt-column-name', 'starttime': 'gantt-column-from', 'endtime': 'gantt-column-to'},
+        columns: ['model.name', 'from', 'to'],
+        treeTableColumns: ['from', 'to'],
+        columnsHeaders: {'model.name' : 'Name', 'from': 'From', 'to': 'To'},
+        columnsClasses: {'model.name' : 'gantt-column-name', 'from': 'gantt-column-from', 'to': 'gantt-column-to'},
         columnsFormatters: {
-            'starttime': function(starttime) {
-                return starttime !== undefined ? starttime.format('lll') : undefined;
+            'from': function(from) {
+                return from !== undefined ? from.format('lll') : undefined;
             },
-            'endtime': function(endtime) {
-                return endtime !== undefined ? endtime.format('lll') : undefined;
+            'to': function(to) {
+                return to !== undefined ? to.format('lll') : undefined;
             }
         },
         treeHeaderContent: '<i class="fa fa-align-justify"></i> {{getHeader()}}',
                               columnsHeaderContents: {
                                   'model.name': '<i class="fa fa-align-justify"></i> {{getHeader()}}',
-                              'starttime': '<i class="fa fa-calendar"></i> {{getHeader()}}',
-                              'endtime': '<i class="fa fa-calendar"></i> {{getHeader()}}'
+                              'from': '<i class="fa fa-calendar"></i> {{getHeader()}}',
+                              'to': '<i class="fa fa-calendar"></i> {{getHeader()}}'
                               },
         autoExpand: 'both',
         api: function(api) {
@@ -67,33 +53,21 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
 
             api.core.on.ready($scope, function () {
                     api.tasks.on.moveEnd($scope, moveHandler);
-                    api.tasks.on.resizeEnd($scope, moveHandler);
                 }
             );
         }
     };
 
-    function moveHandler(item)
+    function moveHandler(task, fromRow)
     {
-        var task_id = undefined;
-        if(item.row.model.id.startsWith('group')) {
-            var claimGroupId = item.model.id;
-            var claimGroup = $scope.dataService.resourceGroupClaimDict[claimGroupId];
-            task_id = claimGroup.task_id;
+        if(task.row.model.name.startsWith('group')) {
         }
         else {
-            var claimId = item.model.id;
+            var claimId = task.model.id;
             var claim = $scope.dataService.resourceClaimDict[claimId];
-            task_id = claim.task_id;
-        }
-        if(task_id) {
-            var task = $scope.dataService.taskDict[task_id];
-            var updatedTask = {
-                id: task.id,
-                starttime: item.model.from._d.toISOString(),
-                endtime: item.model.to._d.toISOString()
-            };
-            $scope.dataService.putTask(updatedTask);
+            var t = $scope.dataService.taskDict[claim.taskId];
+            t.from = task.model.from._d.toISOString();
+            t.to = task.model.to._d.toISOString();
         }
     };
 
@@ -135,13 +109,13 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
         for(var i = 0; i < numResources; i++)
         {
             var resource = resources[i];
+            var groupIds = resourceIdToGroupIdsDict[resource.id];
+            var numGroups = groupIds.length;
 
-            if(resourceIdToGroupIdsDict && resourceIdToGroupIdsDict[resource.id] && resourceIdToGroupIdsDict[resource.id].length > 0) {
-                var groupIds = resourceIdToGroupIdsDict[resource.id];
-                var numGroups = groupIds.length;
+            if(numGroups > 0) {
                 for(var j = 0; j < numGroups; j++) {
                     var parentRowId = 'group_' + groupIds[j];
-                    var resourceRowId = 'resource_' + resource.id + '_group_' + groupIds[j];
+                    var resourceRowId = 'group_' + groupIds[j] + '_resource_' + resource.id;
                     //make resource row child of group row
                     ganntRowsDict[resourceRowId] = {
                         'id': resourceRowId,
@@ -167,7 +141,7 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
         //assign each groupclaim to its resourcegroup
         for(var i = 0; i < numResourceGroupClaims; i++) {
             var groupClaim = resourceGroupClaims[i];
-            var task = taskDict[groupClaim.task_id];
+            var task = taskDict[groupClaim.taskId];
 
             if(task)
             {
@@ -177,9 +151,8 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
                 var groupClaimTask = {
                     id: groupClaim.id,
                     name: task ? task.name : '<unknown>',
-                    'from': groupClaim.starttime,
-                    'to': groupClaim.endtime,
-                    'color': self.taskStatusColors[task.status]
+                    'from': groupClaim.startTime,
+                    'to': groupClaim.endTime
                 };
 
                 if(ganntGroupRow)
@@ -190,24 +163,24 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
         //and assign each resourceclaim to its resource in each group
         for(var i = 0; i < numResourceClaims; i++) {
             var claim = resourceClaims[i];
-            var task = taskDict[claim.task_id];
+            var task = taskDict[claim.taskId];
 
             if(task)
             {
-                if(resourceIdToGroupIdsDict && resourceIdToGroupIdsDict[claim.resource_id] && resourceIdToGroupIdsDict[claim.resource_id].length> 0) {
-                    var groupIds = resourceIdToGroupIdsDict[claim.resource_id];
-                    var numGroups = groupIds.length;
+                var groupIds = resourceIdToGroupIdsDict[claim.resourceId];
+                var numGroups = groupIds.length;
+
+                if(numGroups > 0) {
                     for(var j = 0; j < numGroups; j++) {
-                        var resourceRowId = 'resource_' + claim.resource_id + '_group_' + groupIds[j];
+                        var resourceRowId = 'group_' + groupIds[j] + '_resource_' + claim.resourceId;
                         var ganntRow = ganntRowsDict[resourceRowId];
                         if(ganntRow)
                         {
                             var claimTask = {
                                 id: claim.id,
                                 name: task ? task.name : '<unknown>',
-                                'from': claim.starttime,
-                                'to': claim.endtime,
-                                'color': self.taskStatusColors[task.status]
+                                'from': claim.startTime,
+                                'to': claim.endTime
                             };
 
                             ganntRow.tasks.push(claimTask);
@@ -215,16 +188,14 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
                     }
                 }
                 else {
-                    var resourceRowId = 'resource_' + claim.resource_id;
+                    var resourceRowId = 'resource_' + claim.resourceId;
                     var ganntRow = ganntRowsDict[resourceRowId];
                     if(ganntRow)
                     {
                         var claimTask = {
-                            id: claim.id,
                             name: task ? task.name : '<unknown>',
-                            'from': claim.starttime,
-                            'to': claim.endtime,
-                            'color': self.taskStatusColors[task.status]
+                            'from': claim.startTime,
+                            'to': claim.endTime
                         };
 
                         ganntRow.tasks.push(claimTask);
@@ -243,15 +214,15 @@ ganttControllerMod.controller('GanttController', ['$scope', 'dataService', funct
         if(self.doInitialCollapse && numResources && numResourceGroups)
         {
             doInitialCollapse = false;
-//             setTimeout(function() { $scope.api.tree.collapseAll(); }, 50);
+            setTimeout(function() { $scope.api.tree.collapseAll(); }, 50);
         }
     };
 
-    $scope.$watch('dataService.tasks', updateGanttData, true);
+    $scope.$watch('dataService.tasks', updateGanttData);
     $scope.$watch('dataService.resources', updateGanttData);
-    $scope.$watch('dataService.resourceClaims', updateGanttData, true);
+    $scope.$watch('dataService.resourceClaims', updateGanttData);
     $scope.$watch('dataService.resourceGroups', updateGanttData);
-    $scope.$watch('dataService.resourceGroupClaims', updateGanttData, true);
+    $scope.$watch('dataService.resourceGroupClaims', updateGanttData);
     $scope.$watch('dataService.filteredTaskDict', updateGanttData);
 }
 ]);

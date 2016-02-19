@@ -87,7 +87,6 @@
 // navFunct_observationInPool                 : Look if a given observation is in a given pool (planned,active, finished)
 // navFunct_observationNameToNumber           : Strips Observation from the name and returns the bare number
 // navFunct_ObsToTemp                         : returns the temp observationname
-// navFunct_printLastError                    : determines if there was an error, and if so prints the errorcode text and the error text
 // navFunct_queryConnectObservations          : Queryconnect to keep track of all observations
 // navFunct_receiver2Cabinet                  : Returns the CabinetNr for a RecieverNr
 // navFunct_receiver2HBA                      : Returns the HBANr for a RecieverNr
@@ -2625,14 +2624,4 @@ bool navFunct_checkEmailAddress(string anAddress)
   dyn_string part2 = strsplit(part1[2],".");
   if (dynlen(part2) != 2 || part2[1] == "" || part2[2] == "" ) return FALSE;
   return TRUE;
-}
-
-void navFunct_printLastError(string place, dyn_errClass err)
-{
-   if(dynlen(err) > 0) 
-   { 
-     string dpName = getErrorDpName(err); // get the dpname relatedto the error
-     string errText = getErrorText(err); //get the error text 
-     LOG_ERROR(place+"| Error : " + dpName + " : " + errText);
-   } 
 }

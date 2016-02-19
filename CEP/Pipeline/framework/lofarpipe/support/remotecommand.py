@@ -78,8 +78,6 @@ def run_remote_command(config, logger, host, command, env, arguments = None):
     except:
         method = None
 
-    logger.info("********************** Remote method is %s" % method)
-
     if method == "paramiko":
         try:
             key_filename = config.get('remote', 'key_filename')
@@ -96,17 +94,13 @@ def run_remote_command(config, logger, host, command, env, arguments = None):
         return run_via_mpiexec_cep(logger, command, arguments, host)
     elif method == "slurm_srun_cep3":
         return run_via_slurm_srun_cep3(logger, command, arguments, host)
-    elif method == "custom_cmdline":
-        return run_via_custom_cmdline(logger, host, command, env, arguments, config)
     else:
         return run_via_ssh(logger, host, command, env, arguments)
 
 def run_via_slurm_srun_cep3(logger, command, arguments, host):
-    logger.debug("Dispatching command to %s with srun" % host)
     for arg in arguments:
         command = command + " " + str(arg)
     commandstring = ["srun","-N 1","-n 1","-w",host, "/bin/sh", "-c", "hostname && " + command]
-    #commandstring = ["srun","-N 1","--cpu_bind=map_cpu:none","-w",host, "/bin/sh", "-c", "hostname && " + command]
     # we have a bug that crashes jobs when too many get startet at the same time
     # temporary NOT 100% reliable workaround
     #from random import randint
@@ -182,53 +176,6 @@ def run_via_ssh(logger, host, command, environment, arguments):
     commandstring.extend(re.escape(str(arg)) for arg in arguments)
     ssh_cmd.append('"' + " ".join(commandstring) + '"')
     process = spawn_process(ssh_cmd, logger)
-    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
-    return process
-
-def run_via_custom_cmdline(logger, host, command, environment, arguments, config):
-    """
-    Dispatch a remote command via a customisable command line
-
-    We return a Popen object pointing at the running executable, to which we add a
-    kill method for shutting down the connection if required.
-
-    The command line is taken from the "remote.cmdline" configuration option,
-    with the following strings replaced:
-
-      {host}         := host to execute command on
-      {command}      := bash command line to be executed
-      {uid}          := uid of the calling user
-
-      {image}        := docker.image configuration option
-      {slurm_job_id} := the SLURM job id to allocate resources in
-
-    """
-    commandArray = ["%s=%s" % (key, value) for key, value in environment.items()]
-    commandArray.append(command)
-    commandArray.extend(re.escape(str(arg)) for arg in arguments)
-    commandStr = " ".join(commandArray)
-
-    try:
-        image = config.get('docker', 'image')
-    except:
-        image = "lofar"
-
-    # Construct the full command line, except for {command}, as that itself
-    # can contain spaces which we don't want to split on.
-    full_command_line = config.get('remote', 'cmdline').format(
-      uid          = os.geteuid(),
-      slurm_job_id = os.environ.get("SLURM_JOB_ID"),
-      docker_image = image,
-      host         = host,
-      command      = "{command}"
-    ).split(' ')
-
-    # Fill in {command} somewhere
-    full_command_line = [x.format(command = commandStr) for x in full_command_line]
-
-    logger.debug("Dispatching command to %s with custom_cmdline: %s" % (host, full_command_line))
-
-    process = spawn_process(full_command_line, logger)
     process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
     return process
 
@@ -323,7 +270,8 @@ class ComputeJob(object):
                     "PYTHONPATH": os.environ.get('PYTHONPATH'),
                     "LD_LIBRARY_PATH": os.environ.get('LD_LIBRARY_PATH'),
                     "LOFARROOT" : os.environ.get('LOFARROOT'),
-                    "QUEUE_PREFIX" : os.environ.get('QUEUE_PREFIX','')
+                    "QUEUE_PREFIX" : os.environ.get('QUEUE_PREFIX',''),
+                    "LOFAR_OBSID" : os.environ.get('LOFAR_OBSID','')
                 },
                 arguments = [id, jobhost, jobport]
             )

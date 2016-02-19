@@ -72,7 +72,7 @@ bool Station_Processes_initList() {
   dynClear(station_procList);
   
   if (!navFunct_dpReachable(station_selectedStation)) {
-    return false;
+    return;
   }
   int z;
   dyn_dyn_anytype tab;
@@ -285,7 +285,7 @@ Station_Processes_UpdateStationTree() {
       LOG_TRACE("Station_Processes.ctl:updateStationTree|calling UpdateStationControllers. selected ststion: "+station_selectedStation);
       if (!Station_Processes_UpdateStationControllers()) {
         LOG_ERROR("Station_Processes.ctl:UpdateStationTree|UpdateStationControllers returned false");
-        return;
+        return false;
       }
       if (station_selectedStation != "" && stationTree.itemExists(navFunct_bareDBName(station_selectedStation))) {
         stationTree.setSelectedItem(navFunct_bareDBName(station_selectedStation),true);

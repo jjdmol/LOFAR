@@ -28,7 +28,13 @@ LOGFILE=$LOFARROOT/var/log/rtcp-$OBSID.log
 # The FIFO used for communication with rtcp
 COMMANDPIPE=$LOFARROOT/var/run/rtcp-$OBSID.pipe
 
-source cobalt_functions.sh
+function addlogprefix {
+  ME="`basename "$0" .sh`@`hostname`"
+  while read LINE
+  do
+    echo "$ME" "`date "+%F %T.%3N"`" "$LINE"
+  done
+}
 
 (
 # Always print a header, to match errors to observations
@@ -49,7 +55,6 @@ function error {
 [ -n "$PARSET" ] || error "No parset provided"
 [ -f "$PARSET" -a -r "$PARSET" ] || error "Cannot read parset: $PARSET"
 
-# Export a copy of the parset to the TBB software
 TBB_PARSET=/globalhome/lofarsystem/log/L$OBSID.parset
 echo "Copying parset to $TBB_PARSET for postprocessing"
 cp "$PARSET" "$TBB_PARSET" || true
@@ -59,27 +64,10 @@ ln -sfT $TBB_PARSET /globalhome/lofarsystem/log/latest || true
 [ -e "$COMMANDPIPE" ] && rm -f "$COMMANDPIPE"
 mkfifo -m 0660 "$COMMANDPIPE" || true
 
-# Construct command line
-COMMAND="runObservation.sh -P $PIDFILE -o Cobalt.commandStream=file:$COMMANDPIPE $PARSET"
-
-# Process cluster requirements
-read_cluster_model
-
-if $SLURM; then
-  # We need to issue "salloc" on the target cluster, and once the resources
-  # are available, the job should first SSH back here to start the observation.
-
-  # Note that we need to marshall some SLURM environment variables as well, hence the use of bash.
-  for s in SLURM_JOB_ID SLURM_JOB_NODELIST SLURM_JOB_NUM_NODES; do
-    SLURM_VARS+=" $s=\$$s"
-  done
-
-  COMMAND="ssh -tt $HEADNODE salloc -N $NRCOMPUTENODES bash -c 'ssh `hostname -f` -tt $SLURM_VARS $COMMAND'"
-fi
-
 # Start observation in the background
-echo "Starting $COMMAND"
-$COMMAND > $LOGFILE 2>&1 </dev/null &
+PARAMS="-P $PIDFILE -o Cobalt.commandStream=file:$COMMANDPIPE $PARSET"
+echo "Starting runObservation.sh $PARAMS"
+runObservation.sh $PARAMS > $LOGFILE 2>&1 </dev/null &
 PID=$!
 echo "PID: $PID"
 

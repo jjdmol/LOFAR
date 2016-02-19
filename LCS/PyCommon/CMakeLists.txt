@@ -11,7 +11,6 @@ set(_py_files
   dbcredentials.py
   factory.py
   util.py
-  postgres.py
   datetimeutils.py)
 
 python_install(${_py_files} DESTINATION lofar/common)

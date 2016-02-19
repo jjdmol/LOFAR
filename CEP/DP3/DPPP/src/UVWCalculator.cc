@@ -21,8 +21,6 @@
 //#
 //# @author Ger van Diepen
 
-// Note: this code is used by LOFAR and APERTIF software.
-
 #include <DPPP/UVWCalculator.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/Muvw.h>

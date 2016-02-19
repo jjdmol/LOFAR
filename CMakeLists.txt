@@ -18,7 +18,6 @@ include(LofarGeneral)
 ## ---------------------------------------------------------------------------
 include(LofarPackage)
 if(NOT DEFINED BUILD_PACKAGES)
-  lofar_add_package(Docker)
   lofar_add_package(LCS)
   lofar_add_package(CEP)
   lofar_add_package(RTCP)
