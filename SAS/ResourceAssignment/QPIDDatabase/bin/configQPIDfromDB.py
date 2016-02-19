@@ -14,10 +14,15 @@ def qpidconfig_add_topic(host,exchange):
 def qpidroute_add(fromhost,tohost,exchange,routingkey):
     print ("qpid-route -d route add %s %s %s \'%s\' " %(tohost,fromhost,exchange,routingkey))
 
+def qpidQroute_add(fromhost,tohost,queue):
+    print ("qpid-route -d queue add %s %s %s amq.direct" %(tohost,fromhost,queue))
+
 QPIDinfra = qpidinfra()
 QPIDinfra.perqueue(qpidconfig_add_queue)
 QPIDinfra.perexchange(qpidconfig_add_topic)
 QPIDinfra.perfederationexchange(qpidroute_add)
+QPIDinfra.perfederationqueue(qpidQroute_add)
+
 
 
 

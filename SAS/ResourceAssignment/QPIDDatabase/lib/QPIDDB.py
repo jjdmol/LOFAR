@@ -48,6 +48,11 @@ class qpidinfra:
 	for item in ret:
 	    callback(item['fromhost'],item['tohost'],item['exchangename'],'#') #item['keyname'])
 
+    def perfederationqueue(self,callback):
+	ret=self.doquery("select h1.hostname as fromhost ,h2.hostname as tohost , queuename from queueroutes JOIN hosts as h1 on (fromhost=h1.hostid) JOIN hosts as h2 on (tohost=h2.hostid) JOIN queues on (queueid=qid);")
+	for item in ret:
+	    callback(item['fromhost'],item['tohost'],item['queuename'])
+
     def gethostid(self,hostname):
 	tmp=self.doquery("select * from hosts where hostname='%s';" %(hostname))
 	if (tmp==[]):
