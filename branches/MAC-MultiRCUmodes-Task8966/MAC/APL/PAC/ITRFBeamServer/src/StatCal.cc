@@ -24,7 +24,6 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/LofarConstants.h>
-#include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
 #include <ApplCommon/StationInfo.h>
 #include "StatCal.h"
@@ -73,7 +72,10 @@ bool StatCal::_readData(const string& antennaSet, const string& band)
     snprintf(baseName, sizeof baseName, "CalTable-%s-%s.dat", antennaSet.c_str(), band.c_str());
 	itsFileName = CL.locate(baseName);
 
-    LOG_INFO_STR("### baseName = " << baseName << ", itsFileName = " << itsFileName);
+    if (itsFileName.empty()) {
+        LOG_INFO_STR("Static CalibrationTable '" << baseName << "' NOT available, use default.");
+        return (false);
+    }
 
 	// try to open the file
     FILE 			*file;
