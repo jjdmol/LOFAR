@@ -1,0 +1,107 @@
+################################################################################
+## Parameters for project: LC4_020
+################################################################################
+
+################################################################################
+## RUN 01: 1 targets -- duration:  37800s ( 10.50h)
+## Abell 2069, 15:23:57.9,+29:53:26.0
+ 
+## PARAMETER FILE SETUP 
+projectName=LC4_020
+mainFolderName=A2069_20150813
+mainFolderDescription=A2069_20150813  15:23:57.9,+29:53:26.0
+
+BLOCK
+
+split_targets = F # T/F
+calibration = internal # internal / external / none
+create_calibrator_observations = F # create cal-observations before target (T/F ignored if calibration is none)
+create_target_cal_beam = T # create cal-beam in target observation (T/F ignored if calibration is none)
+processing=Preprocessing # can be one of Calibration, Preprocessing, Imaging, Pulsar, LongBaseline, none
+imagingPipeline=none # can be one of MSSS, standard, none
+repeat=1 # the number of repeats of this block
+
+packageName=20150813_A2069 # name of package folder containing observation/pipelines
+packageDescription=
+packageTag= # optional tag to be prepended before every obs/pipeline name/description (max 8 chars)
+
+antennaMode=LBA Outer
+clock=200 MHz
+instrumentFilter=30-90 MHz
+numberOfBitsPerSample=8 # Change to 16 if requested
+integrationTime=1.0
+channelsPerSubband=64
+stationList=nl
+tbbPiggybackAllowed=T
+aartfaacPiggybackAllowed=T
+
+###### Which data types should be produced: ######
+
+correlatedData=T
+coherentStokesData=F
+incoherentStokesData=F
+flysEye=F
+coherentDedisperseChannels=False
+
+###### Coherent Stokes parameters ######
+#subbandsPerFileCS=
+#numberCollapsedChannelsCS=
+#stokesDownsamplingStepsCS=
+#whichCS=
+###### Coherent Stokes parameters ######
+#subbandsPerFileIS=
+#numberCollapsedChannelsIS=
+#stokesDownsamplingStepsIS=
+#whichIS=
+
+flaggingStrategy=LBAdefault
+calibratorDuration_s=37800 # duration of calibration observations in seconds
+targetDuration_s=37800 # duration of target observations in seconds
+
+
+# startTimeUTC, the start time of the first observation. format: yyyy-MM-dd hh:mm:ss
+# un-comment the startTimeUTC to have the observation start times generated
+startTimeUTC=2015-08-13 13:00:00
+# timeStep's in seconds
+timeStep1=60
+timeStep2=60
+
+
+
+
+
+###### Pipeline settings ######
+## GENERAL INFO
+## Processing mode: Calibration
+## Demixing requested: CygA CasA
+
+# calibrator beam and calibrator pipeline
+# ra; dec; target name; subband list; nrSubbands; nrTABrings; TABringSize; create_pipeline [;pipeline duration seconds]
+# optionally followed by its own 'BBS:' and/or 'Demix:' settings
+# BBS:SkyModel;BBS_baselines;BBS_correlations;BBS_beamModelEnable;BBS_solveParms;BBS_solveUVRange;BBS_strategyBaselines;BBS_strategyTimeRange
+# Demix:avg freq step; avg time step; demix freq step; demix time step; demix_always; demix_if_needed; ignore_target
+calibratorBeam=
+14:11:20.519;+52:12:09.97;3C295;154..397;244;;;T;37800
+Demix=4;2;64;10;CygA,CasA;
+
+# target beams and target pipelines
+# ra ;dec; targetname; subbandList; nrSubbands; nrTABrings; TABringSize; create_pipeline [;pipeline duration seconds]
+# optionally followed by BBS and/or demixing settings
+# BBS: SkyModel;BBS_baselines;BBS_correlations;BBS_beamModelEnable;BBS_solveParms;BBS_solveUVRange;BBS_strategyBaselines;BBS_strategyTimeRange
+# Demix: avg freq step; avg time step; demix freq step; demix time step; demix_always; demix_if_needed; ignore_target
+# Pulsar: pulsar; single-pulse; raw-to-8bit; dspsr-extra-opts; prepdata-extra-opts; 8bit-conversion-sigma; tsubint; norfi; nofold; nopdmp; skip-dspsr; rrats; 2bf2fits-extra-opts; decode-sigma; decode-nblocks; rfifind-extra-opts; prepfold-extra-opts; prepsubband-extra-opts; dynamic-spectrum-time-average; skip-dynamic-spectrum; skip-prepfold
+
+targetBeams= 
+15:23:57.9;+29:53:26.0;Abell 2069;154..397;244;;;T;37800
+Demix=4;2;64;10;CygA,CasA;
+# BBS: Add parameters if BBS needed
+# Pulsar: Add parameters if pulsar pipeline needed
+
+
+
+
+
+
+
+
+ 

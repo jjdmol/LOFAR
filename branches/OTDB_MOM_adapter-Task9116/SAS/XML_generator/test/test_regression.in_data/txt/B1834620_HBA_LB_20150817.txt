@@ -1,0 +1,93 @@
+
+projectName=Commissioning2015
+mainFolderName=B1834+620_phase_shift3
+mainFolderDescription=B1834+620_phase_shift HBA LB
+
+BLOCK
+
+split_targets = F                       # true:create a separate target observation for every target (beam) line or false:combine them in a multi-beam observation
+calibration = external                  # internal / external / none
+create_calibrator_observations = T      # create calibration observations before target observations? (ignored if calibration = none)
+create_target_cal_beam = F              # create a calibration beam in the target observation(s)? (ignored if calibration = none)
+processing= LongBaseline                 # can be one of Calibration, Preprocessing, Imaging, Pulsar, LongBaseline, none
+imagingPipeline=none                    # can be one of MSSS, standard, none
+repeat=2                                # the number of repeats of this block
+
+packageName=20150907_B1834+620              # the name that will be given to the package folder that contains this block's observation and pipelines
+packageDescription=B1834+620_phase_shift HBA LB
+packageTag=                             # optional tag that will be prepended before every observation and pipeline name/description (Max 8 characters).
+
+antennaMode=HBA Dual Inner
+clock=200 MHz
+instrumentFilter=110-190 MHz
+numberOfBitsPerSample=8
+integrationTime=1.0
+channelsPerSubband=64
+stationList=all                        # comma-separated list of station names and/or the following aliasses: core, superterp, remote, international, all, nl
+tbbPiggybackAllowed=T
+aartfaacPiggybackAllowed=F
+subbandsPerSubbandGroup=16
+subbandGroupsPerMS=1
+###### Which data types should be produced: ######
+correlatedData=T
+coherentStokesData=F
+incoherentStokesData=F
+flysEye=F
+coherentDedisperseChannels=False
+###### Coherent Stokes parameters ######
+subbandsPerFileCS=512
+numberCollapsedChannelsCS=16
+stokesDownsamplingStepsCS=128
+whichCS=IQUV
+###### Incoherent Stokes parameters ######
+#subbandsPerFileIS=16
+#numberCollapsedChannelsIS=4
+#stokesDownsamplingStepsIS=12
+#whichIS=IQUV
+flaggingStrategy=HBAdefault             # flagging strategy used for AOflagger
+calibratorDuration_s=600                # duration of calibration observations in seconds
+targetDuration_s=3600                    # duration of target observations in seconds
+
+###### Globals are used when a target/calibration line does not have its own specific parameter specified for that property ######
+#Global_TAB=
+#c;05:34:51.94;+22:00:52.2              # a coherent tab with absolute coordinates 05:34:51.94, +22:00:52.2
+#Global_TABrings=1;0.1                   # nr of tabrings and tabring size
+#Global_Pulsar=B0329+54;T;T;DSPSR EXTRA OPTIONS;PREPDATA;5.1;-2;F;F;F;F;F;2BF2FITS;4;101;RFI FIND EXTRA OPTIONS;PREPFOLD EXTRA;PREPSUBBAND Extra; 0.6;T;T
+#Global_Demix=16;4;64;10;CasA,CygA;
+Global_Subbands=76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,337,338,339,340,341,342,343,344,345,346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,367,368,369,370,371,372,373,374,375,376,377,378,379,380,381,382,383,384;240
+
+# startTimeUTC, the start time of the first observation. format: yyyy-MM-dd hh:mm:ss
+# un-comment the startTimeUTC to have the observation start times generated
+startTimeUTC=2015-09-07 18:45:00
+# timeStep's in seconds
+timeStep1=60
+timeStep2=60
+
+calibratorBeam=
+18:29:31.8;+48:44:46;3C380;;;;;T;900
+BBS=3C380;;;T
+Demix=2;2;64;10;[CygA,CasA];
+#TAB:
+#c;05:34:51.94;+22:00:52.2
+
+# target beams and target pipelines
+# ra ;dec; targetname; subbandList; nrSubbands; nrTABrings; TABringSize; create_pipeline [;pipeline duration seconds]
+# optionally followed by BBS and/or demixing settings
+# BBS: SkyModel;BBS_baselines;BBS_correlations;BBS_beamModelEnable;BBS_solveParms;BBS_solveUVRange;BBS_strategyBaselines;BBS_strategyTimeRange
+# Demix: avg freq step; avg time step; demix freq step; demix time step; demix_always; demix_if_needed; ignore_target
+# Pulsar: pulsar; single-pulse; raw-to-8bit; dspsr-extra-opts; prepdata-extra-opts; 8bit-conversion-sigma; tsubint; norfi; nofold; nopdmp; skip-dspsr; rrats; 2bf2fits-extra-opts; decode-sigma; decode-nblocks; rfifind-extra-opts; prepfold-extra-opts; prepsubband-extra-opts; dynamic-spectrum-time-average; skip-dynamic-spectrum; skip-prepfold
+
+targetBeams=
+18:35:10.9;+62:04:08;B1834+620;;;;;T;1000
+Demix=2;2;64;10;[CygA,CasA];
+
+18:35:19.74;+61:19:39.1;J183519+611939;;;;;T;1000
+Demix=2;2;64;10;[CygA,CasA];
+
+
+nrSubbandsPerImage=10 # (integer, mandatory) the number of subbands grouped together to form one image
+# the following imaging parameters are all optional, if not specified the default value from the default template is used for that parameter
+maxBaseline_m=10000 # (integer) the maximum base-line in meters used in the imaging
+fieldOfView_deg=5.0 # (float) the field of view in degrees
+
+BLOCK
