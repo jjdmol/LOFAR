@@ -1,0 +1,63 @@
+#!/bin/bash
+
+. ./testFuncs.sh
+
+# Replace PVSSGatewayStub's path where it outputs events with stdout,
+# such that the test framework can check against the .stdout ref output.
+cp --preserve=all "$LOFARROOT/etc/PVSSGatewayStub.conf" "$LOFARROOT/etc/PVSSGatewayStub.conf.backup"
+sed -i -e '/outputFile[[:blank:]]*=/d' "$LOFARROOT/etc/PVSSGatewayStub.conf"
+echo "outputFile = /dev/stdout" >> "$LOFARROOT/etc/PVSSGatewayStub.conf"
+
+gwPid=none
+sbPid=none
+trap 'kill -9 $gwPid $sbPid; mv "$LOFARROOT/etc/PVSSGatewayStub.conf.backup" "$LOFARROOT/etc/PVSSGatewayStub.conf"' \
+  SIGTERM SIGINT SIGQUIT SIGHUP
+
+# Start ServiceBroker (if not already running) and PVSSGatewayStub.
+if ps -e | grep [S]erviceBroker > /dev/null; then
+  echo 'WARNING: Did not attempt to start ServiceBroker: already running. Hopefully it works and does not suddenly exit.' >&2
+  sbPid=0  # don't try to kill it afterwards
+else
+  ServiceBroker &
+  sbPid=$!
+fi
+
+PVSSGatewayStub &
+gwPid=$!
+
+# Wait until PVSSGatewayStub (and ServiceBroker if we started it) are listening.
+# Just sleep X secs has proven both long and still unreliable.
+# (Remaining risk: both services started but PVSSGatewayStub not yet registered at ServiceBroker.)
+NETSTAT=/bin/netstat
+gwReady=0
+sbReady=$((1-$sbPid))
+while [ $gwReady -eq 0 -o $sbReady -eq 0 ]; do
+  echo 'Waiting for PVSSGatewayStub and ServiceBroker listening sockets to show up in netstat...' >&2
+  sleep 0.1
+  netstatout=`"$NETSTAT" -l -p -A inet -n 2>/dev/null`
+  gwReady=`echo "$netstatout" | grep $gwPid/ | wc -l`
+  [ $sbPid -ne 0 ] && sbReady=`echo "$netstatout" | grep $sbPid/ | wc -l`
+done
+
+../../../MAC/MACIO/test/tRTmetadata > /dev/null  # logging disrupts output verif
+
+testStatus=$?
+[ $testStatus -eq 0 ] || echo "Error: Test exited with status $testStatus"
+
+kill $gwPid
+wait $gwPid
+gwStatus=$?
+[ $gwStatus -eq 0 ] || echo "Error: PVSSGatewayStub exited with status $gwStatus"
+
+sbStatus=0
+if [ $sbPid -ne 0 ]; then
+  # kill ServiceBroker if we started it
+  kill $sbPid
+  wait $sbPid
+  sbStatus=$?
+  [ $sbStatus -eq 0 ] || echo "Error: ServiceBroker exited with status $sbStatus"
+fi
+
+mv "$LOFARROOT/etc/PVSSGatewayStub.conf.backup" "$LOFARROOT/etc/PVSSGatewayStub.conf"
+
+[ $testStatus -eq 0 -a $gwStatus -eq 0 -a $sbStatus -eq 0 ]

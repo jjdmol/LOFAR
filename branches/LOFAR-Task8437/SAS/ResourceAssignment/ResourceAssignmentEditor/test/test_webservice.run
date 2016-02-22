@@ -1,0 +1,3 @@
+#!/bin/bash
+source python-coverage.sh
+python_coverage_test "webservice" test_webservice.py
