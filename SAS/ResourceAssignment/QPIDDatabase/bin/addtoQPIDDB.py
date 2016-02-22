@@ -46,12 +46,18 @@ if __name__ == '__main__':
 	QPIDinfra.addhost(options.federation)
 	if (options.queue):
 	    QPIDinfra.addqueue(options.queue) # should be superfluous
+	    ecxchange=''
+	    if (options.exchange):
+		QPIDinfra.addexchange(options.exchange)
+		exchange=options.exchange
+	    
 	    QPIDinfra.bindqueuetohost(options.queue,options.federation)
-	    QPIDinfra.setqueueroute(options.queue,options.broker,options.federation)
-
-	if (options.exchange):
-	    QPIDinfra.addexchange(options.exchange) # should be superfluous
-	    QPIDinfra.bindexchangetohost(options.exchange,options.federation)
-	    QPIDinfra.setexchangeroute(options.exchange,options.routingkey,options.broker,options.federation)
-	
+	    QPIDinfra.setqueueroute(options.queue,options.broker,options.federation,exchange)
+	else:
+	    if (options.exchange):
+	        QPIDinfra.addexchange(options.exchange) # should be superfluous
+	        QPIDinfra.bindexchangetohost(options.exchange,options.federation)
+	        QPIDinfra.setexchangeroute(options.exchange,options.routingkey,options.broker,options.federation)
+	    else:
+		raise Exception("federation can only be setup with a queue or an exchange")
 
