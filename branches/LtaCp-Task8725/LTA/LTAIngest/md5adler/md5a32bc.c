@@ -283,6 +283,23 @@ UINT4 *in;
 
 int main (int argc, char *argv[])
 {
+    if (argc == 2 && strcmp (argv[1], "-h") == 0)
+    {
+        printf("md5a32bc is a tool which computes the md5 and adler32 checksum and counts the number of bytes on the stdin datastream.\n");
+        printf("this input datastream is copied and written to stdout by default, or to the output file given as last argument.\n");
+        printf("progress messages can be written every <n> bytes with flag -p <n>.\n");
+        printf("\n");
+        printf("Usage:\n");
+        printf("<some_prog> | md5a32bc\n");
+        printf("or:\n");
+        printf("<some_prog> | md5a32bc <my_output_file>\n");
+        printf("or:\n");
+        printf("<some_prog> | md5a32bc -p <n> <my_output_file>\n");
+        printf("or:\n");
+        printf("<some_prog> | md5a32bc -p <n>\n");
+        exit(0);
+    }
+
     MD5_CTX mdContext;
     int num_bytes_read, num_bytes_written;
     const int BUFFSIZE = 4096;
@@ -291,11 +308,21 @@ int main (int argc, char *argv[])
     int progress_step_cntr = 0;
     int progress_step = 0;
 
-    if (argc == 3 && strcmp (argv[1], "-p") == 0)
+    if (argc >= 3 && strcmp (argv[1], "-p") == 0)
     {
         int num = atoi(argv[2]);
         if(num > 0)
             num_progress_bytes = num;
+    }
+
+    FILE *outfile = stdout;
+    FILE *logstream = stderr;
+    FILE *resultstream = stderr;
+
+    if (argc == 2 || argc == 4)
+    {
+        outfile = fopen(argv[argc-1], "wb");
+        logstream = stdout;
     }
 
     MD5Init (&mdContext);
@@ -311,31 +338,39 @@ int main (int argc, char *argv[])
         MD5Update (&mdContext, data, num_bytes_read);
         mdContext.byte_count += num_bytes_read;
 
-        num_bytes_written = fwrite (data, 1, num_bytes_read, stdout);
+        num_bytes_written = fwrite (data, 1, num_bytes_read, outfile);
 
         if(num_bytes_written != num_bytes_read)
+        {
+            fprintf (logstream, "error while writing\n");
+            if(outfile != stdout)
+                fclose(outfile);
             return -1;
+        }
 
         progress_step = mdContext.byte_count / num_progress_bytes;
 
         if(progress_step > progress_step_cntr)
         {
-            fprintf (stderr, "%lu bytes processed\n", mdContext.byte_count);
-            fflush(stderr);
+            fprintf (logstream, "%lu bytes processed\n", mdContext.byte_count);
+            fflush(logstream);
             progress_step_cntr = progress_step;
         }
     }
 
-    fflush(stdout);
-    fflush(stderr);
+    fflush(outfile);
+    fflush(logstream);
+
+    if(outfile != stdout)
+        fclose(outfile);
 
     MD5Final (&mdContext);
 
     for (int i = 0; i < 16; i++)
-        fprintf (stderr, "%02x", mdContext.digest[i]);
+        fprintf (resultstream, "%02x", mdContext.digest[i]);
 
-    fprintf (stderr, " %x %lu\n", mdContext.adler32, mdContext.byte_count);
-    fflush(stderr);
+    fprintf (resultstream, " %x %lu\n", mdContext.adler32, mdContext.byte_count);
+    fflush(resultstream);
 
     return 0;
 }
