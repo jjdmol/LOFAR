@@ -812,6 +812,10 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 
 		LOG_INFO_STR("Subscribing to subarray: " << subscribe.name);
 		LOG_DEBUG_STR("subbands= " << subscribe.subbandset);
+        if (!_isCalTableValid(itsBeamTransaction.getBeam()->antennaSetName(), itsBeamTransaction.getBeam()->bandName())) {
+            LOG_INFO_STR("No valid CalTable available for this beam, using default");
+        }
+
 		itsCalServer->send(subscribe);
 		itsConnectTimer->setTimer(5.0);
 	}
@@ -1559,6 +1563,36 @@ complex<double>	BeamServer::_getCalFactor(const string& antennaSet, const string
 
 
 	//LOG_INFO_STR("calFactor(" << antennaSet << "," << band <<  "," << rcu << "," << subbandNr << ")=" << result);
+	return (result);
+}
+
+//
+// _getCalFactor(rcumode, rcu, subbandNr)
+//
+bool BeamServer::_isCalTableValid(const string& antennaSet, const string& band)
+{
+    bool result;
+
+    result = false;
+    if (band == "10_90") {
+        if      (antennaSet == "LBA_INNER") { if (itsCalTable_LBA_INNER_10_90) result = true; }
+        else if (antennaSet == "LBA_OUTER") { if (itsCalTable_LBA_OUTER_10_90) result = true; }
+        else if (antennaSet == "LBA_SPARSE_EVEN") { if(itsCalTable_LBA_SPARSE_EVEN_10_90) result = true; }
+        else if (antennaSet == "LBA_SPARSE_ODD") { if(itsCalTable_LBA_SPARSE_ODD_10_90) result = true; }
+        else if (antennaSet == "LBA_X") { if(itsCalTable_LBA_X_10_90) result = true; }
+        else if (antennaSet == "LBA_Y") { if(itsCalTable_LBA_Y_10_90) result = true; }
+    }
+    else if (band == "30_90") {
+        if      (antennaSet == "LBA_INNER") { if(itsCalTable_LBA_INNER_30_90) result = true; }
+        else if (antennaSet == "LBA_OUTER") { if(itsCalTable_LBA_OUTER_30_90) result = true; }
+        else if (antennaSet == "LBA_SPARSE_EVEN") { if(itsCalTable_LBA_SPARSE_EVEN_30_90)result = true; }
+        else if (antennaSet == "LBA_SPARSE_ODD") { if(itsCalTable_LBA_SPARSE_ODD_30_90)  result = true; }
+        else if (antennaSet == "LBA_X") { if(itsCalTable_LBA_X_30_90) result = true; }
+        else if (antennaSet == "LBA_Y") { if(itsCalTable_LBA_Y_30_90) result = true; }
+    }
+    else if (band == "110_190") { if(itsCalTable_HBA_110_190) result = true; }
+    else if (band == "170_230") { if(itsCalTable_HBA_170_230) result = true; }
+    else if (band == "210_250") { if(itsCalTable_HBA_210_250) result = true; }
 	return (result);
 }
 

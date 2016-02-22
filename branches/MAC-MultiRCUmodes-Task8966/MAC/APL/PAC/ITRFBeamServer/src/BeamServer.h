@@ -181,7 +181,7 @@ private:
 	// RCU calibration
 	std::complex<double>	_getCalFactor(const string& antennaSet, const string& band, uint rcu, uint subbandNr);
 	void 					_loadCalTable(const string& antennaSet, const string& band, uint nrRSPBoards);
-
+    bool                    _isCalTableValid(const string& antennaSet, const string& band);
 	// ### data members ###
 
 	// 'constant' containing the current number of bits each datasample has.
