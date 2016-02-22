@@ -866,6 +866,10 @@ void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 				itsPowerOffTime[r] = 0;	// reset poweroff time
 			} // new count is 1
 		} // rcu in mask
+        else if (itsRCUcounts[r] == 0) {
+            time_t now = time(0);
+			itsPowerOffTime[r] = now;
+        }
 	} // for all rcus
 
 	// anything to enable? Tell the RSPDriver.
