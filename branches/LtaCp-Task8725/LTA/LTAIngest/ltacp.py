@@ -144,7 +144,6 @@ class LtaCp:
             random.seed(hash(self.src_path_data) ^ hash(time.time()))
 
             p_data_in, port_data = self._ncListen('data')
-            p_md5_receive, port_md5 = self._ncListen('md5 checksums')
 
 
             self.local_data_fifo = '/tmp/ltacp_datapipe_%s_%s' % (self.src_host, self.logId)
@@ -203,7 +202,9 @@ class LtaCp:
             # 3) simultaneously to 2), calculate checksum of fifo stream
             # 4) break fifo
 
-            self.remote_data_fifo = '/tmp/ltacp_md5_pipe_%s_%s' % (self.logId, port_md5)
+            self.remote_data_fifo = '/tmp/ltacp_md5_pipe_%s' % (self.logId, )
+            #make sure there is no old remote fifo
+            self._removeRemoteFifo()
             cmd_remote_mkfifo = self.ssh_cmd + ['mkfifo %s' % (self.remote_data_fifo,)]
             logger.info('ltacp %s: remote creating fifo. executing: %s' % (self.logId, ' '.join(cmd_remote_mkfifo)))
             p_remote_mkfifo = Popen(cmd_remote_mkfifo, stdout=PIPE, stderr=PIPE)
@@ -255,7 +256,7 @@ class LtaCp:
                 self.started_procs[p_remote_data] = cmd_remote_data
 
                 # start computation of checksum on remote fifo stream
-                cmd_remote_checksum = self.ssh_cmd + ['md5sum %s | %s %s %s' % (self.remote_data_fifo, self.remoteNetCatCmd, self.localIPAddress, port_md5)]
+                cmd_remote_checksum = self.ssh_cmd + ['md5sum %s' % (self.remote_data_fifo,)]
                 logger.info('ltacp %s: remote starting computation of md5 checksum. executing: %s' % (self.logId, ' '.join(cmd_remote_checksum)))
                 p_remote_checksum = Popen(cmd_remote_checksum, stdin=devnull, stdout=PIPE, stderr=PIPE)
                 self.started_procs[p_remote_checksum] = cmd_remote_checksum
@@ -318,12 +319,6 @@ class LtaCp:
                     raise LtacpException('ltacp %s: Error in remote md5 checksum computation: %s' % (self.logId, output_remote_checksum[1]))
                 logger.debug('ltacp %s: remote md5 checksum computation finished.' % self.logId)
 
-                logger.debug('ltacp %s: waiting to receive remote md5 checksum...' % self.logId)
-                output_md5_receive = p_md5_receive.communicate()
-                if p_md5_receive.returncode != 0:
-                    raise LtacpException('ltacp %s: Error while receiving remote md5 checksum: %s' % (self.logId, output_md5_receive[1]))
-                logger.debug('ltacp %s: received md5 checksum.' % self.logId)
-
                 logger.info('ltacp %s: waiting for local computation of md5 adler32 and byte_count...' % self.logId)
                 output_md5a32bc_local = p_md5a32bc.communicate()
                 if p_md5a32bc.returncode != 0:
@@ -332,9 +327,9 @@ class LtaCp:
 
                 # process remote md5 checksums
                 try:
-                    md5_checksum_remote = output_md5_receive[0].split(' ')[0]
+                    md5_checksum_remote = output_remote_checksum[0].split(' ')[0]
                 except Exception as e:
-                    logger.error('ltacp %s: error while parsing remote md5: %s' % (self.logId, output_md5_receive[0]))
+                    logger.error('ltacp %s: error while parsing remote md5: %s\n%s' % (self.logId, output_remote_checksum[0], output_remote_checksum[1]))
                     raise
 
                 # process local md5 adler32 and byte_count
@@ -416,18 +411,26 @@ class LtaCp:
                 return (p_listen, port)
 
 
+    def _removeRemoteFifo(self):
+        if hasattr(self, 'remote_data_fifo') and self.remote_data_fifo:
+            '''remove a file (or fifo) on a remote host. Test if file exists before deleting.'''
+            cmd_remote_ls = self.ssh_cmd + ['ls %s' % (self.remote_data_fifo,)]
+            p_remote_ls = Popen(cmd_remote_ls, stdout=PIPE, stderr=PIPE)
+            p_remote_ls.communicate()
+
+            if p_remote_ls.returncode == 0:
+                cmd_remote_rm = self.ssh_cmd + ['rm %s' % (self.remote_data_fifo,)]
+                logger.info('ltacp %s: removing remote fifo. executing: %s' % (self.logId, ' '.join(cmd_remote_rm)))
+                p_remote_rm = Popen(cmd_remote_rm, stdout=PIPE, stderr=PIPE)
+                p_remote_rm.communicate()
+                if p_remote_rm.returncode != 0:
+                    logger.error("Could not remove remote fifo %s@%s:%s\n%s" % (self.src_user, self.src_host, self.remote_data_fifo, p_remote_rm.stderr))
+                self.remote_data_fifo = None
+
     def cleanup(self):
         logger.debug('ltacp %s: cleaning up' % (self.logId))
 
-        if hasattr(self, 'remote_data_fifo') and self.remote_data_fifo:
-            '''remove a file (or fifo) on a remote host. Test if file exists before deleting.'''
-            cmd_remote_rm = self.ssh_cmd + ['rm %s' % (self.remote_data_fifo,)]
-            logger.info('ltacp %s: removing remote fifo. executing: %s' % (self.logId, ' '.join(cmd_remote_rm)))
-            p_remote_rm = Popen(cmd_remote_rm, stdout=PIPE, stderr=PIPE)
-            p_remote_rm.communicate()
-            if p_remote_rm.returncode != 0:
-                logger.error("Could not remove remote fifo %s@%s:%s\n%s" % (self.src_user, self.src_host, self.remote_data_fifo, p_remote_rm.stderr))
-            self.remote_data_fifo = None
+        self._removeRemoteFifo()
 
         # remove local fifos
         for fifo in self.fifos:
