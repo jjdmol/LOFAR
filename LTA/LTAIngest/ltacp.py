@@ -115,6 +115,26 @@ class LtaCp:
             dst_turl = convert_surl_to_turl(self.dst_surl)
             logger.info('ltacp %s: initiating transfer of %s:%s to %s' % (self.logId, self.src_host, self.src_path_data, self.dst_surl))
 
+            # get input datasize
+            cmd_remote_du = self.ssh_cmd + ['du -b --max-depth=0 %s' % (self.src_path_data,)]
+            logger.info('ltacp %s: remote getting datasize. executing: %s' % (self.logId, ' '.join(cmd_remote_du)))
+            p_remote_du = Popen(cmd_remote_du, stdout=PIPE, stderr=PIPE)
+            self.started_procs[p_remote_du] = cmd_remote_du
+
+            # block until du is finished
+            output_remote_du = p_remote_du.communicate()
+            del self.started_procs[p_remote_du]
+            if p_remote_du.returncode != 0:
+                raise LtacpException('ltacp %s: remote du failed: \nstdout: %s\nstderr: %s' % (self.logId,
+                                                                                               output_remote_du[0],
+                                                                                               output_remote_du[1]))
+            # compute various parameters for progress logging
+            input_datasize = int(output_remote_du[0].split()[0])
+            logger.info('ltacp %s: input datasize: %d bytes, %s' % (self.logId, input_datasize, humanreadablesize(input_datasize)))
+            estimated_tar_size = 512*(input_datasize / 512) + 3*512 #512byte header, 2*512byte ending, 512byte modulo data
+            logger.info('ltacp %s: estimated_tar_size: %d bytes, %s' % (self.logId, estimated_tar_size, humanreadablesize(estimated_tar_size)))
+
+
             #---
             # Server part
             #---
@@ -126,50 +146,27 @@ class LtaCp:
             p_data_in, port_data = self._ncListen('data')
             p_md5_receive, port_md5 = self._ncListen('md5 checksums')
 
-            # create fifo paths
-            self.local_fifo_basename = '/tmp/ltacp_datapipe_%s_%s' % (self.src_host, self.logId)
 
-            def createLocalFifo(fifo_postfix):
-                fifo_path = '%s_%s' % (self.local_fifo_basename, fifo_postfix)
-                logger.info('ltacp %s: creating data fifo: %s' % (self.logId, fifo_path))
-                if os.path.exists(fifo_path):
-                    os.remove(fifo_path)
-                os.mkfifo(fifo_path)
-                if not os.path.exists(fifo_path):
-                    raise LtacpException("ltacp %s: Could not create fifo: %s" % (self.logId, fifo_path))
-                self.fifos.append(fifo_path)
-                return fifo_path
+            self.local_data_fifo = '/tmp/ltacp_datapipe_%s_%s' % (self.src_host, self.logId)
 
-            self.local_data_fifo = createLocalFifo('globus_url_copy')
-            self.local_byte_count_fifo = createLocalFifo('local_byte_count')
-            self.local_adler32_fifo = createLocalFifo('local_adler32')
+            logger.info('ltacp %s: creating data fifo: %s' % (self.logId, self.local_data_fifo))
+            if os.path.exists(self.local_data_fifo):
+                os.remove(self.local_data_fifo)
+            os.mkfifo(self.local_data_fifo)
+            if not os.path.exists(self.local_data_fifo):
+                raise LtacpException("ltacp %s: Could not create fifo: %s" % (self.logId, self.local_data_fifo))
 
-            # tee incoming data stream to fifos (and pipe stream in tee_proc.stdout)
-            cmd_tee = ['tee', self.local_data_fifo, self.local_byte_count_fifo, self.local_adler32_fifo]
-            logger.info('ltacp %s: splitting datastream. executing: %s' % (self.logId, ' '.join(cmd_tee),))
-            p_tee_data = Popen(cmd_tee, stdin=p_data_in.stdout, stdout=PIPE, stderr=PIPE)
-            self.started_procs[p_tee_data] = cmd_tee
-
-            # start counting number of bytes in incoming data stream
-            cmd_byte_count = ['wc', '-c', self.local_byte_count_fifo]
-            logger.info('ltacp %s: computing byte count. executing: %s' % (self.logId, ' '.join(cmd_byte_count)))
-            p_byte_count = Popen(cmd_byte_count, stdout=PIPE, stderr=PIPE, env=dict(os.environ, LC_ALL="C"))
-            self.started_procs[p_byte_count] = cmd_byte_count
-
-            # start computing md5 checksum of incoming data stream
-            cmd_md5_local = ['md5sum']
-            logger.info('ltacp %s: computing local md5 checksum. executing on data pipe: %s' % (self.logId, ' '.join(cmd_md5_local)))
-            p_md5_local = Popen(cmd_md5_local, stdin=p_tee_data.stdout, stdout=PIPE, stderr=PIPE)
-            self.started_procs[p_md5_local] = cmd_md5_local
-
-            # start computing adler checksum of incoming data stream
+            # transfer incomming data stream via md5a32bc to compute md5, adler32 and byte_count
+            # data is written to fifo, which is then later fed into globus-url-copy
+            # on stdout we can monitor progress
+            # set progress message step 0f 0.5% of estimated_tar_size
             currdir = os.path.dirname(os.path.realpath(__file__))
-            cmd_a32_local = [currdir + '/md5adler/a32', self.local_adler32_fifo]
-            logger.info('ltacp %s: computing local adler32 checksum. executing: %s' % (self.logId, ' '.join(cmd_a32_local)))
-            p_a32_local = Popen(cmd_a32_local, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-            self.started_procs[p_a32_local] = cmd_a32_local
+            cmd_md5a32bc = [currdir + '/md5adler/md5a32bc', '-p', str(estimated_tar_size/200), self.local_data_fifo]
+            logger.info('ltacp %s: processing data stream for md5, adler32 and byte_count. executing: %s' % (self.logId, ' '.join(cmd_md5a32bc),))
+            p_md5a32bc = Popen(cmd_md5a32bc, stdin=p_data_in.stdout, stdout=PIPE, stderr=PIPE)
+            self.started_procs[p_md5a32bc] = cmd_md5a32bc
 
-            # start copy fifo stream to SRM
+            # start copy fifo stream to globus-url-copy
             guc_options = ['-cd', #create remote directories if missing
                            '-p 4', #number of parallel ftp connections
                            '-bs 131072', #buffer size
@@ -237,26 +234,6 @@ class LtaCp:
             input_is_file = (output_remote_filetype[0][0] == '-')
             logger.info('ltacp %s: remote path is a %s' % (self.logId, 'file' if input_is_file else 'directory'))
 
-            # get input datasize
-            cmd_remote_du = self.ssh_cmd + ['du -b --max-depth=0 %s' % (self.src_path_data,)]
-            logger.info('ltacp %s: remote getting datasize. executing: %s' % (self.logId, ' '.join(cmd_remote_du)))
-            p_remote_du = Popen(cmd_remote_du, stdout=PIPE, stderr=PIPE)
-            self.started_procs[p_remote_du] = cmd_remote_du
-
-            # block until du is finished
-            output_remote_du = p_remote_du.communicate()
-            del self.started_procs[p_remote_du]
-            if p_remote_du.returncode != 0:
-                raise LtacpException('ltacp %s: remote du failed: \nstdout: %s\nstderr: %s' % (self.logId,
-                                                                                               output_remote_du[0],
-                                                                                               output_remote_du[1]))
-            # compute various parameters for progress logging
-            input_datasize = int(output_remote_du[0].split()[0])
-            logger.info('ltacp %s: input datasize: %d bytes, %s' % (self.logId, input_datasize, humanreadablesize(input_datasize)))
-            estimated_tar_size = 512*(input_datasize / 512) + 3*512 #512byte header, 2*512byte ending, 512byte modulo data
-            logger.info('ltacp %s: estimated_tar_size: %d bytes, %s' % (self.logId, estimated_tar_size, humanreadablesize(estimated_tar_size)))
-            tar_record_size = 10240 # 20 * 512 byte blocks
-
             with open(os.devnull, 'r') as devnull:
                 # start sending remote data, tee to fifo
                 if input_is_file:
@@ -267,7 +244,7 @@ class LtaCp:
                         port_data)]
                 else:
                     src_path_parent, src_path_child = os.path.split(self.src_path_data)
-                    cmd_remote_data = self.ssh_cmd + ['cd %s && tar c --blocking-factor=20 --checkpoint=1000 --checkpoint-action="ttyout=checkpoint %%u\\n" -O %s | tee %s | %s %s %s' % (src_path_parent,
+                    cmd_remote_data = self.ssh_cmd + ['cd %s && tar c -O %s | tee %s | %s %s %s' % (src_path_parent,
                         src_path_child,
                         self.remote_data_fifo,
                         self.remoteNetCatCmd,
@@ -296,11 +273,11 @@ class LtaCp:
                 # wait and poll for progress while all processes are runnning
                 while len([p for p in self.started_procs.keys() if p.poll() is not None]) == 0:
                     try:
-                        # read and process tar stdout lines to create progress messages
-                        nextline = p_remote_data.stdout.readline().strip()
-                        if len(nextline) > 0 and not input_is_file:
-                            record_nr = int(nextline.split()[-1].strip())
-                            total_bytes_transfered = record_nr * tar_record_size
+                        # read and process md5a32bc stdout lines to create progress messages
+                        nextline = p_md5a32bc.stdout.readline().strip()
+
+                        if len(nextline) > 0:
+                            total_bytes_transfered = int(nextline.split()[0].strip())
                             percentage_done = (100.0*float(total_bytes_transfered))/float(estimated_tar_size)
                             current_progress_time = datetime.utcnow()
                             elapsed_secs_since_start = timedelta_total_seconds(current_progress_time - transfer_start_time)
@@ -347,37 +324,35 @@ class LtaCp:
                     raise LtacpException('ltacp %s: Error while receiving remote md5 checksum: %s' % (self.logId, output_md5_receive[1]))
                 logger.debug('ltacp %s: received md5 checksum.' % self.logId)
 
-                logger.debug('ltacp %s: waiting for local computation of md5 checksum...' % self.logId)
-                output_md5_local = p_md5_local.communicate()
-                if p_md5_local.returncode != 0:
-                    raise LtacpException('ltacp %s: Error while receiving remote md5 checksum: %s' % (self.logId, output_md5_local[1]))
-                logger.debug('ltacp %s: computed local md5 checksum.' % self.logId)
+                logger.info('ltacp %s: waiting for local computation of md5 adler32 and byte_count...' % self.logId)
+                output_md5a32bc_local = p_md5a32bc.communicate()
+                if p_md5a32bc.returncode != 0:
+                    raise LtacpException('ltacp %s: Error while computing md5 adler32 and byte_count: %s' % (self.logId, output_md5a32bc_local[1]))
+                logger.debug('ltacp %s: computed local md5 adler32 and byte_count.' % self.logId)
 
-                # compare remote and local md5 checksums
+                # process remote md5 checksums
                 try:
                     md5_checksum_remote = output_md5_receive[0].split(' ')[0]
-                    md5_checksum_local = output_md5_local[0].split(' ')[0]
                 except Exception as e:
-                    logger.error('ltacp %s: error while parsing md5 checksum outputs: local=%s received=%s' % (self.logId, output_md5_local[0], output_md5_receive[0]))
+                    logger.error('ltacp %s: error while parsing remote md5: %s' % (self.logId, output_md5_receive[0]))
                     raise
 
+                # process local md5 adler32 and byte_count
+                try:
+                    items = output_md5a32bc_local[1].splitlines()[-1].split(' ')
+                    md5_checksum_local = items[0].strip()
+                    a32_checksum_local = items[1].strip().zfill(8)
+                    byte_count = int(items[2].strip())
+                except Exception as e:
+                    logger.error('ltacp %s: error while parsing md5 adler32 and byte_count outputs: %s' % (self.logId, output_md5a32bc_local[0]))
+                    raise
+
+                logger.info('ltacp %s: byte count of datastream is %d %s' % (self.logId, byte_count, humanreadablesize(byte_count)))
+
+                # compare local and remote md5
                 if(md5_checksum_remote != md5_checksum_local):
                     raise LtacpException('md5 checksum reported by client (%s) does not match local checksum of incoming data stream (%s)' % (self.logId, md5_checksum_remote, md5_checksum_local))
                 logger.info('ltacp %s: remote and local md5 checksums are equal: %s' % (self.logId, md5_checksum_local,))
-
-                logger.debug('ltacp %s: waiting for local byte count on datastream...' % self.logId)
-                output_byte_count = p_byte_count.communicate()
-                if p_byte_count.returncode != 0:
-                    raise LtacpException('ltacp %s: Error while receiving remote md5 checksum: %s' % (self.logId, output_byte_count[1]))
-                byte_count = int(output_byte_count[0].split()[0].strip())
-                logger.info('ltacp %s: byte count of datastream is %d %s' % (self.logId, byte_count, humanreadablesize(byte_count)))
-
-                logger.debug('ltacp %s: waiting for local adler32 checksum to complete...' % self.logId)
-                output_a32_local = p_a32_local.communicate()
-                if p_a32_local.returncode != 0:
-                    raise LtacpException('ltacp %s: local adler32 checksum computation failed: %s' (self.logId, str(output_a32_local)))
-                logger.debug('ltacp %s: finished computation of local adler32 checksum' % self.logId)
-                a32_checksum_local = output_a32_local[0].split()[1].zfill(8)
 
                 logger.info('ltacp %s: waiting for transfer via globus-url-copy to LTA to finish...' % self.logId)
                 output_data_out = p_data_out.communicate()
@@ -396,7 +371,7 @@ class LtaCp:
                                                                                                                                      srm_a32_checksum,
                                                                                                                                      a32_checksum_local))
 
-            logger.info('ltacp %s: adler32 checksums are equal: %s' % (self.logId, a32_checksum_local))
+            logger.info('ltacp %s: adler32 checksums are equal: %s' % (self.logId, a32_checksum_local,))
 
             if int(srm_file_size) != int(byte_count):
                 raise LtacpException('ltacp %s: file size reported by srm (%s) does not match datastream byte count (%s)' % (self.logId,
