@@ -42,7 +42,9 @@
 /* typedef unsigned long int UINT4; */
 typedef unsigned int UINT4;
 
-/* Data structure for MD5 (Message Digest) computation */
+/* Data structure for MD5 (Message Digest) computation
+ * plus additional adler32 and byte_count variables
+ */
 typedef struct {
   unsigned int adler32;         /* adler 32 crc */
   unsigned long byte_count;     /* total number of bytes processed */
