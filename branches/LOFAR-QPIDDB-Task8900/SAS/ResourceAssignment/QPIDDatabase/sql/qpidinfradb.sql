@@ -42,6 +42,7 @@ CREATE TABLE queueroutes(
     fromhost bigint  NOT NULL,
     tohost bigint  NOT NULL,
     qid  bigint  NOT NULL,
+    eid  bigint  NOT NULL,
     PRIMARY KEY  (qrouteid)
 );
 CREATE TABLE exchangeroutes(
@@ -49,7 +50,8 @@ CREATE TABLE exchangeroutes(
     fromhost bigint  NOT NULL,
     tohost bigint  NOT NULL,
     eid bigint  NOT NULL,
-    routingkey varchar(512) NOT NULL,
+    dynamic bool default false,
+    routingkey varchar(512) default '#',
     PRIMARY KEY  (erouteid)
 );
 CREATE TABLE queuelistener(

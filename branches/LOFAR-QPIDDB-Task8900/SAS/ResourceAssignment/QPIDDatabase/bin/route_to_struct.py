@@ -31,6 +31,10 @@ def to_hostname(s):
 
     return fqdn
 
+def to_exchangename(s):
+    exchangename=s.split('=')[1].split(')')[0]
+    print(" found exchangename '%s'" %(exchangename))
+    return exchangename
 
 
 print (" Num lines %d " %(numlines))
@@ -49,12 +53,17 @@ if (offset!=numlines):
 	s = tosearch[offset].split(' ')
 	if ( len(s) ==5 ): # valid description
 	    hosta=to_hostname(s[2])
+	    exchangename=to_exchangename(s[2])
+	    if (exchangename == ''):
+		exchangename='lofar.default.bus'
 	    queuename=s[4].split('=')[1].split(')')[0]
 	    hostb=to_hostname(s[4]) #.split(':')[0].split('.')
 	    if (s[3]=='<='):
+		todb.bindexchangetohost(exchangename,hosta)
+		todb.bindexchangetohost(exchangename,hostb)
 		todb.bindqueuetohost(queuename,hosta)
 		todb.bindqueuetohost(queuename,hostb)
-		todb.setqueueroute(queuename,hostb,hosta)
+		todb.setqueueroute(queuename,hostb,hosta,exchangename)
 		print ("# queue %s from %s to %s" %(queuename,hostb,hosta))
 	    if (s[3]=='=>'):
 		todb.bindqueuetohost(queuename,hosta)

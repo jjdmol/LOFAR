@@ -34,24 +34,24 @@ class qpidinfra:
     def perqueue(self,callback):
 	ret=self.doquery("select hostname,queuename from persistentqueues INNER join hosts on (hid=hostid) INNER JOIN queues on (qid=queueid);")
 	for item in ret:
-	    callback(item['hostname'],item['queuename'])
+	    callback(item)
 	
     def perexchange(self,callback):
 	ret= self.doquery("select hostname,exchangename from persistentexchanges INNER join hosts on (hid=hostid) INNER JOIN exchanges on (eid=exchangeid);")
 	for item in ret:
-	    callback(item['hostname'],item['exchangename'])
+	    callback(item)
 
 
     def perfederationexchange(self,callback):
 	# cur.execute("select h1.hostname as fromhost ,h2.hostname as tohost , exchangename , keyname from exchangeroutes JOIN hosts as h1 on (fromhost=h1.hostid) JOIN hosts as h2 on (tohost=h2.hostid) JOIN exchanges on (exchangeid=eid) JOIN routingkeys on (keyid=kid);")
-	ret=self.doquery("select h1.hostname as fromhost ,h2.hostname as tohost , exchangename from exchangeroutes JOIN hosts as h1 on (fromhost=h1.hostid) JOIN hosts as h2 on (tohost=h2.hostid) JOIN exchanges on (exchangeid=eid);")
+	ret=self.doquery("select h1.hostname as fromhost ,h2.hostname as tohost , exchangename , dynamic , routingkey from exchangeroutes JOIN hosts as h1 on (fromhost=h1.hostid) JOIN hosts as h2 on (tohost=h2.hostid) JOIN exchanges on (exchangeid=eid);")
 	for item in ret:
-	    callback(item['fromhost'],item['tohost'],item['exchangename'],'#') #item['keyname'])
+	    callback(item)
 
     def perfederationqueue(self,callback):
-	ret=self.doquery("select h1.hostname as fromhost ,h2.hostname as tohost , queuename from queueroutes JOIN hosts as h1 on (fromhost=h1.hostid) JOIN hosts as h2 on (tohost=h2.hostid) JOIN queues on (queueid=qid);")
+	ret=self.doquery("select h1.hostname as fromhost ,h2.hostname as tohost , queuename, exchangename from queueroutes JOIN hosts as h1 on (fromhost=h1.hostid) JOIN hosts as h2 on (tohost=h2.hostid) JOIN queues on (queueid=qid) JOIN exchanges on (exchangeid=eid);")
 	for item in ret:
-	    callback(item['fromhost'],item['tohost'],item['queuename'])
+	    callback(item)
 
     def gethostid(self,hostname):
 	tmp=self.doquery("select * from hosts where hostname='%s';" %(hostname))
@@ -71,32 +71,41 @@ class qpidinfra:
 	    return 0
 	return tmp[0]['exchangeid']
 
-    def addhost(self,hostname):
+    def addhost(self,hostname,verbose=True):
 	id=self.gethostid(hostname)
 
 	if (id!=0):
-	    print ("Host %s already available in database with id = %d" %(hostname,id))
-	    return
+	    if verbose:
+		print ("Host %s already available in database with id = %d" %(hostname,id))
+	    return id
 
 	self.docommit("insert into hosts (hostname) VALUES ('%s');" %(hostname))
+	print (" added host %s to DB" %(hostname))
+	return self.gethostid(hostname)
 	    
-    def addqueue(self,queue):
+    def addqueue(self,queue, verbose=True):
 	id=self.getqueueid(queue)
 	
 	if (id!=0):
-	    print ("Queue %s already available in database with id = %d" %(queue,id))
-	    return
+	    if verbose:
+		print ("Queue %s already available in database with id = %d" %(queue,id))
+	    return id
 
 	self.docommit("insert into queues (queuename)  VALUES ('%s');" %(queue))
+	print (" added queue %s to DB" %(queue))
+	return self.getqueueid(queue)
 
-    def addexchange(self,exchange):
+    def addexchange(self,exchange, verbose=True):
 	id=self.getexchangeid(exchange)
 
-	if (id!=0):
-	    print ("Exchange %s already available in database with id = %d" %(exchange,id))
-	    return
+	if (id):
+	    if verbose:
+		print ("Exchange %s already available in database with id = %d" %(exchange,id))
+	    return id
 
 	self.docommit("insert into exchanges (exchangename) VALUES ('%s');" %(exchange))
+	print(" added exchange %s to DB " %(exchange))
+	return self.getexchangeid(exchange)
 
 
     def getqueuebinding(self,queueid,hostid):
@@ -127,9 +136,9 @@ class qpidinfra:
 	return ret[0]['qrouteid']
 
 
-    def addqueueroute(self,queueid,fromid,toid):
+    def addqueueroute(self,queueid,fromid,toid,exchangeid):
 	if (self.getqueueroute(queueid,fromid,toid)==0):
-	    self.docommit("insert into queueroutes (qid,fromhost,tohost) VALUES ( %s , %s , %s );" %(queueid,fromid,toid))
+	    self.docommit("insert into queueroutes (qid,fromhost,tohost,eid) VALUES ( %s , %s , %s, %s );" %(queueid,fromid,toid,exchangeid))
 
     def getexchangeroute(self,exchangeid,routingkey,fromid,toid):
 	ret=self.doquery("select * from exchangeroutes where eid=%s and fromhost=%s and tohost=%s and routingkey='%s';" %(exchangeid,fromid,toid,routingkey))
@@ -137,22 +146,14 @@ class qpidinfra:
 	    return 0;
 	return ret[0]['erouteid']
 
-    def addexchangeroute(self,exchangeid,routingkey,fromid,toid):
+    def addexchangeroute(self,exchangeid,routingkey,fromid,toid,dynamic=False):
 	if (getexchangeroute(self,exchangeid,routingkey,fromid,toid)==0):
-	    self.docommit("insert into exchangeroutes (eid,fromhost,tohost,routingkey);" %(exchangeid,fromid,toid,routingkey))
+	    self.docommit("insert into exchangeroutes (eid,fromhost,tohost,routingkey,dynamic);" %(exchangeid,fromid,toid,routingkey,dynamic))
 
 
     def bindqueuetohost(self,queue,host):
-	hostid=self.gethostid(host)
-	if (hostid==0):
-	    self.addhost(host)
-	    hostid=self.gethostid(host)
-	
-	queueid=self.getqueueid(queue)
-	if (queueid==0):
-	    self.addqueue(queue)
-	    queueid=self.getqueueid(queue)
-	
+	hostid=self.addhost(host)
+	queueid=self.addqueue(queue)
 	bindid=self.getqueuebinding(queueid,hostid)
 	if (bindid==0): # not found
 	    self.addqueuebinding(queueid,hostid)
@@ -160,33 +161,25 @@ class qpidinfra:
 	    print ("Queue %s already binded with broker %s in database" %(queue,host))
 
     def bindexchangetohost(self,exchange,host):
-	hostid=self.gethostid(host)
-	if (hostid==0):
-	    self.addhost(host)
-	    hostid=self.gethostid(host)
-	
-	exchangeid=self.getexchangeid(exchange)
-	if (exchangeid==0):
-	    self.addexchange(exchange)
-	    exchangeid=self.getexchangeid(exchange)
-
-
+	hostid=self.addhost(host,verbose=False)
+	exchangeid=self.addexchange(exchange,verbose=False)
 	if (self.getexchangebinding(exchangeid,hostid)==0):
 	    self.addexchangebinding(exchangeid,hostid)
 	else:
 	    print("Exchange %s already binded with broker %s in database" %(exchange,host))
 
 
-    def setqueueroute(self,queuename,fromname,toname):
-	fromid=self.gethostid(fromname)
-	toid=self.gethostid(toname)
-	queueid=self.getqueueid(queuename)
-	self.addqueueroute(queueid,fromid,toid)
+    def setqueueroute(self,queuename,fromname,toname,exchange):
+	fromid = self.addhost(fromname)
+	toid = self.addhost(toname)
+	queueid = self.addqueue(queuename)
+	exchangeid = self.addexchange(exchange)
+	self.addqueueroute(queueid,fromid,toid,exchangeid)
 
-    def setexchangeroute(self,exchangename,routingkey,fromname,toname):
-	exchangeid=self.getexchangeid(exchangename)
-	fromid=self.gethostid(fromname)
-	toid=self.gethostid(toname)
-	self.addexchangeroute(exchangeid,routingkey,fromid,toid)
+    def setexchangeroute(self,exchangename,routingkey,fromname,toname,dynamic=False):
+	exchangeid = self.addexchange(exchangename)
+	fromid = self.addhost(fromname)
+	toid = self.addhost(toname)
+	self.addexchangeroute(exchangeid,routingkey,fromid,toid,dynamic)
 
 
