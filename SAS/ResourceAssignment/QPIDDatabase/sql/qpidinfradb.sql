@@ -1,11 +1,11 @@
-DROP TABLE IF EXISTS exchanges;
-DROP TABLE IF EXISTS queues;
-DROP TABLE IF EXISTS hosts;
-DROP TABLE IF EXISTS persistentexchanges;
-DROP TABLE IF EXISTS persistentqueues;
-DROP TABLE IF EXISTS queueroutes;
-DROP TABLE IF EXISTS exchangeroutes;
-DROP TABLE IF EXISTS queuelistener;
+DROP TABLE IF EXISTS exchanges CASCADE;
+DROP TABLE IF EXISTS queues CASCADE;
+DROP TABLE IF EXISTS hosts CASCADE;
+DROP TABLE IF EXISTS persistentexchanges CASCADE;
+DROP TABLE IF EXISTS persistentqueues CASCADE;
+DROP TABLE IF EXISTS queueroutes CASCADE;
+DROP TABLE IF EXISTS exchangeroutes CASCADE;
+DROP TABLE IF EXISTS queuelistener CASCADE;
 
 CREATE TABLE exchanges(
     exchangeid SERIAL,
@@ -25,40 +25,40 @@ CREATE TABLE hosts(
 
 CREATE TABLE persistentexchanges (
     pexid SERIAL,
-    eid bigint  NOT NULL,
-    hid bigint  NOT NULL,
+    eid bigint  references exchanges(exchangeid) ON DELETE CASCADE,
+    hid bigint  references hosts(hostid) ON DELETE CASCADE,
     PRIMARY KEY  (pexid)
 );
 
 CREATE TABLE persistentqueues (
     pquid SERIAL,
-    qid bigint  NOT NULL,
-    hid bigint  NOT NULL,
+    qid bigint  references queues(queueid) ON DELETE CASCADE,
+    hid bigint  references hosts(hostid) ON DELETE CASCADE,
     PRIMARY KEY  (pquid)
 );
 
 CREATE TABLE queueroutes(
     qrouteid SERIAL,
-    fromhost bigint  NOT NULL,
-    tohost bigint  NOT NULL,
-    qid  bigint  NOT NULL,
-    eid  bigint  NOT NULL,
+    fromhost bigint  references hosts(hostid) ON DELETE CASCADE,
+    tohost bigint  references hosts(hostid) ON DELETE CASCADE,
+    qid  bigint  references queues(queueid) ON DELETE CASCADE,
+    eid  bigint  references exchanges(exchangeid) ON DELETE CASCADE,
     PRIMARY KEY  (qrouteid)
 );
 CREATE TABLE exchangeroutes(
     erouteid SERIAL,
-    fromhost bigint  NOT NULL,
-    tohost bigint  NOT NULL,
-    eid bigint  NOT NULL,
+    fromhost bigint  references hosts(hostid) ON DELETE CASCADE,
+    tohost bigint  references hosts(hostid) ON DELETE CASCADE,
+    eid bigint references exchanges(exchangeid) ON DELETE CASCADE,
     dynamic bool default false,
     routingkey varchar(512) default '#',
     PRIMARY KEY  (erouteid)
 );
 CREATE TABLE queuelistener(
     qlistenid SERIAL,
-    fromhost bigint  NOT NULL,
-    eid bigint  NOT NULL,
-    qid bigint NOT NULL,
+    fromhost bigint references hosts(hostid) ON DELETE CASCADE,
+    eid bigint  references exchanges(exchangeid) ON DELETE CASCADE,
+    qid bigint references queues(queueid) ON DELETE CASCADE,
     subject varchar(512) NOT NULL,
     PRIMARY KEY  (qlistenid)
 );
