@@ -17,10 +17,10 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 
-'''Startup script for resourceassigner service'''
+'''Startup script for RAtoOTDBTaskSpecificationPropagator service'''
 
 import sys
-from lofar.sas.resourceassignment.resourceassigner.raservice import main
+from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.rotspservice import main
 
 if __name__ == '__main__':
     main()
