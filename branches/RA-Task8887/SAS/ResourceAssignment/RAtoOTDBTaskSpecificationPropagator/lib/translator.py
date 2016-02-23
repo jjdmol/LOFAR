@@ -21,7 +21,8 @@
 # $Id: assignment.py 1580 2015-09-30 14:18:57Z loose $
 
 """
-ResourceAssigner inserts/updates tasks and assigns resources to it based on incoming parset.
+RAtoOTDBTaskSpecificationPropagator gets a task to be scheduled in OTDB,
+reads the info from the RA DB and sends it to OTDB in the correct format.
 """
 
 import logging
@@ -31,11 +32,11 @@ import time
 from lofar.messaging.RPC import RPC, RPCException
 from lofar.parameterset import parameterset
 
-from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC
-from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME as RADB_BUSNAME
-from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
-from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_BUSNAME as RE_BUSNAME
-from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_SERVICENAME as RE_SERVICENAME
+from lofar.sas.resourceassignment.rotspservice.rpc import RARPC
+from lofar.sas.resourceassignment.rotspservice.config import DEFAULT_BUSNAME as RADB_BUSNAME
+from lofar.sas.resourceassignment.rotspservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
+#from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_BUSNAME as RE_BUSNAME
+#from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_SERVICENAME as RE_SERVICENAME
 
 logger = logging.getLogger(__name__)
 

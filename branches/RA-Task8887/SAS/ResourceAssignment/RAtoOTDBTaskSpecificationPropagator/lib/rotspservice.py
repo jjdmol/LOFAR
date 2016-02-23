@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# ResourceAssigner.py: ResourceAssigner listens on the lofar ?? bus and calls onTaskSpecified
+# rotspservice.py: RAtoOTDBTaskSpecificationPropagator listens on the lofar ?? bus and calls onTaskScheduled
 #
 # Copyright (C) 2015
 # ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,11 +20,11 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
-# $Id: raservice.py 1580 2015-09-30 14:18:57Z loose $
+# $Id: rotspservice.py 1580 2015-09-30 14:18:57Z loose $
 
 """
-TaskSpecifiedListener listens to a bus on which specified tasks get published. It will then try
-to assign resources to these tasks.
+TaskScheduledListener listens to a bus on which scheduled tasks get published. It will then try
+to propagate the changes to OTDB.
 """
 
 import qpid.messaging
@@ -32,20 +32,20 @@ import logging
 from datetime import datetime
 import time
 
-from lofar.sas.resourceassignment.rataskspecified.RABusListener import RATaskSpecifiedBusListener
+from lofar.sas.resourceassignment.rataskscheduled.RABusListener import RATaskScheduledBusListener
 from lofar.messaging.RPC import RPC, RPCException
 
 import lofar.sas.resourceassignment.resourceassignmentservice.rpc as rarpc
 from lofar.sas.resourceassignment.resourceassigner.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
-from lofar.sas.resourceassignment.resourceassigner.config import RATASKSPECIFIED_NOTIFICATION_BUSNAME, RATASKSPECIFIED_NOTIFICATIONNAME
+from lofar.sas.resourceassignment.resourceassigner.config import RATASKSCHEDULED_NOTIFICATION_BUSNAME, RATASKSCHEDULED_NOTIFICATIONNAME
 from lofar.sas.resourceassignment.resourceassigner.assignment import ResourceAssigner
 
 logger = logging.getLogger(__name__)
 
-class SpecifiedTaskListener(RATaskSpecifiedBusListener):
+class ScheduledTaskListener(RATaskScheduledBusListener):
     def __init__(self,
-                 busname=RATASKSPECIFIED_NOTIFICATION_BUSNAME,
-                 subject=RATASKSPECIFIED_NOTIFICATIONNAME,
+                 busname=RATASKSCHEDULED_NOTIFICATION_BUSNAME,
+                 subject=RATASKSCHEDULED_NOTIFICATIONNAME,
                  broker=None,
                  assigner=None,
                  **kwargs):
