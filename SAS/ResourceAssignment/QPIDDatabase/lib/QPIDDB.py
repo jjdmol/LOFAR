@@ -53,60 +53,78 @@ class qpidinfra:
 	for item in ret:
 	    callback(item)
 
-    def gethostid(self,hostname):
-	tmp=self.doquery("select * from hosts where hostname='%s';" %(hostname))
+    def getid(self,itemtype,itemname):
+	tmp=self.doquery("select * from %ss where %sname='%s';" %(itemtype,itemtype,itemname))
 	if (tmp==[]):
 	    return 0
-	return tmp[0]['hostid']
+	return tmp[0]["%sid" %(itemtype)]
 
-    def getqueueid(self,queuename):
-	tmp=self.doquery("select * from queues where queuename='%s';" %(queuename))
-	if (tmp==[]):
-	    return 0
-	return tmp[0]['queueid']
-
-    def getexchangeid(self,exchangename):
-	tmp=self.doquery("select * from exchanges where exchangename='%s';" %(exchangename))
-	if (tmp==[]):
-	    return 0
-	return tmp[0]['exchangeid']
-
-    def addhost(self,hostname,verbose=True):
-	id=self.gethostid(hostname)
-
+    def delid(self,itemtype,itemid):
 	if (id!=0):
-	    if verbose:
-		print ("Host %s already available in database with id = %d" %(hostname,id))
-	    return id
+	    self.docommit("delete from %ss where %sid=%d;"(itemtype,itemtype,itemid))
 
-	self.docommit("insert into hosts (hostname) VALUES ('%s');" %(hostname))
-	print (" added host %s to DB" %(hostname))
-	return self.gethostid(hostname)
-	    
-    def addqueue(self,queue, verbose=True):
-	id=self.getqueueid(queue)
-	
-	if (id!=0):
-	    if verbose:
-		print ("Queue %s already available in database with id = %d" %(queue,id))
-	    return id
-
-	self.docommit("insert into queues (queuename)  VALUES ('%s');" %(queue))
-	print (" added queue %s to DB" %(queue))
-	return self.getqueueid(queue)
-
-    def addexchange(self,exchange, verbose=True):
-	id=self.getexchangeid(exchange)
-
+    def delname(self,itemtype,itemname, verbose=True):
+	id= self.getid(itemtype,itemname)
 	if (id):
 	    if verbose:
-		print ("Exchange %s already available in database with id = %d" %(exchange,id))
+		print("Deleting %s from table %ss." %(itemname,itemtype))
+	    self.docommit("delete from %ss where %sid=%d and %sname='%s'" %(itemtype,itemtype,itemtype,itemname))
+	else:
+	    print("%s %s not found in database." %(itemtype,itemname))
+
+    def getname(self,itemtype,itemid):
+	res=self.doquery("select %sname from %ss where %sid=%d;" %(itemtype,itemtype,itemtype,itemid))
+	if (res!=[]):
+	    return res[0]["%sname" %(itemtype)]
+	return 'NotAvailableInDatabase'
+
+    def gethostid(self,hostname):
+	return self.getid('host',hostname)
+
+    def getqueueid(self,queuename):
+	return self.getid('queue',queuename)
+
+    def getexchangeid(self,exchangename):
+	return self.getid('exchange',exchangename)
+
+    def additem(self,itemtype,itemname,verbose=True):
+	id = self.getid(itemtype,itemname,verbose)
+	if (id!=0):
+	    if verbose:
+		print("%s %s already available in database." %(itemtype,itemname))
 	    return id
+	self.docommit("insert into %ss (%sname) values ('%s');" %(itemtype,itemtype,itemname))
+	if verbose:
+	    print (" added %s %s to DB" %(itemtype,itemname))
+	return self.getid(itemtype,itemname,verbose)
 
-	self.docommit("insert into exchanges (exchangename) VALUES ('%s');" %(exchange))
-	print(" added exchange %s to DB " %(exchange))
-	return self.getexchangeid(exchange)
+    def delitem(self,itemtype,itemname,verbose=True):
+	id = self.getid(itemtype,itemname,verbose)
+	if (id!=0):
+	    if verbose:
+		print("Deleting from table %s the item %s." %(itemtype,itemname))
+	    self.docommit("delete from %ss where %sid=%d and %sname='%s';" %(itemtype,itemtype,id,itemtype,itemname))
+	    return 0;
+	print("%s %s not found in the database" %(itemtype,itemname))
 
+
+    def addhost(self,hostname,verbose=True):
+	return self.additem('host',hostname,verbose)
+	    
+    def addqueue(self,queue, verbose=True):
+	return self.additem('queue',queue,verbose)
+
+    def addexchange(self,exchange, verbose=True):
+	return self.additem('exchange',exchange,verbose)
+
+    def delhost(self,hostname, verbose=True):
+	return self.delitem('host',hostname,verbose)
+
+    def delqueue(self,queuename, verbose=True):
+	return self.delitem('queue',queuename)
+
+    def delexchange(self,exchangename, verbose=True):
+	return self.delitem('exchange',exchangename,verbose)
 
     def getqueuebinding(self,queueid,hostid):
 	ret=self.doquery("select * from persistentqueues where qid=%s and hid=%s;" %(queueid,hostid))
@@ -118,6 +136,13 @@ class qpidinfra:
 	if (self.getqueuebinding(queueid,hostid)==0):
 	    self.docommit("insert into persistentqueues (qid,hid) VALUES (%d,%d);" %(queueid,hostid))
 
+    def delqueuebinding(self,queueid,hostid):
+	id = self.getqueuebinding(queueid,hostid)
+	if (id):
+	    print("Deleting binding for queue %d on host %d" %(queueid,hostid))
+	    self.docommit("delete from persistentqueues where pquid=%d and qid=%d and hid=%d;" %(id,queueid,hostid))
+	    return 0
+	return 1
 
     def getexchangebinding(self,exchangeid,hostid):
 	ret=self.doquery("select * from persistentexchanges where eid=%s and hid=%s;" %(exchangeid,hostid))
@@ -129,26 +154,45 @@ class qpidinfra:
 	if (self.getexchangebinding(exchangeid,hostid)==0):
 	    self.docommit("insert into persistentexchanges (eid,hid) VALUES ( %s , %s ) ;" %(exchangeid,hostid))
 
+    def delexchangebinding(self,exchangeid,hostid):
+	id = self.getexchangebinding(exchangeid,hostid)
+	if (id!=0):
+	    print("Deleting binding for exchange %d on host %d" %(exchangeid,hostid))
+	    self.docommit("delete from persistentexchanges where pexid=%d and eid=%d and hid=%d;" %(id,exchangeid,hostid))
+            return 0
+	return 1
+
     def getqueueroute(self,queueid,fromid,toid):
 	ret=self.doquery("select * from queueroutes where qid=%s and fromhost=%s and tohost=%s;" %(queueid,fromid,toid))
 	if (ret==[]):
 	    return 0
 	return ret[0]['qrouteid']
 
-
     def addqueueroute(self,queueid,fromid,toid,exchangeid):
 	if (self.getqueueroute(queueid,fromid,toid)==0):
 	    self.docommit("insert into queueroutes (qid,fromhost,tohost,eid) VALUES ( %s , %s , %s, %s );" %(queueid,fromid,toid,exchangeid))
 
+    def delqueueroute(self,queueid,fromid,toid):
+	id=self.getqueueroute(queueid,fromid,toid)
+	if (id!=0):
+	    print("Removing queueroute for queue %d from host %d to host %d" %(queueid,fromid,toid))
+	    self.docommit("delete from queueroutes where qrouteid=%d;" %(queuerouteid))
+
     def getexchangeroute(self,exchangeid,routingkey,fromid,toid):
 	ret=self.doquery("select * from exchangeroutes where eid=%s and fromhost=%s and tohost=%s and routingkey='%s';" %(exchangeid,fromid,toid,routingkey))
 	if (ret==[]):
-	    return 0;
+	    return 0
 	return ret[0]['erouteid']
 
     def addexchangeroute(self,exchangeid,routingkey,fromid,toid,dynamic=False):
 	if (getexchangeroute(self,exchangeid,routingkey,fromid,toid)==0):
 	    self.docommit("insert into exchangeroutes (eid,fromhost,tohost,routingkey,dynamic);" %(exchangeid,fromid,toid,routingkey,dynamic))
+
+    def delexchangeroute(self,exchangeid,routingkey,fromid,toid,dynamic=False):
+	id = getexchangeroute(self,exchangeid,routingkey,fromid,toid)
+	if (id!=0):
+	    print("Removing exchangeroute for key %s and exchange %s from host %s to host %s" %(routingkey,exchangekey,fromid,toid))
+	    self.docommit("delete from exchangeroutes where erouteid=%d;" %(id))
 
 
     def bindqueuetohost(self,queue,host):
@@ -181,5 +225,11 @@ class qpidinfra:
 	fromid = self.addhost(fromname)
 	toid = self.addhost(toname)
 	self.addexchangeroute(exchangeid,routingkey,fromid,toid,dynamic)
+
+    def renamequeue(self,oldqueuename,newqueuename):
+	self.docommit("update queues set queuename='%s' where queuename='%s';" %(newqueuename,oldqueuename))
+
+    def renameexchange(self,oldexchangename,newexchangename):
+	self.docommit("update exchanges set exchangename='%s' where exchangename='%s';" %(newexchangename,oldexchangename))
 
 
