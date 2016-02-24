@@ -13,7 +13,7 @@ for host in lhn001.cep2.lofar ccu001.control.lofar mcu001.control.lofar lcs023.c
 do
     for i in $(qpid-stat -q -b $host |grep -v '_' |grep "task\|mom" |awk ' { print $1 } ') 
     do
-	echo ./AddHostToQPIDDB.py -b $host -q $i
-	./AddHostToQPIDDB.py -b $host -q $i
+	echo ./addtoQPIDDB.py -b $host -q $i
+	./addtoQPIDDB.py -b $host -q $i
     done
 done
