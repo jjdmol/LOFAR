@@ -39,14 +39,13 @@ using namespace Cobalt;
 using namespace std;
 
 int observationID;
-unsigned rank;
 
 Exception::TerminateHandler th(Exception::terminate);
 
 void emulateStorage()
 {
   // establish control connection
-  string resource = getStorageControlDescription(observationID, rank);
+  string resource = getStorageControlDescription(observationID);
   PortBroker::ServerStream stream(resource);
 
   // read and print parset
@@ -73,8 +72,8 @@ int main(int argc, char **argv)
 {
   INIT_LOGGER("DummyStorage");
 
-  if (argc != 3) {
-    cerr << "Usage: DummyStorage obsid rank" << endl;
+  if (argc != 2) {
+    cerr << "Usage: DummyStorage obsid" << endl;
     cerr << endl;
     cerr << "Emulates both an OutputProc and a FinalMetaDataGatherer instance." << endl;
     cerr << "Only the protocol with GPUProc is implemented, that is," << endl;
@@ -87,7 +86,6 @@ int main(int argc, char **argv)
   alarm(20);
 
   observationID = boost::lexical_cast<int>(argv[1]);
-  rank = boost::lexical_cast<unsigned>(argv[2]);
 
   // set up broker server
   PortBroker::createInstance(storageBrokerPort(observationID));

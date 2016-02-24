@@ -150,7 +150,7 @@ namespace LOFAR
     {
       // Connect control stream
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connecting...");
-      std::string resource = getStorageControlDescription(itsParset.settings.observationID, itsRank);
+      std::string resource = getStorageControlDescription(itsParset.settings.observationID);
       PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.settings.observationID), resource, 0);
 
       // Send parset

@@ -27,11 +27,11 @@ if [ $? != 0 ]; then
   exit
 fi
 
-ssh ccu001 uploadMetadata LOFAR_4 sas003 $sasid /opt/lofar/var/run/Observation${sasid}_feedback 1>/dev/null 
+ssh ccu001 uploadMetadata LOFAR_4 sasdb $sasid /opt/lofar/var/run/Observation${sasid}_feedback 1>/dev/null 
 
 if [ $? != 0 ]; then
   echo "Problem putting feedback into OTDB using:"
-  echo "ssh ccu001 uploadMetadata LOFAR_4 sas003 $sasid /opt/lofar/var/run/Observation${sasid}_feedback"
+  echo "ssh ccu001 uploadMetadata LOFAR_4 sasdb $sasid /opt/lofar/var/run/Observation${sasid}_feedback"
   exit
 fi  
 

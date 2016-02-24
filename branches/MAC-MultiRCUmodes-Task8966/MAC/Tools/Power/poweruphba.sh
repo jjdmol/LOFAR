@@ -36,7 +36,7 @@ HandleArgs()
     SyntaxError
   fi
 
-  while getopts  "am:" flag
+  while getopts  "ham:" flag
     do
       case "$flag" in
       a)
@@ -48,8 +48,9 @@ HandleArgs()
       h)
         SyntaxError
         ;;
-      *)
-        SyntaxError
+      \?)
+        echo "Invalid option; try -h for help"
+        exit
         ;;
       esac
     done
@@ -69,9 +70,13 @@ fi
 checkbroken=1
 hbamode=0
 
-if [ "$#" -eq 1 ]; then
-   hbamode=$1
-   checkbroken=0
+if [ $# -eq 1 ]; then
+   if [[ $1 =~ ^[0-9] ]]; then 
+     hbamode=$1
+     checkbroken=0
+   else 
+     HandleArgs $*
+   fi
 else 
    HandleArgs $* 
 fi     
@@ -106,20 +111,33 @@ sleep 1
 rspctl --rcuenable=1
 sleep 1
 
-# Determine broken tiles
+# Determine broken tiles. On International stations in local mode we need to read a file
+# called /localhome/stationtest/DISABLED/disabled-mode5.txt
+# For NL stations and international stations in ILT mode we can query PVSS
+
 DISABLED_RCU_LIST=""
 if [ $checkbroken -eq 1 ]; then 
-   if [ -e /opt/lofar/sbin/disabledRCUlist ]; then  
-      DISABLED_RCU_LIST=`/opt/lofar/sbin/disabledRCUlist $hbamode 2</dev/null`
+   mode=`stationswitch -s`
+   if [[ $mode =~ ilt ]]; then 
+      if [ -e /opt/lofar/sbin/disabledRCUlist ]; then  
+         DISABLED_RCU_LIST=`/opt/lofar/sbin/disabledRCUlist $hbamode 2</dev/null`
+      else
+         echo "Cannot determine broken RCUs; missing /opt/lofar/sbin/disabledRCUlist"
+      fi
    else
-      echo "Cannot determine broken RCUs; missing /opt/lofar/sbin/disabledRCUlist"
+      if [ -e /localhome/stationtest/DISABLED/disabled-mode5.txt ]; then 
+         DISABLED_RCU_LIST=`cat /localhome/stationtest/DISABLED/disabled-mode5.txt`
+      else
+         echo "Cannot determine broken RCUs; missing file /localhome/stationtest/DISABLED/disabled-mode5.txt"
+      fi
    fi
-fi 
+fi
 
 # Switch off broken tiles (if any)
 if [ "$DISABLED_RCU_LIST" == "" ]; then 
-   echo "No disabled HBA tiles found" 
+   echo "Using all available RCUs" 
 else 
+   echo "List of disabled RCUs: "$DISABLED_RCU_LIST
    rspctl --rcumode=0 --select=$DISABLED_RCU_LIST 
    sleep 1
    rspctl --rcuenable=0 --select=$DISABLED_RCU_LIST 

@@ -3,5 +3,5 @@
 python_install(
     __init__.py
     default.py
-    DESTINATION resourceassignementeditor/config)
+    DESTINATION lofar/sas/resourceassignment/resourceassignmenteditor/config)
 

@@ -4,9 +4,9 @@
 if [ "$#" -ne 1 ]; then
     echo "Usage: ./ltaingest_build.sh <tag>"
     echo "where tag is a name or version number which is added to the tarballs."
-    echo "This script creates three build flavours (test/lexar/lotar) in source_root_dir/build and builds LTAIngest"
+    echo "This script creates two build flavours (test/lexar) in source_root_dir/build and builds LTAIngest"
     echo "Then it performs a local install (in the each specific build dir) and creates a deployable tarball"
-    echo "Final result is three tarballs in source_root_dir/build which can be copied to the ingest servers"
+    echo "Final result is two tarballs in source_root_dir/build which can be copied to the ingest servers"
     exit 1
 fi
 
@@ -22,20 +22,15 @@ echo "Using Build tag $BUILD_TAG"
 
 TEST_BUILD_DIR=$SOURCE_ROOT/build/test/gnu_debug
 LEXAR_BUILD_DIR=$SOURCE_ROOT/build/lexar/gnu_debug
-LOTAR_BUILD_DIR=$SOURCE_ROOT/build/lotar/gnu_debug
 
 mkdir -p $TEST_BUILD_DIR
 mkdir -p $LEXAR_BUILD_DIR
-mkdir -p $LOTAR_BUILD_DIR
 
 cd $TEST_BUILD_DIR && cmake -DBUILD_PACKAGES=LTAIngest -DLTAINGEST_BUILD_TARGET=test -DCMAKE_INSTALL_PREFIX=/globalhome/ingesttest/ltaingest_$BUILD_TAG $SOURCE_ROOT
 cd $LEXAR_BUILD_DIR && cmake -DBUILD_PACKAGES=LTAIngest -DLTAINGEST_BUILD_TARGET=lexar -DCMAKE_INSTALL_PREFIX=/globalhome/ingest/ltaingest_$BUILD_TAG $SOURCE_ROOT
-cd $LOTAR_BUILD_DIR && cmake -DBUILD_PACKAGES=LTAIngest -DLTAINGEST_BUILD_TARGET=lotar -DCMAKE_INSTALL_PREFIX=/home/lofarlocal/ltaingest_$BUILD_TAG $SOURCE_ROOT
 
 cd $TEST_BUILD_DIR && make && make test && rm -rf ./local_install && make DESTDIR=./local_install install
 cd $LEXAR_BUILD_DIR && make && rm -rf ./local_install && make DESTDIR=./local_install install
-cd $LOTAR_BUILD_DIR && make && rm -rf ./local_install && make DESTDIR=./local_install install
 
 cd $TEST_BUILD_DIR/local_install/globalhome/ingesttest && tar cvzf $SOURCE_ROOT/build/ltaingest_"$BUILD_TAG"_test.tgz ltaingest_$BUILD_TAG
 cd $LEXAR_BUILD_DIR/local_install/globalhome/ingest && tar cvzf $SOURCE_ROOT/build/ltaingest_"$BUILD_TAG"_lexar.tgz ltaingest_$BUILD_TAG
-cd $LOTAR_BUILD_DIR/local_install/home/lofarlocal && tar cvzf $SOURCE_ROOT/build/ltaingest_"$BUILD_TAG"_lotar.tgz ltaingest_$BUILD_TAG

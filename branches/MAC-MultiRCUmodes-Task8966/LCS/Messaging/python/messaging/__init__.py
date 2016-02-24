@@ -29,3 +29,9 @@ from messages import *
 from messagebus import *
 from RPC import *
 from Service import *
+import logging
+
+def setQpidLogLevel(qpidLogLevel):
+    for name, logger in logging.Logger.manager.loggerDict.items():
+        if name.startswith('qpid.') and isinstance(logger, logging.Logger):
+            logger.setLevel(qpidLogLevel)
