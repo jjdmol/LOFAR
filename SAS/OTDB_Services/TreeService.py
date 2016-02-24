@@ -37,7 +37,7 @@ from lofar.common.util import waitForInterrupt
 
 QUERY_EXCEPTIONS = (TypeError, ValueError, MemoryError, pg.ProgrammingError, pg.InternalError)
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Define our own exceptions
@@ -202,7 +202,7 @@ def KeyUpdateCommand(input_dict, db_connection):
         raise FunctionError(("Not all key were updated:", errors))
     return errors
 
-class PostgressMessageHandlerInterface(MessageHandlerInterface):
+class PostgressMessageHandler(MessageHandlerInterface):
     """
     Implements a generic message handlers for services that are tied to a postgres database.
     kwargs must contain the keys:
@@ -212,12 +212,18 @@ class PostgressMessageHandlerInterface(MessageHandlerInterface):
         function <type>      Function to call when a message is received on the message bus.
     """
     def __init__(self, **kwargs):
-        super(PostgressMessageHandlerInterface, self).__init__()
+        super(PostgressMessageHandler, self).__init__()
         self.dbcreds  = kwargs.pop("dbcreds")
         if len(kwargs):
             raise AttributeError("Unknown keys in arguments of 'DatabaseTiedMessageHandler: %s" % kwargs)
         self.connection = None
         self.connected = False
+
+        self.service2MethodMap = {
+            "TaskSpecification": self._TaskSpecificationRequest,
+            "StatusUpdateCmd":   self._StatusUpdateCommand,
+            "KeyUpdateCmd":      self._KeyUpdateCommand
+        }
 
     def prepare_receive(self):
         "Called in main processing loop just before a blocking wait for messages is done."
@@ -233,73 +239,59 @@ class PostgressMessageHandlerInterface(MessageHandlerInterface):
                 logger.error("Not connected to database %s, retry in 5 seconds: %s" % (self.dbcreds, e))
                 time.sleep(5)
 
-class PostgressTaskSpecificationRequest(PostgressMessageHandlerInterface):
-    """
-    Embedding of the TaskSpecificationRequest function in the postgress service class.
-    """
-    def __init__(self, **kwargs):
-        super(PostgressTaskSpecificationRequest, self).__init__(**kwargs)
+    def _TaskSpecificationRequest(self, **kwargs):
+        logger.info("_TaskSpecificationRequest({})".format(kwargs))
+        return TaskSpecificationRequest(kwargs, self.connection)
 
-    def handle_message(self, **msg):
-        " Connect to the right function"
-        return TaskSpecificationRequest(msg, self.connection)
+    def _StatusUpdateCommand(self, **kwargs):
+        logger.info("_StatusUpdateCommand({})".format(kwargs))
+        return StatusUpdateCommand(kwargs, self.connection)
 
-
-class PostgressStatusUpdateCommand(PostgressMessageHandlerInterface):
-    """
-    Embedding of the TaskSpecificationRequest function in the postgress service class.
-    """
-    def __init__(self, **kwargs):
-        super(PostgressStatusUpdateCommand, self).__init__(**kwargs)
-
-    def handle_message(self, **msg):
-        " Connect to the right function"
-        return StatusUpdateCommand(msg, self.connection)
+    def _KeyUpdateCommand(self, **kwargs):
+        logger.info("_KeyUpdateCommand({})".format(kwargs))
+        return KeyUpdateCommand(kwargs, self.connection)
 
 
-class PostgressKeyUpdateCommand(PostgressMessageHandlerInterface):
-    """
-    Embedding of the TaskSpecificationRequest function in the postgress service class.
-    """
-    def __init__(self, **kwargs):
-        super(PostgressKeyUpdateCommand, self).__init__(**kwargs)
-
-    def handle_message(self, **msg):
-        " Connect to the right function"
-        return KeyUpdateCommand(msg, self.connection)
+#class PostgressKeyUpdateCommand(PostgressMessageHandlerInterface):
+#    """
+#    Embedding of the TaskSpecificationRequest function in the postgress service class.
+#    """
+#    def __init__(self, **kwargs):
+#        super(PostgressKeyUpdateCommand, self).__init__(**kwargs)
+#
+#    def handle_message(self, **msg):
+#        " Connect to the right function"
+#        return KeyUpdateCommand(msg, self.connection)
 
 
 if __name__ == "__main__":
     from optparse import OptionParser
     from lofar.common import dbcredentials
     from lofar.common.util import waitForInterrupt
+    from lofar.sas.otdb.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
+    from lofar.messaging import setQpidLogLevel
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]")
-    parser.add_option("-B", "--busname", dest="busname", type="string", default="testbus",
-                      help="Busname or queue-name on which RPC commands are received")
+    parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_BUSNAME,
+           help="Busname or queue-name on which RPC commands are received, default: %s" % DEFAULT_BUSNAME)
+    parser.add_option("-s", "--servicename", dest="servicename", type="string", default=DEFAULT_SERVICENAME,
+           help="Name for this service, default: %s" % DEFAULT_SERVICENAME)
+    parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
     parser.add_option_group(dbcredentials.options_group(parser))
     (options, args) = parser.parse_args()
 
+    setQpidLogLevel(logging.INFO)
     dbcreds = dbcredentials.parse_options(options)
+    print "###dbcreds:", dbcreds
 
-    if not options.busname:
-        print "Missing busname"
-        parser.print_help()
-        sys.exit(1)
-
-    serv1 = Service("TaskSpecification", PostgressTaskSpecificationRequest,
-                    busname=options.busname, numthreads=1,
-                    handler_args = {"dbcreds" : dbcreds})
-    serv2 = Service("StatusUpdateCmd",   PostgressStatusUpdateCommand,
-                    busname=options.busname, numthreads=1,
-                    handler_args = {"dbcreds" : dbcreds})
-    serv3 = Service("KeyUpdateCmd",      PostgressKeyUpdateCommand,
-                    busname=options.busname, numthreads=1,
-                    handler_args = {"dbcreds" : dbcreds})
-
-    with serv1, serv2, serv3:
-        logger.info("Started the OTDB services")
+    with Service(options.servicename,
+                 PostgressMessageHandler,
+                 busname=options.busname,
+                 use_service_methods=True,
+                 numthreads=1,
+                 handler_args={"dbcreds" : dbcreds},
+                 verbose=True):
         waitForInterrupt()
 
     logger.info("Stopped the OTDB services")
