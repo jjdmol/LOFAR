@@ -166,15 +166,23 @@ bool StatCal::_checkHeaderInfo(const string& antennaSet, const string& band) con
 		return (true);
 	}
 
-	if (itsHI.antennaSet != antennaSet) {
-		LOG_ERROR_STR("CALTABLE FOR ANTENNASET " << antennaSet << " CONTAINS WEIGHTS FOR ANTENNASET " << itsHI.antennaSet);
-		return (false);
-	}
+	if (antennaSet.find("HBA") != string::npos) {
+        if (itsHI.antennaSet.find("HBA") == string::npos) {
+            LOG_ERROR_STR("CALTABLE FOR ANTENNASET " << antennaSet << " CONTAINS WEIGHTS FOR ANTENNASET " << itsHI.antennaSet);
+            return (false);
+        }
+        if (itsHI.band != band) {
+            LOG_ERROR_STR("CALTABLE FOR BAND " << band << " CONTAINS WEIGHTS FOR BAND " << itsHI.band);
+            return (false);
+        }
+    }
 
-    if ((itsHI.antennaSet == "HBA") && (itsHI.band != band)) {
-		LOG_ERROR_STR("CALTABLE FOR BAND " << band << " CONTAINS WEIGHTS FOR BAND " << itsHI.band);
-		return (false);
-	}
+    else if (antennaSet.find("LBA") != string::npos) {
+        if (itsHI.antennaSet.find("LBA") == string::npos) {
+            LOG_ERROR_STR("CALTABLE FOR ANTENNASET " << antennaSet << " CONTAINS WEIGHTS FOR ANTENNASET " << itsHI.antennaSet);
+            return (false);
+        }
+    }
 
 	if (itsHI.station != PVSSDatabaseName()) {
 		LOG_ERROR_STR("CALTABLE NOT FOR THIS STATION " << itsHI.station);
