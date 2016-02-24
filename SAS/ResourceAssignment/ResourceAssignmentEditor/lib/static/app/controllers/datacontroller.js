@@ -1,6 +1,6 @@
 // $Id$
 
-angular.module('raeApp').factory("dataService", function(){
+angular.module('raeApp').factory("dataService", ['$http', function($http){
     var self = this;
     self.tasks = [];
     self.resources = [];
@@ -16,24 +16,14 @@ angular.module('raeApp').factory("dataService", function(){
     self.resourceClaimDict = {};
     self.resourceGroupClaimDict = {};
     self.resourceIdToGroupIdsDict = {};
+    self.momProjectsDict = {};
 
     self.resourcesWithClaims = [];
 
     self.filteredTasks = [];
     self.filteredTaskDict = {};
 
-    return self;
-});
-
-var dataControllerMod = angular.module('DataControllerMod', ['ngResource']);
-
-dataControllerMod.controller('DataController',
-                            ['$scope', '$http', 'dataService',
-                            function($scope, $http, dataService) {
-    var self = this;
-    self.dataService = dataService;
-
-    function toIdBasedDict(list) {
+    self.toIdBasedDict = function(list) {
         var dict = {}
         for(var i = list.length-1; i >=0; i--) {
             var item = list[i];
@@ -42,90 +32,236 @@ dataControllerMod.controller('DataController',
         return dict;
     };
 
-    function mapResourcesToGroups() {
+    self.mapResourcesToGroups = function () {
         var dict = {}
-        var resources = self.dataService.resources;
-        var resourceGroups = self.dataService.resourceGroups;
+        var resources = self.resources;
+        var resourceGroups = self.resourceGroups;
 
         if(resources.length > 0) {
             for(var i = resources.length-1; i >=0; i--)
                 dict[resources[i].id] = []
 
-            for(var i = resourceGroups.length-1; i >=0; i--) {
-                var group = resourceGroups[i];
-                var childResourceIds = group.resourceIds;
+                for(var i = resourceGroups.length-1; i >=0; i--) {
+                    var group = resourceGroups[i];
+                    var childResourceIds = group.resourceIds;
 
-                for(var j = childResourceIds.length-1; j >=0; j--) {
-                    var childResourceId = childResourceIds[j];
-                    dict[childResourceId].push(group.id);
+                    for(var j = childResourceIds.length-1; j >=0; j--) {
+                        var childResourceId = childResourceIds[j];
+                        dict[childResourceId].push(group.id);
+                    }
                 }
-            }
         }
 
-        self.dataService.resourceIdToGroupIdsDict = dict;
+        self.resourceIdToGroupIdsDict = dict;
     };
 
-    function getTasks() {
+    self.getTasks = function() {
         $http.get('/rest/tasks').success(function(result) {
-            self.dataService.tasks = result.tasks;
-            self.dataService.taskDict = toIdBasedDict(self.dataService.tasks);
+            //convert datetime strings to Date objects
+            for(var i = result.tasks.length-1; i >=0; i--) {
+                var task = result.tasks[i];
+                task.starttime = new Date(task.starttime);
+                task.endtime = new Date(task.endtime);
 
-            self.dataService.filteredTasks = self.dataService.tasks;
-            self.dataService.filteredTaskDict = self.dataService.taskDict;
+                self.getMoMObjectDetailsForTask(task);
+            }
+
+            self.tasks = result.tasks;
+            self.taskDict = self.toIdBasedDict(self.tasks);
+
+            self.filteredTasks = self.tasks;
+            self.filteredTaskDict = self.taskDict;
         });
     };
 
-    function getResources() {
+    self.putTask = function(task) {
+        $http.put('/rest/tasks/' + task.id, task).error(function(result) {
+            console.log("Error. Could not update task. " + result);
+        })
+    };
+
+    self.getResources = function() {
         $http.get('/rest/resourceitems').success(function(result) {
-            self.dataService.resources = result.resourceitems;
-            self.dataService.resourceDict = toIdBasedDict(self.dataService.resources);
-            mapResourcesToGroups();
-
-            getResourceGroupClaims();
+            self.resources = result.resourceitems;
+            self.resourceDict = self.toIdBasedDict(self.resources);
+            self.mapResourcesToGroups();
         });
     };
 
-    function getResourceClaims() {
+    self.getResourceClaims = function() {
         $http.get('/rest/resourceclaims').success(function(result) {
-            self.dataService.resourceClaims = result.resourceclaims;
-            self.dataService.resourceClaimDict = toIdBasedDict(self.dataService.resourceClaims);
+            //convert datetime strings to Date objects
+            for(var i = result.resourceclaims.length-1; i >=0; i--) {
+                var resourceclaim = result.resourceclaims[i];
+                resourceclaim.starttime = new Date(resourceclaim.starttime);
+                resourceclaim.endtime = new Date(resourceclaim.endtime);
+            }
+
+            self.resourceClaims = result.resourceclaims;
+            self.resourceClaimDict = self.toIdBasedDict(self.resourceClaims);
         });
     };
 
-    function getResourceGroups() {
+    self.getResourceGroups = function() {
         $http.get('/rest/resourcegroups').success(function(result) {
-            self.dataService.resourceGroups = result.resourcegroups;
-            self.dataService.resourceGroupsDict = toIdBasedDict(self.dataService.resourceGroups);
-            mapResourcesToGroups();
-
-            getResources();
+            self.resourceGroups = result.resourcegroups;
+            self.resourceGroupsDict = self.toIdBasedDict(self.resourceGroups);
+            self.mapResourcesToGroups();
         });
     };
 
-    function getResourceGroupClaims() {
+    self.getResourceGroupClaims = function() {
         $http.get('/rest/resourcegroupclaims').success(function(result) {
-            self.dataService.resourceGroupClaims = result.resourcegroupclaims;
-            self.dataService.resourceGroupClaimDict = toIdBasedDict(self.dataService.resourceGroupClaims);
+            //convert datetime strings to Date objects
+            for(var i = result.resourcegroupclaims.length-1; i >=0; i--) {
+                var resourcegroupclaim = result.resourcegroupclaims[i];
+                resourcegroupclaim.starttime = new Date(resourcegroupclaim.starttime);
+                resourcegroupclaim.endtime = new Date(resourcegroupclaim.endtime);
+            }
 
-            setTimeout(function() { getResourceClaims() }, 100);
+            self.resourceGroupClaims = result.resourcegroupclaims;
+            self.resourceGroupClaimDict = self.toIdBasedDict(self.resourceGroupClaims);
         });
     };
 
-    function getTaskTypes() {
+    self.getTaskTypes = function() {
         $http.get('/rest/tasktypes').success(function(result) {
-            self.dataService.tasktypes = result.tasktypes;
+            self.tasktypes = result.tasktypes;
         });
     };
 
-    function getTaskStatusTypes() {
+    self.getTaskStatusTypes = function() {
         $http.get('/rest/taskstatustypes').success(function(result) {
-            self.dataService.taskstatustypes = result.taskstatustypes;
+            self.taskstatustypes = result.taskstatustypes;
         });
     };
 
-    getTaskTypes();
-    getTaskStatusTypes();
-    getTasks();
-    getResourceGroups();
+    self.getMoMProjects = function() {
+        $http.get('/rest/momprojects').success(function(result) {
+            //convert datetime strings to Date objects
+            var dict = {};
+            for(var i = result.momprojects.length-1; i >=0; i--) {
+                var momproject = result.momprojects[i];
+                momproject.statustime = new Date(momproject.statustime);
+                dict[momproject.mom2id] = momproject;
+            }
+            self.momProjectsDict = dict;
+        });
+    };
+
+    self.getMoMObjectDetailsForTask = function(task) {
+        $http.get('/rest/momobjectdetails/'+task.mom_id).success(function(result) {
+            if(result.momobjectdetails) {
+                task.name = result.momobjectdetails.object_name;
+                task.projectName = result.momobjectdetails.project_name;
+                task.projectId = result.momobjectdetails.project_mom2id;
+            }
+        });
+    };
+
+
+
+    self.lastUpdateChangeNumber = undefined;
+
+    self.subscribeToUpdates = function() {
+        var url = '/rest/updates';
+        if(self.lastUpdateChangeNumber) {
+            url += '/' + self.lastUpdateChangeNumber;
+        }
+        $http.get(url, {timeout:300000}).success(function(result) {
+
+            try {
+                var changeNumbers = result.changes.map(function(item) { return item.changeNumber; });
+                self.lastUpdateChangeNumber = changeNumbers.reduce(function(a, b, idx, arr) { return a > b ? a : b; }, undefined);
+
+                for(var i = result.changes.length-1; i >=0; i--) {
+                    try {
+                        var change = result.changes[i];
+
+                        if(change.objectType == 'task') {
+                            var changedTask = change.value;
+                            if(change.changeType == 'update') {
+                                var task = self.taskDict[changedTask.id];
+                                task.status = changedTask.status;
+                                task.mom_id = changedTask.mom_id;
+                                task.otdb_id = changedTask.otdb_id;
+                                task.starttime = new Date(changedTask.starttime);
+                                task.endtime = new Date(changedTask.endtime);
+                                self.getMoMObjectDetailsForTask(task);
+                            } else if(change.changeType == 'insert') {
+                                self.getMoMObjectDetailsForTask(changedTask);
+                                self.tasks.push(changedTask);
+                                self.taskDict[changedTask.id] = changedTask;
+                            } else if(change.changeType == 'delete') {
+                                delete self.taskDict[changedTask.id]
+                                for(var k = self.tasks.length-1; k >= 0; k--) {
+                                    if(self.tasks[k].id == changedTask.id) {
+                                        self.tasks.splice(k, 1);
+                                        break;
+                                    }
+                                }
+                            }
+                        } else if(change.objectType == 'resourceClaim') {
+                            var changedClaim = change.value;
+                            if(change.changeType == 'update') {
+                                var claim = self.resourceClaimDict[changedClaim.id];
+                                claim.status = changedClaim.status;
+                                claim.starttime = new Date(changedClaim.starttime);
+                                claim.endtime = new Date(changedClaim.endtime);
+                            } else if(change.changeType == 'insert') {
+                                self.resourceClaims.push(changedClaim);
+                                self.resourceClaimDict[changedClaim.id] = changedClaim;
+                            } else if(change.changeType == 'delete') {
+                                delete self.resourceClaimDict[changedClaim.id]
+                                for(var k = self.resourceClaims.length-1; k >= 0; k--) {
+                                    if(self.resourceClaims[k].id == changedClaim.id) {
+                                        self.resourceClaims.splice(k, 1);
+                                        break;
+                                    }
+                                }
+                            }
+                        } else if(change.objectType == 'resourceGroupClaim') {
+                            var changedGroupClaim = change.value;
+                            var claim = self.resourceGroupClaimDict[changedGroupClaim.id];
+                            claim.starttime = new Date(changedGroupClaim.starttime);
+                            claim.endtime = new Date(changedGroupClaim.endtime);
+                        }
+                    } catch(err) {
+                        console.log(err)
+                    }
+                }
+            } catch(err) {
+                console.log(err)
+            }
+
+            //and update again
+            self.subscribeToUpdates();
+        }).error(function() {
+            setTimeout(self.subscribeToUpdates, 1000);
+        });
+    };
+
+    return self;
+}]);
+
+var dataControllerMod = angular.module('DataControllerMod', ['ngResource']);
+
+dataControllerMod.controller('DataController',
+                            ['$scope', 'dataService',
+                            function($scope, dataService) {
+    var self = this;
+    self.dataService = dataService;
+
+
+    dataService.getTaskTypes();
+    dataService.getTaskStatusTypes();
+    dataService.getTasks();
+//     dataService.getResourceGroups();
+//     dataService.getResourceGroupClaims();
+    dataService.getResources();
+    dataService.getResourceClaims();
+    dataService.getMoMProjects();
+
+    dataService.subscribeToUpdates();
 }
 ]);

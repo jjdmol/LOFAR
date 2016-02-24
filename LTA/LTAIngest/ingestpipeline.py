@@ -4,6 +4,8 @@ import socket
 from lxml import etree
 from cStringIO import StringIO
 from job_group import corr_type, bf_type, img_type, unspec_type, pulp_type
+import ltacp
+import getpass
 
 def humanreadablesize(num, suffix='B'):
   """ converts the given size (number) to a human readable string in powers of 1024
@@ -39,13 +41,13 @@ class PipelineError(Exception):
 #---------------------- IngestPipeline ------------------------------------------
 class IngestPipeline():
   def __init__(self, logdir, job, momClient, ltaClient, ltacphost, ltacpport, mailCommand, momRetry, ltaRetry, srmRetry, srmInit):
-    self.logdir    = logdir
-    self.job       = job
-    self.momClient = momClient
-    self.ltaClient = ltaClient
-    self.ltacphost = ltacphost
-    self.ltacpport = ltacpport
-    self.mailCommand = mailCommand
+    self.logdir          = logdir
+    self.job             = job
+    self.momClient       = momClient
+    self.ltaClient       = ltaClient
+    self.ltacphost       = ltacphost
+    self.ltacpport       = ltacpport
+    self.mailCommand     = mailCommand
 
     self.Project       = job['Project']
     self.DataProduct   = job['DataProduct']
@@ -143,23 +145,6 @@ class IngestPipeline():
         self.SecondaryUri  = result['secondary_uri_rnd']
     self.logger.debug('got tempURIs %s %s, random URIs %s %s and ticket %s' % (self.tempPrimary, self.tempSecondary, self.PrimaryUri, self.SecondaryUri, self.ticket))
 
-
-#(renting)lexar002> java -Xmx256m -jar /globalhome/ingest/ltacp/ltacp.jar lexar002 8803 srm://srm.grid.sara.nl:8443/pnfs/grid.sara.nl/data/lofartest/ops/projects/L6512_SAP002_SB079_uv.MS.tar L6512_SAP002_SB079_uv.MS
-#2012-04-10 14:18:17,974 DEBUG client.LtaCp:58 - Creating the socket
-#2012-04-10 14:18:17,984 DEBUG client.LtaCp:81 - Writing the request header
-#2012-04-10 14:18:17,985 DEBUG client.LtaCp:107 - Transfering data via lexar002:8803 to srm://srm.grid.sara.nl:8443/pnfs/grid.sara.nl/data/lofartest/ops/projects/L6512_SAP002_SB079_uv.MS.tar
-#2012-04-10 14:18:17,995 DEBUG client.LtaCp:122 - Starting to stream data
-#...
-#2012-04-10 14:18:38,352 INFO  client.LtaCp:156 - Transfered 100% of 346 MB at 105 MB/s
-#2012-04-10 14:18:38,353 DEBUG client.LtaCp:182 - Flushing the stream
-#2012-04-10 14:18:38,353 DEBUG client.LtaCp:237 - Transfered 346960383 bytes
-#2012-04-10 14:18:38,354 DEBUG client.LtaCp:242 - Closing the socket
-#2012-04-10 14:18:38,354 DEBUG client.LtaCp:256 - Retrieving the checksums
-#2012-04-10 14:18:51,161 INFO  client.LtaCp:270 - Adler32 checksum for lexar002: 6367d2e1
-#2012-04-10 14:18:51,161 INFO  client.LtaCp:272 - Checksums from server: <size>347074560</size><checksums><checksum><algorithm>MD5</algorithm><value>ae28093ed958e5aaf7f7cf5ff4188f37</value></checksum><checksum><algorithm>Adler32</algorithm><value>6367d2e1</value></checksum></checksums>
-#2012-04-10 14:18:51,162 INFO  client.LtaCp:276 - Transfered 346 MB in 20s at 17 MB/s average speed
-
-
   def ParseLTAcpLog(self, log):
     for l in log:
       if 'Checksums from server:' in l:
@@ -186,7 +171,7 @@ class IngestPipeline():
       javacmd = "/data/java7/jdk1.7.0_55/bin/java"
 
     ltacppath = "/globalhome/%s/ltacp" % ("ingesttest" if self.ltacpport == 8801 else "ingest")
-    
+
     if self.PrimaryUri:
       cmd = ["ssh",  "-T", "ingest@" +self.HostLocation, "cd %s;%s -Xmx256m -cp %s/qpid-properties/lexar001.offline.lofar:%s/ltacp.jar nl.astron.ltacp.client.LtaCp %s %s %s %s" % (self.LocationDir, javacmd, ltacppath, ltacppath, hostname, self.ltacpport, self.PrimaryUri, self.Source)]
     else:
@@ -194,7 +179,7 @@ class IngestPipeline():
     ## SecondaryUri handling not implemented
     self.logger.debug(cmd)
     start = time.time()
-    p       = subprocess.Popen(cmd, stdin=open('/dev/null'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p       = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     logs    = p.communicate()
     elapsed = time.time() - start
     self.logger.debug("File transfer for %s took %d sec" % (self.JobId, elapsed))
@@ -223,6 +208,52 @@ class IngestPipeline():
         raise PipelineError('Dataproduct for %s not found on %s'% (self.JobId, self.HostLocation), 'TransferFile', PipelineNoSourceError)
     self.logger.debug('Finished file transfer of %s' % self.JobId)
 
+
+  def TransferFileNew(self):
+    self.logger.debug('Starting new style file transfer for %s ' % self.JobId)
+
+    try:
+        start = time.time()
+
+        host = self.HostLocation
+
+        # eor dawn nodes are not known in dns
+        # convert to ip address
+        for i in range(1, 33):
+            host = host.replace('node%d.intra.dawn.rug.nl' % (i+100,), '10.196.232.%d' % (i+10,))
+
+        self.logger.info(os.path.join(self.LocationDir, self.Source))
+        self.logger.info(self.PrimaryUri)
+
+        cp = ltacp.LtaCp(host,
+                         os.path.join(self.LocationDir, self.Source),
+                         self.PrimaryUri)
+
+        self.MD5Checksum, self.Adler32Checksum, self.FileSize = cp.transfer()
+
+        elapsed = time.time() - start
+        self.logger.debug("New style file transfer for %s took %d sec" % (self.JobId, elapsed))
+        self.logger.debug('Finished new style file transfer of %s' % self.JobId)
+
+        self.CheckChecksums()
+
+        try:
+            if int(self.FileSize) > 0:
+                avgSpeed = float(self.FileSize) / elapsed
+            self.logger.debug("New style file transfer for %s  took %d sec with an average speed of %s for %s including ltacp overhead" % (self.JobId, elapsed, humanreadablesize(avgSpeed, 'Bps'), humanreadablesize(float(self.FileSize), 'B')))
+        except Exception:
+            pass
+
+    except ltacp.LtacpException as exp:
+        if '550 File not found' in exp.value:
+            self.logger.error('Destination directory does not exist. Creating %s in LTA for %s' % (self.PrimaryUri, self.JobId))
+
+            if ltacp.create_missing_directories(self.PrimaryUri) == 0:
+                self.logger.info('Created path %s in LTA for %s' % (self.PrimaryUri, self.JobId))
+
+        raise Exception('New style file transfer failed of %s\n%s' % (self.JobId, str(exp)))
+
+
   def CheckChecksums(self):
     if self.MD5Checksum and self.Adler32Checksum and self.FileSize:
       try:
@@ -240,6 +271,7 @@ class IngestPipeline():
       uris = ''
     try:
       start = time.time()
+      self.logger.debug("SendChecksums for %s: project=%s ticket=%s size=%s md5=%s a32=%s uris=%s" % (self.JobId, self.Project, self.ticket, self.FileSize,self.MD5Checksum,self.Adler32Checksum, uris))
       result = self.ltaClient.SendChecksums(self.Project, self.ticket, self.FileSize, {'MD5':self.MD5Checksum,'Adler32':self.Adler32Checksum}, uris)
       self.logger.debug("SendChecksums for %s took %ds" % (self.JobId, time.time() - start))
     except xmlrpclib.Fault as err:
@@ -283,6 +315,7 @@ class IngestPipeline():
   def CheckSIP(self):
       ##might do more than validate in the future
     try:
+      self.logger.debug("CheckSIP for %s" % (self.JobId))
       start = time.time()
       f      = open('doc/LTA-SIP.xsd')
       xml    = etree.parse(f)
@@ -298,7 +331,7 @@ class IngestPipeline():
 
   def CheckSIPContent(self):
     try:
-      start = time.time()
+      self.logger.debug("CheckSIPContent for %s" % (self.JobId))
       sip   = StringIO(self.SIP)
       tree   = etree.parse(sip)
       root   = tree.getroot()
@@ -328,6 +361,7 @@ class IngestPipeline():
         self.logger.error("CheckSIPContent for %s storageTicket %s does not match expected %s" % (self.JobId, storageTickets[0].text, self.ticket))
         return False
         
+      self.logger.debug("CheckSIPContent OK for %s" % (self.JobId,))
       return True
     except Exception as e:
       self.logger.error('CheckSIPContent failed: ' + str(e))
@@ -345,6 +379,73 @@ class IngestPipeline():
         self.logger.exception('Getting SIP from MoM failed')
         raise
       self.logger.debug('SIP received for %s from MoM with size %d (%s): %s' % (self.JobId, len(self.SIP), humanreadablesize(len(self.SIP)), self.SIP[0:256]))
+    elif self.Type.lower() == "eor":
+      try:
+        sip_host = job['SIPLocation'].split(':')[0]
+        for i in range(1, 43):
+            sip_host = sip_host.replace('node%d.intra.dawn.rug.nl' % (i+100,), '10.196.232.%d' % (i+10,))
+        sip_path = job['SIPLocation'].split(':')[1]
+        cmd = ['ssh', '-tt', '-n', '-x', '-q', '%s@%s' % (getpass.getuser(), sip_host), 'cat %s' % sip_path]
+        self.logger.debug("GetSIP for %s with mom2DPId %s - StorageTicket %s - FileName %s - Uri %s - cmd %s" % (self.JobId, self.ArchiveId, self.ticket, self.FileName, self.PrimaryUri, ' ' .join(cmd)))
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        if p.returncode != 0:
+            raise PipelineError('GetSIP error getting EoR SIP for %s: %s' % (self.JobId, err), 'GetSip')
+
+        self.SIP = out
+
+        # parse sip xml and add filesize, storageticket and checkums
+        from xml.dom import minidom
+        sip_dom = minidom.parseString(self.SIP)
+        dp_node = sip_dom.getElementsByTagName('dataProduct')[0]
+
+        for elem in dp_node.getElementsByTagName('checksum'):
+            dp_node.removeChild(elem)
+
+        for elem in dp_node.getElementsByTagName('size'):
+            dp_node.removeChild(elem)
+
+        for elem in dp_node.getElementsByTagName('storageTicket'):
+            dp_node.removeChild(elem)
+
+        sip_namespace = "http://www.astron.nl/SIP-Lofar"
+        storageticket_node = sip_dom.createElementNS(sip_namespace, 'storageTicket')
+        storageticket_node.appendChild(sip_dom.createTextNode(str(self.ticket)))
+
+        size_node = sip_dom.createElementNS(sip_namespace, 'size')
+        size_node.appendChild(sip_dom.createTextNode(str(self.FileSize)))
+
+        checksum_md5_algo_node = sip_dom.createElementNS(sip_namespace, 'algorithm')
+        checksum_md5_algo_node.appendChild(sip_dom.createTextNode('MD5'))
+        checksum_md5_value_node = sip_dom.createElementNS(sip_namespace, 'value')
+        checksum_md5_value_node.appendChild(sip_dom.createTextNode(str(self.MD5Checksum)))
+        checksum_md5_node = sip_dom.createElementNS(sip_namespace, 'checksum')
+        checksum_md5_node.appendChild(checksum_md5_algo_node)
+        checksum_md5_node.appendChild(checksum_md5_value_node)
+
+        checksum_a32_algo_node = sip_dom.createElementNS(sip_namespace, 'algorithm')
+        checksum_a32_algo_node.appendChild(sip_dom.createTextNode('Adler32'))
+        checksum_a32_value_node = sip_dom.createElementNS(sip_namespace, 'value')
+        checksum_a32_value_node.appendChild(sip_dom.createTextNode(str(self.Adler32Checksum)))
+        checksum_a32_node = sip_dom.createElementNS(sip_namespace, 'checksum')
+        checksum_a32_node.appendChild(checksum_a32_algo_node)
+        checksum_a32_node.appendChild(checksum_a32_value_node)
+
+        filesize_node = sip_dom.createElementNS(sip_namespace, 'size')
+        filesize_node.appendChild(sip_dom.createTextNode(str(self.FileSize)))
+
+        dp_node.insertBefore(checksum_a32_node, dp_node.getElementsByTagName('fileName')[0])
+        dp_node.insertBefore(checksum_md5_node, checksum_a32_node)
+        dp_node.insertBefore(filesize_node, checksum_md5_node)
+        dp_node.insertBefore(storageticket_node, filesize_node)
+
+        self.SIP = sip_dom.toxml("utf-8")
+        self.SIP = self.SIP.replace('<stationType>Europe</stationType>','<stationType>International</stationType>')
+
+      except:
+        self.logger.exception('Getting SIP from EoR failed')
+        raise
+      self.logger.debug('SIP received for %s from EoR with size %d (%s): \n%s' % (self.JobId, len(self.SIP), humanreadablesize(len(self.SIP)), self.SIP[0:1024]))
     else:
       self.SIP = unspecifiedSIP.makeSIP(self.Project, self.ObsId, self.ArchiveId, self.ticket, self.FileName, self.FileSize, self.MD5Checksum, self.Adler32Checksum, self.Type)
       self.FileType = unspec_type
@@ -360,7 +461,7 @@ class IngestPipeline():
       ###raise Exception('Got a malformed SIP from MoM: %s' % self.SIP[0:50])
     if not self.CheckSIPContent():
       self.logger.error('SIP has invalid content for %s\n%s' % (self.JobId, self.SIP))
-      raise PipelineError('Got a SIP with wrong contents from MoM for %s : %s' % (self.JobId, self.SIP), func.__name__)
+      raise PipelineError('Got a SIP with wrong contents for %s : %s' % (self.JobId, self.SIP), 'GetSIP')
 
   def SendSIP(self):
     try:
@@ -390,7 +491,7 @@ class IngestPipeline():
       ## SecondaryUri handling not implemented
       self.logger.debug(cmd)
       start   = time.time()
-      p       = subprocess.Popen(cmd, stdin=open('/dev/null'), stdout=subprocess.PIPE)
+      p       = subprocess.Popen(cmd, stdout=subprocess.PIPE)
       log     = p.communicate()[0].split('\n')
       self.logger.debug("RollBack for %s took %ds" % (self.JobId, time.time() - start))
       self.logger.debug(log)
@@ -417,7 +518,9 @@ class IngestPipeline():
         break  
       retry += 1
       if retry < times:
-        time.sleep(random.randint(30, 60) * retry)
+        wait_time = random.randint(30, 60) * retry
+        self.logger.debug('waiting %d seconds before trying %s again' % (wait_time, self.JobId))
+        time.sleep(wait_time)
     if error:
       raise PipelineError(errortext + ' tried %s times but failed on %s. Got the following errors: %s' % (retry, self.JobId, error), func.__name__)
 
@@ -426,7 +529,13 @@ class IngestPipeline():
       self.logger.debug("Ingest Pipeline started for %s" % self.JobId)
       start = time.time()
       self.RetryRun(self.GetStorageTicket, self.ltaRetry, 'Getting storage ticket')
-      self.RetryRun(self.TransferFile, self.srmRetry , 'Transfering file')
+
+      self.RetryRun(self.TransferFileNew, self.srmRetry , 'Transfering file')
+      #if self.Type.lower() == "eor":
+        #self.RetryRun(self.TransferFileNew, self.srmRetry , 'Transfering file')
+      #else:
+        #self.RetryRun(self.TransferFile, self.srmRetry , 'Transfering file')
+
       self.RetryRun(self.SendChecksums, self.ltaRetry, 'Sending Checksums')
 #      self.RenameFile()
       self.RetryRun(self.GetSIP, self.momRetry, 'Get SIP from MoM')
@@ -495,5 +604,31 @@ class IngestPipeline():
 
 #----------------------------------------------------------------- selfstarter -
 if __name__ == '__main__':
-    standalone = IngestPipeline()
-    standalone.main()
+    import sys
+    if len(sys.argv) != 2:
+        print 'usage: ingestpipeline.py <path_to_jobfile.xml>'
+
+    logging.basicConfig(format="%(asctime)-15s %(levelname)s %(message)s", level=logging.DEBUG)
+    logger = logging.getLogger('Slave')
+
+    jobfile = sys.argv[1]
+    import job_parser
+    parser = job_parser.parser(logger)
+    job = parser.parse(jobfile)
+    job['filename'] = jobfile
+
+    logger.info(str(job))
+
+    if getpass.getuser() == 'ingest':
+        import ingest_config as config
+    else:
+        import ingest_config_test as config
+
+    #create misc mock args
+    ltacphost = 'mock-ltacphost'
+    ltacpport = -1
+    mailCommand = ''
+    srmInit = ''
+
+    standalone = IngestPipeline(None, job, config.momClient, config.ltaClient, config.ipaddress, config.ltacpport, config.mailCommand, config.momRetry, config.ltaRetry, config.srmRetry, config.srmInit)
+    standalone.run()

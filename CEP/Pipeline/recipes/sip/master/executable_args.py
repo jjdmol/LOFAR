@@ -171,6 +171,12 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             '--environment',
             help="Update environment variables for this step.",
             optional=True
+        ),
+        'error_tolerance': ingredient.BoolField(
+            '--error_tolerance',
+            help="Controls if the program exits on the first error or continues with succeeded MS.",
+            default=True,
+            optional=True
         )
     }
 
@@ -313,7 +319,18 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
         # ********************************************************************
         # Call the node side of the recipe
         # Create and schedule the compute jobs
-        command = "python %s" % (self.__file__.replace('master', 'nodes')).replace('executable_args', self.inputs['nodescript'])
+        #command = "python %s" % (self.__file__.replace('master', 'nodes')).replace('executable_args', self.inputs['nodescript'])
+        recipe_dir_str = str(self.config.get('DEFAULT', 'recipe_directories'))
+        recipe_directories = recipe_dir_str.rstrip(']').lstrip('[').split(',')
+        pylist = os.getenv('PYTHONPATH').split(':')
+        command = None
+        for pl in pylist:
+            if os.path.isfile(os.path.join(pl,'lofarpipe/recipes/nodes/'+self.inputs['nodescript']+'.py')):
+                command = "python %s" % os.path.join(pl,'lofarpipe/recipes/nodes/'+self.inputs['nodescript']+'.py')
+        for pl in recipe_directories:
+            if os.path.isfile(os.path.join(pl,'nodes/'+self.inputs['nodescript']+'.py')):
+                command = "python %s" % os.path.join(pl,'nodes/'+self.inputs['nodescript']+'.py')
+
         inputmapfiles[0].iterator = outputmapfiles[0].iterator = DataMap.SkipIterator
         jobs = []
         for i, (outp, inp,) in enumerate(zip(
@@ -362,6 +379,9 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
         for job, outp in zip(jobs, outputmapfiles[0]):
             if job.results['returncode'] != 0:
                 outp.skip = True
+                if not self.inputs['error_tolerance']:
+                    self.logger.error("A job has failed and error_tolerance is not set. Bailing out!")
+                    return 1
             for k, v in job.results.items():
                 if not k in jobresultdict:
                     jobresultdict[k] = []
