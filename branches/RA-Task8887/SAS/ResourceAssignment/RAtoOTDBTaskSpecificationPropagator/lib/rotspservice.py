@@ -47,7 +47,7 @@ class RATaskScheduledListener(RATaskScheduledBusListener):
                  busname=RATASKSCHEDULED_NOTIFICATION_BUSNAME,
                  subject=RATASKSCHEDULED_NOTIFICATIONNAME,
                  broker=None,
-                 assigner=None,
+                 propagator=None, ## TODO also give translator?
                  **kwargs):
         """
         RATaskScheduledListener listens on the lofar ?? bus and calls onTaskScheduled
@@ -61,22 +61,22 @@ class RATaskScheduledListener(RATaskScheduledBusListener):
         """
         super(RATaskScheduledListener, self).__init__(busname=busname, subject=subject, broker=broker, **kwargs)
 
-        self.translator = translator
-        if not self.translator:
-            self.translator =  RAtoOTDBTranslator()
+        self.propagator = propagator
+        if not self.propagator:
+            self.propagator =  RAtoOTDBPropagator()
 
     def onTaskScheduled(self, otdbId, momId, modificationTime):
         logger.info('onTaskScheduled: otdbId=%s' % otdbId)
 
-        self.translator.doTranslation(otdbId, momId, 'scheduled')
+        self.propagator.doPropagation(otdbId, momId, 'scheduled')
 
 #    def onTaskConflict(self, otdbId, momId, modificationTime):
 #        logger.info('onTaskConflict: otdbId=%s' % otdbId)
 #
-#        self.translator.doTranslation(otdbId, momId, 'conflict')
+#        self.propagator.doPropagation(otdbId, momId, 'conflict')
 
 
-__all__ = ["TaskScheduledListener"]
+__all__ = ["RATaskScheduledListener"]
 
 def main():
     from optparse import OptionParser
@@ -90,7 +90,7 @@ def main():
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]",
-                          description='runs the resourceassigner service')
+                          description='runs the RAtoOTDBTaskSpecificationPropagator service')
     parser.add_option('-q', '--broker', dest='broker', type='string', default=None, help='Address of the qpid broker, default: localhost')
     parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_BUSNAME, help="Name of the bus exchange on the qpid broker, default: %s" % DEFAULT_BUSNAME)
     parser.add_option("-s", "--servicename", dest="servicename", type="string", default=DEFAULT_SERVICENAME, help="Name for this service, default: %s" % DEFAULT_SERVICENAME)
@@ -107,15 +107,15 @@ def main():
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                         level=logging.DEBUG if options.verbose else logging.INFO)
 
-    with RAtoOTDBTranslator(radb_busname=options.radb_busname,
+    with RAtoOTDBPropagator(radb_busname=options.radb_busname,
                             radb_servicename=options.radb_servicename,
                             otdb_busname=options.otdb_busname,
                             otdb_servicename=options.otdb_servicename,
-                            broker=options.broker) as translator:
+                            broker=options.broker) as propagator:
         with TaskScheduledListener(busname=options.notification_busname,
                                    subject=options.notification_subject,
                                    broker=options.broker,
-                                   translator=translator) as listener:
+                                   propagator=propagator) as listener:
             waitForInterrupt()
 
 if __name__ == '__main__':
