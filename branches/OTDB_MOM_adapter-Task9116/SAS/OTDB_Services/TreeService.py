@@ -109,15 +109,18 @@ def TaskSetSpecification(input_dict, db_connection):
     check if there is a tree with the given OtdbID or MoMID
     if not
         instanciate a template from default template 'DefaultTemplateName'
-    ...
+    update the keys in the tree
 
-    Output: (boolean) - Reflects the successful update of the status.
+    Output: OtdbID - integer : OTDB id of the updated tree.
+            MoMID  - integer : MoM id of the updated tree.
+            Errors - dict    : dict of the keys that could not be updated and th reason why.
+                               Empty dict when everything went well.
 
     Exceptions:
     ...
     AttributeError: There is something wrong with the given input values.
-    FunctionError: An error occurred during the execution of the function.
-                   The text of the exception explains what is wrong.
+    FunctionError:  An error occurred during the execution of the function.
+                    The text of the exception explains what is wrong.
     """
     # Get task identifier: OtdbId or MoMID
     if not isinstance(input_dict, dict):
@@ -133,12 +136,15 @@ def TaskSetSpecification(input_dict, db_connection):
     tree_id = otdb_id if otdb_id is not None else mom_id
     is_mom_id = mom_id is not None
     try:
-        (treeid, treetype, treestate) =\
-            db_connection.query("select treeid,type,state from getTreeInfo({}, {})".format(tree_id, is_mom_id)).getresult()[0]
+        treeid = db_connection.query("select treeid from getTreeInfo({}, {})".format(tree_id, is_mom_id)).getresult()[0][0]
         # tree exists, no extra actions to take.
 
     except QUERY_EXCEPTIONS, exc_info:
-        # tree does not exist, we have to create it from a default template. Search for the name...
+        # tree does not exist, we have to create it from a default template when the tree was specified with a MoMID!
+        # Search for the name...
+        if not is_mom_id:
+            raise FunctionError("Task with OTDBid {} does not exist".format(otdb_id))
+
         selected_template = input_dict.get('TemplateName', None)
         if selected_template is None:
             raise AttributeError("TaskSetSpecification: Need 'TemplateName' key to create a task")
@@ -154,14 +160,26 @@ def TaskSetSpecification(input_dict, db_connection):
             if len(template_ids) != 1:
                 raise FunctionError("Programming error: matching task_ids for template {} are {}".\
                       format(selected_template, template_ids))
-            new_tree = db_connection.query("select copyTree(1,{})".format(template_ids[0])).getresult()[0][0]
-            print "###NEW_TREE=",new_tree
-            is_mom_id = False
-            (treeid, treetype, treestate) =\
-                db_connection.query("select treeid,type,state from getTreeInfo({}, {})".format(new_tree, is_mom_id)).getresult()[0]
+            treeid = db_connection.query("select copyTree(1,{})".format(template_ids[0])).getresult()[0][0]
+            print "###NEW_TREE=",treeid
+            # give new tree the mom_id when mom_id was specified by the user.
+            if is_mom_id:
+                success = db_connection.query("select setMomInfo(1,{},{},0,'no campaign')".format(treeid, mom_id)).getresult()[0]
         except QUERY_EXCEPTIONS, exc_info:
             raise FunctionError("Error while create task from template {}: {}".format(selected_template, exc_info))
 
+    # Do the key updates
+    try:
+        update_result = KeyUpdateCommand({'OtdbID':treeid, 'Updates':input_dict['Updates']}, db_connection, 
+                                         always_return_result_dict=True)
+    except (AttributeError, FunctionError), exc_info:
+        update_result = exc_info
+
+    answer = {}
+    answer['OtdbID'] = treeid
+    answer['MoMID']  = mom_id
+    answer['Errors'] = update_result
+    return answer
     return { 'result': "not completely implemented yet, treeid={}, type={}, state={}".format(treeid, treetype, treestate)}
 
 
@@ -249,7 +267,7 @@ def StatusUpdateCommand(input_dict, db_connection):
 
 
 # Key Update Command
-def KeyUpdateCommand(input_dict, db_connection):
+def KeyUpdateCommand(input_dict, db_connection, always_return_result_dict=False):
     """
     RPC function to update the values of a tree.
 
@@ -296,9 +314,10 @@ def KeyUpdateCommand(input_dict, db_connection):
             print "%s: %s ==> %s" % (key, record_list[0][2], value)
         except QUERY_EXCEPTIONS, exc:
             errors[key] = str(exc)
-    if len(errors):
+    if len(errors) and not always_return_result_dict:
         raise FunctionError(("Not all key were updated:", errors))
     return errors
+
 
 class PostgressMessageHandler(MessageHandlerInterface):
     """
