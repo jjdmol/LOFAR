@@ -859,6 +859,10 @@ void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 	RCUmask_t	rcus2switchOn;
 	rcus2switchOn.reset();
 	Timestamp timeStamp;
+
+    blitz::Array<uint,1> rcuModes = subarray->RCUmodes();
+    LOG_INFO_STR("rcuModes= " << rcuModes);
+
 	for (uint r = 0; r < m_n_rcus; r++) {
 		if (rcuMask.test(r)) {
 			if (++itsRCUcounts[r] == 1) {
@@ -883,8 +887,8 @@ void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 		enableCmd.rcumask   = rcus2switchOn;
 		enableCmd.settings().resize(m_n_rcus);
 
-        blitz::Array<uint,1> rcuModes = subarray->RCUmodes();
-        LOG_INFO_STR("rcuModes= " << rcuModes);
+        //blitz::Array<uint,1> rcuModes = subarray->RCUmodes();
+        //LOG_INFO_STR("rcuModes= " << rcuModes);
 
         for (uint r = 0; r < m_n_rcus; r++) {
             if (rcus2switchOn.test(r)) {
@@ -899,14 +903,24 @@ void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 	}
 
 	// when the lbl inputs are selected swap the X and the Y.
-	//int rcumode(subarray->SPW().rcumode());
-	int rcumode(0);  // TODO: add real rcumode or change all to antennaset
-	if (rcumode == 1 || rcumode == 2) {		// LBLinput used?
-		LOG_INFO("LBL inputs are used, swapping X and Y RCU's");
-		RSPSetswapxyEvent	swapCmd;
+    //int rcumode(subarray->SPW().rcumode());
+    //int rcumode(0);  // TODO: add real rcumode or change all to antennaset
+	//if (rcumode == 1 || rcumode == 2) {		// LBLinput used?
+
+    RCUmask_t switchMask;
+    switchMask.reset();
+    for (uint r = 0; r < m_n_rcus; r++) {
+        if ((rcuModes(r) == 1) || (rcuModes(r) == 2)) {  // LBLinput used?
+            switchMask.set(r);
+        }
+    }
+    if (switchMask.any()) {
+        LOG_INFO("LBL inputs are used, swapping X and Y RCU's");
+
+        RSPSetswapxyEvent	swapCmd;
 		swapCmd.timestamp   = timeStamp;
 		swapCmd.swapxy	    = true;
-		swapCmd.antennamask = RCU2AntennaMask(rcuMask);
+		swapCmd.antennamask = RCU2AntennaMask(switchMask);
 		itsRSPDriver->send(swapCmd);
 	}
 }
