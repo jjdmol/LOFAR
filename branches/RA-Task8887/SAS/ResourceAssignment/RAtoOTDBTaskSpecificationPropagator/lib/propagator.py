@@ -35,45 +35,37 @@ from lofar.parameterset import parameterset
 from lofar.sas.resourceassignment.rotspservice.rpc import RARPC
 from lofar.sas.resourceassignment.rotspservice.config import DEFAULT_BUSNAME as RADB_BUSNAME
 from lofar.sas.resourceassignment.rotspservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
-#from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_BUSNAME as RE_BUSNAME
-#from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_SERVICENAME as RE_SERVICENAME
+from lofar.sas.otdb.otdbservice.config import DEFAULT_BUSNAME as OTDB_BUSNAME
+from lofar.sas.otdb.otdbservice.config import DEFAULT_SERVICENAME as OTDB_SERVICENAME
 
 logger = logging.getLogger(__name__)
 
-class ResourceAssigner():
+
+class RAtoOTDBTranslator():
     def __init__(self,
                  radb_busname=RADB_BUSNAME,
                  radb_servicename=RADB_SERVICENAME,
                  radb_broker=None,
-                 re_busname=RE_BUSNAME,
-                 re_servicename=RE_SERVICENAME,
-                 re_broker=None,
-                 ssdb_busname='lofar.system',
-                 ssdb_servicename='SSDBService',
-                 ssdb_broker=None,
+                 otdb_busname=OTDB_BUSNAME,
+                 otdb_servicename=OTDB_SERVICENAME,
+                 otdb_broker=None,
                  broker=None):
         """
-        ResourceAssigner inserts/updates tasks in the radb and assigns resources to it based on incoming parset.
+        RAtoOTDBTranslator inserts/updates tasks in the radb and assigns resources to it based on incoming parset.
         :param radb_busname: busname on which the radb service listens (default: lofar.ra.command)
         :param radb_servicename: servicename of the radb service (default: RADBService)
         :param radb_broker: valid Qpid broker host (default: None, which means localhost)
-        :param re_busname: busname on which the resource estimator service listens (default: lofar.ra.command)
-        :param re_servicename: servicename of the resource estimator service (default: ResourceEstimation)
-        :param re_broker: valid Qpid broker host (default: None, which means localhost)
-        :param ssdb_busname: busname on which the ssdb service listens (default: lofar.system)
-        :param ssdb_servicename: servicename of the radb service (default: SSDBService)
-        :param ssdb_broker: valid Qpid broker host (default: None, which means localhost)
-        :param broker: if specified, overrules radb_broker, re_broker and ssdb_broker. Valid Qpid broker host (default: None, which means localhost)
+        :param otdb_busname: busname on which the OTDB service listens (default: lofar.otdb.command)
+        :param otdb_servicename: servicename of the OTDB service (default: OTDBService)
+        :param otdb_broker: valid Qpid broker host (default: None, which means localhost)
+        :param broker: if specified, overrules radb_broker and otdb_broker. Valid Qpid broker host (default: None, which means localhost)
         """
         if broker:
             radb_broker = broker
-            re_broker = broker
-            ssdb_broker = broker
+            otdb_broker = broker
 
         self.radbrpc = RARPC(servicename=radb_servicename, busname=radb_busname, broker=radb_broker)
-        self.rerpc = RPC(re_servicename, busname=re_busname, broker=re_broker, ForwardExceptions=True)
-        self.ssdbGetActiveGroupNames = RPC(ssdb_servicename+'.GetActiveGroupNames', busname=ssdb_busname, broker=ssdb_broker, ForwardExceptions=True)
-        self.ssdbGetHostForGID = RPC(ssdb_servicename+'.GetHostForGID', busname=ssdb_busname, broker=ssdb_broker, ForwardExceptions=True)
+        self.otdbrpc = RPC(otdb_servicename, busname=otdb_busname, broker=otdb_broker, ForwardExceptions=True)
 
     def __enter__(self):
         """Internal use only. (handles scope 'with')"""
@@ -87,19 +79,15 @@ class ResourceAssigner():
     def open(self):
         """Open rpc connections to radb service and resource estimator service"""
         self.radbrpc.open()
-        self.rerpc.open()
-        self.ssdbGetActiveGroupNames.open()
-        self.ssdbGetHostForGID.open()
+        self.otdbrpc.open()
 
     def close(self):
         """Close rpc connections to radb service and resource estimator service"""
         self.radbrpc.close()
-        self.rerpc.close()
-        self.ssdbGetActiveGroupNames.close()
-        self.ssdbGetHostForGID.close()
+        self.otdbrpc.close()
 
-    def doAssignment(self, sasId, parsets, status='prescheduled'):
-        logger.info('doAssignment: sasId=%s parset=%s' % (sasId, parsets))
+    def doTranslation(self, otdbId, momId, status='scheduled'):
+        logger.info('doTranslation: otdbId=%s momId=%s' % (sasId, momId))
 
         #parse main parset...
         mainParsetDict = parsets[str(sasId)]
