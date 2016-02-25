@@ -32,16 +32,17 @@ import time
 from lofar.messaging.RPC import RPC, RPCException
 from lofar.parameterset import parameterset
 
-from lofar.sas.resourceassignment.rotspservice.rpc import RARPC
-from lofar.sas.resourceassignment.rotspservice.config import DEFAULT_BUSNAME as RADB_BUSNAME
-from lofar.sas.resourceassignment.rotspservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
+from lofar.sas.resourceassignment.RAtoOTDBTaskSpecificationPropagator.rpc import RARPC
+from lofar.sas.resourceassignment.RAtoOTDBTaskSpecificationPropagator.config import DEFAULT_BUSNAME as RADB_BUSNAME
+from lofar.sas.resourceassignment.RAtoOTDBTaskSpecificationPropagator.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
 from lofar.sas.otdb.otdbservice.config import DEFAULT_BUSNAME as OTDB_BUSNAME
 from lofar.sas.otdb.otdbservice.config import DEFAULT_SERVICENAME as OTDB_SERVICENAME
+from lofar.sas.resourceassignment.RAtoOTDBTaskSpecificationPropagator.rpc import RAtoOTDBTranslator
 
 logger = logging.getLogger(__name__)
 
 
-class RAtoOTDBTranslator():
+class RAtoOTDBPropagator():
     def __init__(self,
                  radb_busname=RADB_BUSNAME,
                  radb_servicename=RADB_SERVICENAME,
@@ -51,7 +52,7 @@ class RAtoOTDBTranslator():
                  otdb_broker=None,
                  broker=None):
         """
-        RAtoOTDBTranslator inserts/updates tasks in the radb and assigns resources to it based on incoming parset.
+        RAtoOTDBPropagator updates tasks in the OTDB after the ResourceAssigner is done with them.
         :param radb_busname: busname on which the radb service listens (default: lofar.ra.command)
         :param radb_servicename: servicename of the radb service (default: RADBService)
         :param radb_broker: valid Qpid broker host (default: None, which means localhost)
@@ -66,6 +67,7 @@ class RAtoOTDBTranslator():
 
         self.radbrpc = RARPC(servicename=radb_servicename, busname=radb_busname, broker=radb_broker)
         self.otdbrpc = RPC(otdb_servicename, busname=otdb_busname, broker=otdb_broker, ForwardExceptions=True)
+        self.translator = RAtoOTDBTranslator()
 
     def __enter__(self):
         """Internal use only. (handles scope 'with')"""
@@ -86,113 +88,27 @@ class RAtoOTDBTranslator():
         self.radbrpc.close()
         self.otdbrpc.close()
 
-    def doTranslation(self, otdbId, momId, status='scheduled'):
-        logger.info('doTranslation: otdbId=%s momId=%s' % (sasId, momId))
-
-        #parse main parset...
-        mainParsetDict = parsets[str(sasId)]
-        mainParset = parameterset(mainParsetDict)
-        momId = mainParset.getInt('Observation.momID', -1)
-        taskType = mainParset.getString('Task.type', '')
-        if taskType.lower() == 'observation':
-            taskType = 'Observation'
-        startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
-        endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
-
-        ##check if task already present in radb
-        #existingTask = self.radbrpc.getTask(otdb_id=sasId)
-
-        #if existingTask:
-            ##present, so update task and specification in radb
-            #taskId = existingTask['id']
-            #specificationId = existingTask['specification_id']
-            #self.radbrpc.updateSpecification(specificationId, startTime, endTime, str(mainParsetDict))
-            #self.radbrpc.updateTask(taskId, momId, sasId, status, taskType, specificationId)
-        #else:
-        #insert new task and specification in the radb
-        specificationId = self.radbrpc.insertSpecification(startTime, endTime, str(mainParsetDict))['id']
-        taskId = self.radbrpc.insertTask(momId, sasId, status, taskType, specificationId)['id']
-
-        #analyze the parset for needed and available resources and claim these in the radb
-        cluster = self.parseSpecification(mainParset)
-        available = self.getAvailableResources(cluster)
-
-        needed = self.getNeededResouces(mainParset)
-
-        if self.checkResources(needed, available):
-            claimed, resourceIds = self.claimResources(needed, taskId, startTime, endTime)
-            if claimed:
-                self.commitResourceClaimsForTask(taskId)
-                self.radbrpc.updateTask(taskId, status='scheduled')
-            else:
-                self.radbrpc.updateTask(taskId, status='conflict')
-
-    def parseSpecification(self, parset):
-        # TODO: cluster is not part of specification yet. For now return CEP4. Add logic later.
-        default = "cep2"
-        cluster ="cep4"
-        return cluster
-
-    def getNeededResouces(self, parset):
-        replymessage, status = self.rerpc(parset.dict(), timeout=10)
-        logger.info('getNeededResouces: %s' % replymessage)
-        stations = parset.getStringVector('Observation.VirtualInstrument.stationList', '')
-        logger.info('Stations: %s' % stations)
-        return replymessage
-
-    def getAvailableResources(self, cluster):
-        # Used settings
-        groupnames = {}
-        available    = {}
-        while True:
-            try:
-                replymessage, status = self.ssdbGetActiveGroupNames()
-                if status == 'OK':
-                    groupnames = replymessage
-                    logger.info('SSDBService ActiveGroupNames: %s' % groupnames)
-                else:
-                    logger.error("Could not get active group names from SSDBService: %s" % status)
-
-                groupnames = {v:k for k,v in groupnames.items()} #swap key/value for name->id lookup
-                logger.info('groupnames: %s' % groupnames)
-                if cluster in groupnames.keys():
-                    groupId = groupnames[cluster]
-                    replymessage, status = self.ssdbGetHostForGID(groupId)
-                    if status == 'OK':
-                        available = replymessage
-                        logger.info('available: %s' % available)
-                    else:
-                        logger.error("Could not get hosts for group %s (gid=%s) from SSDBService: %s" % (cluster, groupId, status))
-                else:
-                    logger.error("group \'%s\' not known in SSDBService active groups (%s)" % (cluster, ', '.join(groupnames.keys())))
-                return available
-            except KeyboardInterrupt:
-                break
-            except Exception as e:
-                logger.warning("Exception while getting available resources. Trying again... " + str(e))
-                time.sleep(0.25)
-
-    def checkResources(self, needed, available):
-        return True
-
-    def claimResources(self, resources, taskId, startTime, endTime):
-        #TEMP HACK
-        cep4storage = resources['Observation']['total_data_size']
-        resources = dict()
-        resources['cep4storage'] = cep4storage
-
-        resourceNameDict = {r['name']:r for r in self.radbrpc.getResources()}
-        claimedStatusId = next(x['id'] for x in self.radbrpc.getResourceClaimStatuses() if x['name'].lower() == 'claimed')
-
-        resourceClaimIds = []
-
-        for r in resources:
-            if r in resourceNameDict:
-                resourceClaimIds.append(self.radbrpc.insertResourceClaim(resourceNameDict[r]['id'], taskId, startTime, endTime, claimedStatusId, 1, -1, 'anonymous', -1))
-
-        success = len(resourceClaimIds) == len(resources)
-        return success, resourceClaimIds
-
-    def commitResourceClaimsForTask(self, taskId):
-        self.radbrpc.updateResourceClaimsForTask(taskId, status='ALLOCATED')
-
+    def doPropagation(self, otdbId, momId, status): #status has no default.
+        logger.info('doPropagation: otdbId=%s momId=%s' % (sasId, momId))
+        
+        if not otdbId:
+            logger.warning('doPropagation no valid otdbId: otdbId=%s' % (sasId, momId))
+            return
+        
+        if status == 'conflict':
+            self.otdbrpc.UpdateTreeStatus(otdbId, 'conflict')
+        elif status == 'scheduled':
+            RAinfo = self.getRAinfo()
+            OTDBinfo = self.translator.doTranslation(RAinfo)
+            self.setOTDBinfo(otdbId, OTDBinfo, 'scheduled')
+        else:
+            logger.warning('doPropagation received unknown status: %s' % (status,))
+    
+    def getRAinfo():
+        info = {}
+        self.radbrpc.
+    
+    def setOTDBinfo(otdbId, OTDBinfo, OTDBstatus)
+        r = self.otdbrpc.UpdateTreeKey(otdbId, OTDBinfo('OTDBkeys'))
+        if r:
+            r = self.otdbrpc.UpdateTreeStatus(otdbId, OTDBstatus)
