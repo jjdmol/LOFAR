@@ -2,8 +2,8 @@
 
 python_install(
     __init__.py
-    raservice.py
-    assignment.py
+    rotspservice.py
+    translator.py
     config.py
-    DESTINATION lofar/sas/resourceassignment/resourceassigner)
+    DESTINATION lofar/sas/resourceassignment/RAtoOTDBTaskSpecificationPropagator)
 
