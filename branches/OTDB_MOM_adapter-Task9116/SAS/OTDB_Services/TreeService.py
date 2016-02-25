@@ -96,6 +96,104 @@ def TaskSpecificationRequest(input_dict, db_connection):
         answer_dict["tree"] = answer_list
     return answer_dict
 
+# Task Set Specification
+def TaskSetSpecification(input_dict, db_connection):
+    """
+    RPC function that (create and) updates the contents of a template or VIC tree.
+
+    Input : dict with either the key OtdbID (integer) or the key MoMID (integer).
+            This key is used to search for the specified tree.
+            Updates (dict)    - The key-value pairs that must be updated.
+
+    Implemented workflow (all checks for errors are left out):
+    check if there is a tree with the given OtdbID or MoMID
+    if not
+        instanciate a template from default template 'DefaultTemplateName'
+    ...
+
+    Output: (boolean) - Reflects the successful update of the status.
+
+    Exceptions:
+    ...
+    AttributeError: There is something wrong with the given input values.
+    FunctionError: An error occurred during the execution of the function.
+                   The text of the exception explains what is wrong.
+    """
+    # Get task identifier: OtdbId or MoMID
+    if not isinstance(input_dict, dict):
+        raise AttributeError("TaskSetSpecification: Expected a dict as input")
+    if 'OtdbID' not in input_dict and 'MoMID' not in input_dict:
+        raise AttributeError("TaskSetSpecificationRequest: Need 'OtdbID' or 'MoMID' key for task retrieval")
+    otdb_id = input_dict.get('OtdbID', None)
+    mom_id  = input_dict.get('MoMID',  None)
+    logger.info("TaskSetSpecification: otdb_id={}, mom_id={}".format(otdb_id, mom_id))
+
+    # Try to get the taskInfo (to find out whether or not the task already exists.
+    # but first unify information we have.
+    tree_id = otdb_id if otdb_id is not None else mom_id
+    is_mom_id = mom_id is not None
+    try:
+        (treeid, treetype, treestate) =\
+            db_connection.query("select treeid,type,state from getTreeInfo({}, {})".format(tree_id, is_mom_id)).getresult()[0]
+        # tree exists, no extra actions to take.
+
+    except QUERY_EXCEPTIONS, exc_info:
+        # tree does not exist, we have to create it from a default template. Search for the name...
+        selected_template = input_dict.get('TemplateName', None)
+        if selected_template is None:
+            raise AttributeError("TaskSetSpecification: Need 'TemplateName' key to create a task")
+        try:
+            template_info = db_connection.query("select treeid,name from getDefaultTemplates()").getresult()
+            # template_info is a list with tuples: (treeid,name)
+            print "TEMPLATENAMES:", template_info
+            all_names = [ name for (_,name) in template_info if name[0] != '#' ]
+            if not selected_template in all_names:
+                raise AttributeError("DefaultTemplate '{}' not found, available are:{}".format(selected_template, all_names))
+            # Yeah, default template exist, now make a copy of it.
+            template_ids = [ tasknr for (tasknr,name) in template_info if name == selected_template ]
+            if len(template_ids) != 1:
+                raise FunctionError("Programming error: matching task_ids for template {} are {}".\
+                      format(selected_template, template_ids))
+            new_tree = db_connection.query("select copyTree(1,{})".format(template_ids[0])).getresult()[0][0]
+            print "###NEW_TREE=",new_tree
+            is_mom_id = False
+            (treeid, treetype, treestate) =\
+                db_connection.query("select treeid,type,state from getTreeInfo({}, {})".format(new_tree, is_mom_id)).getresult()[0]
+        except QUERY_EXCEPTIONS, exc_info:
+            raise FunctionError("Error while create task from template {}: {}".format(selected_template, exc_info))
+
+    return { 'result': "not completely implemented yet, treeid={}, type={}, state={}".format(treeid, treetype, treestate)}
+
+
+
+
+    # Try to get the specification information
+    try:
+        logger.info("TaskSpecificationRequest:%s" % input_dict)
+        top_node = db_connection.query("select nodeid from getTopNode('%s')" % tree_id).getresult()[0][0]
+        treeinfo = db_connection.query("select exportTree(1, '%s', '%s')" % (tree_id, top_node)).getresult()[0][0]
+    except QUERY_EXCEPTIONS, exc_info:
+        raise FunctionError("Error while requesting specs of tree %d: %s"% (tree_id, exc_info))
+    # When the query was succesfull 'treeinfo' is now a string that contains many 'key = value' lines seperated
+    # with newlines. To make it more usable for the user we convert that into a dict...
+
+    # Note: a PIC tree is a list of keys while a Template tree and a VIC tree is a list of key-values.
+    #       Since we don't know what kind of tree was requested we assume a Template/VIC tree (most likely)
+    #       but if this ends in exceptions we fall back to a PIC tree.
+    answer_dict = {}
+    answer_list = []
+    for line in treeinfo.split('\n'): # make seperate lines of it.
+        try:
+            # assume a 'key = value' line
+            (key, value) = line.split("=", 1)
+            answer_dict[key] = value
+        except ValueError:
+            # oops, no '=' on the line, must be a PIC tree that was queried: make a list iso a dict
+            answer_list.append(line)
+    if len(answer_list) > 1:		# there is always one empty line, ignore that one...
+        answer_dict["tree"] = answer_list
+    return answer_dict
+
 # Status Update Command
 def StatusUpdateCommand(input_dict, db_connection):
     """
@@ -220,9 +318,10 @@ class PostgressMessageHandler(MessageHandlerInterface):
         self.connected = False
 
         self.service2MethodMap = {
-            "TaskSpecification": self._TaskSpecificationRequest,
-            "StatusUpdateCmd":   self._StatusUpdateCommand,
-            "KeyUpdateCmd":      self._KeyUpdateCommand
+            "TaskSpecification":    self._TaskSpecificationRequest,
+            "StatusUpdateCmd":      self._StatusUpdateCommand,
+            "KeyUpdateCmd":         self._KeyUpdateCommand,
+            "TaskSetSpecification": self._TaskSetSpecification
         }
 
     def prepare_receive(self):
@@ -250,6 +349,11 @@ class PostgressMessageHandler(MessageHandlerInterface):
     def _KeyUpdateCommand(self, **kwargs):
         logger.info("_KeyUpdateCommand({})".format(kwargs))
         return KeyUpdateCommand(kwargs, self.connection)
+
+    def _TaskSetSpecification(self, **kwargs):
+        logger.info("_TaskSetSpecification({})".format(kwargs))
+        return TaskSetSpecification(kwargs, self.connection)
+
 
 
 #class PostgressKeyUpdateCommand(PostgressMessageHandlerInterface):
