@@ -1,0 +1,9 @@
+// INI file of the BSE
+// Two options are known Loop and Stop on errors
+
+Loop				= 0 // Do not loop
+StopOnError	= 1 // Stop when an error occured
+logview			= 0
+logline			= 0
+logtofile		= 0
+Replay			= 0

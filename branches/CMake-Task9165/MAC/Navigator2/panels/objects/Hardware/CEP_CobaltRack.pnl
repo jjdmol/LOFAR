@@ -1,0 +1,243 @@
+V 11
+1
+LANG:1 10 CobaltRack
+PANEL,-1 -1 669 432 N "_3DFace" 0
+"main()
+{
+  baseDP= g_currentDatapoint+\"_Cobalt\";
+  strModuleName   = myModuleName(); 
+  
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
+  clearNodeRefNames();
+  addNodes();
+  
+  // connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP);
+}
+
+void clearNodeRefNames() {
+  // remove all symbols because new ones will be added
+  for (int i=1; i <= dynlen(nodeRefNames); i++) {
+    removeSymbol(strModuleName,\"\",nodeRefNames[i]);
+  }
+  dynClear(nodeRefNames);
+}
+
+void addNodes() {
+  int x,y;
+  getValue(\"cobaltrack_highLight\",\"position\",x,y);
+  int xPos_AddSymbol = 25+x; 
+  int yPos_AddSymbol = 380+y; 
+  int ref = 1;
+  string addPanelName    = \"objects/Hardware/CEP_CobaltNode_small.pnl\";
+  //loop over list and prepare panel with all stations and swlevel objects   
+  for (int i=1; i<=9; i++) {
+    nodeRefNames[ref]=\"cobaltNode\"+(ref);
+    int nodeNr=i;
+      
+    if (  addSymbol(  strModuleName,                   // Stay in this modul
+                      \"\",                              // Name of this panel
+                      addPanelName,                    // Panel to add
+                      nodeRefNames[ref],               // Ref of the addedPanel
+                      makeDynString( \"$nr:\" + nodeNr) ,     // Define all $values
+                      xPos_AddSymbol,                  // Xpos of the AddedSymbol
+                      yPos_AddSymbol,                  // Ypos of the AddedSymbol
+                      0,                               // angle
+                      1    ,1                          // zoomX , zoomY
+        ) < 0 ) {
+	  LOG_ERROR(\"CEP_CobaltRack.pnl:addNodes|Error Appending CobaltNode: \" + nodeNr + \" in this panel.\");
+          }
+    yPos_AddSymbol -= 30;
+    if (i == 4) {
+      yPos_AddSymbol=380+y;
+      xPos_AddSymbol=19+x+145;
+    }
+    ref++;
+  }
+}" 0
+ E "main()
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  188 128
+""0  1
+E "#uses \"navPanel.ctl\"
+string  baseDP          = \"\";
+dyn_string nodeRefNames;
+
+string strPanelName;
+string strModuleName;
+
+
+bool    bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {  
+    navPanel_setEvent(\"Cobalt\",\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"CEP_CobaltRack.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(\"Cobalt\",\"ChangePanel\");
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"Cobalt\",\"EventRightClick\");
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 2190
+"cobaltrack_highLight"
+""
+1 0 0 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+856 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"CobaltRackCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void CobaltRackCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"CEP_CobaltRack.pnl:CobaltRackCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"CEP_CobaltRack.pnl:CobaltRackCallback|Found highlight : \" + highlight + \" Looking for Cobalt\");
+  bool bHighlight=false;
+  if (dynContains(highlight,\"Cobalt\")) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"CEP_CobaltRack.pnl:CobaltRackCallback|Highlight request: \"+bHighlight);
+  cobaltrack_highLight.visible = bHighlight;
+  
+}
+
+" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 10 10 305 415
+6 2188
+"childStateBorder"
+""
+1 14 418 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+855 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 2 1 0 1 E U  1 E 15 15 300 410
+1 2193 86 "" 1
+0
+4 2192
+"LINE1"
+""
+1 158 16 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+857 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 2 1 E  158 16 158 411
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 86 "selfState" -1
+"objects\\lofar_self_state.pnl" 284 264 T 851 1.13333333333333 0 1 -302.866666666667 -245
+0
+0
