@@ -325,6 +325,7 @@ def KeyUpdateCommand(input_dict, db_connection, always_return_result_dict=False)
         raise FunctionError(("Not all key were updated:", errors))
     return errors
 
+
 # Task Prepare For Scheduling
 def TaskPrepareForScheduling(input_dict, db_connection):
     """
@@ -402,6 +403,34 @@ def TaskPrepareForScheduling(input_dict, db_connection):
     return [task_id]
 
 
+# Task Delete
+def TaskDelete(input_dict, db_connection):
+    """
+    RPC function to close the definition fase and make the task schedulable (by converting the template task to an VIC task)
+
+    Input : OtdbID   (integer) - ID of the task to change the status of.
+    Output: success  (bool)    - result of function
+
+    Exceptions:
+    AttributeError: There is something wrong with the given input values.
+    FunctionError: An error occurred during the execution of the function.
+                   The text of the exception explains what is wrong.
+    """
+    # Solve ID(s) that the user may have specified and return the validated values.
+    (found_task, otdb_id, mom_id) = TaskGetIDs(input_dict, db_connection) # throws on missing input
+
+    # if task i not found it is end of story.
+    if not found_task:
+        raise FunctionError("Task with OtdbID/MoMID {}/{} does not exist".format(otdb_id, mom_id))
+
+    # delete the task
+    try: 
+       db_connection.query("select deleteTree(1,{})".format(otdb_id))
+       return 'True'
+    except QUERY_EXCEPTIONS, exc_info:
+        raise FunctionError("TaskDelete {}: {}".format(otdb_id, exc_info))
+
+
 
 class PostgressMessageHandler(MessageHandlerInterface):
     """
@@ -426,7 +455,8 @@ class PostgressMessageHandler(MessageHandlerInterface):
             "StatusUpdateCmd":          self._StatusUpdateCommand,
             "KeyUpdateCmd":             self._KeyUpdateCommand,
             "TaskPrepareForScheduling": self._TaskPrepareForScheduling,
-            "TaskGetIDs":               self._TaskGetIDs
+            "TaskGetIDs":               self._TaskGetIDs,
+            "TaskDelete":               self._TaskDelete
         }
 
     def prepare_receive(self):
@@ -467,6 +497,10 @@ class PostgressMessageHandler(MessageHandlerInterface):
     def _TaskGetIDs(self, **kwargs):
         logger.info("_TaskGetIDs({})".format(kwargs))
         return TaskGetIDs(kwargs, self.connection, return_tuple=False)
+
+    def _TaskDelete(self, **kwargs):
+        logger.info("_TaskDelete({})".format(kwargs))
+        return TaskDelete(kwargs, self.connection)
 
 
 if __name__ == "__main__":
