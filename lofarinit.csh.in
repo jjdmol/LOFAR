@@ -37,8 +37,12 @@ endif
 # Use only the basename of the the lib
 set lfr_libdir=`basename $lfr_libdir`
 
-# Get directory for Python extensions
-set lfr_pylibdir=`python -c "from distutils.sysconfig import get_python_lib; from os.path import join; print join(get_python_lib(plat_specific=True, standard_lib=True, prefix=''), 'site-packages')"`
+# Get directory for Python modules relative to install prefix
+set lfr_pylibdir=@PYTHON_INSTALL_DIR@
+set lfr_pylibdir=`echo $lfr_pylibdir | sed 's,^@CMAKE_INSTALL_PREFIX@/,,'`
+if ("$lfr_pylibdir" == "") then
+    unset lfr_pylibdir
+endif
 
 # Only modify path variables if $lfr_root is an existing directory.
 if (! (-d $lfr_root) ) then
@@ -58,7 +62,7 @@ else
             set lfr_lib = "$lfr_path/$lfr_libdir"
             setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${lfr_lib}:%:%g" -e "s%^${lfr_lib}:%%"  -e "s%:${lfr_lib}"'$%%' -e "s%^${lfr_lib}"'$%%'`
         endif
-        if ($?PYTHONPATH) then
+        if ($?PYTHONPATH && $?lfr_pylibdir) then
             set lfr_pyt = "$lfr_path/$lfr_pylibdir"
             setenv PYTHONPATH `echo $PYTHONPATH | sed -e "s%:${lfr_pyt}:%:%g" -e "s%^${lfr_pyt}:%%"  -e "s%:${lfr_pyt}"'$%%' -e "s%^${lfr_pyt}"'$%%'`
         endif
@@ -85,7 +89,7 @@ else
         set lfr_lib = "$lfr_path/$lfr_libdir"
         setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${lfr_lib}:%:%g" -e "s%^${lfr_lib}:%%"  -e "s%:${lfr_lib}"'$%%' -e "s%^${lfr_lib}"'$%%'`
     endif
-    if ($?PYTHONPATH) then
+    if ($?PYTHONPATH && $?lfr_pylibdir) then
         set lfr_pyt = "$lfr_path/$lfr_pylibdir"
         setenv PYTHONPATH `echo $PYTHONPATH | sed -e "s%:${lfr_pyt}:%:%g" -e "s%^${lfr_pyt}:%%"  -e "s%:${lfr_pyt}"'$%%' -e "s%^${lfr_pyt}"'$%%'`
     endif
@@ -101,11 +105,13 @@ else
     else
         setenv LD_LIBRARY_PATH $LOFARROOT/${lfr_libdir}:$LD_LIBRARY_PATH
     endif
-    set lfr_pyt = "$LOFARROOT/$lfr_pylibdir"
-    if (! $?PYTHONPATH) then
-        setenv PYTHONPATH $lfr_pyt
-    else
-        setenv PYTHONPATH ${lfr_pyt}:$PYTHONPATH
+    if ($?lfr_pylibdir) then
+        set lfr_pyt = "$LOFARROOT/$lfr_pylibdir"
+        if (! $?PYTHONPATH) then
+            setenv PYTHONPATH $lfr_pyt
+        else
+            setenv PYTHONPATH ${lfr_pyt}:$PYTHONPATH
+        endif
     endif
 
     # Now define the new LOFARDATAROOT (if possible).
