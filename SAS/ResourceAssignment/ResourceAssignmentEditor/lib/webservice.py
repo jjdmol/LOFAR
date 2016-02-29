@@ -205,12 +205,17 @@ def getTaskStatusTypes():
 
 @app.route('/rest/momprojects')
 def getMoMProjects():
-    projects = momrpc.getProjects()
-    projects = [x for x in projects if x['status_id'] in [1, 7]]
-    for project in projects:
-        project['mom_id'] = project.pop('mom2id')
+    projects = []
+    try:
+        projects = momrpc.getProjects()
+        projects = [x for x in projects if x['status_id'] in [1, 7]]
+        for project in projects:
+            project['mom_id'] = project.pop('mom2id')
+    except Exception as e:
+        logger.error(e)
+        projects.append({'name':'<unknown>', 'mom_id':-99, 'description': 'Container project for tasks for which we could not find a MoM project'})
 
-    projects.append({'name':'OTDB Only', 'mom_id':-42, 'description': 'Container projects for tasks which exists only in OTDB'})
+    projects.append({'name':'OTDB Only', 'mom_id':-98, 'description': 'Container project for tasks which exists only in OTDB'})
     return jsonify({'momprojects': projects})
 
 @app.route('/rest/momobjectdetails/<int:mom2id>')
