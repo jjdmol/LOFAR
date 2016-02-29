@@ -65,7 +65,7 @@ def TaskGetIDs(input_dict, db_connection, return_tuple=True):
     Exceptions:
         AttributeError: Input not conform the specs
     """
-    # Get task identifier: OtdbId or MoMID
+    # Get task identifier: OtdbID or MoMID
     if not isinstance(input_dict, dict):
         raise AttributeError("Expected a dict as input")
 
@@ -372,6 +372,7 @@ def TaskPrepareForScheduling(input_dict, db_connection):
         raise FunctionError("TaskPrepareForScheduling: Task {} has the wrong type ('hardware')".format(task_id))
 
     # If task is of the type VItemplate convert it to a VHtree
+    delete_task = False
     if task_type == type_names['VItemplate']:
         try:
             # create executable task
@@ -379,6 +380,7 @@ def TaskPrepareForScheduling(input_dict, db_connection):
             # get the characteristics
             (task_id, task_type, task_state) = db_connection.query("select treeid,type,state from getTreeInfo({},False)"\
                                            .format(new_task_id)).getresult()[0]
+            delete_task = True
         except QUERY_EXCEPTIONS, exc_info:
             raise FunctionError("TaskPrepareForScheduling: failed for task {}: {}"\
                                 .format(otdb_id, exc_info))
@@ -399,6 +401,10 @@ def TaskPrepareForScheduling(input_dict, db_connection):
             db_connection.query("select setTreeState(1,{},{}::INT2,True)".format(task_id, state_names['approved']))
         except QUERY_EXCEPTIONS, exc_info:
             raise FunctionError("Error while setting task {} to 'approved': {}".format(task_id, exc_info))
+
+    if delete_task:
+        TaskDelete({'OtdbID':otdb_id}, db_connection)
+
     # QPID can't return an integer, make a list of it.
     return [task_id]
 
@@ -431,6 +437,85 @@ def TaskDelete(input_dict, db_connection):
         raise FunctionError("TaskDelete {}: {}".format(otdb_id, exc_info))
 
 
+# Task Get Default Templates
+def TaskGetDefaultTemplates(input_dict, db_connection):
+    """
+    RPC function to retrieve all (active) default templates
+
+    Output: Templates (dict) - Dict containing the characteristics of the default templates
+
+    Exceptions:
+    FunctionError: An error occurred during the execution of the function.
+                   The text of the exception explains what is wrong.
+    """
+    # get the information
+    Templates = {}
+    try: 
+        for (treeid,name,proc_type,proc_subtype,strategy) in db_connection.query("select * from getDefaultTemplates()").getresult():
+            if name[0] != '#':
+                Templates[name] = { 'OtdbID':treeid, 'processType':proc_type, 'processSubtype':proc_subtype, 'Strategy':strategy}
+        return Templates
+    except QUERY_EXCEPTIONS, exc_info:
+        raise FunctionError("TaskGetDefaulTemplates: {}".format(exc_info))
+
+
+# Get Stations
+def GetStations(input_dict, db_connection):
+    """
+    RPC function to retrieve all station names (and their relative location)
+
+    Output: Stations (dict) - Dict containing all the stations
+
+    Exceptions:
+    FunctionError: An error occurred during the execution of the function.
+                   The text of the exception explains what is wrong.
+    """
+    # get the information
+    Stations = {}
+    try: 
+        for fullname in db_connection.query("select * from getStations()").getresult():
+            # (LOFAR.PIC.<location>.<name>,)
+            level = fullname[0].split('.')
+            if len(level) == 4:
+                Stations[level[3]] = level[2]
+        return Stations
+    except QUERY_EXCEPTIONS, exc_info:
+        raise FunctionError("GetStations: {}".format(exc_info))
+
+
+# Set Project
+def SetProject(input_dict, db_connection):
+    """
+    RPC function to create or update a project record
+
+    Output: result (bool) - Reflecting the result of the function
+
+    Exceptions:
+    AttributeError: There is something wrong with the given input values.
+    FunctionError: An error occurred during the execution of the function.
+                   The text of the exception explains what is wrong.
+    """
+    # Check input
+    if not isinstance(input_dict, dict):
+        raise AttributeError("Expected a dict as input")
+    try:
+        project_name = input_dict['name']
+        title        = input_dict['title']
+        pi           = input_dict['pi']
+        co_i         = input_dict['co_i']
+        contact      = input_dict['contact']
+    except KeyError, info:
+        raise AttributeError("SetProject: Key %s is missing in the input" % info)
+    logger.info("SetProject for project: {}".format(project_name))
+
+    # get the information
+    Stations = {}
+    try: 
+        project_id = db_connection.query("select saveCampaign(0,'{}','{}','{}','{}','{}')".format(project_name, title, pi, co_i, contact)).getresult()[0][0]
+        return { "projectID": project_id }
+    except QUERY_EXCEPTIONS, exc_info:
+        raise FunctionError("SetProject: {}".format(exc_info))
+
 
 class PostgressMessageHandler(MessageHandlerInterface):
     """
@@ -456,7 +541,10 @@ class PostgressMessageHandler(MessageHandlerInterface):
             "KeyUpdateCmd":             self._KeyUpdateCommand,
             "TaskPrepareForScheduling": self._TaskPrepareForScheduling,
             "TaskGetIDs":               self._TaskGetIDs,
-            "TaskDelete":               self._TaskDelete
+            "TaskDelete":               self._TaskDelete,
+            "TaskGetDefaultTemplates":  self._TaskGetDefaultTemplates,
+            "GetStations":              self._GetStations,
+            "SetProject":               self._SetProject
         }
 
     def prepare_receive(self):
@@ -501,6 +589,18 @@ class PostgressMessageHandler(MessageHandlerInterface):
     def _TaskDelete(self, **kwargs):
         logger.info("_TaskDelete({})".format(kwargs))
         return TaskDelete(kwargs, self.connection)
+
+    def _TaskGetDefaultTemplates(self, **kwargs):
+        logger.info("_TaskGetDefaultTemplates()")
+        return TaskGetDefaultTemplates(kwargs, self.connection)
+
+    def _GetStations(self, **kwargs):
+        logger.info("_GetStations()")
+        return GetStations(kwargs, self.connection)
+
+    def _SetProject(self, **kwargs):
+        logger.info("_SetProject({})".format(kwargs))
+        return SetProject(kwargs, self.connection)
 
 
 if __name__ == "__main__":
