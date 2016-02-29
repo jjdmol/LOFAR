@@ -112,6 +112,9 @@ class MoMDatabaseWrapper:
         :param mixed mom_ids comma seperated string of mom2object id's, or list of ints
         :rtype list of dict's key value pairs with the project details
         '''
+        if not mom_ids:
+            return {}
+
         if _isListOfInts(mom_ids):
             ids = mom_ids
         else:
@@ -183,6 +186,9 @@ class ProjectDetailsQueryHandler(MessageHandlerInterface):
         self.momdb = MoMDatabaseWrapper(self.dbcreds)
 
     def getProjectDetails(self, mom_ids):
+        if not mom_ids:
+            return {}
+        
         ids = _idsFromString(mom_ids)
         if not _isListOfInts(ids):
             raise ValueError("%s is not a proper list of ints" % str(mom_ids))
