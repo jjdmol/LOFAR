@@ -34,43 +34,36 @@ def updateTaskMomDetails(task, momrpc):
     '''fill in the task propeties with mom object and project details.
     :param task: dictionary or list of dictionaries with the task(s)
     :param momrpc: MoM rpc object the query for details'''
+    def applyDefaults(t):
+        '''apply sane default values for a task'''
+        t['name'] = 'Task (sasId: %d)' % t['otdb_id']
+        t['project_name'] = '<unknown>'
+        t['project_mom_id'] = -99
+
+    tasklist = task if isinstance(task, list) else [task]
+
+    for t in tasklist:
+        applyDefaults(t)
+
     if not momrpc:
         return
 
-    def copyValues(t, m):
-        t['name'] = m['object_name']
-        t['project_name'] = m['project_name']
-        t['project_mom_id'] = m['project_mom2id']
+    try:
+        momIds = ','.join([str(t['mom_id']) for t in tasklist])
+        logger.info('momrpc.getProjectDetails(momIds)')
+        details = momrpc.getProjectDetails(momIds)
+        logger.info('details=' + str(details))
 
-
-    if isinstance(task, list):
-        momIds = ','.join([str(t['mom_id']) for t in task])
-    else:
-        momIds = task['mom_id']
-
-    logger.info('-----------------------')
-    logger.info(momIds)
-
-    details = momrpc.getProjectDetails(momIds)
-
-    logger.info('-----------------------')
-    logger.info(details)
-    logger.info('-----------------------')
-
-    if isinstance(task, list):
-        for t in task:
+        for t in tasklist:
             mom_id = str(t['mom_id'])
             if mom_id in details:
-                copyValues(t, details[mom_id])
+                m = details[mom_id]
+                t['name'] = m['object_name']
+                t['project_name'] = m['project_name']
+                t['project_mom_id'] = m['project_mom2id']
             else:
-                print t
-                t['name'] = 'Task (sasId: %d)' % t['otdb_id']
                 t['project_name'] = 'OTDB Only'
-                t['project_mom_id'] = -42
-    else:
-        mom_id = task['mom_id']
-        if mom_id in details:
-            copyValues(task, details[mom_id])
+                t['project_mom_id'] = -98
+    except Exception as e:
+        logger.error(str(e))
 
-    logger.info(task)
-    logger.info('-----------------------')
