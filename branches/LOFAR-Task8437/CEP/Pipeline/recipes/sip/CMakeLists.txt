@@ -74,6 +74,7 @@ lofar_add_bin_scripts(
   bin/pulsar_pipeline.py
   bin/long_baseline_pipeline.py
   bin/selfcal_imager_pipeline.py
+  bin/runPipeline.sh
   bin/startPython.sh
   bin/startPythonVersion.sh
   bin/stopPython.sh
