@@ -35,26 +35,72 @@ from lofar.messaging.RPC import *
 logging.basicConfig(stream=sys.stdout, level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
+def do_rpc_catch_exception(rpc_instance, arg_dict):
+    try:
+        print "Executing {}({})...".format(rpc_instance.ServiceName,arg_dict)
+        (data, status) = (rpc_instance)(**arg_dict)
+        raise Exception("Expected an exception, didn't get any")
+    except Exception:
+        print "{}: Caught expected exception".format(rpc_instance.ServiceName)
+    print "======"
+
 def do_rpc(rpc_instance, arg_dict):
-#    try:
-    (data, status) = (rpc_instance)(**arg_dict)
-    if status != "OK":
-        raise Exception("Status returned is %s" % status)
-    for key in sorted(data):
-        print "%s ==> %s" % (key, data[key])
-#    except OverflowError as e:
-#        pass
+    try:
+        print "Executing {}({})...".format(rpc_instance.ServiceName,arg_dict)
+        (data, status) = (rpc_instance)(**arg_dict)
+        if status != "OK":
+            raise Exception("Status returned is {}".format(status))
+        if isinstance(data, dict):
+            for key in sorted(data):
+                print "%s ==> %s" % (key, data[key])
+        else:
+            print "data =", data
+    except OverflowError as e:
+        pass
     print "======"
 
 if __name__ == "__main__":
     busname = sys.argv[1] if len(sys.argv) > 1 else "simpletest"
 
-    with RPC("TaskSpecification", ForwardExceptions=True, busname=busname, timeout=10) as task_spec_request:
-        do_rpc(task_spec_request, {'OtdbID':1099269})	# PIC
-        do_rpc(task_spec_request, {'OtdbID':1099238})	# Template
-        do_rpc(task_spec_request, {'OtdbID':1099266})	# VIC
+    with RPC("OTDBService.TaskGetIDs", ForwardExceptions=True, busname="lofar.otdb.specification", timeout=10) as otdbRPC:
+        # Existing: otdb_id:1099268, mom_id:353713
+        do_rpc                (otdbRPC, {'OtdbID': 1099268, 'MoMID': 353713 })
+        do_rpc                (otdbRPC, {'OtdbID': 1099268, 'MoMID': 5 })
+        do_rpc                (otdbRPC, {'OtdbID': 1099268, 'MoMID': None })
+        do_rpc                (otdbRPC, {'OtdbID': 5, 'MoMID': 353713 })
+        do_rpc_catch_exception(otdbRPC, {'OtdbID': 5, 'MoMID': 5 })
+        do_rpc_catch_exception(otdbRPC, {'OtdbID': 5, 'MoMID': None })
+        do_rpc                (otdbRPC, {'OtdbID': None, 'MoMID': 353713 })
+        do_rpc_catch_exception(otdbRPC, {'OtdbID': None, 'MoMID': 5 })
+        do_rpc_catch_exception(otdbRPC, {'OtdbID': None, 'MoMID': None })
 
-    with RPC("StatusUpdateCmd", ForwardExceptions=True, busname=busname, timeout=5) as status_update_command:
+#    with RPC("OTDBService.GetStations", ForwardExceptions=True, busname=busname, timeout=10) as otdbRPC:
+#        do_rpc(otdbRPC,{})
+
+    with RPC("OTDBService.GetDefaultTemplates", ForwardExceptions=True, busname=busname, timeout=10) as otdbRPC:
+        do_rpc(otdbRPC,{})
+
+    with RPC("OTDBService.SetProject", ForwardExceptions=True, busname=busname, timeout=10) as otdbRPC:
+        do_rpc(otdbRPC,{'name':"Taka Tuka Land", "title":"Adventure movie", "pi":"Pippi", "co_i":"Mr.Nelson", "contact":"Witje"})
+
+#with RPC("OTDBService.TaskSetSpecification", ForwardExceptions=True, busname="lofar.otdb.specification", timeout=10) as task_spec_request:
+#     do_rpc(task_spec_request, {'OtdbID':12379072, 'TemplateName':'BeamObservation', 'Updates': {'state': 'finished'}})
+#     do_rpc(task_spec_request, {'MoMID':182210, 'TemplateName':'BeamObservation', 'Updates': {'state': 'finished'}})
+
+#with RPC("OTDBService.TaskPrepareForScheduling", ForwardExceptions=True, busname="lofar.otdb.specification", timeout=10) as otdbRPC:
+#     do_rpc(otdbRPC, {'MoMID':179369})   # template
+
+#with RPC("OTDBService.TaskDelete", ForwardExceptions=True, busname="lofar.otdb.specification", timeout=10) as otdbRPC:
+#     do_rpc(otdbRPC, {'MoMID':178240})
+
+
+
+#    with RPC("OTDBService.TaskGetSpecification", ForwardExceptions=True, busname=busname, timeout=10) as otdbRPC:
+#        do_rpc(otdbRPC, {'OtdbID':1099269})	# PIC
+#        do_rpc(otdbRPC, {'OtdbID':1099238})	# Template
+#        do_rpc(otdbRPC, {'OtdbID':1099266})	# VIC
+
+    with RPC("OTDBService.TaskSetState", ForwardExceptions=True, busname=busname, timeout=5) as status_update_command:
         # PIC
         (data, status) = status_update_command(OtdbID=1099269, NewStatus='finished', UpdateTimestamps=True)
         print status, data
@@ -78,7 +124,7 @@ if __name__ == "__main__":
             print "Caught expected exception on invalid status in status update"
 
 
-    with RPC("KeyUpdateCmd", ForwardExceptions=True, busname=busname, timeout=5) as key_update:
+    with RPC("OTDBService.TaskUpdateSpecifications", ForwardExceptions=True, busname=busname, timeout=5) as key_update:
         # VIC tree: valid
         (data, status) = key_update(OtdbID=1099266,
                           Updates={'LOFAR.ObsSW.Observation.ObservationControl.PythonControl.pythonHost':'NameOfTestHost'})
