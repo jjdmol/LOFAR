@@ -139,6 +139,7 @@ namespace LOFAR {
       }
 
       itsSols.reserve(info().ntime());
+      iS.allg.resize(0,0,0);
 
       if (itsNChan==0) {
         itsNChan = info().nchan();
@@ -255,7 +256,7 @@ namespace LOFAR {
       itsTimerFill.stop();
 
       if (itsNTimes==itsSolInt-1) {
-        itsSols.push_back(stefcal(itsMode,itsSolInt).copy());
+        itsSols.push_back(stefcal(itsMode,itsSolInt,0).copy());
         itsNTimes=0;
       } else {
         itsNTimes++;
@@ -358,7 +359,8 @@ namespace LOFAR {
       itsMVis.resize(IPosition(6,nSt,2,nCh,itsSolInt,2,nSt));
     }
 
-    Matrix<DComplex> GainCal::stefcal (string mode, uint solInt) {
+    Matrix<DComplex> GainCal::stefcal (string mode, uint solInt,
+                                       uint freqCell) {
       vector<double> dgs;
 
       itsTimerSolve.start();
@@ -378,10 +380,10 @@ namespace LOFAR {
       int badIters=0;
       int maxBadIters=5;
 
-      uint nSt, nCr, nUn, nSp; // number of actual stations,
-                               // number of correlations,
-                               // number of unknowns
-                               // number that is two for scalarphase, one else
+      uint nSt, nCr, nUn, nSp; // nSt: number of actual stations,
+                               // nCr: number of correlations,
+                               // nUn: number of unknowns
+                               // nSp: number that is two for scalarphase, one else
 
       nSt=itsAntUseds[itsAntUseds.size()-1].size();
       if (mode=="fulljones") {
@@ -399,14 +401,14 @@ namespace LOFAR {
       }
       uint nCh = info().nchan();
 
-      iS.g.resize(nUn,nCr,itsNFreqCells);
-      iS.gold.resize(nUn,nCr,itsNFreqCells);
-      iS.gx.resize(nUn,nCr,itsNFreqCells);
-      iS.gxx.resize(nUn,nCr,itsNFreqCells);
-      iS.h.resize(nUn,nCr,itsNFreqCells);
+      iS.g.resize(nUn,nCr);
+      iS.gold.resize(nUn,nCr);
+      iS.gx.resize(nUn,nCr);
+      iS.gxx.resize(nUn,nCr);
+      iS.h.resize(nUn,nCr);
       uint numThreads=OpenMP::maxThreads();
       for (uint thread=0; thread<numThreads; ++thread) {
-        iS.z[thread].resize(nUn*nCh*solInt*nSp,nCr);
+        iS.z[thread].resize(nUn*itsNChan*solInt*nSp,nCr);
       }
 
       // Initialize all vectors
@@ -467,8 +469,8 @@ namespace LOFAR {
             Vector<DComplex> t(nCr);
 
             for (uint time=0;time<solInt;++time) {
-              for (uint ch=0;ch<nCh;++ch) {
-                uint zoff=nSt*ch+nSt*nCh*time;
+              for (uint ch=freqCell*itsNChan;ch<(freqCell+1)*itsNChan;++ch) {
+                uint zoff=nSt*(ch-freqCell*itsNChan)+nSt*itsNChan*time;
                 mvis_p=&itsMVis(IPosition(6,0,0,ch,time,0,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z[thread](st2+zoff,0)  = iS.h(st2,0) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,0,st1)) 
                 mvis_p=&itsMVis(IPosition(6,0,1,ch,time,0,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z[thread](st2+zoff,0) += iS.h(st2,2) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,1,st1)) 
                 mvis_p=&itsMVis(IPosition(6,0,0,ch,time,1,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z[thread](st2+zoff,1)  = iS.h(st2,0) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,0,st1)) 
@@ -483,9 +485,9 @@ namespace LOFAR {
             w=0;
 
             for (uint time=0;time<solInt;++time) {
-              for (uint ch=0;ch<nCh;++ch) {
+              for (uint ch=freqCell*itsNChan;ch<(freqCell+1)*itsNChan;++ch) {
                 for (uint st2=0;st2<nSt;++st2) {
-                  uint zoff=st2+nSt*ch+nSt*nCh*time;
+                  uint zoff=st2+nSt*(ch-freqCell*itsNChan)+nSt*itsNChan*time;
                   w(0) += conj(iS.z[thread](zoff,0))*iS.z[thread](zoff,0) + conj(iS.z[thread](zoff,2))*iS.z[thread](zoff,2);
                   w(1) += conj(iS.z[thread](zoff,0))*iS.z[thread](zoff,1) + conj(iS.z[thread](zoff,2))*iS.z[thread](zoff,3);
                   w(3) += conj(iS.z[thread](zoff,1))*iS.z[thread](zoff,1) + conj(iS.z[thread](zoff,3))*iS.z[thread](zoff,3);
@@ -785,7 +787,7 @@ namespace LOFAR {
 
       //Solve remaining time slots if any
       if (itsNTimes!=0) {
-        itsSols.push_back(stefcal(itsMode,itsSolInt).copy());
+        itsSols.push_back(stefcal(itsMode,itsSolInt,0).copy());
       }
 
       itsTimerWrite.start();
