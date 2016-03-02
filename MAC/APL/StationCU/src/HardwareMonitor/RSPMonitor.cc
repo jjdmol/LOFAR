@@ -52,7 +52,7 @@ namespace LOFAR {
 	using namespace GCF::PVSS;
 	using namespace GCF::RTDB;
 	namespace StationCU {
-	
+
 //
 // RSPMonitor()
 //
@@ -132,13 +132,13 @@ RSPMonitor::~RSPMonitor()
 //
 // Setup connection with PVSS
 //
-GCFEvent::TResult RSPMonitor::initial_state(GCFEvent& event, 
+GCFEvent::TResult RSPMonitor::initial_state(GCFEvent& event,
 													GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
+
 	switch (event.signal) {
     case F_INIT:
    		break;
@@ -169,11 +169,11 @@ GCFEvent::TResult RSPMonitor::initial_state(GCFEvent& event,
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("RSP:initial"));
-		
+
 		LOG_DEBUG_STR("Going to connect to the RSPDriver.");
 		TRAN (RSPMonitor::connect2RSP);
 	}
-	
+
 	case DP_SET:
 		break;
 
@@ -184,7 +184,7 @@ GCFEvent::TResult RSPMonitor::initial_state(GCFEvent& event,
 	default:
 		LOG_DEBUG_STR ("initial, DEFAULT");
 		break;
-	}    
+	}
 
 	return (status);
 }
@@ -195,13 +195,13 @@ GCFEvent::TResult RSPMonitor::initial_state(GCFEvent& event,
 //
 // Setup connection with RSPdriver
 //
-GCFEvent::TResult RSPMonitor::connect2RSP(GCFEvent& event, 
+GCFEvent::TResult RSPMonitor::connect2RSP(GCFEvent& event,
 													GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("connect2RSP:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
+
 	switch (event.signal) {
 	case F_ENTRY:
 		// update PVSS
@@ -221,7 +221,7 @@ GCFEvent::TResult RSPMonitor::connect2RSP(GCFEvent& event,
 
 	case F_DISCONNECTED:
 		port.close();
-		ASSERTSTR (&port == itsRSPDriver, 
+		ASSERTSTR (&port == itsRSPDriver,
 								"F_DISCONNECTED event from port " << port.getName());
 		LOG_WARN("RSP:Connection with RSPDriver failed, retry in 10 seconds");
 		itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("RSP:connection timeout"));
@@ -242,7 +242,7 @@ GCFEvent::TResult RSPMonitor::connect2RSP(GCFEvent& event,
 	default:
 		LOG_DEBUG_STR ("connect2RSP, DEFAULT");
 		break;
-	}    
+	}
 
 	return (status);
 }
@@ -252,13 +252,13 @@ GCFEvent::TResult RSPMonitor::connect2RSP(GCFEvent& event,
 //
 // Ask the configuration of the station
 //
-GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event, 
+GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 													GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("askConfiguration:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
+
 	switch (event.signal) {
 	case F_ENTRY: {
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:asking configuration"));
@@ -274,13 +274,13 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 	case RSP_GETCONFIGACK: {
 		RSPGetconfigackEvent	ack(event);
 		// TODO cheack status?
-	
+
 		// calc size of the propertyset vectors
 		itsNrRCUs	   = ack.n_rcus;
 		itsNrRSPboards = ack.n_rspboards;
-		itsNrSubracks  = (itsNrRSPboards/NR_RSPBOARDS_PER_SUBRACK) + 
+		itsNrSubracks  = (itsNrRSPboards/NR_RSPBOARDS_PER_SUBRACK) +
 						 	((itsNrRSPboards%NR_RSPBOARDS_PER_SUBRACK) ? 1 : 0);
-		itsNrCabinets  = (itsNrSubracks /NR_SUBRACKS_PER_CABINET)  + 
+		itsNrCabinets  = (itsNrSubracks /NR_SUBRACKS_PER_CABINET)  +
 						 	((itsNrSubracks%NR_SUBRACKS_PER_CABINET) ? 1 : 0);
 		// construct a mask containing all available RSPboards.
 		itsRSPmask.reset();
@@ -292,7 +292,7 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 		for(uint32	rcu = 0; rcu < itsNrRCUs; rcu++) {
 			itsRCUmask.set(rcu);
 		}
-		
+
 		// Read number of Antenna's from RemoteStation.conf file.
 		ConfigLocator	CL;
 		ParameterSet	RSconf(CL.locate("RemoteStation.conf"));
@@ -311,14 +311,14 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 		LOG_INFO_STR(         "RSPmask      = " << itsRSPmask);
 		LOG_INFO(formatString("has splitters= %s", (itsHasSplitters ? "yes" : "no")));
 		LOG_INFO(formatString("has aartfaac = %s", (itsHasAartfaac ? "yes" : "no")));
-	
+
 		// do some checks
 		if (itsNrRSPboards != (uint32)ack.max_rspboards) {
-			LOG_WARN_STR("RSP:RSPdriver only controls " << itsNrRSPboards << " of " << ack.max_rspboards 
+			LOG_WARN_STR("RSP:RSPdriver only controls " << itsNrRSPboards << " of " << ack.max_rspboards
 						<< " RSPboards, cannot monitor full station");
 		}
 		if (itsNrRSPboards * NR_RCUS_PER_RSPBOARD != itsNrRCUs) {
-			LOG_INFO_STR("RSP:Station not fully equiped, only " << itsNrRCUs << " of " 
+			LOG_INFO_STR("RSP:Station not fully equiped, only " << itsNrRCUs << " of "
 						<< itsNrRSPboards * NR_RCUS_PER_RSPBOARD << "RCUs");
 		}
 		if (itsNrLBAs > (itsNrRCUs / 2)) {
@@ -344,7 +344,7 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 	default:
 		LOG_DEBUG_STR ("askConfiguration, DEFAULT");
 		break;
-	}    
+	}
 
 	return (status);
 }
@@ -355,13 +355,13 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 //
 // Create PropertySets for all hardware.
 //
-GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event, 
+GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 													GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("createPropertySets:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
+
 	switch (event.signal) {
 
 	case F_ENTRY: {
@@ -379,7 +379,7 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 		string	subrackNameMask (createPropertySetName(PSN_SUB_RACK,  getName()));
 		string	rspboardNameMask(createPropertySetName(PSN_RSP_BOARD, getName()));
 		string	rcuNameMask     (createPropertySetName(PSN_RCU, 	  getName()));
-		// Note: when we are REconnected to the RSPdriver we already have the 
+		// Note: when we are REconnected to the RSPdriver we already have the
 		// propertySet allocated. So only create a PS when we don't have one yet.
 		for (uint32	rcu = 0; rcu < itsNrRCUs; rcu++) {
 			// new cabinet?
@@ -414,7 +414,7 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 			if (!itsRCUs[rcu]) {
 				itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO | PSAT_CW, this);
 			}
-			usleep (2000); // wait 2 ms in order not to overload the system  
+			usleep (2000); // wait 2 ms in order not to overload the system
 		}
 		itsStationInfo  = new RTDBPropertySet(PSN_STATION_INFO, PST_STATION_INFO, PSAT_WO | PSAT_CW, this);
 		itsAartfaacInfo = new RTDBPropertySet(PSN_AARTFAAC, PST_AARTFAAC, PSAT_WO | PSAT_CW, this);
@@ -437,7 +437,7 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 			ASSERTSTR(itsRCUs[rcu], "Allocation of PS for rcu " << rcu << " failed.");
 		}
 		ASSERTSTR(itsStationInfo, "Allocation of PS for StationInfo failed.");
-		
+
 		LOG_INFO_STR("Allocation of all propertySets successfull, going to subscribe to RCU states");
 //		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
 		TRAN(RSPMonitor::subscribeToRCUs);
@@ -458,7 +458,7 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 	default:
 		LOG_DEBUG_STR ("createPropertySets, DEFAULT");
 		break;
-	}    
+	}
 
 	return (status);
 }
@@ -469,13 +469,13 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 //
 // Get a subscription to the state of the RCU's
 //
-GCFEvent::TResult RSPMonitor::subscribeToRCUs(GCFEvent& event, 
+GCFEvent::TResult RSPMonitor::subscribeToRCUs(GCFEvent& event,
 											  GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("subscribeToRCUs:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
+
 	switch (event.signal) {
 
 	case F_ENTRY: {
@@ -532,7 +532,7 @@ GCFEvent::TResult RSPMonitor::subscribeToRCUs(GCFEvent& event,
 	default:
 		LOG_DEBUG_STR ("createPropertySets, DEFAULT");
 		break;
-	}    
+	}
 
 	return (status);
 }
@@ -543,16 +543,16 @@ GCFEvent::TResult RSPMonitor::subscribeToRCUs(GCFEvent& event,
 //
 // Ask the firmware version of the boards
 //
-GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event, 
+GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 													GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("askVersion:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
+
 	switch (event.signal) {
 
-	case F_ENTRY: 
+	case F_ENTRY:
 	case F_TIMER: {
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:getting version info"));
 //		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
@@ -579,16 +579,16 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 			// RSP board version
 			versionStr = formatString("%d", ack.versions.bp()(rsp).rsp_version);
 			itsRSPs[rsp]->setValue(PN_RSP_VERSION, GCFPVString(versionStr), double(ack.timestamp));
-			setObjectState(getName(), itsRSPs[rsp]->getFullScope(), (ack.versions.bp()(rsp).rsp_version) ? 
+			setObjectState(getName(), itsRSPs[rsp]->getFullScope(), (ack.versions.bp()(rsp).rsp_version) ?
 															RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
-			
+
 			// BP version
 			versionStr = formatString("%d.%d", ack.versions.bp()(rsp).fpga_maj,
 											   ack.versions.bp()(rsp).fpga_min);
 			itsRSPs[rsp]->setValue(PN_RSP_BP_VERSION, GCFPVString(versionStr), double(ack.timestamp));
-			setObjectState(getName(), itsRSPs[rsp]->getFullScope()+".BP", (ack.versions.bp()(rsp).rsp_version) ? 
+			setObjectState(getName(), itsRSPs[rsp]->getFullScope()+".BP", (ack.versions.bp()(rsp).rsp_version) ?
 															RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
-			
+
 			// APx versions
 			for (int ap = 0; ap < MEPHeader::N_AP; ap++) {
 				versionStr = formatString("%d.%d", ack.versions.ap()(rsp * MEPHeader::N_AP + ap).fpga_maj,
@@ -597,7 +597,7 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 				itsRSPs[rsp]->setValue(DPEname, GCFPVString(versionStr), double(ack.timestamp));
 				setObjectState(getName(), formatString("%s.AP%d", itsRSPs[rsp]->getFullScope().c_str(), ap),
 										(ack.versions.ap()(rsp * MEPHeader::N_AP + ap).fpga_maj +
-										 ack.versions.ap()(rsp * MEPHeader::N_AP + ap).fpga_min) ? 
+										 ack.versions.ap()(rsp * MEPHeader::N_AP + ap).fpga_min) ?
 										RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
 			}
 		}
@@ -626,7 +626,7 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 	default:
 		LOG_DEBUG_STR ("askVersion, DEFAULT");
 		break;
-	}    
+	}
 
 	return (status);
 }
@@ -637,13 +637,13 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 //
 // Ask the information of the RSP boards
 //
-GCFEvent::TResult RSPMonitor::askSplitterInfo(GCFEvent& event, 
+GCFEvent::TResult RSPMonitor::askSplitterInfo(GCFEvent& event,
 											  GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("askSplitterInfo:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
+
 	switch (event.signal) {
 
 	case F_ENTRY: {
@@ -675,7 +675,7 @@ GCFEvent::TResult RSPMonitor::askSplitterInfo(GCFEvent& event,
 	}
 	break;
 
-	case F_TIMER: 
+	case F_TIMER:
 		LOG_ERROR_STR("RSP:Timeout on getting the splitter information, trying status information");
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getSplitter timeout"));
 		TRAN (RSPMonitor::askRSPinfo);
@@ -699,7 +699,7 @@ GCFEvent::TResult RSPMonitor::askSplitterInfo(GCFEvent& event,
 	default:
 		LOG_DEBUG_STR ("askSplitterInfo, DEFAULT");
 		break;
-	}    
+	}
 
 	return (status);
 }
@@ -709,13 +709,13 @@ GCFEvent::TResult RSPMonitor::askSplitterInfo(GCFEvent& event,
 //
 // Ask the information of the RSP boards
 //
-GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event, 
+GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 										 GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("askRSPinfo:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
+
 	switch (event.signal) {
 
 	case F_ENTRY: {
@@ -752,70 +752,70 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 		for (uint32	rsp = 0; rsp < itsNrRSPboards; rsp++) {
 			BoardStatus		bStat = ack.sysstatus.board()(rsp);
 			// board voltages
-			itsRSPs[rsp]->setValue(PN_RSP_VOLTAGE12, GCFPVDouble(double(bStat.rsp.voltage_1_2)*(2.5/192.0)), 
+			itsRSPs[rsp]->setValue(PN_RSP_VOLTAGE12, GCFPVDouble(double(bStat.rsp.voltage_1_2)*(2.5/192.0)),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_VOLTAGE25, GCFPVDouble(double(bStat.rsp.voltage_2_5)*(3.3/192.0)), 
+			itsRSPs[rsp]->setValue(PN_RSP_VOLTAGE25, GCFPVDouble(double(bStat.rsp.voltage_2_5)*(3.3/192.0)),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_VOLTAGE33, GCFPVDouble(double(bStat.rsp.voltage_3_3)*(5.0/192.0)), 
+			itsRSPs[rsp]->setValue(PN_RSP_VOLTAGE33, GCFPVDouble(double(bStat.rsp.voltage_3_3)*(5.0/192.0)),
 									double(ack.timestamp), false);
-			
+
 			// Ethernet status
-			itsRSPs[rsp]->setValue(PN_RSP_ETHERNET_PACKETS_RECEIVED, GCFPVUnsigned(bStat.eth.nof_frames), 
+			itsRSPs[rsp]->setValue(PN_RSP_ETHERNET_PACKETS_RECEIVED, GCFPVUnsigned(bStat.eth.nof_frames),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_ETHERNET_PACKETS_ERROR,    GCFPVUnsigned(bStat.eth.nof_errors), 
+			itsRSPs[rsp]->setValue(PN_RSP_ETHERNET_PACKETS_ERROR,    GCFPVUnsigned(bStat.eth.nof_errors),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_ETHERNET_LAST_ERROR,       GCFPVUnsigned(bStat.eth.last_error), 
+			itsRSPs[rsp]->setValue(PN_RSP_ETHERNET_LAST_ERROR,       GCFPVUnsigned(bStat.eth.last_error),
 									double(ack.timestamp), false);
-			setObjectState(getName(), itsRSPs[rsp]->getFullScope()+".Ethernet", (bStat.eth.nof_frames != 0) ? 
+			setObjectState(getName(), itsRSPs[rsp]->getFullScope()+".Ethernet", (bStat.eth.nof_frames != 0) ?
 															RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
-			
+
 			// MEP status
-			itsRSPs[rsp]->setValue(PN_RSP_MEP_SEQNR, GCFPVUnsigned(bStat.mep.seqnr), 
+			itsRSPs[rsp]->setValue(PN_RSP_MEP_SEQNR, GCFPVUnsigned(bStat.mep.seqnr),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_MEP_ERROR, GCFPVUnsigned(bStat.mep.error), 
+			itsRSPs[rsp]->setValue(PN_RSP_MEP_ERROR, GCFPVUnsigned(bStat.mep.error),
 									double(ack.timestamp), false);
 
 			// BP status
-			itsRSPs[rsp]->setValue(PN_RSP_BP_TEMPERATURE, GCFPVDouble(double(bStat.rsp.bp_temp)), 
+			itsRSPs[rsp]->setValue(PN_RSP_BP_TEMPERATURE, GCFPVDouble(double(bStat.rsp.bp_temp)),
 									double(ack.timestamp), false);
 			// AP0
-			itsRSPs[rsp]->setValue(PN_RSP_AP0_TEMPERATURE,		 GCFPVDouble(double(bStat.rsp.ap0_temp)), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP0_TEMPERATURE,		 GCFPVDouble(double(bStat.rsp.ap0_temp)),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_AP0_SYNC_SAMPLE_COUNT, GCFPVUnsigned(bStat.ap0_sync.sample_offset), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP0_SYNC_SAMPLE_COUNT, GCFPVUnsigned(bStat.ap0_sync.sample_offset),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_AP0_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap0_sync.sample_offset), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP0_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap0_sync.sample_offset),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_AP0_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap0_sync.ext_count), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP0_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap0_sync.ext_count),
 									double(ack.timestamp), false);
 
 			// AP1
-			itsRSPs[rsp]->setValue(PN_RSP_AP1_TEMPERATURE,		 GCFPVDouble(double(bStat.rsp.ap1_temp)), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP1_TEMPERATURE,		 GCFPVDouble(double(bStat.rsp.ap1_temp)),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_AP1_SYNC_SAMPLE_COUNT, GCFPVUnsigned(bStat.ap1_sync.sample_offset), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP1_SYNC_SAMPLE_COUNT, GCFPVUnsigned(bStat.ap1_sync.sample_offset),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_AP1_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap1_sync.sample_offset), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP1_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap1_sync.sample_offset),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_AP1_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap1_sync.ext_count), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP1_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap1_sync.ext_count),
 									double(ack.timestamp), false);
 
 			// AP2
-			itsRSPs[rsp]->setValue(PN_RSP_AP2_TEMPERATURE,		 GCFPVDouble(double(bStat.rsp.ap2_temp)), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP2_TEMPERATURE,		 GCFPVDouble(double(bStat.rsp.ap2_temp)),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_AP2_SYNC_SAMPLE_COUNT, GCFPVUnsigned(bStat.ap2_sync.sample_offset), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP2_SYNC_SAMPLE_COUNT, GCFPVUnsigned(bStat.ap2_sync.sample_offset),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_AP2_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap2_sync.sample_offset), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP2_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap2_sync.sample_offset),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_AP2_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap2_sync.ext_count), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP2_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap2_sync.ext_count),
 									double(ack.timestamp), false);
 
 			// AP3
-			itsRSPs[rsp]->setValue(PN_RSP_AP3_TEMPERATURE,		 GCFPVDouble(double(bStat.rsp.ap3_temp)), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP3_TEMPERATURE,		 GCFPVDouble(double(bStat.rsp.ap3_temp)),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_AP3_SYNC_SAMPLE_COUNT, GCFPVUnsigned(bStat.ap3_sync.sample_offset), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP3_SYNC_SAMPLE_COUNT, GCFPVUnsigned(bStat.ap3_sync.sample_offset),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_AP3_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap3_sync.sample_offset), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP3_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap3_sync.sample_offset),
 									double(ack.timestamp), false);
-			itsRSPs[rsp]->setValue(PN_RSP_AP3_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap3_sync.ext_count), 
+			itsRSPs[rsp]->setValue(PN_RSP_AP3_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap3_sync.ext_count),
 									double(ack.timestamp), false);
 
 			// finally set the splitter
@@ -850,7 +850,7 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 	default:
 		LOG_DEBUG_STR ("askRSPinfo, DEFAULT");
 		break;
-	}    
+	}
 
 	return (status);
 }
@@ -865,7 +865,7 @@ GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event, GCFPortInterface& por
 	LOG_DEBUG_STR ("askTDstatus:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
+
 	switch (event.signal) {
 
 	case F_ENTRY:  {
@@ -879,7 +879,7 @@ GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event, GCFPortInterface& por
 		itsTimerPort->setTimer(5.0);		// in case the answer never comes
 	}
 	break;
-	
+
 	case F_TIMER:
 		LOG_ERROR_STR ("RSP:Timeout on getting information of the TD board, trying again in next run");
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getClockboard timeout"));
@@ -914,7 +914,7 @@ GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event, GCFPortInterface& por
 			// This board controls the clockboard.
 			int	subrack = rsp/4;
 			// set state first
-			setObjectState(getName(), itsSubracks[subrack]->getFullScope()+".clockBoard", 
+			setObjectState(getName(), itsSubracks[subrack]->getFullScope()+".clockBoard",
 							(boardStatus.unknown) ?  RTDB_OBJ_STATE_OFF : RTDB_OBJ_STATE_OPERATIONAL);
 
 			if (boardStatus.unknown) {
@@ -922,17 +922,17 @@ GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event, GCFPortInterface& por
 				continue;
 			}
 
-			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD_TEMPERATURE, 
+			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD_TEMPERATURE,
 									GCFPVDouble(boardStatus.temperature), double(ack.timestamp), false);
-			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD_LOCK160, 
+			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD_LOCK160,
 									GCFPVBool(boardStatus.pll_160MHz_locked), double(ack.timestamp), false);
-			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD_LOCK200, 
+			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD_LOCK200,
 									GCFPVBool(boardStatus.pll_200MHz_locked), double(ack.timestamp), false);
-			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD_FREQ, 
+			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD_FREQ,
 									GCFPVInteger(boardStatus.output_clock ? 200 : 160), double(ack.timestamp), false);
-			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD__VFSP, 
+			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD__VFSP,
 									GCFPVDouble(boardStatus.v2_5 * 3.3 / 192.0), double(ack.timestamp), false);
-			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD__VCLOCK, 
+			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD__VCLOCK,
 									GCFPVDouble(boardStatus.v3_3 * 5.0 / 192.0), double(ack.timestamp), false);
 			itsSubracks[subrack]->flush();
 			usleep(1000); // wait 1 ms
@@ -965,7 +965,7 @@ GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event, GCFPortInterface& por
 	default:
 		LOG_DEBUG_STR ("askVersion, DEFAULT");
 		break;
-	}    
+	}
 
 	return (status);
 }
@@ -980,7 +980,7 @@ GCFEvent::TResult RSPMonitor::askSPUstatus(GCFEvent& event, GCFPortInterface& po
 	LOG_DEBUG_STR ("askSPUstatus:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
+
 	switch (event.signal) {
 
 	case F_ENTRY:  {
@@ -1018,15 +1018,17 @@ GCFEvent::TResult RSPMonitor::askSPUstatus(GCFEvent& event, GCFPortInterface& po
 		for (uint32	subrack = 0; subrack < itsNrSubracks; subrack++) {
 			SPUBoardStatus&	boardStatus = ack.spustatus.subrack()(subrack);
 
-			itsSubracks[subrack]->setValue(PN_SRCK_SPU_TEMPERATURE, 
+			itsSubracks[subrack]->setValue(PN_SRCK_SPU_TEMPERATURE,
 									GCFPVDouble(boardStatus.temperature), double(ack.timestamp), false);
-			itsSubracks[subrack]->setValue(PN_SRCK_SPU__VDIG,  // RCU
+            itsSubracks[subrack]->setValue(PN_SRCK_SPU__VDIG,  // RCU
 									GCFPVDouble(boardStatus.v2_5 * 2.5 / 192.0 * 2.0), double(ack.timestamp), false);
 			itsSubracks[subrack]->setValue(PN_SRCK_SPU__VLBA,  // LBA
 									GCFPVDouble(boardStatus.v3_3 * 3.3 / 192.0 * 3.0), double(ack.timestamp), false);
 			itsSubracks[subrack]->setValue(PN_SRCK_SPU__VHBA,  // HBA
 									GCFPVDouble(boardStatus.v12 * 12.0 / 192.0 * 4.01), double(ack.timestamp), false);
-			itsSubracks[subrack]->flush();
+            itsSubracks[subrack]->setValue(PN_SRCK_SPU__VSPU,  // SPU
+									GCFPVDouble(boardStatus.vcc * 5.0 / 192.0), double(ack.timestamp), false);
+            itsSubracks[subrack]->flush();
 			usleep(1000); // wait 1 ms
 
 			setObjectState(getName(), itsSubracks[subrack]->getFullScope()+".SPU", RTDB_OBJ_STATE_OPERATIONAL);
@@ -1055,7 +1057,7 @@ GCFEvent::TResult RSPMonitor::askSPUstatus(GCFEvent& event, GCFPortInterface& po
 	default:
 		LOG_DEBUG_STR ("askVersion, DEFAULT");
 		break;
-	}    
+	}
 
 	return (status);
 }
@@ -1109,37 +1111,37 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 			uint32		rawValue = ack.settings()(rcu).getRaw();
 			LOG_DEBUG(formatString("Updating rcu %d with %08lX", rcu, rawValue));
 			// update all RCU variables
-			itsRCUs[rcu]->setValue(PN_RCU_DELAY, 
+			itsRCUs[rcu]->setValue(PN_RCU_DELAY,
 						GCFPVDouble((1000.0 / itsClock) * uint32(rawValue & DELAY_MASK)),
 						double(ack.timestamp), false);
-			itsRCUs[rcu]->setValue(PN_RCU_INPUT_ENABLE, 
+			itsRCUs[rcu]->setValue(PN_RCU_INPUT_ENABLE,
 						GCFPVBool(rawValue & INPUT_ENABLE_MASK),
 						double(ack.timestamp), false);
-			itsRCUs[rcu]->setValue(PN_RCU_LBL_ENABLE, 
+			itsRCUs[rcu]->setValue(PN_RCU_LBL_ENABLE,
 						GCFPVBool(rawValue & LBL_ANT_POWER_MASK), double(ack.timestamp), false);
-			itsRCUs[rcu]->setValue(PN_RCU_LBH_ENABLE, 
+			itsRCUs[rcu]->setValue(PN_RCU_LBH_ENABLE,
 						GCFPVBool(rawValue & LBH_ANT_POWER_MASK), double(ack.timestamp), false);
-			itsRCUs[rcu]->setValue(PN_RCU_HBA_ENABLE, 
+			itsRCUs[rcu]->setValue(PN_RCU_HBA_ENABLE,
 						GCFPVBool(rawValue & HBA_ANT_POWER_MASK), double(ack.timestamp), false);
-			itsRCUs[rcu]->setValue(PN_RCU_BAND_SEL_LBA_HBA, 
+			itsRCUs[rcu]->setValue(PN_RCU_BAND_SEL_LBA_HBA,
 						GCFPVBool(rawValue & USE_LB_MASK),
 						double(ack.timestamp), false);
-			itsRCUs[rcu]->setValue(PN_RCU_HBA_FILTER_SEL, 
+			itsRCUs[rcu]->setValue(PN_RCU_HBA_FILTER_SEL,
 						GCFPVUnsigned((rawValue & HB_FILTER_MASK) >> HB_FILTER_OFFSET),
 						double(ack.timestamp), false);
-			itsRCUs[rcu]->setValue(PN_RCU_VL_ENABLE, 
+			itsRCUs[rcu]->setValue(PN_RCU_VL_ENABLE,
 						GCFPVBool(rawValue & LB_POWER_MASK), double(ack.timestamp), false);
-			itsRCUs[rcu]->setValue(PN_RCU_VH_ENABLE, 
+			itsRCUs[rcu]->setValue(PN_RCU_VH_ENABLE,
 						GCFPVBool(rawValue & HB_POWER_MASK), double(ack.timestamp), false);
-			itsRCUs[rcu]->setValue(PN_RCU_VDD_VCC_ENABLE, 
+			itsRCUs[rcu]->setValue(PN_RCU_VDD_VCC_ENABLE,
 						GCFPVBool(rawValue & ADC_POWER_MASK), double(ack.timestamp), false);
-			itsRCUs[rcu]->setValue(PN_RCU_BAND_SEL_LBL_LBH, 
+			itsRCUs[rcu]->setValue(PN_RCU_BAND_SEL_LBL_LBH,
 						GCFPVBool(rawValue & USE_LBH_MASK),
 						double(ack.timestamp), false);
-			itsRCUs[rcu]->setValue(PN_RCU_LBA_FILTER_SEL, 
+			itsRCUs[rcu]->setValue(PN_RCU_LBA_FILTER_SEL,
 						GCFPVUnsigned((rawValue & LB_FILTER_MASK) >> LB_FILTER_OFFSET),
 						double(ack.timestamp), false);
-			itsRCUs[rcu]->setValue(PN_RCU_ATTENUATION, 
+			itsRCUs[rcu]->setValue(PN_RCU_ATTENUATION,
 						GCFPVDouble(0.25 * uint32((rawValue & ATT_MASK) >> ATT_OFFSET)),
 						double(ack.timestamp), false);
 			itsRCUs[rcu]->flush();
@@ -1161,7 +1163,7 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
                 LOG_DEBUG_STR("PN_RCU_ATTENUATION  (0xF80000):" << (uint32((rawValue & ATT_MASK) >> ATT_OFFSET)));
 			}
 #endif
-			setObjectState(getName(), itsRCUs[rcu]->getFullScope(), (rawValue & ADC_POWER_MASK) ? 
+			setObjectState(getName(), itsRCUs[rcu]->getFullScope(), (rawValue & ADC_POWER_MASK) ?
 															RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
 
 			// update own RCU admin also
@@ -1177,7 +1179,7 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 		for (uint ant = 0; ant < itsNrLBAs; ant++) {
 			if (itsRCUInputStates(itsAntMapper->XRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_LBA)) ||
 				itsRCUInputStates(itsAntMapper->YRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_LBA))) {
-				setObjectState(getName(), formatString("%s:LOFAR_PIC_LBA%03d", pvssDBname.c_str(), ant), 
+				setObjectState(getName(), formatString("%s:LOFAR_PIC_LBA%03d", pvssDBname.c_str(), ant),
 								MAX2(itsRCUstates(itsAntMapper->XRCU(ant)), itsRCUstates(itsAntMapper->YRCU(ant)) ) );
 			}
 			else {
@@ -1187,7 +1189,7 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 		for (uint ant = 0; ant < itsNrHBAs; ant++) {
 			if (itsRCUInputStates(itsAntMapper->XRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_HBA)) ||
 				itsRCUInputStates(itsAntMapper->YRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_HBA))) {
-				setObjectState(getName(), formatString("%s:LOFAR_PIC_HBA%02d", pvssDBname.c_str(), ant), 
+				setObjectState(getName(), formatString("%s:LOFAR_PIC_HBA%02d", pvssDBname.c_str(), ant),
 								MAX2(itsRCUstates(itsAntMapper->XRCU(ant)), itsRCUstates(itsAntMapper->YRCU(ant)) ) );
 			}
 			else {
@@ -1257,7 +1259,7 @@ GCFEvent::TResult RSPMonitor::askDatastream(GCFEvent& event, GCFPortInterface& p
 		}
 		else {
 			TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
-		}	
+		}
 		break;
 
 	case RSP_GETDATASTREAMACK: {
@@ -1271,7 +1273,7 @@ GCFEvent::TResult RSPMonitor::askDatastream(GCFEvent& event, GCFPortInterface& p
 			}
 			else {
 				TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
-			}	
+			}
 			break;
 		}
 
@@ -1398,15 +1400,15 @@ GCFEvent::TResult RSPMonitor::askAartfaacState(GCFEvent& event, GCFPortInterface
 //
 // Wait for our next cycle.
 //
-GCFEvent::TResult RSPMonitor::waitForNextCycle(GCFEvent& event, 
+GCFEvent::TResult RSPMonitor::waitForNextCycle(GCFEvent& event,
 													GCFPortInterface& port)
 {
 	if (eventName(event) != "DP_SET") {
-		LOG_DEBUG_STR ("waitForNextCycle:" << eventName(event) << "@" << port.getName());	
+		LOG_DEBUG_STR ("waitForNextCycle:" << eventName(event) << "@" << port.getName());
 	}
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
+
 	switch (event.signal) {
 	case F_ENTRY: {
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:wait for next cycle"));
@@ -1444,7 +1446,7 @@ GCFEvent::TResult RSPMonitor::waitForNextCycle(GCFEvent& event,
 	default:
 		LOG_DEBUG_STR ("waitForNextCycle, DEFAULT");
 		break;
-	}    
+	}
 
 	return (status);
 }
@@ -1528,7 +1530,7 @@ GCFEvent::TResult RSPMonitor::finish_state(GCFEvent& event, GCFPortInterface& po
 //		itsOwnPropertySet->setValue(string(PN_HWM_RSP_ERROR),GCFPVString(""));
 		break;
 	}
-  
+
 	case DP_SET:
 		break;
 
@@ -1536,7 +1538,7 @@ GCFEvent::TResult RSPMonitor::finish_state(GCFEvent& event, GCFPortInterface& po
 		LOG_DEBUG("finishing_state, DEFAULT");
 		status = GCFEvent::NOT_HANDLED;
 		break;
-	}    
+	}
 	return (status);
 }
 
