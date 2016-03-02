@@ -84,7 +84,7 @@ namespace LOFAR {
 
     private:
       struct StefVecs {
-        casa::Matrix<casa::DComplex> g;
+        casa::Matrix<casa::DComplex> g;    // Stations, polarizations
         casa::Matrix<casa::DComplex> gold;
         casa::Matrix<casa::DComplex> gx;
         casa::Matrix<casa::DComplex> gxx;
@@ -95,7 +95,7 @@ namespace LOFAR {
       void exportToMatlab(uint ch);
 
       // Perform stefcal (polarized or unpolarized)
-      void stefcal(string mode, uint solint=1);
+      casa::Matrix<casa::DComplex> stefcal(string mode, uint solint=1);
 
       // Counts the number of antennas with non-flagged data, adds this to
       // dataPerAntenna
@@ -133,7 +133,7 @@ namespace LOFAR {
       casa::Array<casa::DComplex> itsVis;
       casa::Array<casa::DComplex> itsMVis;
 
-      vector<casa::Matrix<casa::DComplex> > itsSols; // for every timeslot, nSt gains with vector of length nCr values
+      vector<casa::Matrix<casa::DComplex> > itsSols; // for every timeslot, nFreqCells times nSt gains with vector of length nCr values
       vector<vector<int> > itsAntUseds;
       vector<vector<int> > itsAntMaps;
 
@@ -152,6 +152,8 @@ namespace LOFAR {
       double           itsTolerance;
       bool             itsPropagateSolutions;
       uint             itsSolInt;
+      uint             itsNChan;
+      uint             itsNFreqCells;
       uint             itsMinBLperAnt;      
 
       uint             itsConverged;

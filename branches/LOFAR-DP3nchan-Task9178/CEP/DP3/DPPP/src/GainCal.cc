@@ -79,11 +79,13 @@ namespace LOFAR {
         itsTolerance     (parset.getDouble (prefix + "tolerance", 1.e-5)),
         itsPropagateSolutions (parset.getBool(prefix + "propagatesolutions", false)),
         itsSolInt        (parset.getInt(prefix + "solint", 1)),
+        itsNChan         (parset.getInt(prefix + "nchan", 0)),
         itsMinBLperAnt   (parset.getInt(prefix + "minblperant", 4)),
         itsConverged     (0),
         itsNonconverged  (0),
         itsStalled       (0),
-        itsNTimes        (0)
+        itsNTimes        (0),
+        itsNFreqCells    (0)
     {
       if (itsParmDBName=="") {
         itsParmDBName=parset.getString("msin")+"/instrument";
@@ -138,8 +140,13 @@ namespace LOFAR {
 
       itsSols.reserve(info().ntime());
 
-      // Read the antenna beam info from the MS.
-      // Only take the stations actually used.
+      if (itsNChan==0) {
+        itsNChan = info().nchan();
+      }
+      ASSERT(info().nchan() % itsNChan == 0);
+      ASSERT(itsNChan<=info().nchan());
+      itsNFreqCells = info().nchan() / itsNChan;
+
       itsAntennaUsedNames.resize(info().antennaUsed().size());
       itsDataPerAntenna.resize(info().antennaNames().size());
       casa::Vector<int> antsUsed = info().antennaUsed();
@@ -155,6 +162,7 @@ namespace LOFAR {
       os << "GainCal " << itsName << endl;
       os << "  parmdb:             " << itsParmDBName << endl;
       os << "  solint:             " << itsSolInt <<endl;
+      os << "  nchan:              " << itsNChan <<endl;
       os << "  max iter:           " << itsMaxIter << endl;
       os << "  tolerance:          " << itsTolerance << endl;
       os << "  mode:               " << itsMode << endl;
@@ -247,7 +255,7 @@ namespace LOFAR {
       itsTimerFill.stop();
 
       if (itsNTimes==itsSolInt-1) {
-        stefcal(itsMode,itsSolInt);
+        itsSols.push_back(stefcal(itsMode,itsSolInt).copy());
         itsNTimes=0;
       } else {
         itsNTimes++;
@@ -350,7 +358,7 @@ namespace LOFAR {
       itsMVis.resize(IPosition(6,nSt,2,nCh,itsSolInt,2,nSt));
     }
 
-    void GainCal::stefcal (string mode, uint solInt) {
+    Matrix<DComplex> GainCal::stefcal (string mode, uint solInt) {
       vector<double> dgs;
 
       itsTimerSolve.start();
@@ -391,11 +399,11 @@ namespace LOFAR {
       }
       uint nCh = info().nchan();
 
-      iS.g.resize(nUn,nCr);
-      iS.gold.resize(nUn,nCr);
-      iS.gx.resize(nUn,nCr);
-      iS.gxx.resize(nUn,nCr);
-      iS.h.resize(nUn,nCr);
+      iS.g.resize(nUn,nCr,itsNFreqCells);
+      iS.gold.resize(nUn,nCr,itsNFreqCells);
+      iS.gx.resize(nUn,nCr,itsNFreqCells);
+      iS.gxx.resize(nUn,nCr,itsNFreqCells);
+      iS.h.resize(nUn,nCr,itsNFreqCells);
       uint numThreads=OpenMP::maxThreads();
       for (uint thread=0; thread<numThreads; ++thread) {
         iS.z[thread].resize(nUn*nCh*solInt*nSp,nCr);
@@ -711,8 +719,6 @@ namespace LOFAR {
       //}
 
       // Stefcal terminated (either by maxiter or by converging)
-      // Let's save G...
-      itsSols.push_back(iS.g.copy());
 
       if (itsDebugLevel>3) {
         //cout<<"g="<<iS.g<<endl;
@@ -734,6 +740,8 @@ namespace LOFAR {
       }
 //      THROW(Exception,"Klaar!");
       itsTimerSolve.stop();
+
+      return iS.g;
     }
 
 
@@ -777,7 +785,7 @@ namespace LOFAR {
 
       //Solve remaining time slots if any
       if (itsNTimes!=0) {
-        stefcal(itsMode,itsSolInt);
+        itsSols.push_back(stefcal(itsMode,itsSolInt).copy());
       }
 
       itsTimerWrite.start();
