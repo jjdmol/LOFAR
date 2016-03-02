@@ -27,6 +27,7 @@ from lofar.common.util import waitForInterrupt
 from lofar.sas.resourceassignment.database import radb
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 from lofar.common import dbcredentials
+from lofar.common.util import convertIntKeysToString
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ class RADBHandler(MessageHandlerInterface):
             'UpdateResourceClaimsForTask': self._updateResourceClaimsForTask,
             'GetResourceGroupTypes': self._getResourceGroupTypes,
             'GetResourceGroups': self._getResourceGroups,
+            'GetResourceGroupMemberships': self._getResourceGroupMemberships,
             'GetResourceTypes': self._getResourceTypes,
             'GetResources': self._getResources,
             'GetTasks': self._getTasks,
@@ -54,7 +56,6 @@ class RADBHandler(MessageHandlerInterface):
             'DeleteTask': self._deleteTask,
             'UpdateTask': self._updateTask,
             'GetTaskStatuses': self._getTaskStatuses,
-            'GetTaskTypes': self._getTaskTypes,
             'GetTaskTypes': self._getTaskTypes,
             'GetSpecifications': self._getSpecifications,
             'GetSpecification': self._getSpecification,
@@ -145,6 +146,11 @@ class RADBHandler(MessageHandlerInterface):
 
     def _getResourceGroups(self):
         return self.radb.getResourceGroups()
+
+    def _getResourceGroupMemberships(self):
+        rg_memberships = self.radb.getResourceGroupMemberships()
+        rg_memberships = convertIntKeysToString(rg_memberships)
+        return rg_memberships
 
     def _getResourceTypes(self):
         return self.radb.getResourceTypes()
