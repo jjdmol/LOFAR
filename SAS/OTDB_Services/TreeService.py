@@ -28,8 +28,8 @@ RPC functions that allow access to (VIC) trees in OTDB.
                            TVP (Template/Vic/Pic)
 ---------------------------------------------------------------------------------------------------
 TaskGetSpecification       TVP : get the specification(parset) of a task as dict.
-TaskSetSpecification       TV- : set the specification(parset) of a task.
-TaskUpdateSpecifications   TV- : function to update the value of multiple (existing) keys.
+TaskCreate                 TV- : create a task (if not already existing) and store the specifications
+TaskSetSpecifications      TV- : function to update the value of multiple (existing) keys.
 TaskSetState               TVP : function to update the status of a task.
 TaskPrepareForScheduling   TV- : creates or updates a task that can be scheduled (VIC with state approved)
 TaskGetIDs                 TVP : returns the otdb_id/mom_id/task_type of the specified task.
@@ -51,7 +51,7 @@ HARDWARE_TREE = 10
 TEMPLATE_TREE = 20
 VIC_TREE = 30
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Define our own exceptions
@@ -65,9 +65,9 @@ class DatabaseError(Exception):
 # Task Get IDs
 def TaskGetIDs(input_dict, db_connection, return_tuple=True):
     """
-    RPC function that returns the MoMID and OTDBid from the user input, verifies the input in the database.
+    RPC function that returns the MomID and OTDBid from the user input, verifies the input in the database.
 
-    Input : dict with either the key OtdbID (integer) or the key MoMID (integer).
+    Input : dict with either the key OtdbID (integer) or the key MomID (integer).
             This key is used to search for the specified tree.
             return_tuple (bool) : Tuples can not be send with QPID, but for internal use we prefer them
 
@@ -78,22 +78,21 @@ def TaskGetIDs(input_dict, db_connection, return_tuple=True):
     Exceptions:
         AttributeError: Input not conform the specs
     """
-    # Get task identifier: OtdbID or MoMID
+    # Get task identifier: OtdbID or MomID
     if not isinstance(input_dict, dict):
         raise AttributeError("Expected a dict as input")
 
-    if 'OtdbID' not in input_dict and 'MoMID' not in input_dict:
-        raise AttributeError("Need 'OtdbID' or 'MoMID' key for task retrieval")
+    if 'OtdbID' not in input_dict and 'MomID' not in input_dict:
+        raise AttributeError("Need 'OtdbID' or 'MomID' key for task retrieval")
 
     otdb_id = input_dict.get('OtdbID', None)
-    mom_id  = input_dict.get('MoMID',  None)
+    mom_id  = input_dict.get('MomID',  None)
 
     # Try to get the taskInfo (to find out whether or not the task already exists.
     if otdb_id is not None:
         try:
             (real_otdb_id, real_mom_id,tree_type) =\
                 db_connection.query("select treeid,momid,type from getTreeInfo({}, False)".format(otdb_id)).getresult()[0]
-            print "$$$$$$$$$$ found on otdb_id: {}".format(real_otdb_id)
             return (tree_type, real_otdb_id, real_mom_id) if return_tuple else [tree_type, real_otdb_id, real_mom_id]
         except QUERY_EXCEPTIONS:
             pass
@@ -103,13 +102,11 @@ def TaskGetIDs(input_dict, db_connection, return_tuple=True):
         try:
             (real_otdb_id, real_mom_id,tree_type) =\
                 db_connection.query("select treeid,momid,type from getTreeInfo({}, True)".format(mom_id)).getresult()[0]
-            print "$$$$$$$$$$ found on mom_id: {}".format(real_otdb_id)
             return (tree_type, real_otdb_id, real_mom_id) if return_tuple else [tree_type, real_otdb_id, real_mom_id]
         except QUERY_EXCEPTIONS:
             pass
 
     # Task not found in any way return input values to the user
-    print "$$$$$$$$$$ not found"
     return (None, otdb_id, mom_id) if return_tuple else [None, otdb_id, mom_id]
 
 
@@ -128,11 +125,10 @@ def TaskGetSpecification(input_dict, db_connection):
     """
     # Solve ID(s) that the user may have specified and return the validated values.
     (task_type, otdb_id, mom_id) = TaskGetIDs(input_dict, db_connection) # throws on missing input
-    print "@@@@@@@@@@@@@@@@", task_type, otdb_id
 
     # if task i not found it is end of story.
     if task_type is None:
-        raise FunctionError("Task with OtdbID/MoMID {}/{} does not exist".format(otdb_id, mom_id))
+        raise FunctionError("Task with OtdbID/MomID {}/{} does not exist".format(otdb_id, mom_id))
 
     # Try to get the specification information
     try:
@@ -159,26 +155,27 @@ def TaskGetSpecification(input_dict, db_connection):
             answer_list.append(line)
     if len(answer_list) > 1:		# there is always one empty line, ignore that one...
         answer_dict["tree"] = answer_list
-    return answer_dict
+    return {'TaskSpecification':answer_dict}
 
-# Task Set Specification
-def TaskSetSpecification(input_dict, db_connection):
+
+# Task Create
+def TaskCreate(input_dict, db_connection):
     """
     RPC function that (create and) updates the contents of a template or VIC tree.
 
-    Input : dict with either the key OtdbID (integer) or the key MoMID (integer).
+    Input : dict with either the key OtdbID (integer) or the key MomID (integer).
             This key is used to search for the specified tree.
             TemplateName      - Optional: Needed when the task doesn't exist and has to be created.
-            Updates (dict)    - The key-value pairs that must be updated.
+            Specifications (dict)    - The key-value pairs that must be updated.
 
     Implemented workflow (all checks for errors are left out):
-    check if there is a tree with the given OtdbID or MoMID
+    check if there is a tree with the given OtdbID or MomID
     if not
         instanciate a template from default template 'DefaultTemplateName'
     update the keys in the tree
 
     Output: OtdbID - integer : OTDB id of the updated tree.
-            MoMID  - integer : MoM id of the updated tree.
+            MomID  - integer : MoM id of the updated tree.
             Errors - dict    : dict of the keys that could not be updated and th reason why.
                                Empty dict when everything went well.
 
@@ -194,17 +191,16 @@ def TaskSetSpecification(input_dict, db_connection):
     # when otdb_id = None task is not in the database
     # if we searched on OtdbID and the task is not found then is it end-of-story
     if task_type is None and otdb_id is not None:
-        raise FunctionError("Task with OtdbID/MoMID {}/{} does not exist".format(otdb_id, mom_id))
+        raise FunctionError("Task with OtdbID/MomID {}/{} does not exist".format(otdb_id, mom_id))
 
     # if we searched on MomID and the task is not found that we try to create a task(template)
     if task_type is None and mom_id is not None:
         selected_template = input_dict.get('TemplateName', None)
         if selected_template is None:
-            raise AttributeError("TaskSetSpecification: Need 'TemplateName' key to create a task")
+            raise AttributeError("TaskCreate: Need 'TemplateName' key to create a task")
         try:
             template_info = db_connection.query("select treeid,name from getDefaultTemplates()").getresult()
             # template_info is a list with tuples: (treeid,name)
-            print "TEMPLATENAMES:", template_info
             all_names = [ name for (_,name) in template_info if name[0] != '#' ]
             if not selected_template in all_names:
                 raise AttributeError("DefaultTemplate '{}' not found, available are:{}".format(selected_template, all_names))
@@ -214,25 +210,14 @@ def TaskSetSpecification(input_dict, db_connection):
                 raise FunctionError("Programming error: matching task_ids for template {} are {}".\
                       format(selected_template, template_ids))
             otdb_id = db_connection.query("select copyTree(1,{})".format(template_ids[0])).getresult()[0][0]
-            print "###NEW_TREE=",otdb_id
             # give new tree the mom_id when mom_id was specified by the user.
-            if is_mom_id:
-                db_connection.query("select setMomInfo(1,{},{},0,'no campaign')".format(treeid, mom_id))
+            if mom_id:
+                db_connection.query("select setMomInfo(1,{},{},0,'no campaign')".format(otdb_id, mom_id))
         except QUERY_EXCEPTIONS, exc_info:
             raise FunctionError("Error while create task from template {}: {}".format(selected_template, exc_info))
 
     # When we are here we always have a task, so do the key updates
-    try:
-        update_result = TaskUpdateSpecifications({'OtdbID':otdb_id, 'Updates':input_dict['Updates']}, db_connection, 
-                                         always_return_result_dict=True)
-    except (AttributeError, FunctionError), exc_info:
-        update_result = exc_info
-
-    answer = {}
-    answer['OtdbID'] = otdb_id
-    answer['MoMID']  = mom_id
-    answer['Errors'] = update_result
-    return answer
+    return TaskSetSpecifications({'OtdbID':otdb_id, 'Specifications':input_dict['Specifications']}, db_connection)
 
 
 # Task Set State
@@ -259,13 +244,11 @@ def TaskSetState(input_dict, db_connection):
 
     # if task i not found it is end of story.
     if task_type is None:
-        raise FunctionError("Task with OtdbID/MoMID {}/{} does not exist".format(otdb_id, mom_id))
+        raise FunctionError("Task with OtdbID/MomID {}/{} does not exist".format(otdb_id, mom_id))
 
     try:
         new_status   = input_dict['NewStatus']
-        update_times = True
-        if input_dict.has_key("UpdateTimestamps"):
-            update_times = bool(input_dict["UpdateTimestamps"])
+        update_times = bool(input_dict.get("UpdateTimestamps", True))
         logger.info("TaskSetState(%s,%s,%s)" % (otdb_id, new_status, update_times))
     except KeyError, info:
         raise AttributeError("TaskSetState: Key %s is missing in the input" % info)
@@ -289,16 +272,16 @@ def TaskSetState(input_dict, db_connection):
             (otdb_id, allowed_states[new_status], str(update_times))).getresult()[0][0] == 't')
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("Error while setting the status of tree %d: %s" % (otdb_id, exc_info))
-    return str(success)
+    return {'OtdbID':otdb_id, 'MomID':mom_id, 'Success':success}
 
 
-# TaskUpdateSpecifications
-def TaskUpdateSpecifications(input_dict, db_connection, always_return_result_dict=False):
+# TaskSetSpecifications
+def TaskSetSpecifications(input_dict, db_connection):
     """
     RPC function to update the values of a tree.
 
     Input : OtdbID  (integer) - ID of the tree to change the status of.
-            Updates (dict)    - The key-value pairs that must be updated.
+            Specifications (dict)    - The key-value pairs that must be updated.
     Output: (dict)
             'Errors' (dict)    Refects the problems that occured {'key':'problem'}
                                Field is empty if all fields could be updated.
@@ -312,28 +295,30 @@ def TaskUpdateSpecifications(input_dict, db_connection, always_return_result_dic
 
     # if task i not found it is end of story.
     if task_type is None:
-        raise FunctionError("Task with OtdbID/MoMID {}/{} does not exist".format(otdb_id, mom_id))
+        raise FunctionError("Task with OtdbID/MomID {}/{} does not exist".format(otdb_id, mom_id))
     if task_type == HARDWARE_TREE:
-        raise FunctionError("OtdbID/MoMID {}/{} refers to a hardware tree.".format(otdb_id, mom_id))
+        raise FunctionError("OtdbID/MomID {}/{} refers to a hardware tree.".format(otdb_id, mom_id))
 
     try:
-        update_list = input_dict['Updates']
+        update_list = input_dict['Specifications']
     except KeyError, info:
-        raise AttributeError("TaskUpdateSpecifications: Key %s is missing in the input" % info)
+        raise AttributeError("TaskSetSpecifications: Key %s is missing in the input" % info)
     if not isinstance(update_list, dict):
-        raise AttributeError("TaskUpdateSpecifications (tree=%d): Field 'Updates' must be of type 'dict'" % otdb_id)
-    logger.info("TaskUpdateSpecifications for tree: %d", otdb_id)
+        raise AttributeError("TaskSetSpecifications (tree=%d): Field 'Specifications' must be of type 'dict'" % otdb_id)
+    logger.info("TaskSetSpecifications for tree: %d", otdb_id)
 
     # Finally try to update all keys
     errors = {}
     for (key, value) in update_list.iteritems():
         try:
             if task_type == TEMPLATE_TREE:
-                record_list = (db_connection.query("select nodeid,instances,limits from getVTitemlist (%d, '%s')" %
-                               (otdb_id, key))).getresult()
+                (node_id,name) = db_connection.query("select nodeid,name from getVTitem({},'{}')"\
+                               .format(otdb_id, key)).getresult()[0]
+                record_list = db_connection.query("select nodeid,instances,limits from getVTitemlist ({},'{}') where nodeid={}"\
+                               .format(otdb_id, name, node_id)).getresult()
             else: # VIC_TREE
-                record_list = (db_connection.query("select nodeid,instances,limits from getVHitemlist (%d, '%s')" %
-                               (otdb_id, key))).getresult()
+                record_list = db_connection.query("select nodeid,instances,limits from getVHitemlist ({},'{}')"\
+                               .format(otdb_id, key)).getresult()
             if len(record_list) == 0:
                 errors[key] = "Not found for tree %d" % otdb_id
                 continue
@@ -348,9 +333,13 @@ def TaskUpdateSpecifications(input_dict, db_connection, always_return_result_dic
             print "%s: %s ==> %s" % (key, record_list[0][2], value)
         except QUERY_EXCEPTIONS, exc:
             errors[key] = str(exc)
-    if len(errors) and not always_return_result_dict:
-        raise FunctionError(("Not all key were updated:", errors))
-    return errors
+
+    answer = {}
+    answer['OtdbID'] = otdb_id
+    answer['MomID']  = mom_id
+    if len(errors)>0:
+        answer['Errors'] = errors
+    return answer
 
 
 # Task Prepare For Scheduling
@@ -374,9 +363,9 @@ def TaskPrepareForScheduling(input_dict, db_connection):
 
     # if task i not found it is end of story.
     if task_type is None:
-        raise FunctionError("Task with OtdbID/MoMID {}/{} does not exist".format(otdb_id, mom_id))
+        raise FunctionError("Task with OtdbID/MomID {}/{} does not exist".format(otdb_id, mom_id))
     if task_type == HARDWARE_TREE:
-        raise FunctionError("OtdbID/MoMID {}/{} refers to a hardware tree.".format(otdb_id, mom_id))
+        raise FunctionError("OtdbID/MomID {}/{} refers to a hardware tree.".format(otdb_id, mom_id))
 
     # get the information of the task
     try: 
@@ -440,7 +429,7 @@ def TaskDelete(input_dict, db_connection):
 
     # if task i not found it is end of story.
     if task_type is None:
-        raise FunctionError("Task with OtdbID/MoMID {}/{} does not exist".format(otdb_id, mom_id))
+        raise FunctionError("Task with OtdbID/MomID {}/{} does not exist".format(otdb_id, mom_id))
 
     # delete the task
     try: 
@@ -549,9 +538,9 @@ class PostgressMessageHandler(MessageHandlerInterface):
 
         self.service2MethodMap = {
             "TaskGetSpecification":     self._TaskGetSpecification,
-            "TaskSetSpecification":     self._TaskSetSpecification,
+            "TaskCreate":               self._TaskCreate,
             "TaskSetState":             self._TaskSetState,
-            "TaskUpdateSpecifications": self._TaskUpdateSpecifications,
+            "TaskSetSpecifications":    self._TaskSetSpecifications,
             "TaskPrepareForScheduling": self._TaskPrepareForScheduling,
             "TaskGetIDs":               self._TaskGetIDs,
             "TaskDelete":               self._TaskDelete,
@@ -579,17 +568,17 @@ class PostgressMessageHandler(MessageHandlerInterface):
         logger.info("_TaskGetSpecification({})".format(kwargs))
         return TaskGetSpecification(kwargs, self.connection)
 
-    def _TaskSetSpecification(self, **kwargs):
-        logger.info("_TaskSetSpecification({})".format(kwargs))
-        return TaskSetSpecification(kwargs, self.connection)
+    def _TaskCreate(self, **kwargs):
+        logger.info("_TaskCreate({})".format(kwargs))
+        return TaskCreate(kwargs, self.connection)
 
     def _TaskSetState(self, **kwargs):
         logger.info("_TaskSetState({})".format(kwargs))
         return TaskSetState(kwargs, self.connection)
 
-    def _TaskUpdateSpecifications(self, **kwargs):
-        logger.info("_TaskUpdateSpecifications({})".format(kwargs))
-        return TaskUpdateSpecifications(kwargs, self.connection)
+    def _TaskSetSpecifications(self, **kwargs):
+        logger.info("_TaskSetSpecifications({})".format(kwargs))
+        return TaskSetSpecifications(kwargs, self.connection)
 
     def _TaskPrepareForScheduling(self, **kwargs):
         logger.info("_TaskPrepareForScheduling({})".format(kwargs))

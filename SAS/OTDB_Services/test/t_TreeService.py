@@ -35,47 +35,42 @@ from lofar.messaging.RPC import *
 logging.basicConfig(stream=sys.stdout, level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-def do_rpc_catch_exception(rpc_instance, arg_dict):
+def do_rpc_catch_exception(exc_text, rpc_instance, arg_dict):
     try:
-        print "Executing {}({})...".format(rpc_instance.ServiceName,arg_dict)
+        print "** Executing {}({})...".format(rpc_instance.ServiceName,arg_dict)
         (data, status) = (rpc_instance)(**arg_dict)
-        raise Exception("Expected an exception, didn't get any")
+        raise Exception("Expected an exception {}, didn't get any".format(exc_text))
     except Exception:
-        print "{}: Caught expected exception".format(rpc_instance.ServiceName)
+        print "Caught expected exception {}".format(exc_text)
     print "======"
 
 def do_rpc(rpc_instance, arg_dict):
-    try:
-        print "Executing {}({})...".format(rpc_instance.ServiceName,arg_dict)
-        (data, status) = (rpc_instance)(**arg_dict)
-        if status != "OK":
-            raise Exception("Status returned is {}".format(status))
-        if isinstance(data, dict):
-            for key in sorted(data):
-                print "%s ==> %s" % (key, data[key])
-        else:
-            print "data =", data
-    except OverflowError as e:
-        pass
+    print "** Executing {}({})...".format(rpc_instance.ServiceName,arg_dict)
+    (data, status) = (rpc_instance)(**arg_dict)
+    if status != "OK":
+        raise Exception("Status returned is {}".format(status))
+    if isinstance(data, dict):
+        for key in sorted(data):
+            print "%s ==> %s" % (key, data[key])
+    else:
+        print "data =", data
     print "======"
+    return data
 
 if __name__ == "__main__":
     busname = sys.argv[1] if len(sys.argv) > 1 else "simpletest"
 
     with RPC("OTDBService.TaskGetIDs", ForwardExceptions=True, busname="lofar.otdb.specification", timeout=10) as otdbRPC:
         # Existing: otdb_id:1099268, mom_id:353713
-        do_rpc                (otdbRPC, {'OtdbID': 1099268, 'MoMID': 353713 })
-        do_rpc                (otdbRPC, {'OtdbID': 1099268, 'MoMID': 5 })
-        do_rpc                (otdbRPC, {'OtdbID': 1099268, 'MoMID': None })
-        do_rpc                (otdbRPC, {'OtdbID': 5, 'MoMID': 353713 })
-        do_rpc_catch_exception(otdbRPC, {'OtdbID': 5, 'MoMID': 5 })
-        do_rpc_catch_exception(otdbRPC, {'OtdbID': 5, 'MoMID': None })
-        do_rpc                (otdbRPC, {'OtdbID': None, 'MoMID': 353713 })
-        do_rpc_catch_exception(otdbRPC, {'OtdbID': None, 'MoMID': 5 })
-        do_rpc_catch_exception(otdbRPC, {'OtdbID': None, 'MoMID': None })
-
-#    with RPC("OTDBService.GetStations", ForwardExceptions=True, busname=busname, timeout=10) as otdbRPC:
-#        do_rpc(otdbRPC,{})
+        do_rpc                    (otdbRPC, {'OtdbID': 1099268, 'MomID': 353713 })
+        do_rpc                    (otdbRPC, {'OtdbID': 1099268, 'MomID': 5 })
+        do_rpc                    (otdbRPC, {'OtdbID': 1099268, 'MomID': None })
+        do_rpc                    (otdbRPC, {'OtdbID': 5, 'MomID': 353713 })
+        do_rpc_catch_exception('', otdbRPC, {'OtdbID': 5, 'MomID': 5 })
+        do_rpc_catch_exception('', otdbRPC, {'OtdbID': 5, 'MomID': None })
+        do_rpc                    (otdbRPC, {'OtdbID': None, 'MomID': 353713 })
+        do_rpc_catch_exception('', otdbRPC, {'OtdbID': None, 'MomID': 5 })
+        do_rpc_catch_exception('', otdbRPC, {'OtdbID': None, 'MomID': None })
 
     with RPC("OTDBService.GetDefaultTemplates", ForwardExceptions=True, busname=busname, timeout=10) as otdbRPC:
         do_rpc(otdbRPC,{})
@@ -83,77 +78,63 @@ if __name__ == "__main__":
     with RPC("OTDBService.SetProject", ForwardExceptions=True, busname=busname, timeout=10) as otdbRPC:
         do_rpc(otdbRPC,{'name':"Taka Tuka Land", "title":"Adventure movie", "pi":"Pippi", "co_i":"Mr.Nelson", "contact":"Witje"})
 
-#with RPC("OTDBService.TaskSetSpecification", ForwardExceptions=True, busname="lofar.otdb.specification", timeout=10) as task_spec_request:
-#     do_rpc(task_spec_request, {'OtdbID':12379072, 'TemplateName':'BeamObservation', 'Updates': {'state': 'finished'}})
-#     do_rpc(task_spec_request, {'MoMID':182210, 'TemplateName':'BeamObservation', 'Updates': {'state': 'finished'}})
+    with RPC("OTDBService.TaskCreate", ForwardExceptions=True, busname=busname, timeout=10) as task_create:
+        do_rpc(task_create, {'OtdbID':1099268, 'TemplateName':'BeamObservation', 'Specifications': {'state':'finished'}})
+        do_rpc(task_create, {'MomID':353713,   'TemplateName':'BeamObservation', 'Specifications': {'state':'finished'}})
+        data = do_rpc(task_create, {'MomID':12345, 'TemplateName':'BeamObservation', 'Specifications': {'state':'finished'}})
+        new_tree1 = data['MomID']
+        data = do_rpc(task_create, {'MomID':54321, 'TemplateName':'BeamObservation', 'Specifications': {'state':'finished'}})
+        new_tree2= data['MomID']
 
-#with RPC("OTDBService.TaskPrepareForScheduling", ForwardExceptions=True, busname="lofar.otdb.specification", timeout=10) as otdbRPC:
-#     do_rpc(otdbRPC, {'MoMID':179369})   # template
+    with RPC("OTDBService.TaskPrepareForScheduling", ForwardExceptions=True, busname=busname, timeout=10) as otdbRPC:
+        do_rpc(otdbRPC, {'MomID':new_tree1})   # template
+        do_rpc(otdbRPC, {'MomID':new_tree1})   # now a VIC
 
-#with RPC("OTDBService.TaskDelete", ForwardExceptions=True, busname="lofar.otdb.specification", timeout=10) as otdbRPC:
-#     do_rpc(otdbRPC, {'MoMID':178240})
+    with RPC("OTDBService.TaskDelete", ForwardExceptions=True, busname=busname, timeout=10) as otdbRPC:
+        do_rpc(otdbRPC, {'MomID':new_tree2})
 
-
-
-#    with RPC("OTDBService.TaskGetSpecification", ForwardExceptions=True, busname=busname, timeout=10) as otdbRPC:
-#        do_rpc(otdbRPC, {'OtdbID':1099269})	# PIC
-#        do_rpc(otdbRPC, {'OtdbID':1099238})	# Template
-#        do_rpc(otdbRPC, {'OtdbID':1099266})	# VIC
+    with RPC("OTDBService.TaskGetSpecification", ForwardExceptions=True, busname=busname, timeout=10) as otdbRPC:
+#       do_rpc(otdbRPC, {'OtdbID':1099269})  # PIC
+        do_rpc(otdbRPC, {'OtdbID':1099238})	  # Template
+        do_rpc(otdbRPC, {'OtdbID':1099266})	  # VIC
+        do_rpc_catch_exception('on non-existing treeID', otdbRPC, {'OtdbID':5}) # Non existing
 
     with RPC("OTDBService.TaskSetState", ForwardExceptions=True, busname=busname, timeout=5) as status_update_command:
         # PIC
-        (data, status) = status_update_command(OtdbID=1099269, NewStatus='finished', UpdateTimestamps=True)
-        print status, data
+        do_rpc(status_update_command, {'OtdbID':1099269, 'NewStatus':'finished', 'UpdateTimestamps':True})
         # Template
-        (data, status) = status_update_command(OtdbID=1099238, NewStatus='finished', UpdateTimestamps=True)
-        print status, data
+        do_rpc(status_update_command, {'OtdbID':1099238, 'NewStatus':'finished', 'UpdateTimestamps':True})
         # VIC
-        (data, status) = status_update_command(OtdbID=1099266, NewStatus='finished', UpdateTimestamps=True)
-        print status, data
+        do_rpc(status_update_command, {'OtdbID':1099266, 'NewStatus':'finished', 'UpdateTimestamps':True})
 
         # Nonexisting tree
-        try:
-            (data, status) = status_update_command(OtdbID=10, NewStatus='finished', UpdateTimestamps=True)
-        except RPCException as e:
-            print "Caught expected exception on invalid treeID in status update"
+        do_rpc_catch_exception('on invalid treeID', 
+                               status_update_command, {'OtdbID':10, 'NewStatus':'finished', 'UpdateTimestamps':True})
 
         # VIC tree: invalid status
-        try:
-            (data, status) = status_update_command(OtdbID=1099266, NewStatus='what_happend', UpdateTimestamps=True)
-        except RPCException as e:
-            print "Caught expected exception on invalid status in status update"
+        do_rpc_catch_exception('on invalid status',
+                               status_update_command, {'OtdbID':1099266, 'NewStatus':'what_happend', 'UpdateTimestamps':True})
+        # Set PIC back to active...
+        do_rpc(status_update_command, {'OtdbID':1099269, 'NewStatus':'active', 'UpdateTimestamps':True})
 
 
-    with RPC("OTDBService.TaskUpdateSpecifications", ForwardExceptions=True, busname=busname, timeout=5) as key_update:
+    with RPC("OTDBService.GetStations", ForwardExceptions=True, busname=busname, timeout=10) as otdbRPC:
+        do_rpc(otdbRPC,{})
+
+    with RPC("OTDBService.TaskSetSpecifications", ForwardExceptions=True, busname=busname, timeout=5) as key_update:
         # VIC tree: valid
-        (data, status) = key_update(OtdbID=1099266,
-                          Updates={'LOFAR.ObsSW.Observation.ObservationControl.PythonControl.pythonHost':'NameOfTestHost'})
-        print status, data
-
+        do_rpc(key_update, {'OtdbID':1099266,
+               'Specifications':{'LOFAR.ObsSW.Observation.ObservationControl.PythonControl.pythonHost':'NameOfTestHost'}})
         # Template tree: not supported yet
-        try:
-            (data, status) = key_update(OtdbID=1099238,
-                          Updates={'LOFAR.ObsSW.Observation.ObservationControl.PythonControl.pythonHost':'NameOfTestHost'})
-        except RPCException as e:
-            print "Caught expected exception on invalid treetype in key update"
-
+        do_rpc(key_update, {'OtdbID':1099238,
+               'Specifications':{'LOFAR.ObsSW.Observation.Scheduler.priority':'0.1'}})
         # PIC tree: not supported yet
-        try:
-            (data, status) = key_update(OtdbID=1099269, Updates={'LOFAR.PIC.Core.CS001.status_state':'50'})
-        except RPCException as e:
-            print "Caught expected exception on invalid treetype (PIC) in key update"
-
+        do_rpc_catch_exception('on invalid treetype (PIC)', key_update, 
+               {'OtdbID':1099269, 'Specifications':{'LOFAR.PIC.Core.CS001.status_state':'50'}})
         # Non exsisting tree
-        try:
-            (data, status) = key_update(OtdbID=10,
-                          Updates={'LOFAR.ObsSW.Observation.ObservationControl.PythonControl.pythonHost':'NameOfTestHost'})
-        except RPCException as e:
-            print "Caught expected exception on invalid treeID in key update"
-
+        do_rpc_catch_exception('on invalid treeID', key_update, {'OtdbID':10,
+               'Specifications':{'LOFAR.ObsSW.Observation.ObservationControl.PythonControl.pythonHost':'NameOfTestHost'}})
         # VIC tree: wrong key
-        try:
-            (data, status) = key_update(OtdbID=1099266,
-                          Updates={'LOFAR.ObsSW.Observation.ObservationControl.PythonControl.NoSuchKey':'NameOfTestHost'})
-        except RPCException as e:
-            print "Caught expected exception on invalid key in key update"
+        do_rpc_catch_exception('on invalid key', key_update, {'OtdbID':1099266,
+               'Specifications':{'LOFAR.ObsSW.Observation.ObservationControl.PythonControl.NoSuchKey':'NameOfTestHost'}})
 
