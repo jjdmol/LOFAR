@@ -4,6 +4,7 @@ import logging
 import datetime
 from lofar.messaging.RPC import RPC, RPCException, RPCWrapper
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
+from lofar.common.util import convertStringDigitKeysToInt
 
 ''' Simple RPC client for Service lofarbus.*Z
 '''
@@ -88,6 +89,11 @@ class RARPC(RPCWrapper):
 
     def getResourceGroups(self):
         return self.rpc('GetResourceGroups')
+
+    def getResourceGroupMemberships(self):
+        rg_memberships = self.rpc('GetResourceGroupMemberships')
+        rg_memberships = convertStringDigitKeysToInt(rg_memberships)
+        return rg_memberships
 
     def getResourceTypes(self):
         return self.rpc('GetResourceTypes')
@@ -177,24 +183,27 @@ def do_tests(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME):
             #print rpc.getResourceClaim(rcId)
             #print
 
-        tasks = rpc.getTasks()
-        for t in tasks:
-            print rpc.getTask(t['id'])
-            for i in range(4,9):
-                rcId = rpc.insertResourceClaim(i, t['id'], datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1)['id']
-            #print rpc.deleteTask(t['id'])
-            #print rpc.getTasks()
-            #print rpc.getResourceClaims()
+        #tasks = rpc.getTasks()
+        #for t in tasks:
+            #print rpc.getTask(t['id'])
+            #for i in range(4,9):
+                #rcId = rpc.insertResourceClaim(i, t['id'], datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1)['id']
+            ##print rpc.deleteTask(t['id'])
+            ##print rpc.getTasks()
+            ##print rpc.getResourceClaims()
 
-        print
-        taskId = tasks[0]['id']
-        print 'taskId=', taskId
-        print rpc.getResourceClaimsForTask(taskId)
-        print rpc.updateResourceClaimsForTask(taskId, starttime=datetime.datetime.utcnow(), endtime=datetime.datetime.utcnow() + datetime.timedelta(hours=3))
-        print rpc.getResourceClaimsForTask(taskId)
+        #print
+        #taskId = tasks[0]['id']
+        #print 'taskId=', taskId
+        #print rpc.getResourceClaimsForTask(taskId)
+        #print rpc.updateResourceClaimsForTask(taskId, starttime=datetime.datetime.utcnow(), endtime=datetime.datetime.utcnow() + datetime.timedelta(hours=3))
+        #print rpc.getResourceClaimsForTask(taskId)
 
         #print rpc.getTasks()
         #print rpc.getResourceClaims()
+        #print rpc.getResources()
+        #print rpc.getResourceGroups()
+        print rpc.getResourceGroupMemberships()
 
         #rpc.deleteTask(taskId)
 

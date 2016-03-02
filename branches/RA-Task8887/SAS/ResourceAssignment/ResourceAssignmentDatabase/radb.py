@@ -366,6 +366,75 @@ class RADatabase:
 
         return list(self._executeQuery(query, fetch=_FETCH_ALL))
 
+    def getResourceGroupMemberships(self):
+        '''get a dict containing the resource->group and group->group relations'''
+        query = '''select
+                    prg.id as resource_group_parent_id,
+                    prg.name as resource_group_parent_name,
+                    crg.id as resource_group_id,
+                    crg.name as resource_group_name
+                    from virtual_instrument.resource_group_to_resource_group rg2rg
+                    left join virtual_instrument.resource_group prg on rg2rg.parent_id = prg.id
+                    inner join virtual_instrument.resource_group crg on rg2rg.child_id = crg.id
+        '''
+        relations = self._executeQuery(query, fetch=_FETCH_ALL)
+
+        rg_items = {}
+        # loop over list of relations
+        # for each unique resource_group item create a dict, and add parent_ids to it
+        for relation in relations:
+            rg_item_id = relation['resource_group_id']
+            if not rg_item_id in rg_items:
+                rg_item = {k:relation[k] for k in ('resource_group_id', 'resource_group_name')}
+                rg_item['child_ids'] = []
+                rg_item['parent_ids'] = []
+                rg_items[rg_item_id] = rg_item
+
+            parent_id = relation['resource_group_parent_id']
+            if parent_id != None:
+                rg_items[rg_item_id]['parent_ids'].append(parent_id)
+
+        # now that we have a full list (dict.values) of rg_items...
+        # add a child_id reference to each item's parent
+        # this gives us a full bidirectional graph
+        for rg_item in rg_items.values():
+            parentIds = rg_item['parent_ids']
+            rg_item_id = rg_item['resource_group_id']
+            for parentId in parentIds:
+                if parentId in rg_items:
+                    parentNode = rg_items[parentId]
+                    parentNode['child_ids'].append(rg_item_id)
+
+        query = '''select
+                    prg.id as resource_group_parent_id,
+                    prg.name as resource_group_parent_name,
+                    cr.id as resource_id,
+                    cr.name as resource_name
+                    from virtual_instrument.resource_to_resource_group r2rg
+                    left join virtual_instrument.resource_group prg on r2rg.parent_id = prg.id
+                    inner join virtual_instrument.resource cr on r2rg.child_id = cr.id
+        '''
+        relations = self._executeQuery(query, fetch=_FETCH_ALL)
+
+        r_items = {}
+        # loop over list of relations
+        # for each unique resource item create a dict, and add parent_ids to it
+        for relation in relations:
+            r_item_id = relation['resource_id']
+            if not r_item_id in r_items:
+                r_item = {k:relation[k] for k in ('resource_id', 'resource_name')}
+                r_item['parent_group_ids'] = []
+                r_items[r_item_id] = r_item
+
+            parent_id = relation['resource_group_parent_id']
+            if parent_id != None:
+                r_items[r_item_id]['parent_group_ids'].append(parent_id)
+
+        result = {'groups': rg_items,
+                'resources': r_items }
+
+        return result
+
     def getResourceClaims(self):
         query = '''SELECT * from resource_allocation.resource_claim_view'''
 
@@ -546,11 +615,15 @@ if __name__ == '__main__':
     #resultPrint(db.getResourceTypeNames)
     #resultPrint(db.getResourceGroupTypes)
     #resultPrint(db.getResourceGroupTypeNames)
-    #resultPrint(db.getResources)
-    #resultPrint(db.getResourceGroups)
+    resultPrint(db.getResources)
+    resultPrint(db.getResourceGroups)
+    resultPrint(db.getResourceGroupMemberships)
     #resultPrint(db.getTasks)
     #resultPrint(db.getSpecifications)
     #resultPrint(db.getResourceClaims)
+
+    import pprint
+    pprint.pprint(db.getResourceGroupMemberships())
 
     #rcId = db.insertResourceClaim(1, 1, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1, True)
 
@@ -578,29 +651,36 @@ if __name__ == '__main__':
         #db.deleteResourceClaim(c['id'])
         ##resultPrint(db.getResourceClaims)
 
-    #tasks = db.getTasks()
+    #specId = db.insertSpecification(datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=4), "")
+    #taskId = db.insertTask(1234, 5678, 600, 0, specId)
+    #resources = db.getResources()
+    #for r in resources:
+        #rcId = db.insertResourceClaim(r['id'], taskId, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=4), 0, 4, 10, 'einstein', -1)
+
+
+    ##tasks = db.getTasks()
+    ##for t in tasks:
+        ##db.deleteTask(t['id'])
+        ####resultPrint(db.getTasks)
+        ####resultPrint(db.getResourceClaims)
+
+    #import random
+
+    ##for i in range(1):
+        ##taskId = db.insertTask(1234, 5678, 600, 0, 1)
+        ##for j in range(2*i):
+            ##rcId = db.insertResourceClaim(j, taskId, datetime.datetime.utcnow() + datetime.timedelta(hours=4*i), datetime.datetime.utcnow() + datetime.timedelta(hours=4*i+3.5), 0, 4, 10, 'einstein', -1)
+
+        ##time.sleep(0.5)
+
+    ##resultPrint(db.getTasks)
+    ##resultPrint(db.getResourceClaims)
+
+    #ts = db.getTaskStatuses()
+
+    #tasks = sorted(db.getTasks(), key=lambda x: x['id'])
     #for t in tasks:
-        #db.deleteTask(t['id'])
-        ###resultPrint(db.getTasks)
-        ###resultPrint(db.getResourceClaims)
-
-    import random
-
-    #for i in range(20):
-        #taskId = db.insertTask(1234, 5678, 600, 0, 1)
-        #for j in range(2*i):
-            #rcId = db.insertResourceClaim(j, taskId, datetime.datetime.utcnow() + datetime.timedelta(hours=4*i), datetime.datetime.utcnow() + datetime.timedelta(hours=4*i+3.5), 0, 4, 10, 'einstein', -1)
-
-        #time.sleep(0.5)
-
-    #resultPrint(db.getTasks)
-    #resultPrint(db.getResourceClaims)
-
-    ts = db.getTaskStatuses()
-
-    tasks = sorted(db.getTasks(), key=lambda x: x['id'])
-    for t in tasks:
-        db.updateTask(t['id'], task_status=ts[random.randint(0, len(ts)-1)]['id'])
-        time.sleep(0.01)
+        #db.updateTask(t['id'], task_status=ts[random.randint(0, len(ts)-1)]['id'])
+        #time.sleep(0.01)
 
     #db.commit()
