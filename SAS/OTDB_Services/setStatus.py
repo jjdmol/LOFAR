@@ -42,9 +42,9 @@ if __name__ == "__main__":
     parser = OptionParser("%prog -o obsid -s status [options]")
     parser.add_option("-B", "--busname", dest="busname", type="string", default="lofar.otdb.command",
                       help="Busname on which OTDB commands are sent")
-    parser.add_option("-o", "--obsid", dest="obsid", type="int", default="",
+    parser.add_option("-o", "--obsid", dest="obsid", type="int", default=0,
                       help="Observation/tree ID to set status for")
-    parser.add_option("-s", "--status", dest="status", type="int", default="",
+    parser.add_option("-s", "--status", dest="status", type="string", default="",
                       help="New status")
     (options, args) = parser.parse_args()
 
