@@ -104,7 +104,8 @@ namespace LOFAR {
         }
       }
       ASSERT(itsMode=="diagonal" || itsMode=="phaseonly" ||
-             itsMode=="fulljones" || itsMode=="scalarphase");
+             itsMode=="fulljones" || itsMode=="scalarphase" ||
+             itsMode=="amplitudeonly");
     }
 
     GainCal::~GainCal()
@@ -552,6 +553,8 @@ namespace LOFAR {
             //cout<<", g="<<iS.g(st1,0)<<endl;
             if (itsMode=="phaseonly" || itsMode=="scalarphase") {
               iS.g(st1,0)/=abs(iS.g(st1,0));
+            } else if (itsMode=="amplitudeonly") {
+              iS.g(st1,0)=abs(iS.g(st1,0));
             }
 
             if (itsStefcalVariant=="2a") {
@@ -824,6 +827,13 @@ namespace LOFAR {
         itsParmDB->putDefValue("Gain:1:1:Ampl",pvset);
       }
 
+      // Write out default phases
+      if (itsMode=="amplitudeonly") {
+        ParmValueSet pvset(ParmValue(0.0));
+        itsParmDB->putDefValue("Gain:0:0:Phase",pvset);
+        itsParmDB->putDefValue("Gain:1:1:Phase",pvset);
+      }
+
       // Write out default gains
       if (itsMode=="diagonal" || itsMode=="fulljones") {
         ParmValueSet pvset(ParmValue(1.0));
@@ -843,34 +853,38 @@ namespace LOFAR {
         string suffix(itsAntennaUsedNames[st]);
 
         for (int pol=0; pol<4; ++pol) { // For 0101
-          if ((itsMode=="diagonal" || itsMode=="phaseonly") && (pol==1||pol==2)) {
+          if ((itsMode=="diagonal" || itsMode=="phaseonly" || itsMode=="amplitudeonly") && (pol==1||pol==2)) {
             continue;
           }
           if (itsMode=="scalarphase" && pol>0) {
             continue;
           }
           int realimmax;
-          if (itsMode=="phaseonly" || itsMode=="scalarphase") {
+          if (itsMode=="phaseonly" || itsMode=="scalarphase" || itsMode=="amplitudeonly") {
             realimmax=1;
           } else {
             realimmax=2;
           }
           for (int realim=0; realim<realimmax; ++realim) { // For real and imaginary
-            string name(string("Gain:") +
-                        str0101[pol] + (itsMode=="phaseonly"?"Phase:":strri[realim]) + suffix);
+            string name;
             if (itsMode=="scalarphase") {
-              name="CommonScalarPhase:"+suffix;
+              name=string("CommonScalarPhase:")+suffix;
+            } else {
+              name=string("Gain:") + str0101[pol];
+              if (itsMode=="phaseonly") {
+                name=name+"Phase:";
+              } else if (itsMode=="amplitudeonly") {
+                name=name+"Amplitude:";
+              } else {
+                name=name+strri[realim];
+              }
+              name+=suffix;
             }
             // Collect its solutions for all times in a single array.
             for (uint ts=0; ts<ntime; ++ts) {
               if (itsAntMaps[ts][st]==-1) {
                 // No solution found, insert NaN
-                if (itsMode!="phaseonly" && itsMode!="scalarphase" &&
-                    realim==0 && (pol==0||pol==3)) {
-                  values(0, ts) = std::numeric_limits<double>::quiet_NaN();
-                } else {
-                  values(0, ts) = std::numeric_limits<double>::quiet_NaN();
-                }
+                values(0, ts) = std::numeric_limits<double>::quiet_NaN();
               } else {
                 int rst=itsAntMaps[ts][st]; // Real station
                 if (itsMode=="fulljones") {
