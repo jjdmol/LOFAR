@@ -499,15 +499,15 @@ namespace LOFAR {
             t=0;
 
             for (uint time=0;time<solInt;++time) {
-              for (uint ch=0;ch<nCh;++ch) {
-                vis_p=&itsVis(IPosition(6,0,0,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,0)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,0,st1))
-                vis_p=&itsVis(IPosition(6,0,1,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,2)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,1,st1))
-                vis_p=&itsVis(IPosition(6,0,0,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,0)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,0,st1))
-                vis_p=&itsVis(IPosition(6,0,1,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,2)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,1,st1))
-                vis_p=&itsVis(IPosition(6,0,0,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,1)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,0,st1))
-                vis_p=&itsVis(IPosition(6,0,1,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,3)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,1,st1))
-                vis_p=&itsVis(IPosition(6,0,0,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,1)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,0,st1))
-                vis_p=&itsVis(IPosition(6,0,1,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z[thread](st2+nSt*ch+nSt*nCh*time,3)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,1,st1))
+              for (uint ch=freqCell*itsNChan;ch<(freqCell+1)*itsNChan;++ch) {
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z[thread](st2+nSt*(ch-freqCell*itsNChan)+nSt*itsNChan*time,0)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,0,st1))
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z[thread](st2+nSt*(ch-freqCell*itsNChan)+nSt*itsNChan*time,2)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,1,st1))
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z[thread](st2+nSt*(ch-freqCell*itsNChan)+nSt*itsNChan*time,0)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,0,st1))
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z[thread](st2+nSt*(ch-freqCell*itsNChan)+nSt*itsNChan*time,2)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,1,st1))
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z[thread](st2+nSt*(ch-freqCell*itsNChan)+nSt*itsNChan*time,1)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,0,st1))
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,0,st1)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z[thread](st2+nSt*(ch-freqCell*itsNChan)+nSt*itsNChan*time,3)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,1,st1))
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z[thread](st2+nSt*(ch-freqCell*itsNChan)+nSt*itsNChan*time,1)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,0,st1))
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,1,st1)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z[thread](st2+nSt*(ch-freqCell*itsNChan)+nSt*itsNChan*time,3)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,1,st1))
               }
             }
             DComplex invdet= 1./(w(0) * w (3) - w(1)*w(2));
@@ -540,7 +540,7 @@ namespace LOFAR {
             vis_p = &itsVis(IPosition(6,0,0,0,0,st1/nSt,st1%nSt));
             for (uint st1pol=0;st1pol<nSp;++st1pol) {
               for (uint time=0;time<solInt;++time) {
-                for (uint ch=0;ch<nCh;++ch) {
+                for (uint ch=freqCell*itsNChan;ch<(freqCell+1)*itsNChan;++ch) {
                   DComplex* h_p=iS.h.data();
                   for (uint st2=0;st2<nUn;++st2) {
                     *z_p = h_p[st2] * *mvis_p; //itsMVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1/nSt,st1%nSt));
