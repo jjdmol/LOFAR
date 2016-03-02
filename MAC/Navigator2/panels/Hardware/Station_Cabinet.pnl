@@ -46,7 +46,7 @@ void prepareHardwareList() {
   
   // For this panel Cabinets and subracks should be selectable so we get them for the treelist
   // Cabinets first
-  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT= \\\"Cabinet\\\" OR _DPT=\\\"SubRack\\\"  OR _DPT=\\\"URIboard\\\"   OR _DPT=\\\"UniBoard\\\"\", tab);
+  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT= \\\"Cabinet\\\" OR _DPT=\\\"SubRack\\\"  OR _DPT=\\\"URIBoard\\\"   OR _DPT=\\\"UniBoard\\\"\", tab);
   LOG_TRACE(\"Station_Cabinet.pnl:prepareHardwareList|tab: \"+tab);
   
   dyn_string aDS=navFunct_getDynString(tab, 2,1);
@@ -60,7 +60,7 @@ void prepareHardwareList() {
     strreplace(aS,baseDP+\"_\",\"\");
     if (aS == \"\") continue;
     
-    // Remainder should be Cabinet?_Subrack?  and Cabinet?_URIboard? combinations, split on _ 
+    // Remainder should be Cabinet?_Subrack?  and Cabinet?_URIBoard? combinations, split on _ 
     dyn_string spl=strsplit(aS,\"_\");
     if (dynlen(spl) > 1) { // Subrack
       string node = spl[2];
@@ -68,8 +68,8 @@ void prepareHardwareList() {
         strreplace(node,\"Subrack\",\"\");
         int s = node;
         dynAppend(g_subrackList,s);
-       } else if (strpos(node,\"URIboard\") >= 0) {
-        strreplace(node,\"URIboard\",\"\");
+       } else if (strpos(node,\"URIBoard\") >= 0) {
+        strreplace(node,\"URIBoard\",\"\");
         int u = node;
         dynAppend(g_uriBoardList,u);
        } else if (strpos(node,\"UniBoard\") >= 0) {
