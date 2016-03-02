@@ -80,12 +80,12 @@ namespace LOFAR {
         itsPropagateSolutions (parset.getBool(prefix + "propagatesolutions", false)),
         itsSolInt        (parset.getInt(prefix + "solint", 1)),
         itsNChan         (parset.getInt(prefix + "nchan", 0)),
+        itsNFreqCells    (0),
         itsMinBLperAnt   (parset.getInt(prefix + "minblperant", 4)),
         itsConverged     (0),
         itsNonconverged  (0),
         itsStalled       (0),
-        itsNTimes        (0),
-        itsNFreqCells    (0)
+        itsNTimes        (0)
     {
       if (itsParmDBName=="") {
         itsParmDBName=parset.getString("msin")+"/instrument";
@@ -139,7 +139,6 @@ namespace LOFAR {
       }
 
       itsSols.reserve(info().ntime());
-      iS.allg.resize(0,0,0);
 
       if (itsNChan==0) {
         itsNChan = info().nchan();
@@ -256,7 +255,7 @@ namespace LOFAR {
       itsTimerFill.stop();
 
       if (itsNTimes==itsSolInt-1) {
-        itsSols.push_back(stefcal(itsMode,itsSolInt,0).copy());
+        itsSols.push_back(doStefCal(itsSolInt).copy());
         itsNTimes=0;
       } else {
         itsNTimes++;
@@ -359,8 +358,45 @@ namespace LOFAR {
       itsMVis.resize(IPosition(6,nSt,2,nCh,itsSolInt,2,nSt));
     }
 
-    Matrix<DComplex> GainCal::stefcal (string mode, uint solInt,
-                                       uint freqCell) {
+    Cube<DComplex> GainCal::doStefCal(uint solInt) {
+      uint nSt, nCr, nUn, nSp; // nSt: number of actual stations,
+                               // nCr: number of correlations,
+                               // nUn: number of unknowns
+                               // nSp: number that is two for scalarphase, one else
+
+      nSt=itsAntUseds[itsAntUseds.size()-1].size();
+      if (itsMode=="fulljones") {
+        nUn=nSt;
+        nCr=4;
+        nSp=1;
+      } else if (itsMode=="scalarphase") {
+        nUn=nSt;
+        nCr=1;
+        nSp=2;
+      } else {
+        nUn=nSt*2;
+        nCr=1;
+        nSp=1;
+      }
+
+      iS.g.resize(nUn,nCr);
+      iS.gold.resize(nUn,nCr);
+      iS.gx.resize(nUn,nCr);
+      iS.gxx.resize(nUn,nCr);
+      iS.h.resize(nUn,nCr);
+
+      iS.allg.resize(nUn,nCr);//itsNFreqCells);
+
+      for (uint freqCell=0; freqCell<itsNFreqCells; ++freqCell) {
+        stefcal(solInt, freqCell, nSt, nCr, nUn, nSp);
+        iS.allg = iS.g.copy();
+      }
+
+      return iS.allg;
+    }
+
+    Matrix<DComplex> GainCal::stefcal (uint solInt, uint freqCell, uint nSt,
+                                       uint nCr, uint nUn, uint nSp) {
       vector<double> dgs;
 
       itsTimerSolve.start();
@@ -380,32 +416,6 @@ namespace LOFAR {
       int badIters=0;
       int maxBadIters=5;
 
-      uint nSt, nCr, nUn, nSp; // nSt: number of actual stations,
-                               // nCr: number of correlations,
-                               // nUn: number of unknowns
-                               // nSp: number that is two for scalarphase, one else
-
-      nSt=itsAntUseds[itsAntUseds.size()-1].size();
-      if (mode=="fulljones") {
-        nUn=nSt;
-        nCr=4;
-        nSp=1;
-      } else if (mode=="scalarphase") {
-        nUn=nSt;
-        nCr=1;
-        nSp=2;
-      } else {
-        nUn=nSt*2;
-        nCr=1;
-        nSp=1;
-      }
-      uint nCh = info().nchan();
-
-      iS.g.resize(nUn,nCr);
-      iS.gold.resize(nUn,nCr);
-      iS.gx.resize(nUn,nCr);
-      iS.gxx.resize(nUn,nCr);
-      iS.h.resize(nUn,nCr);
       uint numThreads=OpenMP::maxThreads();
       for (uint thread=0; thread<numThreads; ++thread) {
         iS.z[thread].resize(nUn*itsNChan*solInt*nSp,nCr);
@@ -431,7 +441,7 @@ namespace LOFAR {
       if (nSt>0 && abs(fronormmod)>1.e-15) {
         ginit=sqrt(fronormvis/fronormmod);
       }
-      if (mode=="fulljones") {
+      if (itsMode=="fulljones") {
         for (uint st=0;st<nUn;++st) {
           iS.g(st,0)=1.;
           iS.g(st,1)=0.;
@@ -452,7 +462,7 @@ namespace LOFAR {
       for (;iter<itsMaxIter;++iter) {
         iS.gold=iS.g;
 
-        if (mode=="fulljones") { // ======================== Polarized =======================
+        if (itsMode=="fulljones") { // ======================== Polarized =======================
           for (uint st=0;st<nSt;++st) {
             iS.h(st,0)=conj(iS.g(st,0));
             iS.h(st,1)=conj(iS.g(st,1));
@@ -787,7 +797,7 @@ namespace LOFAR {
 
       //Solve remaining time slots if any
       if (itsNTimes!=0) {
-        itsSols.push_back(stefcal(itsMode,itsSolInt,0).copy());
+        itsSols.push_back(doStefCal(itsSolInt).copy());
       }
 
       itsTimerWrite.start();
