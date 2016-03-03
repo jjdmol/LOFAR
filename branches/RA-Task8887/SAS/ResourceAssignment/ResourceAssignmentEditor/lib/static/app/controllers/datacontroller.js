@@ -6,16 +6,14 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
     self.resources = [];
     self.resourceGroups = [];
     self.resourceClaims = [];
-    self.resourceGroupClaims = [];
     self.tasktypes = [];
     self.taskstatustypes = [];
 
     self.taskDict = {};
     self.resourceDict = {};
     self.resourceGroupsDict = {};
+    self.resourceGroupMemberships = {};
     self.resourceClaimDict = {};
-    self.resourceGroupClaimDict = {};
-    self.resourceIdToGroupIdsDict = {};
     self.tasktypesDict = {};
 
     self.momProjects = [];
@@ -33,29 +31,6 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
             dict[item.id] = item;
         }
         return dict;
-    };
-
-    self.mapResourcesToGroups = function () {
-        var dict = {}
-        var resources = self.resources;
-        var resourceGroups = self.resourceGroups;
-
-        if(resources.length > 0) {
-            for(var i = resources.length-1; i >=0; i--)
-                dict[resources[i].id] = []
-
-                for(var i = resourceGroups.length-1; i >=0; i--) {
-                    var group = resourceGroups[i];
-                    var childResourceIds = group.resourceIds;
-
-                    for(var j = childResourceIds.length-1; j >=0; j--) {
-                        var childResourceId = childResourceIds[j];
-                        dict[childResourceId].push(group.id);
-                    }
-                }
-        }
-
-        self.resourceIdToGroupIdsDict = dict;
     };
 
     self.getTasks = function() {
@@ -82,10 +57,9 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
     };
 
     self.getResources = function() {
-        $http.get('/rest/resourceitems').success(function(result) {
-            self.resources = result.resourceitems;
+        $http.get('/rest/resources').success(function(result) {
+            self.resources = result.resources;
             self.resourceDict = self.toIdBasedDict(self.resources);
-            self.mapResourcesToGroups();
         });
     };
 
@@ -107,21 +81,12 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
         $http.get('/rest/resourcegroups').success(function(result) {
             self.resourceGroups = result.resourcegroups;
             self.resourceGroupsDict = self.toIdBasedDict(self.resourceGroups);
-            self.mapResourcesToGroups();
         });
     };
 
-    self.getResourceGroupClaims = function() {
-        $http.get('/rest/resourcegroupclaims').success(function(result) {
-            //convert datetime strings to Date objects
-            for(var i = result.resourcegroupclaims.length-1; i >=0; i--) {
-                var resourcegroupclaim = result.resourcegroupclaims[i];
-                resourcegroupclaim.starttime = new Date(resourcegroupclaim.starttime);
-                resourcegroupclaim.endtime = new Date(resourcegroupclaim.endtime);
-            }
-
-            self.resourceGroupClaims = result.resourcegroupclaims;
-            self.resourceGroupClaimDict = self.toIdBasedDict(self.resourceGroupClaims);
+    self.getResourceGroupMemberships = function() {
+        $http.get('/rest/resourcegroupmemberships').success(function(result) {
+            self.resourceGroupMemberships = result.resourcegroupmemberships;
         });
     };
 
@@ -236,30 +201,6 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
                                     }
                                 }
                             }
-                        } else if(change.objectType == 'resourceGroupClaim') {
-                            var changedGroupClaim = change.value;
-                            if(change.changeType == 'update') {
-                                var claim = self.resourceGroupClaimDict[changedGroupClaim.id];
-                                if(claim) {
-                                    claim.status = changedGroupClaim.status;
-                                    claim.starttime = new Date(changedGroupClaim.starttime);
-                                    claim.endtime = new Date(changedGroupClaim.endtime);
-                                }
-                            } else if(change.changeType == 'insert') {
-                                var claim = self.resourceGroupClaimDict[changedGroupClaim.id];
-                                if(!claim) {
-                                    self.resourceGroupClaims.push(changedGroupClaim);
-                                    self.resourceGroupClaimDict[changedGroupClaim.id] = changedGroupClaim;
-                                }
-                            } else if(change.changeType == 'delete') {
-                                delete self.resourceGroupClaimDict[changedGroupClaim.id]
-                                for(var k = self.resourceGroupClaims.length-1; k >= 0; k--) {
-                                    if(self.resourceGroupClaims[k].id == changedGroupClaim.id) {
-                                        self.resourceGroupClaims.splice(k, 1);
-                                        break;
-                                    }
-                                }
-                            }
                         }
                     } catch(err) {
                         console.log(err)
@@ -287,15 +228,14 @@ dataControllerMod.controller('DataController',
     var self = this;
     self.dataService = dataService;
 
-
+    dataService.getMoMProjects();
     dataService.getTaskTypes();
     dataService.getTaskStatusTypes();
     dataService.getTasks();
-//     dataService.getResourceGroups();
-//     dataService.getResourceGroupClaims();
+    dataService.getResourceGroups();
     dataService.getResources();
+    dataService.getResourceGroupMemberships();
     dataService.getResourceClaims();
-    dataService.getMoMProjects();
 
     dataService.subscribeToUpdates();
 }
