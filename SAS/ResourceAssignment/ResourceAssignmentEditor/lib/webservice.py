@@ -101,11 +101,11 @@ def index():
     '''Serves the ResourceAssignmentEditor's index page'''
     return render_template('index.html', title='Resource Assignment Editor')
 
-@app.route('/rest/resourceitems')
+@app.route('/rest/resources')
 @gzipped
 def resourcesitems():
     result = rarpc.getResources()
-    return jsonify({'resourceitems': result})
+    return jsonify({'resources': result})
 
 @app.route('/rest/resourcegroups')
 @gzipped
@@ -113,17 +113,17 @@ def resourcegroups():
     result = rarpc.getResourceGroups()
     return jsonify({'resourcegroups': result})
 
+@app.route('/rest/resourcegroupmemberships')
+@gzipped
+def resourcegroupsmemberships():
+    result = rarpc.getResourceGroupMemberships()
+    return jsonify({'resourcegroupmemberships': result})
+
 @app.route('/rest/resourceclaims')
 @gzipped
 def resourceclaims():
     claims = rarpc.getResourceClaims()
     return jsonify({'resourceclaims': claims})
-
-@app.route('/rest/resourcegroupclaims')
-@gzipped
-def resourcegroupclaims():
-    abort(500)
-
 
 @app.route('/rest/tasks')
 @gzipped

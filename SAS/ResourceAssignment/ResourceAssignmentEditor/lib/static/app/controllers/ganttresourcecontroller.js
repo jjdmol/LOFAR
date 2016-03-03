@@ -8,7 +8,6 @@ var ganttResourceControllerMod = angular.module('GanttResourceControllerMod', [
                                         'gantt.tooltips',
                                         'gantt.bounds',
                                         'gantt.progress',
-                                        'gantt.table',
                                         'gantt.tree',
                                         'gantt.groups',
                                         'gantt.overlap',
@@ -31,7 +30,7 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                              'prescheduled': '#6666ff',
                              'scheduled': '#ff66ff',
                              'queued': '#bb6644',
-                             'active': '#eeffee',
+                             'active': '#77ff77',
                              'completing': '#776688',
                              'finished': '#66ff33',
                              'aborted': '#ff3366',
@@ -42,24 +41,7 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
         mode: 'custom',
         scale: 'day',
         sideMode: 'Tree',
-        columns: ['model.name', 'starttime', 'endtime'],
-        treeTableColumns: ['starttime', 'endtime'],
-        columnsHeaders: {'model.name' : 'Name', 'starttime': 'From', 'endtime': 'To'},
-        columnsClasses: {'model.name' : 'gantt-column-name', 'starttime': 'gantt-column-from', 'endtime': 'gantt-column-to'},
-        columnsFormatters: {
-            'starttime': function(starttime) {
-                return starttime !== undefined ? starttime.format('lll') : undefined;
-            },
-            'endtime': function(endtime) {
-                return endtime !== undefined ? endtime.format('lll') : undefined;
-            }
-        },
         treeHeaderContent: '<i class="fa fa-align-justify"></i> {{getHeader()}}',
-                              columnsHeaderContents: {
-                                  'model.name': '<i class="fa fa-align-justify"></i> {{getHeader()}}',
-                              'starttime': '<i class="fa fa-calendar"></i> {{getHeader()}}',
-                              'endtime': '<i class="fa fa-calendar"></i> {{getHeader()}}'
-                              },
         autoExpand: 'both',
         api: function(api) {
             // API Object is used to control methods and events from angular-gantt.
@@ -100,143 +82,164 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
     function updateGanttData() {
         var ganntRowsDict = {};
 
+        var resourceGroupsDict = $scope.dataService.resourceGroupsDict;
         var resourceGroups = $scope.dataService.resourceGroups;
         var numResourceGroups = resourceGroups.length;
 
-        var resourceIdToGroupIdsDict = $scope.dataService.resourceIdToGroupIdsDict;
+        var resourceDict = $scope.dataService.resourceDict;
         var resources = $scope.dataService.resources;
         var numResources = resources.length;
 
-        var resourceGroupsDict = $scope.dataService.resourceGroupsDict;
-        var taskDict = $scope.dataService.filteredTaskDict;
+        var resourceGroupMemberships = $scope.dataService.resourceGroupMemberships;
 
-        var resourceGroupClaims = $scope.dataService.resourceGroupClaims;
-        var numResourceGroupClaims = resourceGroupClaims.length;
+        var taskDict = $scope.dataService.filteredTaskDict;
+        var numTasks = $scope.dataService.filteredTasks.length;
 
         var resourceClaims = $scope.dataService.resourceClaims;
         var numResourceClaims = resourceClaims.length;
 
-        var resourceDict = $scope.dataService.resourceDict;
+        //dict resourceGroup2GanttRows for fast lookup of ganttrows based on groupId
+        var resourceGroup2GanttRows = {};
 
-        //create rows in gantt for resourceGroups
-        for(var i = 0; i < numResourceGroups; i++)
-        {
-            var resourceGroup = resourceGroups[i];
-            var groupRowId = 'group_' + resourceGroup.id;
-            ganntRowsDict[groupRowId] = {
+        // recursive method which creates ganntrows for a resourceGroup(Id),
+        // and its childs, and adds the subtree to the parentRow
+        var createGanttRowTree = function(groupId, parentRow) {
+            var resourceGroup = resourceGroupsDict[groupId];
+
+            var groupRowId = 'group_' + groupId;
+            if(parentRow) {
+                groupRowId += '_parent' + parentRow.id;
+            }
+
+            var ganntRow = {
                 'id': groupRowId,
+                'parent': parentRow ? parentRow.id : null,
                 'name': resourceGroup.name,
                 'tasks': []
             };
-        }
 
-        //create rows in gantt for resources
-        //add each resource row to all group rows of which group it is a member
-        for(var i = 0; i < numResources; i++)
-        {
-            var resource = resources[i];
+            ganntRowsDict[groupRowId] = ganntRow;
 
-            if(resourceIdToGroupIdsDict && resourceIdToGroupIdsDict[resource.id] && resourceIdToGroupIdsDict[resource.id].length > 0) {
-                var groupIds = resourceIdToGroupIdsDict[resource.id];
-                var numGroups = groupIds.length;
-                for(var j = 0; j < numGroups; j++) {
-                    var parentRowId = 'group_' + groupIds[j];
-                    var resourceRowId = 'resource_' + resource.id + '_group_' + groupIds[j];
-                    //make resource row child of group row
-                    ganntRowsDict[resourceRowId] = {
-                        'id': resourceRowId,
-                        'parent': parentRowId,
-                        'name': resource.name,
-                        'tasks': []
-                    };
+            //store ganntRow also in dict resourceGroup2GanttRows for fast lookup based on groupId
+            if(!resourceGroup2GanttRows.hasOwnProperty(groupId)) {
+                resourceGroup2GanttRows[groupId] = [];
+            }
+            resourceGroup2GanttRows[groupId].push(ganntRow);
+
+            //recurse over the childs
+            var numChilds = resourceGroupMemberships.groups[groupId].child_ids.length;
+            for(var i = 0; i < numChilds; i++) {
+                var childGroupId = resourceGroupMemberships.groups[groupId].child_ids[i];
+                createGanttRowTree(childGroupId, ganntRow);
+            }
+        };
+
+        //build tree of resourceGroups
+        //note that one resourceGroup can be a child of multiple parents
+        if(resourceGroupMemberships.hasOwnProperty('groups')) {
+            for(var groupId in resourceGroupMemberships.groups) {
+                if(resourceGroupMemberships.groups[groupId].parent_ids.length == 0) {
+                    //resourceGroup is a root item (no parents)
+                    //so start creating a ganttRow tree for this root and all its descendants
+                    createGanttRowTree(groupId, null);
                 }
             }
-            else
-            {
-                //no parent groups, so one individual row
-                var resourceRowId = 'resource_' + resource.id;
-                ganntRowsDict[resourceRowId] = {
-                    'id': resourceRowId,
-                    'name': resource.name,
-                    'tasks': []
-                };
-            }
         }
 
-        //now that we have all rows for the gantt...
-        //assign each groupclaim to its resourcegroup
-        for(var i = 0; i < numResourceGroupClaims; i++) {
-            var groupClaim = resourceGroupClaims[i];
-            var task = taskDict[groupClaim.task_id];
 
-            if(task)
-            {
-                var groupRowId = 'group_' + groupClaim.resourceGroupId;
-                var ganntGroupRow = ganntRowsDict[groupRowId];
+        //dict resource2GanttRows for fast lookup of ganttrows based on resourceId
+        var resource2GanttRows = {};
 
-                var groupClaimTask = {
-                    id: groupClaim.id,
-                    name: task ? task.name : '<unknown>',
-                    'from': groupClaim.starttime,
-                    'to': groupClaim.endtime,
-                    'color': self.taskStatusColors[task.status]
-                };
+        //add resources to their parent resourceGroups
+        //note that one resource can be a child of multiple parent resourceGroups
+        if(resourceGroupMemberships.hasOwnProperty('resources')) {
+            for(var resourceId in resourceGroupMemberships.resources) {
+                var resource = resourceDict[resourceId];
+                if(resource) {
+                    //of which parent(s) is this resource a child?
+                    var parentGroupIds = resourceGroupMemberships.resources[resourceId].parent_group_ids;
 
-                if(ganntGroupRow)
-                    ganntGroupRow.tasks.push(groupClaimTask);
-            }
-        }
+                    //loop over parents
+                    //add a ganntRow for the resource to each parent ganntRow
+                    for(var parentGroupId of parentGroupIds) {
+                        //note that one parentResourceGroup can actually have multiple rows
+                        //since each resourceGroup itself can have multiple parents
+                        var parentGanttRows = resourceGroup2GanttRows[parentGroupId];
 
-        //and assign each resourceclaim to its resource in each group
-        for(var i = 0; i < numResourceClaims; i++) {
-            var claim = resourceClaims[i];
-            var task = taskDict[claim.task_id];
-
-            if(task)
-            {
-                if(resourceIdToGroupIdsDict && resourceIdToGroupIdsDict[claim.resource_id] && resourceIdToGroupIdsDict[claim.resource_id].length> 0) {
-                    var groupIds = resourceIdToGroupIdsDict[claim.resource_id];
-                    var numGroups = groupIds.length;
-                    for(var j = 0; j < numGroups; j++) {
-                        var resourceRowId = 'resource_' + claim.resource_id + '_group_' + groupIds[j];
-                        var ganntRow = ganntRowsDict[resourceRowId];
-                        if(ganntRow)
-                        {
-                            var claimTask = {
-                                id: claim.id,
-                                name: task ? task.name : '<unknown>',
-                                'from': claim.starttime,
-                                'to': claim.endtime,
-                                'color': self.taskStatusColors[task.status]
+                        for(var parentGanttRow of parentGanttRows) {
+                            var resourceGanttRowId = 'resource_' + resource.id + '_' + parentGanttRow.id;
+                            var ganntRow = {
+                                'id': resourceGanttRowId,
+                                'parent': parentGanttRow.id,
+                                'name': resource.name,
+                                'tasks': []
                             };
 
-                            ganntRow.tasks.push(claimTask);
+                            ganntRowsDict[resourceGanttRowId] = ganntRow;
+
+                            //store ganntRow also in dict resource2GanttRows for fast lookup based on groupId
+                            if(!resource2GanttRows.hasOwnProperty(resourceId)) {
+                                resource2GanttRows[resourceId] = [];
+                            }
+                            resource2GanttRows[resourceId].push(ganntRow);
                         }
                     }
                 }
-                else {
-                    var resourceRowId = 'resource_' + claim.resource_id;
-                    var ganntRow = ganntRowsDict[resourceRowId];
-                    if(ganntRow)
-                    {
-                        var claimTask = {
-                            id: claim.id,
-                            name: task ? task.name : '<unknown>',
-                            'from': claim.starttime,
-                            'to': claim.endtime,
-                            'color': self.taskStatusColors[task.status]
-                        };
+            }
+        }
 
-                        ganntRow.tasks.push(claimTask);
-                    }
+        //there are also resources which are not part of a group
+        //add these as well.
+        for(var resourceId in resourceDict) {
+            var resource = resourceDict[resourceId];
+
+            if(!resource2GanttRows.hasOwnProperty(resourceId)) {
+                var resourceGanttRowId = 'resource_' + resource.id;
+                var ganntRow = {
+                    'id': resourceGanttRowId,
+                    'name': resource.name,
+                    'tasks': []
+                };
+
+                ganntRowsDict[resourceGanttRowId] = ganntRow;
+                resource2GanttRows[resourceId] = [ganntRow];
+            }
+        }
+
+        //and finally assign each resourceclaim to its resource in each group
+        if(numResourceClaims > 0 && numTasks > 0) {
+            for(var i = 0; i < numResourceClaims; i++) {
+                var claim = resourceClaims[i];
+                var task = taskDict[claim.task_id];
+
+                if(!task) {
+                    continue;
+                }
+
+                var ganntRows = resource2GanttRows[claim.resource_id];
+
+                if(!ganntRows) {
+                    continue;
+                }
+
+                for(var ganntRow of ganntRows) {
+                    var claimTask = {
+                        id: claim.id,
+                        name: task.name,
+                        from: claim.starttime,
+                        to: claim.endtime,
+                        color: self.taskStatusColors[task.status]
+                    };
+
+                    ganntRow.tasks.push(claimTask);
                 }
             }
         }
 
         var ganntRows = [];
 
-        for (var groupId in ganntRowsDict)
-            ganntRows.push(ganntRowsDict[groupId]);
+        for (var rowId in ganntRowsDict)
+            ganntRows.push(ganntRowsDict[rowId]);
 
         $scope.ganttData = ganntRows;
 
@@ -251,7 +254,7 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
     $scope.$watch('dataService.resources', updateGanttData);
     $scope.$watch('dataService.resourceClaims', updateGanttData, true);
     $scope.$watch('dataService.resourceGroups', updateGanttData);
-    $scope.$watch('dataService.resourceGroupClaims', updateGanttData, true);
+    $scope.$watch('dataService.resourceGroupMemberships', updateGanttData);
     $scope.$watch('dataService.filteredTaskDict', updateGanttData);
 }
 ]);
