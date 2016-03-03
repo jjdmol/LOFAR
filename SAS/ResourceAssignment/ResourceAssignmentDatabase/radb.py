@@ -388,6 +388,7 @@ class RADatabase:
                 rg_item = {k:relation[k] for k in ('resource_group_id', 'resource_group_name')}
                 rg_item['child_ids'] = []
                 rg_item['parent_ids'] = []
+                rg_item['resource_ids'] = []
                 rg_items[rg_item_id] = rg_item
 
             parent_id = relation['resource_group_parent_id']
@@ -429,6 +430,7 @@ class RADatabase:
             parent_id = relation['resource_group_parent_id']
             if parent_id != None:
                 r_items[r_item_id]['parent_group_ids'].append(parent_id)
+                rg_items[parent_id]['resource_ids'].append(r_item_id)
 
         result = {'groups': rg_items,
                 'resources': r_items }
