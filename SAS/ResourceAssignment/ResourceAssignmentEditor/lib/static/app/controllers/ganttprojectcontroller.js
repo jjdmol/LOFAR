@@ -31,7 +31,7 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
                              'prescheduled': '#6666ff',
                              'scheduled': '#ff66ff',
                              'queued': '#bb6644',
-                             'active': '#eeffee',
+                             'active': '#77ff77',
                              'completing': '#776688',
                              'finished': '#66ff33',
                              'aborted': '#ff3366',
@@ -69,26 +69,17 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
 
     function moveHandler(item)
     {
-//         var task_id = undefined;
-//         if(item.row.model.id.startsWith('group')) {
-//             var claimGroupId = item.model.id;
-//             var claimGroup = $scope.dataService.resourceGroupClaimDict[claimGroupId];
-//             task_id = claimGroup.task_id;
-//         }
-//         else {
-//             var claimId = item.model.id;
-//             var claim = $scope.dataService.resourceClaimDict[claimId];
-//             task_id = claim.task_id;
-//         }
-//         if(task_id) {
-//             var task = $scope.dataService.taskDict[task_id];
-//             var updatedTask = {
-//                 id: task.id,
-//                 starttime: item.model.from._d.toISOString(),
-//                 endtime: item.model.to._d.toISOString()
-//             };
-//             $scope.dataService.putTask(updatedTask);
-//         }
+        var task_id = item.model.id;
+
+        if(task_id) {
+            var task = $scope.dataService.taskDict[task_id];
+            var updatedTask = {
+                id: task.id,
+                starttime: item.model.from._d.toISOString(),
+                endtime: item.model.to._d.toISOString()
+            };
+            $scope.dataService.putTask(updatedTask);
+        }
     };
 
     function updateGanttData() {
