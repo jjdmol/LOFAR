@@ -88,7 +88,10 @@ if __name__ == "__main__":
 
     with RPC("OTDBService.TaskPrepareForScheduling", ForwardExceptions=True, busname=busname, timeout=10) as otdbRPC:
         do_rpc(otdbRPC, {'MomID':new_tree1})   # template
-        do_rpc(otdbRPC, {'MomID':new_tree1})   # now a VIC
+        do_rpc(otdbRPC, {'MomID':new_tree1})   # now a VIC tree
+        do_rpc(otdbRPC, {'MomID':new_tree1, 'StartTime':'2016-03-01 12:00:00', 'StopTime':'2016-03-01 12:34:56'})
+        do_rpc_catch_exception("on invalid stoptime", otdbRPC, 
+                               {'MomID':new_tree1, 'StartTime':'2016-03-01 12:00:00', 'StopTime':'2016'})
 
     with RPC("OTDBService.TaskDelete", ForwardExceptions=True, busname=busname, timeout=10) as otdbRPC:
         do_rpc(otdbRPC, {'MomID':new_tree2})

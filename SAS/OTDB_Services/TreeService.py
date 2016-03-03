@@ -32,8 +32,8 @@ TaskCreate                 TV- : create a task (if not already existing) and sto
 TaskSetSpecifications      TV- : function to update the value of multiple (existing) keys.
 TaskSetState               TVP : function to update the status of a task.
 TaskPrepareForScheduling   TV- : creates or updates a task that can be scheduled (VIC with state approved)
-TaskGetIDs                 TVP : returns the otdb_id/mom_id/task_type of the specified task.
 TaskDelete                 TVP : deletes a tree with all related information.
+TaskGetIDs                 TVP : returns the otdb_id/mom_id/task_type of the specified task.
 GetDefaultTemplates        --- : Returns a list with default templates
 GetStations                --- : Returns a list of the defined stations from the active PIC tree.
 SetProject                 --- : Creates or updates the information of a project/campaign.
@@ -407,8 +407,17 @@ def TaskPrepareForScheduling(input_dict, db_connection):
     if delete_old_task:
         TaskDelete({'OtdbID':otdb_id}, db_connection)
 
-    # QPID can't return an integer, make a list of it.
-    return [task_id]
+    #Set the scheduling times if they are specified.
+    start_time = input_dict.get("StartTime", "")
+    end_time   = input_dict.get("StopTime", "")
+    if start_time != "" or end_time != "":
+        try:
+            db_connection.query("select setSchedule(1,{},'{}','{}')".format(task_id,start_time,end_time))
+        except QUERY_EXCEPTIONS, exc_info:
+            raise FunctionError("Error while setting schedule-times of task {} to '{}'-'{}': {}"\
+                  .format(task_id, start_time, end_time, exc_info))
+
+    return {'OtdbID':task_id, 'MomID':mom_id, 'Success':True}
 
 
 # Task Delete
@@ -433,10 +442,11 @@ def TaskDelete(input_dict, db_connection):
 
     # delete the task
     try: 
-       db_connection.query("select deleteTree(1,{})".format(otdb_id))
-       return 'True'
+        db_connection.query("select deleteTree(1,{})".format(otdb_id))
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("TaskDelete {}: {}".format(otdb_id, exc_info))
+
+    return {'OtdbID':otdb_id, 'MomID':mom_id, 'Success':True}
 
 
 # Task Get Default Templates
@@ -456,10 +466,10 @@ def GetDefaultTemplates(input_dict, db_connection):
         for (treeid,name,proc_type,proc_subtype,strategy) in db_connection.query("select * from getDefaultTemplates()").getresult():
             if name[0] != '#':
                 Templates[name] = { 'OtdbID':treeid, 'processType':proc_type, 'processSubtype':proc_subtype, 'Strategy':strategy}
-        return Templates
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("GetDefaulTemplates: {}".format(exc_info))
 
+    return { 'DefaultTemplates': Templates }
 
 # Get Stations
 def GetStations(input_dict, db_connection):
@@ -480,10 +490,10 @@ def GetStations(input_dict, db_connection):
             level = fullname[0].split('.')
             if len(level) == 4:
                 Stations[level[3]] = level[2]
-        return Stations
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("GetStations: {}".format(exc_info))
 
+    return { 'Stations': Stations }
 
 # Set Project
 def SetProject(input_dict, db_connection):
@@ -514,9 +524,10 @@ def SetProject(input_dict, db_connection):
     Stations = {}
     try: 
         project_id = db_connection.query("select saveCampaign(0,'{}','{}','{}','{}','{}')".format(project_name, title, pi, co_i, contact)).getresult()[0][0]
-        return { "projectID": project_id }
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("SetProject: {}".format(exc_info))
+
+    return { "projectID": project_id }
 
 
 class PostgressMessageHandler(MessageHandlerInterface):
