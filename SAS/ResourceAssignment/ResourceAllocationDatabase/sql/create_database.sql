@@ -25,6 +25,7 @@ DROP TABLE IF EXISTS resource_monitoring.resource_capacity CASCADE;
 DROP TABLE IF EXISTS resource_allocation.resource_claim CASCADE;
 DROP TABLE IF EXISTS resource_allocation.resource_claim_status CASCADE;
 DROP TABLE IF EXISTS resource_allocation.claim_session CASCADE;
+DROP TABLE IF EXISTS resource_allocation.task_predecessor CASCADE;
 DROP TABLE IF EXISTS resource_allocation.task CASCADE;
 DROP TABLE IF EXISTS resource_allocation.specification CASCADE;
 DROP TABLE IF EXISTS resource_allocation.task_type CASCADE;
@@ -137,6 +138,15 @@ CREATE TABLE resource_allocation.task (
 ALTER TABLE resource_allocation.task
   OWNER TO resourceassignment;
 
+CREATE TABLE resource_allocation.task_predecessor (
+  id serial NOT NULL,
+  task_id integer NOT NULL REFERENCES resource_allocation.task(id) ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  predecessor_id integer NOT NULL REFERENCES resource_allocation.task(id) ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  PRIMARY KEY (id)
+) WITH (OIDS=FALSE);
+ALTER TABLE resource_allocation.task_predecessor
+  OWNER TO resourceassignment;
+
 CREATE TABLE resource_allocation.claim_session (
   id serial NOT NULL,
   username text NOT NULL,
@@ -227,7 +237,7 @@ COMMENT ON VIEW resource_allocation.task_view
 
 CREATE OR REPLACE VIEW resource_allocation.resource_claim_view AS
  SELECT rc.id, rc.resource_id, rc.task_id, rc.starttime, rc.endtime,
-    rc.status_id, rc.session_id, rc.claim_size, rc.username, rc.user_id,
+    rc.status_id, rc.session_id, rc.claim_size, rc.nr_of_parts, rc.username, rc.user_id,
     rcs.name AS status
    FROM resource_allocation.resource_claim rc
    JOIN resource_allocation.resource_claim_status rcs ON rcs.id = rc.status_id;
