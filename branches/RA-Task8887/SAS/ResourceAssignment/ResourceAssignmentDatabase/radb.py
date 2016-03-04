@@ -662,7 +662,7 @@ if __name__ == '__main__':
         taskId = db.insertTask(1234+i, 5678+i, 600, 0, specId)
         resources = db.getResources()
         for r in resources:
-            rcId = db.insertResourceClaim(r['id'], taskId, datetime.datetime.utcnow() + datetime.timedelta(hours=2*i), datetime.datetime.utcnow() + datetime.timedelta(hours=2*(i+1)), 0, 1, 10, 1,'einstein', -1)
+            rcId = db.insertResourceClaim(r['id'], taskId, datetime.datetime.utcnow() + datetime.timedelta(hours=2*i), datetime.datetime.utcnow() + datetime.timedelta(hours=2*(i+1)), 0, 1, 10, 'einstein', -1)
 
 
     ##tasks = db.getTasks()
