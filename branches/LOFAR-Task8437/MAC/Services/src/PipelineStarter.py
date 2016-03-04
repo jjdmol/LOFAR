@@ -21,15 +21,41 @@
 #
 # $Id$
 """
-Daemon that listens to OTDB status changes to PRESCHEDULED and SCHEDULED, requests
-the parset of such jobs (+ their predecessors), and posts them on the bus.
+Daemon that listens to OTDB status changes to SCHEDULED, requests
+the parset of such jobs, and starts them using SLURM and Docker.
+
+The execution chain is as follows:
+
+[SCHEDULED]          -> PipelineStarter schedules
+
+                           runPipeline.sh <obsid> || pipelineAborted.sh <obsid>
+
+                        using two SLURM jobs, guaranteeing that pipelineAborted.sh is
+                        called in the following circumstances:
+
+                          - runPipeline.sh exits with failure
+                          - runPipeline.sh is killed by SLURM
+                          - runPipeline.sh job is cancelled in the queue
+
+                        State is set to [QUEUED].
+
+(runPipeline.sh)     -> Calls
+                          - state <- [ACTIVE]
+                          - getParset
+                          - (run pipeline)
+                          - state <- [COMPLETING]
+                          - (wrap up)
+                          - state <- [FINISHED]
+
+(pipelineAborted.sh) -> Calls
+                          - state <- [ABORTED]
 """
 
 from lofar.messaging import FromBus, ToBus, RPC, EventMessage
 from lofar.parameterset import PyParameterValue
 from lofar.sas.otdb.OTDBBusListener import OTDBBusListener
-from lofar.sas.otdb.setStatus import setStatus
 from lofar.common.util import waitForInterrupt
+from lofar.messaging.RPC import RPC
 
 import subprocess
 import datetime
@@ -38,21 +64,31 @@ import os
 import logging
 logger = logging.getLogger(__name__)
 
-def runCommand(self, cmdline, input=None):
+def runCommand(cmdline, input=None):
   logger.info("Running '%s'", cmdline)
 
-  stdout, _ = subprocess.Popen(
+  # Start command
+  proc = subprocess.Popen(
     cmdline,
-    stdin=file("/dev/null"),
+    stdin=subprocess.PIPE if input else file("/dev/null"),
     stdout=subprocess.PIPE,
-    ).communicate(input)
+    shell=True,
+    universal_newlines=True
+    )
 
+  # Feed input and wait for termination
+  stdout, _ = proc.communicate(input)
   logger.debug(stdout)
 
+  # Check exit status, bail on error
+  if proc.returncode != 0:
+    raise subprocess.CalledProcessError(proc.returncode, cmdline)
+
+  # Return output
   return stdout.strip()
 
-def runSlurmCommand(self, args):
-  cmdline = "ssh head01.cep4 %s" % (args,)
+def runSlurmCommand(cmdline, headnode="head01.cep4"):
+  cmdline = "ssh %s %s" % (headnode,args)
   runCommand(cmdline)
 
 """ Prefix that is common to all parset keys, depending on the exact source. """
@@ -77,17 +113,20 @@ class Parset(dict):
   def slurmJobName(self):
     return self[PARSET_PREFIX + "Observation.ObsID"]
 
-def getSlurmJobInfo(self):
+def getSlurmJobInfo():
   stdout = runSlurmCommand("scontrol show job --oneliner")
 
+  if stdout == "No jobs in the system":
+    return {}
+
   jobs = {}
-  for l in stdout.split():
+  for l in stdout.split("\n"):
     # One line is one job
     job_properties = {}
 
     # Information is in k=v pairs
     for i in l.split():
-      k,v = i.split("=", 2)
+      k,v = i.split("=", 1)
       job_properties[k] = v
 
     name = job_properties["JobName"]
@@ -98,11 +137,19 @@ def getSlurmJobInfo(self):
   return jobs
 
 class PipelineStarter(OTDBBusListener):
-  def __init__(self, otdb_busname=None, setStatus_busname=None **kwargs):
+  def __init__(self, otdb_busname=None, setStatus_busname=None, **kwargs):
     super(PipelineStarter, self).__init__(busname=otdb_busname, **kwargs)
 
     self.parset_rpc = RPC(service="TaskSpecification", busname=otdb_busname)
     self.setStatus_busname = setStatus_busname if setStatus_busname else otdb_busname
+
+  def _setStatus(self, obsid, status):
+    try:
+        with RPC("StatusUpdateCmd", busname=self.setStatus_busname, timeout=10) as status_rpc:
+            result, _ = status_rpc(OtdbID=obsid, NewStatus=status)
+    except RPCTimeoutException, e:
+        # We use a queue, so delivery is guaranteed. We don't care about the answer.
+        pass
 
   def start_listening(self, **kwargs):
     self.parset_rpc.open()
@@ -116,7 +163,7 @@ class PipelineStarter(OTDBBusListener):
     self.send_bus.close()
     self.parset_rpc.close()
 
-
+  @classmethod
   def _shouldHandle(self, parset):
     if parset[PARSET_PREFIX + "Observation.processType"] != "Pipeline":
       logger.info("Not processing tree: is not a pipeline")
@@ -128,6 +175,7 @@ class PipelineStarter(OTDBBusListener):
 
     return True
 
+  @classmethod
   def _slurmJobNames(self, parsets, allowed):
     names = []
 
@@ -140,6 +188,7 @@ class PipelineStarter(OTDBBusListener):
 
     return names
 
+  @classmethod
   def _getPredecessorParsets(self, parset):
     obsIDs = parset.predecessors()
 
@@ -160,7 +209,7 @@ class PipelineStarter(OTDBBusListener):
     if not self.shouldHandle(parset):
       return
 
-    # Cancel corresponding SLURM job, causnig any successors
+    # Cancel corresponding SLURM job, causing any successors
     # to be cancelled as well.
     stdout = self.runSlurmCommand("scancel --jobname %s" % (self._slurmJobName(parset),))
 
@@ -170,6 +219,7 @@ class PipelineStarter(OTDBBusListener):
   onObservationConflict = onObservationAborted
   onObservationHold     = onObservationAborted
 
+  @classmethod
   def _minStartTime(self, preparsets):
     result = None
 
@@ -210,8 +260,6 @@ class PipelineStarter(OTDBBusListener):
       a SLURM job.
     """
 
-    logger.info("Scheduling SLURM job")
-
     # Determine SLURM parameters
     sbatch_params = ["--job-name=%s" % (parset.slurmJobName(),),
 
@@ -244,7 +292,12 @@ class PipelineStarter(OTDBBusListener):
     if predecessor_jobs:
       sbatch_params.append("--dependency=%s" % (",".join(("afterok:%s" % x for x in predecessor_jobs)),))
 
-    # Schedule job
+    # Set OTDB status to QUEUED
+    logger.info("Setting status to QUEUED")
+    self.setStatus(treeId, "queued")
+
+    # Schedule runPipeline.sh
+    logger.info("Scheduling SLURM job for runPipeline.sh")
     slurm_job_id = runSlurmCommand(
       "sbatch %s bash -c '%s'" % (" ".join(sbatch_params), 
 
@@ -260,16 +313,29 @@ class PipelineStarter(OTDBBusListener):
         obsid = treeId,
         tag = parset.dockerTag(),
       )
-    )
+    ))
     logger.info("Scheduled SLURM job %s" % (slurm_job_id,))
 
-    # Set OTDB status to QUEUED
-    logger.info("Setting status to QUEUED")
-    try:
-        setStatus(treeId, "queued", otdb_busname=self.setStatus_busname)
-    except RPCTimeoutException, e:
-        # We use a queue, so delivery is guaranteed. We don't care about the answer.
-        pass
+    # Schedule pipelineAborted.sh
+    logger.info("Scheduling SLURM job for pipelineAborted.sh")
+    slurm_cancel_job_id = runSlurmCommand(
+      "sbatch"
+      " --job-name=%s-aborted"
+      " --cpus-per=task=1 --ntasks=1"
+      " --dependency=afternotok:%d"
+      " --kill-on-invalid-dep=yes"
+      " --requeue"
+      " bash -c '%s'" % (parset.slurmJobName(), slurm_job_id,
+
+      "docker run --rm lofar-pipeline:{tag}"
+      " --net=host"
+      " -e LUSER=$UID"
+      " pipelineAborted.sh {obsid}".format(
+        obsid = treeId,
+        tag = parset.dockerTag(),
+      )
+    ))
+    logger.info("Scheduled SLURM job %s" % (slurm_cancel_job_id,))
 
     logger.info("Pipeline processed.")
 

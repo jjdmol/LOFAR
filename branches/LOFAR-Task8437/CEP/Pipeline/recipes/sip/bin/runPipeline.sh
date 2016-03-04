@@ -8,11 +8,11 @@
 #   getParset()
 #   (execute pipeline as specified in parset)
 #   setStatus(COMPLETING)
-#   setStatus(FINISHED/ABORTED)
+#   setStatus(FINISHED)
 #
 # Syntax:
 #
-#   runPipeline.sh <obsid>
+#   runPipeline.sh <obsid> || pipelineAborted.sh <obsid>
 
 OBSID=$1
 
@@ -26,7 +26,6 @@ SETSTATUS_BUS=lofar.otdb.setStatus
 
 # Mark as started
 setStatus.py -o $OBSID -s active -b $SETSTATUS_BUS || true
-trap "setStatus.py -o $OBSID -s aborted -b $SETSTATUS_BUS || true" SIGTERM SIGINT SIGQUIT SIGHUP
 
 # Fetch parset
 PARSET=${LOFARROOT}/var/run/Observation${OBSID}.parset
@@ -52,15 +51,13 @@ RESULT=$?
 
 # Process the result
 setStatus.py -o $OBSID -s completing -b $SETSTATUS_BUS || true
+
 if [ $RESULT -eq 0 ]; then
   # Wait for feedback to propagate
   sleep 60
 
   # Mark as succesful
   setStatus.py -o $OBSID -s finished -b $SETSTATUS_BUS || true
-else
-  # Mark as failed
-  setStatus.py -o $OBSID -s aborted -b $SETSTATUS_BUS || true
 fi
 
 # Propagate result to caller
