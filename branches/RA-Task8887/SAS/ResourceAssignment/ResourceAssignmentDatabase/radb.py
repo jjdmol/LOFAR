@@ -135,8 +135,14 @@ class RADatabase:
 
     def getTasks(self):
         query = '''SELECT * from resource_allocation.task_view;'''
+        tasks = list(self._executeQuery(query, fetch=_FETCH_ALL))
+        predIds = self.getTaskPredecessorIds()
 
-        return list(self._executeQuery(query, fetch=_FETCH_ALL))
+        for task in tasks:
+            task['predecessor_ids'] = predIds.get(task['id'], [])
+
+        return tasks
+
 
     def getTask(self, id=None, mom_id=None, otdb_id=None):
         '''get a task for either the given (task)id, or for the given mom_id, or for the given otdb_id'''
@@ -230,6 +236,48 @@ class RADatabase:
             self.conn.commit()
 
         return self.cursor.rowcount > 0
+
+    def getTaskPredecessorIds(self):
+        query = '''SELECT * from resource_allocation.task_predecessor tp;'''
+        items = list(self._executeQuery(query, fetch=_FETCH_ALL))
+        predIdDict = {}
+        for item in items:
+            taskId = item['task_id']
+            if taskId not in predIdDict:
+                predIdDict[taskId] = []
+            predIdDict[taskId].append(item['predecessor_id'])
+        return predIdDict
+
+    def getTaskPredecessorIdsForTask(self, task_id):
+        query = '''SELECT * from resource_allocation.task_predecessor tp
+        WHERE tp.task_id = %s;'''
+
+        items = list(self._executeQuery(query, [task_id], fetch=_FETCH_ALL))
+        return [x['predecessor_id'] for x in items]
+
+    def getTaskSuccessorIdsForTask(self, task_):
+        query = '''SELECT * from resource_allocation.task_predecessor tp
+        WHERE tp.predecessor_id = %s;'''
+
+        items = list(self._executeQuery(query, [task_], fetch=_FETCH_ALL))
+        return [x['task_id'] for x in items]
+
+    def insertTaskPredecessor(self, task_id, predecessor_id, commit=True):
+        query = '''INSERT INTO resource_allocation.task_predecessor
+        (task_id, predecessor_id)
+        VALUES (%s, %s)
+        RETURNING id;'''
+
+        id = self._executeQuery(query, (task_id, predecessor_id), fetch=_FETCH_ONE)['id']
+        if commit:
+            self.conn.commit()
+        return id
+
+    def insertTaskPredecessors(self, task_id, predecessor_ids, commit=True):
+        ids = [self.insertTaskPredecessor(task_id, predecessor_id, false) for predecessor_id in predecessor_ids]
+        if commit:
+            self.conn.commit()
+        return ids
 
     def getSpecifications(self):
         query = '''SELECT * from resource_allocation.specification;'''
@@ -621,15 +669,15 @@ if __name__ == '__main__':
     #resultPrint(db.getResourceTypeNames)
     #resultPrint(db.getResourceGroupTypes)
     #resultPrint(db.getResourceGroupTypeNames)
-    resultPrint(db.getResources)
-    resultPrint(db.getResourceGroups)
-    resultPrint(db.getResourceGroupMemberships)
-    #resultPrint(db.getTasks)
+    #resultPrint(db.getResources)
+    #resultPrint(db.getResourceGroups)
+    #resultPrint(db.getResourceGroupMemberships)
+    resultPrint(db.getTasks)
     #resultPrint(db.getSpecifications)
     #resultPrint(db.getResourceClaims)
 
-    import pprint
-    pprint.pprint(db.getResourceGroupMemberships())
+    #import pprint
+    #pprint.pprint(db.getResourceGroupMemberships())
 
     #rcId = db.insertResourceClaim(1, 1, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1, True)
 
@@ -657,12 +705,18 @@ if __name__ == '__main__':
         #db.deleteResourceClaim(c['id'])
         ##resultPrint(db.getResourceClaims)
 
-    for i in range(2):
-        specId = db.insertSpecification(datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=4), "")
-        taskId = db.insertTask(1234+i, 5678+i, 600, 0, specId)
-        resources = db.getResources()
-        for r in resources:
-            rcId = db.insertResourceClaim(r['id'], taskId, datetime.datetime.utcnow() + datetime.timedelta(hours=2*i), datetime.datetime.utcnow() + datetime.timedelta(hours=2*(i+1)), 0, 1, 10, 'einstein', -1)
+    #predTaskId = None
+    #for i in range(2):
+        #specId = db.insertSpecification(datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=4), "")
+        #taskId = db.insertTask(1234+i, 5678+i, 600, 0, specId)
+
+        #if predTaskId:
+            #db.insertTaskPredecessor(taskId, predTaskId)
+        #predTaskId = taskId
+
+        #resources = db.getResources()
+        #for r in resources:
+            #rcId = db.insertResourceClaim(r['id'], taskId, datetime.datetime.utcnow() + datetime.timedelta(hours=2*i), datetime.datetime.utcnow() + datetime.timedelta(hours=2*(i+1)), 0, 1, 10, 'einstein', -1)
 
 
     ##tasks = db.getTasks()
