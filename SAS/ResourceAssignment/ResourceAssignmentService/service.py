@@ -55,6 +55,8 @@ class RADBHandler(MessageHandlerInterface):
             'InsertTask': self._insertTask,
             'DeleteTask': self._deleteTask,
             'UpdateTask': self._updateTask,
+            'InsertTaskPredecessor': self._insertTaskPredecessor,
+            'insertTaskPredecessors': self._insertTaskPredecessors,
             'GetTaskStatuses': self._getTaskStatuses,
             'GetTaskTypes': self._getTaskTypes,
             'GetSpecifications': self._getSpecifications,
@@ -193,6 +195,16 @@ class RADBHandler(MessageHandlerInterface):
                                        task_type=kwargs.get('type_id', kwargs.get('type')),
                                        specification_id=kwargs.get('specification_id'))
         return {'id': id, 'updated': updated}
+
+    def _insertTaskPredecessor(self, **kwargs):
+        id = self.radb.insertTaskPredecessor(kwargs['task_id'],
+                                             kwargs['predecessor_id'])
+        return {'id':id}
+
+    def _insertTaskPredecessors(self, **kwargs):
+        ids = self.radb.insertTaskPredecessors(kwargs['task_id'],
+                                               kwargs['predecessor_ids'])
+        return {'ids':ids}
 
     def _getSpecifications(self):
         return self.radb.getSpecifications()
