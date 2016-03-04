@@ -137,9 +137,11 @@ class RADatabase:
         query = '''SELECT * from resource_allocation.task_view;'''
         tasks = list(self._executeQuery(query, fetch=_FETCH_ALL))
         predIds = self.getTaskPredecessorIds()
+        succIds = self.getTaskSuccessorIds()
 
         for task in tasks:
             task['predecessor_ids'] = predIds.get(task['id'], [])
+            task['successor_ids'] = succIds.get(task['id'], [])
 
         return tasks
 
@@ -247,6 +249,17 @@ class RADatabase:
                 predIdDict[taskId] = []
             predIdDict[taskId].append(item['predecessor_id'])
         return predIdDict
+
+    def getTaskSuccessorIds(self):
+        query = '''SELECT * from resource_allocation.task_predecessor tp;'''
+        items = list(self._executeQuery(query, fetch=_FETCH_ALL))
+        succIdDict = {}
+        for item in items:
+            predId = item['predecessor_id']
+            if predId not in succIdDict:
+                succIdDict[predId] = []
+            succIdDict[predId].append(item['task_id'])
+        return succIdDict
 
     def getTaskPredecessorIdsForTask(self, task_id):
         query = '''SELECT * from resource_allocation.task_predecessor tp
@@ -673,6 +686,8 @@ if __name__ == '__main__':
     #resultPrint(db.getResourceGroups)
     #resultPrint(db.getResourceGroupMemberships)
     resultPrint(db.getTasks)
+    print db.getTaskPredecessorIds()
+    print db.getTaskSuccessorIds()
     #resultPrint(db.getSpecifications)
     #resultPrint(db.getResourceClaims)
 

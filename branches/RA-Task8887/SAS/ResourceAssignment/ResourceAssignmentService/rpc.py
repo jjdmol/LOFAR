@@ -137,6 +137,12 @@ class RARPC(RPCWrapper):
             task['endtime'] = task['endtime'].datetime()
         return tasks
 
+    def insertTaskPredecessor(self, task_id, predecessor_id):
+        return self.rpc('InsertTaskPredecessor', task_id=task_id, predecessor_id=predecessor_id)
+
+    def insertTaskPredecessors(self, task_id, predecessor_ids):
+        return self.rpc('InsertTaskPredecessors', task_id=task_id, predecessor_ids=predecessor_ids)
+
     def getTaskTypes(self):
         return self.rpc('GetTaskTypes')
 
