@@ -16,24 +16,26 @@ CREATE SCHEMA resource_allocation;
 BEGIN;
 
 -- This is insanity, but works, order needs to be the reverse of the CREATE TABLE statements
-DROP TABLE IF EXISTS resource_allocation.config;
-DROP TABLE IF EXISTS resource_monitoring.resource_group_availability;
-DROP TABLE IF EXISTS resource_monitoring.resource_availability;
-DROP TABLE IF EXISTS resource_monitoring.resource_capacity;
-DROP TABLE IF EXISTS resource_allocation.resource_claim;
-DROP TABLE IF EXISTS resource_allocation.resource_claim_status;
-DROP TABLE IF EXISTS resource_allocation.claim_session;
-DROP TABLE IF EXISTS resource_allocation.task;
-DROP TABLE IF EXISTS resource_allocation.specification;
-DROP TABLE IF EXISTS resource_allocation.task_type;
-DROP TABLE IF EXISTS resource_allocation.task_status;
-DROP TABLE IF EXISTS virtual_instrument.resource_group_to_resource_group;
-DROP TABLE IF EXISTS virtual_instrument.resource_to_resource_group;
-DROP TABLE IF EXISTS virtual_instrument.resource_group;
-DROP TABLE IF EXISTS virtual_instrument.resource_group_type;
-DROP TABLE IF EXISTS virtual_instrument.resource;
-DROP TABLE IF EXISTS virtual_instrument.resource_type;
-DROP TABLE IF EXISTS virtual_instrument.unit;
+DROP VIEW IF EXISTS resource_allocation.task_view CASCADE;
+DROP VIEW IF EXISTS resource_allocation.resource_claim_view CASCADE;
+DROP TABLE IF EXISTS resource_allocation.config CASCADE;
+DROP TABLE IF EXISTS resource_monitoring.resource_group_availability CASCADE;
+DROP TABLE IF EXISTS resource_monitoring.resource_availability CASCADE;
+DROP TABLE IF EXISTS resource_monitoring.resource_capacity CASCADE;
+DROP TABLE IF EXISTS resource_allocation.resource_claim CASCADE;
+DROP TABLE IF EXISTS resource_allocation.resource_claim_status CASCADE;
+DROP TABLE IF EXISTS resource_allocation.claim_session CASCADE;
+DROP TABLE IF EXISTS resource_allocation.task CASCADE;
+DROP TABLE IF EXISTS resource_allocation.specification CASCADE;
+DROP TABLE IF EXISTS resource_allocation.task_type CASCADE;
+DROP TABLE IF EXISTS resource_allocation.task_status CASCADE;
+DROP TABLE IF EXISTS virtual_instrument.resource_group_to_resource_group CASCADE;
+DROP TABLE IF EXISTS virtual_instrument.resource_to_resource_group CASCADE;
+DROP TABLE IF EXISTS virtual_instrument.resource_group CASCADE;
+DROP TABLE IF EXISTS virtual_instrument.resource_group_type CASCADE;
+DROP TABLE IF EXISTS virtual_instrument.resource CASCADE;
+DROP TABLE IF EXISTS virtual_instrument.resource_type CASCADE;
+DROP TABLE IF EXISTS virtual_instrument.unit CASCADE;
 -- Would like to use this instead, but I can not get it to do something useful: SET CONSTRAINTS ALL DEFERRED;
 
 CREATE TABLE virtual_instrument.unit (
@@ -56,7 +58,7 @@ ALTER TABLE virtual_instrument.resource_type
 CREATE TABLE virtual_instrument.resource (
   id serial NOT NULL,
   name text NOT NULL,
-  type_id integer NOT NULL REFERENCES virtual_instrument.resource_type DEFERRABLE INITIALLY IMMEDIATE,
+  type_id integer NOT NULL REFERENCES virtual_instrument.resource_type ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE virtual_instrument.resource
@@ -73,7 +75,7 @@ ALTER TABLE virtual_instrument.resource_group_type
 CREATE TABLE virtual_instrument.resource_group (
   id serial NOT NULL,
   name text NOT NULL,
-  type_id integer NOT NULL REFERENCES virtual_instrument.resource_group_type DEFERRABLE INITIALLY IMMEDIATE,
+  type_id integer NOT NULL REFERENCES virtual_instrument.resource_group_type ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE virtual_instrument.resource_group
@@ -81,8 +83,8 @@ ALTER TABLE virtual_instrument.resource_group
 
 CREATE TABLE virtual_instrument.resource_to_resource_group (
   id serial NOT NULL,
-  child_id integer NOT NULL REFERENCES virtual_instrument.resource DEFERRABLE INITIALLY IMMEDIATE,
-  parent_id integer NOT NULL REFERENCES virtual_instrument.resource_group DEFERRABLE INITIALLY IMMEDIATE,
+  child_id integer NOT NULL REFERENCES virtual_instrument.resource ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  parent_id integer NOT NULL REFERENCES virtual_instrument.resource_group ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE virtual_instrument.resource_to_resource_group
@@ -90,8 +92,8 @@ ALTER TABLE virtual_instrument.resource_to_resource_group
 
 CREATE TABLE virtual_instrument.resource_group_to_resource_group (
   id serial NOT NULL,
-  child_id integer NOT NULL REFERENCES virtual_instrument.resource_group DEFERRABLE INITIALLY IMMEDIATE,
-  parent_id integer REFERENCES virtual_instrument.resource_group DEFERRABLE INITIALLY IMMEDIATE,
+  child_id integer NOT NULL REFERENCES virtual_instrument.resource_group ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  parent_id integer REFERENCES virtual_instrument.resource_group ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE virtual_instrument.resource_group_to_resource_group
@@ -156,7 +158,7 @@ ALTER TABLE resource_allocation.resource_claim_status
 
 CREATE TABLE resource_allocation.resource_claim (
   id serial NOT NULL,
-  resource_id integer NOT NULL REFERENCES virtual_instrument.resource DEFERRABLE INITIALLY IMMEDIATE,
+  resource_id integer NOT NULL REFERENCES virtual_instrument.resource ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
   task_id integer NOT NULL REFERENCES resource_allocation.task ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
   starttime timestamp NOT NULL,
   endtime timestamp NOT NULL,
@@ -172,7 +174,7 @@ ALTER TABLE resource_allocation.resource_claim
 
 CREATE TABLE resource_monitoring.resource_capacity (
   id serial NOT NULL,
-  resource_id integer NOT NULL REFERENCES virtual_instrument.resource DEFERRABLE INITIALLY IMMEDIATE,
+  resource_id integer NOT NULL REFERENCES virtual_instrument.resource ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
   available bigint NOT NULL,
   total bigint NOT NULL,
   PRIMARY KEY (id)
@@ -182,7 +184,7 @@ ALTER TABLE resource_monitoring.resource_capacity
 
 CREATE TABLE resource_monitoring.resource_availability (
   id serial NOT NULL,
-  resource_id integer NOT NULL REFERENCES virtual_instrument.resource DEFERRABLE INITIALLY IMMEDIATE,
+  resource_id integer NOT NULL REFERENCES virtual_instrument.resource ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
   available bool NOT NULL,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
