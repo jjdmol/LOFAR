@@ -241,10 +241,20 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                     var claims = resource2Claims[resourceId];
 
                     for(var claim of claims) {
-                        aggregatedClaims[claim.id] = { starttime: claim.starttime, endtime: claim.endtime };
+                        var taskId = claim.task_id;
+                        if(taskId in aggregatedClaims) {
+                            if(claim.starttime < aggregatedClaims[taskId].starttime) {
+                                aggregatedClaims[taskId].starttime = claim.starttime;
+                            }
+                            if(claim.endtime > aggregatedClaims[taskId].endtime) {
+                                aggregatedClaims[taskId].endtime = claim.endtime;
+                            }
+                        } else {
+                            aggregatedClaims[taskId] = { starttime: claim.starttime,
+                                                          endtime: claim.endtime };
+                        }
                     }
                 }
-
 
                 var childGroupIds = resourceGroupMemberships.groups[groupId].child_ids;
 
@@ -252,17 +262,17 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
 
                     var subAggregatedClaims = aggregateDescendants(childGroupId);
 
-                    for(var claimId in subAggregatedClaims) {
-                        var subAggregatedClaim = subAggregatedClaims[claimId];
-                        if(claimId in aggregatedClaims) {
-                            if(subAggregatedClaim.starttime > aggregatedClaims[claimId].starttime) {
-                                aggregatedClaims[claimId].starttime = subAggregatedClaim.starttime;
+                    for(var taskId in subAggregatedClaims) {
+                        var subAggregatedClaim = subAggregatedClaims[taskId];
+                        if(taskId in aggregatedClaims) {
+                            if(subAggregatedClaim.starttime < aggregatedClaims[taskId].starttime) {
+                                aggregatedClaims[taskId].starttime = subAggregatedClaim.starttime;
                             }
-                            if(subAggregatedClaim.endtime < aggregatedClaims[claimId].endtime) {
-                                aggregatedClaims[claimId].endtime = subAggregatedClaim.endtime;
+                            if(subAggregatedClaim.endtime > aggregatedClaims[taskId].endtime) {
+                                aggregatedClaims[taskId].endtime = subAggregatedClaim.endtime;
                             }
                         } else {
-                            aggregatedClaims[claimId] = { starttime: subAggregatedClaim.starttime,
+                            aggregatedClaims[taskId] = { starttime: subAggregatedClaim.starttime,
                                                           endtime: subAggregatedClaim.endtime };
                         }
                     }
@@ -270,20 +280,21 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
 
                 var ganttRows = resourceGroup2GanttRows[groupId];
                 for(var ganttRow of ganttRows) {
-                    for(var claimId in aggregatedClaims) {
-                        var aggClaim = aggregatedClaims[claimId];
-                        var orgClaim = resourceClaimDict[claimId];
-                        var task = taskDict[orgClaim.task_id];
-                        var claimTask = {
-                            id: 'claim_' + claimId + '_' + ganttRow.id,
-                            name: task.name,
-                            from: aggClaim.starttime,
-                            to: aggClaim.endtime,
-                            color: self.taskStatusColors[task.status],
-                            raTask: task
-                        };
+                    for(var taskId in aggregatedClaims) {
+                        var aggClaimForTask = aggregatedClaims[taskId];
+                        var task = taskDict[taskId];
+                        if(task) {
+                            var claimTask = {
+                                id: 'aggregatedClaimForTask_' + taskId + '_' + ganttRow.id,
+                                name: task.name,
+                                from: aggClaimForTask.starttime,
+                                to: aggClaimForTask.endtime,
+                                color: self.taskStatusColors[task.status],
+                                raTask: task
+                            };
 
-                        ganttRow.tasks.push(claimTask);
+                            ganttRow.tasks.push(claimTask);
+                        }
                     }
                 }
                 return aggregatedClaims;
