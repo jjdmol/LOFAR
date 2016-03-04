@@ -165,6 +165,7 @@ CREATE TABLE resource_allocation.resource_claim (
   status_id integer NOT NULL REFERENCES resource_allocation.resource_claim_status DEFERRABLE INITIALLY IMMEDIATE,
   session_id integer NOT NULL REFERENCES resource_allocation.claim_session DEFERRABLE INITIALLY IMMEDIATE,
   claim_size bigint NOT NULL,
+  nr_of_parts int NOT NULL DEFAULT 1,
   username text,
   user_id integer,
   PRIMARY KEY (id)
