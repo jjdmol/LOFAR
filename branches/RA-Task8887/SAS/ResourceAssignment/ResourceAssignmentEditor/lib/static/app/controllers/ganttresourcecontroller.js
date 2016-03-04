@@ -82,6 +82,7 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
         var taskDict = $scope.dataService.filteredTaskDict;
         var numTasks = $scope.dataService.filteredTasks.length;
 
+        var resourceClaimDict = $scope.dataService.resourceClaimDict;
         var resourceClaims = $scope.dataService.resourceClaims;
         var numResourceClaims = resourceClaims.length;
 
@@ -271,6 +272,8 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                 for(var ganttRow of ganttRows) {
                     for(var claimId in aggregatedClaims) {
                         var aggClaim = aggregatedClaims[claimId];
+                        var orgClaim = resourceClaimDict[claimId];
+                        var task = taskDict[orgClaim.task_id];
                         var claimTask = {
                             id: 'claim_' + claimId + '_' + ganttRow.id,
                             name: task.name,
