@@ -53,6 +53,11 @@ class RADBPGListener(PostgresListener):
         self.subscribe('task_insert', self.onTaskInserted)
         self.subscribe('task_delete', self.onTaskDeleted)
 
+        # when the specification starttime and endtime are updated, then that effects the task as well
+        # so subscribe to specification_update, and use task_view as view_for_row
+        self.setupPostgresNotifications('resource_allocation', 'specification', updateNotification=True, insertNotification=False, deleteNotification=False, view_for_row='task_view')
+        self.subscribe('specification_update', self.onSpecificationUpdated)
+
         self.setupPostgresNotifications('resource_allocation', 'resource_claim', view_for_row='resource_claim_view')
         self.subscribe('resource_claim_update', self.onResourceClaimUpdated)
         self.subscribe('resource_claim_insert', self.onResourceClaimInserted)
@@ -66,6 +71,11 @@ class RADBPGListener(PostgresListener):
 
     def onTaskDeleted(self, payload = None):
         self._sendNotification('TaskDeleted', payload)
+
+    def onSpecificationUpdated(self, payload = None):
+        # when the specification starttime and endtime are updated, then that effects the task as well
+        # so send a TaskUpdated notification
+        self._sendNotification('TaskUpdated', payload, ['starttime', 'endtime'])
 
     def onResourceClaimUpdated(self, payload = None):
         self._sendNotification('ResourceClaimUpdated', payload, ['starttime', 'endtime'])
