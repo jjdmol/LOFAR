@@ -6,6 +6,19 @@ with open("add_virtual_instrument.sql", 'w+') as output:
   output.write("-- resourceassignment password for testing on mcu005 is the same as the password on the president's luggage +6\n")
   output.write("-- psql resourceassignment -U resourceassignment -f add_virtual_instrument.sql -W\n")
   output.write("BEGIN;\n")
+
+  output.write("-- start with clearing the old virtual instrument model\n")
+  output.write("-- for some reason truncate takes a looooong time to complete, so use delete from\n")
+  output.write("DELETE FROM virtual_instrument.resource_group_to_resource_group CASCADE;\n")
+  output.write("DELETE FROM virtual_instrument.resource_to_resource_group CASCADE;\n")
+  output.write("DELETE FROM virtual_instrument.resource_group CASCADE;\n")
+  output.write("DELETE FROM virtual_instrument.resource_group_type CASCADE;\n")
+  output.write("DELETE FROM virtual_instrument.resource CASCADE;\n")
+  output.write("DELETE FROM virtual_instrument.resource_type CASCADE;\n")
+  output.write("DELETE FROM virtual_instrument.unit CASCADE;\n")
+  output.write("-- end of initial cleanup\n\n")
+
+
   #----- resource unit -----
   output.write("INSERT INTO virtual_instrument.unit VALUES \n")
   output.write("(0, 'rsp_channel_bit'),(1, 'bytes'),(2, 'rcu_board'),(3, 'bytes/second'),(4, 'cores');\n")
@@ -35,6 +48,13 @@ with open("add_virtual_instrument.sql", 'w+') as output:
     lastGroupNumber += len(clusters)
     output.write(', ')
     output.write(',\n'.join(["(%i, '%s', 1)" % (nr, cluster) for nr, cluster in zip(clusternumbers, clusters)]))
+  nodegroups = ['computenodes', 'gpunodes']
+  nodegroupnumbers = range(lastGroupNumber+1, lastGroupNumber+1+len(nodegroups))
+  if nodegroups:
+    lastGroupNumber += len(nodegroups)
+    output.write(', ')
+    output.write(',\n'.join(["(%i, '%s', 4)" % (nr, nodegroup) for nr, nodegroup in zip(nodegroupnumbers, nodegroups)]))
+
   ##station group
   #stationgroups = ['STATIONS', 'SUPERTERP', 'CORE', 'REMOTE', 'INTERNATIONAL', 'LORA', 'AARTFAAC']
   stationgroups = []
@@ -59,16 +79,26 @@ with open("add_virtual_instrument.sql", 'w+') as output:
       output.write(', ')
     output.write(',\n'.join(["(%i, '%s', 3)" % (nr, station) for nr, station in zip(stationnumbers, stations)]))
 
-  ##node
+  ##cep4 nodes
   numCep4Nodes = 50
   cep4numbers = range(lastGroupNumber+1, lastGroupNumber+1+numCep4Nodes)
   if cep4numbers:
-    lastGroupNumber += len(stationgroups)
+    lastGroupNumber += len(cep4numbers)
     if clusters or stationgroups or stations:
       output.write(', ')
     output.write(',\n'.join(["(%i, 'cpunode%02d', 5)" % (nr, node) for nr, node in zip(cep4numbers, range(1, numCep4Nodes+1))]))
 
-  output.write(';\n')
+  ##cobalt nodes
+  numCobaltNodes = 8
+  cobaltnumbers = range(lastGroupNumber+1, lastGroupNumber+1+numCobaltNodes)
+  if cobaltnumbers:
+    lastGroupNumber += len(cobaltnumbers)
+    if clusters or stationgroups or stations or cep4numbers:
+      output.write(', ')
+    output.write(',\n'.join(["(%i, 'cbt%03d', 5)" % (nr, node) for nr, node in zip(cobaltnumbers, range(1, numCobaltNodes+1))]))
+
+  if clusters or stationgroups or stations or cobaltnumbers:
+    output.write(';\n')
   
   ##node_group
   #output.write("(64, 'cep4_gpu', 4);\n") ## unknown which nodes are in here? Last entry for resource groups, to make the syntax work FIXME
@@ -101,7 +131,7 @@ with open("add_virtual_instrument.sql", 'w+') as output:
     resource_available += "(DEFAULT, %i, TRUE), " % (resource_count,)
     resource_count += 1
   ## nodes
-  for node in cep4numbers:
+  for node in cep4numbers + cobaltnumbers:
     resources += "(%i, 'bandwidth', %i), " % (resource_count, bandwidth_index)
     resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, node)
     resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 50*1024*1024*1024, 50*1024*1024*1024) ##magic numbers FIXME
@@ -119,13 +149,13 @@ with open("add_virtual_instrument.sql", 'w+') as output:
     #resource_count += 1
   ## CEP4 bandwidth
   resources += "(%i, 'cep4bandwidth', %i), " % (resource_count, bandwidth_index)
-  resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, 3) ##magic numbers FIXME
+  resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, 1) ##magic numbers FIXME
   resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 80*1024*1024*1024, 80*1024*1024*1024) ##magic numbers FIXME
   resource_available += "(DEFAULT, %i, TRUE), " % (resource_count,)
   resource_count += 1
   ## CEP4 storage
   resources += "(%i, 'cep4storage', %i), " % (resource_count, storage_index)
-  resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, 3) ##magic numbers FIXME
+  resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, 1) ##magic numbers FIXME
   resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 2100*1024*1024*1024, 2100*1024*1024*1024) ##magic numbers FIXME
   resource_available += "(DEFAULT, %i, TRUE), " % (resource_count,)
   resource_count += 1
@@ -145,8 +175,12 @@ with open("add_virtual_instrument.sql", 'w+') as output:
       resource_group_to_resource_group += "(DEFAULT, %i, 9), " % (stationnumbers[i],)  ## REMOTE
     else:
       resource_group_to_resource_group += "(DEFAULT, %i, 10), " % (stationnumbers[i],)  ## INTERNATIONAL
-    for node in cep4numbers:
-      resource_group_to_resource_group += "(DEFAULT, %i, 3), " % (node,)  ## CEP4 nodes
+
+  resource_group_to_resource_group += "(DEFAULT, 3, 1), "  ## CEP4 computenodes
+  for node in cep4numbers:
+    resource_group_to_resource_group += "(DEFAULT, %i, 3), " % (node,)  ## CEP4 nodes
+  for node in cobaltnumbers:
+    resource_group_to_resource_group += "(DEFAULT, %i, 2), " % (node,)  ## Cobalt nodes
   for cluster in clusternumbers:
     resource_group_to_resource_group += "(DEFAULT, %i, 0), " % (cluster,) # clusters to LOFAR
   for stationgroup in stationgroupnumbers:
