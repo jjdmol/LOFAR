@@ -93,7 +93,8 @@ class RADBHandler(MessageHandlerInterface):
                                            kwargs['session_id'],
                                            kwargs['claim_size'],
                                            kwargs['username'],
-                                           kwargs['user_id'])
+                                           kwargs['user_id'],
+                                           kwargs['nr_of_parts'])
         return {'id':id}
 
     def _deleteResourceClaim(self, **kwargs):
@@ -113,6 +114,7 @@ class RADBHandler(MessageHandlerInterface):
                                                 status=kwargs.get('status_id', kwargs.get('status')),
                                                 session_id=kwargs.get('session_id'),
                                                 claim_size=kwargs.get('claim_size'),
+                                                nr_of_parts=kwargs.get('nr_of_parts'),
                                                 username=kwargs.get('username'),
                                                 user_id=kwargs.get('user_id'))
         return {'id': id, 'updated': updated}

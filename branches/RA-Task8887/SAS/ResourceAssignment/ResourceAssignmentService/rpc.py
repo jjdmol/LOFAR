@@ -42,7 +42,7 @@ class RARPC(RPCWrapper):
         return resource_claim
 
 
-    def insertResourceClaim(self, resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id):
+    def insertResourceClaim(self, resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, nr_of_parts=1):
         return self.rpc('InsertResourceClaim', resource_id=resource_id,
                                                     task_id=task_id,
                                                     starttime=starttime,
@@ -51,12 +51,13 @@ class RARPC(RPCWrapper):
                                                     session_id=session_id,
                                                     claim_size=claim_size,
                                                     username=username,
-                                                    user_id=user_id)
+                                                    user_id=user_id,
+                                                    nr_of_parts=nr_of_parts)
 
     def deleteResourceClaim(self, id):
         return self.rpc('DeleteResourceClaim', id=id)
 
-    def updateResourceClaim(self, id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, username=None, user_id=None):
+    def updateResourceClaim(self, id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, nr_of_parts=None, username=None, user_id=None):
         return self.rpc('UpdateResourceClaim', id=id,
                                                     resource_id=resource_id,
                                                     task_id=task_id,
@@ -65,6 +66,7 @@ class RARPC(RPCWrapper):
                                                     status=status,
                                                     session_id=session_id,
                                                     claim_size=claim_size,
+                                                    nr_of_parts=nr_of_parts,
                                                     username=username,
                                                     user_id=user_id)
 

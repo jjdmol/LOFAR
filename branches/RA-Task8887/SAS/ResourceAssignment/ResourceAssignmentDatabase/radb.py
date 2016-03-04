@@ -450,17 +450,17 @@ class RADatabase:
 
         return dict(result) if result else None
 
-    def insertResourceClaim(self, resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, commit=True):
+    def insertResourceClaim(self, resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, nr_of_parts=1, commit=True):
         if status and isinstance(status, basestring):
             #convert status string to status.id
             status = self.getResourceClaimStatusId(status)
 
         query = '''INSERT INTO resource_allocation.resource_claim
-        (resource_id, task_id, starttime, endtime, status_id, session_id, claim_size, username, user_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        (resource_id, task_id, starttime, endtime, status_id, session_id, claim_size, nr_of_parts, username, user_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id;'''
 
-        id = self._executeQuery(query, (resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id), fetch=_FETCH_ONE)['id']
+        id = self._executeQuery(query, (resource_id, task_id, starttime, endtime, status, session_id, claim_size, nr_of_parts, username, user_id), fetch=_FETCH_ONE)['id']
         if commit:
             self.conn.commit()
         return id
@@ -474,7 +474,7 @@ class RADatabase:
             self.conn.commit()
         return self.cursor.rowcount > 0
 
-    def updateResourceClaim(self, resource_claim_id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, username=None, user_id=None, commit=True):
+    def updateResourceClaim(self, resource_claim_id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, nr_of_parts=None, username=None, user_id=None, commit=True):
         if status and isinstance(status, basestring):
             #convert status string to status.id
             status = self.getResourceClaimStatusId(status)
@@ -509,6 +509,10 @@ class RADatabase:
         if claim_size:
             fields.append('claim_size')
             values.append(claim_size)
+
+        if nr_of_parts:
+            fields.append('nr_of_parts')
+            values.append(nr_of_parts)
 
         if username:
             fields.append('username')
@@ -653,11 +657,12 @@ if __name__ == '__main__':
         #db.deleteResourceClaim(c['id'])
         ##resultPrint(db.getResourceClaims)
 
-    #specId = db.insertSpecification(datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=4), "")
-    #taskId = db.insertTask(1234, 5678, 600, 0, specId)
-    #resources = db.getResources()
-    #for r in resources:
-        #rcId = db.insertResourceClaim(r['id'], taskId, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=4), 0, 4, 10, 'einstein', -1)
+    for i in range(2):
+        specId = db.insertSpecification(datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=4), "")
+        taskId = db.insertTask(1234+i, 5678+i, 600, 0, specId)
+        resources = db.getResources()
+        for r in resources:
+            rcId = db.insertResourceClaim(r['id'], taskId, datetime.datetime.utcnow() + datetime.timedelta(hours=2*i), datetime.datetime.utcnow() + datetime.timedelta(hours=2*(i+1)), 0, 1, 10, 1,'einstein', -1)
 
 
     ##tasks = db.getTasks()
