@@ -176,10 +176,11 @@ def putTask(task_id):
                     abort(400, 'timestamp not in iso format: ' + updatedTask['endtime'])
 
             logger.info('putTask: ' + str(updatedTask))
-            rarpc.updateResourceClaimsForTask(task_id,
+            rarpc.updateTaskAndResourceClaims(task_id,
                                             starttime=updatedTask.get('starttime', None),
                                             endtime=updatedTask.get('endtime', None),
-                                            status=updatedTask.get('status', None))
+                                            task_status=updatedTask.get('task_status', None),
+                                            claim_status=updatedTask.get('claim_status', None))
 
             return "", 204
         except KeyError:

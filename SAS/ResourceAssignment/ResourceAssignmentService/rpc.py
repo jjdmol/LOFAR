@@ -77,11 +77,12 @@ class RARPC(RPCWrapper):
             claim['endtime'] = claim['endtime'].datetime()
         return claims
 
-    def updateResourceClaimsForTask(self, task_id, starttime=None, endtime=None, status=None, session_id=None, username=None, user_id=None):
+    def updateTaskAndResourceClaims(self, task_id, starttime=None, endtime=None, task_status=None, claim_status=None, session_id=None, username=None, user_id=None):
         return self.rpc('UpdateResourceClaimsForTask', task_id=task_id,
                                                         starttime=starttime,
                                                         endtime=endtime,
-                                                        status=status,
+                                                        task_status=task_status,
+                                                        claim_status=claim_status,
                                                         session_id=session_id,
                                                         username=username,
                                                         user_id=user_id)
