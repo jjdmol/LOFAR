@@ -190,7 +190,7 @@ class RPC():
             excep_mod = __import__("exceptions")
             excep_class_ = getattr(excep_mod, answer.errmsg.split(':')[0], None)
             if (excep_class_ != None):
-                instance = excep_class_(answer.backtrace)
+                instance = excep_class_("%s%s" % (answer.errmsg.split(':',1)[1].strip(), answer.backtrace))
                 raise (instance)
             else:
                 raise RPCException(answer.errmsg)
