@@ -87,10 +87,6 @@ def runCommand(cmdline, input=None):
   # Return output
   return stdout.strip()
 
-def runSlurmCommand(cmdline, headnode="head01.cep4"):
-  cmdline = "ssh %s %s" % (headnode, cmdline)
-  runCommand(cmdline)
-
 """ Prefix that is common to all parset keys, depending on the exact source. """
 PARSET_PREFIX="ObsSW."
 
@@ -111,34 +107,56 @@ class Parset(dict):
     return runCommand("docker-template", "${LOFAR_TAG}")
 
   def slurmJobName(self):
-    return self[PARSET_PREFIX + "Observation.ObsID"]
+    return str(self.treeId())
 
-def getSlurmJobInfo():
-  stdout = runSlurmCommand("scontrol show job --oneliner")
+  def treeId(self):
+    return int(self[PARSET_PREFIX + "Observation.ObsID"])
 
-  if stdout == "No jobs in the system":
-    return {}
+class Slurm(object):
+  def __init__(self, headnode="head01.cep4"):
+    self.headnode = headnode
 
-  jobs = {}
-  for l in stdout.split("\n"):
-    # One line is one job
-    job_properties = {}
+  def _runCommand(self, cmdline):
+    cmdline = "ssh %s %s" % (self.headnode, cmdline)
+    runCommand(cmdline)
 
-    # Information is in k=v pairs
-    for i in l.split():
-      k,v = i.split("=", 1)
-      job_properties[k] = v
+  def schedule(self, jobName, cmdline, sbatch_params=None):
+    if sbatch_params is None:
+      sbatch_params = []
 
-    if "JobName" not in job_properties:
-      logger.warning("Could not find job name in line: %s" % (l,))
-      continue
+    self._runCommand("sbatch --job-name=%s %s bash -c '%s'" % (jobName, " ".join(sbatch_params), cmdline))
 
-    name = job_properties["JobName"]
-    if name in jobs:
-      logger.warning("Duplicate job name: %s" % (name,))
-    jobs[name] = job_properties
+  def cancel(self, jobName):
+    stdout = self._runCommand("scancel --jobname %s" % (jobName,))
 
-  return jobs
+    logger.debug("scancel output: %s" % (output,))
+
+  def jobs(self):
+    stdout = self._runCommand("scontrol show job --oneliner")
+
+    if stdout == "No jobs in the system":
+      return {}
+
+    jobs = {}
+    for l in stdout.split("\n"):
+      # One line is one job
+      job_properties = {}
+
+      # Information is in k=v pairs
+      for i in l.split():
+        k,v = i.split("=", 1)
+        job_properties[k] = v
+
+      if "JobName" not in job_properties:
+        logger.warning("Could not find job name in line: %s" % (l,))
+        continue
+
+      name = job_properties["JobName"]
+      if name in jobs:
+        logger.warning("Duplicate job name: %s" % (name,))
+      jobs[name] = job_properties
+
+    return jobs
 
 class PipelineStarter(OTDBBusListener):
   def __init__(self, otdb_busname=None, setStatus_busname=None, **kwargs):
@@ -146,6 +164,8 @@ class PipelineStarter(OTDBBusListener):
 
     self.parset_rpc = RPC(service="TaskSpecification", busname=otdb_busname, ForwardExceptions=True)
     self.setStatus_busname = setStatus_busname if setStatus_busname else otdb_busname
+
+    self.slurm = Slurm()
 
   def _setStatus(self, obsid, status):
     try:
@@ -181,27 +201,22 @@ class PipelineStarter(OTDBBusListener):
   def _slurmJobNames(self, parsets, allowed):
     names = []
 
-    for obsid, p in parsets.iteritems():
-      processType = p[PARSET_PREFIX + "Observation.processType"]
+    for p in parsets:
       jobName = p.slurmJobName()
 
       if jobName not in allowed:
-        raise KeyError("No SLURM job for predecessor %d (JobName '%s')." % (obsid, jobName))
+        raise KeyError("No SLURM job for predecessor %d (JobName '%s')." % (p.treeId(), jobName))
 
-      names.append(p.slurmJobName())
+      names.append(jobName)
 
     return names
 
   def _getPredecessorParsets(self, parset):
-    obsIDs = parset.predecessors()
+    treeIds = parset.predecessors()
 
-    logger.info("Obtaining predecessor parsets %s", obsIDs)
+    logger.info("Obtaining predecessor parsets %s", treeIds)
 
-    preparsets = {}
-    for obsid in obsIDs:
-      preparsets[obsid] = Parset(self.parset_rpc( OtdbID=obsid, timeout=10 )[0])
-
-    return preparsets
+    return [Parset(self.parset_rpc( OtdbID=treeId, timeout=10 )[0]) for treeId in treeIds]
 
   def onObservationAborted(self, treeId, modificationTime):
     logger.info("***** STOP Tree ID %s *****", treeId)
@@ -214,7 +229,7 @@ class PipelineStarter(OTDBBusListener):
 
     # Cancel corresponding SLURM job, causing any successors
     # to be cancelled as well.
-    stdout = self.runSlurmCommand("scancel --jobname %s" % (self._slurmJobName(parset),))
+    self.slurm.cancel(parset.slurmJobName())
 
   """
     More statusses we want to abort on.
@@ -223,18 +238,17 @@ class PipelineStarter(OTDBBusListener):
   onObservationHold     = onObservationAborted
 
   @classmethod
-  def _minStartTime(self, preparsets):
+  def _minStartTime(self, preparsets, margin=datetime.timedelta(0, 60, 0)):
     result = None
 
-    for preparset in preparsets.values():
-      processType = preparset[PARSET_PREFIX + "Observation.processType"]
+    for p in preparsets:
+      processType = p[PARSET_PREFIX + "Observation.processType"]
 
-      if processType == "Observation":
-        # If we depend on an observation, start 1 minute after it
-        obs_endtime = datetime.datetime.strptime(preparset[PARSET_PREFIX + "Observation.stopTime"], "%Y-%m-%d %H:%M:%S")
-        min_starttime = obs_endtime + datetime.timedelta(0, 60, 0)
+      # If we depend on an observation, start 1 minute after it
+      obs_endtime = datetime.datetime.strptime(p[PARSET_PREFIX + "Observation.stopTime"], "%Y-%m-%d %H:%M:%S")
+      min_starttime = obs_endtime + margin
 
-        result = max(result, min_starttime) if result else min_starttime
+      result = max(result, min_starttime) if result else min_starttime
 
     return result
 
@@ -256,7 +270,7 @@ class PipelineStarter(OTDBBusListener):
 
     # Collect SLURM job information
     logger.info("Obtaining SLURM job list")
-    slurm_jobs = getSlurmJobInfo()
+    slurm_jobs = self.slurm.jobs()
 
     """
       Schedule "docker-runPipeline.sh", which will fetch the parset and run the pipeline within
@@ -264,8 +278,7 @@ class PipelineStarter(OTDBBusListener):
     """
 
     # Determine SLURM parameters
-    sbatch_params = ["--job-name=%s" % (parset.slurmJobName(),),
-
+    sbatch_params = [
                      # Only run job if all nodes are ready
                      "--wait-all-nodes=1",
 
@@ -284,56 +297,57 @@ class PipelineStarter(OTDBBusListener):
                      # Define better places to write the output
                      os.path.expandvars("--error=$LOFARROOT/var/log/docker-startPython-%s.stderr" % (treeId,)),
                      os.path.expandvars("--output=$LOFARROOT/var/log/docker-startPython-%s.log" % (treeId,)),
-
                      ]
 
-    min_starttime = self._minStartTime(preparsets)
+    min_starttime = self._minStartTime([x for x in preparsets if x[PARSET_PREFIX + "Observation.processType"] == "Observation"])
     if min_starttime:
       sbatch_params.append("--begin=%s" % (min_starttime.strftime("%FT%T"),))
 
-    predecessor_jobs = self._slurmJobNames(preparsets, slurm_jobs.keys())
+    predecessor_jobs = self._slurmJobNames([x for x in preparsets if x[PARSET_PREFIX + "Observation.processType"] != "Observation"], slurm_jobs.keys())
     if predecessor_jobs:
       sbatch_params.append("--dependency=%s" % (",".join(("afterok:%s" % x for x in predecessor_jobs)),))
 
     # Schedule runPipeline.sh
     logger.info("Scheduling SLURM job for runPipeline.sh")
-    slurm_job_id = runSlurmCommand(
-      "sbatch %s bash -c '%s'" % (" ".join(sbatch_params), 
+    slurm_job_id = self.slurm.schedule(parset.slurmJobName(),
 
-      # Supply script to run on-the-fly to reduce dependencies on
-      # compute nodes.
       "docker run --rm lofar-pipeline:{tag}"
-      " --net=host"
-      " -v /data:/data"
-      " -e LUSER=$UID"
-      " -v $HOME/.ssh:/home/lofar/.ssh:ro"
-      " -e SLURM_JOB_ID=$SLURM_JOB_ID"
-      " runPipeline.sh {obsid}".format(
+        " --net=host"
+        " -v /data:/data"
+        " -e LUSER=$UID"
+        " -v $HOME/.ssh:/home/lofar/.ssh:ro"
+        " -e SLURM_JOB_ID=$SLURM_JOB_ID"
+        " runPipeline.sh {obsid}"
+      .format(
         obsid = treeId,
         tag = parset.dockerTag(),
-      )
-    ))
+      ),
+
+      sbatch_params=sbatch_params
+    )
     logger.info("Scheduled SLURM job %s" % (slurm_job_id,))
 
     # Schedule pipelineAborted.sh
     logger.info("Scheduling SLURM job for pipelineAborted.sh")
-    slurm_cancel_job_id = runSlurmCommand(
-      "sbatch"
-      " --job-name=%s-aborted"
-      " --cpus-per=task=1 --ntasks=1"
-      " --dependency=afternotok:%s"
-      " --kill-on-invalid-dep=yes"
-      " --requeue"
-      " bash -c '%s'" % (parset.slurmJobName(), slurm_job_id,
+    slurm_cancel_job_id = self.slurm.schedule("%s-aborted" % parset.slurmJobName(),
 
       "docker run --rm lofar-pipeline:{tag}"
-      " --net=host"
-      " -e LUSER=$UID"
-      " pipelineAborted.sh {obsid}".format(
+        " --net=host"
+        " -e LUSER=$UID"
+        " pipelineAborted.sh {obsid}"
+      .format(
         obsid = treeId,
         tag = parset.dockerTag(),
-      )
-    ))
+      ),
+
+      sbatch_params=[
+        "--cpus-per=task=1",
+        "--ntasks=1"
+        "--dependency=afternotok:%s" % slurm_job_id,
+        "--kill-on-invalid-dep=yes",
+        "--requeue",
+      ]
+    )
     logger.info("Scheduled SLURM job %s" % (slurm_cancel_job_id,))
 
     # Set OTDB status to QUEUED

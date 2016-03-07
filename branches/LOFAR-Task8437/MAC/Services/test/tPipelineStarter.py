@@ -54,30 +54,30 @@ class TestRunCommand(unittest.TestCase):
     output = runCommand("cat -", "yes")
     self.assertEqual(output, "yes")
 
-class TestSlurmJobInfo(unittest.TestCase):
+class TestSlurmJobs(unittest.TestCase):
   def test_no_jobs(self):
     """ Test 'scontrol show job' output if there are no jobs. """
-    with patch('lofar.mac.PipelineStarter.runSlurmCommand') as MockRunSlurmCommand:
+    with patch('lofar.mac.PipelineStarter.Slurm._runCommand') as MockRunSlurmCommand:
       MockRunSlurmCommand.return_value = """No jobs in the system"""
 
-      self.assertEqual(getSlurmJobInfo(), {})
+      self.assertEqual(Slurm().jobs(), {})
 
   def test_one_job(self):
     """ Test 'scontrol show job' output for a single job. """
-    with patch('lofar.mac.PipelineStarter.runSlurmCommand') as MockRunSlurmCommand:
+    with patch('lofar.mac.PipelineStarter.Slurm._runCommand') as MockRunSlurmCommand:
       MockRunSlurmCommand.return_value = """JobId=119 JobName=foo UserId=mol(7261) GroupId=mol(7261) Priority=4294901736 Nice=0 Account=(null) QOS=(null) JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=0 Reboot=0 ExitCode=0:0 RunTime=00:00:07 TimeLimit=UNLIMITED TimeMin=N/A SubmitTime=2016-03-04T12:05:52 EligibleTime=2016-03-04T12:05:52 StartTime=2016-03-04T12:05:52 EndTime=Unknown PreemptTime=None SuspendTime=None SecsPreSuspend=0 Partition=cpu AllocNode:Sid=thead01:7040 ReqNodeList=(null) ExcNodeList=(null) NodeList=tcpu[01-02] BatchHost=tcpu01 NumNodes=2 NumCPUs=2 CPUs/Task=1 ReqB:S:C:T=0:0:*:* TRES=cpu=2,mem=6000,node=2 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=1 MinMemoryNode=3000M MinTmpDiskNode=0 Features=(null) Gres=(null) Reservation=(null) Shared=OK Contiguous=0 Licenses=(null) Network=(null) Command=(null) WorkDir=/home/mol Power= SICP=0"""
 
-      jobs = getSlurmJobInfo()
+      jobs = Slurm().jobs()
       self.assertEqual(jobs["foo"]["JobName"], "foo")
       self.assertEqual(jobs["foo"]["JobId"], "119")
 
   def test_two_jobs(self):
     """ Test 'scontrol show job' output for multiple jobs. """
-    with patch('lofar.mac.PipelineStarter.runSlurmCommand') as MockRunSlurmCommand:
+    with patch('lofar.mac.PipelineStarter.Slurm._runCommand') as MockRunSlurmCommand:
       MockRunSlurmCommand.return_value = """JobId=120 JobName=foo UserId=mol(7261) GroupId=mol(7261) Priority=4294901735 Nice=0 Account=(null) QOS=(null) JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=0 Reboot=0 ExitCode=0:0 RunTime=00:00:17 TimeLimit=UNLIMITED TimeMin=N/A SubmitTime=2016-03-04T12:09:53 EligibleTime=2016-03-04T12:09:53 StartTime=2016-03-04T12:09:53 EndTime=Unknown PreemptTime=None SuspendTime=None SecsPreSuspend=0 Partition=cpu AllocNode:Sid=thead01:7250 ReqNodeList=(null) ExcNodeList=(null) NodeList=tcpu[01-02] BatchHost=tcpu01 NumNodes=2 NumCPUs=2 CPUs/Task=1 ReqB:S:C:T=0:0:*:* TRES=cpu=2,mem=6000,node=2 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=1 MinMemoryNode=3000M MinTmpDiskNode=0 Features=(null) Gres=(null) Reservation=(null) Shared=OK Contiguous=0 Licenses=(null) Network=(null) Command=(null) WorkDir=/home/mol Power= SICP=0
     JobId=121 JobName=bar UserId=mol(7261) GroupId=mol(7261) Priority=4294901734 Nice=0 Account=(null) QOS=(null) JobState=PENDING Reason=Resources Dependency=(null) Requeue=1 Restarts=0 BatchFlag=0 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=UNLIMITED TimeMin=N/A SubmitTime=2016-03-04T12:09:59 EligibleTime=2016-03-04T12:09:59 StartTime=2017-03-04T12:09:53 EndTime=Unknown PreemptTime=None SuspendTime=None SecsPreSuspend=0 Partition=cpu AllocNode:Sid=thead01:7250 ReqNodeList=(null) ExcNodeList=(null) NodeList=(null) NumNodes=2-2 NumCPUs=2 CPUs/Task=1 ReqB:S:C:T=0:0:*:* TRES=cpu=2,node=2 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=1 MinMemoryNode=0 MinTmpDiskNode=0 Features=(null) Gres=(null) Reservation=(null) Shared=OK Contiguous=0 Licenses=(null) Network=(null) Command=(null) WorkDir=/home/mol Power= SICP=0"""
 
-      jobs = getSlurmJobInfo()
+      jobs = Slurm().jobs()
       self.assertEqual(jobs["foo"]["JobName"], "foo")
       self.assertEqual(jobs["foo"]["JobId"], "120")
 
@@ -112,21 +112,28 @@ class TestPipelineStarter(unittest.TestCase):
     self.addCleanup(self.bus.close)
 
     # Patch SLURM
-    def _runSlurmCommand(cmdline, **kwargs):
-      print "SLURM call: %s" % cmdline
+    class MockSlurm(object):
+      def __init__(self, *args, **kwargs):
+        self.scheduled_jobs = {}
 
-      return ""
+      def schedule(self, jobName, *args, **kwargs):
+        print "Schedule SLURM job '%s': %s, %s" % (jobName, args, kwargs)
 
-    patcher = patch('lofar.mac.PipelineStarter.runSlurmCommand')
-    patcher.start().side_effect = _runSlurmCommand
-    self.addCleanup(patcher.stop)
+        self.scheduled_jobs[jobName] = (args, kwargs)
 
-    patcher = patch('lofar.mac.PipelineStarter.getSlurmJobInfo')
-    patcher.start().return_value = {
-      "1": { "JobName": "1" },
-      "2": { "JobName": "2" },
-      "3": { "JobName": "3" },
-    }
+        # Return job ID
+        return "42"
+
+      def jobs(self):
+        return {
+          "1": { "JobName": "1" },
+          "2": { "JobName": "2" },
+          "3": { "JobName": "3" },
+          # "4" is an observation, so no SLURM job
+        }
+
+    patcher = patch('lofar.mac.PipelineStarter.Slurm')
+    patcher.start().side_effect = MockSlurm
     self.addCleanup(patcher.stop)
 
     # Catch functions to prevent running executables
@@ -142,11 +149,20 @@ class TestPipelineStarter(unittest.TestCase):
       print "***** TaskSpecificationService(%s) *****" % (OtdbID,)
 
       if OtdbID == 1:
-        predecessors = "[2,3]"
+        predecessors = "[2,3,4]"
       elif OtdbID == 2:
         predecessors = "[3]"
       elif OtdbID == 3:
         predecessors = "[]"
+      elif OtdbID == 4:
+        return {
+          "Version.number":                                                           "1",
+          PARSET_PREFIX + "Observation.ObsID":                                 str(OtdbID),
+          PARSET_PREFIX + "Observation.Scheduler.predecessors":                "[]",
+          PARSET_PREFIX + "Observation.processType":                           "Observation",
+          PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName": "CEP4",
+          PARSET_PREFIX + "Observation.stopTime":                              "2016-01-01 01:00:00",
+        }
       else:
         raise Exception("Invalid OtdbID: %s" % OtdbID)
 
@@ -199,7 +215,7 @@ class TestPipelineStarter(unittest.TestCase):
 
   def testNoPredecessors(self):
     """
-      Request the resources for a simulated obsid 3, with the following predecessor tree:
+      Request to start a simulated obsid 3, with the following predecessor tree:
 
         3 requires nothing
     """
@@ -213,11 +229,17 @@ class TestPipelineStarter(unittest.TestCase):
       # Verify message
       self.assertEqual(self.trigger.args[0], 3) # treeId
 
+      # Check if job was scheduled
+      self.assertIn("3", ps.slurm.scheduled_jobs)
+      self.assertIn("3-aborted", ps.slurm.scheduled_jobs)
+
   def testPredecessors(self):
     """
-      Request the resources for a simulated obsid 3, with the following predecessor tree:
+      Request to start a simulated obsid 1, with the following predecessor tree:
 
-        1 requires 2, 3
+        1 requires 2, 3, 4
+        2 requires 3
+        4 is an observation
     """
     with PipelineStarter(otdb_busname=self.busname, setStatus_busname=self.busname) as ps:
       # Send fake status update
@@ -228,6 +250,19 @@ class TestPipelineStarter(unittest.TestCase):
 
       # Verify message
       self.assertEqual(self.trigger.args[0], 1) # treeId
+
+      # Check if job was scheduled
+      self.assertIn("1", ps.slurm.scheduled_jobs)
+      self.assertIn("1-aborted", ps.slurm.scheduled_jobs)
+
+      # Earliest start of this job > stop time of observation
+      for p in ps.slurm.scheduled_jobs["1"][1]["sbatch_params"]:
+        if p.startswith("--begin="):
+          begin = datetime.datetime.strptime(p, "--begin=%Y-%m-%dT%H:%M:%S")
+          self.assertGreater(begin, datetime.datetime(2016, 1, 1, 1, 0, 0))
+          break
+      else:
+        self.assertTrue(False, "--begin parameter not given to SLURM job")
 
 def main(argv):
   unittest.main(verbosity=2)
