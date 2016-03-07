@@ -2255,13 +2255,15 @@ Github: https://github.com/angular-gantt/angular-gantt.git
                 };
 
                 this.install = function() {
-                    this.element.bind('mouseenter', this.mouseEnterHandler);
-                    this.element.bind('mouseleave', this.mouseExitHandler);
+//JS: quick 'fix' to make sure we have read-only dependencies. We don't want the webscheduler to add/remove dependencies yet.
+//                     this.element.bind('mouseenter', this.mouseEnterHandler);
+//                     this.element.bind('mouseleave', this.mouseExitHandler);
                 };
 
                 this.release = function() {
-                    this.element.unbind('mouseenter', this.mouseEnterHandler);
-                    this.element.unbind('mouseleave', this.mouseExitHandler);
+//JS: quick 'fix' to make sure we have read-only dependencies. We don't want the webscheduler to add/remove dependencies yet.
+//                     this.element.unbind('mouseenter', this.mouseEnterHandler);
+//                     this.element.unbind('mouseleave', this.mouseExitHandler);
                     $timeout.cancel(self.hideEndpointsPromise);
                 };
 
@@ -2276,14 +2278,15 @@ Github: https://github.com/angular-gantt/angular-gantt.git
                 if (!self.installed) {
                     self.hideEndpoints();
 
-                    self.elementHandlers.push(new ElementHandler(self.task.getContentElement()));
-                    angular.forEach(self.task.dependencies.endpoints, function(endpoint) {
-                        self.elementHandlers.push(new ElementHandler(angular.element(endpoint.canvas)));
-                    });
-
-                    angular.forEach(self.elementHandlers, function(elementHandler) {
-                        elementHandler.install();
-                    });
+//JS: quick 'fix' to make sure we have read-only dependencies. We don't want the webscheduler to add/remove dependencies yet.
+//                     self.elementHandlers.push(new ElementHandler(self.task.getContentElement()));
+//                     angular.forEach(self.task.dependencies.endpoints, function(endpoint) {
+//                         self.elementHandlers.push(new ElementHandler(angular.element(endpoint.canvas)));
+//                     });
+//
+//                     angular.forEach(self.elementHandlers, function(elementHandler) {
+//                         elementHandler.install();
+//                     });
 
                     self.installed = true;
                 }
@@ -2294,13 +2297,14 @@ Github: https://github.com/angular-gantt/angular-gantt.git
              */
             this.release = function() {
                 if (self.installed) {
-                    angular.forEach(self.elementHandlers, function(elementHandler) {
-                        elementHandler.release();
-                    });
-
-                    self.elementHandlers = [];
-
-                    self.displayEndpoints();
+//JS: quick 'fix' to make sure we have read-only dependencies. We don't want the webscheduler to add/remove dependencies yet.
+//                     angular.forEach(self.elementHandlers, function(elementHandler) {
+//                         elementHandler.release();
+//                     });
+//
+//                     self.elementHandlers = [];
+//
+//                     self.displayEndpoints();
                     self.installed = false;
                 }
             };
