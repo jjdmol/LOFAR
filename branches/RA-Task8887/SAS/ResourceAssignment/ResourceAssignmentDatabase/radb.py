@@ -90,7 +90,7 @@ class RADatabase:
     def getTaskStatusId(self, status_name):
         query = '''SELECT id from resource_allocation.task_status
                    WHERE name = %s;'''
-        result = self._executeQuery(query, [status_name], fetch=_FETCH_One)
+        result = self._executeQuery(query, [status_name], fetch=_FETCH_ONE)
 
         if result:
             return result['id']
