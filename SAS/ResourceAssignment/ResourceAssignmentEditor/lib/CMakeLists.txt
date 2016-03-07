@@ -20,6 +20,7 @@ file(GLOB_RECURSE angular_ui_layout_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} s
 file(GLOB_RECURSE angular_ui_tabs_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-ui-tabs/*)
 file(GLOB_RECURSE angular_gantt_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-gantt/*)
 file(GLOB_RECURSE angular_moment_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/angular-moment/*)
+file(GLOB_RECURSE jsplumb_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/jsplumb/*)
 file(GLOB_RECURSE moment_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/js/moment/*)
 file(GLOB_RECURSE bootstrap_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/css/bootstrap.min.css)
 file(GLOB_RECURSE fonts_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} static/fonts/*)
@@ -48,6 +49,7 @@ set(web_files
     ${angular_gantt_files}
     ${angular_moment_files}
     ${moment_files}
+    ${jsplumb_files}
     ${bootstrap_files} 
     ${fonts_files}
     ${utils_files}
