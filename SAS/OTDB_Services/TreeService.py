@@ -28,9 +28,9 @@ RPC functions that allow access to (VIC) trees in OTDB.
                            TVP (Template/Vic/Pic)
 ---------------------------------------------------------------------------------------------------
 TaskGetSpecification       TVP : get the specification(parset) of a task as dict.
-TaskCreate                 TV- : create a task (if not already existing) and store the specifications
-TaskSetSpecifications      TV- : function to update the value of multiple (existing) keys.
-TaskSetState               TVP : function to update the status of a task.
+TaskCreate                 TV- : create a task (if not already existing) and store the specification
+TaskSetSpecification       TV- : function to update the value of multiple (existing) keys.
+TaskSetStatus              TVP : function to update the status of a task.
 TaskPrepareForScheduling   TV- : creates or updates a task that can be scheduled (VIC with state approved)
 TaskDelete                 TVP : deletes a tree with all related information.
 TaskGetIDs                 TVP : returns the otdb_id/mom_id/task_type of the specified task.
@@ -115,7 +115,7 @@ def TaskGetSpecification(input_dict, db_connection):
     """
     RPC function that retrieves the task specification from a tree.
 
-    Input : OtdbID (integer) - ID of the tree to retrieve the specifications of
+    Input : OtdbID (integer) - ID of the tree to retrieve the specification of
     Output: (dict)           - The 'parset' of the tree
 
     Exceptions:
@@ -166,7 +166,7 @@ def TaskCreate(input_dict, db_connection):
     Input : dict with either the key OtdbID (integer) or the key MomID (integer).
             This key is used to search for the specified tree.
             TemplateName      - Optional: Needed when the task doesn't exist and has to be created.
-            Specifications (dict)    - The key-value pairs that must be updated.
+            Specification (dict)    - The key-value pairs that must be updated.
 
     Implemented workflow (all checks for errors are left out):
     check if there is a tree with the given OtdbID or MomID
@@ -217,11 +217,11 @@ def TaskCreate(input_dict, db_connection):
             raise FunctionError("Error while create task from template {}: {}".format(selected_template, exc_info))
 
     # When we are here we always have a task, so do the key updates
-    return TaskSetSpecifications({'OtdbID':otdb_id, 'Specifications':input_dict['Specifications']}, db_connection)
+    return TaskSetSpecification({'OtdbID':otdb_id, 'Specification':input_dict['Specification']}, db_connection)
 
 
 # Task Set State
-def TaskSetState(input_dict, db_connection):
+def TaskSetStatus(input_dict, db_connection):
     """
     RPC function to update the status of a tree.
 
@@ -249,9 +249,9 @@ def TaskSetState(input_dict, db_connection):
     try:
         new_status   = input_dict['NewStatus']
         update_times = bool(input_dict.get("UpdateTimestamps", True))
-        logger.info("TaskSetState(%s,%s,%s)" % (otdb_id, new_status, update_times))
+        logger.info("TaskSetStatus(%s,%s,%s)" % (otdb_id, new_status, update_times))
     except KeyError, info:
-        raise AttributeError("TaskSetState: Key %s is missing in the input" % info)
+        raise AttributeError("TaskSetStatus: Key %s is missing in the input" % info)
 
     # Get list of allowed tree states
     allowed_states = {}
@@ -275,13 +275,13 @@ def TaskSetState(input_dict, db_connection):
     return {'OtdbID':otdb_id, 'MomID':mom_id, 'Success':success}
 
 
-# TaskSetSpecifications
-def TaskSetSpecifications(input_dict, db_connection):
+# TaskSetSpecification
+def TaskSetSpecification(input_dict, db_connection):
     """
     RPC function to update the values of a tree.
 
     Input : OtdbID  (integer) - ID of the tree to change the status of.
-            Specifications (dict)    - The key-value pairs that must be updated.
+            Specification (dict)    - The key-value pairs that must be updated.
     Output: (dict)
             'Errors' (dict)    Refects the problems that occured {'key':'problem'}
                                Field is empty if all fields could be updated.
@@ -300,12 +300,12 @@ def TaskSetSpecifications(input_dict, db_connection):
         raise FunctionError("OtdbID/MomID {}/{} refers to a hardware tree.".format(otdb_id, mom_id))
 
     try:
-        update_list = input_dict['Specifications']
+        update_list = input_dict['Specification']
     except KeyError, info:
-        raise AttributeError("TaskSetSpecifications: Key %s is missing in the input" % info)
+        raise AttributeError("TaskSetSpecification: Key %s is missing in the input" % info)
     if not isinstance(update_list, dict):
-        raise AttributeError("TaskSetSpecifications (tree=%d): Field 'Specifications' must be of type 'dict'" % otdb_id)
-    logger.info("TaskSetSpecifications for tree: %d", otdb_id)
+        raise AttributeError("TaskSetSpecification (tree=%d): Field 'Specification' must be of type 'dict'" % otdb_id)
+    logger.info("TaskSetSpecification for tree: %d", otdb_id)
 
     # Finally try to update all keys
     errors = {}
@@ -550,8 +550,8 @@ class PostgressMessageHandler(MessageHandlerInterface):
         self.service2MethodMap = {
             "TaskGetSpecification":     self._TaskGetSpecification,
             "TaskCreate":               self._TaskCreate,
-            "TaskSetState":             self._TaskSetState,
-            "TaskSetSpecifications":    self._TaskSetSpecifications,
+            "TaskSetStatus":            self._TaskSetStatus,
+            "TaskSetSpecification":     self._TaskSetSpecification,
             "TaskPrepareForScheduling": self._TaskPrepareForScheduling,
             "TaskGetIDs":               self._TaskGetIDs,
             "TaskDelete":               self._TaskDelete,
@@ -583,13 +583,13 @@ class PostgressMessageHandler(MessageHandlerInterface):
         logger.info("_TaskCreate({})".format(kwargs))
         return TaskCreate(kwargs, self.connection)
 
-    def _TaskSetState(self, **kwargs):
-        logger.info("_TaskSetState({})".format(kwargs))
-        return TaskSetState(kwargs, self.connection)
+    def _TaskSetStatus(self, **kwargs):
+        logger.info("_TaskSetStatus({})".format(kwargs))
+        return TaskSetStatus(kwargs, self.connection)
 
-    def _TaskSetSpecifications(self, **kwargs):
-        logger.info("_TaskSetSpecifications({})".format(kwargs))
-        return TaskSetSpecifications(kwargs, self.connection)
+    def _TaskSetSpecification(self, **kwargs):
+        logger.info("_TaskSetSpecification({})".format(kwargs))
+        return TaskSetSpecification(kwargs, self.connection)
 
     def _TaskPrepareForScheduling(self, **kwargs):
         logger.info("_TaskPrepareForScheduling({})".format(kwargs))
