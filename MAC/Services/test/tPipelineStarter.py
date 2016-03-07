@@ -1,21 +1,29 @@
 #!/usr/bin/env python
 
 # Be able to find service python file
-import sys, os
-sys.path.insert(0, "{srcdir}/../src".format(**os.environ))
+import sys
+
 
 import lofar.mac.PipelineStarter as module
 from lofar.sas.otdb.OTDBBusListener import OTDBBusListener
-from lofar.messaging import ToBus, Service, EventMessage
-import subprocess
+from lofar.messaging import ToBus, Service, EventMessagea
 
+from methodtrigger import MethodTrigger
+
+import subprocess
 import unittest
 import uuid
 import datetime
-from threading import Condition, Lock
 
 import logging
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
+try:
+  from mock import patch
+except ImportError:
+  print "Cannot run test without python MagicMock"
+  print "Call 'pip install mock' / 'apt-get install python-mock'"
+  exit(3)
 
 def setUpModule():
   pass
@@ -50,28 +58,32 @@ class TestRunCommand(unittest.TestCase):
 class TestSlurmJobInfo(unittest.TestCase):
   def test_no_jobs(self):
     """ Test 'scontrol show job' output if there are no jobs. """
-    module.runSlurmCommand = lambda _: """No jobs in the system"""
-    self.assertEqual(module.getSlurmJobInfo(), {})
+    with patch('lofar.mac.PipelineStarter.runSlurmCommand') as MockRunSlurmCommand:
+      MockRunSlurmCommand.return_value = """No jobs in the system"""
+
+      self.assertEqual(module.getSlurmJobInfo(), {})
 
   def test_one_job(self):
     """ Test 'scontrol show job' output for a single job. """
-    module.runSlurmCommand = lambda _: """JobId=119 JobName=foo UserId=mol(7261) GroupId=mol(7261) Priority=4294901736 Nice=0 Account=(null) QOS=(null) JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=0 Reboot=0 ExitCode=0:0 RunTime=00:00:07 TimeLimit=UNLIMITED TimeMin=N/A SubmitTime=2016-03-04T12:05:52 EligibleTime=2016-03-04T12:05:52 StartTime=2016-03-04T12:05:52 EndTime=Unknown PreemptTime=None SuspendTime=None SecsPreSuspend=0 Partition=cpu AllocNode:Sid=thead01:7040 ReqNodeList=(null) ExcNodeList=(null) NodeList=tcpu[01-02] BatchHost=tcpu01 NumNodes=2 NumCPUs=2 CPUs/Task=1 ReqB:S:C:T=0:0:*:* TRES=cpu=2,mem=6000,node=2 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=1 MinMemoryNode=3000M MinTmpDiskNode=0 Features=(null) Gres=(null) Reservation=(null) Shared=OK Contiguous=0 Licenses=(null) Network=(null) Command=(null) WorkDir=/home/mol Power= SICP=0"""
+    with patch('lofar.mac.PipelineStarter.runSlurmCommand') as MockRunSlurmCommand:
+      MockRunSlurmCommand.return_value = """JobId=119 JobName=foo UserId=mol(7261) GroupId=mol(7261) Priority=4294901736 Nice=0 Account=(null) QOS=(null) JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=0 Reboot=0 ExitCode=0:0 RunTime=00:00:07 TimeLimit=UNLIMITED TimeMin=N/A SubmitTime=2016-03-04T12:05:52 EligibleTime=2016-03-04T12:05:52 StartTime=2016-03-04T12:05:52 EndTime=Unknown PreemptTime=None SuspendTime=None SecsPreSuspend=0 Partition=cpu AllocNode:Sid=thead01:7040 ReqNodeList=(null) ExcNodeList=(null) NodeList=tcpu[01-02] BatchHost=tcpu01 NumNodes=2 NumCPUs=2 CPUs/Task=1 ReqB:S:C:T=0:0:*:* TRES=cpu=2,mem=6000,node=2 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=1 MinMemoryNode=3000M MinTmpDiskNode=0 Features=(null) Gres=(null) Reservation=(null) Shared=OK Contiguous=0 Licenses=(null) Network=(null) Command=(null) WorkDir=/home/mol Power= SICP=0"""
 
-    jobs = module.getSlurmJobInfo()
-    self.assertEqual(jobs["foo"]["JobName"], "foo")
-    self.assertEqual(jobs["foo"]["JobId"], "119")
+      jobs = module.getSlurmJobInfo()
+      self.assertEqual(jobs["foo"]["JobName"], "foo")
+      self.assertEqual(jobs["foo"]["JobId"], "119")
 
   def test_two_jobs(self):
     """ Test 'scontrol show job' output for multiple jobs. """
-    module.runSlurmCommand = lambda _: """JobId=120 JobName=foo UserId=mol(7261) GroupId=mol(7261) Priority=4294901735 Nice=0 Account=(null) QOS=(null) JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=0 Reboot=0 ExitCode=0:0 RunTime=00:00:17 TimeLimit=UNLIMITED TimeMin=N/A SubmitTime=2016-03-04T12:09:53 EligibleTime=2016-03-04T12:09:53 StartTime=2016-03-04T12:09:53 EndTime=Unknown PreemptTime=None SuspendTime=None SecsPreSuspend=0 Partition=cpu AllocNode:Sid=thead01:7250 ReqNodeList=(null) ExcNodeList=(null) NodeList=tcpu[01-02] BatchHost=tcpu01 NumNodes=2 NumCPUs=2 CPUs/Task=1 ReqB:S:C:T=0:0:*:* TRES=cpu=2,mem=6000,node=2 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=1 MinMemoryNode=3000M MinTmpDiskNode=0 Features=(null) Gres=(null) Reservation=(null) Shared=OK Contiguous=0 Licenses=(null) Network=(null) Command=(null) WorkDir=/home/mol Power= SICP=0
+    with patch('lofar.mac.PipelineStarter.runSlurmCommand') as MockRunSlurmCommand:
+      MockRunSlurmCommand.return_value = """JobId=120 JobName=foo UserId=mol(7261) GroupId=mol(7261) Priority=4294901735 Nice=0 Account=(null) QOS=(null) JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=0 Reboot=0 ExitCode=0:0 RunTime=00:00:17 TimeLimit=UNLIMITED TimeMin=N/A SubmitTime=2016-03-04T12:09:53 EligibleTime=2016-03-04T12:09:53 StartTime=2016-03-04T12:09:53 EndTime=Unknown PreemptTime=None SuspendTime=None SecsPreSuspend=0 Partition=cpu AllocNode:Sid=thead01:7250 ReqNodeList=(null) ExcNodeList=(null) NodeList=tcpu[01-02] BatchHost=tcpu01 NumNodes=2 NumCPUs=2 CPUs/Task=1 ReqB:S:C:T=0:0:*:* TRES=cpu=2,mem=6000,node=2 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=1 MinMemoryNode=3000M MinTmpDiskNode=0 Features=(null) Gres=(null) Reservation=(null) Shared=OK Contiguous=0 Licenses=(null) Network=(null) Command=(null) WorkDir=/home/mol Power= SICP=0
     JobId=121 JobName=bar UserId=mol(7261) GroupId=mol(7261) Priority=4294901734 Nice=0 Account=(null) QOS=(null) JobState=PENDING Reason=Resources Dependency=(null) Requeue=1 Restarts=0 BatchFlag=0 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=UNLIMITED TimeMin=N/A SubmitTime=2016-03-04T12:09:59 EligibleTime=2016-03-04T12:09:59 StartTime=2017-03-04T12:09:53 EndTime=Unknown PreemptTime=None SuspendTime=None SecsPreSuspend=0 Partition=cpu AllocNode:Sid=thead01:7250 ReqNodeList=(null) ExcNodeList=(null) NodeList=(null) NumNodes=2-2 NumCPUs=2 CPUs/Task=1 ReqB:S:C:T=0:0:*:* TRES=cpu=2,node=2 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=1 MinMemoryNode=0 MinTmpDiskNode=0 Features=(null) Gres=(null) Reservation=(null) Shared=OK Contiguous=0 Licenses=(null) Network=(null) Command=(null) WorkDir=/home/mol Power= SICP=0"""
 
-    jobs = module.getSlurmJobInfo()
-    self.assertEqual(jobs["foo"]["JobName"], "foo")
-    self.assertEqual(jobs["foo"]["JobId"], "120")
+      jobs = module.getSlurmJobInfo()
+      self.assertEqual(jobs["foo"]["JobName"], "foo")
+      self.assertEqual(jobs["foo"]["JobId"], "120")
 
-    self.assertEqual(jobs["bar"]["JobName"], "bar")
-    self.assertEqual(jobs["bar"]["JobId"], "121")
+      self.assertEqual(jobs["bar"]["JobName"], "bar")
+      self.assertEqual(jobs["bar"]["JobId"], "121")
 
 class TestPipelineStarterClassMethods(unittest.TestCase):
   def test_shouldHandle(self):
@@ -94,29 +106,34 @@ class TestPipelineStarterClassMethods(unittest.TestCase):
 
 class TestPipelineStarter(unittest.TestCase):
   def setUp(self):
-    # Catch SLURM calls
+    # Create a random bus
+    self.busname = "%s-%s" % (sys.argv[0], str(uuid.uuid4())[:8])
+    self.bus = ToBus(self.busname, { "create": "always", "delete": "always", "node": { "type": "topic" } })
+    self.bus.open()
+    self.addCleanup(self.bus.close)
+
+    # Patch SLURM
     def _runSlurmCommand(cmdline, **kwargs):
       print "SLURM call: %s" % cmdline
 
       return ""
 
-    module.runSlurmCommand = _runSlurmCommand
+    patcher = patch('lofar.mac.PipelineStarter.runSlurmCommand')
+    patcher.start().side_effect = _runSlurmCommand
+    self.addCleanup(patcher.stop)
 
-    # Catch functions to prevent system calls
-    module.Parset.dockerTag = lambda self: "trunk"
-    module.getSlurmJobInfo = lambda: {
+    patcher = patch('lofar.mac.PipelineStarter.getSlurmJobInfo')
+    patcher.start().return_value = {
       "1": { "JobName": "1" },
       "2": { "JobName": "2" },
       "3": { "JobName": "3" },
     }
-      
-    # Create a random bus
-    self.busname = "%s-%s" % (sys.argv[0], str(uuid.uuid4())[:8])
-    self.bus = ToBus(self.busname, { "create": "always", "delete": "always", "node": { "type": "topic" } })
-    self.bus.open()
+    self.addCleanup(patcher.stop)
 
-    # Define the services we use
-    self.status_service = "%s/otdb.treestatus" % (self.busname,)
+    # Catch functions to prevent running executables
+    patcher = patch('lofar.mac.PipelineStarter.Parset.dockerTag')
+    patcher.start().return_value = "trunk"
+    self.addCleanup(patcher.stop)
 
     # ================================
     # Setup mock parset service
@@ -142,6 +159,14 @@ class TestPipelineStarter(unittest.TestCase):
         module.PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName": "CEP4",
       }
 
+    service = Service("TaskSpecification", TaskSpecificationService, busname=self.busname)
+    service.start_listening()
+    self.addCleanup(service.stop_listening)
+
+    # ================================
+    # Setup mock status update service
+    # ================================
+
     def StatusUpdateCmd( OtdbID, NewStatus ):
       print "***** StatusUpdateCmd(%s,%s) *****" % (OtdbID, NewStatus)
 
@@ -150,50 +175,20 @@ class TestPipelineStarter(unittest.TestCase):
       msg = EventMessage(context="otdb.treestatus", content=content)
       self.bus.send(msg)
 
-    self.parset_service = Service("TaskSpecification", TaskSpecificationService, busname=self.busname)
-    self.parset_service.start_listening()
-
-    self.setstate_service = Service("StatusUpdateCmd", StatusUpdateCmd, busname=self.busname)
-    self.setstate_service.start_listening()
+    service = Service("StatusUpdateCmd", StatusUpdateCmd, busname=self.busname)
+    service.start_listening()
+    self.addCleanup(service.stop_listening)
 
     # ================================
     # Setup listener to catch result
     # of our service
     # ================================
 
-    class Listener(OTDBBusListener):
-      def __init__(self, **kwargs):
-        super(Listener, self).__init__(**kwargs)
+    listener = OTDBBusListener(busname=self.busname)
+    listener.start_listening()
+    self.addCleanup(listener.stop_listening)
 
-        self.messageReceived = False
-        self.lock = Lock()
-        self.cond = Condition(self.lock)
-
-      def onObservationQueued(self, sasId, modificationTime):
-        self.messageReceived = True
-
-        self.sasID = sasId
-
-        # Release waiting parent
-        with self.lock:
-          self.cond.notify()
-
-      def waitForMessage(self):
-        with self.lock:
-          self.cond.wait(5.0)
-        return self.messageReceived
-
-    self.listener = Listener(busname=self.busname)
-    self.listener.start_listening()
-
-  def tearDown(self):
-    self.listener.stop_listening()
-    self.setstate_service.stop_listening()
-    self.parset_service.stop_listening()
-    self.bus.close()
-
-    # Undo our overrides
-    reload(module)
+    self.trigger = MethodTrigger(listener, "onObservationQueued")
 
   def testNoPredecessors(self):
     """
@@ -206,10 +201,10 @@ class TestPipelineStarter(unittest.TestCase):
       ps._setStatus(3, "scheduled")
 
       # Wait for message to arrive
-      self.assertTrue(self.listener.waitForMessage())
+      self.assertTrue(self.trigger.wait())
 
       # Verify message
-      self.assertEqual(self.listener.sasID, 3)
+      self.assertEqual(self.trigger.args[0], 3) # treeId
 
   def testPredecessors(self):
     """
@@ -222,10 +217,10 @@ class TestPipelineStarter(unittest.TestCase):
       ps._setStatus(1, "scheduled")
 
       # Wait for message to arrive
-      self.assertTrue(self.listener.waitForMessage())
+      self.assertTrue(self.trigger.wait())
 
       # Verify message
-      self.assertEqual(self.listener.sasID, 1)
+      self.assertEqual(self.trigger.args[0], 1) # treeId
 
 def main(argv):
   unittest.main(verbosity=2)
