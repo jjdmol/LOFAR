@@ -6,7 +6,7 @@ import sys
 
 import lofar.mac.PipelineStarter as module
 from lofar.sas.otdb.OTDBBusListener import OTDBBusListener
-from lofar.messaging import ToBus, Service, EventMessagea
+from lofar.messaging import ToBus, Service, EventMessage
 
 from methodtrigger import MethodTrigger
 
