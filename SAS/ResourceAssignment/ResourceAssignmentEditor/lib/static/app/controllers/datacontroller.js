@@ -161,6 +161,8 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
                                     task.otdb_id = changedTask.otdb_id;
                                     task.starttime = new Date(changedTask.starttime);
                                     task.endtime = new Date(changedTask.endtime);
+                                    task.predecessor_ids = changedTask.predecessor_ids;
+                                    task.successor_ids = changedTask.successor_ids;
                                 }
                             } else if(change.changeType == 'insert') {
                                 var task = self.taskDict[changedTask.id];
