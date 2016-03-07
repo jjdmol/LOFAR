@@ -55,7 +55,7 @@ from lofar.messaging import FromBus, ToBus, RPC, EventMessage
 from lofar.parameterset import PyParameterValue
 from lofar.sas.otdb.OTDBBusListener import OTDBBusListener
 from lofar.common.util import waitForInterrupt
-from lofar.messaging.RPC import RPC
+from lofar.messaging.RPC import RPC, RPCTimeoutException
 
 import subprocess
 import datetime
@@ -88,7 +88,7 @@ def runCommand(cmdline, input=None):
   return stdout.strip()
 
 def runSlurmCommand(cmdline, headnode="head01.cep4"):
-  cmdline = "ssh %s %s" % (headnode,args)
+  cmdline = "ssh %s %s" % (headnode, cmdline)
   runCommand(cmdline)
 
 """ Prefix that is common to all parset keys, depending on the exact source. """
@@ -99,7 +99,7 @@ class Parset(dict):
     """ Extract the list of predecessor obs IDs from the given parset. """
 
     key = PARSET_PREFIX + "Observation.Scheduler.predecessors"
-    strlist = PyParameterValue(str(parset[key]), True).getStringVector()
+    strlist = PyParameterValue(str(self[key]), True).getStringVector()
 
     # Key contains "Lxxxxx" values, we want to have "xxxxx" only
     result = [int(filter(str.isdigit,x)) for x in strlist]
@@ -129,6 +129,10 @@ def getSlurmJobInfo():
       k,v = i.split("=", 1)
       job_properties[k] = v
 
+    if "JobName" not in job_properties:
+      logger.warning("Could not find job name in line: %s" % (l,))
+      continue
+
     name = job_properties["JobName"]
     if name in jobs:
       logger.warning("Duplicate job name: %s" % (name,))
@@ -140,12 +144,12 @@ class PipelineStarter(OTDBBusListener):
   def __init__(self, otdb_busname=None, setStatus_busname=None, **kwargs):
     super(PipelineStarter, self).__init__(busname=otdb_busname, **kwargs)
 
-    self.parset_rpc = RPC(service="TaskSpecification", busname=otdb_busname)
+    self.parset_rpc = RPC(service="TaskSpecification", busname=otdb_busname, ForwardExceptions=True)
     self.setStatus_busname = setStatus_busname if setStatus_busname else otdb_busname
 
   def _setStatus(self, obsid, status):
     try:
-        with RPC("StatusUpdateCmd", busname=self.setStatus_busname, timeout=10) as status_rpc:
+        with RPC("StatusUpdateCmd", busname=self.setStatus_busname, timeout=10, ForwardExceptions=True) as status_rpc:
             result, _ = status_rpc(OtdbID=obsid, NewStatus=status)
     except RPCTimeoutException, e:
         # We use a queue, so delivery is guaranteed. We don't care about the answer.
@@ -153,14 +157,12 @@ class PipelineStarter(OTDBBusListener):
 
   def start_listening(self, **kwargs):
     self.parset_rpc.open()
-    self.send_bus.open()
 
     super(PipelineStarter, self).start_listening(**kwargs)
 
   def stop_listening(self, **kwargs):
     super(PipelineStarter, self).stop_listening(**kwargs)
 
-    self.send_bus.close()
     self.parset_rpc.close()
 
   @classmethod
@@ -179,24 +181,25 @@ class PipelineStarter(OTDBBusListener):
   def _slurmJobNames(self, parsets, allowed):
     names = []
 
-    for p in parsets:
+    for obsid, p in parsets.iteritems():
       processType = p[PARSET_PREFIX + "Observation.processType"]
-      if p not in allowed:
-        raise KeyError("No SLURM job for predecessor. Expected job %s." % (obsid,jobName))
+      jobName = p.slurmJobName()
+
+      if jobName not in allowed:
+        raise KeyError("No SLURM job for predecessor %d (JobName '%s')." % (obsid, jobName))
 
       names.append(p.slurmJobName())
 
     return names
 
-  @classmethod
   def _getPredecessorParsets(self, parset):
     obsIDs = parset.predecessors()
 
-    logger.info("Obtaining predecessor parsets %s", predecessor_obsIDs)
+    logger.info("Obtaining predecessor parsets %s", obsIDs)
 
     preparsets = {}
     for obsid in obsIDs:
-      preparsets[p] = Parset(self.parset_rpc( OtdbID=obsid, timeout=10 )[0])
+      preparsets[obsid] = Parset(self.parset_rpc( OtdbID=obsid, timeout=10 )[0])
 
     return preparsets
 
@@ -206,7 +209,7 @@ class PipelineStarter(OTDBBusListener):
     # Request the parset
     parset = Parset(self.parset_rpc( OtdbID=treeId, timeout=10 )[0])
 
-    if not self.shouldHandle(parset):
+    if not self._shouldHandle(parset):
       return
 
     # Cancel corresponding SLURM job, causing any successors
@@ -223,7 +226,7 @@ class PipelineStarter(OTDBBusListener):
   def _minStartTime(self, preparsets):
     result = None
 
-    for preparset in preparsets:
+    for preparset in preparsets.values():
       processType = preparset[PARSET_PREFIX + "Observation.processType"]
 
       if processType == "Observation":
@@ -241,7 +244,7 @@ class PipelineStarter(OTDBBusListener):
     # Request the parset
     parset = Parset(self.parset_rpc( OtdbID=treeId, timeout=10 )[0])
 
-    if not self.shouldHandle(parset):
+    if not self._shouldHandle(parset):
       return
 
     """
@@ -292,10 +295,6 @@ class PipelineStarter(OTDBBusListener):
     if predecessor_jobs:
       sbatch_params.append("--dependency=%s" % (",".join(("afterok:%s" % x for x in predecessor_jobs)),))
 
-    # Set OTDB status to QUEUED
-    logger.info("Setting status to QUEUED")
-    self.setStatus(treeId, "queued")
-
     # Schedule runPipeline.sh
     logger.info("Scheduling SLURM job for runPipeline.sh")
     slurm_job_id = runSlurmCommand(
@@ -322,7 +321,7 @@ class PipelineStarter(OTDBBusListener):
       "sbatch"
       " --job-name=%s-aborted"
       " --cpus-per=task=1 --ntasks=1"
-      " --dependency=afternotok:%d"
+      " --dependency=afternotok:%s"
       " --kill-on-invalid-dep=yes"
       " --requeue"
       " bash -c '%s'" % (parset.slurmJobName(), slurm_job_id,
@@ -336,6 +335,10 @@ class PipelineStarter(OTDBBusListener):
       )
     ))
     logger.info("Scheduled SLURM job %s" % (slurm_cancel_job_id,))
+
+    # Set OTDB status to QUEUED
+    logger.info("Setting status to QUEUED")
+    self._setStatus(treeId, "queued")
 
     logger.info("Pipeline processed.")
 

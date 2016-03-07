@@ -5,12 +5,17 @@ import sys, os
 sys.path.insert(0, "{srcdir}/../src".format(**os.environ))
 
 import lofar.mac.PipelineStarter as module
+from lofar.sas.otdb.OTDBBusListener import OTDBBusListener
+from lofar.messaging import ToBus, Service, EventMessage
 import subprocess
 
 import unittest
+import uuid
+import datetime
+from threading import Condition, Lock
 
 import logging
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 def setUpModule():
   pass
@@ -68,7 +73,7 @@ class TestSlurmJobInfo(unittest.TestCase):
     self.assertEqual(jobs["bar"]["JobName"], "bar")
     self.assertEqual(jobs["bar"]["JobId"], "121")
 
-class TestPipelineStarter(unittest.TestCase):
+class TestPipelineStarterClassMethods(unittest.TestCase):
   def test_shouldHandle(self):
     """ Test whether we filter the right OTDB trees. """
 
@@ -86,6 +91,141 @@ class TestPipelineStarter(unittest.TestCase):
       parset = { "ObsSW.Observation.processType": t["type"],
                  "ObsSW.Observation.Cluster.ProcessingCluster.clusterName": t["cluster"] }
       self.assertEqual(module.PipelineStarter._shouldHandle(parset), t["shouldHandle"])
+
+class TestPipelineStarter(unittest.TestCase):
+  def setUp(self):
+    # Catch SLURM calls
+    def _runSlurmCommand(cmdline, **kwargs):
+      print "SLURM call: %s" % cmdline
+
+      return ""
+
+    module.runSlurmCommand = _runSlurmCommand
+
+    # Catch functions to prevent system calls
+    module.Parset.dockerTag = lambda self: "trunk"
+    module.getSlurmJobInfo = lambda: {
+      "1": { "JobName": "1" },
+      "2": { "JobName": "2" },
+      "3": { "JobName": "3" },
+    }
+      
+    # Create a random bus
+    self.busname = "%s-%s" % (sys.argv[0], str(uuid.uuid4())[:8])
+    self.bus = ToBus(self.busname, { "create": "always", "delete": "always", "node": { "type": "topic" } })
+    self.bus.open()
+
+    # Define the services we use
+    self.status_service = "%s/otdb.treestatus" % (self.busname,)
+
+    # ================================
+    # Setup mock parset service
+    # ================================
+
+    def TaskSpecificationService( OtdbID ):
+      print "***** TaskSpecificationService(%s) *****" % (OtdbID,)
+
+      if OtdbID == 1:
+        predecessors = "[2,3]"
+      elif OtdbID == 2:
+        predecessors = "[3]"
+      elif OtdbID == 3:
+        predecessors = "[]"
+      else:
+        raise Exception("Invalid OtdbID: %s" % OtdbID)
+
+      return {
+        "Version.number":                                                           "1",
+        module.PARSET_PREFIX + "Observation.ObsID":                                 str(OtdbID),
+        module.PARSET_PREFIX + "Observation.Scheduler.predecessors":                predecessors,
+        module.PARSET_PREFIX + "Observation.processType":                           "Pipeline",
+        module.PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName": "CEP4",
+      }
+
+    def StatusUpdateCmd( OtdbID, NewStatus ):
+      print "***** StatusUpdateCmd(%s,%s) *****" % (OtdbID, NewStatus)
+
+      # Broadcast the state change
+      content = { "treeID" : OtdbID, "state" : NewStatus, "time_of_change" : datetime.datetime.utcnow() }
+      msg = EventMessage(context="otdb.treestatus", content=content)
+      self.bus.send(msg)
+
+    self.parset_service = Service("TaskSpecification", TaskSpecificationService, busname=self.busname)
+    self.parset_service.start_listening()
+
+    self.setstate_service = Service("StatusUpdateCmd", StatusUpdateCmd, busname=self.busname)
+    self.setstate_service.start_listening()
+
+    # ================================
+    # Setup listener to catch result
+    # of our service
+    # ================================
+
+    class Listener(OTDBBusListener):
+      def __init__(self, **kwargs):
+        super(Listener, self).__init__(**kwargs)
+
+        self.messageReceived = False
+        self.lock = Lock()
+        self.cond = Condition(self.lock)
+
+      def onObservationQueued(self, sasId, modificationTime):
+        self.messageReceived = True
+
+        self.sasID = sasId
+
+        # Release waiting parent
+        with self.lock:
+          self.cond.notify()
+
+      def waitForMessage(self):
+        with self.lock:
+          self.cond.wait(5.0)
+        return self.messageReceived
+
+    self.listener = Listener(busname=self.busname)
+    self.listener.start_listening()
+
+  def tearDown(self):
+    self.listener.stop_listening()
+    self.setstate_service.stop_listening()
+    self.parset_service.stop_listening()
+    self.bus.close()
+
+    # Undo our overrides
+    reload(module)
+
+  def testNoPredecessors(self):
+    """
+      Request the resources for a simulated obsid 3, with the following predecessor tree:
+
+        3 requires nothing
+    """
+    with module.PipelineStarter(otdb_busname=self.busname, setStatus_busname=self.busname) as ps:
+      # Send fake status update
+      ps._setStatus(3, "scheduled")
+
+      # Wait for message to arrive
+      self.assertTrue(self.listener.waitForMessage())
+
+      # Verify message
+      self.assertEqual(self.listener.sasID, 3)
+
+  def testPredecessors(self):
+    """
+      Request the resources for a simulated obsid 3, with the following predecessor tree:
+
+        1 requires 2, 3
+    """
+    with module.PipelineStarter(otdb_busname=self.busname, setStatus_busname=self.busname) as ps:
+      # Send fake status update
+      ps._setStatus(1, "scheduled")
+
+      # Wait for message to arrive
+      self.assertTrue(self.listener.waitForMessage())
+
+      # Verify message
+      self.assertEqual(self.listener.sasID, 1)
 
 def main(argv):
   unittest.main(verbosity=2)
