@@ -3,8 +3,7 @@
 # Be able to find service python file
 import sys
 
-
-import lofar.mac.PipelineStarter as module
+from lofar.mac.PipelineStarter import *
 from lofar.sas.otdb.OTDBBusListener import OTDBBusListener
 from lofar.messaging import ToBus, Service, EventMessage
 
@@ -34,25 +33,25 @@ def tearDownModule():
 class TestRunCommand(unittest.TestCase):
   def test_basic(self):
     """ Test whether we can run a trivial command. """
-    module.runCommand("true")
+    runCommand("true")
 
   def test_invalid_command(self):
     """ Test whether an invalid command produces an error. """
     with self.assertRaises(subprocess.CalledProcessError):
-      output = module.runCommand(".")
+      output = runCommand(".")
 
   def test_shell(self):
     """ Test whether the command is parsed by a shell. """
-    module.runCommand("true --version")
+    runCommand("true --version")
 
   def test_output(self):
     """ Test whether we catch the command output correctly. """
-    output = module.runCommand("echo yes")
+    output = runCommand("echo yes")
     self.assertEqual(output, "yes")
 
   def test_input(self):
     """ Test whether we can provide input. """
-    output = module.runCommand("cat -", "yes")
+    output = runCommand("cat -", "yes")
     self.assertEqual(output, "yes")
 
 class TestSlurmJobInfo(unittest.TestCase):
@@ -61,14 +60,14 @@ class TestSlurmJobInfo(unittest.TestCase):
     with patch('lofar.mac.PipelineStarter.runSlurmCommand') as MockRunSlurmCommand:
       MockRunSlurmCommand.return_value = """No jobs in the system"""
 
-      self.assertEqual(module.getSlurmJobInfo(), {})
+      self.assertEqual(getSlurmJobInfo(), {})
 
   def test_one_job(self):
     """ Test 'scontrol show job' output for a single job. """
     with patch('lofar.mac.PipelineStarter.runSlurmCommand') as MockRunSlurmCommand:
       MockRunSlurmCommand.return_value = """JobId=119 JobName=foo UserId=mol(7261) GroupId=mol(7261) Priority=4294901736 Nice=0 Account=(null) QOS=(null) JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=0 Reboot=0 ExitCode=0:0 RunTime=00:00:07 TimeLimit=UNLIMITED TimeMin=N/A SubmitTime=2016-03-04T12:05:52 EligibleTime=2016-03-04T12:05:52 StartTime=2016-03-04T12:05:52 EndTime=Unknown PreemptTime=None SuspendTime=None SecsPreSuspend=0 Partition=cpu AllocNode:Sid=thead01:7040 ReqNodeList=(null) ExcNodeList=(null) NodeList=tcpu[01-02] BatchHost=tcpu01 NumNodes=2 NumCPUs=2 CPUs/Task=1 ReqB:S:C:T=0:0:*:* TRES=cpu=2,mem=6000,node=2 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=1 MinMemoryNode=3000M MinTmpDiskNode=0 Features=(null) Gres=(null) Reservation=(null) Shared=OK Contiguous=0 Licenses=(null) Network=(null) Command=(null) WorkDir=/home/mol Power= SICP=0"""
 
-      jobs = module.getSlurmJobInfo()
+      jobs = getSlurmJobInfo()
       self.assertEqual(jobs["foo"]["JobName"], "foo")
       self.assertEqual(jobs["foo"]["JobId"], "119")
 
@@ -78,7 +77,7 @@ class TestSlurmJobInfo(unittest.TestCase):
       MockRunSlurmCommand.return_value = """JobId=120 JobName=foo UserId=mol(7261) GroupId=mol(7261) Priority=4294901735 Nice=0 Account=(null) QOS=(null) JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=0 Reboot=0 ExitCode=0:0 RunTime=00:00:17 TimeLimit=UNLIMITED TimeMin=N/A SubmitTime=2016-03-04T12:09:53 EligibleTime=2016-03-04T12:09:53 StartTime=2016-03-04T12:09:53 EndTime=Unknown PreemptTime=None SuspendTime=None SecsPreSuspend=0 Partition=cpu AllocNode:Sid=thead01:7250 ReqNodeList=(null) ExcNodeList=(null) NodeList=tcpu[01-02] BatchHost=tcpu01 NumNodes=2 NumCPUs=2 CPUs/Task=1 ReqB:S:C:T=0:0:*:* TRES=cpu=2,mem=6000,node=2 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=1 MinMemoryNode=3000M MinTmpDiskNode=0 Features=(null) Gres=(null) Reservation=(null) Shared=OK Contiguous=0 Licenses=(null) Network=(null) Command=(null) WorkDir=/home/mol Power= SICP=0
     JobId=121 JobName=bar UserId=mol(7261) GroupId=mol(7261) Priority=4294901734 Nice=0 Account=(null) QOS=(null) JobState=PENDING Reason=Resources Dependency=(null) Requeue=1 Restarts=0 BatchFlag=0 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=UNLIMITED TimeMin=N/A SubmitTime=2016-03-04T12:09:59 EligibleTime=2016-03-04T12:09:59 StartTime=2017-03-04T12:09:53 EndTime=Unknown PreemptTime=None SuspendTime=None SecsPreSuspend=0 Partition=cpu AllocNode:Sid=thead01:7250 ReqNodeList=(null) ExcNodeList=(null) NodeList=(null) NumNodes=2-2 NumCPUs=2 CPUs/Task=1 ReqB:S:C:T=0:0:*:* TRES=cpu=2,node=2 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=1 MinMemoryNode=0 MinTmpDiskNode=0 Features=(null) Gres=(null) Reservation=(null) Shared=OK Contiguous=0 Licenses=(null) Network=(null) Command=(null) WorkDir=/home/mol Power= SICP=0"""
 
-      jobs = module.getSlurmJobInfo()
+      jobs = getSlurmJobInfo()
       self.assertEqual(jobs["foo"]["JobName"], "foo")
       self.assertEqual(jobs["foo"]["JobId"], "120")
 
@@ -102,7 +101,7 @@ class TestPipelineStarterClassMethods(unittest.TestCase):
     for t in trials:
       parset = { "ObsSW.Observation.processType": t["type"],
                  "ObsSW.Observation.Cluster.ProcessingCluster.clusterName": t["cluster"] }
-      self.assertEqual(module.PipelineStarter._shouldHandle(parset), t["shouldHandle"])
+      self.assertEqual(PipelineStarter._shouldHandle(parset), t["shouldHandle"])
 
 class TestPipelineStarter(unittest.TestCase):
   def setUp(self):
@@ -153,10 +152,10 @@ class TestPipelineStarter(unittest.TestCase):
 
       return {
         "Version.number":                                                           "1",
-        module.PARSET_PREFIX + "Observation.ObsID":                                 str(OtdbID),
-        module.PARSET_PREFIX + "Observation.Scheduler.predecessors":                predecessors,
-        module.PARSET_PREFIX + "Observation.processType":                           "Pipeline",
-        module.PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName": "CEP4",
+        PARSET_PREFIX + "Observation.ObsID":                                 str(OtdbID),
+        PARSET_PREFIX + "Observation.Scheduler.predecessors":                predecessors,
+        PARSET_PREFIX + "Observation.processType":                           "Pipeline",
+        PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName": "CEP4",
       }
 
     service = Service("TaskSpecification", TaskSpecificationService, busname=self.busname)
@@ -196,7 +195,7 @@ class TestPipelineStarter(unittest.TestCase):
 
         3 requires nothing
     """
-    with module.PipelineStarter(otdb_busname=self.busname, setStatus_busname=self.busname) as ps:
+    with PipelineStarter(otdb_busname=self.busname, setStatus_busname=self.busname) as ps:
       # Send fake status update
       ps._setStatus(3, "scheduled")
 
@@ -212,7 +211,7 @@ class TestPipelineStarter(unittest.TestCase):
 
         1 requires 2, 3
     """
-    with module.PipelineStarter(otdb_busname=self.busname, setStatus_busname=self.busname) as ps:
+    with PipelineStarter(otdb_busname=self.busname, setStatus_busname=self.busname) as ps:
       # Send fake status update
       ps._setStatus(1, "scheduled")
 
