@@ -148,7 +148,7 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
                             'color': self.taskStatusColors[task.status]
                         };
 
-                        if(task.predecessor_ids.length > 0) {
+                        if(task.predecessor_ids && task.predecessor_ids.length > 0) {
                             rowTask['dependencies'] = [];
                             for(var predId of task.predecessor_ids) {
                                  rowTask['dependencies'].push({'from': predId});
