@@ -11,6 +11,7 @@ var ganttProjectControllerMod = angular.module('GanttProjectControllerMod', [
                                         'gantt.table',
                                         'gantt.tree',
                                         'gantt.groups',
+                                        'gantt.dependencies',
                                         'gantt.overlap',
                                         'gantt.resizeSensor']).config(['$compileProvider', function($compileProvider) {
     $compileProvider.debugInfoEnabled(false); // Remove debug info (angularJS >= 1.3)
@@ -55,6 +56,7 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
             }
         },
         autoExpand: 'both',
+        dependencies: true,
         api: function(api) {
             // API Object is used to control methods and events from angular-gantt.
             $scope.api = api;
@@ -146,6 +148,13 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
                             'color': self.taskStatusColors[task.status]
                         };
 
+                        if(task.predecessor_ids.length > 0) {
+                            rowTask['dependencies'] = [];
+                            for(var predId of task.predecessor_ids) {
+                                 rowTask['dependencies'].push({'from': predId});
+                            }
+                        }
+
                         ganntTypeRow.tasks.push(rowTask);
                     }
                 }
@@ -161,6 +170,7 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
         $scope.ganttData = ganntRows;
     };
 
+    $scope.$watch('dataService.tasks', updateGanttData, true);
     $scope.$watch('dataService.filteredTasks', updateGanttData, true);
     $scope.$watch('dataService.tasktypes', updateGanttData, true);
     $scope.$watch('dataService.momProjectsDict', updateGanttData, true);
