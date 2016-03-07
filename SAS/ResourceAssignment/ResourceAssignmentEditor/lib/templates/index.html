@@ -27,6 +27,7 @@
     <script src="/static/js/angular-ui-tabs/angular-ui.bootstrap.tabs.min.js"></script>
     <script src="/static/js/angular-moment/angular-moment.js"></script>
     <script src="/static/js/utils/datetimepicker.js"></script>
+    <script src="/static/js/jsplumb/jsplumb-2.0.7-min.js"></script>
     <link href="/static/js/angular-gantt/angular-gantt.min.css" rel="stylesheet" type="text/css">
     <link href="/static/js/angular-gantt/angular-gantt-plugins.min.css" rel="stylesheet" type="text/css">
     <script src="/static/js/angular-gantt/angular-gantt.js"></script>
@@ -62,6 +63,7 @@
                                     allow-row-switching="false">
                                 </gantt-movable>
                                 <gantt-tooltips></gantt-tooltips>
+                                <gantt-dependencies enabled="options.dependencies"></gantt-dependencies>
                             </div>
                         </div>
                     </uib-tab>
