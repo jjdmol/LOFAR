@@ -92,7 +92,7 @@ Github: https://github.com/angular-gantt/angular-gantt.git
                     scope.jsPlumbDefaults = {
                         Endpoint: ['Dot', {radius: 4}],
                         EndpointStyle: {fillStyle: '#456', strokeStyle: '#456', lineWidth: 1},
-                        Connector: 'Flowchart',
+                        Connector: ['Flowchart', {midpoint:0.975, stub:16}],
                         ConnectionOverlays: [['Arrow', {location: 1, length: 12, width: 12}]]
                     };
                 }
