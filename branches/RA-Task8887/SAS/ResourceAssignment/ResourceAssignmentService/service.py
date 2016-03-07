@@ -44,7 +44,7 @@ class RADBHandler(MessageHandlerInterface):
             'DeleteResourceClaim': self._deleteResourceClaim,
             'UpdateResourceClaim': self._updateResourceClaim,
             'GetResourceClaimsForTask': self._getResourceClaimsForTask,
-            'UpdateResourceClaimsForTask': self._updateResourceClaimsForTask,
+            'UpdateTaskAndResourceClaims': self._updateTaskAndResourceClaims,
             'GetResourceGroupTypes': self._getResourceGroupTypes,
             'GetResourceGroups': self._getResourceGroups,
             'GetResourceGroupMemberships': self._getResourceGroupMemberships,
@@ -125,8 +125,8 @@ class RADBHandler(MessageHandlerInterface):
         claims = self.radb.getResourceClaimsForTask(task_id)
         return claims
 
-    def _updateResourceClaimsForTask(self, **kwargs):
-        logger.info('UpdateResourceClaimsForTask: %s' % kwargs)
+    def _updateTaskAndResourceClaims(self, **kwargs):
+        logger.info('UpdateTaskAndResourceClaims: %s' % kwargs)
         task_id = kwargs['task_id']
         starttime = kwargs.get('starttime')
         if starttime:
@@ -136,10 +136,11 @@ class RADBHandler(MessageHandlerInterface):
         if endtime:
             endtime = endtime.datetime();
 
-        updated = self.radb.updateResourceClaimsForTask(task_id,
+        updated = self.radb.updateTaskAndResourceClaims(task_id,
                                                         starttime=starttime,
                                                         endtime=endtime,
-                                                        status=kwargs.get('status_id', kwargs.get('status')),
+                                                        task_status=kwargs.get('task_status_id', kwargs.get('task_status')),
+                                                        claim_status=kwargs.get('claim_status_id', kwargs.get('claim_status')),
                                                         session_id=kwargs.get('session_id'),
                                                         username=kwargs.get('username'),
                                                         user_id=kwargs.get('user_id'))

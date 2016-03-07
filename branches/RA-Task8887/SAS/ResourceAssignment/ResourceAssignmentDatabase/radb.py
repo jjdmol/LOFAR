@@ -603,10 +603,19 @@ class RADatabase:
 
         return list(self._executeQuery(query, [task_id], fetch=_FETCH_ALL))
 
-    def updateResourceClaimsForTask(self, task_id, starttime=None, endtime=None, status=None, session_id=None, username=None, user_id=None, commit=True):
-        if status and isinstance(status, basestring):
+    def updateTaskAndResourceClaims(self, task_id, starttime=None, endtime=None, task_status=None, claim_status=None, session_id=None, username=None, user_id=None, commit=True):
+        if claim_status and isinstance(claim_status, basestring):
             #convert status string to status.id
-            status = self.getResourceClaimStatusId(status)
+            claim_status = self.getResourceClaimStatusId(claim_status)
+
+        updated = True
+
+        if task_status:
+            updated &= self.updateTask(task_id, task_status=task_status, commit=False)
+
+        if starttime or endtime:
+            task = self.getTask(task_id)
+            updated &= self.updateSpecification(task['specification_id'], starttime=starttime, endtime=endtime, commit=False)
 
         fields = []
         values = []
@@ -619,9 +628,9 @@ class RADatabase:
             fields.append('endtime')
             values.append(endtime)
 
-        if status:
+        if claim_status:
             fields.append('status_id')
-            values.append(status)
+            values.append(claim_status)
 
         if session_id:
             fields.append('session_id')
@@ -644,10 +653,12 @@ class RADatabase:
                                                                                             task_id_placeholder='%s')
 
         self._executeQuery(query, values)
+        updated &= self.cursor.rowcount > 0
+
         if commit:
             self.conn.commit()
 
-        return self.cursor.rowcount > 0
+        return updated
 
 
 if __name__ == '__main__':
@@ -690,6 +701,8 @@ if __name__ == '__main__':
     print db.getTaskSuccessorIds()
     #resultPrint(db.getSpecifications)
     #resultPrint(db.getResourceClaims)
+
+    db.updateTaskAndResourceClaims(16, starttime= datetime.datetime.utcnow())
 
     #import pprint
     #pprint.pprint(db.getResourceGroupMemberships())
