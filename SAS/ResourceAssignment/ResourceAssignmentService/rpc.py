@@ -78,7 +78,7 @@ class RARPC(RPCWrapper):
         return claims
 
     def updateTaskAndResourceClaims(self, task_id, starttime=None, endtime=None, task_status=None, claim_status=None, session_id=None, username=None, user_id=None):
-        return self.rpc('UpdateResourceClaimsForTask', task_id=task_id,
+        return self.rpc('UpdateTaskAndResourceClaims', task_id=task_id,
                                                         starttime=starttime,
                                                         endtime=endtime,
                                                         task_status=task_status,
