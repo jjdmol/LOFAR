@@ -1,5 +1,7 @@
 from threading import Lock, Condition
 
+__all__ = ["MethodTrigger"]
+
 class MethodTrigger:
   """
     Set a flag when a specific method is called, possibly asynchronously. Caller can wait on this flag.
