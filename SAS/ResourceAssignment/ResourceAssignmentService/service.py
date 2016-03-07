@@ -86,7 +86,7 @@ class RADBHandler(MessageHandlerInterface):
         return claim
 
     def _insertResourceClaim(self, **kwargs):
-        logger.info('InsertResourceClaim: %s' % kwargs)
+        logger.info('InsertResourceClaim: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
         id = self.radb.insertResourceClaim(kwargs['resource_id'],
                                            kwargs['task_id'],
                                            kwargs['starttime'].datetime(),
@@ -100,13 +100,13 @@ class RADBHandler(MessageHandlerInterface):
         return {'id':id}
 
     def _deleteResourceClaim(self, **kwargs):
-        logger.info('DeleteResourceClaim: %s' % kwargs)
+        logger.info('DeleteResourceClaim: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
         id = kwargs['id']
         deleted = self.radb.deleteResourceClaim(id)
         return {'id': id, 'deleted': deleted}
 
     def _updateResourceClaim(self, **kwargs):
-        logger.info('UpdateResourceClaim: %s' % kwargs)
+        logger.info('UpdateResourceClaim: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
         id = kwargs['id']
         updated = self.radb.updateResourceClaim(id,
                                                 resource_id=kwargs.get('resource_id'),
@@ -126,7 +126,7 @@ class RADBHandler(MessageHandlerInterface):
         return claims
 
     def _updateTaskAndResourceClaims(self, **kwargs):
-        logger.info('UpdateTaskAndResourceClaims: %s' % kwargs)
+        logger.info('UpdateTaskAndResourceClaims: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
         task_id = kwargs['task_id']
         starttime = kwargs.get('starttime')
         if starttime:
@@ -167,12 +167,12 @@ class RADBHandler(MessageHandlerInterface):
         return self.radb.getTasks()
 
     def _getTask(self, **kwargs):
-        logger.info('GetTask: %s' % kwargs)
+        logger.info('GetTask: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
         task = self.radb.getTask(id=kwargs.get('id'), mom_id=kwargs.get('mom_id'), otdb_id=kwargs.get('otdb_id'))
         return task
 
     def _insertTask(self, **kwargs):
-        logger.info('InsertTask: %s' % kwargs)
+        logger.info('InsertTask: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
         task_id = self.radb.insertTask(kwargs['mom_id'],
                                        kwargs['otdb_id'],
                                        kwargs.get('status_id', kwargs.get('status', 'prepared')),
@@ -181,13 +181,13 @@ class RADBHandler(MessageHandlerInterface):
         return {'id':task_id }
 
     def _deleteTask(self, **kwargs):
-        logger.info('DeleteTask: %s' % kwargs)
+        logger.info('DeleteTask: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
         id = kwargs['id']
         deleted = self.radb.deleteTask(id)
         return {'id': id, 'deleted': deleted}
 
     def _updateTask(self, **kwargs):
-        logger.info('UpdateTask: %s' % kwargs)
+        logger.info('UpdateTask: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
         id = kwargs['id']
         updated = self.radb.updateTask(id,
                                        mom_id=kwargs.get('mom_id'),
@@ -211,25 +211,25 @@ class RADBHandler(MessageHandlerInterface):
         return self.radb.getSpecifications()
 
     def _getSpecification(self, **kwargs):
-        logger.info('GetSpecification: %s' % kwargs)
+        logger.info('GetSpecification: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
         specification = self.radb.getSpecification(kwargs['id'])
         return specification
 
     def _insertSpecification(self, **kwargs):
-        logger.info('InsertSpecification: %s' % kwargs)
+        logger.info('InsertSpecification: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
         specification_id = self.radb.insertSpecification(kwargs['starttime'].datetime(),
                                                          kwargs['endtime'].datetime(),
                                                          kwargs['content'])
         return {'id':specification_id}
 
     def _deleteSpecification(self, **kwargs):
-        logger.info('DeleteSpecification: %s' % kwargs)
+        logger.info('DeleteSpecification: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
         id = kwargs['id']
         deleted = self.radb.deleteSpecification(id)
         return {'id': id, 'deleted': deleted}
 
     def _updateSpecification(self, **kwargs):
-        logger.info('UpdateSpecification: %s' % kwargs)
+        logger.info('UpdateSpecification: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
         id = kwargs['id']
         updated = self.radb.updateSpecification(id,
                                                 starttime=kwargs['starttime'].datetime() if 'starttime' in kwargs else None,
