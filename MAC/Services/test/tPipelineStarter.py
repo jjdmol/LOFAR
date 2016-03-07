@@ -189,6 +189,14 @@ class TestPipelineStarter(unittest.TestCase):
 
     self.trigger = MethodTrigger(listener, "onObservationQueued")
 
+  def test_setStatus(self):
+    with PipelineStarter(otdb_busname=self.busname, setStatus_busname=self.busname) as ps:
+      ps._setStatus(12345, "queued")
+
+      # Wait for the staatus to propagate
+      self.assertTrue(self.trigger.wait())
+      self.assertEqual(self.trigger.args[0], 12345)
+
   def testNoPredecessors(self):
     """
       Request the resources for a simulated obsid 3, with the following predecessor tree:
