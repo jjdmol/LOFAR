@@ -29,9 +29,14 @@
 #include <Common/lofar_bitset.h>
 #include <Common/Exception.h>
 #include <Common/Version.h>
+
+#include <ApplCommon/LofarDirs.h>
+
 #include <ApplCommon/StationConfig.h>
 #include <ApplCommon/StationDatatypes.h>
+#include <ApplCommon/AntennaSets.h>
 
+#include <APL/APLCommon/AntennaField.h>
 #include <APL/RTCCommon/daemonize.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
@@ -39,10 +44,8 @@
 #include <MACIO/MACServiceInfo.h>
 
 #include "CalServer.h"
-#include "SubArrays.h"
+#include "SubArrayMgr.h"
 #include "SubArraySubscription.h"
-#include "RemoteStationCalibration.h"
-#include "CalibrationAlgorithm.h"
 #include <Cal_Server/Package__Version.h>
 
 #ifdef USE_CAL_THREAD
@@ -65,14 +68,15 @@
 
 using namespace std;
 using namespace blitz;
-using namespace LOFAR;
-using namespace CAL;
-using namespace RTC;
-using namespace RSP_Protocol;
-using namespace CAL_Protocol;
-using namespace GCF::TM;
 
-#define NPOL 2
+namespace LOFAR {
+  using namespace RTC;
+  using namespace RSP_Protocol;
+  using namespace CAL_Protocol;
+  using namespace GCF::TM;
+  namespace CAL {
+
+
 
 #define SCHEDULING_DELAY 3
 
@@ -81,16 +85,15 @@ Exception::TerminateHandler t(Exception::terminate);
 
 // static pointer used for signal handler.
 static CalServer*	thisCalServer = 0;
-	
+
 //
 // CalServer constructor
 //
 CalServer::CalServer(const string& name, ACCs& accs)
 	: GCFTask((State)&CalServer::initial, name),
 	m_accs(accs),
-	m_cal(0),
 	m_converter(0),
-	m_sampling_frequency(0.0),
+	itsClockSetting(0),
 	m_n_rspboards(0),
 	m_n_rcus(0),
 	itsHasSecondRing	(0),
@@ -137,7 +140,6 @@ CalServer::CalServer(const string& name, ACCs& accs)
 //
 CalServer::~CalServer()
 {
-	if (m_cal)       delete m_cal;
 	if (m_converter) delete m_converter;
 #ifdef USE_CAL_THREAD
 	if (m_calthread) delete m_calthread;
@@ -178,7 +180,7 @@ GCFEvent::TResult CalServer::finishing_state(GCFEvent& 		event, GCFPortInterface
 	case F_ENTRY: {
 		// turn off 'old' timers
 		itsCheckTimer->cancelAllTimers();
-		SubArray::RCUmask_t	rcus2switchOff;
+		RCUmask_t	rcus2switchOff;
 		rcus2switchOff.reset();
 		for (uint i = 0; i < m_n_rcus; i++) {
 			rcus2switchOff.set(i);
@@ -190,11 +192,11 @@ GCFEvent::TResult CalServer::finishing_state(GCFEvent& 		event, GCFPortInterface
 	case F_TIMER: {
 		GCFScheduler::instance()->stop();
 	} break;
-  
+
 	default:
 		LOG_DEBUG("finishing_state, default");
 		break;
-	}    
+	}
 	return (GCFEvent::HANDLED);
 }
 
@@ -223,10 +225,10 @@ void CalServer::remove_client(GCFPortInterface* port)
 	while (iter != end) {
 		if (iter->second == port) {
 			// stop subarray if it is still there.
-			SubArray* subarray = m_subarrays.getByName(iter->first);
+			SubArray* subarray = itsSubArrays.getByName(iter->first);
 			if (subarray) {
 				_disableRCUs(subarray);
-				m_subarrays.schedule_remove(subarray);
+				itsSubArrays.scheduleRemove(subarray);
 			}
 
 			// add to dead list.
@@ -264,9 +266,13 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 			// load the source catalog
 			m_sources.getAll(cl.locate(GET_CONFIG_STRING("CalServer.SourceCatalogFile")));
 
+            // load the antenna positions
+			ASSERTSTR(globalAntennaField(), "Could not load the antennaposition file");
+			LOG_DEBUG("Loaded antenna postions file");
+
 			// Load antenna arrays
-			m_arrays.getAll(cl.locate(GET_CONFIG_STRING("CalServer.AntennaArraysFile")));
-			ASSERTSTR(!m_arrays.getNameList().empty(), "No antenna positions found");
+			//m_arrays.getAll(cl.locate(GET_CONFIG_STRING("CalServer.AntennaArraysFile")));
+			//ASSERTSTR(!m_arrays.getNameList().empty(), "No antenna positions found");
 
 			// Setup datapath
 			itsDataDir = globalParameterSet()->getString("CalServer.DataDirectory", "/opt/lofar/bin");
@@ -282,11 +288,9 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 			itsPowerOffDelay = globalParameterSet()->getTime("CalServer.PowerOffDelay", 180);
 			LOG_INFO_STR("PowerOff delay = " << itsPowerOffDelay << " seconds.");
 
-			// Setup calibration algorithm
-			m_cal = new RemoteStationCalibration(m_sources, m_dipolemodels, *m_converter);
 #ifdef USE_CAL_THREAD
 			// Setup calibration thread
-			m_calthread = new CalibrationThread(&m_subarrays, m_cal, m_globallock, itsDataDir);
+			m_calthread = new CalibrationThread(&itsSubArrays, m_globallock, itsDataDir);
 
 			pthread_mutex_unlock(&m_globallock); // unlock global lock
 #endif
@@ -346,10 +350,10 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 			exit(EXIT_FAILURE);
 		}
 
-		// get clock value and convert to MHz
-		m_sampling_frequency = getclockack.clock * (uint32)1.0e6;
+		// get clock value in MHz
+		itsClockSetting = getclockack.clock;
 
-		LOG_INFO_STR("Initial sampling frequency: " << m_sampling_frequency);
+		LOG_INFO_STR("Initial sampling frequency: " << itsClockSetting << " MHz");
 
 		// subscribe to clock change updates
 		RSPSubclockEvent subclock;
@@ -454,8 +458,8 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	case RSP_UPDCLOCK: {
 		RSPUpdclockEvent updclock(e);
 		// use new sampling frequency
-		m_sampling_frequency = updclock.clock * (uint32)1.0e6;
-		LOG_INFO_STR("New sampling frequency: " << m_sampling_frequency);
+		itsClockSetting = updclock.clock * (uint32)1.0e6;
+		LOG_INFO_STR("New sampling frequency: " << itsClockSetting);
 	}
 	break;
 
@@ -489,7 +493,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 		}
 	}
 	break;
-    
+
 	case F_CONNECTED: {
 		LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
 	}
@@ -497,7 +501,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	case F_TIMER: {
 		// first check Poweroff timer
-		SubArray::RCUmask_t		rcus2switchOff;
+		RCUmask_t		rcus2switchOff;
 		rcus2switchOff.reset();
 		time_t		now(time(0L));
 		for (uint i = 0; i < m_n_rcus; i++) {				// loop over all rcus
@@ -532,11 +536,11 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 			(void)m_calthread->join();
 #endif
 
-			m_subarrays.mutex_lock();
+			itsSubArrays.mutex_lock();
 			undertaker(); // destroy dead clients, done here to prevent possible use of closed port
-			m_subarrays.undertaker();  // remove subarrays scheduled for deletion
-			m_subarrays.creator();     // bring new subarrays to life
-			m_subarrays.mutex_unlock();
+			itsSubArrays.removeDeadArrays();  // remove subarrays scheduled for deletion
+			itsSubArrays.activateArrays();     // bring new subarrays to life
+			itsSubArrays.mutex_unlock();
 
 			if (GET_CONFIG("CalServer.WriteACCToFile", i)) {
 				write_acc();
@@ -548,17 +552,13 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 			m_calthread->run();
 #else
 			bool	writeGains(GET_CONFIG("CalServer.WriteGainsToFile", i) == 1);
-			if (GET_CONFIG("CalServer.DisableCalibration", i)) {
-				m_subarrays.calibrate(0, m_accs.getFront(), writeGains, itsDataDir);
-			} else {
-				m_subarrays.calibrate(m_cal, m_accs.getFront(), writeGains, itsDataDir);
-			}
-			m_subarrays.updateAll();
+            itsSubArrays.calibrate(m_accs.getFront(), writeGains, itsDataDir);
+			itsSubArrays.updateAll();
 #endif
 		}
 
 #ifdef USE_CAL_THREAD
-		m_subarrays.updateAll();
+		// itsSubArrays.updateAll();  // TODO: is update still needed
 #endif
 	}
 	break;
@@ -623,10 +623,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 	ack.status      = CAL_Protocol::CAL_SUCCESS; // assume succes, until otherwise
 	ack.name        = start.name;
 
-	// find parent AntennaArray
-	const AntennaArray* parent = m_arrays.getByName(start.parent);
-
-	if (m_subarrays.getByName(start.name)) {
+	if (itsSubArrays.getByName(start.name)) {
 		LOG_ERROR_STR("A subarray with name='" << start.name << "' has already been registered.");
 		ack.status = ERR_ALREADY_REGISTERED;
 
@@ -634,12 +631,20 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 		LOG_ERROR("Empty subarray name.");
 		ack.status = ERR_NO_SUBARRAY_NAME;
 
-	} else if (!parent) {
-		// parent not found, set error status
-		LOG_ERROR_STR("Parent array '" << start.parent << "' not found.");
+	} else if (!globalAntennaSets()->isAntennaSet(start.antennaSet)) {
+		// AntenneSet not found, set error status
+		LOG_ERROR_STR("AntennaSet '" << start.antennaSet << "' not found.");
 		ack.status = ERR_NO_PARENT;
 
-	} else if (start.subset.count() == 0) {
+    } else if (globalAntennaSets()->usesLBAfield(start.antennaSet) &&
+              ((start.band < BAND_10_70) || (start.band > BAND_30_90))) {
+            LOG_ERROR_STR("AntennaSet and band do not match '" << start.antennaSet << ", " <<  start.band << "'.");
+            ack.status = ERR_WRONG_BAND;
+    } else if (!globalAntennaSets()->usesLBAfield(start.antennaSet) &&
+              ((start.band < BAND_110_190) || (start.band > BAND_210_250))) {
+            LOG_ERROR_STR("AntennaSet and band do not match '" << start.antennaSet << ", " <<  start.band << "'.");
+            ack.status = ERR_WRONG_BAND;
+	} else if (start.rcuMask.count() == 0) {
 		// empty selection
 		LOG_ERROR("Empty antenna selection not allowed.");
 		ack.status = ERR_NO_ANTENNAS;
@@ -653,7 +658,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 	} else {
 		// register because this is a cal_start
 		m_clients[start.name] = &port;		// register subarray and port
-
+#if 0
 		// Construct a 'select' array (nAntennas, nPol) that knows which antennas the user will use.
 		const Array<double, 3>& positions = parent->getAntennaPos();
 		Array<bool, 2> select;
@@ -662,13 +667,14 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 		int		maxI(positions.extent(firstDim)*positions.extent(secondDim));
 		for (int i = 0; i < maxI; i++) {
 			// subset is one-dimensional (receiver), select is two-dimensional (antenna, polarization)
-			if (start.subset[i]) {
+			if (start.rcuMask[i]) {
 				select(i/2,i%2) = true;
 			}
 		}
 
 		LOG_DEBUG_STR("m_accs.getBack().getACC().shape()=" << m_accs.getBack().getACC().shape());
 		LOG_DEBUG_STR("positions.shape()" << positions.shape());
+#endif
 
 		// check start.subset value
 		bitset<MAX_RCUS> invalidmask;
@@ -689,54 +695,46 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 		{
 			LOG_INFO("ACC shape and parent array positions shape don't match.");
 			LOG_ERROR_STR("ACC.shape=" << m_accs.getFront().getACC().shape());
-			LOG_ERROR_STR("'" << start.parent << "'.shape=" << positions.shape());
+			LOG_ERROR_STR("'" << start.antennaSet << "'.shape=" << positions.shape());
 			LOG_ERROR_STR("Expecting AntenneArray with " <<
 							m_accs.getFront().getACC().extent(fourthDim) << " antennas.");
 			ack.status = ERR_RANGE;
 		}
-		else 
+		else
 #endif
-		if ((start.subset & invalidmask).any()) {
+		if ((start.rcuMask & invalidmask).any()) {
 			LOG_INFO("CAL_START: Invalid receiver subset.");
 			ack.status = ERR_RANGE;
 		}
 		else {
-			// create subarray to calibrate
-			SubArray* subarray = new SubArray(start.name,
-								parent->getGeoLoc(),
-								positions.copy(),
-								select,
-								m_sampling_frequency,
-								start.rcumode()(0).getNyquistZone(),
-								GET_CONFIG("CalServer.N_SUBBANDS", i),
-								start.rcumode()(0).getRaw());
+            RCUmask_t	validRCUs(start.rcuMask & globalAntennaSets()->RCUallocation(start.antennaSet));
 
-			if (m_subarrays.conflicting(subarray)) {
-				// error is already printed
-				ack.status = ERR_NO_PARENT;
-			}
-			else {
-				m_subarrays.schedule_add(subarray);
+            // create subarray to calibrate
+            SubArray* subarray = new SubArray(start.name,
+                                              start.antennaSet,
+                                              validRCUs,
+                                              start.band);
 
-				// calibration will start within one second
-				// set the spectral inversion right
-				RSPSetbypassEvent	specInvCmd;
-				bool				SIon(start.rcumode()(0).getNyquistZone() == 2);// on or off?
-				specInvCmd.timestamp = Timestamp(0,0);
-				specInvCmd.rcumask   = start.subset;
-				specInvCmd.settings().resize(1);
-				specInvCmd.settings()(0).setXSI(SIon);
-				specInvCmd.settings()(0).setYSI(SIon);
-				LOG_DEBUG_STR("NyquistZone = " << start.rcumode()(0).getNyquistZone()
-								<< " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
-				itsRSPDriver->send(specInvCmd);
+            itsSubArrays.scheduleAdd(subarray, &port);
 
-                RCUSettings rcu_settings;
-                rcu_settings().resize(1);
-                rcu_settings()(0) = start.rcumode()(0);
-                				
-                _enableRCUs(subarray, rcu_settings, SCHEDULING_DELAY + 4);
-			} // conflict?
+            // calibration will start within one second
+            // set the spectral inversion right
+            RSPSetbypassEvent	specInvCmd;
+            bool				SIon(subarray->SPW().nyquistZone() == 2);// on or off?
+            specInvCmd.timestamp = Timestamp(0,0);
+            specInvCmd.rcumask   = start.rcuMask;
+            specInvCmd.settings().resize(1);
+            specInvCmd.settings()(0).setXSI(SIon);
+            specInvCmd.settings()(0).setYSI(SIon);
+            LOG_DEBUG_STR("NyquistZone = " << subarray->SPW().nyquistZone()
+                            << " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
+            itsRSPDriver->send(specInvCmd);
+
+            //RCUSettings rcu_settings;
+            //rcu_settings().resize(1);
+            //rcu_settings()(0).setMode(start.rcumode);
+
+            _enableRCUs(subarray, SCHEDULING_DELAY + 4);
 		}
 	}
 	port.send(ack); // send ack
@@ -757,9 +755,9 @@ GCFEvent::TResult CalServer::handle_cal_stop(GCFEvent& e, GCFPortInterface &port
 	ack.status = CAL_Protocol::CAL_SUCCESS;		// return success: don't bother client with our admin
 	port.send(ack);
 
-	_disableRCUs(m_subarrays.getByName(stop.name));	// switch off unused RCUs
+	_disableRCUs(itsSubArrays.getByName(stop.name));	// switch off unused RCUs
 
-	m_subarrays.schedule_remove(stop.name);	// stop calibration
+	itsSubArrays.scheduleRemove(stop.name);	// stop calibration
 
 	// remove subarray-port entry from the map.
 	map<string, GCFPortInterface*>::iterator	iter = m_clients.begin();
@@ -778,78 +776,55 @@ GCFEvent::TResult CalServer::handle_cal_stop(GCFEvent& e, GCFPortInterface &port
 //
 // handle_cal_subscribe(event, port)
 //
-GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface &port)
+GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& event, GCFPortInterface &port)
 {
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-
-	CALSubscribeEvent subscribe(e);
+	CALSubscribeEvent subscribe(event);
 	CALSubscribeackEvent ack;
-	ack.status = CAL_Protocol::CAL_SUCCESS;
+	ack.name = subscribe.name;
 
 	// get subarray by name
-	SubArray* subarray = m_subarrays.getByName(subscribe.name);
-
+	SubArray* subarray = itsSubArrays.getByName(subscribe.name);
 	if (subarray) {
-		// create subscription
-		SubArraySubscription* subscription = new SubArraySubscription(subarray,
-														subscribe.subbandset,
-														port);
-
-		ack.handle = (CAL_Protocol::memptr_t)subscription;
-		subarray->attach(subscription); // attach subscription to the subarray
+		ack.status = CAL_SUCCESS;
 		ack.subarray = *subarray; 		// return subarray positions
 
-		// don't register subarray in cal_subscribe
-		// it has already been registerd in cal_start
-		LOG_DEBUG_STR("Subscription succeeded: " << subscribe.name);
+		// create subscription
+		itsSubArrays.addSubscription(subscribe.name, &port);
+
+		LOG_INFO_STR("Subscription succeeded: " << subscribe.name);
 	}
 	else {
 		ack.status = ERR_NO_SUBARRAY;
-		ack.handle = 0;
-		//memset(&ack.subarray, 0, sizeof(SubArray));
-		// doesn't work with gcc-3.4 ack.subarray = SubArray();
-		(void)new((void*)&ack.subarray) SubArray();
-
-		LOG_WARN_STR("Subarray not found: " << subscribe.name);
+		LOG_INFO_STR("Subarray not found: " << subscribe.name);
 	}
 
 	port.send(ack);
 
-	return status;
+	return (GCFEvent::HANDLED);
 }
 
 //
 // handle_cal_unsubscribe(event,port)
 //
-GCFEvent::TResult CalServer::handle_cal_unsubscribe(GCFEvent& e, GCFPortInterface &port)
+GCFEvent::TResult CalServer::handle_cal_unsubscribe(GCFEvent& event, GCFPortInterface &port)
 {
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-
-	CALUnsubscribeEvent unsubscribe(e);
-
+	CALUnsubscribeEvent unsubscribe(event);
 	// create ack
 	CALUnsubscribeackEvent ack;
-	ack.name = unsubscribe.name;
-	ack.handle = unsubscribe.handle;
-	ack.status = CAL_Protocol::CAL_SUCCESS;
+	ack.name   = unsubscribe.name;
 
-	// find associated subarray
-	SubArray* subarray = m_subarrays.getByName(unsubscribe.name);
-	if (subarray) {
-		// detach subscription, this destroys the subscription
-		subarray->detach((SubArraySubscription*)unsubscribe.handle);
-
-		// handle is no longer valid
+	if (itsSubArrays.removeSubscription(unsubscribe.name)) {
+		ack.status = CAL_SUCCESS;
 		LOG_INFO_STR("Subscription deleted: " << unsubscribe.name);
 	}
 	else {
 		ack.status = ERR_NO_SUBARRAY;
-		LOG_WARN_STR("Subscription failed. Subbarray not found: " << unsubscribe.name);
+		LOG_INFO_STR("Unsubscribe failed. Subbarray not found: " << unsubscribe.name);
 	}
 
 	port.send(ack);
 
-	return status;
+	return (GCFEvent::HANDLED);
 }
 
 //
@@ -862,7 +837,7 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 	CALGetsubarrayEvent	 	request(e);
 	CALGetsubarrayackEvent	ack;
 	ack.status = CAL_Protocol::CAL_SUCCESS;
-	ack.subarraymap = m_subarrays.getSubArrays(request.subarrayname);	// let SubArrays do the job
+	ack.subarraymap = itsSubArrays.getSubArrays(request.subarrayname);	// let SubArrays do the job
 
 	// correct status is name was given but nothing was found.
 	if (!request.subarrayname.empty() && ack.subarraymap.size() == 0) {
@@ -877,13 +852,17 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 //
 //  (subarray*)
 //
-void CalServer::_enableRCUs(SubArray*	subarray, RCUSettings rcu_settings, int delay)
+void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 {
 	// increment the usecount of the receivers
-	SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
-	SubArray::RCUmask_t	rcus2switchOn;
+	RCUmask_t	rcuMask = subarray->RCUMask();
+	RCUmask_t	rcus2switchOn;
 	rcus2switchOn.reset();
 	Timestamp timeStamp;
+
+    blitz::Array<uint,1> rcuModes = subarray->RCUmodes();
+    LOG_INFO_STR("rcuModes= " << rcuModes);
+
 	for (uint r = 0; r < m_n_rcus; r++) {
 		if (rcuMask.test(r)) {
 			if (++itsRCUcounts[r] == 1) {
@@ -891,6 +870,10 @@ void CalServer::_enableRCUs(SubArray*	subarray, RCUSettings rcu_settings, int de
 				itsPowerOffTime[r] = 0;	// reset poweroff time
 			} // new count is 1
 		} // rcu in mask
+        else if (itsRCUcounts[r] == 0) {
+            time_t now = time(0);
+			itsPowerOffTime[r] = now;
+        }
 	} // for all rcus
 
 	// anything to enable? Tell the RSPDriver.
@@ -902,24 +885,50 @@ void CalServer::_enableRCUs(SubArray*	subarray, RCUSettings rcu_settings, int de
 		timeStamp.setNow(delay);
 		enableCmd.timestamp = timeStamp;
 		enableCmd.rcumask   = rcus2switchOn;
-		enableCmd.settings().resize(1);
-        enableCmd.settings()(0) = rcu_settings()(0);
-		enableCmd.settings()(0).setEnable(true);
+		enableCmd.settings().resize(m_n_rcus);
+
+        //blitz::Array<uint,1> rcuModes = subarray->RCUmodes();
+        //LOG_INFO_STR("rcuModes= " << rcuModes);
+
+        for (uint r = 0; r < m_n_rcus; r++) {
+            if (rcus2switchOn.test(r)) {
+                enableCmd.settings()(r).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)rcuModes(r));
+                enableCmd.settings()(r).setEnable(true);
+            }
+        }
+        LOG_INFO_STR("enableCmd= " << enableCmd);
 		sleep (1);
 		LOG_INFO("Enabling some rcu's because they are used for the first time");
 		itsRSPDriver->send(enableCmd);
 	}
 
 	// when the lbl inputs are selected swap the X and the Y.
-	int rcumode(subarray->getSPW().rcumode());
-	if (rcumode == 1 || rcumode == 2) {		// LBLinput used?
-		LOG_INFO("LBL inputs are used, swapping X and Y RCU's");
-		RSPSetswapxyEvent	swapCmd;
-		swapCmd.timestamp   = timeStamp;
-		swapCmd.swapxy	    = true;
-		swapCmd.antennamask = RCU2AntennaMask(rcuMask);
-		itsRSPDriver->send(swapCmd);
-	}
+    //int rcumode(subarray->SPW().rcumode());
+    //int rcumode(0);  // TODO: add real rcumode or change all to antennaset
+	//if (rcumode == 1 || rcumode == 2) {		// LBLinput used?
+
+    if ((subarray->antennaSet() == "LBA_X") || (subarray->antennaSet() == "LBA_Y")) {
+        LOG_INFO("LBL_X or LBA_Y used, swapping not needed");
+    }
+    else {
+
+        RCUmask_t switchMask;
+        switchMask.reset();
+        for (uint r = 0; r < m_n_rcus; r++) {
+            if ((rcuModes(r) == 1) || (rcuModes(r) == 2)) {  // LBLinput used?
+                switchMask.set(r);
+            }
+        }
+        if (switchMask.any()) {
+            LOG_INFO("LBL inputs are used, swapping X and Y RCU's");
+
+            RSPSetswapxyEvent	swapCmd;
+            swapCmd.timestamp   = timeStamp;
+            swapCmd.swapxy	    = true;
+            swapCmd.antennamask = RCU2AntennaMask(switchMask);
+            itsRSPDriver->send(swapCmd);
+        }
+    }
 }
 
 //
@@ -929,13 +938,13 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 {
 	// decrement the usecount of the receivers and build mask of receiver that may be disabled.
 	bool				allSwitchedOff(true);
-	SubArray::RCUmask_t	rcus2switchOff;
+	RCUmask_t	rcus2switchOff;
 	rcus2switchOff.reset();
 	Timestamp 			powerOffTime;
 	powerOffTime.setNow(itsPowerOffDelay);
 
 	if (subarray) {		// when no subarray is defined skip this loop: switch all rcus off.
-		SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
+		RCUmask_t	rcuMask = subarray->RCUMask();
 		for (uint r = 0; r < m_n_rcus; r++) {
 			if (rcuMask.test(r)) {
 				if (--itsRCUcounts[r] == 0) {
@@ -979,7 +988,7 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 //
 // _powerdownRCUs(rcus2switchOff)
 //
-void CalServer::_powerdownRCUs(SubArray::RCUmask_t	rcus2switchOff)
+void CalServer::_powerdownRCUs(RCUmask_t	rcus2switchOff)
 {
 	// anything to disable? Tell the RSPDriver.
 	if (rcus2switchOff.any()) {
@@ -1049,27 +1058,15 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 	// create ack
 	CALGetsubarrayackEvent ack;
 	ack.status = CAL_Protocol::CAL_SUCCESS;
+	ack.subarraymap = itsSubArrays.getSubArrays(getsubarray.subarrayname);
+	LOG_INFO("Sending subarray info: " << getsubarray.subarrayname);
 
-	// find associated subarray
-	SubArray* subarray = m_subarrays.getByName(getsubarray.name);
-	if (subarray) {
-
-	// return antenna positions
-	ack.positions = *(static_cast<AntennaArray*>(subarray));
-
-	LOG_INFO("Sending subarray info: " << getsubarray.name);
-
-	} else {
-
-	// TODO: need sensible value for ack.positions, it is not initialized at this point
-	ack.status = ERR_NO_SUBARRAY;
-
-	LOG_INFO("Getsubarray. Subarray not found: " << getsubarray.name);
-
+	if (ack.subarraymap.empty()) {
+        ack.status = ERR_NO_SUBARRAY;
+        LOG_INFO("Getsubarray. Subarray not found: " << getsubarray.subarrayname);
 	}
 
 	port.send(ack);
-
 	return status;
 }
 #endif
@@ -1118,55 +1115,5 @@ void CalServer::write_acc()
 	(void)fclose(accfile);
 }
 
-//
-// MAIN
-//
-int main(int argc, char** argv)
-{
-	GCFScheduler::instance()->init(argc, argv, "CalServer");
-
-	LOG_INFO("MACProcessScope: LOFAR_PermSW_CalServer");
-
-	LOG_INFO(formatString("Program %s has started", argv[0]));
-
-	ACCs* 			accs; // the ACC buffers
-	StationConfig	SC;
-	accs = new ACCs(GET_CONFIG("CalServer.N_SUBBANDS", i), SC.nrRSPs * NR_ANTENNAS_PER_RSPBOARD, NPOL);
-
-	if (!accs) {
-		LOG_FATAL("Failed to allocate memory for the ACC arrays.");
-		exit(EXIT_FAILURE);
-	}
-
-	// SOMETIMES CALSERVER IS STARTED BEFORE RSPDRIVER IS ON THE AIR THIS SHOULD NOT BE A PROBLEM
-	// BUT IT SOMETIMES IS. QAD HACK TO AVOID HANGING CalServer
-	sleep(3);
-
-	//
-	// create CalServer and ACMProxy tasks
-	// they communicate via the ACCs instance
-	//
-	bool	ACMProxyEnabled(!globalParameterSet()->getBool("CalServer.DisableACMProxy"));
-	try {
-		CalServer cal     ("CalServer", *accs);
-		ACMProxy  acmproxy("ACMProxy",  *accs);
-
-		cal.start();      // make initial transition
-		if (ACMProxyEnabled) {
-			LOG_INFO("ACMProxy is enabled");
-			acmproxy.start(); // make initial transition
-		}
-
-		GCFScheduler::instance()->run();
-	}
-	catch (Exception& e) {
-		LOG_ERROR_STR("Exception: " << e.text());
-		exit(EXIT_FAILURE);
-	}
-
-	delete accs;
-
-	LOG_INFO("Normal termination of program");
-
-	return 0;
-}
+    };  // CAL
+};  // LOFAR

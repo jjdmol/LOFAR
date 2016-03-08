@@ -1,4 +1,4 @@
-//#  SHMInfoServer.cc: 
+//#  SHMInfoServer.cc:
 //#
 //#  Copyright (C) 2002-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -68,13 +68,13 @@ SHMInfoServer::SHMInfoServer() :
 	}
 	catch (Exception& e) {
 	        LOG_WARN_STR("Error: failed to load configuration files: " << e.text());
-	}  
+	}
 	//MAXMOD
 	//Put the AntennaArrays.conf read in here
 	try {
 	  ConfigLocator  aCL;
 	  // Load antenna arrays
-	  m_arrays.getAll(aCL.locate("AntennaArrays.conf"));
+	  //m_arrays.getAll(aCL.locate("AntennaArrays.conf"));
 	  //vector<string> ArrayNames = m_arrays.getNameList();
 	  //vector<string>::iterator	iter = ArrayNames.begin();
 	  //vector<string>::iterator	end  = ArrayNames.end();
@@ -148,17 +148,17 @@ GCFEvent::TResult SHMInfoServer::accepting(GCFEvent& e, GCFPortInterface& p)
 	static unsigned long garbageTimerID = 0;
 	(void)p;  // may be unused, depending on switch().
 //	static unsigned long rereadPolicyTimerID = 0;
-//	static bool hasPVSS = false; 
+//	static bool hasPVSS = false;
 
 	switch (e.signal) {
 	case F_ENTRY: {
-		garbageTimerID      = itsListener->setTimer(5.0, 5.0); 
-//		rereadPolicyTimerID = itsListener->setTimer(60.0, 60.0); 
+		garbageTimerID      = itsListener->setTimer(5.0, 5.0);
+//		rereadPolicyTimerID = itsListener->setTimer(60.0, 60.0);
 		break;
 	}
 
 	case F_DISCONNECTED:
-		DBGFAILWHEN(itsListener == &p && "SHMport provider may not be disconnected."); 
+		DBGFAILWHEN(itsListener == &p && "SHMport provider may not be disconnected.");
 		break;
 
 	case F_TIMER: {
@@ -175,10 +175,10 @@ GCFEvent::TResult SHMInfoServer::accepting(GCFEvent& e, GCFPortInterface& p)
 		}
 /*		else if (timerEvent.id == rereadPolicyTimerID) {
 			_policyHandler.rereadPolicyFile();
-		}      
+		}
 */
 		break;
-	}  
+	}
 
 	case F_CONNECTED:
 		DBGFAILWHEN(&p == itsListener);
@@ -191,7 +191,7 @@ GCFEvent::TResult SHMInfoServer::accepting(GCFEvent& e, GCFPortInterface& p)
 #if 0
 		if (!hasPVSS) {
 			// now we have PVSS connection
-			hasPVSS = true;        
+			hasPVSS = true;
 			// the GCFPVSSInfo::getOwnManNum() method only returns a valid
 			// man number if a PVSS connections has been established
 			// is will be automatically done by the SHMSession
@@ -214,7 +214,7 @@ GCFEvent::TResult SHMInfoServer::accepting(GCFEvent& e, GCFPortInterface& p)
 //
 void SHMInfoServer::clientClosed(SHMSession& client)
 {
-	_sessionsGarbage.push_back(&client);  
+	_sessionsGarbage.push_back(&client);
 }
 
  } // namespace AMI

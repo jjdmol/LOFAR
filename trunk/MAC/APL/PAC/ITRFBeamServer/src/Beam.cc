@@ -34,11 +34,13 @@ using namespace std;
 //
 // Beam(name, rcuMask)
 //
-Beam::Beam(const string& 				name, 
+Beam::Beam(const string& 				name,
 		   const string&				antennaSet,
+		   const string&				band,
 		   const bitset<MAX_RCUS>&		rcuMask) :
-	itsName		 (name), 
+	itsName		 (name),
 	itsAntennaSet(antennaSet),
+	itsBand      (band),
 	itsRCUs		 (rcuMask)
 {}
 
@@ -71,7 +73,7 @@ void Beam::_resolveGaps()
 			++iter;
 		}
 	}
-	
+
 	// Loop over the new list and fill the gaps again.
 	iter = itsPointings.begin();
 	end  = itsPointings.end();
@@ -82,7 +84,7 @@ void Beam::_resolveGaps()
 			Pointing	nilPointing(0.0 ,0.0, "NONE", endTime, int(iter->time()-endTime.sec()));
 			itsPointings.insert(iter, nilPointing);
 		}
-			
+
 		if (iter->duration() == 0) {		// current pointings lasts forever?, delete rest of pointings.
 			itsPointings.erase(++iter, end);
 			return;
@@ -108,7 +110,7 @@ bool Beam::_pointingOverlaps(const IBS_Protocol::Pointing& pt) const
 			return (true);
 		}
 		++iter;
-	}       
+	}
 
 	return (false);
 }
@@ -147,7 +149,7 @@ Pointing Beam::pointingAtTime(const Timestamp& time)
 	}
 
 	// if nothing found, return NIL pointing
-	if (iter == end) {			
+	if (iter == end) {
 		return (Pointing());
 	}
 

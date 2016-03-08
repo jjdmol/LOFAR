@@ -26,19 +26,17 @@
 
 #ifdef USE_CAL_THREAD
 #include <pthread.h>
-#include <APL/CAL_Protocol/ACC.h>
+#include "ACC.h"
 
 namespace LOFAR {
   namespace CAL {
 
-    class SubArrays;
-    class CalibrationInterface;
+    class SubArrayMgr;
 
     class CalibrationThread
     {
     public:
-      CalibrationThread(SubArrays*            subarrays,
-						CalibrationInterface* cal,
+      CalibrationThread(SubArrayMgr*            subarrays,
 						pthread_mutex_t&      globallock,
 						const string&		  dataDir);
       virtual ~CalibrationThread();
@@ -48,10 +46,9 @@ namespace LOFAR {
       void run();
       static void* thread_main(void* thisthread);
       int join();
-      
+
     private:
-      SubArrays*            m_subarrays;
-      CalibrationInterface* m_cal;
+      SubArrayMgr*          m_subarrays;
       ACC*                  m_acc;
 	  string				itsDataDir;
 
