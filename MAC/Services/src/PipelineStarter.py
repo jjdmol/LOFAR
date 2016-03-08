@@ -21,8 +21,8 @@
 #
 # $Id$
 """
-Daemon that listens to OTDB status changes to SCHEDULED, requests
-the parset of such jobs, and starts them using SLURM and Docker.
+Daemon that listens to OTDB status changes to SCHEDULED, starts them
+using SLURM and Docker, and puts the jobs to QUEUED.
 
 The execution chain is as follows:
 
@@ -229,7 +229,9 @@ class PipelineStarter(OTDBBusListener):
 
     # Cancel corresponding SLURM job, causing any successors
     # to be cancelled as well.
-    self.slurm.cancel(parset.slurmJobName())
+    jobName = parset.slurmJobName()
+    logger.info("Cancelling job %s", jobName)
+    self.slurm.cancel(jobName)
 
   """
     More statusses we want to abort on.
@@ -266,11 +268,21 @@ class PipelineStarter(OTDBBusListener):
     """
 
     # Collect the parsets of predecessors
+    logger.info("Obtaining predecessor parsets")
     preparsets = self._getPredecessorParsets(parset)
 
     # Collect SLURM job information
     logger.info("Obtaining SLURM job list")
     slurm_jobs = self.slurm.jobs()
+
+    """
+      Update OTDB before scheduling the SLURM jobs,
+      as the SLURM jobs will set the status too.
+    """
+
+    # Set OTDB status to QUEUED
+    logger.info("Setting status to QUEUED")
+    self._setStatus(treeId, "queued")
 
     """
       Schedule "docker-runPipeline.sh", which will fetch the parset and run the pipeline within
@@ -349,10 +361,6 @@ class PipelineStarter(OTDBBusListener):
       ]
     )
     logger.info("Scheduled SLURM job %s" % (slurm_cancel_job_id,))
-
-    # Set OTDB status to QUEUED
-    logger.info("Setting status to QUEUED")
-    self._setStatus(treeId, "queued")
 
     logger.info("Pipeline processed.")
 
