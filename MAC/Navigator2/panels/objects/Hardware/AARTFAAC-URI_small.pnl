@@ -19,13 +19,13 @@ PANEL,-1 -1 169 75 N "_3DFace" 2
   }
     
   if (strpos(baseDP,\"_Cabinet\") > -1){
-    baseDP += \"_URIboard\" + uNr;         
+    baseDP += \"_URIBoard\" + uNr;         
   } else {
-    baseDP += \"_Cabinet\" + cNr + \"_URIboard\" + uNr;         
+    baseDP += \"_Cabinet\" + cNr + \"_URIBoard\" + uNr;         
   }
   
 
-  setValue(\"uriTxt\",\"text\",\"URIboard: \"+uNr);
+  setValue(\"uriTxt\",\"text\",\"URIBoard: \"+uNr);
 
   // pass baseDP to selfstate Object to work with
   setValue(\"selfState.light\",\"toolTipText\",baseDP);
@@ -83,7 +83,7 @@ void click() {
   // set delay in case double click was meant
   delay(0, 100); 
   if (!bDoubleClicked) {
-    navPanel_setEvent(\"URIboard\"+uNr,\"EventClick\");
+    navPanel_setEvent(\"URIBoard\"+uNr,\"EventClick\");
   }
 }
 
@@ -95,7 +95,7 @@ void dblClick() {
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"AARTFAAC-URI_small:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
-    navPanel_setEvent(\"URIboard\"+uNr,\"ChangePanel\"); 
+    navPanel_setEvent(\"URIBoard\"+uNr,\"ChangePanel\"); 
   }
   
   // set delay to avoid click event will be triggered
@@ -105,7 +105,7 @@ void dblClick() {
 
 // routine for right mouse click
 void rClick() {
-  navPanel_setEvent(\"URIboard\"+uNr,\"EventRightClick\");
+  navPanel_setEvent(\"URIBoard\"+uNr,\"EventRightClick\");
 }" 0
  2
 "CBRef" "1"
@@ -148,9 +148,9 @@ LANG:1 0
 void UriCallback(string dp1, bool aTrig) {
   
   LOG_DEBUG(\"AARTFAAC-URI_small:UriCallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
-  LOG_DEBUG(\"AARTFAAC-URI_small:UriCallback|Found highlight : \" + highlight + \" Looking for: URIboard\" + uNr);
+  LOG_DEBUG(\"AARTFAAC-URI_small:UriCallback|Found highlight : \" + highlight + \" Looking for: URIBoard\" + uNr);
   bool bHighlight=false;
-  if (dynContains(highlight,\"URIboard\"+uNr)) {
+  if (dynContains(highlight,\"URIBoard\"+uNr)) {
     bHighlight=true;
   }
   LOG_DEBUG(\"AARTFAAC-URI_small:UriCallback|Highlight request: \"+bHighlight);
