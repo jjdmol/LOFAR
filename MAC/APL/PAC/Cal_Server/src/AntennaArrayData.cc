@@ -19,9 +19,9 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: AntennaArrayData.cc 30919 2015-02-05 15:26:22Z amesfoort $
 
-#include <APL/CAL_Protocol/AntennaArrayData.h>
+#include "AntennaArrayData.h"
 #include <string>
 #include <fstream>
 
@@ -47,7 +47,7 @@ bool AntennaArrayData::getNextFromFile(string filename)
     m_file.open(filename.c_str());
     m_filename = filename;
   }
-  
+
   if (!m_file.good()) {
     m_file.close();
     return false;
@@ -55,9 +55,9 @@ bool AntennaArrayData::getNextFromFile(string filename)
 
   // The file may have comment lines at the top. These lines start with '#'
   // and must be skipped, first.
- 
-  m_name = '#'; 
-  while (m_name[0] == '#') { 
+
+  m_name = '#';
+  while (m_name[0] == '#') {
     getline(m_file, m_name); // get name
     // No empty lines are allowed.
     if ("" == m_name) {

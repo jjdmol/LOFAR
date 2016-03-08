@@ -88,13 +88,13 @@ private:
 	void  destroyAllBeams(GCFPortInterface* port);
 
 	// Create new beam and update administration
-	DigitalBeam*	checkBeam(GCFPortInterface* 					port,
-					string 								name, 
-					string 								subarrayname, 
+	DigitalBeam*	checkBeam(GCFPortInterface* 		port,
+					string 								name,
+					string 								antennaSetName,
+					string 								band,
 					IBS_Protocol::Beamlet2SubbandMap	allocation,
 					bitset<LOFAR::MAX_RCUS>				rcumask,
 					uint								ringNr,
-					uint								rcuMode,
 					int*								beamError);
 
 	// Destroy beam of specified transaction.
@@ -179,9 +179,9 @@ private:
 	void _logBeamAdministration();
 
 	// RCU calibration
-	std::complex<double>	_getCalFactor(uint rcuMode, uint rcu, uint subbandNr);
-	void 					_loadCalTable(uint rcuMode, uint nrRSPBoards);
-
+	std::complex<double>	_getCalFactor(const string& antennaSet, const string& band, uint rcu, uint subbandNr);
+	void 					_loadCalTable(const string& antennaSet, const string& band, uint nrRSPBoards);
+    bool                    _isCalTableValid(const string& antennaSet, const string& band);
 	// ### data members ###
 
 	// 'constant' containing the current number of bits each datasample has.
@@ -203,7 +203,7 @@ private:
 	blitz::Array<std::complex<double>,  3> itsWeights;
 	blitz::Array<std::complex<int16_t>, 3> itsWeights16;
 
-	// RCU Allocations in the AntennaArrays. Remember that each RCU can participate 
+	// RCU Allocations in the AntennaArrays. Remember that each RCU can participate
 	// in more than one beam.
 	bitset<MAX_RCUS>			itsLBAallocation;	// which RCUs are used for LBA
 	bitset<MAX_RCUS>			itsHBAallocation;	// which RCUs are used for HBA
@@ -233,12 +233,22 @@ private:
 	map<string, DigitalBeam*> 	itsBeamPool;			//
 	AnaBeamMgr*					itsAnaBeamMgr;			// for managing the analogue beams
 
-	StatCal*					itsCalTableMode1;		// table for mode 1 and 2
-	StatCal*					itsCalTableMode3;		// table for mode 3 and 4
-	StatCal*					itsCalTableMode5;		// table for mode 5
-	StatCal*					itsCalTableMode6;		// table for mode 6
-	StatCal*					itsCalTableMode7;		// table for mode 7
-	
+    StatCal*                    itsCalTable_LBA_INNER_10_90;
+    StatCal*                    itsCalTable_LBA_INNER_30_90;
+    StatCal*                    itsCalTable_LBA_OUTER_10_90;
+    StatCal*                    itsCalTable_LBA_OUTER_30_90;
+    StatCal*                    itsCalTable_LBA_SPARSE_EVEN_10_90;
+    StatCal*                    itsCalTable_LBA_SPARSE_EVEN_30_90;
+    StatCal*                    itsCalTable_LBA_SPARSE_ODD_10_90;
+    StatCal*                    itsCalTable_LBA_SPARSE_ODD_30_90;
+    StatCal*                    itsCalTable_LBA_X_10_90;
+    StatCal*                    itsCalTable_LBA_X_30_90;
+    StatCal*                    itsCalTable_LBA_Y_10_90;
+    StatCal*                    itsCalTable_LBA_Y_30_90;
+    StatCal*                    itsCalTable_HBA_110_190;
+    StatCal*                    itsCalTable_HBA_170_230;
+    StatCal*                    itsCalTable_HBA_210_250;
+
 	// constants
 	uint   	itsMaxRCUs;				//
 	uint   	itsMaxRSPboards;		//

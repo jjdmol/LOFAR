@@ -68,7 +68,7 @@ int	gBeamformerGain = 0;
 //
 // BeamServer(name)
 //
-BeamServer::BeamServer(const string& name, long	timestamp) : 
+BeamServer::BeamServer(const string& name, long	timestamp) :
 	GCFTask((State)&BeamServer::con2rspdriver, name),
 	itsCurrentBitsPerSample (MAX_BITS_PER_SAMPLE),
 	itsCurrentMaxBeamlets   (maxBeamlets(itsCurrentBitsPerSample)),
@@ -79,11 +79,21 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	itsCalServer			(0),
 	itsBeamsModified		(false),
 	itsAnaBeamMgr			(0),
-	itsCalTableMode1		(0),
-	itsCalTableMode3		(0),
-	itsCalTableMode5		(0),
-	itsCalTableMode6		(0),
-	itsCalTableMode7		(0),
+    itsCalTable_LBA_INNER_10_90       (0),
+    itsCalTable_LBA_INNER_30_90       (0),
+    itsCalTable_LBA_OUTER_10_90       (0),
+    itsCalTable_LBA_OUTER_30_90       (0),
+    itsCalTable_LBA_SPARSE_EVEN_10_90 (0),
+    itsCalTable_LBA_SPARSE_EVEN_30_90 (0),
+    itsCalTable_LBA_SPARSE_ODD_10_90  (0),
+    itsCalTable_LBA_SPARSE_ODD_30_90  (0),
+    itsCalTable_LBA_X_10_90           (0),
+    itsCalTable_LBA_X_30_90           (0),
+    itsCalTable_LBA_Y_10_90           (0),
+    itsCalTable_LBA_Y_30_90           (0),
+    itsCalTable_HBA_110_190           (0),
+    itsCalTable_HBA_170_230           (0),
+    itsCalTable_HBA_210_250           (0),
 	itsUpdateInterval		(0),
 	itsComputeInterval		(0),
 	itsHBAUpdateInterval	(0),
@@ -134,7 +144,7 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	itsComputeInterval   = globalParameterSet()->getInt32("BeamServer.ComputeInterval", DIG_COMPUTE_INTERVAL);
 	itsHBAUpdateInterval = globalParameterSet()->getInt32("BeamServer.HBAUpdateInterval",  HBA_INTERVAL);
 	if (itsHBAUpdateInterval < HBA_MIN_INTERVAL) {
-		LOG_FATAL_STR("HBAUpdateInterval is too small, must be greater or equal to " << 
+		LOG_FATAL_STR("HBAUpdateInterval is too small, must be greater or equal to " <<
 						HBA_MIN_INTERVAL << " seconds");
 		exit(EXIT_FAILURE);
 	}
@@ -145,11 +155,21 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	// read static calibrationtables if available
 	StationConfig	SC;
 	if (itsStaticCalEnabled) {
-		_loadCalTable(1, SC.nrRSPs);
-		_loadCalTable(3, SC.nrRSPs);
-		_loadCalTable(5, SC.nrRSPs);
-		_loadCalTable(6, SC.nrRSPs);
-		_loadCalTable(7, SC.nrRSPs);
+        _loadCalTable("LBA_INNER", "10_90", SC.nrRSPs);
+        _loadCalTable("LBA_INNER", "30_90", SC.nrRSPs);
+        _loadCalTable("LBA_OUTER", "10_90", SC.nrRSPs);
+        _loadCalTable("LBA_OUTER", "30_90", SC.nrRSPs);
+        _loadCalTable("LBA_SPARSE_EVEN", "10_90", SC.nrRSPs);
+        _loadCalTable("LBA_SPARSE_EVEN", "30_90", SC.nrRSPs);
+        _loadCalTable("LBA_SPARSE_ODD", "10_90", SC.nrRSPs);
+        _loadCalTable("LBA_SPARSE_ODD", "30_90", SC.nrRSPs);
+        _loadCalTable("LBA_X", "10_90", SC.nrRSPs);
+        _loadCalTable("LBA_X", "30_90", SC.nrRSPs);
+        _loadCalTable("LBA_Y", "10_90", SC.nrRSPs);
+        _loadCalTable("LBA_Y", "30_90", SC.nrRSPs);
+        _loadCalTable("HBA", "110_190", SC.nrRSPs);
+        _loadCalTable("HBA", "170_230", SC.nrRSPs);
+        _loadCalTable("HBA", "210_250", SC.nrRSPs);
 	}
 	else {
 		LOG_WARN("Static calibration is disabled!");
@@ -520,7 +540,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 
 	GCFEvent::TResult	status = GCFEvent::HANDLED;
 	static int 			weightsPeriod = 0;
-	
+
 	undertaker();	// remove dead clients from admin
 
 	switch (event.signal) {
@@ -535,7 +555,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 			delete client;
 		} else {
 			itsClientList.push_back(client);
-			LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", 
+			LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected",
 																itsClientList.size()));
 		}
 	}
@@ -549,7 +569,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 		if (&port == itsDigHeartbeat) {
 			GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
 			LOG_DEBUG_STR("timer=" << Timestamp(timer->sec, timer->usec));
-			
+
 			weightsPeriod += itsUpdateInterval;
 			if (weightsPeriod >= itsComputeInterval) {
 				weightsPeriod = 0;
@@ -558,7 +578,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 				compute_weights(Timestamp(timer->sec + LEADIN_TIME, 0L));
 				send_weights   (Timestamp(timer->sec + LEADIN_TIME, 0L));
 			}
-			
+
 			if (itsBeamsModified) {
 				send_sbselection();
 				itsBeamsModified = false;
@@ -579,7 +599,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 			}
 			return (GCFEvent::HANDLED);
 		}
-		
+
 		LOG_ERROR_STR("Unknown F_TIMER event occurred at port " << port.getName() << "! Ignoring it.");
 	} // case
 	break;
@@ -588,11 +608,21 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 	case IBS_GETCALINFO: {
 		IBSGetcalinfoackEvent	answer;
 		ostringstream	oss;
-		if (itsCalTableMode1)	oss << *itsCalTableMode1 << endl;
-		if (itsCalTableMode3)	oss << *itsCalTableMode3 << endl;
-		if (itsCalTableMode5)	oss << *itsCalTableMode5 << endl;
-		if (itsCalTableMode6)	oss << *itsCalTableMode6 << endl;
-		if (itsCalTableMode7)	oss << *itsCalTableMode7 << endl;
+        if (itsCalTable_LBA_INNER_10_90)        oss << *itsCalTable_LBA_INNER_10_90 << endl;
+        if (itsCalTable_LBA_INNER_30_90)        oss << *itsCalTable_LBA_INNER_30_90 << endl;
+        if (itsCalTable_LBA_OUTER_10_90)        oss << *itsCalTable_LBA_OUTER_10_90 << endl;
+        if (itsCalTable_LBA_OUTER_30_90)        oss << *itsCalTable_LBA_OUTER_30_90 << endl;
+        if (itsCalTable_LBA_SPARSE_EVEN_10_90)  oss << *itsCalTable_LBA_SPARSE_EVEN_10_90 << endl;
+        if (itsCalTable_LBA_SPARSE_EVEN_30_90)  oss << *itsCalTable_LBA_SPARSE_EVEN_30_90 << endl;
+        if (itsCalTable_LBA_SPARSE_ODD_10_90)   oss << *itsCalTable_LBA_SPARSE_ODD_10_90 << endl;
+        if (itsCalTable_LBA_SPARSE_ODD_30_90)   oss << *itsCalTable_LBA_SPARSE_ODD_30_90 << endl;
+        if (itsCalTable_LBA_X_10_90)            oss << *itsCalTable_LBA_X_10_90 << endl;
+        if (itsCalTable_LBA_X_30_90)            oss << *itsCalTable_LBA_X_30_90 << endl;
+        if (itsCalTable_LBA_Y_10_90)            oss << *itsCalTable_LBA_Y_10_90 << endl;
+        if (itsCalTable_LBA_Y_30_90)            oss << *itsCalTable_LBA_Y_30_90 << endl;
+        if (itsCalTable_HBA_110_190)            oss << *itsCalTable_HBA_110_190 << endl;
+        if (itsCalTable_HBA_170_230)            oss << *itsCalTable_HBA_170_230 << endl;
+        if (itsCalTable_HBA_210_250)            oss << *itsCalTable_HBA_210_250 << endl;
 		answer.info = oss.str();
 		port.send(answer);
 	}
@@ -782,6 +812,10 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 
 		LOG_INFO_STR("Subscribing to subarray: " << subscribe.name);
 		LOG_DEBUG_STR("subbands= " << subscribe.subbandset);
+        if (!_isCalTableValid(itsBeamTransaction.getBeam()->antennaSetName(), itsBeamTransaction.getBeam()->bandName())) {
+            LOG_INFO_STR("No valid CalTable available for this beam, using default");
+        }
+
 		itsCalServer->send(subscribe);
 		itsConnectTimer->setTimer(5.0);
 	}
@@ -792,38 +826,38 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 		CALSubscribeackEvent ack(event);
 		IBSBeamallocackEvent beamallocack;
 
-		if (ack.status == CAL_Protocol::CAL_SUCCESS && 
-				(ack.subarray.getSPW().getNumSubbands() >= 
-				(int)itsBeamTransaction.getBeam()->allocation()().size()) ) {
+		if (ack.status == CAL_Protocol::CAL_SUCCESS) { // &&
+//TODO				(ack.subarray.SPW().getNumSubbands() >=
+//TODO              (int)itsBeamTransaction.getBeam()->allocation()().size()) ) {
 
-			LOG_INFO_STR("Got subscription to subarray " << ack.subarray.getName());
-			LOG_DEBUG_STR("ack.subarray.positions=" << ack.subarray.getAntennaPos());
+			LOG_INFO_STR("Got subscription to subarray " << ack.subarray.name());
+//TODO			LOG_DEBUG_STR("ack.subarray.positions=" << ack.subarray.getAntennaPos());
 
 			// set positions on beam
 			DigitalBeam*	theBeam = itsBeamTransaction.getBeam();
 //TODO			theBeam->setSubarray(ack.subarray);
 
 			// set the scale of the beamlets: (-2PI * freq * i)/lightspeed
-			_scaleBeamlets(theBeam->allocation(), theBeam->ringNr(), ack.subarray.getSPW());
+			_scaleBeamlets(theBeam->allocation(), theBeam->ringNr(), ack.subarray.SPW());
 
 			// set calibration handle for this beam
 //TODO		// future ITRF CalServer will not return a handle, it will use the beamName we passed to it.
-			itsBeamTransaction.getBeam()->calibrationHandle(ack.handle);
+			itsBeamTransaction.getBeam()->calibrationHandle(ack.name);
 
 			// send succesful ack
 			beamallocack.status 	  = IBS_Protocol::IBS_NO_ERR;
-			beamallocack.antennaGroup = ack.subarray.getName();
+			beamallocack.antennaGroup = ack.subarray.name();
 			beamallocack.beamName 	  = itsBeamTransaction.getBeam()->name();
 			itsBeamTransaction.getPort()->send(beamallocack);
 
 			// add beam to our pool
 			LOG_DEBUG_STR("Adding beam " << itsBeamTransaction.getBeam()->name() << " to the pool");
 			itsBeamPool[itsBeamTransaction.getBeam()->name()] = itsBeamTransaction.getBeam();
-		} 
+		}
 		else {
 			LOG_ERROR("Failed to subscribe to subarray");
-			LOG_DEBUG_STR("getNumSubbands()    = " << ack.subarray.getSPW().getNumSubbands());
-			LOG_DEBUG_STR("allocation.size()= " << (int)itsBeamTransaction.getBeam()->allocation()().size());
+			//TODO LOG_DEBUG_STR("getNumSubbands()    = " << ack.subarray.SPW().getNumSubbands());
+			//TODO LOG_DEBUG_STR("allocation.size()= " << (int)itsBeamTransaction.getBeam()->allocation()().size());
 
 			// failed to subscribe
 			beamallocack.status 	  = IBS_BEAMALLOC_ERR;
@@ -902,9 +936,8 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 		// unsubscribe
 		CALUnsubscribeEvent unsubscribe;
 		unsubscribe.name 	= itsBeamTransaction.getBeam()->name();
-		unsubscribe.handle  = itsBeamTransaction.getBeam()->calibrationHandle();
 //TODO	Handle will be replaced by beamName for ITRF CalServer
-		ASSERT(unsubscribe.handle != 0);
+//TODO	ASSERT(unsubscribe.handle != 0);
 		itsCalServer->send(unsubscribe);
 		itsConnectTimer->setTimer(5.0);
 	}
@@ -989,7 +1022,7 @@ bool BeamServer::beamalloc_start(IBSBeamallocEvent& ba,
 {
 	// allocate the beam
 	int		beamError(IBS_NO_ERR);
-	DigitalBeam* beam = checkBeam(&port, ba.beamName, ba.antennaSet, ba.allocation, ba.rcumask, ba.ringNr, ba.rcuMode, &beamError);
+	DigitalBeam* beam = checkBeam(&port, ba.beamName, ba.antennaSet, ba.band, ba.allocation, ba.rcumask, ba.ringNr, &beamError);
 
 	if (!beam) {
 		LOG_FATAL_STR("BEAMALLOC: failed to allocate beam " << ba.beamName << " on " << ba.antennaSet);
@@ -1013,7 +1046,7 @@ bool BeamServer::beamfree_start(IBSBeamfreeEvent&  bf,
 								GCFPortInterface& port)
 {
 	map<string, DigitalBeam*>::iterator	beamIter = itsBeamPool.find(bf.beamName);
-	if (beamIter == itsBeamPool.end()) { 
+	if (beamIter == itsBeamPool.end()) {
 		LOG_FATAL_STR("BEAMFREE failed: beam '" << bf.beamName << "' does not exist");
 
 		IBSBeamfreeackEvent ack;
@@ -1076,8 +1109,8 @@ int BeamServer::beampointto_action(IBSPointtoEvent&		ptEvent,
 
 	// The analogue must be started several seconds before the observationstart time because the I2C bus
 	// needs several seconds to pass the information
-	int		activationTime = _idealStartTime(Timestamp::now().sec(), 
-				ptEvent.pointing.time(), HBA_MIN_INTERVAL, 
+	int		activationTime = _idealStartTime(Timestamp::now().sec(),
+				ptEvent.pointing.time(), HBA_MIN_INTERVAL,
 				itsLastHBACalculationTime+itsHBAUpdateInterval, HBA_MIN_INTERVAL, itsHBAUpdateInterval);
 	int		timeShift(ptEvent.pointing.time().sec() - activationTime);
 	// update pointing
@@ -1088,8 +1121,8 @@ int BeamServer::beampointto_action(IBSPointtoEvent&		ptEvent,
 	}
 
 	// note we don't know if we added the beam before, just do it again and ignore returnvalue.
-	itsAnaBeamMgr->addBeam(AnalogueBeam(ptEvent.beamName, beamIter->second->antennaSetName(), 
-									beamIter->second->rcuMask(), ptEvent.rank));
+	itsAnaBeamMgr->addBeam(AnalogueBeam(ptEvent.beamName, beamIter->second->antennaSetName(),
+                                        beamIter->second->bandName(), beamIter->second->rcuMask(), ptEvent.rank));
 	if (!itsAnaBeamMgr->addPointing(ptEvent.beamName, ptEvent.pointing)) {
 		return (IBS_UNKNOWN_BEAM_ERR);
 	}
@@ -1220,15 +1253,15 @@ void BeamServer::destroyAllBeams(GCFPortInterface* port)
 // checkBeam(beamTransaction, port , name, subarray, beamletAllocation)
 //
 DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
-						  std::string 						name, 
-						  std::string 						antennaSetName, 
+						  std::string 						name,
+						  std::string 						antennaSetName,
+						  std::string 						band,
 						  IBS_Protocol::Beamlet2SubbandMap	allocation,
 						  bitset<LOFAR::MAX_RCUS>		    rcumask,
 						  uint								ringNr,
-						  uint								rcuMode,
 						  int*								beamError)
 {
-	LOG_TRACE_FLOW_STR("checkBeam(port=" << port->getName() << ", name=" << name << ", subarray=" << antennaSetName 
+	LOG_TRACE_FLOW_STR("checkBeam(port=" << port->getName() << ", name=" << name << ", subarray=" << antennaSetName
 										<< ", ring=" << ringNr);
 
 	ASSERT(port);
@@ -1248,12 +1281,12 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 	if (antennaSetName.length() == 0)  {
 		LOG_ERROR_STR("AntennaSet name not set, cannot alloc beam " << name);
 		*beamError = IBS_NO_ANTENNASET_ERR;
-		return (0); 
+		return (0);
 	}
 	if (!globalAntennaSets()->isAntennaSet(antennaSetName))  {
 		LOG_ERROR_STR("Unknown antennaSet name, cannot alloc beam " << name);
 		*beamError = IBS_NO_ANTENNASET_ERR;
-		return (0); 
+		return (0);
 	}
 	if (itsSplitterOn) {		// check allocation
 		uint	ringLimit = itsMaxRCUs / 2;
@@ -1273,7 +1306,7 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 
 	// nr of subbands should fit in the beamlet space.
 	if (static_cast<int>(allocation.getSubbandBitset().count()) > itsCurrentMaxBeamlets) {
-		LOG_ERROR_STR("Too many subbands specified (" << allocation.getSubbandBitset().count() << ") only " 
+		LOG_ERROR_STR("Too many subbands specified (" << allocation.getSubbandBitset().count() << ") only "
 					<< itsCurrentMaxBeamlets << " allowed");
 		return (0);
 	}
@@ -1284,7 +1317,7 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 		return (0);
 	}
 
-	DigitalBeam* beam = new DigitalBeam(name, antennaSetName, allocation, rcumask, ringNr, rcuMode);
+	DigitalBeam* beam = new DigitalBeam(name, antennaSetName, band, allocation, rcumask, ringNr);
 
 	if (beam) { // register new beam
 		itsClientBeams[port].insert(beam);
@@ -1310,10 +1343,10 @@ void BeamServer::deleteTransactionBeam()
 
 	// release beamlets
 	if (itsBeamTransaction.isAllocationDone()) {
-		_releaseBeamlets(itsBeamTransaction.getBeam()->allocation(), 
+		_releaseBeamlets(itsBeamTransaction.getBeam()->allocation(),
 						 itsBeamTransaction.getBeam()->ringNr());
 	}
-	
+
 	// unregister beam
 	_unregisterBeamRCUs(*(itsBeamTransaction.getBeam()));
 	itsClientBeams[itsBeamTransaction.getPort()].erase(itsBeamTransaction.getBeam());
@@ -1350,11 +1383,11 @@ bool BeamServer::_checkBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 		//											v--- beamletnumber
 		int	index(ringNr * itsCurrentMaxBeamlets + iter->first);
 		if (itsBeamletAllocation[index].subbandNr) {
-			LOG_ERROR_STR("Beamlet " << iter->first << "(" << index << 
+			LOG_ERROR_STR("Beamlet " << iter->first << "(" << index <<
 							") is already assigned to subband " << iter->second);
 			return (false);
 		}
-	} 
+	}
 	return (true);
 }
 
@@ -1375,7 +1408,7 @@ void BeamServer::_allocBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 		// the spectral window of the antenneSet for that. We will receive that info
 		// from the CalServer in a later state and calc the scalings than.
 		itsBeamletAllocation[ringNr * itsCurrentMaxBeamlets + iter->first].scaling = complex<double>(0.0, 0.0);
-	} 
+	}
 
 	LOG_INFO_STR("Assignment of subbands to beamlets succesfull.");
 }
@@ -1396,10 +1429,10 @@ void BeamServer::_scaleBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 	map<uint16,uint16>::iterator end  = allocation().end();
 	for ( ; iter != end; iter++) {
 		// first: beamletIndex, second: subbandnr
-		double	freq  = spw.getSubbandFreq(iter->second);
+		double	freq  = spw.subbandFreq(iter->second);
 		int		index = ringNr * itsCurrentMaxBeamlets + iter->first;
 		itsBeamletAllocation[index].scaling = -2.0 * M_PI * freq * complex<double>(0.0,1.0) / speedOfLight;
-		LOG_TRACE_OBJ_STR("scaling subband[" << itsBeamletAllocation[index].subbandNr << 
+		LOG_TRACE_OBJ_STR("scaling subband[" << itsBeamletAllocation[index].subbandNr <<
 						  "]@beamlet[" << index << "] = " << itsBeamletAllocation[index].scaling <<
 						  ", freq = " << freq);
 	}
@@ -1419,7 +1452,7 @@ void BeamServer::_releaseBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 	for ( ; iter != end; iter++) {
 		itsBeamletAllocation[ringNr * itsCurrentMaxBeamlets + iter->first].subbandNr = 0;
 		itsBeamletAllocation[ringNr * itsCurrentMaxBeamlets + iter->first].scaling   = complex<double>(0.0, 0.0);
-	} 
+	}
 
 	LOG_INFO_STR("Assigned beamlets released succesfully.");
 }
@@ -1440,7 +1473,7 @@ void BeamServer::_registerBeamRCUs(const DigitalBeam&	beam)
 		if (beam.rcuMask().test(r)) {
 			RCUcounts[r]++;
 			rcuBitset.set(r, true);
-		}	
+		}
 	}
 	if (isLBAbeam) {
 		itsNrLBAbeams++;
@@ -1466,7 +1499,7 @@ void BeamServer::_unregisterBeamRCUs(const DigitalBeam&	beam)
 			if (--RCUcounts[r] == 0) {
 				rcuBitset.set(r, false);
 			}
-		}	
+		}
 	}
 	if (isLBAbeam) {
 		itsNrLBAbeams--;
@@ -1503,58 +1536,94 @@ void BeamServer::_logBeamAdministration()
 //
 // _getCalFactor(rcumode, rcu, subbandNr)
 //
-complex<double>	BeamServer::_getCalFactor(uint rcuMode, uint rcu, uint subbandNr)
+complex<double>	BeamServer::_getCalFactor(const string& antennaSet, const string& band, uint rcu, uint subbandNr)
 {
-	complex<double>	result(1.0, 0.0);
+    complex<double>	result(1.0, 0.0);
+	//LOG_DEBUG_STR("calFactor(" << antennaSet << "," << band <<  "," << rcu << "," << subbandNr << ")=" << result);
 
-	switch (rcuMode) {
-	case 1:
-	case 2:
-		if (itsCalTableMode1) { result = itsCalTableMode1->calFactor(rcu, subbandNr); } break;
-	case 3:
-	case 4:
-		if (itsCalTableMode3) { result = itsCalTableMode3->calFactor(rcu, subbandNr); } break;
-	case 5:
-		if (itsCalTableMode5) { result = itsCalTableMode5->calFactor(rcu, subbandNr); } break;
-	case 6:
-		if (itsCalTableMode6) { result = itsCalTableMode6->calFactor(rcu, subbandNr); } break;
-	case 7:
-		if (itsCalTableMode7) { result = itsCalTableMode7->calFactor(rcu, subbandNr); } break;
-	default:
-		break;
-	}
+    if (band == "10_90") {
+        if      (antennaSet == "LBA_INNER") { if (itsCalTable_LBA_INNER_10_90) result = itsCalTable_LBA_INNER_10_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_OUTER") { if (itsCalTable_LBA_OUTER_10_90) result = itsCalTable_LBA_OUTER_10_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_SPARSE_EVEN") { if(itsCalTable_LBA_SPARSE_EVEN_10_90) result = itsCalTable_LBA_SPARSE_EVEN_10_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_SPARSE_ODD") { if(itsCalTable_LBA_SPARSE_ODD_10_90) result = itsCalTable_LBA_SPARSE_ODD_10_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_X") { if(itsCalTable_LBA_X_10_90) result = itsCalTable_LBA_X_10_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_Y") { if(itsCalTable_LBA_Y_10_90) result = itsCalTable_LBA_Y_10_90->calFactor(rcu, subbandNr); }
+    }
+    else if (band == "30_90") {
+        if      (antennaSet == "LBA_INNER") { if(itsCalTable_LBA_INNER_30_90) result = itsCalTable_LBA_INNER_30_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_OUTER") { if(itsCalTable_LBA_OUTER_30_90) result = itsCalTable_LBA_OUTER_30_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_SPARSE_EVEN") { if(itsCalTable_LBA_SPARSE_EVEN_30_90)result = itsCalTable_LBA_SPARSE_EVEN_30_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_SPARSE_ODD") { if(itsCalTable_LBA_SPARSE_ODD_30_90)  result = itsCalTable_LBA_SPARSE_ODD_30_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_X") { if(itsCalTable_LBA_X_30_90) result = itsCalTable_LBA_X_30_90->calFactor(rcu, subbandNr); }
+        else if (antennaSet == "LBA_Y") { if(itsCalTable_LBA_Y_30_90) result = itsCalTable_LBA_Y_30_90->calFactor(rcu, subbandNr); }
+    }
+    else if (band == "110_190") { if(itsCalTable_HBA_110_190) result = itsCalTable_HBA_110_190->calFactor(rcu, subbandNr); }
+    else if (band == "170_230") { if(itsCalTable_HBA_170_230) result = itsCalTable_HBA_170_230->calFactor(rcu, subbandNr); }
+    else if (band == "210_250") { if(itsCalTable_HBA_210_250) result = itsCalTable_HBA_210_250->calFactor(rcu, subbandNr); }
 
-//	LOG_DEBUG_STR("calFactor(" << rcuMode << "," << rcu << "," << subbandNr << ")=" << result);
+
+	//LOG_INFO_STR("calFactor(" << antennaSet << "," << band <<  "," << rcu << "," << subbandNr << ")=" << result);
 	return (result);
 }
 
-void BeamServer::_loadCalTable(uint rcuMode, uint nrRSPBoards)
+//
+// _getCalFactor(rcumode, rcu, subbandNr)
+//
+bool BeamServer::_isCalTableValid(const string& antennaSet, const string& band)
+{
+    bool result;
+
+    result = false;
+    if (band == "10_90") {
+        if      (antennaSet == "LBA_INNER") { if (itsCalTable_LBA_INNER_10_90) result = true; }
+        else if (antennaSet == "LBA_OUTER") { if (itsCalTable_LBA_OUTER_10_90) result = true; }
+        else if (antennaSet == "LBA_SPARSE_EVEN") { if(itsCalTable_LBA_SPARSE_EVEN_10_90) result = true; }
+        else if (antennaSet == "LBA_SPARSE_ODD") { if(itsCalTable_LBA_SPARSE_ODD_10_90) result = true; }
+        else if (antennaSet == "LBA_X") { if(itsCalTable_LBA_X_10_90) result = true; }
+        else if (antennaSet == "LBA_Y") { if(itsCalTable_LBA_Y_10_90) result = true; }
+    }
+    else if (band == "30_90") {
+        if      (antennaSet == "LBA_INNER") { if(itsCalTable_LBA_INNER_30_90) result = true; }
+        else if (antennaSet == "LBA_OUTER") { if(itsCalTable_LBA_OUTER_30_90) result = true; }
+        else if (antennaSet == "LBA_SPARSE_EVEN") { if(itsCalTable_LBA_SPARSE_EVEN_30_90)result = true; }
+        else if (antennaSet == "LBA_SPARSE_ODD") { if(itsCalTable_LBA_SPARSE_ODD_30_90)  result = true; }
+        else if (antennaSet == "LBA_X") { if(itsCalTable_LBA_X_30_90) result = true; }
+        else if (antennaSet == "LBA_Y") { if(itsCalTable_LBA_Y_30_90) result = true; }
+    }
+    else if (band == "110_190") { if(itsCalTable_HBA_110_190) result = true; }
+    else if (band == "170_230") { if(itsCalTable_HBA_170_230) result = true; }
+    else if (band == "210_250") { if(itsCalTable_HBA_210_250) result = true; }
+	return (result);
+}
+
+void BeamServer::_loadCalTable(const string& antennaSet, const string& band, uint nrRSPBoards)
 {
 	StatCal**	tableHandle(0);
-	switch (rcuMode) {
-		case 1:
-		case 2: tableHandle = &itsCalTableMode1; break;
-		case 3:
-		case 4: tableHandle = &itsCalTableMode3; break;
-		case 5: tableHandle = &itsCalTableMode5; break;
-		case 6: tableHandle = &itsCalTableMode6; break;
-		case 7: tableHandle = &itsCalTableMode7; break;
-		default: return;
-	}
-	
-	(*tableHandle) = new StatCal(rcuMode, nrRSPBoards);
+	string name;
+    name = antennaSet + "-" + band;
+
+    if      (name == "LBA_INNER-10_90")       tableHandle = &itsCalTable_LBA_INNER_10_90;
+    else if (name == "LBA_INNER-30_90")       tableHandle = &itsCalTable_LBA_INNER_30_90;
+    else if (name == "LBA_OUTER-10_90")       tableHandle = &itsCalTable_LBA_OUTER_10_90;
+    else if (name == "LBA_OUTER-30_90")       tableHandle = &itsCalTable_LBA_OUTER_30_90;
+    else if (name == "LBA_SPARSE_EVEN-10_90") tableHandle = &itsCalTable_LBA_SPARSE_EVEN_10_90;
+    else if (name == "LBA_SPARSE_EVEN-30_90") tableHandle = &itsCalTable_LBA_SPARSE_EVEN_30_90;
+    else if (name == "LBA_SPARSE_ODD-10_90")  tableHandle = &itsCalTable_LBA_SPARSE_ODD_10_90;
+    else if (name == "LBA_SPARSE_ODD-30_90")  tableHandle = &itsCalTable_LBA_SPARSE_ODD_30_90;
+    else if (name == "LBA_X-10_90")           tableHandle = &itsCalTable_LBA_X_10_90;
+    else if (name == "LBA_X-30_90")           tableHandle = &itsCalTable_LBA_X_30_90;
+    else if (name == "LBA_Y-10_90")           tableHandle = &itsCalTable_LBA_Y_10_90;
+    else if (name == "LBA_Y-30_90")           tableHandle = &itsCalTable_LBA_Y_30_90;
+    else if (name == "HBA-110_190")           tableHandle = &itsCalTable_HBA_110_190;
+    else if (name == "HBA-170_230")           tableHandle = &itsCalTable_HBA_170_230;
+    else if (name == "HBA-210_250")           tableHandle = &itsCalTable_HBA_210_250;
+    else return;
+
+	(*tableHandle) = new StatCal(antennaSet, band, nrRSPBoards);
 	if ((*tableHandle) && !(*tableHandle)->isValid()) {
 		delete (*tableHandle);
 		(*tableHandle) = 0;
-		switch (rcuMode) {
-			case 1:
-			case 2: LOG_WARN ("NO CALIBRATION TABLE FOUND FOR MODE 1 AND 2"); break;
-			case 3:
-			case 4: LOG_WARN ("NO CALIBRATION TABLE FOUND FOR MODE 3 AND 4"); break;
-			case 5:
-			case 6:
-			case 7: LOG_WARN_STR ("NO CALIBRATION TABLE FOUND FOR MODE " << rcuMode); break;
-		}
+        LOG_WARN_STR ("NO CALIBRATION TABLE FOUND FOR ANTENNASET " << antennaSet << ", BAND " << band);
 		return;
 	}
 
@@ -1573,7 +1642,7 @@ vector<double>	BeamServer::blitz2vector(const blitz::Array<double,1>&	anBA) cons
 	resultVect[0] = anBA(0);
 	resultVect[1] = anBA(1);
 	resultVect[2] = anBA(2);
-     
+
 	return (resultVect);
 }
 
@@ -1604,7 +1673,7 @@ void BeamServer::compute_weights(Timestamp weightTime)
 	LOG_INFO_STR("Calculating weights for time " << weightTime);
 
 	// reset all weights
-	LOG_DEBUG_STR("Weights array has size: " << itsWeights.extent(firstDim) << "x" << 
+	LOG_DEBUG_STR("Weights array has size: " << itsWeights.extent(firstDim) << "x" <<
 								itsWeights.extent(secondDim) << "x" << itsWeights.extent(thirdDim));
 	itsWeights = 0.0;
 
@@ -1679,22 +1748,22 @@ void BeamServer::compute_weights(Timestamp weightTime)
 				LOG_FATAL_STR("Conversion of source to J2000 failed");
 				continue;
 			}
-			LOG_INFO(formatString("sourceJ2000xyz: [ %9.6f, %9.6f, %9.6f ]", 
+			LOG_INFO(formatString("sourceJ2000xyz: [ %9.6f, %9.6f, %9.6f ]",
 							sourceJ2000xyz(0,0), sourceJ2000xyz(0,1), sourceJ2000xyz(0,2)));
 
 			// Note: Beamlet numbers depend on the ring.
 			int	firstBeamlet(gAntField->ringNr(fieldName) * itsCurrentMaxBeamlets);
 			LOG_DEBUG_STR("first beamlet of field " << fieldName << "=" << firstBeamlet);
-			// Note: RCUallocation is stationbased, rest info is fieldbased, 
+			// Note: RCUallocation is stationbased, rest info is fieldbased,
 			bitset<MAX_RCUS>	RCUallocation(beamIter->second->rcuMask());
 			for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
 				if (!RCUallocation.test(rcu)) {			// all RCUS switched on in LBA/HBA mode
 					continue;
 				}
-	
+
 				//
 				// For all beamlets that belong to this beam calculate the weight
-				// Note: weight is in-procduct for RCUpos and source Pos and depends on 
+				// Note: weight is in-procduct for RCUpos and source Pos and depends on
 				// the frequency of the subband.
 				//
 				boost::dynamic_bitset<>	beamletAllocation;
@@ -1705,12 +1774,12 @@ void BeamServer::compute_weights(Timestamp weightTime)
 					if (!beamletAllocation.test(beamlet)) {
 						continue;
 					}
-
-					complex<double>	CalFactor = _getCalFactor(beamIter->second->rcuMode(), rcu, 
-																itsBeamletAllocation[beamlet+firstBeamlet].subbandNr);
+                    //LOG_DEBUG_STR("get CalFactor for " << beamIter->second->antennaSetName() << ", " <<  beamIter->second->bandName());
+					complex<double>	CalFactor = _getCalFactor(beamIter->second->antennaSetName(), beamIter->second->bandName(),
+                                                              rcu, itsBeamletAllocation[beamlet+firstBeamlet].subbandNr);
 					int	bitPlane = beamlet / beamletsPerPlane;
-					itsWeights(rcu, bitPlane, beamlet % beamletsPerPlane) = 
-						CalFactor * exp(itsBeamletAllocation[beamlet+firstBeamlet].scaling * 
+					itsWeights(rcu, bitPlane, beamlet % beamletsPerPlane) =
+						CalFactor * exp(itsBeamletAllocation[beamlet+firstBeamlet].scaling *
 								(rcuJ2000Pos((int)posIndex[rcu], 0) * sourceJ2000xyz(0,0) +
 								 rcuJ2000Pos((int)posIndex[rcu], 1) * sourceJ2000xyz(0,1) +
 								 rcuJ2000Pos((int)posIndex[rcu], 2) * sourceJ2000xyz(0,2)));
@@ -1741,21 +1810,21 @@ void BeamServer::send_weights(Timestamp time)
 	if (!itsSetWeightsEnabled) {
 		return;
 	}
-  
+
 	RSPSetweightsEvent sw;
 	sw.timestamp = time;
 	LOG_DEBUG_STR("weights.time=" << sw.timestamp);
-  
+
 	// select all BLPS, no subarraying
 	sw.rcumask.reset();
 	for (uint i = 0; i < itsMaxRCUs; i++) {
 		sw.rcumask.set(i);
 	}
-  
+
 	int	nPlanes = MAX_BITS_PER_SAMPLE / itsCurrentBitsPerSample;
 	sw.weights().resize(1, itsMaxRCUs, nPlanes, itsCurrentMaxBeamlets / nPlanes);
 	sw.weights()(0, Range::all(), Range::all(), Range::all()) = itsWeights16;
-  
+
 	LOG_INFO_STR("sending weights for interval " << time << " : " << time + (long)(itsComputeInterval-1));
 
 //  for debugging purposes print 40 subbands of 10 antennas for 1 timestamp.
@@ -1838,7 +1907,7 @@ void BeamServer::send_sbselection()
 			LOG_DEBUG_STR("Sending subbandselection for ring segment " << ringNr);
 			LOG_DEBUG_STR(ss.subbands.beamlets());
 			itsRSPDriver->send(ss);
-		} 
+		}
 		else {
 			LOG_DEBUG_STR("No subbandselection for ring segment " << ringNr);
 			// TODO [200710] Shouldn't we send empty selections also (after cleanup of beams).

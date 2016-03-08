@@ -50,12 +50,12 @@ public:
 	// @param allocation How the subbands of the beam are mapped tot the bemalets.
 	// @param rcuMask The RCUs that participate in this beam.
 	// @param ringNr The serdes segment the allocation is ment for.
-	DigitalBeam(const string& 							name, 
-			    const string& 							antenneSet, 
-			    const IBS_Protocol::Beamlet2SubbandMap&	allocation, 
+	DigitalBeam(const string& 							name,
+			    const string& 							antenneSetName,
+			    const string& 							band,
+			    const IBS_Protocol::Beamlet2SubbandMap&	allocation,
 			    const bitset<MAX_RCUS>&					rcuMask,
-			    uint 									ringNr,
-				uint									rcuMode);
+			    uint 									ringNr);
 
 	// Default destructor.
 	virtual ~DigitalBeam();
@@ -73,12 +73,9 @@ public:
 	// Get number of ringSegment
 	uint ringNr() const	{ return (itsRingNr); }
 
-	// Get rcuMode of beam
-	uint rcuMode() const	{ return (itsRCUmode); }
-
-	// Set handle (=uniq ID) from the CalServer
-	void  calibrationHandle(void	*handle) { itsCShandle = handle; }
-	void* calibrationHandle()				 { return (itsCShandle); }
+    // Set handle (=uniq ID) from the CalServer
+	void  calibrationHandle(const string& name) { itsCShandle = name; }
+	string calibrationHandle()				 { return (itsCShandle); }
 
 private:
 	// Don't allow copying this object.
@@ -90,21 +87,18 @@ private:
 
 	//# ----- DATAMEMBERS -----
 
-	// Allocation.
+    // Allocation.
 	IBS_Protocol::Beamlet2SubbandMap 	itsBeamletAllocation;
 
 	// ringSegment the beam is allocated on
 	uint		itsRingNr;
 
-	// temp: rcumode of the beam (will become obsolete when new CalServer is used).
-	uint		itsRCUmode;
-
 	// The antenna array.
 //	CAL::SubArray 		itsSubArray;
 
-	// calserver handle	
+	// calserver handle
 	// will become obsolete when new ITRF CalServer is used.
-	void*		itsCShandle;
+	string		itsCShandle;
 
 };
 
