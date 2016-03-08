@@ -10,6 +10,7 @@ add_subdirectory(test)
 set(_py_files
   dbcredentials.py
   factory.py
+  methodtrigger.py
   util.py
   postgres.py
   datetimeutils.py)
