@@ -7,7 +7,7 @@ from lofar.mac.PipelineStarter import *
 from lofar.sas.otdb.OTDBBusListener import OTDBBusListener
 from lofar.messaging import ToBus, Service, EventMessage
 
-from methodtrigger import MethodTrigger
+from lofar.common.methodtrigger import MethodTrigger
 
 import subprocess
 import unittest
