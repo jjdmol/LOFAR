@@ -1,8 +1,0 @@
-# CalCtlr
-#
-connected		bool
-beamNames		stringArr
-antennaArray	string
-filter			string
-nyquistzone		int
-rcus			string
