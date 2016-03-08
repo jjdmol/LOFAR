@@ -50,7 +50,7 @@ namespace LOFAR {
 	using namespace APLCommon;
 	using namespace APL::RTDBCommon;
 	namespace StationCU {
-
+	
 //
 // TBBMonitor()
 //
@@ -107,7 +107,7 @@ GCFEvent::TResult TBBMonitor::initial_state(GCFEvent& event, GCFPortInterface& p
 	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-
+  
 	switch (event.signal) {
     case F_INIT:
    		break;
@@ -124,7 +124,7 @@ GCFEvent::TResult TBBMonitor::initial_state(GCFEvent& event, GCFPortInterface& p
 		}
 		break;
 
-	case DP_CREATED: {
+	case DP_CREATED: {		
 		// NOTE: this function may be called DURING the construction of the PropertySet.
 		// Always exit this event in a way that GCF can end the construction.
 		DPCreatedEvent		dpEvent(event);
@@ -140,11 +140,11 @@ GCFEvent::TResult TBBMonitor::initial_state(GCFEvent& event, GCFPortInterface& p
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("TBB:initial"));
 		itsOwnPropertySet->setValue(PN_HWM_TBB_CONNECTED,GCFPVBool(false));
 //		itsOwnPropertySet->setValue(PN_FSM_ERROR,  GCFPVString(""));
-
+		
 		LOG_DEBUG_STR("Going to connect to the TBBDriver.");
 		TRAN (TBBMonitor::connect2TBB);
 	}
-
+	
 	case DP_SET:
 		break;
 
@@ -155,7 +155,7 @@ GCFEvent::TResult TBBMonitor::initial_state(GCFEvent& event, GCFPortInterface& p
 	default:
 		LOG_DEBUG_STR ("initial, DEFAULT");
 		break;
-	}
+	}    
 
 	return (status);
 }
@@ -171,7 +171,7 @@ GCFEvent::TResult TBBMonitor::connect2TBB(GCFEvent& event, GCFPortInterface& por
 	LOG_DEBUG_STR ("connect2TBB:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-
+  
 	switch (event.signal) {
 	case F_ENTRY:
 		// update PVSS
@@ -190,7 +190,7 @@ GCFEvent::TResult TBBMonitor::connect2TBB(GCFEvent& event, GCFPortInterface& por
 
 	case F_DISCONNECTED:
 		port.close();
-		ASSERTSTR (&port == itsTBBDriver,
+		ASSERTSTR (&port == itsTBBDriver, 
 								"F_DISCONNECTED event from port " << port.getName());
 		LOG_WARN("Connection with TBBDriver failed, retry in 10 seconds");
 		itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("TBB:connection timeout"));
@@ -211,7 +211,7 @@ GCFEvent::TResult TBBMonitor::connect2TBB(GCFEvent& event, GCFPortInterface& por
 	default:
 		LOG_DEBUG_STR ("connect2TBB, DEFAULT");
 		break;
-	}
+	}    
 
 	return (status);
 }
@@ -226,7 +226,7 @@ GCFEvent::TResult TBBMonitor::askConfiguration(GCFEvent& event, GCFPortInterface
 	LOG_DEBUG_STR ("askConfiguration:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-
+  
 	switch (event.signal) {
 	case F_ENTRY: {
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("TBB:asking configuration"));
@@ -248,10 +248,10 @@ GCFEvent::TResult TBBMonitor::askConfiguration(GCFEvent& event, GCFPortInterface
 		itsTBBDriver->send(getconfig);
 	}
 	break;
-
+		
 	case TBB_GET_CONFIG_ACK: {
 		TBBGetConfigAckEvent	ack(event);
-
+	
 		// calc size of the propertyset vectors
 		itsBoardMask   = bitset<MAX_N_TBBOARDS>(ack.active_boards_mask);
 		itsNrTBboards  = ack.max_boards;
@@ -260,10 +260,10 @@ GCFEvent::TResult TBBMonitor::askConfiguration(GCFEvent& event, GCFPortInterface
 		// inform user
 		LOG_INFO_STR("Active boards = " << itsBoardMask);
 		LOG_INFO(formatString("nr TBboards = %d", itsNrTBboards));
-
+	
 		// do some checks
 		if (itsNrTBboards != itsBoardMask.count()) {
-			LOG_WARN_STR("TBB:Only " << itsBoardMask.count() << " of " << itsNrTBboards
+			LOG_WARN_STR("TBB:Only " << itsBoardMask.count() << " of " << itsNrTBboards 
 						<< " TBboards are available.");
 		}
 
@@ -283,7 +283,7 @@ GCFEvent::TResult TBBMonitor::askConfiguration(GCFEvent& event, GCFPortInterface
 	default:
 		LOG_DEBUG_STR ("askConfiguration, DEFAULT");
 		break;
-	}
+	}    
 
 	return (status);
 }
@@ -299,7 +299,7 @@ GCFEvent::TResult TBBMonitor::createPropertySets(GCFEvent& event, GCFPortInterfa
 	LOG_DEBUG_STR ("createPropertySets:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-
+  
 	switch (event.signal) {
 
 	case F_ENTRY: {
@@ -377,7 +377,7 @@ GCFEvent::TResult TBBMonitor::createPropertySets(GCFEvent& event, GCFPortInterfa
 	default:
 		LOG_DEBUG_STR ("createPropertySets, DEFAULT");
 		break;
-	}
+	}    
 
 	return (status);
 }
@@ -393,7 +393,7 @@ GCFEvent::TResult TBBMonitor::askVersion(GCFEvent& event, GCFPortInterface& port
 	LOG_DEBUG_STR ("askVersion:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-
+  
 	switch (event.signal) {
 
 	case F_ENTRY: {
@@ -414,7 +414,7 @@ GCFEvent::TResult TBBMonitor::askVersion(GCFEvent& event, GCFPortInterface& port
 		itsTBBDriver->send(getVersion);
 	}
 	break;
-
+		
 	case TBB_VERSION_ACK: {
 		itsTimerPort->cancelAllTimers();
 		TBBVersionAckEvent		ack(event);
@@ -429,11 +429,11 @@ GCFEvent::TResult TBBMonitor::askVersion(GCFEvent& event, GCFPortInterface& port
 				versionStr = formatString("%d.%d", ack.boardversion[tbb] / 10, ack.boardversion[tbb] % 10);
 				itsTBBs[tbb]->setValue(PN_TBB_BOARD_VERSION, GCFPVString(versionStr), 0.0, false);
 				itsTBBs[tbb]->setValue(PN_TBB_BOARDID, GCFPVUnsigned(ack.boardid[tbb]), 0.0, false);
-
+			
 				// BP version
 				versionStr = formatString("%d.%d", ack.tphwversion[tbb] / 10, ack.tphwversion[tbb] % 10);
 				itsTBBs[tbb]->setValue(PN_TBB_TP_VERSION, GCFPVString(versionStr), 0.0, false);
-
+			
 				// MPx versions
 				versionStr = formatString("%d.%d", ack.mp0version[tbb] / 10, ack.mp0version[tbb] % 10);
 				itsTBBs[tbb]->setValue(PN_TBB_MP0_VERSION, GCFPVString(versionStr), 0.0, false);
@@ -455,16 +455,16 @@ GCFEvent::TResult TBBMonitor::askVersion(GCFEvent& event, GCFPortInterface& port
 				itsTBBs[tbb]->setValue(PN_TBB_MP3_VERSION,	 GCFPVString("?.?"), 0.0, false);
 			}
 			itsTBBs[tbb]->flush();
-
+			
 			// set right color
 			//string reasonStr;
 			if (ack.status_mask[tbb] == TBB_SUCCESS) {
 				//reasonStr = formatString("%s: good", getName());
-				setObjectState("TBBMonitor: good", itsTBBs[tbb]->getFullScope(), RTDB_OBJ_STATE_OPERATIONAL, true);
+				setObjectState("TBBMonitor: good", itsTBBs[tbb]->getFullScope(), RTDB_OBJ_STATE_OPERATIONAL);
 			}
 			else {
 				//reasonStr = formatString("%s: wrong image", getName());
-				setObjectState("TBBMonitor: unknown versions", itsTBBs[tbb]->getFullScope(), RTDB_OBJ_STATE_BROKEN);
+				setObjectState("TBBMonitor: wrong image", itsTBBs[tbb]->getFullScope(), RTDB_OBJ_STATE_BROKEN);
 			}
 		}
 
@@ -488,7 +488,7 @@ GCFEvent::TResult TBBMonitor::askVersion(GCFEvent& event, GCFPortInterface& port
 	default:
 		LOG_DEBUG_STR ("askVersion, DEFAULT");
 		break;
-	}
+	}    
 
 	return (status);
 }
@@ -503,7 +503,7 @@ GCFEvent::TResult TBBMonitor::askSizeInfo(GCFEvent& event, GCFPortInterface& por
 	LOG_DEBUG_STR ("askSizeInfo:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-
+  
 	switch (event.signal) {
 
 	case F_ENTRY: {
@@ -560,7 +560,7 @@ GCFEvent::TResult TBBMonitor::askSizeInfo(GCFEvent& event, GCFPortInterface& por
 	default:
 		LOG_DEBUG_STR ("askSizeInfo, DEFAULT");
 		break;
-	}
+	}    
 
 	return (status);
 }
@@ -577,7 +577,7 @@ GCFEvent::TResult TBBMonitor::askFlashInfo(GCFEvent& event, GCFPortInterface& po
 	LOG_DEBUG_STR ("askFlashInfo:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-
+  
 	switch (event.signal) {
 
 	case F_ENTRY: {
@@ -600,7 +600,7 @@ GCFEvent::TResult TBBMonitor::askFlashInfo(GCFEvent& event, GCFPortInterface& po
 		nrOfRequests--;
 		// move the information to the database.
 		LOG_DEBUG_STR("ack.status_mask=" << ack.status_mask << ", board = " << ack.board);
-
+		
 		if (ack.status_mask == TBB_SUCCESS) {
 			vector<GCFPValue*>		imageVersions;
 			vector<GCFPValue*>		writeDates;
@@ -653,7 +653,7 @@ LOG_DEBUG(formatString("%d:%d:%d:%16.16s", image, ack.image_version[image], ack.
 	default:
 		LOG_DEBUG_STR ("askFlashInfo, DEFAULT");
 		break;
-	}
+	}    
 
 	return (status);
 }
@@ -669,7 +669,7 @@ GCFEvent::TResult TBBMonitor::askTBBinfo(GCFEvent& event, GCFPortInterface& port
 	LOG_DEBUG_STR ("askTBBinfo:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-
+  
 	switch (event.signal) {
 
 	case F_ENTRY: {
@@ -704,7 +704,7 @@ GCFEvent::TResult TBBMonitor::askTBBinfo(GCFEvent& event, GCFPortInterface& port
 				// flush to database
 				itsTBBs[tbb]->flush();
 			}
-
+			
 		} // for all boards
 
 		LOG_DEBUG_STR ("TBboard information updated, going to RCU information");
@@ -734,7 +734,7 @@ GCFEvent::TResult TBBMonitor::askTBBinfo(GCFEvent& event, GCFPortInterface& port
 	default:
 		LOG_DEBUG_STR ("askTBBinfo, DEFAULT");
 		break;
-	}
+	}    
 
 	return (status);
 }
@@ -743,7 +743,7 @@ GCFEvent::TResult TBBMonitor::askTBBinfo(GCFEvent& event, GCFPortInterface& port
 //
 // askRCUinfo(event, port)
 //
-// Normal operation state.
+// Normal operation state. 
 //
 GCFEvent::TResult TBBMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port)
 {
@@ -908,14 +908,14 @@ GCFEvent::TResult TBBMonitor::askRCUSettings(GCFEvent& event, GCFPortInterface& 
 //
 // Take subscription on clock modifications
 //
-GCFEvent::TResult TBBMonitor::waitForNextCycle(GCFEvent& event,
+GCFEvent::TResult TBBMonitor::waitForNextCycle(GCFEvent& event, 
 													GCFPortInterface& port)
 {
 	if (eventName(event) != "DP_SET") {
 		LOG_DEBUG_STR ("waitForNextCycle:" << eventName(event) << "@" << port.getName());	}
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-
+  
 	switch (event.signal) {
 	case F_ENTRY: {
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("TBB:wait for next cycle"));
@@ -925,7 +925,7 @@ GCFEvent::TResult TBBMonitor::waitForNextCycle(GCFEvent& event,
 		}
 		itsTimerPort->cancelAllTimers();
 		itsTimerPort->setTimer(double(waitTime));
-		LOG_INFO_STR("TBB:Waiting " << waitTime << " seconds for next cycle");
+		LOG_INFO_STR("Waiting " << waitTime << " seconds for next cycle");
 	}
 	break;
 
@@ -948,7 +948,7 @@ GCFEvent::TResult TBBMonitor::waitForNextCycle(GCFEvent& event,
 	default:
 		LOG_DEBUG_STR ("waitForNextCycle, DEFAULT");
 		break;
-	}
+	}    
 
 	return (status);
 }
@@ -989,7 +989,7 @@ GCFEvent::TResult TBBMonitor::finish_state(GCFEvent& event, GCFPortInterface& po
 //		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
 		break;
 	}
-
+  
 	case DP_SET:
 		break;
 
@@ -997,14 +997,14 @@ GCFEvent::TResult TBBMonitor::finish_state(GCFEvent& event, GCFPortInterface& po
 		LOG_DEBUG("finishing_state, DEFAULT");
 		status = GCFEvent::NOT_HANDLED;
 		break;
-	}
+	}    
 	return (status);
 }
 
 //
 // TBBRCUstate(char)
 //
-string	TBBMonitor::TBBRCUstate(char	stateCode)
+string	TBBMonitor::TBBRCUstate(char	stateCode) 
 {
 	switch (stateCode) {
 	case 'A':	return ("Allocated");
