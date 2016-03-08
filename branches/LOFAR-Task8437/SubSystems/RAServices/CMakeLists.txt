@@ -2,6 +2,7 @@
 
 lofar_package(RAServices
                 DEPENDS OTDB_Services
+                        MAC_Services
                         MoMQueryService
                         ResourceAssignmentDatabase
                         ResourceAssignmentServices
