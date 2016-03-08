@@ -81,6 +81,11 @@ if __name__ == "__main__":
     with RPC("OTDBService.TaskCreate", ForwardExceptions=True, busname=busname, timeout=10) as task_create:
         do_rpc(task_create, {'OtdbID':1099268, 'TemplateName':'BeamObservation', 'Specification': {'state':'finished'}})
         do_rpc(task_create, {'MomID':353713,   'TemplateName':'BeamObservation', 'Specification': {'state':'finished'}})
+        do_rpc_catch_exception('on non-exsisting campaign', task_create, 
+                               {'MomID':998877,   'TemplateName':'BeamObservation', 
+                                'CampaignName':'No such campaign', 'Specification': {'state':'finished'}})
+        do_rpc(task_create, {'MomID':998877,   'TemplateName':'BeamObservation', 
+                             'CampaignName':'Taka Tuka Land', 'Specification': {'state':'finished'}})
         data = do_rpc(task_create, {'MomID':12345, 'TemplateName':'BeamObservation', 'Specification': {'state':'finished'}})
         new_tree1 = data['MomID']
         data = do_rpc(task_create, {'MomID':54321, 'TemplateName':'BeamObservation', 'Specification': {'state':'finished'}})
