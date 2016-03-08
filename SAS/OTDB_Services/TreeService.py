@@ -165,13 +165,15 @@ def TaskCreate(input_dict, db_connection):
 
     Input : dict with either the key OtdbID (integer) or the key MomID (integer).
             This key is used to search for the specified tree.
-            TemplateName      - Optional: Needed when the task doesn't exist and has to be created.
-            Specification (dict)    - The key-value pairs that must be updated.
+            TemplateName (string) - Optional: Needed when the task doesn't exist and has to be created.
+            CampaignName (string) = Optional: Needed when the task doesn't exist and has to be created.
+            Specification (dict)  - The key-value pairs that must be updated.
 
     Implemented workflow (all checks for errors are left out):
     check if there is a tree with the given OtdbID or MomID
     if not
         instanciate a template from default template 'DefaultTemplateName'
+        assign the MomID and the campaign info to this task.
     update the keys in the tree
 
     Output: OtdbID - integer : OTDB id of the updated tree.
@@ -211,8 +213,9 @@ def TaskCreate(input_dict, db_connection):
                       format(selected_template, template_ids))
             otdb_id = db_connection.query("select copyTree(1,{})".format(template_ids[0])).getresult()[0][0]
             # give new tree the mom_id when mom_id was specified by the user.
-            if mom_id:
-                db_connection.query("select setMomInfo(1,{},{},0,'no campaign')".format(otdb_id, mom_id))
+            campaign_name  = input_dict.get('CampaignName','no campaign')
+            if mom_id is None: mom_id = 0
+            db_connection.query("select setMomInfo(1,{},{},0,'{}')".format(otdb_id, mom_id, campaign_name))
         except QUERY_EXCEPTIONS, exc_info:
             raise FunctionError("Error while create task from template {}: {}".format(selected_template, exc_info))
 
