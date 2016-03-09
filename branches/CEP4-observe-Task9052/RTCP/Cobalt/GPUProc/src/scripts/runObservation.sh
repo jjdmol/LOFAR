@@ -411,9 +411,9 @@ OUTPUTPROC_CMDLINE="$OUTPUTPROC_VARS $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID"
 
 # Wrap command line with Docker if required
 if $DOCKER; then
-  TAG="`echo ${LOFAR_TAG} | docker-template`"
+  TAG="`echo '${LOFAR_TAG}' | docker-template`"
 
-  OUTPUTPROC_CMDLINE="docker run -it -e LUSER=`id -u $SSH_USER_NAME` --net=host -v $GLOBALFS_DIR:$GLOBALFS_DIR lofar-outputproc:$TAG bash -c \"$OUTPUTPROC_CMDLINE\""
+  OUTPUTPROC_CMDLINE="docker run --rm -e LUSER=`id -u $SSH_USER_NAME` --net=host -v $GLOBALFS_DIR:$GLOBALFS_DIR lofar-outputproc:$TAG bash -c \"$OUTPUTPROC_CMDLINE\""
 fi
 
 echo "[outputProc] command line = $OUTPUTPROC_CMDLINE"
@@ -421,7 +421,7 @@ echo "[outputProc] command line = $OUTPUTPROC_CMDLINE"
 if ! $DUMMY_RUN; then
   if $SLURM; then
     # The nodes we need (and can use) are part of this job
-    COMMAND="srun -N $SLURM_JOB_NUM_NODES $OUTPUTPROC_CMDLINE"
+    COMMAND="srun -N $SLURM_JOB_NUM_NODES -J $OBSID.outputproc $OUTPUTPROC_CMDLINE"
     echo "[outputProc] Starting $COMMAND"
 
     $COMMAND &
