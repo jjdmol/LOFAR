@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(ResourceAssignmentServices 1.0 DEPENDS PyMessaging PyCommon pyparameterset OTDB_Services)
+lofar_package(ResourceAssignmentServices 1.0 DEPENDS PyMessaging PyCommon pyparameterset)
 
 include(PythonInstall)
 
