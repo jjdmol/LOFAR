@@ -1,2 +1,0 @@
-#all lexars share same variants
-include(variants.lexar)
