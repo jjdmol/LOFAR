@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<message>
+   <header>
+      <system>LOFAR</system>
+      <version>1.0.0</version>
+      <protocol>
+         <name>task.specification.system</name>
+         <version>1.0.0</version>
+      </protocol>
+      <source>
+         <name>LOFAR.MACScheduler</name>
+         <user></user>
+         <uuid>9ecef8b9-5d36-4a08-9810-8f72b53d8a94</uuid>
+         <timestamp>2015-01-01T03:01:00</timestamp>
+         <summary></summary>
+      </source>
+      <ids>
+         <momid>100000</momid>
+         <sasid>301010</sasid>
+      </ids>
+   </header>
+   <payload>key1=unusedvalue1
+key2=unusedvalue2
+
+ObsSW.Observation.Campaign.CO_I="Dicey, Rose"
+ObsSW.Observation.Campaign.PI="Random, Joe"
+ObsSW.Observation.Campaign.contact="Random, Joe"
+ObsSW.Observation.Campaign.name="TEST-001"
+ObsSW.Observation.Campaign.title="SOFTWARE TEST PROJECT"
+
+ObsSW.Observation.DataProducts.Output_CoherentStokes.enabled=true
+ObsSW.Observation.DataProducts.Output_CoherentStokes.filenames=[L301010_B000_cs.h5]
+ed, since enabled=false
+ObsSW.Observation.DataProducts.Output_CoherentStokes.locations=[node000:/data/L301010/]
+
+ObsSW.Observation.DataProducts.Output_Correlated.enabled=true
+ObsSW.Observation.DataProducts.Output_Correlated.filenames=[L301010_SB001_uv.MS,L301010_SB002_uv.MS]
+ObsSW.Observation.DataProducts.Output_Correlated.locations=[node001:/data/L301010/,yyy001:/data/L301010/]
+
+ObsSW.Observation.DataProducts.Output_IncoherentStokes.enabled=true
+ObsSW.Observation.DataProducts.Output_IncoherentStokes.filenames=[L301010_B000_is.h5,L301010_B001_is.h5]
+ObsSW.Observation.DataProducts.Output_IncoherentStokes.locations=[yikes002:/data/L301010/,1*yikes003.xxx.yyy.lofar:/data/L301010/]
+
+ObsSW.Observation.startTime=2015-01-01 03:03:00
+ObsSW.Observation.stopTime=2015-01-01 03:13:00
+</payload>
+</message>
