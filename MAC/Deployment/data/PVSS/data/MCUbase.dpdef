@@ -124,7 +124,6 @@ NavPanelConfig.NavPanelConfig	1#
 	StnLOFAR_Reports	9#
 	StnLOFAR_Alerts	9#
 	HBAAntenna_Hardware	9#
-	CEPLogProcessor_Processes	9#
 	PythonControl_Processes	9#
 	CobaltRack_Hardware	9#
 	CobaltNode_Hardware	9#
@@ -229,7 +228,6 @@ root.CEPPIC_Hardware	NavPanelConfig	"Hardware/CEP.pnl"
 root.OSRack_Hardware	NavPanelConfig	"Hardware/CEP_OSRack_detailed.pnl"
 root.CEPHardwareMonitor_Processes	NavPanelConfig	"Processes/CEPHardwareMonitor.pnl"
 root.HBAAntenna_Hardware	NavPanelConfig	"Hardware/HBAAntenna.pnl"
-root.CEPlogProcessor_Processes	NavPanelConfig	"Processes/CEPlogProcessor.pnl"
 root.PythonControl_Processes	NavPanelConfig	"Processes/PythonControl.pnl"
 root.CobaltRack_Hardware	NavPanelConfig	"Hardware/CEP_CobaltRack_detailed.pnl"
 root.CobaltNode_Hardware	NavPanelConfig	"Hardware/CEP_CobaltNode_detailed.pnl"

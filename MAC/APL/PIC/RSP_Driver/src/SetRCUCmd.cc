@@ -62,8 +62,8 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
 	// someone else using the I2C bus?
 	I2Cuser	busUser = cache.getI2Cuser();
-	LOG_INFO_STR("SetRCU::apply : " << ((busUser == NONE) ?  "NONE" : 
-									   ((busUser == HBA) ?   "HBA" : 
+	LOG_INFO_STR("SetRCU::apply : " << ((busUser == NONE) ?  "NONE" :
+									   ((busUser == HBA) ?   "HBA" :
 									   ((busUser == RCU_R) ? "RCU_R" : "RCU_W"))));
 	if (busUser != NONE && busUser != RCU_W) {
 		postponeExecution(true);
@@ -72,21 +72,25 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 	cache.setI2Cuser(RCU_W);		// claim the I2C bus.
 	postponeExecution(false);
 
-	bool			newMode 	  = m_event->settings()(0).isModeModified();
-	uint32			mode 		  = m_event->settings()(0).getMode();
+	uint32			mode;
 	CableSettings*	cableSettings = CableSettings::instance();
 	float			delayStep	  = 1000.0 / cache.getClock();
     float           attenuationStep = cache.getAttenuationStepSize();
     uint8           attenuation   = 0;
-    
+
 //  LOG_INFO("SetRCUCmd::apply");
+
 	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 		if (m_event->rcumask[cache_rcu]) {
-			// make change
-			cache.getRCUSettings()()(cache_rcu) = m_event->settings()(0);
-			
+
+			uint eventRcu = (m_event->settings().extent(firstDim) == 1)?0:cache_rcu;
+
+            // make change
+			cache.getRCUSettings()()(cache_rcu) = m_event->settings()(eventRcu);
+
 			// Apply delays and attenuation when mode was changed.
-			if (newMode) {
+			if (m_event->settings()(eventRcu).isModeModified()) {
+                mode  = m_event->settings()(eventRcu).getMode();
                 // if mode changed be sure RCU is enabled, is needed to reduce poweron current on hba's
                 /*
                 if (mode > 0) {
@@ -98,20 +102,20 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
                 */
 				cache.getRCUSettings()()(cache_rcu).setDelay(
 							(uint8) ((delayStep/2.0 + cableSettings->getDelay(cache_rcu, mode)) / delayStep));
-				
-                attenuation = (uint8) (((attenuationStep/2.0) + cableSettings->getAtt(cache_rcu, mode) + cache.getFixedAttenuation(mode)) / attenuationStep); 
+
+                attenuation = (uint8) (((attenuationStep/2.0) + cableSettings->getAtt(cache_rcu, mode) + cache.getFixedAttenuation(mode)) / attenuationStep);
                 if (attenuation > 31) { attenuation = 31; }
-                
+
                 cache.getRCUSettings()()(cache_rcu).setAttenuation(attenuation);
                 if (cache_rcu == 0) {
-					LOG_DEBUG(formatString("RCU 0 new Delay   : %f/2.0 + %f / %f = %d", 
-						delayStep, cableSettings->getDelay(0, mode), delayStep, 
-						(uint8) ((delayStep/2.0 + cableSettings->getDelay(cache_rcu, mode)) / delayStep)));
-					LOG_DEBUG(formatString("RCU 0 new Atten   : (%f  + %f + %f) / %f = %d", 
-                        (attenuationStep/2.0), 
-                        cableSettings->getAtt(0, mode), 
-                        cache.getFixedAttenuation(mode), 
-                        attenuationStep, 
+					LOG_DEBUG(formatString("RCU 0 new Delay   : %f/2.0 + %f / %f = %d",
+						delayStep, cableSettings->getDelay(0, mode), delayStep,
+						(uint8) ((delayStep/2.0 + cableSettings->getDelay(0, mode)) / delayStep)));
+					LOG_DEBUG(formatString("RCU 0 new Atten   : (%f  + %f + %f) / %f = %d",
+                        (attenuationStep/2.0),
+                        cableSettings->getAtt(0, mode),
+                        cache.getFixedAttenuation(mode),
+                        attenuationStep,
                         attenuation));
 					LOG_DEBUG(formatString("RCU 0 new RawMode : %08lX", cache.getRCUSettings()()(0).getRaw()));
 				}
@@ -119,12 +123,12 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 
 			if (setModFlag) {
 				// only write RCU Handler settings if modified
-				if (m_event->settings()(0).isHandlerModified()) {
+				if (m_event->settings()(eventRcu).isHandlerModified()) {
 					cache.getCache().getState().rcusettings().write(cache_rcu);
 				}
 
 				// only write RCU Protocol settings if modified
-				if (m_event->settings()(0).isProtocolModified()) {
+				if (m_event->settings()(eventRcu).isProtocolModified()) {
 					cache.getCache().getState().rcuprotocol().write(cache_rcu);
 				}
 			}
@@ -150,6 +154,6 @@ void SetRCUCmd::setTimestamp(const Timestamp& timestamp)
 bool SetRCUCmd::validate() const
 {
   return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
-	  && (1 == m_event->settings().dimensions())
-	  && (1 == m_event->settings().extent(firstDim)));
+	  && (m_event->settings().dimensions() == 1)
+	  && (m_event->settings().extent(firstDim) <= (unsigned int)StationSettings::instance()->nrRcus()));
 }

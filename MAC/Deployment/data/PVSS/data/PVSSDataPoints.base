@@ -59,7 +59,6 @@ CEPHardwareMonitor		CHM		C	Y	LOFAR_PermSW_CEPHardwareMonitor
 Daemons				-		C	N	LOFAR_PermSW_Daemons
 PVSS00pmon			-		C	Y	LOFAR_PermSW_Daemons_PVSS00pmon
 LogProcessor			-		C	Y	LOFAR_PermSW_Daemons_LogProcessor
-CEPlogProcessor			-		C	Y	LOFAR_PermSW_Daemons_CEPlogProcessor
 ServiceBroker			- 		C	Y	LOFAR_PermSW_Daemons_ServiceBroker
 SoftwareMonitor			-		C	Y	LOFAR_PermSW_Daemons_SoftwareMonitor
 SASGateway			-		C	Y	LOFAR_PermSW_Daemons_SASGateway

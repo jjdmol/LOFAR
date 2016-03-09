@@ -8,6 +8,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 lofar_add_test(tBandPass tBandPass.cc)
 lofar_add_test(t_cpu_utils t_cpu_utils.cc)
+lofar_add_test(t_generate_globalfs_locations)
 lofar_add_test(tMPIReceive tMPIReceive.cc)
 if(UNITTEST++_FOUND)
   lofar_add_test(t_gpu_utils t_gpu_utils)

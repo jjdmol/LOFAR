@@ -39,8 +39,9 @@ public:
 	// key-value logger as nodeid.
 	// @param rcuMask The RCUs that participate in this beam.
 	// @param ringNr The serdes segment the allocation is ment for.
-	AnalogueBeam(const string& 				name, 
-				 const string&				antennaSet,
+	AnalogueBeam(const string& 				name,
+				 const string&				antennaSetName,
+				 const string&				bandName,
 				 const bitset<MAX_RCUS>&	rcuMask,
 				 uint 						rankNr);
 	AnalogueBeam() : itsRankNr(0) {};
