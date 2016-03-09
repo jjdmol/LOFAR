@@ -5,5 +5,6 @@ python_install(
     rotspservice.py
     translator.py
     config.py
+    propagator.py
     DESTINATION lofar/sas/resourceassignment/RAtoOTDBTaskSpecificationPropagator)
 
