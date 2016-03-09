@@ -102,6 +102,15 @@ class Parset(dict):
 
     return result
 
+  def isObservation(self):
+    return self[PARSET_PREFIX + "Observation.processType"] == "Observation"
+
+  def isPipeline(self):
+    return not self.isObservation()
+
+  def processingCluster(self):
+    return self[PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName"] or "CEP2"
+
   def dockerTag(self):
     # For now, return OUR tag
     return runCommand("docker-template", "${LOFAR_TAG}")
@@ -187,11 +196,11 @@ class PipelineStarter(OTDBBusListener):
 
   @classmethod
   def _shouldHandle(self, parset):
-    if parset[PARSET_PREFIX + "Observation.processType"] != "Pipeline":
+    if not parset.isPipeline():
       logger.info("Not processing tree: is not a pipeline")
       return False
 
-    if parset[PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName"] in ["", "CEP2"]:
+    if parset.processingCluster() == "CEP2":
       logger.info("Not processing tree: is a CEP2 pipeline")
       return False
 
@@ -211,18 +220,21 @@ class PipelineStarter(OTDBBusListener):
 
     return names
 
+  def _getParset(self, treeId):
+    return Parset(self.parset_rpc( OtdbID=treeId, timeout=10 )[0])
+
   def _getPredecessorParsets(self, parset):
     treeIds = parset.predecessors()
 
     logger.info("Obtaining predecessor parsets %s", treeIds)
 
-    return [Parset(self.parset_rpc( OtdbID=treeId, timeout=10 )[0]) for treeId in treeIds]
+    return [self._getParset(treeId) for treeId in treeIds]
 
   def onObservationAborted(self, treeId, modificationTime):
     logger.info("***** STOP Tree ID %s *****", treeId)
 
     # Request the parset
-    parset = Parset(self.parset_rpc( OtdbID=treeId, timeout=10 )[0])
+    parset = self._getParset(treeId)
 
     if not self._shouldHandle(parset):
       return
@@ -258,7 +270,7 @@ class PipelineStarter(OTDBBusListener):
     logger.info("***** QUEUE Tree ID %s *****", treeId)
 
     # Request the parset
-    parset = Parset(self.parset_rpc( OtdbID=treeId, timeout=10 )[0])
+    parset = self._getParset(treeId)
 
     if not self._shouldHandle(parset):
       return
@@ -311,11 +323,11 @@ class PipelineStarter(OTDBBusListener):
                      os.path.expandvars("--output=$LOFARROOT/var/log/docker-startPython-%s.log" % (treeId,)),
                      ]
 
-    min_starttime = self._minStartTime([x for x in preparsets if x[PARSET_PREFIX + "Observation.processType"] == "Observation"])
+    min_starttime = self._minStartTime([x for x in preparsets if x.isObservation()])
     if min_starttime:
       sbatch_params.append("--begin=%s" % (min_starttime.strftime("%FT%T"),))
 
-    predecessor_jobs = self._slurmJobNames([x for x in preparsets if x[PARSET_PREFIX + "Observation.processType"] != "Observation"], slurm_jobs.keys())
+    predecessor_jobs = self._slurmJobNames([x for x in preparsets if x.isPipeline()], slurm_jobs.keys())
     if predecessor_jobs:
       sbatch_params.append("--dependency=%s" % (",".join(("afterok:%s" % x for x in predecessor_jobs)),))
 

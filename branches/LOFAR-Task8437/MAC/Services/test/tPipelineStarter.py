@@ -101,7 +101,7 @@ class TestPipelineStarterClassMethods(unittest.TestCase):
     for t in trials:
       parset = { "ObsSW.Observation.processType": t["type"],
                  "ObsSW.Observation.Cluster.ProcessingCluster.clusterName": t["cluster"] }
-      self.assertEqual(PipelineStarter._shouldHandle(parset), t["shouldHandle"])
+      self.assertEqual(PipelineStarter._shouldHandle(Parset(parset)), t["shouldHandle"])
 
 class TestPipelineStarter(unittest.TestCase):
   def setUp(self):
