@@ -1,15 +1,15 @@
 # $Id$
 
 lofar_add_bin_scripts(
-  pipelinestarter
+  pipelinecontrol
 )
 
 python_install(
-  PipelineStarter.py
+  PipelineControl.py
   DESTINATION lofar/mac
 )
 
 # supervisord config files
 install(FILES
-  pipelinestarter.ini
+  pipelinecontrol.ini
   DESTINATION etc/supervisord.d)

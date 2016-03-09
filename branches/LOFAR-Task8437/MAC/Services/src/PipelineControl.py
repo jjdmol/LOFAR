@@ -26,7 +26,7 @@ using SLURM and Docker, and puts the jobs to QUEUED.
 
 The execution chain is as follows:
 
-[SCHEDULED]          -> PipelineStarter schedules
+[SCHEDULED]          -> PipelineControl schedules
 
                            runPipeline.sh <obsid> || pipelineAborted.sh <obsid>
 
@@ -167,9 +167,9 @@ class Slurm(object):
 
     return jobs
 
-class PipelineStarter(OTDBBusListener):
+class PipelineControl(OTDBBusListener):
   def __init__(self, otdb_busname=None, setStatus_busname=None, **kwargs):
-    super(PipelineStarter, self).__init__(busname=otdb_busname, **kwargs)
+    super(PipelineControl, self).__init__(busname=otdb_busname, **kwargs)
 
     self.parset_rpc = RPC(service="TaskSpecification", busname=otdb_busname, ForwardExceptions=True)
     self.setStatus_busname = setStatus_busname if setStatus_busname else otdb_busname
@@ -187,10 +187,10 @@ class PipelineStarter(OTDBBusListener):
   def start_listening(self, **kwargs):
     self.parset_rpc.open()
 
-    super(PipelineStarter, self).start_listening(**kwargs)
+    super(PipelineControl, self).start_listening(**kwargs)
 
   def stop_listening(self, **kwargs):
-    super(PipelineStarter, self).stop_listening(**kwargs)
+    super(PipelineControl, self).stop_listening(**kwargs)
 
     self.parset_rpc.close()
 
