@@ -38,7 +38,7 @@ from lofar.messaging.RPC import RPC, RPCException
 import lofar.sas.resourceassignment.resourceassignmentservice.rpc as rarpc ## RA DB
 from lofar.sas.resourceassignment.resourceassigner.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 from lofar.sas.resourceassignment.resourceassigner.config import RATASKSCHEDULED_NOTIFICATION_BUSNAME, RATASKSCHEDULED_NOTIFICATIONNAME
-from lofar.sas.resourceassignment.RAtoOTDBTaskSpecificationPropagator.translator import RAtoOTDBTranslator
+from lofar.sas.resourceassignment.RAtoOTDBTaskSpecificationPropagator.propagator import RAtoOTDBPropagator
 
 logger = logging.getLogger(__name__)
 
