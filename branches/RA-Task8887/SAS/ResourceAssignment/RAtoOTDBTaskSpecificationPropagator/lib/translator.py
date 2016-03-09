@@ -26,39 +26,28 @@ reads the info from the RA DB and sends it to OTDB in the correct format.
 """
 
 import logging
-from datetime import datetime
-import time
 
-from lofar.messaging.RPC import RPC, RPCException
 from lofar.parameterset import parameterset
 
-from lofar.sas.resourceassignment.rotspservice.rpc import RARPC
-from lofar.sas.resourceassignment.rotspservice.config import DEFAULT_BUSNAME as RADB_BUSNAME
-from lofar.sas.resourceassignment.rotspservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
-from lofar.sas.otdb.otdbservice.config import DEFAULT_BUSNAME as OTDB_BUSNAME
-from lofar.sas.otdb.otdbservice.config import DEFAULT_SERVICENAME as OTDB_SERVICENAME
-
 logger = logging.getLogger(__name__)
-
 
 class RAtoOTDBTranslator():
     def __init__(self):
         """
-        RAtoOTDBTranslator translates values from the RADB into parset keys
+        RAtoOTDBTranslator translates values from the RADB into parset keys to be stored in an OTDB Tree
         """
 
     def doTranslation(self, otdbId, momId, RAinfo):
-        logger.info('doTranslation: start=%s, stop=%s' % (RAinfo['startTime'], RAinfo['stopTime']))
+        logger.info('doTranslation: start=%s, end=%s' % (RAinfo['starttime'], RAinfo['endtime']))
 
-        #parse main parset...
-        mainParsetDict = parsets[str(sasId)]
         parset = parameterset()
-        momId = parset.add('Observation.momID', momId)
+        momId = parset.add('Observation.momID', momId) ##TODO probably add ObsSw. to all keys?
+        parset.add('Observation.startTime', RAinfo['starttime'].strpfime('%Y-%m-%d %H:%M:%S'))
+        parset.add('Observation.stopTime', RAinfo['endtime'].strpfime('%Y-%m-%d %H:%M:%S'))
+
         if stations in RAinfo:
             parset.add('Observation.VirtualInstrument.stationList', stations)
 
-        startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
-        endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
 
 
 
