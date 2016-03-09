@@ -39,6 +39,7 @@
 #include <Common/Thread/Mutex.h>
 #include <CoInterface/StreamableData.h>
 #include <CoInterface/LTAFeedback.h>
+#include <CoInterface/SmartPtr.h>
 #include <OutputProc/CommonLofarAttributes.h>
 #include <OutputProc/Package__Version.h>
 
