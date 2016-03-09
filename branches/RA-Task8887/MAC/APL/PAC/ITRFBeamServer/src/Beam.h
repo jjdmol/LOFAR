@@ -44,8 +44,9 @@ public:
 	// @param name String identifying this beam uniquely in the OTDB, used with
 	// key-value logger as nodeid.
 	// @param rcuMask The RCUs that participate in this beam.
-	Beam(const string& 				name, 
+	Beam(const string& 				name,
 		 const string&				antennaSet,
+		 const string&				band,
 		 const bitset<MAX_RCUS>&	rcuMask);
 	Beam() {};
 
@@ -56,7 +57,7 @@ public:
 	int addPointing(const IBS_Protocol::Pointing& pointing);
 
 	// @return Current pointing.
-	IBS_Protocol::Pointing currentPointing() const { return (itsCurrentPointing); } 
+	IBS_Protocol::Pointing currentPointing() const { return (itsCurrentPointing); }
 
 	// @return Current pointing.
 	IBS_Protocol::Pointing pointingAtTime(const RTC::Timestamp& time);
@@ -69,6 +70,9 @@ public:
 
 	// Get the name of the subarray on which this beam operates.
 	string antennaSetName() const { return (itsAntennaSet); }
+
+    // Get the name of the band on which this beam operates.
+	string bandName() const { return (itsBand); }
 
 	// Get beam name (unique name, can be used as key in key-value logger).
 	const bitset<MAX_RCUS>& rcuMask() const { return (itsRCUs); }
@@ -96,6 +100,9 @@ private:
 
 	// Name of the AntennaSet the beam is allocated on.
 	string 		itsAntennaSet;
+
+    // Name of the AntennaSet the beam is allocated on.
+	string 		itsBand;
 
 	// RCUs participating in the beam
 	bitset<MAX_RCUS>		itsRCUs;

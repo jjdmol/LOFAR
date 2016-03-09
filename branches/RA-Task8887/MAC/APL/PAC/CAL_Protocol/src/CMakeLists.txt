@@ -12,12 +12,9 @@ include_directories(${CMAKE_BINARY_DIR}/include/MAC)
 lofar_add_library(cal_protocol
   Package__Version.cc
   CAL_Protocol.cc
-  AntennaArray.cc
-  AntennaArrayData.cc
   AntennaGains.cc
   SpectralWindow.cc
-  SubArray.cc
-  ACC.cc)
+  SubArray.cc)
 add_dependencies(cal_protocol CAL_Protocol-CAL_Protocol)
 
 lofar_add_bin_program(versioncal_protocol versioncal_protocol.cc)

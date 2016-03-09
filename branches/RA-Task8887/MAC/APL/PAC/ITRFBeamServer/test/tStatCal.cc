@@ -33,11 +33,11 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace BS;
 
-int main(int, char*	argv[]) 
+int main(int, char*	argv[])
 {
 	INIT_LOGGER(argv[0]);
 
-	StatCal		theCalTable(1,12);
+	StatCal		theCalTable("LBA_INNER", "10_90", 12);
 	blitz::Array<std::complex<double>,3> theData = theCalTable();
 
 	cout << "RCU 5: X,Y for subband 10..15: " << endl;

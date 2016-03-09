@@ -38,7 +38,7 @@ class StatCal {
 public:
 
 	// constructor and destructor
-	explicit StatCal(uint rcumode, uint nrRSPBoards);
+	explicit StatCal(const string& antennaSet, const string& band, uint nrRSPBoards);
 	~StatCal();
 
 	std::complex<double> calFactor(uint	rcuNr, uint subbandNr) const;
@@ -57,23 +57,25 @@ private:
 	StatCal& operator= (const StatCal&); // not implemented
 
 	// helper functions
-	bool _readData       (uint	mode);
+	bool _readData       (const string& antennaSet, const string& band);
 	bool _readHeaderInfo (FILE*	file);
-	bool _checkHeaderInfo(uint	mode) const;
-	
+	bool _checkHeaderInfo(const string& antennaSet, const string& band) const;
+
 	uint 	itsNantennas;
 	uint 	itsNpols;
 	uint 	itsNsubbands;
-	uint 	itsMode;
+	string 	itsAntennaSet;
+	string 	itsBand;
 	string 	itsFileName;
 	bool	itsIsValid;
 
 	class headerinfo {
 	public:
-		headerinfo() : mode(-1) {};
+		headerinfo() : antennaSet("") {};
 		// datamembers
 		string	station;
-		int		mode;
+		string	antennaSet;
+		string	band;
 		string	source;
 		string	date;
 		string	calVersion;
@@ -84,8 +86,8 @@ private:
 	};
 	headerinfo		itsHI;
 
-	// two 
-	blitz::Array<std::complex<double>, 3> itsStaticCalibration;  // 
+	// two
+	blitz::Array<std::complex<double>, 3> itsStaticCalibration;  //
 };
 
 //# -------------------- inline functions --------------------

@@ -30,93 +30,94 @@
 #include <pthread.h>
 
 namespace LOFAR {
-  namespace CAL {
+    namespace CAL {
+
+/**
+ * This class holds the results of a remote station calibration: the
+ * calibrated antenna gains. Along with the gains a quality measure
+ * is computed by the calibration algorithm. This quality measure indicates
+ * the confidence in the computed antenna gain.
+ */
+class AntennaGains
+{
+public:
+
+    /*@{*/
+    /**
+     * Constructors
+     */
+    AntennaGains();
+    AntennaGains(uint nRCUs, uint nsubbands);
+    /*@}*/
 
     /**
-     * This class holds the results of a remote station calibration: the
-     * calibrated antenna gains. Along with the gains a quality measure
-     * is computed by the calibration algorithm. This quality measure indicates
-     * the confidence in the computed antenna gain.
+     * Destructor
      */
-    class AntennaGains
-    {
-    public:
+    virtual ~AntennaGains();
+    // Make a copy of this class
+    AntennaGains* clone() const;
 
-      /*@{*/
-      /**
-       * Constructors
-       */
-      AntennaGains();
-      AntennaGains(int nantennas, int npol, int nsubbands);
-      /*@}*/
+    /**
+     * Get reference to the array with calibrated antenna gains.
+     * @return a reference to the calibrated gains. A three dimensional array of
+     * complex doubles with dimensions: nantennas x npol x nsubbands
+     */
+    const blitz::Array<std::complex<double>, 2>& getGains() const { return m_gains; }
 
-      /**
-       * Destructor
-       */
-      virtual ~AntennaGains();
+    /**
+     * Get reference to the array with quality measure.
+     * @return a reference to the quality measure array. A 3-dimensional array
+     * of doubles with nantennas x npol x nsubbands elements.
+     */
+    const blitz::Array<double, 2>& getQuality() const { return m_quality; }
 
-      /**
-       * Get reference to the array with calibrated antenna gains.
-       * @return a reference to the calibrated gains. A three dimensional array of
-       * complex doubles with dimensions: nantennas x npol x nsubbands
-       */
-      const blitz::Array<std::complex<double>, 3>& getGains() const { return m_gains; }
+    /**
+     * has the calibration algorithm producing this result completed?
+     */
+    inline bool isDone() const { bool done; lock(); done = m_done; unlock(); return done; }
 
-      /**
-       * Get reference to the array with quality measure.
-       * @return a reference to the quality measure array. A 3-dimensional array
-       * of doubles with nantennas x npol x nsubbands elements.
-       */
-      const blitz::Array<double, 3>& getQuality() const { return m_quality; }
+    /**
+     * set the complete status.
+     */
+    inline void setDone(bool value = true) { lock(); m_done = value; unlock(); }
 
-      /**
-       * has the calibration algorithm producing this result completed?
-       */
-      inline bool isDone() const { bool done; lock(); done = m_done; unlock(); return done; }
+    /**
+     * assignment operator
+     * @param rhs Right-hand-side of assignment. It is not const
+     * because the rhs must be locked during the assignment.
+     */
+    AntennaGains& operator=(const AntennaGains& rhs);
 
-      /**
-       * set the complete status.
-       */
-      inline void setDone(bool value = true) { lock(); m_done = value; unlock(); }
+    /**
+     * lock/unlock
+     */
+    inline int lock()   const { return pthread_mutex_lock((pthread_mutex_t*)m_mutex);   }
+    inline int unlock() const { return pthread_mutex_unlock((pthread_mutex_t*)m_mutex); }
 
-      /**
-       * assignment operator
-       * @param rhs Right-hand-side of assignment. It is not const
-       * because the rhs must be locked during the assignment.
-       */
-      AntennaGains& operator=(const AntennaGains& rhs);
+public:
+    /*@{*/
+    /**
+     * marshalling methods
+     */
+    size_t getSize() const;
+    size_t pack   (char* buffer) const;
+    size_t unpack (const char* buffer);
+    /*@}*/
 
-      /**
-       * lock/unlock
-       */
-      inline int lock()   const { return pthread_mutex_lock((pthread_mutex_t*)m_mutex);   }
-      inline int unlock() const { return pthread_mutex_unlock((pthread_mutex_t*)m_mutex); }
+private:
+    /**
+     * Prevent copy constructor
+     */
+    AntennaGains(const AntennaGains & copy);
 
-    public:
-      /*@{*/
-      /**
-       * marshalling methods
-       */
-      size_t getSize() const;
-      size_t pack   (char* buffer) const;
-      size_t unpack (const char* buffer);
-      /*@}*/
+    blitz::Array<std::complex<double>, 2> m_gains;
+    blitz::Array<double, 2>               m_quality;
+    bool                                  m_done; // has the calibration finished
 
-    private:
-      /**
-       * Prevent copy constructor
-       */
-      AntennaGains(const AntennaGains & copy);
+    const pthread_mutex_t* m_mutex; // control access to the m_done flag
+};
 
-    private:
-      blitz::Array<std::complex<double>, 3> m_gains;
-      blitz::Array<double, 3>               m_quality;
-      bool                                  m_done; // has the calibration finished
-
-      const pthread_mutex_t* m_mutex; // control access to the m_done flag
-    };
-
-  }; // namespace CAL
+    }; // namespace CAL
 }; // namespace LOFAR
 
 #endif /* CALIBRATIONRESULT_H_ */

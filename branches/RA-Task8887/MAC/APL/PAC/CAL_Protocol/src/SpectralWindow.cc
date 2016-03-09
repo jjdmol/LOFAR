@@ -26,162 +26,162 @@
 #include <Common/StringUtil.h>
 
 #include <APL/CAL_Protocol/SpectralWindow.h>
-
-#include <blitz/array.h>
-#include <sstream>
+//#include <APL/CAL_Protocol/CAL_Protocol.ph>
 
 #include <MACIO/Marshalling.tcc>
 #include <APL/RTCCommon/MarshallBlitz.h>
 
-#include <math.h>
-
-using namespace std;
-using namespace blitz;
-using namespace LOFAR;
-using namespace CAL;
+namespace LOFAR {
+    namespace CAL {
 
 SpectralWindow::SpectralWindow() :
-  m_name("undefined"), m_sampling_freq(0), m_nyquist_zone(0), m_numsubbands(0), m_rcucontrol(0)
+    itsName("undefined"), itsSamplingFreq(0), itsNyquistZone(0), itsLBAfilterOn(0)
 {
-	LOG_TRACE_OBJ("SpectralWindow()");
+    LOG_TRACE_OBJ("SpectralWindow()");
 }
 
-SpectralWindow::SpectralWindow(std::string name, double sampling_freq,
-								 int nyquist_zone, int numsubbands, uint32 rcucontrol) :
-	m_name(name), 
-	m_sampling_freq(sampling_freq),
-	m_nyquist_zone(nyquist_zone), 
-	m_numsubbands(numsubbands), 
-	m_rcucontrol(rcucontrol) 
+
+#if 0
+//TODO
+SpectralWindow::SpectralWindow(uint rcumode)
 {
-	LOG_TRACE_OBJ(formatString("SpectralWindow(%s,%f,%d,%d,%08X)", 
-						name.c_str(), sampling_freq, nyquist_zone, numsubbands, rcucontrol));
+    switch (rcumode) {
+    case 1: *this = SpectralWindow("rcumode1", 200.0e6, 1, false);  // 1
+    case 2: *this = SpectralWindow("rcumode2", 200.0e6, 1, true);   // 2
+    case 3: *this = SpectralWindow("rcumode3", 200.0e6, 1, false);  // 1
+    case 4: *this = SpectralWindow("rcumode4", 200.0e6, 1, true);   // 2
+    case 5: *this = SpectralWindow("rcumode5", 200.0e6, 2, false);  // 3
+    case 6: *this = SpectralWindow("rcumode6", 160.0e6, 3, false);  // 4
+    case 7: *this = SpectralWindow("rcumode7", 200.0e6, 3, false);  // 5
+    default:
+        ASSERTSTR(rcumode >= 1 && rcumode <= (uint)NR_RCU_MODES, "rcumode must have value: 1.." << NR_RCU_MODES);
+    }
 }
- 
+#endif
+
+SpectralWindow::SpectralWindow(const string& name, uint band) :
+    itsName         (name)
+{
+    itsSamplingFreq = 200e6;
+    itsLBAfilterOn = false;
+
+    switch (band) {
+        case BAND_10_70: {
+            itsSamplingFreq = 160e6;
+            itsNyquistZone = 1;
+        } break;
+
+        case BAND_10_90: {
+            itsNyquistZone = 1;
+        } break;
+
+        case BAND_30_70: {
+            itsSamplingFreq = 160e6;
+            itsNyquistZone = 1;
+            itsLBAfilterOn = true;
+        } break;
+
+        case BAND_30_90: {
+            itsNyquistZone = 1;
+            itsLBAfilterOn = true;
+        } break;
+
+        case BAND_110_190: {
+            itsNyquistZone = 2;
+        } break;
+
+        case BAND_170_230: {
+            itsSamplingFreq = 160e6;
+            itsNyquistZone = 3;
+        } break;
+
+        case BAND_210_250: {
+            itsNyquistZone = 3;
+        } break;
+
+        default: {
+        } break;
+    }
+    LOG_TRACE_OBJ(formatString("SpectralWindow(%s,%f,%d,%s)",
+                  name.c_str(), itsSamplingFreq, itsNyquistZone, (itsLBAfilterOn ? "ON" : " OFF")));
+}
+
 SpectralWindow::~SpectralWindow()
 {
-	LOG_TRACE_OBJ("~SpectralWindow()");
+    LOG_TRACE_OBJ("~SpectralWindow()");
 }
 
-double SpectralWindow::getSubbandFreq(int subband) const
+//
+// rcumodeHBA()
+//
+uint SpectralWindow::rcumodeHBA() const
 {
-//	LOG_TRACE_OBJ_STR("SpectralWindow::getSubbandFreq(" << subband << " of " << m_numsubbands << ")");
-
-	ASSERT(m_numsubbands);
-	ASSERT(subband >= 0 && subband <= m_numsubbands);
-
-	bool is160 	   = ::fabs(160e6 - m_sampling_freq) < 1e-4;
-	float freqOffset = (is160 ? 80.0e6 : 100.0e6) * (m_nyquist_zone - 1);
-
-	return (freqOffset + ((subband % m_numsubbands) * getSubbandWidth()));
+    switch (itsNyquistZone) {
+    case 1: return (0); // LBA
+    case 2: return (5);
+    case 3: return (itsSamplingFreq == 200.0e6 ? 7 : 6);
+    default: ASSERTSTR(false, "rcuMode cannot be determined, illegal nyquistzone.");
+    }
 }
 
-
-//
-// isForHBA(): bool
-//
-bool SpectralWindow::isForHBA() const
+double SpectralWindow::subbandFreq(int subband) const
 {
-	LOG_DEBUG (formatString("isForHBA(%06X)", m_rcucontrol));
+    ASSERT(subband >= 0 && subband < MAX_SUBBANDS);
 
-	switch (m_rcucontrol) {
-	case 0x017900:	// LB_10_90
-	case 0x057900:	// LB_30_80
-	case 0x037A00:	// LBH_10_90
-	case 0x077A00:	// LBH_30_80
-		return (false);
-		break;
+    bool    is160      = ::fabs(160e6 - itsSamplingFreq) < 1e-4;
+    float   freqOffset = (is160 ? 80.0e6 : 100.0e6) * (itsNyquistZone - 1);
 
-	case 0x07A400: // HB_110_190
-	case 0x079400: // HB_170_230
-	case 0x078400: // HB_210_250
-		return (true);
-		break;
-
-	default:
-		LOG_WARN(formatString("Unknown RCUcontrol setting (0x%X), assuming LBA array",
-							m_rcucontrol));
-		break;
-	}
-
-	return (false);		// assume LBA
+    return (freqOffset + (subband * subbandWidth()));
 }
 
-//
-// rcumode(): rcumode
-//
-int SpectralWindow::rcumode() const
-{
-	LOG_DEBUG (formatString("rcumode(%06X)", m_rcucontrol));
-
-	switch (m_rcucontrol) {
-	case 0x017900:	return (1);
-	case 0x057900:	return (2);
-	case 0x037A00:	return (3);
-	case 0x077A00:	return (4);
-	case 0x07A400:	return (5);
-	case 0x079400:	return (6);
-	case 0x078400:	return (7);
-	default: 		return (0);
-	}
-}
-
-uint32 SpectralWindow::raw_rcumode() const
-{
-    LOG_DEBUG (formatString("rcumode(%06X)", m_rcucontrol));
-    return (m_rcucontrol);
-}
-
-//
-// print
-//
+// print function for operator<<
 ostream& SpectralWindow::print(ostream& os) const
 {
-	os << formatString("SpectralWindow(name=%s,f=%f,nyq=%d,#sub=%d,rcuctrl=%08X)", 
-						m_name.c_str(), m_sampling_freq, m_nyquist_zone, m_numsubbands, m_rcucontrol);
-	return (os);
+    os << "SpectralWindow " << itsName << ":sampleFreq=" << itsSamplingFreq << ", nyquistzone=" << itsNyquistZone;
+    os << ", LBAfilter=" << (itsLBAfilterOn ? "ON" : "OFF");
+    return (os);
 }
 
 
+//
+// ---------- pack and unpack functions ----------
+//
 size_t SpectralWindow::getSize() const
 {
-  return MSH_size(m_name) +
-    sizeof(m_sampling_freq) +
-    sizeof(m_nyquist_zone) +
-    sizeof(m_numsubbands) +
-    sizeof(m_rcucontrol);
+    return MSH_size(itsName) +
+        sizeof(itsSamplingFreq) +
+        sizeof(itsNyquistZone) +
+        sizeof(itsLBAfilterOn);
 }
 
 size_t SpectralWindow::pack(char* buffer) const
 {
-  size_t offset = 0;
+    size_t offset = 0;
 
-  offset = MSH_pack(buffer, offset, m_name);
-  memcpy(buffer + offset, &m_sampling_freq, sizeof(m_sampling_freq));
-  offset += sizeof(m_sampling_freq);
-  memcpy(buffer + offset, &m_nyquist_zone, sizeof(m_nyquist_zone));
-  offset += sizeof(m_nyquist_zone);
-  memcpy(buffer + offset, &m_numsubbands, sizeof(m_numsubbands));
-  offset += sizeof(m_numsubbands);
-  memcpy(buffer + offset, &m_rcucontrol, sizeof(m_rcucontrol));
-  offset += sizeof(m_rcucontrol);
+    offset = MSH_pack(buffer, offset, itsName);
+    memcpy(buffer + offset, &itsSamplingFreq, sizeof(itsSamplingFreq));
+    offset += sizeof(itsSamplingFreq);
+    memcpy(buffer + offset, &itsNyquistZone, sizeof(itsNyquistZone));
+    offset += sizeof(itsNyquistZone);
+    memcpy(buffer + offset, &itsLBAfilterOn, sizeof(itsLBAfilterOn));
+    offset += sizeof(itsLBAfilterOn);
 
-  return offset;
+    return offset;
 }
 
 size_t SpectralWindow::unpack(const char* buffer)
 {
-  size_t offset = 0;
+    size_t offset = 0;
 
-  offset = MSH_unpack(buffer, offset, m_name);
-  memcpy(&m_sampling_freq, buffer + offset, sizeof(m_sampling_freq));
-  offset += sizeof(m_sampling_freq);
-  memcpy(&m_nyquist_zone, buffer + offset, sizeof(m_nyquist_zone));
-  offset += sizeof(m_nyquist_zone);
-  memcpy(&m_numsubbands, buffer + offset, sizeof(m_numsubbands));
-  offset += sizeof(m_numsubbands);
-  memcpy(&m_rcucontrol, buffer + offset, sizeof(m_rcucontrol));
-  offset += sizeof(m_rcucontrol);
+    offset = MSH_unpack(buffer, offset, itsName);
+    memcpy(&itsSamplingFreq, buffer + offset, sizeof(itsSamplingFreq));
+    offset += sizeof(itsSamplingFreq);
+    memcpy(&itsNyquistZone, buffer + offset, sizeof(itsNyquistZone));
+    offset += sizeof(itsNyquistZone);
+    memcpy(&itsLBAfilterOn, buffer + offset, sizeof(itsLBAfilterOn));
+    offset += sizeof(itsLBAfilterOn);
 
-  return offset;
+    return offset;
 }
+    }  // namespace ICAL
+}  // namespace LOFAR

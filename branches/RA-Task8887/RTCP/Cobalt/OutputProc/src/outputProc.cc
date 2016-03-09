@@ -89,13 +89,12 @@ int main(int argc, char *argv[])
     }
   }
 
-  if (argc != 3) {
+  if (argc != 3 && argc != 2) {
     usage(argv[0]);
     return EXIT_FAILURE;
   }
 
   int observationID = boost::lexical_cast<int>(argv[1]);
-  unsigned myRank = boost::lexical_cast<unsigned>(argv[2]);
 
   // Ignore SIGPIPE, as we handle disconnects ourselves
   struct sigaction sa;
@@ -123,10 +122,10 @@ int main(int argc, char *argv[])
   PortBroker::createInstance(storageBrokerPort(observationID));
 
   // retrieve control stream to receive the parset and report back
-  string resource = getStorageControlDescription(observationID, myRank);
+  string resource = getStorageControlDescription(observationID);
   PortBroker::ServerStream controlStream(resource);
 
-  if (process(controlStream, myRank)) {
+  if (process(controlStream)) {
     LOG_INFO("Program terminated succesfully");
     return EXIT_SUCCESS;
   } else {

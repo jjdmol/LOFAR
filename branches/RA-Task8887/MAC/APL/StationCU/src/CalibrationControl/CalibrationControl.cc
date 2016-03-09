@@ -32,6 +32,7 @@
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
+#include <APL/CAL_Protocol/SpectralWindow.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <signal.h>
 
@@ -51,9 +52,10 @@ namespace LOFAR {
 	using namespace APLCommon;
 	using namespace DP_Protocol;
 	using namespace Controller_Protocol;
+	using namespace CAL;
 	using namespace CAL_Protocol;
 	namespace StationCU {
-	
+
 // static pointer to this object for signal handler
 static CalibrationControl*	thisCalibrationControl = 0;
 static uint16				gResult = CT_RESULT_NO_ERROR;
@@ -72,7 +74,8 @@ CalibrationControl::CalibrationControl(const string&	cntlrName) :
 	itsState			(CTState::NOSTATE)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
-	LOG_INFO(Version::getInfo<StationCUVersion>("CalibrationControl"));
+
+    LOG_INFO(Version::getInfo<StationCUVersion>("CalibrationControl"));
 
 	// First readin our observation related config file.
 	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);
@@ -145,43 +148,24 @@ void    CalibrationControl::setState(CTState::CTstateNr     newState)
 		CTState		cts;
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString(cts.name(newState)));
 	}
-}   
+}
 
 
 //
-// convertFilterSelection(string) : uint8
+// convertFilterSelection2int(string)
 //
-int32 CalibrationControl::convertFilterSelection(const string&	filterselection, const string&	antennaSet) 
+int32 CalibrationControl::convertFilterSelection2int(const string&	bandselection)
 {
-	// international stations don't have the LBL's connected, force them to use the LBH inputs.
-	string	tmpAntennaSet(antennaSet);	// modifyable copy
-	if ((stationTypeValue() == 2) && (tmpAntennaSet == "LBA_OUTER")) {
-		tmpAntennaSet = "LBA_INNER";
-		LOG_INFO("LBA_OUTER on an international station: forcing it to LBA_INNER");
-	}
-	LOG_DEBUG_STR("stationTypeValue() = " << stationTypeValue());
-	LOG_DEBUG_STR("antennaSet         = " << tmpAntennaSet);
-	LOG_DEBUG_STR("filterselection    = " << filterselection);
-	// support new filternames
-	if (tmpAntennaSet == "LBA_OUTER") {
-		if (filterselection == "LBA_10_70")	{ return(1); }	// 160 Mhz
-		if (filterselection == "LBA_10_90")	{ return(1); }	// 200 Mhz
-		if (filterselection == "LBA_30_70")	{ return(2); }	// 160 Mhz
-		if (filterselection == "LBA_30_90")	{ return(2); }	// 200 Mhz
-	}
-	if (tmpAntennaSet == "LBA_INNER") {
-		if (filterselection == "LBA_10_70")	{ return(3); }	// 160 Mhz
-		if (filterselection == "LBA_10_90")	{ return(3); }	// 200 Mhz
-		if (filterselection == "LBA_30_70")	{ return(4); }	// 160 Mhz
-		if (filterselection == "LBA_30_90")	{ return(4); }	// 200 Mhz
-	}
-	if (filterselection == "HBA_110_190")	{ return(5); }	// 200 Mhz
-	if (filterselection == "HBA_170_230")	{ return(6); }	// 160 Mhz
-	if (filterselection == "HBA_210_250")	{ return(7); }	// 200 Mhz
+    if (bandselection == "LBA_10_70")   { return(BAND_10_70);   }  // 160 Mhz
+    if (bandselection == "LBA_10_90")   { return(BAND_10_90);   }  // 200 Mhz
+    if (bandselection == "LBA_30_70")   { return(BAND_30_70);   }  // 160 Mhz
+    if (bandselection == "LBA_30_90")   { return(BAND_30_90);   }  // 200 Mhz
+	if (bandselection == "HBA_110_190") { return(BAND_110_190); }  // 200 Mhz
+	if (bandselection == "HBA_170_230") { return(BAND_170_230); }  // 160 Mhz
+	if (bandselection == "HBA_210_250") { return(BAND_210_250); }  // 200 Mhz
 
-	LOG_WARN_STR ("filterselection value '" << filterselection << 
-									"' not recognized, using LBA_10_70");
-	return (1);
+	LOG_WARN_STR ("bandselection value '" << bandselection << "' not recognized");
+	return (BAND_UNDEFINED);
 }
 
 //
@@ -189,13 +173,13 @@ int32 CalibrationControl::convertFilterSelection(const string&	filterselection, 
 //
 // Connect to PVSS and report state back to StartDaemon
 //
-GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event, 
+GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 													GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
+
 	switch (event.signal) {
     case F_INIT:
    		break;
@@ -227,7 +211,7 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 		itsTimerPort->setTimer(0.0);
 	}
 	break;
-	  
+
 	case F_TIMER:
 		if (!itsPropertySetInitialized) {
 			itsPropertySetInitialized = true;
@@ -249,7 +233,7 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 			itsPropertySet->setValue(PN_CC_FILTER,			GCFPVString (""));
 			itsPropertySet->setValue(PN_CC_NYQUISTZONE,		GCFPVInteger(0));
 			itsPropertySet->setValue(PN_CC_RCUS,			GCFPVString (""));
-		  
+
 			// Start ParentControl task
 			LOG_DEBUG ("Enabling ParentControl task and wait for my name");
 			itsParentPort = itsParentControl->registerTask(this);
@@ -271,7 +255,7 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
 		setState(CTState::CONNECTED);
 		sendControlResult(port, CONTROL_CONNECTED, msg.cntlrName, CT_RESULT_NO_ERROR);
-		
+
 		// let ParentControl watch over the start and stop times for extra safety.
 		ptime	startTime = time_from_string(globalParameterSet()->
 													getString("Observation.startTime"));
@@ -287,7 +271,7 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 	default:
 		status = _defaultEventHandler(event, port);
 		break;
-	}    
+	}
 
 	return (status);
 }
@@ -297,7 +281,7 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 //
 // wait for CLAIM event
 //
-GCFEvent::TResult CalibrationControl::started_state(GCFEvent& 		  event, 
+GCFEvent::TResult CalibrationControl::started_state(GCFEvent& 		  event,
 													GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("started:" << eventName(event) << "@" << port.getName());
@@ -316,7 +300,7 @@ GCFEvent::TResult CalibrationControl::started_state(GCFEvent& 		  event,
 		break;
 
 	case F_CONNECTED: // CONNECT must be from Calserver.
-		ASSERTSTR (&port == itsCalServer, 
+		ASSERTSTR (&port == itsCalServer,
 									"F_CONNECTED event from port " << port.getName());
 		itsTimerPort->cancelAllTimers();
 		itsPropertySet->setValue(PN_CC_CONNECTED,GCFPVBool(true));
@@ -328,7 +312,7 @@ GCFEvent::TResult CalibrationControl::started_state(GCFEvent& 		  event,
 
 	case F_DISCONNECTED:
 		port.close();
-		ASSERTSTR (&port == itsCalServer, 
+		ASSERTSTR (&port == itsCalServer,
 								"F_DISCONNECTED event from port " << port.getName());
 		itsPropertySet->setValue(PN_CC_CONNECTED,GCFPVBool(false));
 		LOG_WARN("Connection with CalServer failed, retry in 2 seconds");
@@ -361,14 +345,14 @@ GCFEvent::TResult CalibrationControl::started_state(GCFEvent& 		  event,
 
 	return (status);
 }
-	
+
 
 //
 // claimed_state(event, port)
 //
 // wait for PREPARE event
 //
-GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event, 
+GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 													GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("claimed:" << eventName(event) << "@" << port.getName());
@@ -394,7 +378,7 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 
 	case F_DISCONNECTED:
 		port.close();
-		ASSERTSTR (&port == itsCalServer, 
+		ASSERTSTR (&port == itsCalServer,
 								"F_DISCONNECTED event from port " << port.getName());
 		LOG_WARN("Connection with CalServer lost, going to reconnect state.");
 		TRAN(CalibrationControl::started_state);
@@ -458,12 +442,12 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 
 	return (status);
 }
-	
+
 
 //
 // active_state(event, port)
 //
-// Normal operation state. 
+// Normal operation state.
 //
 GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInterface& port)
 {
@@ -484,7 +468,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case F_DISCONNECTED:
 		port.close();
-		ASSERTSTR (&port == itsCalServer, 
+		ASSERTSTR (&port == itsCalServer,
 								"F_DISCONNECTED event from port " << port.getName());
 		LOG_DEBUG("Connection with CalServer lost, going to reconnect");
 		TRAN(CalibrationControl::started_state);
@@ -535,7 +519,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 			LOG_INFO_STR ("Calibration of beam " << ack.name << " successfully stopped");
 		}
 		else {
-			LOG_WARN_STR ("Calibration of beam " << ack.name << " stopped with ERROR:" 
+			LOG_WARN_STR ("Calibration of beam " << ack.name << " stopped with ERROR:"
 						<< errorName(ack.status));
 		}
 
@@ -562,7 +546,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 			else {
 				LOG_ERROR("Stop of some calibrations failed, staying in SUSPENDED mode");
 				setObjectState("Cannot stop the calibration", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
-				sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
+				sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(),
 																CT_RESULT_CALSTOP_FAILED);
 				setState(CTState::SUSPENDED);
 			}
@@ -585,7 +569,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 //
 // Quiting: send QUITED, wait 1 second and stop
 //
-GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event, 
+GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 													GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("quiting:" << eventName(event) << "@" << port.getName());
@@ -631,7 +615,7 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 //
 // startCalibration()
 //
-bool	CalibrationControl::startCalibration() 
+bool	CalibrationControl::startCalibration()
 {
 	itsNrBeams = itsObsPar->beams.size();
 	LOG_DEBUG_STR("Calibrating " << itsNrBeams << " beams.");
@@ -648,19 +632,15 @@ bool	CalibrationControl::startCalibration()
 		CALStartEvent calStartEvent;
 		calStartEvent.name   = itsObsPar->beams[i].name;
 		StationConfig		config;
-		// TODO: As long as the AntennaArray.conf uses different names as SAS we have to use this dirty hack.
-//		calStartEvent.parent = itsObsPar->getAntennaArrayName(config.hasSplitters);
-		calStartEvent.parent = AS->antennaField(itsObsPar->beams[i].antennaSet);
-		calStartEvent.rcumode().resize(1);
-		calStartEvent.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)
-											convertFilterSelection(itsObsPar->filter, itsObsPar->beams[i].antennaSet));
-		calStartEvent.subset = itsObsPar->getRCUbitset(0, 0, itsObsPar->beams[i].antennaSet) &
+		calStartEvent.antennaSet = itsObsPar->beams[i].antennaSet;
+		calStartEvent.band = convertFilterSelection2int(itsObsPar->filter);
+		calStartEvent.rcuMask = itsObsPar->getRCUbitset(0, 0, itsObsPar->beams[i].antennaSet) &
 								AS->RCUallocation(itsObsPar->beams[i].antennaSet);
 
 		// Note: when HBA_DUAL is selected we should set up a calibration on both HBA_0 and HBA_1 field.
-		LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
-								calStartEvent.name.c_str(), calStartEvent.parent.c_str(),
-								calStartEvent.rcumode()(0).getRaw()));
+		LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%d)",
+								calStartEvent.name.c_str(), calStartEvent.antennaSet.c_str(),
+								calStartEvent.band));
 		itsCalServer->send(calStartEvent);
 		beamNameArr.push_back(new GCFPVString(itsObsPar->beams[i].name));	// update array for PVSS
 	} // for all beams

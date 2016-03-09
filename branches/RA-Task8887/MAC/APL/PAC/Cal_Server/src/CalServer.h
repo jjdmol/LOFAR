@@ -27,12 +27,14 @@
 #include <Common/lofar_list.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_string.h>
-#include <APL/CAL_Protocol/ACC.h>
+#include <ApplCommon/StationDatatypes.h>
+#include "ACC.h"
 #include <APL/CAL_Protocol/SubArray.h>
 #include <APL/RSP_Protocol/RCUSettings.h>
 #include "Source.h"
+#include "AntennaArray.h"
 #include "DipoleModel.h"
-#include "SubArrays.h"
+#include "SubArrayMgr.h"
 
 #include <GCF/TM/GCF_Control.h>
 #include <AMCBase/ConverterClient.h>
@@ -43,11 +45,9 @@ namespace LOFAR {
   using GCF::TM::GCFTCPPort;
   using GCF::TM::GCFPortInterface;
   using GCF::TM::GCFTimerPort;
-  
   namespace CAL {
 
 // forward declarations
-class CalibrationAlgorithm;
 #ifdef USE_CAL_THREAD
 class CalibrationThread;
 #endif
@@ -71,7 +71,7 @@ public:
 	void remove_client(GCFPortInterface* port);
 
 	// increment RCU usagecounters and enable newly used RCUs
-	void _enableRCUs(SubArray*	subarray, RSP_Protocol::RCUSettings rcu_settings, int delay);
+	void _enableRCUs(SubArray*	subarray, int delay);
 
 	// decrement RCU usagecounters and disable unused RCUs
 	void _disableRCUs(SubArray*	subarray);
@@ -85,7 +85,7 @@ public:
 	static void 	  sigintHandler(int signum);
 	void 			  finish();
 	GCFEvent::TResult finishing_state(GCFEvent&	event, GCFPortInterface& port);
-		
+
 	/*@}*/
 
 	/*@{*/
@@ -96,14 +96,14 @@ public:
 	GCFEvent::TResult handle_cal_unsubscribe(GCFEvent& e, GCFPortInterface &port);
 	GCFEvent::TResult handle_cal_getsubarray(GCFEvent& e, GCFPortInterface &port);
 	/*@}*/
-    
+
 	// Write ACC to file if configured to do so.
 	void write_acc();
 
 	// Helper functions
 	bool _dataOnRing	  (uint	ringNr)	const;
 	void _updateDataStream(uint	delay);
-	void _powerdownRCUs   (SubArray::RCUmask_t	rcus2switchOff);
+	void _powerdownRCUs   (RCUmask_t	rcus2switchOff);
 
 private:
 	// ----- DATA MEMBERS -----
@@ -113,15 +113,13 @@ private:
 	Sources                     m_sources;      // source catalog (read from file)
 	DipoleModels                m_dipolemodels; // dipole model   (read from file)
 
-	SubArrays                   m_subarrays;    // the subarrays (created by clients)
+	SubArrayMgr                 itsSubArrays;    // the subarrays (created by clients)
 	ACCs&                       m_accs;         // front and back ACC buffers (received from ACMServer)
-
-	CalibrationAlgorithm*       m_cal;          // pointer to the calibration algorithm to use
 
 	AMC::ConverterClient*       m_converter;    // interface for coordinate conversion (Astronomical Measures Conversion)
 
 	// Current sampling frequency of the system.
-	double m_sampling_frequency;
+	int itsClockSetting;
 
 	// remember number of RSP boards and number of rcus
 	uint 	m_n_rspboards;
