@@ -28,7 +28,7 @@ Typical usage is to derive your own subclass from RABusListener and implement th
 """
 
 from lofar.messaging.messagebus import AbstractBusListener
-from .config import DEFAULT_NOTIFICATION_BUSNAME, RATASKSPECIFIED_NOTIFICATIONNAME
+from lofar.sas.resourceassignment.rataskspecified.config import DEFAULT_NOTIFICATION_BUSNAME, RATASKSPECIFIED_NOTIFICATIONNAME
 
 import qpid.messaging
 import logging
