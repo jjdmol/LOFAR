@@ -50,7 +50,7 @@ class RATaskScheduledListener(RATaskScheduledBusListener):
                  propagator=None, ## TODO also give translator?
                  **kwargs):
         """
-        RATaskScheduledListener listens on the lofar ?? bus and calls onTaskScheduled
+        RATaskScheduledListener listens on the lofar ?? bus and calls onTaskScheduled or onTaskConclict
         :param busname: valid Qpid address (default: lofar.ra.notification)
         :param broker: valid Qpid broker host (default: None, which means localhost)
         additional parameters in kwargs:
@@ -65,15 +65,15 @@ class RATaskScheduledListener(RATaskScheduledBusListener):
         if not self.propagator:
             self.propagator =  RAtoOTDBPropagator()
 
-    def onTaskScheduled(self, otdbId, momId, modificationTime):
-        logger.info('onTaskScheduled: otdbId=%s' % otdbId)
+    def onTaskScheduled(self, raId, otdbId, momId, modificationTime):
+        logger.info('onTaskScheduled: raId=%s otdbId=%s momId=%s' % (raId, otdbId, momId))
 
-        self.propagator.doPropagation(otdbId, momId, 'scheduled')
+        self.propagator.doPropagation(raId, otdbId, momId, 'scheduled')
 
-#    def onTaskConflict(self, otdbId, momId, modificationTime):
-#        logger.info('onTaskConflict: otdbId=%s' % otdbId)
-#
-#        self.propagator.doPropagation(otdbId, momId, 'conflict')
+    def onTaskConflict(self, raId, otdbId, momId, modificationTime):
+        logger.info('onTaskConflict: raId=%s otdbId=%s momId=%s' % (raId, otdbId, momId))
+
+        self.propagator.doPropagation(otdbId, momId, 'conflict')
 
 
 __all__ = ["RATaskScheduledListener"]

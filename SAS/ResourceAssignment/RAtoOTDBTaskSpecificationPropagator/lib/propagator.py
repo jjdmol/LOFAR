@@ -88,7 +88,7 @@ class RAtoOTDBPropagator():
         self.radbrpc.close()
         self.otdbrpc.close()
 
-    def doPropagation(self, otdbId, momId, status): #status has no default.
+    def doPropagation(self, raId, otdbId, momId, status): #status has no default.
         logger.info('doPropagation: otdbId=%s momId=%s' % (sasId, momId))
         
         if not otdbId:
@@ -98,15 +98,16 @@ class RAtoOTDBPropagator():
         if status == 'conflict':
             self.otdbrpc.UpdateTreeStatus(otdbId, 'conflict')
         elif status == 'scheduled':
-            RAinfo = self.getRAinfo()
+            RAinfo = self.getRAinfo(raId)
             OTDBinfo = self.translator.doTranslation(RAinfo)
             self.setOTDBinfo(otdbId, OTDBinfo, 'scheduled')
         else:
             logger.warning('doPropagation received unknown status: %s' % (status,))
     
-    def getRAinfo():
+    def getRAinfo(raId):
         info = {}
-        self.radbrpc.
+        task = self.radbrpc.GetTask(raId)
+        info.update(task)
     
     def setOTDBinfo(otdbId, OTDBinfo, OTDBstatus)
         r = self.otdbrpc.UpdateTreeKey(otdbId, OTDBinfo('OTDBkeys'))
