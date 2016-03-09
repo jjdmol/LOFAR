@@ -1,0 +1,78 @@
+#!/bin/bash
+
+echo FILTERED BY $0
+
+# Create a temporary file that contains our script.
+SCRIPT=`mktemp`
+
+# Use a bash HEREDOC to provide the script. The delimiter EOF is quoted
+# to prevent $ and \ substitution.
+>$SCRIPT cat - <<'EOF'
+
+# ----- filter gcc warnings, for example:
+# /usr/include/boost/date_time/gregorian/conversion.hpp:44: warning: missing initializer ...
+if (m#^([/._ A-Za-z0-9-]+):([0-9]+):[0-9:]* warning: +(.*)$#) {
+  $file = $1;
+  $line = $2;
+  $warning = $3;
+
+  # ---- reasons to filter out this line
+
+  # PVSS warnings
+  next if $file =~ m#^/opt/WinCC_OA/# && $warning =~ /^unused parameter/;
+  next if $file =~ m#^/opt/WinCC_OA/# && $warning =~ /^base class '[^']+' should be explicitly initialized/;
+  next if $file =~ m#^/opt/WinCC_OA/# && $warning =~ /^'[^']+' was hidden/;
+  next if $file =~ m#^/opt/WinCC_OA/# && $warning =~ /^by '[^']+'/;
+  next if $file =~ m#^/opt/WinCC_OA/# && $warning =~ /^enumeral and non-enumeral type in conditional expression/;
+
+  # OpenMPI warnings
+  next if $file =~ m#/mpicxx.h$# && $warning =~ /^unused parameter/;
+
+  # Boost warnings
+  next if $file =~ m#/boost/date_time/.*/conversion.hpp$# && $warning =~ /^missing initializer/;
+  next if $file =~ m#/boost/date_time/time.hpp$#          && $warning =~ /^unused parameter/;
+  next if $file =~ m#/boost/date_time/time_facet.hpp$#    && $warning =~ /^unused parameter/;
+
+  # Blitz warnings
+  next if $file =~ m#/blitz/compiler.h$#        && $warning =~ /^"restrict" redefined/;
+  next if $file =~ m#/casacore/casa/aipsdef.h$# && $warning =~ /^this is the location of the previous definition/;
+
+  # CasaRest warnings
+  next if $file =~ m#^/opt/cep/casarest/# && $warning =~ /^type qualifiers ignored on function return type/;
+  next if $file =~ m#^/opt/cep/casarest/# && $warning =~ /^'[^']+' was hidden/;
+  next if $file =~ m#^/opt/cep/casarest/# && $warning =~ /^by '[^']+'/;
+  next if $file =~ m#^/opt/cep/casarest/# && $warning =~ /^unused parameter/;
+  next if $file =~ m#^/opt/cep/casarest/# && $warning =~ /^abstract virtual '[^']+' called from constructor/;
+  next if $file =~ m#^/opt/cep/casarest/#;
+
+  # Dynamic parts of a static executable
+  next if $warning =~ /^Using '[^']+' in statically linked applications requires at runtime the shared libraries/;
+}
+
+# ------ filter ld warnings, for example:
+# SocketStream.cc:(.text+0x482c): warning: Using 'getaddrinfo' in statically linked ...
+# (.text+0x2e9c): warning: Using 'endpwent' in statically linked ...
+if ( m#^([/._ A-Za-z0-9-]+):\([+.A-Za-z0-9]+\): warning: (.*)$#
+  || m#^()\([+.A-Za-z0-9]+\): warning: (.*)$#) {
+  $file = $1;
+  $warning = $2;
+
+  # ---- reasons to filter out this line
+
+  # Dynamic parts of a static executable
+  next if $warning =~ /^Using '[^']+' in statically linked applications requires at runtime the shared libraries/;
+}
+
+# ----- print what was not filtered
+print;
+
+EOF
+
+# Run our script on the output of make
+make $@ 2>&1 | perl -n $SCRIPT
+
+MAKESTATUS=${PIPESTATUS[0]}
+
+rm -f $SCRIPT
+
+exit $MAKESTATUS
