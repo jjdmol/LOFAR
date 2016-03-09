@@ -45,7 +45,7 @@ namespace LOFAR
 
     void MSWriterFile::write(StreamableData *data)
     {
-      data->write(&itsFile, true, FastFileStream::alignment);
+      data->write(&itsFile, true, 512);
     }
 
 

@@ -25,7 +25,7 @@
 
 #include <CoInterface/StreamableData.h>
 #include "MSWriter.h"
-#include "FastFileStream.h"
+#include <Stream/FileStream.h>
 
 namespace LOFAR
 {
@@ -44,7 +44,7 @@ namespace LOFAR
       virtual size_t getDataSize();
 
     protected:
-      FastFileStream itsFile;
+      FileStream itsFile;
     };
 
 
