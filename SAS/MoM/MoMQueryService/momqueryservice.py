@@ -65,7 +65,9 @@ class MoMDatabaseWrapper:
         connect_options = self.dbcreds.mysql_connect_options()
         connect_options['connection_timeout'] = 5
         try:
+            logger.info("Connecting to %s" % self.dbcreds.stringWithHiddenPassword())
             self.conn = connector.connect(**connect_options)
+            logger.info("Connected to %s" % self.dbcreds.stringWithHiddenPassword())
         except Exception as e:
             logger.error(str(e))
             self.conn = None
