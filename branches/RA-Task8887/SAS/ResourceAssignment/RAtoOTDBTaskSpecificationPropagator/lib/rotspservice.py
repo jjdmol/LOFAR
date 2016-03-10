@@ -32,13 +32,13 @@ import logging
 from datetime import datetime
 import time
 
-from lofar.sas.resourceassignment.RAtoOTDBTaskSpecificationPropagator.RABusListener import RATaskScheduledBusListener
+from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.RABusListener import RATaskScheduledBusListener
 from lofar.messaging.RPC import RPC, RPCException
 
 import lofar.sas.resourceassignment.resourceassignmentservice.rpc as rarpc ## RA DB
 from lofar.sas.resourceassignment.resourceassigner.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 from lofar.sas.resourceassignment.resourceassigner.config import RATASKSCHEDULED_NOTIFICATION_BUSNAME, RATASKSCHEDULED_NOTIFICATIONNAME
-from lofar.sas.resourceassignment.RAtoOTDBTaskSpecificationPropagator.propagator import RAtoOTDBPropagator
+from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.propagator import RAtoOTDBPropagator
 
 logger = logging.getLogger(__name__)
 

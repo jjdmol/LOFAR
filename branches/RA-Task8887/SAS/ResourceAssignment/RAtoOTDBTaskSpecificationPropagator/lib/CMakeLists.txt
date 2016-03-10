@@ -6,5 +6,6 @@ python_install(
     translator.py
     config.py
     propagator.py
-    DESTINATION lofar/sas/resourceassignment/RAtoOTDBTaskSpecificationPropagator)
+    rabuslistener.py
+    DESTINATION lofar/sas/resourceassignment/ratootdbtaskspecificationpropagator)
 
