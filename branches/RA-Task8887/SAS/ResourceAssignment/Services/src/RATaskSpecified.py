@@ -190,7 +190,7 @@ class RATaskSpecified(OTDBBusListener):
   def __init__(self, servicename, otdb_listen_busname=None, otdb_listen_subject=None, otdb_request_busname=None, my_busname=None, broker=None, **kwargs):
     super(RATaskSpecified, self).__init__(busname=otdb_listen_busname, subject=otdb_listen_subject, broker=broker, **kwargs)
 
-    self.parset_rpc = RPC(service="TaskSpecification", busname=otdb_request_busname, broker=broker)
+    self.parset_rpc = RPC(service="OTDBService.TaskGetSpecification", busname=otdb_request_busname, broker=broker)
     self.send_bus   = ToBus("%s/%s" % (my_busname, servicename), broker=broker)
 
   def start_listening(self, **kwargs):
