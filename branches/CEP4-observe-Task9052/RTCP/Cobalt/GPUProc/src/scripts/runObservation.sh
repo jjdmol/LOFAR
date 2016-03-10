@@ -277,38 +277,6 @@ then
   echo -e "$EXTRA_PARSET_KEYS" >> $PARSET
 fi
 
-# ******************************
-# Run the observation
-# ******************************
-
-# Determine node list to run on
-HOSTS=`mpi_node_list -n "$PARSET"`
-
-if [ -z "$HOSTS" ]; then
-  HOSTS=localhost
-fi
-
-echo "[cobalt] Hosts = $HOSTS"
-
-# Copy parset to all hosts
-cksumline=`md5sum $PARSET`
-for h in `echo $HOSTS | tr ',' ' '`
-do
-  # Ignore empty hostnames
-  [ -z "$h" ] && continue;
-
-  # Ignore hostnames that point to us
-  [ "$h" == "localhost" ] && continue;
-  [ "$h" == "`hostname`" ] && continue;
-
-  # Ignore hosts that already have the same parset (for example, through NFS).
-  timeout $KILLOPT 5s ssh -qn $h "[ -f $PARSET ] && echo \"$cksumline\" | md5sum -c --status" && continue
-
-  # Copy parset to remote node
-  echo "Copying parset to $h:$PARSET"
-  timeout $KILLOPT 30s scp -Bq $PARSET $h:$PARSET || error "[parset] Could not scp parset to $h"
-done
-
 # ************************************
 # Start outputProcs on receiving nodes
 # ***********************************
@@ -441,6 +409,38 @@ if ! $DUMMY_RUN; then
     done
   fi
 fi
+
+# ******************************
+# Distribute parset to cbtXXX
+# ******************************
+
+# Determine node list to run on
+HOSTS=`mpi_node_list -n "$PARSET"`
+
+if [ -z "$HOSTS" ]; then
+  HOSTS=localhost
+fi
+
+echo "[cobalt] Hosts = $HOSTS"
+
+# Copy parset to all hosts
+cksumline=`md5sum $PARSET`
+for h in `echo $HOSTS | tr ',' ' '`
+do
+  # Ignore empty hostnames
+  [ -z "$h" ] && continue;
+
+  # Ignore hostnames that point to us
+  [ "$h" == "localhost" ] && continue;
+  [ "$h" == "`hostname`" ] && continue;
+
+  # Ignore hosts that already have the same parset (for example, through NFS).
+  timeout $KILLOPT 5s ssh -qn $h "[ -f $PARSET ] && echo \"$cksumline\" | md5sum -c --status" && continue
+
+  # Copy parset to remote node
+  echo "Copying parset to $h:$PARSET"
+  timeout $KILLOPT 30s scp -Bq $PARSET $h:$PARSET || error "[parset] Could not scp parset to $h"
+done
 
 # ************************************
 # Start rtcp 
