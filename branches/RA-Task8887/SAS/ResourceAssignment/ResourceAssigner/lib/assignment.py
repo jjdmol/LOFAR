@@ -108,25 +108,27 @@ class ResourceAssigner():
         mainParsetDict = parsets[str(sasId)]
         mainParset = parameterset(mainParsetDict)
         momId = mainParset.getInt('Observation.momID', -1)
-        taskType = mainParset.getString('Task.type', '')
-        if taskType.lower() == 'observation':
-            taskType = 'Observation'
+        taskType = mainParset.getString('Task.type', '').lower()
         startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
         endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
 
-        ##check if task already present in radb
-        #existingTask = self.radbrpc.getTask(otdb_id=sasId)
+        #check if task already present in radb
+        existingTask = self.radbrpc.getTask(otdb_id=sasId)
 
-        #if existingTask:
-            ##present, so update task and specification in radb
-            #taskId = existingTask['id']
-            #specificationId = existingTask['specification_id']
-            #self.radbrpc.updateSpecification(specificationId, startTime, endTime, str(mainParsetDict))
-            #self.radbrpc.updateTask(taskId, momId, sasId, status, taskType, specificationId)
-        #else:
+        if existingTask:
+            #present, delete it, and create a new task
+            taskId = existingTask['id']
+            self.radbrpc.deleteTask(taskId)
+            specificationId = existingTask['specification_id']
+            self.radbrpc.deleteSpecification(specificationId)
+
         #insert new task and specification in the radb
+        logger.info('doAssignment: insertSpecification startTime=%s endTime=%s' % (startTime, endTime))
         specificationId = self.radbrpc.insertSpecification(startTime, endTime, str(mainParsetDict))['id']
+        logger.info('doAssignment: insertSpecification specificationId=%s' % (specificationId,))
+        logger.info('doAssignment: insertTask momId=%s sasId=%s status=%s taskType=%s specificationId=%s' % (momId, sasId, status, taskType, specificationId))
         taskId = self.radbrpc.insertTask(momId, sasId, status, taskType, specificationId)['id']
+        logger.info('doAssignment: insertTask taskId=%s' % (taskId,))
 
         #analyze the parset for needed and available resources and claim these in the radb
         cluster = self.parseSpecification(mainParset)
@@ -137,7 +139,7 @@ class ResourceAssigner():
         if self.checkResources(needed, available):
             claimed, resourceIds = self.claimResources(needed, taskId, startTime, endTime)
             if claimed:
-                self.commitResourceClaimsForTask(taskId)
+                self.radbrpc.updateTaskAndResourceClaims(taskId, claim_status='allocated')
                 self.radbrpc.updateTask(taskId, status='scheduled')
                 self.raPublisher.notifyTaskSpecified(taskId, status='scheduled')
             else:
@@ -211,6 +213,4 @@ class ResourceAssigner():
         success = len(resourceClaimIds) == len(resources)
         return success, resourceClaimIds
 
-    def commitResourceClaimsForTask(self, taskId):
-        self.radbrpc.updateResourceClaimsForTask(taskId, status='ALLOCATED')
 
