@@ -211,6 +211,7 @@ class RATaskSpecified(OTDBBusListener):
     # Request the parset
     main_obsID  = treeId
     main_parset,_ = self.parset_rpc( OtdbID=main_obsID )
+    main_parset = main_parset['TaskSpecification']
     logger.info("main_parset [%s]: %s" % (main_obsID, main_parset))
 
     # Construct a dict of all the parsets we retrieved
@@ -236,6 +237,7 @@ class RATaskSpecified(OTDBBusListener):
 
         # Request predecessor parset
         parsets[obsID],_ = self.parset_rpc( OtdbID=obsID )
+        parsets[obsID] = parsets[obsID]['TaskSpecification']
         logger.info("predecessor parset [%s]: %s" % (obsID, parsets[obsID]))
 
         # Add the list of predecessors
