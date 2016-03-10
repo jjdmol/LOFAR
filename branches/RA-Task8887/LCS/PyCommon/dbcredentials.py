@@ -68,6 +68,9 @@ class Credentials:
   def __str__(self):
     return "type={type} addr={host}:{port} auth={user}:{password} db={database}".format(**self.__dict__)
 
+  def stringWithHiddenPassword(self):
+    return "type={type} addr={host}:{port} auth={user}:XXXXXX db={database}".format(**self.__dict__)
+
   def pg_connect_options(self):
     """
       Returns a dict of options to provide to PyGreSQL's pg.connect function. Use:
