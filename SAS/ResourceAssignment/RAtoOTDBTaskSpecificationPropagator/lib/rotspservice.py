@@ -32,7 +32,7 @@ import logging
 from datetime import datetime
 import time
 
-from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.RABusListener import RATaskScheduledBusListener
+from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.rabuslistener import RATaskScheduledBusListener
 from lofar.messaging.RPC import RPC, RPCException
 
 import lofar.sas.resourceassignment.resourceassignmentservice.rpc as rarpc ## RA DB
