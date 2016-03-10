@@ -136,6 +136,25 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
 
     self.lastUpdateChangeNumber = undefined;
 
+    self.initialLoad = function() {
+        $http.get('/rest/mostRecentChangeNumber').success(function(result) {
+            if(result.mostRecentChangeNumber >= 0) {
+                self.lastUpdateChangeNumber = result.mostRecentChangeNumber;
+            }
+
+            self.getMoMProjects();
+            self.getTaskTypes();
+            self.getTaskStatusTypes();
+            self.getTasks();
+            self.getResourceGroups();
+            self.getResources();
+            self.getResourceGroupMemberships();
+            self.getResourceClaims();
+
+            self.subscribeToUpdates();
+        });
+    };
+
     self.subscribeToUpdates = function() {
         var url = '/rest/updates';
         if(self.lastUpdateChangeNumber) {
@@ -230,15 +249,6 @@ dataControllerMod.controller('DataController',
     var self = this;
     self.dataService = dataService;
 
-    dataService.getMoMProjects();
-    dataService.getTaskTypes();
-    dataService.getTaskStatusTypes();
-    dataService.getTasks();
-    dataService.getResourceGroups();
-    dataService.getResources();
-    dataService.getResourceGroupMemberships();
-    dataService.getResourceClaims();
-
-    dataService.subscribeToUpdates();
+    dataService.initialLoad();
 }
 ]);

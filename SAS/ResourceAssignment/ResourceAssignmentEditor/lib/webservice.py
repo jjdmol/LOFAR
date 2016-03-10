@@ -234,6 +234,11 @@ def getUpdateEventsSince(sinceChangeNumber):
     changesSince = radbchangeshandler.getChangesSince(sinceChangeNumber)
     return jsonify({'changes': changesSince})
 
+@app.route('/rest/mostRecentChangeNumber')
+def getMostRecentChangeNumber():
+    mrcn = radbchangeshandler.getMostRecentChangeNumber()
+    return jsonify({'mostRecentChangeNumber': mrcn})
+
 @app.route('/rest/updates')
 def getUpdateEvents():
     return getUpdateEventsSince(-1L)

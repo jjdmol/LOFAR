@@ -127,10 +127,16 @@ class RADBChangesHandler(RADBBusListener):
         claim_change = {'changeType':CHANGE_DELETE_TYPE, 'objectType':'resourceClaim', 'value':claim}
         self._handleChange(claim_change)
 
+    def getMostRecentChangeNumber(self):
+        with self._lock:
+            if self._changes:
+                return self._changes[-1]['changeNumber']
+        return -1L
+
     def clearChangesBefore(self, timestamp):
         if isinstance(timestamp, datetime):
             timestamp = timestamp.isoformat()
-            
+
         with self._lock:
             self._changes = [x for x in self._changes if x['timestamp'] >= timestamp]
 
