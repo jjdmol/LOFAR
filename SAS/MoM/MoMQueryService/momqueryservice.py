@@ -80,7 +80,7 @@ class MoMDatabaseWrapper:
             # try a simple select
             # if it fails, reconnect
             cursor = self.conn.cursor()
-            cursor.execute('''SELECT * FROM lofar_mom3.project;''')
+            cursor.execute('''SELECT * FROM project;''')
             cursor.fetchall()
         except (OperationalError, AttributeError) as e:
             if isinstance(e, OperationalError):
@@ -133,8 +133,8 @@ class MoMDatabaseWrapper:
         # TODO: make a view for this query in momdb!
         query = '''SELECT project.mom2id as project_mom2id, project.name as project_name, project.description as project_description,
         object.mom2id as object_mom2id, object.name as object_name, object.description as object_description, object.mom2objecttype as object_type, object.group_id as object_group_id
-        FROM lofar_mom3.mom2object as object
-        inner join lofar_mom3.mom2object as project on project.id = object.ownerprojectid
+        FROM mom2object as object
+        inner join mom2object as project on project.id = object.ownerprojectid
         where object.mom2id in (%s)
         order by project_mom2id
         ''' % (ids_str,)
@@ -160,11 +160,11 @@ class MoMDatabaseWrapper:
         '''
         # TODO: make a view for this query in momdb!
         query = '''SELECT project.mom2id as mom2id, project.name as name, project.description as description,
-                lofar_mom3.statustype.code as status_name,  lofar_mom3.statustype.id as status_id,
-        lofar_mom3.status.userid as last_user_id, lofar_mom3.status.name as last_user_name, lofar_mom3.status.statustime as statustime
-        FROM lofar_mom3.mom2object as project
-        left join lofar_mom3.mom2objectstatus as status on project.currentstatusid = status.id
-        left join lofar_mom3.status as statustype on status.statusid=statustype.id
+                statustype.code as status_name,  statustype.id as status_id,
+        status.userid as last_user_id, status.name as last_user_name, status.statustime as statustime
+        FROM mom2object as project
+        left join mom2objectstatus as status on project.currentstatusid = status.id
+        left join status as statustype on status.statusid=statustype.id
         where project.mom2objecttype='PROJECT'
         order by mom2id;
         '''
