@@ -58,7 +58,13 @@ class OTDBBusListener(AbstractBusListener):
         treeId =  msg.content['treeID']
         modificationTime = datetime.utcnow()
         if 'time_of_change' in msg.content:
-            modificationTime = msg.content['time_of_change'].datetime()
+            try:
+                if msg.content['time_of_change'][-7] == '.':
+                    modificationTime = datetime.strptime(msg.content['time_of_change'], '%Y-%m-%dT%H:%M:%S.%f')
+                else:
+                    modificationTime = datetime.strptime(msg.content['time_of_change'], '%Y-%m-%dT%H:%M:%S')
+            except:
+                pass
 
         if msg.content['state'] == 'described':
             self.onObservationDescribed(treeId, modificationTime)
