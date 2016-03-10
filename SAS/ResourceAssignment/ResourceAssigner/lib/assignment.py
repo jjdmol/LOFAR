@@ -146,6 +146,14 @@ class ResourceAssigner():
                 self.radbrpc.updateTask(taskId, status='conflict')
                 self.raPublisher.notifyTaskSpecified(taskId, status='conflict')
 
+        try:
+            predecessor_ids = [int(id) for id in parsets.keys() if id != str(sasId)]
+            for predecessor_id in predecessor_ids:
+                predecessor_task = self.radbrpc.getTask(otdb_id=predecessor_id)
+                if predecessor_task:
+                    self.radbrpc.insertTaskPredecessor(sasId, predecessor_id)
+        except Exception as e:
+            logger.error(e)
 
     def parseSpecification(self, parset):
         # TODO: cluster is not part of specification yet. For now return CEP4. Add logic later.
