@@ -94,31 +94,33 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
         var createGanttRowTree = function(groupId, parentRow) {
             var resourceGroup = resourceGroupsDict[groupId];
 
-            var groupRowId = 'group_' + groupId;
-            if(parentRow) {
-                groupRowId += '_parent' + parentRow.id;
-            }
+            if(resourceGroup) {
+                var groupRowId = 'group_' + groupId;
+                if(parentRow) {
+                    groupRowId += '_parent' + parentRow.id;
+                }
 
-            var ganttRow = {
-                'id': groupRowId,
-                'parent': parentRow ? parentRow.id : null,
-                'name': resourceGroup.name,
-                'tasks': []
-            };
+                var ganttRow = {
+                    'id': groupRowId,
+                    'parent': parentRow ? parentRow.id : null,
+                    'name': resourceGroup.name,
+                    'tasks': []
+                };
 
-            ganttRowsDict[groupRowId] = ganttRow;
+                ganttRowsDict[groupRowId] = ganttRow;
 
-            //store ganttRow also in dict resourceGroup2GanttRows for fast lookup based on groupId
-            if(!resourceGroup2GanttRows.hasOwnProperty(groupId)) {
-                resourceGroup2GanttRows[groupId] = [];
-            }
-            resourceGroup2GanttRows[groupId].push(ganttRow);
+                //store ganttRow also in dict resourceGroup2GanttRows for fast lookup based on groupId
+                if(!resourceGroup2GanttRows.hasOwnProperty(groupId)) {
+                    resourceGroup2GanttRows[groupId] = [];
+                }
+                resourceGroup2GanttRows[groupId].push(ganttRow);
 
-            //recurse over the childs
-            var numChilds = resourceGroupMemberships.groups[groupId].child_ids.length;
-            for(var i = 0; i < numChilds; i++) {
-                var childGroupId = resourceGroupMemberships.groups[groupId].child_ids[i];
-                createGanttRowTree(childGroupId, ganttRow);
+                //recurse over the childs
+                var numChilds = resourceGroupMemberships.groups[groupId].child_ids.length;
+                for(var i = 0; i < numChilds; i++) {
+                    var childGroupId = resourceGroupMemberships.groups[groupId].child_ids[i];
+                    createGanttRowTree(childGroupId, ganttRow);
+                }
             }
         };
 
@@ -153,22 +155,24 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                         //since each resourceGroup itself can have multiple parents
                         var parentGanttRows = resourceGroup2GanttRows[parentGroupId];
 
-                        for(var parentGanttRow of parentGanttRows) {
-                            var resourceGanttRowId = 'resource_' + resource.id + '_' + parentGanttRow.id;
-                            var ganttRow = {
-                                id: resourceGanttRowId,
-                                parent: parentGanttRow.id,
-                                name: resource.name,
-                                tasks: []
-                            };
+                        if(parentGanttRows) {
+                            for(var parentGanttRow of parentGanttRows) {
+                                var resourceGanttRowId = 'resource_' + resource.id + '_' + parentGanttRow.id;
+                                var ganttRow = {
+                                    id: resourceGanttRowId,
+                                    parent: parentGanttRow.id,
+                                    name: resource.name,
+                                    tasks: []
+                                };
 
-                            ganttRowsDict[resourceGanttRowId] = ganttRow;
+                                ganttRowsDict[resourceGanttRowId] = ganttRow;
 
-                            //store ganttRow also in dict resource2GanttRows for fast lookup based on groupId
-                            if(!resource2GanttRows.hasOwnProperty(resourceId)) {
-                                resource2GanttRows[resourceId] = [];
+                                //store ganttRow also in dict resource2GanttRows for fast lookup based on groupId
+                                if(!resource2GanttRows.hasOwnProperty(resourceId)) {
+                                    resource2GanttRows[resourceId] = [];
+                                }
+                                resource2GanttRows[resourceId].push(ganttRow);
                             }
-                            resource2GanttRows[resourceId].push(ganttRow);
                         }
                     }
                 }
@@ -240,18 +244,20 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                 for(var resourceId of resourceIds) {
                     var claims = resource2Claims[resourceId];
 
-                    for(var claim of claims) {
-                        var taskId = claim.task_id;
-                        if(taskId in aggregatedClaims) {
-                            if(claim.starttime < aggregatedClaims[taskId].starttime) {
-                                aggregatedClaims[taskId].starttime = claim.starttime;
+                    if(claims) {
+                        for(var claim of claims) {
+                            var taskId = claim.task_id;
+                            if(taskId in aggregatedClaims) {
+                                if(claim.starttime < aggregatedClaims[taskId].starttime) {
+                                    aggregatedClaims[taskId].starttime = claim.starttime;
+                                }
+                                if(claim.endtime > aggregatedClaims[taskId].endtime) {
+                                    aggregatedClaims[taskId].endtime = claim.endtime;
+                                }
+                            } else {
+                                aggregatedClaims[taskId] = { starttime: claim.starttime,
+                                                            endtime: claim.endtime };
                             }
-                            if(claim.endtime > aggregatedClaims[taskId].endtime) {
-                                aggregatedClaims[taskId].endtime = claim.endtime;
-                            }
-                        } else {
-                            aggregatedClaims[taskId] = { starttime: claim.starttime,
-                                                          endtime: claim.endtime };
                         }
                     }
                 }

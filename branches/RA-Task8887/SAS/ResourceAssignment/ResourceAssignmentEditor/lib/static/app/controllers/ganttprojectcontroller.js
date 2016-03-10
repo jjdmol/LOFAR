@@ -171,8 +171,11 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
     };
 
     $scope.$watch('dataService.tasks', updateGanttData, true);
-    $scope.$watch('dataService.filteredTasks', updateGanttData, true);
-    $scope.$watch('dataService.tasktypes', updateGanttData, true);
+    $scope.$watch('dataService.resources', updateGanttData);
+    $scope.$watch('dataService.resourceClaims', updateGanttData, true);
+    $scope.$watch('dataService.resourceGroups', updateGanttData);
+    $scope.$watch('dataService.resourceGroupMemberships', updateGanttData);
+    $scope.$watch('dataService.filteredTaskDict', updateGanttData);
     $scope.$watch('dataService.momProjectsDict', updateGanttData, true);
 }
 ]);
