@@ -143,7 +143,7 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
             self.lofarTime = new Date(result.lofarTime);
         });
 
-        setTimeout(self._syncLofarTimeWithServer, 6000);
+        setTimeout(self._syncLofarTimeWithServer, 60000);
     };
     self._syncLofarTimeWithServer();
 
