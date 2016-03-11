@@ -243,6 +243,10 @@ def getMostRecentChangeNumber():
 def getUpdateEvents():
     return getUpdateEventsSince(-1L)
 
+@app.route('/rest/lofarTime')
+def getLofarTime():
+    return jsonify({'lofarTime': asIsoFormat(datetime.utcnow())})
+
 def main():
     # Check the invocation arguments
     parser = OptionParser('%prog [options]',
