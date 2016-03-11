@@ -24,6 +24,11 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
     self.filteredTasks = [];
     self.filteredTaskDict = {};
 
+    //start with local client time
+    //lofarTime will be synced with server,
+    //because local machine might have incorrect clock
+    self.lofarTime = new Date(Date.now());
+
     self.toIdBasedDict = function(list) {
         var dict = {}
         for(var i = list.length-1; i >=0; i--) {
@@ -32,6 +37,7 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
         }
         return dict;
     };
+
 
     self.getTasks = function() {
         $http.get('/rest/tasks').success(function(result) {
@@ -132,6 +138,14 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
         });
     };
 
+    self._syncLofarTimeWithServer = function() {
+        $http.get('/rest/lofarTime').success(function(result) {
+            self.lofarTime = new Date(result.lofarTime);
+        });
+
+        setTimeout(self._syncLofarTimeWithServer, 6000);
+    };
+    self._syncLofarTimeWithServer();
 
 
     self.lastUpdateChangeNumber = undefined;
@@ -250,5 +264,20 @@ dataControllerMod.controller('DataController',
     self.dataService = dataService;
 
     dataService.initialLoad();
+
+    //clock ticking every second
+    //updating current lofarTime by the elapsed time since previous tick
+    //lofarTime is synced every minute with server utc time.
+    self._prevTick = Date.now();
+    self._doTimeTick = function() {
+        var tick = Date.now();
+        var elapsed = tick - self._prevTick;
+        self._prevTick = tick;
+        //evalAsync, so lofarTime will be seen by watches
+        $scope.$evalAsync(function() { dataService.lofarTime = new Date(dataService.lofarTime.getTime() + elapsed); });
+
+        setTimeout(self._doTimeTick, 1000);
+    };
+    self._doTimeTick();
 }
 ]);

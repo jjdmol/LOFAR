@@ -23,7 +23,7 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
     self.doInitialCollapse = true;
 
     $scope.dataService = dataService;
-    $scope.ganttData = []
+    $scope.ganttData = [];
 
     self.taskStatusColors = {'prepared':'#aaff00',
                              'approved':'#ffaa00',
@@ -37,11 +37,15 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
                              'finished': '#66ff33',
                              'aborted': '#ff3366',
                              'error': '#ff4488',
-                             'obsolete': '#555555'}
+                             'obsolete': '#555555'};
 
     $scope.options = {
         mode: 'custom',
-        scale: 'day',
+        scale: 'minute',
+        currentDate: 'line',
+        currentDateValue: $scope.dataService.lofarTime,
+        columnMagnetUnit: 'minute',
+        columnMagnetValue: 1,
         sideMode: 'Tree',
         columns: ['model.name', 'starttime', 'endtime'],
         treeTableColumns: ['starttime', 'endtime'],
@@ -177,5 +181,6 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
     $scope.$watch('dataService.resourceGroupMemberships', updateGanttData);
     $scope.$watch('dataService.filteredTaskDict', updateGanttData);
     $scope.$watch('dataService.momProjectsDict', updateGanttData, true);
+    $scope.$watch('dataService.lofarTime', function() {$scope.options.currentDateValue= $scope.dataService.lofarTime;});
 }
 ]);
