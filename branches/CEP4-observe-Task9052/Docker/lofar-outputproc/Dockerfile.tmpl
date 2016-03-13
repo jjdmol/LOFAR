@@ -28,6 +28,7 @@ RUN sudo apt-get install -y subversion cmake g++ gfortran bison flex autogen lib
     cd ${INSTALLDIR}/lofar/build/gnu_opt && make install && \
     bash -c "strip ${INSTALLDIR}/lofar/{bin,sbin,lib64}/* || true" && \
     bash -c "rm -rf ${INSTALLDIR}/lofar/{build,src}" && \
+    sudo setcap cap_sys_nice,cap_ipc_lock=ep ${INSTALLDIR}/lofar/bin/outputProc && \
     sudo apt-get purge -y subversion cmake g++ gfortran bison flex autogen liblog4cplus-dev libhdf5-dev libblitz0-dev libboost-dev libboost-python${BOOST_VERSION}-dev libxml2-dev pkg-config libpng12-dev libfftw3-dev libunittest++-dev libxml++2.6-dev libboost-filesystem${BOOST_VERSION}-dev libboost-date-time${BOOST_VERSION}-dev libboost-thread${BOOST_VERSION}-dev binutils-dev libcfitsio3-dev wcslib-dev && \
     sudo apt-get autoremove -y
 
