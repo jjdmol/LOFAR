@@ -535,7 +535,7 @@ namespace LOFAR {
       if (ps.settings.realTime) {
         // Each board has its own pool to reduce lock contention
         for (size_t board = 0; board < nrBoards; ++board)
-          for (size_t i = 0; i < 16; ++i)
+          for (size_t i = 0; i < 24; ++i)
             rspDataPool[board]->free.append(new RSPData(RT_PACKET_BATCH_SIZE), false);
       } else {
         // We just process one packet at a time, merging all the streams into rspDataPool[0].
