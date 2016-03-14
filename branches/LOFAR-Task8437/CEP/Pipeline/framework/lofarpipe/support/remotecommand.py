@@ -211,7 +211,7 @@ def run_via_custom_cmdline(logger, host, command, environment, arguments, config
     try:
         image = config.get('docker', 'image')
     except:
-        image = "lofar"
+        image = "lofar-pipeline"
 
     # Construct the full command line, except for {command}, as that itself
     # can contain spaces which we don't want to split on.
