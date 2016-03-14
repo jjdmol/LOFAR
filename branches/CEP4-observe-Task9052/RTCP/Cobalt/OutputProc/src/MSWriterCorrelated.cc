@@ -24,6 +24,7 @@
 
 #include <sys/types.h>
 #include <fcntl.h>
+#include <cstdio>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -47,7 +48,8 @@ namespace LOFAR
 
     MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex)
       :
-      MSWriterFile(str(format("%s/table.f0data") % msName)),
+      // Write the data to a temporary file, until we have a MeasurementSet we can move it into.
+      MSWriterFile(str(format("%s-table.f0data") % msName)),
       itsLogPrefix(logPrefix),
       itsMSname(msName),
       itsParset(parset),
@@ -60,7 +62,7 @@ namespace LOFAR
 
       // Create Sequence file
       if (LofarStManVersion > 1) {
-        string seqfilename = str(format("%s/table.f0seqnr") % msName);
+        string seqfilename = str(format("%s-table.f0seqnr") % msName);
 
         try {
           itsSequenceNumbersFile = new FileStream(seqfilename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
@@ -73,7 +75,7 @@ namespace LOFAR
 
     void MSWriterCorrelated::init()
     {
-      // Creaate MeasurementSet
+      // Create MeasurementSet
 #if defined HAVE_AIPSPP
       MeasurementSetFormat myFormat(itsParset, 512);
 
@@ -81,6 +83,16 @@ namespace LOFAR
 
       LOG_DEBUG_STR(itsLogPrefix << "MeasurementSet created");
 #endif // defined HAVE_AIPSPP
+
+      // Move data file into the measurement set
+      if (rename(str(format("%s-table.f0data") % itsMSname).c_str(),
+                 str(format("%s/table.f0data") % itsMSname).c_str()) < 0)
+        THROW_SYSCALL(str(format("rename(%s-table.f0data, %s/table.f0data)") % itsMSname % itsMSname));
+
+      // Move sequence file into the measurement set
+      if (rename(str(format("%s-table.f0seqnr") % itsMSname).c_str(),
+                 str(format("%s/table.f0seqnr") % itsMSname).c_str()) < 0)
+        THROW_SYSCALL(str(format("rename(%s-table.f0seqnr, %s/table.f0seqnr)") % itsMSname % itsMSname));
     }
 
 

@@ -70,14 +70,14 @@ SUITE(SubbandWriter)
       ps.add("Observation.nrBeams",                                  "1");
       ps.add("Observation.Beam[0].subbandList",                      "[0]");
       ps.add("Observation.DataProducts.Output_Correlated.enabled",   "true");
-      ps.add("Observation.DataProducts.Output_Correlated.filenames", "[tWriter.out_raw]");
+      ps.add("Observation.DataProducts.Output_Correlated.filenames", "[tSubbandWriter.out_raw]");
       ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
       ps.add("Cobalt.OutputProc.StaticMetaDataDirectory",            "tSubbandWriter.in_1");
       ps.updateSettings();
     }
 
     ~OneBeam() {
-      int dummy = system("rm -rf tWriter.out_raw");
+      int dummy = system("rm -rf tSubbandWriter.out_raw");
 
       (void)dummy; // satisfy compiler
     }
@@ -97,7 +97,6 @@ SUITE(SubbandWriter)
     {
 #     pragma omp section
       {
-        w.init();
         w.process();
       }
 
@@ -119,7 +118,7 @@ SUITE(SubbandWriter)
 
     // verify output
     {
-      FileStream f("tWriter.out_raw/table.f0data");
+      FileStream f("tSubbandWriter.out_raw/table.f0data");
 
       CorrelatedData data(ps.nrMergedStations(), ps.settings.correlator.nrChannels, ps.settings.correlator.nrSamplesPerIntegration(), heapAllocator, 512);
 
@@ -140,7 +139,6 @@ SUITE(SubbandWriter)
     {
 #     pragma omp section
       {
-        w.init();
         w.process();
       }
 
@@ -165,7 +163,7 @@ SUITE(SubbandWriter)
 
     // list failures BEFORE obs
     {
-      Table tab("tWriter.out_raw/LOFAR_ANTENNA_FIELD");
+      Table tab("tSubbandWriter.out_raw/LOFAR_ANTENNA_FIELD");
       ROArrayColumn<Bool> flagCol(tab, "ELEMENT_FLAG");
 
       if (flagCol.nrow() == 0) {
@@ -193,7 +191,7 @@ SUITE(SubbandWriter)
 
     // list failures DURING obs
     {
-      Table tab("tWriter.out_raw/LOFAR_ELEMENT_FAILURE");
+      Table tab("tSubbandWriter.out_raw/LOFAR_ELEMENT_FAILURE");
       ROTableRow row(tab);
 
 
@@ -216,7 +214,7 @@ SUITE(SubbandWriter)
 
 int main()
 {
-  INIT_LOGGER("tWriter");
+  INIT_LOGGER("tSubbandWriter");
 
   omp_set_nested(true);
 
