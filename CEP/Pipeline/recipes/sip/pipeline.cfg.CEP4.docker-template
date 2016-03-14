@@ -22,10 +22,10 @@ hdf5root =
 wcsroot = /opt/wcslib
 pythonpath = /opt/lofar/lib/python2.7/site-packages
 # runtime dir is a global FS (nfs, lustre) to exchange small files (parsets, vds, map files, etc)
-runtime_directory = /shared/mol/regression_test/rundir
+runtime_directory = /data/share/pipeline
 recipe_directories = [%(pythonpath)s/lofarpipe/recipes]
 # working dir is the local dir in which input/output dataproducts reside
-working_directory = /globalhome/mol/regression_test/working_dir
+working_directory = /data/scratch
 task_files = [%(lofarroot)s/share/pipeline/tasks.cfg]
 
 [layout]
@@ -50,11 +50,9 @@ xml_stat_file = %(runtime_directory)s/%(job_name)s/logs/%(start_time)s/statistic
 method = none
 
 [docker]
-image = lofar-patched
+image = lofar-pipeline:${LOFAR_TAG}
 
 [remote]
-#method = slurm_srun_cep3 
-#method = ssh_docker
 method = custom_cmdline
 max_per_node = 1 
 
@@ -85,5 +83,4 @@ max_per_node = 1
 #                            /bin/bash -c
 #
 #                            Required because the pipeline framework needs some bash functionality in the commands it starts.
-#cmdline = ssh -n -tt -x localhost srun -w {host} -N 1 -n 1 --jobid={slurm_job_id} docker run -t --rm -e LUSER={uid} -w g -v /home/mol/.ssh:/home/lofar/.ssh:ro -v /globalhome/mol/regression_test:/globalhome/mol/regression_test -v /shared:/shared --net=host {docker_image} /bin/bash -c
-cmdline = ssh -n -tt -x localhost srun -w {host} -N 1 -n 1 --jobid={slurm_job_id} docker run -t --rm -e LUSER={uid} -v %(runtime_directory)s:%(runtime_directory)s -v %(working_directory)s:%(working_directory)s --net=host {docker_image} /bin/bash -c "\"{command}\""
+cmdline = ssh -n -tt -x localhost srun -w {host} -N 1 -n 1 --jobid={slurm_job_id} docker run --rm -e LUSER={uid} -v %(runtime_directory)s:%(runtime_directory)s -v working_directory)s:%(working_directory)s -v /data:/data --net=host {docker_image} /bin/bash -c "\"{command}\""

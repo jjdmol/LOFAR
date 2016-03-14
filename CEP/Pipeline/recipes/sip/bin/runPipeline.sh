@@ -15,9 +15,10 @@
 #   runPipeline.sh <obsid> || pipelineAborted.sh <obsid>
 
 OBSID=$1
+shift
 
 if [ -z "$OBSID" ]; then
-  echo "Usage: $0 <obsid>"
+  echo "Usage: $0 <obsid> <pipeline parameters>"
   exit 1
 fi
 
@@ -35,10 +36,7 @@ getParset.py -o $OBSID >$PARSET
 PROGRAM_NAME=$(getparsetvalue $PARSET "ObsSW.Observation.ObservationControl.PythonControl.programName")
 
 # Run pipeline
-OPTIONS=" \
- -d \
- -c ${LOFARROOT}/share/pipeline/pipeline.cfg \
- -t ${LOFARROOT}/share/pipeline/tasks.cfg"
+OPTIONS=" -d $@"
   
 # Set up the environment (information to propagate to the node scripts for monitoring and logging)
 export LOFAR_OBSID="$OBSID"
