@@ -326,7 +326,7 @@ namespace LOFAR {
        * 3. We can receive old data from before `current'.
        */
 
-      const TimeStamp deadline = TimeStamp(current.to + mode.secondsToSamples(0.25), mode.clockHz());
+      const TimeStamp deadline = TimeStamp(current.to + mode.secondsToSamples(0.33), mode.clockHz());
 
       LOG_INFO_STR(logPrefix << "[block " << current.block << "] Waiting until " << deadline);
 
