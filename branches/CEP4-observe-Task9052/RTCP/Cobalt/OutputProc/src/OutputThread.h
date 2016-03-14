@@ -70,10 +70,10 @@ namespace LOFAR
       void           cleanUp() const;
 
       // Create the metadata files in parallel to writing the data
-      void           createMetaData();
+      void           init();
 
       // Add FinalMetaData to the data container.
-      void           augment(const FinalMetaData &finalMetaData);
+      void           fini(const FinalMetaData &finalMetaData);
 
       // Return the LTA feedback produced by this writer.
       ParameterSet feedbackLTA() const;

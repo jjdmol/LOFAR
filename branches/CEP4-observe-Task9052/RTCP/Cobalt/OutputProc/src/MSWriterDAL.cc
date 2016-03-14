@@ -114,7 +114,7 @@ namespace LOFAR
     }
 
     template <typename T,unsigned DIM>
-    void MSWriterDAL<T,DIM>::createMetaData()
+    void MSWriterDAL<T,DIM>::init()
     {
       string h5filename = forceextension(itsFilename, ".h5");
       string rawfilename = forceextension(itsFilename, ".raw");

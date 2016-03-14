@@ -161,26 +161,26 @@ namespace LOFAR
     }
 
 
-    template<typename T> void OutputThread<T>::createMetaData()
+    template<typename T> void OutputThread<T>::init()
     {
       try {
-        // augment the data product
+        // fini the data product
         ASSERT(itsWriter.get());
 
-        itsWriter->createMetaData();
+        itsWriter->init();
       } catch (Exception &ex) {
         LOG_ERROR_STR(itsLogPrefix << "Could not create meta data: " << ex);
       }
     }
 
 
-    template<typename T> void OutputThread<T>::augment( const FinalMetaData &finalMetaData )
+    template<typename T> void OutputThread<T>::fini( const FinalMetaData &finalMetaData )
     {
       try {
-        // augment the data product
+        // fini the data product
         ASSERT(itsWriter.get());
 
-        itsWriter->augment(finalMetaData);
+        itsWriter->fini(finalMetaData);
       } catch (Exception &ex) {
         LOG_ERROR_STR(itsLogPrefix << "Could not add final meta data: " << ex);
       }
@@ -216,7 +216,7 @@ namespace LOFAR
         }
 
 #       pragma omp section
-        createMetaData();
+        init();
       }
     }
 

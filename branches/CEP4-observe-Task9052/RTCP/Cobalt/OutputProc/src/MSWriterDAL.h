@@ -45,7 +45,7 @@ namespace LOFAR
       MSWriterDAL(const std::string &filename, const Parset &parset, unsigned fileno);
       ~MSWriterDAL();
 
-      virtual void createMetaData();
+      virtual void init();
 
       virtual void write(StreamableData *data);
 

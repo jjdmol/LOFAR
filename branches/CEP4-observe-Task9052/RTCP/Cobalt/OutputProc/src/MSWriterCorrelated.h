@@ -43,11 +43,11 @@ namespace LOFAR
       MSWriterCorrelated(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex);
       ~MSWriterCorrelated();
 
-      virtual void createMetaData();
+      virtual void init();
 
       virtual void write(StreamableData *data);
 
-      virtual void augment(const FinalMetaData &finalMetaData);
+      virtual void fini(const FinalMetaData &finalMetaData);
 
     protected:
       const std::string itsLogPrefix;

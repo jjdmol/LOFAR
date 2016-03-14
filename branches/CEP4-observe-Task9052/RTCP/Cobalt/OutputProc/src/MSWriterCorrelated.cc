@@ -71,7 +71,7 @@ namespace LOFAR
     }
 
 
-    void MSWriterCorrelated::createMetaData()
+    void MSWriterCorrelated::init()
     {
       // Creaate MeasurementSet
 #if defined HAVE_AIPSPP
@@ -126,7 +126,7 @@ namespace LOFAR
     }
 
 
-    void MSWriterCorrelated::augment(const FinalMetaData &finalMetaData)
+    void MSWriterCorrelated::fini(const FinalMetaData &finalMetaData)
     {
       ScopedLock sl(MeasurementSetFormat::sharedMutex);
 

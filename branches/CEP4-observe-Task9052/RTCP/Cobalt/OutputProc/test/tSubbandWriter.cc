@@ -97,6 +97,7 @@ SUITE(SubbandWriter)
     {
 #     pragma omp section
       {
+        w.init();
         w.process();
       }
 
@@ -139,6 +140,7 @@ SUITE(SubbandWriter)
     {
 #     pragma omp section
       {
+        w.init();
         w.process();
       }
 
@@ -159,7 +161,7 @@ SUITE(SubbandWriter)
     finalMetaData.brokenRCUsAtBegin.push_back( FinalMetaData::BrokenRCU("CS001", "LBA", brokenAntennaBefore, "2012-01-01 12:34") );
     finalMetaData.brokenRCUsDuring.push_back( FinalMetaData::BrokenRCU("CS001", "LBA", brokenAntennaDuring, "2013-01-01 00:30") );
 
-    w.augment(finalMetaData);
+    w.fini(finalMetaData);
 
     // list failures BEFORE obs
     {

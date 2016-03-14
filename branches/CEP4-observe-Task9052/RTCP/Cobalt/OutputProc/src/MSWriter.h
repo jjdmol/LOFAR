@@ -39,9 +39,12 @@ namespace LOFAR
 
       virtual void write(StreamableData *) = 0;
 
-      virtual void createMetaData();
+      // init() initialises the meta data,
+      // and will be called in parallel to write().
+      virtual void init();
 
-      virtual void augment(const FinalMetaData &finalMetaData);
+      // fini() will be called after init() and write().
+      virtual void fini(const FinalMetaData &finalMetaData);
 
       virtual size_t getDataSize();
 

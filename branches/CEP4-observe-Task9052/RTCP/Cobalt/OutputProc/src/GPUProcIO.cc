@@ -294,9 +294,9 @@ bool process(Stream &controlStream)
     LOG_DEBUG_STR("Processing final meta data");
 
     for (size_t i = 0; i < subbandWriters.size(); ++i)
-      subbandWriters[i]->augment(finalMetaData);
+      subbandWriters[i]->fini(finalMetaData);
     for (size_t i = 0; i < tabWriters.size(); ++i)
-      tabWriters[i]->augment(finalMetaData);
+      tabWriters[i]->fini(finalMetaData);
 
     /*
      * LTA FEEDBACK
