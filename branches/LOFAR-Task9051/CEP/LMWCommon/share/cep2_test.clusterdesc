@@ -1,9 +1,0 @@
-ClusterName = cep2_test
-
-# Compute nodes
-Compute.Nodes = [ locus098..99 ]
-Compute.LocalDisks = [ /data ]
-
-# Head nodes
-Head.Nodes = [ locus102 ]
-Head.LocalDisks = [ /data ]
