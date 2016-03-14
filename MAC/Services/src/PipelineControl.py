@@ -21,10 +21,13 @@
 #
 # $Id$
 """
-Daemon that listens to OTDB status changes to SCHEDULED, starts them
-using SLURM and Docker, and puts the jobs to QUEUED.
+Daemon that starts/stops pipelines based on their status in OTDB.
 
-The execution chain is as follows:
+The execution chains are as follows:
+
+-----------------------------
+  Starting a pipeline
+-----------------------------
 
 [SCHEDULED]          -> PipelineControl schedules
 
@@ -42,13 +45,20 @@ The execution chain is as follows:
 (runPipeline.sh)     -> Calls
                           - state <- [ACTIVE]
                           - getParset
-                          - (run pipeline)
+                          - (run pipeline) (which, for CEP2 compatibility, still calls state <- [FINISHED/ABORTED])
                           - state <- [COMPLETING]
                           - (wrap up)
                           - state <- [FINISHED]
 
 (pipelineAborted.sh) -> Calls
                           - state <- [ABORTED]
+
+-----------------------------
+  Stopping a pipeline
+-----------------------------
+
+[ABORTED]            -> Cancels SLURM job associated with pipeline, causing
+                        a cascade of job terminations of successor pipelines.
 """
 
 from lofar.messaging import FromBus, ToBus, RPC, EventMessage
