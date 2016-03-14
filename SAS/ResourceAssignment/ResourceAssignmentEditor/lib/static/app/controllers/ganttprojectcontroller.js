@@ -89,6 +89,9 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
     };
 
     function updateGanttData() {
+        if(!dataService.initialLoadComplete) {
+            return;
+        }
 
         var projectsDict = $scope.dataService.momProjectsDict;
         var numProjecs = $scope.dataService.momProjects.length;
@@ -179,6 +182,7 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
         $scope.ganttData = ganntRows;
     };
 
+    $scope.$watch('dataService.initialLoadComplete', updateGanttData);
     $scope.$watch('dataService.tasks', updateGanttData, true);
     $scope.$watch('dataService.resources', updateGanttData);
     $scope.$watch('dataService.resourceClaims', updateGanttData, true);

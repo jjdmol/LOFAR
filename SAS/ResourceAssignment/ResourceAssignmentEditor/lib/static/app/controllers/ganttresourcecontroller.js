@@ -71,6 +71,10 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
     };
 
     function updateGanttData() {
+        if(!dataService.initialLoadComplete) {
+            return;
+        }
+
         var ganttRowsDict = {};
 
         var resourceGroupsDict = $scope.dataService.resourceGroupsDict;
@@ -344,7 +348,7 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
         }
     };
 
-//     $scope.$watch('dataService.tasks', updateGanttData, true);
+    $scope.$watch('dataService.initialLoadComplete', updateGanttData);
     $scope.$watch('dataService.resources', updateGanttData);
     $scope.$watch('dataService.resourceClaims', updateGanttData, true);
     $scope.$watch('dataService.resourceGroups', updateGanttData);
