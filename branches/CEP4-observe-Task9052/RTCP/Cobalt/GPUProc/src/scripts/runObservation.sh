@@ -39,45 +39,6 @@ function usage {
   exit 1
 }
 
-# command_retry expects a string it will execute as a subprocess
-# It wait on the processes finish (using the PID) with a
-# succesfull return value
-# - On signals kill the child process
-# - On ssh and bash errors it will retry
-#   with increasingly larger wait periods between tries
-function command_retry {
-  COMMAND="$1"   
-  SLEEP_DURATION=1                          # Increasing wait duration
-  while :
-  do 
-    $COMMAND &                              # Run the command
-    SSH_PID=$!                              # get the PID
-
-    # Trap 'all' signals and forward to ssh process
-    TRAP_COMMAND="kill $SSH_PID; break"
-    trap "$TRAP_COMMAND" SIGTERM SIGINT SIGQUIT SIGHUP 2> /dev/null
-
-    # wait for ssh to finish
-    wait $SSH_PID
-
-    # Return codes:
-    #     255: SSH fails
-    #     127: BASH 'command not found'
-    #     126: BASH 'command not executable'
-    # smaller: outputProc fails
-    #       0: success
-
-    # Break the loop if the command was started -- there is no need
-    # to keep starting it if the command itself returned an error.
-    if [ "$?" -lt 126 ]; then
-      break
-    fi
-
-    sleep $SLEEP_DURATION                  # Sleep if ssh failed
-    SLEEP_DURATION=$((SLEEP_DURATION + 1)) # Increase duration   
-  done
-}
-
 # Send the result state back to LOFAR (MAC, MoM)
 #
 # to report success:
@@ -402,8 +363,8 @@ if ! $DUMMY_RUN; then
       COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $OUTPUTPROC_CMDLINE"
       echo "[outputProc] Starting $COMMAND"
       
-      command_retry "$COMMAND" &  # Start retrying function in the background
-      PID=$!                      # get the pid 
+      $COMMAND &
+      PID=$!
       
       echo -n "$PID " >> $PID_LIST_FILE  # Save the pid for cleanup
     done
