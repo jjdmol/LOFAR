@@ -1,6 +1,6 @@
 // $Id$
 
-angular.module('raeApp').factory("dataService", ['$http', function($http){
+angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, $q){
     var self = this;
     self.tasks = [];
     self.resources = [];
@@ -24,6 +24,8 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
     self.filteredTasks = [];
     self.filteredTaskDict = {};
 
+    self.initialLoadComplete = false;
+
     //start with local client time
     //lofarTime will be synced with server,
     //because local machine might have incorrect clock
@@ -38,8 +40,9 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
         return dict;
     };
 
-
     self.getTasks = function() {
+        var defer = $q.defer();
+
         $http.get('/rest/tasks').success(function(result) {
             //convert datetime strings to Date objects
             for(var i = result.tasks.length-1; i >=0; i--) {
@@ -53,7 +56,11 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
 
             self.filteredTasks = self.tasks;
             self.filteredTaskDict = self.taskDict;
+
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     self.putTask = function(task) {
@@ -63,13 +70,19 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
     };
 
     self.getResources = function() {
+        var defer = $q.defer();
         $http.get('/rest/resources').success(function(result) {
             self.resources = result.resources;
             self.resourceDict = self.toIdBasedDict(self.resources);
+
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     self.getResourceClaims = function() {
+        var defer = $q.defer();
         $http.get('/rest/resourceclaims').success(function(result) {
             //convert datetime strings to Date objects
             for(var i = result.resourceclaims.length-1; i >=0; i--) {
@@ -80,36 +93,61 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
 
             self.resourceClaims = result.resourceclaims;
             self.resourceClaimDict = self.toIdBasedDict(self.resourceClaims);
+
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     self.getResourceGroups = function() {
+        var defer = $q.defer();
         $http.get('/rest/resourcegroups').success(function(result) {
             self.resourceGroups = result.resourcegroups;
             self.resourceGroupsDict = self.toIdBasedDict(self.resourceGroups);
+
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     self.getResourceGroupMemberships = function() {
+        var defer = $q.defer();
         $http.get('/rest/resourcegroupmemberships').success(function(result) {
             self.resourceGroupMemberships = result.resourcegroupmemberships;
+
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     self.getTaskTypes = function() {
+        var defer = $q.defer();
         $http.get('/rest/tasktypes').success(function(result) {
             self.tasktypes = result.tasktypes;
             self.tasktypesDict = self.toIdBasedDict(self.tasktypes);
+
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     self.getTaskStatusTypes = function() {
+        var defer = $q.defer();
         $http.get('/rest/taskstatustypes').success(function(result) {
             self.taskstatustypes = result.taskstatustypes;
+
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     self.getMoMProjects = function() {
+        var defer = $q.defer();
         $http.get('/rest/momprojects').success(function(result) {
             //convert datetime strings to Date objects
             var dict = {};
@@ -125,7 +163,11 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
 
             self.momProjects = list;
             self.momProjectsDict = dict;
+
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     self.getMoMObjectDetailsForTask = function(task) {
@@ -156,14 +198,23 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
                 self.lastUpdateChangeNumber = result.mostRecentChangeNumber;
             }
 
-            self.getMoMProjects();
-            self.getTaskTypes();
-            self.getTaskStatusTypes();
-            self.getTasks();
-            self.getResourceGroups();
-            self.getResources();
-            self.getResourceGroupMemberships();
-            self.getResourceClaims();
+            var nrOfItemsToLoad = 8;
+            var nrOfItemsLoaded = 0;
+            var checkInitialLoadCompleteness = function() {
+                nrOfItemsLoaded += 1;
+                if(nrOfItemsLoaded >= nrOfItemsToLoad) {
+                    self.initialLoadComplete = true;
+                }
+            };
+
+            self.getMoMProjects().then(checkInitialLoadCompleteness);
+            self.getTaskTypes().then(checkInitialLoadCompleteness);
+            self.getTaskStatusTypes().then(checkInitialLoadCompleteness);
+            self.getTasks().then(checkInitialLoadCompleteness);
+            self.getResourceGroups().then(checkInitialLoadCompleteness);
+            self.getResources().then(checkInitialLoadCompleteness);
+            self.getResourceGroupMemberships().then(checkInitialLoadCompleteness);
+            self.getResourceClaims().then(checkInitialLoadCompleteness);
 
             self.subscribeToUpdates();
         });
