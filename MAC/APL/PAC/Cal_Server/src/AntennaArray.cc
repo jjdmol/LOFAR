@@ -19,13 +19,13 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: AntennaArray.cc 30919 2015-02-05 15:26:22Z amesfoort $
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <APL/CAL_Protocol/AntennaArray.h>
-#include <APL/CAL_Protocol/AntennaArrayData.h>
+#include "AntennaArray.h"
+#include "AntennaArrayData.h"
 
 #include <blitz/array.h>
 #include <fstream>
@@ -51,8 +51,8 @@ AntennaArray::AntennaArray( string                  name,
 							const Array<double, 1>& geoloc,
 							const Array<double, 3>& pos,
 							const Array<int16,  2>* rcuindex) :
-	m_name(name), 
-	m_geoloc(geoloc), 
+	m_name(name),
+	m_geoloc(geoloc),
 	m_pos(pos)
 {
 	m_rcuindex.resize(m_pos.extent(firstDim), m_pos.extent(secondDim));

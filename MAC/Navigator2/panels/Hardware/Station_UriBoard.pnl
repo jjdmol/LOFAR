@@ -10,7 +10,7 @@ PANEL,-1 -1 1200 823 N "_3DFace" 0
   baseDP         = g_currentDatapoint;
   dyn_string dpAr= strsplit(dpSubStr(g_currentDatapoint,DPSUB_DP),\"_\");
   for (int i = 1; i<=dynlen(dpAr); i++) {
-    if (strpos(dpAr[i],\"URIboard\") > -1) {
+    if (strpos(dpAr[i],\"URIBoard\") > -1) {
       uNr = substr(dpAr[i],8,strlen(dpAr[i]));
     } else if (strpos(dpAr[i],\"Cabinet\") > -1) {
       cNr = substr(dpAr[i],7,strlen(dpAr[i]));

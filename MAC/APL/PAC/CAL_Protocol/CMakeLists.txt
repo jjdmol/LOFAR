@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(CAL_Protocol 6.0 DEPENDS Common MACIO RTCCommon RSP_Protocol)
+lofar_package(CAL_Protocol 6.0 DEPENDS Common MACIO RTCCommon RSP_Protocol ApplCommon)
 
 include(LofarFindPackage)
 lofar_find_package(Blitz REQUIRED)

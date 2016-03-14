@@ -12,7 +12,7 @@ PANEL,-1 -1 120 287 N "_3DFace" 1
   dyn_string dpAr= strsplit(dpSubStr(baseDP,DPSUB_DP),\"_\");
 	
   for (int i = 1; i <= dynlen(dpAr);i++ ) {
-    if (strpos(dpAr[i],\"URIboard\") > -1) {
+    if (strpos(dpAr[i],\"URIBoard\") > -1) {
       uNr = substr(dpAr[i],8,strlen(dpAr[i]));
       break;
     }
@@ -30,7 +30,7 @@ PANEL,-1 -1 120 287 N "_3DFace" 1
   rspNr=rspNr+rStart;	
   setValue(\"RSPBoard_Txt\",\"text\",\"RSP: \"+rspNr);
 	
-  RSPDP = substr(baseDP,0,strpos(baseDP,\"_URIboard\"))+\"_Subrack\"+uNr+\"_RSPBoard\"+rspNr;
+  RSPDP = substr(baseDP,0,strpos(baseDP,\"_URIBoard\"))+\"_Subrack\"+uNr+\"_RSPBoard\"+rspNr;
 
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(RSPDP+\".version\")) {

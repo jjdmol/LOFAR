@@ -121,28 +121,28 @@ int main(int    argc, char* argv[])
 
 	// calculate scaling
 	const double speedOfLight = 299792458.0;
-	SpectralWindow	spw("someSPW", 200.0e6, 1, 512, 0x00000000);
+	SpectralWindow	spw("someSPW", BAND_10_90);
 	blitz::Array<complex<double>,1>	itsScaling(NR_TEST_SUBBANDS);
 	for (int s = 0; s < NR_TEST_SUBBANDS; s++) {
 		int		subbandNr = (s+1)*100;
-        double  freq  = spw.getSubbandFreq(subbandNr);
+        double  freq  = spw.subbandFreq(subbandNr);
         itsScaling(s) = -2.0 * M_PI * freq * complex<double>(0.0,1.0) / speedOfLight;
         LOG_DEBUG_STR("scaling subband[" << subbandNr <<
                           "] = " << itsScaling(s) << ", freq = " << freq);
 	}
 
-	// N10ote: RCUallocation is stationbased, rest info is fieldbased, 
+	// N10ote: RCUallocation is stationbased, rest info is fieldbased,
 	//		 use firstRCU as offsetcorrection
 	int	firstRCU(gAntField->ringNr(fieldName) * gAntField->nrAnts(fieldName) * 2);
 	LOG_DEBUG_STR("first RCU of field " << fieldName << "=" << firstRCU);
 	for (int rcu = 0; rcu < NR_TEST_RCUS; rcu++) {
 		//
 		// For all beamlets that belong to this beam calculate the weight
-		// Note: weight is in-product for RCUpos and source Pos and depends on 
+		// Note: weight is in-product for RCUpos and source Pos and depends on
 		// the frequency of the subband.
 		//
 		for (int	beamlet = 0; beamlet < NR_TEST_SUBBANDS; beamlet++) {
-			itsWeights(rcu, beamlet) = exp(itsScaling(beamlet) * 
+			itsWeights(rcu, beamlet) = exp(itsScaling(beamlet) *
 					(rcuJ2000Pos(rcu-firstRCU, 0) * sourceJ2000xyz(0,0) +
 					 rcuJ2000Pos(rcu-firstRCU, 1) * sourceJ2000xyz(0,1) +
 					 rcuJ2000Pos(rcu-firstRCU, 2) * sourceJ2000xyz(0,2)));
@@ -218,7 +218,7 @@ void tBeamServer::send_sbselection()
 		if (selection().size()) {
 			LOG_DEBUG_STR("Subbandselection for ring segment " << ringNr);
 			LOG_DEBUG_STR(ss.subbands());
-		} 
+		}
 		else {
 			LOG_DEBUG_STR("No subbandselection for ring segment " << ringNr);
 		}

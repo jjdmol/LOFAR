@@ -83,7 +83,7 @@ void doAction(string aDP, string anAction) {
   
   // Reload
   if (actionString[1] == \"Reload\") {
-    redraw(arrayList.text(arrayList.number()));
+    redraw(g_activeAntennaType);
     return;
   } else if (actionString[1] == \"DistChanged\") {
     // for dist system bound hardware only, if the distsystem went offline we need to replace 
@@ -116,7 +116,7 @@ void updatePositions(string dp1, float cX,
   
   
   // Check if the update concerns the current view
-  string txt=arrayList.text(arrayList.number());
+  string txt=g_activeAntennaType;
   
   if (strpos(dp1,txt) < 0) {    //not found match
     return;
@@ -358,8 +358,9 @@ void redraw(string mode) {
 void updateField() {
   
   // Check if the update concerns the current view
-  string txt= arrayList.text(arrayList.number());
+  string txt= g_activeAntennaType;
 
+  sysName = dpSubStr(g_currentDatapoint,DPSUB_SYS);
   string dpt=txt+\"Antenna\";
   dyn_string unsortX=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaX;\",dpt);
   dyn_string unsortY=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaY;\",dpt);
@@ -509,13 +510,28 @@ LANG:1 0
 E E
 0 0 0 0 0
 1
-E "main(int button)
+"main()
 {
   zoomFactor=1;
   shiftValue=25;
   shiftFactorX=0;
   shiftFactorY=0;
   setValue(\"shift_value\",\"text\",shiftValue);
+  if (g_activeAntennaType == \"LBA\") {
+    setValue(\"\", \"number\", 1);
+  } else {
+    setValue(\"\", \"number\", 0);
+  }
+  updateField();
+}" 0
+ "main(int button)
+{
+  zoomFactor=1;
+  shiftValue=25;
+  shiftFactorX=0;
+  shiftFactorY=0;
+  setValue(\"shift_value\",\"text\",shiftValue);
+  g_activeAntennaType = arrayList.text(arrayList.number());
   updateField();
 }" 0
 
