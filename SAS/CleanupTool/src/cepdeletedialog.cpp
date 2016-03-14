@@ -41,8 +41,10 @@ CEPdeleteDialog::CEPdeleteDialog(QWidget *parent)
 
 	#if defined Q_OS_WIN
 	itsConnectCmd = "C:\\progra~1\\putty\\plink -agent lofarsys@";
+	itsCEP4ConnectCmd = "C:\\progra~1\\putty\\plink -agent lofarsys@head01.cep4.control.lofar ";
 #elif defined Q_OS_UNIX
 	itsConnectCmd = "ssh lofarsys@lhn001.cep2.lofar ssh ";
+	itsCEP4ConnectCmd = "ssh lofarsys@head01.cep4.control.lofar ";
 #else
 	std::cerr << "ERROR: Unknown operating system. Don't know how to connect with storage nodes" << std::endl;
 	return;
@@ -198,7 +200,11 @@ void CEPdeleteDialog::deleteConfirmed(void) {
 				QProcess *fp = new QProcess(this);
 				itsCleanProcesses[nodeIt->first] = std::pair<runState, QProcess *>(RUNNING, fp);
 				connect(fp, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(nodeCleanFinished(int, QProcess::ExitStatus)));
-				cmd = itsConnectCmd + nodeIt->first + ".cep2.lofar " + nodeIt->second;
+				if (nodeIt->first == "CEP4") {
+					cmd = itsCEP4ConnectCmd + nodeIt->second;
+				} else {
+					cmd = itsConnectCmd + nodeIt->first + ".cep2.lofar " + nodeIt->second;
+				}	
 				itsParentCleanupDialog->writeLog("executing:" + cmd);
 				fp->start(cmd);
 			}
@@ -228,7 +234,11 @@ void CEPdeleteDialog::retryDelete(void) {
 				QProcess *fp = new QProcess(this);
 				retryCleanProcesses[nodeIt->first] = std::pair<runState, QProcess *>(RUNNING, fp);
 				connect(fp, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(nodeCleanFinished(int, QProcess::ExitStatus)));
-				cmd = itsConnectCmd + nodeIt->first + ".cep2.lofar " + nodeIt->second;
+				if (nodeIt->first == "CEP4") {
+					cmd = itsCEP4ConnectCmd + nodeIt->second;
+				} else {
+					cmd = itsConnectCmd + nodeIt->first + ".cep2.lofar " + nodeIt->second;
+				}
 				itsParentCleanupDialog->writeLog("retrying :" + cmd);
 				fp->start(cmd);
 			}
