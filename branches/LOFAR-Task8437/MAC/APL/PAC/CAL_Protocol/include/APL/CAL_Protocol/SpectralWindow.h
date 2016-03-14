@@ -30,83 +30,79 @@
 #include <Common/LofarConstants.h>
 
 namespace LOFAR {
-  namespace CAL {
+    namespace CAL {
 
-    /**
-     * Class which represents a window on the electromagnetic spectrum.
-     *
-     * A window is defined by three parameters:
-     * - sampling frequency
-     * - nyquist_zone
-     * - nsubbands
-     *
-     * The band starting at frequency ((nyquist_zone - 1) * (sampling_frequency / 2.0)) and
-     * ending at (nyquist_zone * (sampling_frequency / 2.0)) is filtered into
-     * nsubband equal frequency bins.
-     * 
-     * The method getSubbandFreq(subband) returns the center frequency of a subband.
-     */
-    class SpectralWindow
-    {
-    public:
-      // Constructors
-      SpectralWindow();
-      SpectralWindow(std::string name, double sampling_freq,
-					 int nyquist_zone, int numsubbands, uint32 rcucontrol);
-      virtual ~SpectralWindow();
+enum {
+    BAND_UNDEFINED,
+    BAND_10_70,            // 160 MHz
+    BAND_10_90,            // 200 MHz
+    BAND_30_70,            // 160 MHz
+    BAND_30_90,            // 200 MHz
+    BAND_110_190,          // 200 MHz
+    BAND_170_230,          // 160 MHz
+    BAND_210_250           // 200 MHz
+};
 
-      // Return the name of the spectral window.
-      std::string getName() const { return m_name; }
-      
-      // Return the sampling frequency for this window
-      double getSamplingFrequency() const { return m_sampling_freq; }
-      
-      // Return the nyquist zone for this window.
-      int getNyquistZone() const { return m_nyquist_zone; }
-
-      // Return the number of subbands for the spectral window.
-      int getNumSubbands() const { return m_numsubbands; }
-      
-      // Return the width of the subbands.
-      double getSubbandWidth() const { return m_sampling_freq / (2.0 * MAX_SUBBANDS); }
-      
-      // Return frequency of a specific subband.
-      double getSubbandFreq(int subband) const;
-
-	  // Returns try if spectralWindow is ment for the HBA antennas.
-	  bool isForHBA() const;
-	
-	  // Returns the rcumode of this SPW
-	  int rcumode() const;
-
-      // Returns the rcumode of this SPW
-	  uint32 raw_rcumode() const;
-
-	  // Output function
-	  ostream& print (ostream& os) const;
-
-    public:
-      /*@{*/
-      // marshalling methods
-	size_t getSize() const;
-	size_t pack  (char* buffer) const;
-	size_t unpack(const char *buffer);
-      /*@}*/
-
-    private:
-      std::string m_name;          // name of the spectral window
-      double      m_sampling_freq; // sampling frequency
-      uint16      m_nyquist_zone;  // defines the window
-      uint16      m_numsubbands;   // number of subbands
-      uint32      m_rcucontrol;    // RCU control setting
-    };
-
+// Class which represents a window on the electromagnetic spectrum.
 //
+// A window is defined by two parameters:
+// - sampling frequency
+// - nyquist_zone
+//
+// The band starting at frequency ((nyquist_zone - 1) * (sampling_frequency / 2.0)) and
+// ending at (nyquist_zone * (sampling_frequency / 2.0)) is split into MAX_SUBBANDS frequency bins
+class SpectralWindow
+{
+public:
+    // Constructors
+    SpectralWindow();
+//TODO    explicit SpectralWindow(uint rcumode);
+    SpectralWindow(const string& name, uint band);
+    ~SpectralWindow();
+
+    // Return the name of the spectral window.
+    string name() const { return itsName; }
+
+    // Return the sampling frequency for this window
+    double samplingFrequency() const { return itsSamplingFreq; }
+
+    // Return the nyquist zone for this window.
+    int nyquistZone() const { return itsNyquistZone; }
+
+    // Return the LBA filter setting
+    int LBAfilterOn() const { return itsLBAfilterOn; }
+
+    // Return the rcumode of SPW (only defined for HBA SPW's).
+    uint rcumodeHBA() const;
+
+    // Return the width of the subbands.
+    double subbandWidth() const { return itsSamplingFreq / (2.0 * MAX_SUBBANDS); }
+
+    // Return centre frequency of a specific subband.
+    double subbandFreq(int subband) const;
+
+    /*@{*/
+    // marshalling methods
+    size_t getSize() const;
+    size_t pack  (char* buffer) const;
+    size_t unpack(const char *buffer);
+    /*@}*/
+
+    // call for operator<<
+    ostream& print (ostream& os) const;
+
+private:
+    string  itsName;            // name of the spectral window
+
+    double  itsSamplingFreq;    // sampling frequency
+    uint16  itsNyquistZone;     // defines the window
+    bool    itsLBAfilterOn;     // 10-30Mhz filter switch on/off
+};
+
 // operator<<
-//
 inline ostream& operator<< (ostream& os, const SpectralWindow& spw)
 {
-	return (spw.print(os));
+    return (spw.print(os));
 }
 
   }; // namespace CAL

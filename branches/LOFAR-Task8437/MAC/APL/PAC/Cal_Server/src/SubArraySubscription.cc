@@ -36,19 +36,17 @@ void SubArraySubscription::update(Subject* subject)
 {
   ASSERT(subject == static_cast<Subject*>(m_subarray));
 
-  AntennaGains* calibratedGains = 0;
+  //AntennaGains calibratedGains;
 
   // get gains from the FRONT buffer
-  if (m_subarray->getGains(calibratedGains, SubArray::FRONT)) {
+  //calibratedGains = m_subarray->getGains();
+  CALUpdateEvent update;
+  update.name = m_subarray->name();
+  update.timestamp.setNow(0);
+  update.status = CAL_SUCCESS;
+  //update.handle = (memptr_t)this;
+  update.gains = m_subarray->getGains();
 
-    CALUpdateEvent update;
-    update.timestamp.setNow(0);
-    update.status = CAL_SUCCESS;
-    update.handle = (memptr_t)this;
-
-    update.gains = *calibratedGains;
-
-    if (m_port.isConnected()) m_port.send(update);
-  }
+  if (m_port.isConnected()) m_port.send(update);
 }
 

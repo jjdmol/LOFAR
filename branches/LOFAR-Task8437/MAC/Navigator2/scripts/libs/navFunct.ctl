@@ -1560,8 +1560,8 @@ void navFunct_fillHardwareTree() {
           if (lvl == "Cabinet") {
             connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr;
           }
-          dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_URIboard"+g_uriBoardList[i];
-          dynAppend(result,connectTo+",URIboard"+g_uriBoardList[i]+","+dp);
+          dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_URIBoard"+g_uriBoardList[i];
+          dynAppend(result,connectTo+",URIBoard"+g_uriBoardList[i]+","+dp);
         }
       }
 

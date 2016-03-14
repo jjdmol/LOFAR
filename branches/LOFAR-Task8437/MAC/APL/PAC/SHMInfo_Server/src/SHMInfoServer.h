@@ -1,4 +1,4 @@
-//#  SHMInfoServer.h: 
+//#  SHMInfoServer.h:
 //#
 //#  Copyright (C) 2002-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -32,7 +32,7 @@
 #include <APL/CAL_Protocol/SubArray.h>
 
 namespace LOFAR {
-	namespace AMI {  
+	namespace AMI {
 
 class SHMSession;
 
@@ -44,28 +44,28 @@ class SHMInfoServer : public GCF::TM::GCFTask
 public:
     SHMInfoServer ();
     ~SHMInfoServer();
-    
+
 	// member functions
     GCF::TM::GCFTCPPort& 	getPortProvider();
 //    SHMPolicyHandler& 		getPolicyHandler();
     void clientClosed(SHMSession& client);
-  
-    //MAXMOD
-    CAL::AntennaArrays               m_arrays;       // antenna arrays (read from file)
 
-private: 
+    //MAXMOD
+    //CAL::AntennaArrays               m_arrays;       // antenna arrays (read from file)
+
+private:
 	// state methods
     MACIO::GCFEvent::TResult initial   (MACIO::GCFEvent& e, GCF::TM::GCFPortInterface& p);
     MACIO::GCFEvent::TResult accepting (MACIO::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-        
-	// data members        
+
+	// data members
     GCF::TM::GCFTCPPort*	itsListener;
 //	RTDB::DPservice*		itsDPservice;
 //    SHMPolicyHandler		_policyHandler;
 
 	// admin members
     typedef list<SHMSession*> TSessions;
-    TSessions				_sessionsGarbage;    
+    TSessions				_sessionsGarbage;
 
 };
 
