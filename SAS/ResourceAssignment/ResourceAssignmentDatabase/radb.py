@@ -68,6 +68,10 @@ class RADatabase:
                     self.cursor.execute(query, qargs)
                     break
                 time.sleep(i*i)
+        except psycopg2.IntegrityError as e:
+            logger.error("Rolling back query=\'%s\' args=\'%s\' due to error: \'%s\'" % (query, ', '.join(str(x) for x in qargs), e))
+            self.conn.rollback()
+            return -1;
 
         if fetch == _FETCH_ONE:
             return self.cursor.fetchone()
@@ -696,13 +700,13 @@ if __name__ == '__main__':
     #resultPrint(db.getResources)
     #resultPrint(db.getResourceGroups)
     #resultPrint(db.getResourceGroupMemberships)
-    resultPrint(db.getTasks)
-    print db.getTaskPredecessorIds()
-    print db.getTaskSuccessorIds()
+    #resultPrint(db.getTasks)
+    #print db.getTaskPredecessorIds()
+    #print db.getTaskSuccessorIds()
     #resultPrint(db.getSpecifications)
     #resultPrint(db.getResourceClaims)
 
-    db.updateTaskAndResourceClaims(16, starttime= datetime.datetime.utcnow())
+    #db.updateTaskAndResourceClaims(16, starttime= datetime.datetime.utcnow())
 
     #import pprint
     #pprint.pprint(db.getResourceGroupMemberships())
@@ -723,10 +727,17 @@ if __name__ == '__main__':
 
     #print db.updateTask(taskId, task_status='scheduled', otdb_id=723, task_type='PIPELINE')
 
-    #resultPrint(db.getTasks)
+    #resultPrint(db.getSpecifications)
 
     #for s in db.getSpecifications():
-        #db.updateSpecification(s['id'], datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1))
+        #db.deleteSpecification(s['id'])
+
+    #resultPrint(db.getSpecifications)
+
+    #specId = db.insertSpecification(datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=4), "")
+    #taskId = db.insertTask(1234, 5678, 600, 0, specId)
+
+    #resultPrint(db.getSpecifications)
 
     #claims = db.getResourceClaims()
     #for c in claims:
