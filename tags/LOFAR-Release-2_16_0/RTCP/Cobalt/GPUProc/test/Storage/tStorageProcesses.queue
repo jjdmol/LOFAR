@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<message>
+   <header>
+      <system>LOFAR</system>
+      <version>1.0.0</version>
+      <protocol>
+         <name>task.feedback.dataproducts</name>
+         <version>1.0.0</version>
+      </protocol>
+      <source>
+         <name>Cobalt/GPUProc/Storage/StorageProcess</name>
+         <user></user>
+         <uuid>ef8c6085-16cd-4a37-bc41-c329c3b3e014</uuid>
+         <timestamp>2015-06-19T15:07:41</timestamp>
+         <summary>Feedback for Correlated Data, subband 0</summary>
+      </source>
+      <ids>
+         <momid>0</momid>
+         <sasid>12345</sasid>
+      </ids>
+   </header>
+   <payload>Observation.DataProducts.Output_Correlated_[0].SAP=0
+Observation.DataProducts.Output_Correlated_[0].centralFrequency=0.000000
+Observation.DataProducts.Output_Correlated_[0].channelWidth=3051.757812
+Observation.DataProducts.Output_Correlated_[0].channelsPerSubband=64
+Observation.DataProducts.Output_Correlated_[0].duration=0
+Observation.DataProducts.Output_Correlated_[0].fileFormat=AIPS++/CASA
+Observation.DataProducts.Output_Correlated_[0].filename=SB0.MS
+Observation.DataProducts.Output_Correlated_[0].integrationInterval=1.006633
+Observation.DataProducts.Output_Correlated_[0].location=localhost:.
+Observation.DataProducts.Output_Correlated_[0].percentageWritten=0
+Observation.DataProducts.Output_Correlated_[0].size=0
+Observation.DataProducts.Output_Correlated_[0].startTime=2015-01-01 00:00:00
+Observation.DataProducts.Output_Correlated_[0].stationSubband=0
+Observation.DataProducts.Output_Correlated_[0].subband=0
+</payload>
+</message>
+
