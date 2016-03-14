@@ -59,7 +59,7 @@
                             <div gantt data=ganttData
                                 api=options.api
                                 show-side='true'
-                                view-scale="options.scale"
+                                view-scale="options.viewScale"
                                 current-date="options.currentDate"
                                 current-date-value="options.currentDateValue"
                                 column-magnet="options.columnMagnet">
@@ -74,11 +74,15 @@
                             </div>
                         </div>
                     </uib-tab>
-<!--                    <uib-tab heading="Resources" index='1' active='false'>
+                    <uib-tab heading="Resources" index='1' active='false'>
                         <div class="tab-pane active" ng-controller="GanttResourceController as ganttResourceCtrl">
                             <div gantt data=ganttData
                                 api=options.api
-                                show-side='true'>
+                                show-side='true'
+                                view-scale="options.viewScale"
+                                current-date="options.currentDate"
+                                current-date-value="options.currentDateValue"
+                                column-magnet="options.columnMagnet">
                                 <gantt-tree enabled="true"></gantt-tree>
                                 <gantt-movable enabled="true"
                                     allow-moving="true"
@@ -87,7 +91,7 @@
                                 <gantt-tooltips></gantt-tooltips>
                             </div>
                         </div>
-                    </uib-tab>-->
+                    </uib-tab>
                 <uib-tabset>
             <header>
         </div>

@@ -39,7 +39,11 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
 
     $scope.options = {
         mode: 'custom',
-        scale: 'day',
+        viewScale: '15 minutes',
+        currentDate: 'line',
+        currentDateValue: $scope.dataService.lofarTime,
+        columnMagnetUnit: 'minute',
+        columnMagnetValue: 1,
         sideMode: 'Tree',
         treeHeaderContent: '<i class="fa fa-align-justify"></i> {{getHeader()}}',
         autoExpand: 'both',
@@ -85,6 +89,11 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
         var resourceClaimDict = $scope.dataService.resourceClaimDict;
         var resourceClaims = $scope.dataService.resourceClaims;
         var numResourceClaims = resourceClaims.length;
+
+        if(numResourceGroups == 0 || numResources == 0){
+            $scope.ganttData = [];
+            return;
+        }
 
         //dict resourceGroup2GanttRows for fast lookup of ganttrows based on groupId
         var resourceGroup2GanttRows = {};
@@ -335,11 +344,12 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
         }
     };
 
-    $scope.$watch('dataService.tasks', updateGanttData, true);
+//     $scope.$watch('dataService.tasks', updateGanttData, true);
     $scope.$watch('dataService.resources', updateGanttData);
     $scope.$watch('dataService.resourceClaims', updateGanttData, true);
     $scope.$watch('dataService.resourceGroups', updateGanttData);
     $scope.$watch('dataService.resourceGroupMemberships', updateGanttData);
     $scope.$watch('dataService.filteredTaskDict', updateGanttData);
+    $scope.$watch('dataService.lofarTime', function() {$scope.options.currentDateValue= $scope.dataService.lofarTime;});
 }
 ]);

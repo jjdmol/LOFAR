@@ -41,7 +41,7 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
 
     $scope.options = {
         mode: 'custom',
-        scale: 'minute',
+        viewScale: '15 minutes',
         currentDate: 'line',
         currentDateValue: $scope.dataService.lofarTime,
         columnMagnetUnit: 'minute',
@@ -100,6 +100,11 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
         var tasktypesDict = $scope.dataService.tasktypesDict;
         var tasktypes = $scope.dataService.tasktypes;
         var numTasktypes = tasktypes.length;
+
+        if(numProjecs == 0 || numTasktypes == 0){
+            $scope.ganttData = [];
+            return;
+        }
 
         var ganntRowsDict = {};
 
