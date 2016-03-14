@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+          <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
+          <version>2.10.3</version>
+          <template version="2.10.3" author="Alwin de Jong" changedBy="Alwin de Jong">
+          <description>XML Template generator version 2.10.3</description>
+          </template>
+          <name>LC4_012</name>
+          <children>
+   <item index="0">
+              <lofar:folder topology_parent="false">
+              <name>HD152679</name>
+              <description>LBA outer 8ch/sb 1s Dutch</description>
+              <children>
+   <item index="0">
+              <lofar:folder topology_parent="true">
+                <topology>0</topology>
+                <name>20150616</name>
+                <description>Apastron observation (Imaging)</description>
+                <children>
+          <item index="0">
+                <lofar:observation>
+                  <name>HD156279/1/TO</name>
+                  <description>HD156279/1/TO (Target Observation)</description>
+                  <topology>B0.1.T</topology>
+                  <predecessor_topology></predecessor_topology>
+                  <currentStatus>
+                    <mom2:openedStatus/>
+                  </currentStatus>
+                  <lofar:observationAttributes>
+                    <observationId>
+                    </observationId>
+                    <name>HD156279/1/TO</name>
+                    <projectName>LC4_012</projectName>
+                    <instrument>Beam Observation</instrument>
+                    <defaultTemplate>BeamObservation</defaultTemplate>
+                    <tbbPiggybackAllowed>false</tbbPiggybackAllowed>
+                    <aartfaacPiggybackAllowed>false</aartfaacPiggybackAllowed>
+                    <userSpecification>
+                      <correlatedData>true</correlatedData>
+                      <coherentStokesData>false</coherentStokesData>
+                      <incoherentStokesData>false</incoherentStokesData>
+                      <antenna>LBA Outer</antenna>
+                      <clock mode="200 MHz"/>
+                      <instrumentFilter>30-90 MHz</instrumentFilter>
+                      <integrationInterval>1.0</integrationInterval>
+                      <channelsPerSubband>64</channelsPerSubband>
+                      <coherentDedisperseChannels>false</coherentDedisperseChannels>
+                      <tiedArrayBeams>
+                        <flyseye>false</flyseye>
+                      </tiedArrayBeams>
+                      <stokes>
+                        <integrateChannels>false</integrateChannels>
+                        <subbandsPerFileCS></subbandsPerFileCS>
+                        <numberCollapsedChannelsCS></numberCollapsedChannelsCS>
+                        <stokesDownsamplingStepsCS></stokesDownsamplingStepsCS>
+                        <whichCS></whichCS>
+                        <subbandsPerFileIS></subbandsPerFileIS>
+                        <numberCollapsedChannelsIS></numberCollapsedChannelsIS>
+                        <stokesDownsamplingStepsIS></stokesDownsamplingStepsIS>
+                        <whichIS></whichIS>
+                      </stokes>
+                      <stationSet>Custom</stationSet>
+                      <stations>CS001,CS002,CS003,CS004,CS005,CS006,CS007,CS011,CS013,CS017,CS021,CS024,CS026,CS028,CS030,CS031,CS032,CS101,CS103,CS201,CS301,CS302,CS401,CS501,RS106,RS205,RS208,RS210,RS305,RS306,RS307,RS310,RS406,RS407,RS409,RS503,RS508,RS509</stations>
+                      <timeFrame>UT</timeFrame>
+                      <startTime>2015-06-16T20:00:00</startTime>
+                      <endTime>2015-06-17T02:00:00</endTime>
+                      <duration>21600</duration>
+                      <bypassPff>false</bypassPff>
+                      <enableSuperterp>false</enableSuperterp>
+                      <numberOfBitsPerSample>8</numberOfBitsPerSample>
+                    </userSpecification>
+                  </lofar:observationAttributes>
+                  <children>
+<item index="0">
+                      <lofar:measurement xsi:type="lofar:BFMeasurementType">
+                        <name>HD156279</name>
+                        <description>HD156279</description>
+                        <topology>B0.1.T.SAP000</topology>
+                        <currentStatus>
+                          <mom2:openedStatus/>
+                        </currentStatus>
+                        <lofar:bfMeasurementAttributes>
+                          <measurementType>Target</measurementType>
+                          <specification>
+                            <targetName>HD156279</targetName>
+                            <ra>258.096666667</ra>
+                            <dec>63.3520833333</dec>
+                            <equinox>J2000</equinox>
+                            <duration>0</duration>
+                            <subbandsSpecification>
+                              <subbands>154..397</subbands>
+                            </subbandsSpecification>
+                          <tiedArrayBeams>
+                            <flyseye>false</flyseye>
+                          <nrTabRings>0</nrTabRings>
+                          <tabRingSize></tabRingSize>
+                            <tiedArrayBeamList>
+                            
+                            </tiedArrayBeamList>
+                          </tiedArrayBeams>
+                          </specification>
+                        </lofar:bfMeasurementAttributes>
+                        <resultDataProducts>
+                        <item>
+                    <lofar:uvDataProduct>
+                    <name>B0.1.T.SAP000.uv.dps</name>
+                    <topology>B0.1.T.SAP000.uv.dps</topology>
+                    <status>no_data</status>
+                    </lofar:uvDataProduct>
+                  </item>
+                        </resultDataProducts>   
+                      </lofar:measurement>
+                    </item>
+<item index="0">
+                      <lofar:measurement xsi:type="lofar:BFMeasurementType">
+                        <name>3C380</name>
+                        <description>3C380</description>
+                        <topology>B0.1.T.SAP001</topology>
+                        <currentStatus>
+                          <mom2:openedStatus/>
+                        </currentStatus>
+                        <lofar:bfMeasurementAttributes>
+                          <measurementType>Calibration</measurementType>
+                          <specification>
+                            <targetName>3C380</targetName>
+                            <ra>277.382166667</ra>
+                            <dec>48.746375</dec>
+                            <equinox>J2000</equinox>
+                            <duration>0</duration>
+                            <subbandsSpecification>
+                              <subbands>154..397</subbands>
+                            </subbandsSpecification>
+                          <tiedArrayBeams>
+                            <flyseye>false</flyseye>
+                          <nrTabRings></nrTabRings>
+                          <tabRingSize></tabRingSize>
+                            <tiedArrayBeamList>
+                            
+                            </tiedArrayBeamList>
+                          </tiedArrayBeams>
+                          </specification>
+                        </lofar:bfMeasurementAttributes>
+                        <resultDataProducts>
+                        <item>
+                    <lofar:uvDataProduct>
+                    <name>B0.1.T.SAP001.uv.dps</name>
+                    <topology>B0.1.T.SAP001.uv.dps</topology>
+                    <status>no_data</status>
+                    </lofar:uvDataProduct>
+                  </item>
+                        </resultDataProducts>   
+                      </lofar:measurement>
+                    </item>
+</children>
+                </lofar:observation>
+                </item>
+        <item index="0">
+              <lofar:pipeline xsi:type="lofar:CalibrationPipelineType">
+                <topology>B0.1.CPT</topology>
+                <predecessor_topology>B0.1.T</predecessor_topology>
+                <name>3C380/1/CPT</name>
+                <description>3C380/1/CPT (Cal Pipe Target)</description>
+                <pipelineAttributes>
+                  <defaultTemplate>Calibrator Pipeline (no export)</defaultTemplate>
+                  <flaggingStrategy>LBAdefault</flaggingStrategy>
+                  <duration>43200</duration>
+                  <skyModelDatabase>3C380</skyModelDatabase>
+                  <demixingParameters>
+                    <averagingFreqStep>8</averagingFreqStep>
+                    <averagingTimeStep>1</averagingTimeStep>
+                    <demixFreqStep>8</demixFreqStep>
+                    <demixTimeStep>1</demixTimeStep>
+                    <demixAlways>CygA,CasA</demixAlways>
+                    <demixIfNeeded></demixIfNeeded>
+                    <ignoreTarget></ignoreTarget>
+                  </demixingParameters>
+                  <bbsParameters>
+                    <baselines></baselines>
+                    <correlations></correlations>
+                    <beamModelEnable>true</beamModelEnable>
+                    <solveParms></solveParms>
+                    <solveUVRange></solveUVRange>
+                    <strategyBaselines></strategyBaselines>
+                    <strategyTimeRange></strategyTimeRange>
+                  </bbsParameters>
+                </pipelineAttributes>
+                <usedDataProducts>
+                  <item>
+                    <lofar:uvDataProduct topology="B0.1.T.SAP001.uv.dps">
+                    </lofar:uvDataProduct>
+                  </item>
+                </usedDataProducts>
+                <resultDataProducts>
+                  <item>
+                    <lofar:instrumentModelDataProduct>
+                      <name>B0.1.CPT.inst.dps</name>
+                      <topology>B0.1.CPT.inst.dps</topology>
+                      <status>no_data</status>
+                    </lofar:instrumentModelDataProduct>
+                  </item>
+                  <item>
+                    <lofar:uvDataProduct>
+                      <name>B0.1.CPT.uv.dps</name>
+                      <topology>B0.1.CPT.uv.dps</topology>
+                      <status>no_data</status>
+                    </lofar:uvDataProduct>
+                  </item>
+                </resultDataProducts>
+              </lofar:pipeline>
+            </item>
+<item index="0">
+                  <lofar:pipeline xsi:type="lofar:CalibrationPipelineType">
+                    <topology>B0.1.PT0</topology>
+                    <predecessor_topology>B0.1.T,B0.1.CPT</predecessor_topology>
+                    <name>HD156279/1.0/TP</name>
+                    <description>HD156279/1.0/TP (Target Pipeline)</description>
+                    <pipelineAttributes>
+                      <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
+                      <flaggingStrategy>LBAdefault</flaggingStrategy>
+                      <duration>43200</duration>
+                      <demixingParameters>
+                        <averagingFreqStep>8</averagingFreqStep>
+                        <averagingTimeStep>1</averagingTimeStep>
+                        <demixFreqStep>8</demixFreqStep>
+                        <demixTimeStep>1</demixTimeStep>
+                        <demixAlways>CygA,CasA</demixAlways>
+                        <demixIfNeeded></demixIfNeeded>
+                        <ignoreTarget></ignoreTarget>
+                      </demixingParameters>
+                      <bbsParameters>
+                        <baselines></baselines>
+                        <correlations></correlations>
+                        <beamModelEnable>true</beamModelEnable>
+                        <solveParms></solveParms>
+                        <solveUVRange></solveUVRange>
+                        <strategyBaselines></strategyBaselines>
+                        <strategyTimeRange></strategyTimeRange>
+                      </bbsParameters>
+                    </pipelineAttributes>
+                    <usedDataProducts>
+                      <item>
+                        <lofar:uvDataProduct topology="B0.1.T.SAP000.uv.dps">
+                          <name>B0.1.T.SAP000.uv.dps</name>
+                        </lofar:uvDataProduct>
+                      </item>
+                      <item>
+                        <lofar:instrumentModelDataProduct topology="B0.1.CPT.inst.dps">
+                          <name>B0.1.CPT.inst.dps</name>
+                        </lofar:instrumentModelDataProduct>
+                      </item>
+                    </usedDataProducts>
+                    <resultDataProducts>
+                        <item>
+                          <lofar:uvDataProduct>
+                            <name>B0.1.PT0.uv.dps</name>
+                            <topology>B0.1.PT0.uv.dps</topology>
+                            <status>no_data</status>
+                          </lofar:uvDataProduct>
+                        </item> 
+                    </resultDataProducts>               
+                    </lofar:pipeline>
+                  </item>
+</children>
+        </lofar:folder>
+        </item>
+</children>
+    </lofar:folder>
+    </item>
+          </children>
+  </lofar:project>
