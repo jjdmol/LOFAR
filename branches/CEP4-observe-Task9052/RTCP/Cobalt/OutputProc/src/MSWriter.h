@@ -39,6 +39,8 @@ namespace LOFAR
 
       virtual void write(StreamableData *) = 0;
 
+      virtual void createMetaData();
+
       virtual void augment(const FinalMetaData &finalMetaData);
 
       virtual size_t getDataSize();

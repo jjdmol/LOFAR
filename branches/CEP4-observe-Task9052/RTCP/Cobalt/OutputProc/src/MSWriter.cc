@@ -42,6 +42,10 @@ namespace LOFAR
     {
     }
 
+    void MSWriter::createMetaData()
+    {
+    }
+
     void MSWriter::augment(const FinalMetaData &finalMetaData)
     {
       (void)finalMetaData;

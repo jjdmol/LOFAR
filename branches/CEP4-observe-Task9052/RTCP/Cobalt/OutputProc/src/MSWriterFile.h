@@ -36,6 +36,11 @@ namespace LOFAR
     class MSWriterFile : public MSWriter
     {
     public:
+      /*
+       * Write data to the provided file name.
+       *
+       * Any parent directories are automatically created.
+       */
       MSWriterFile(const std::string &msName);
       ~MSWriterFile();
 

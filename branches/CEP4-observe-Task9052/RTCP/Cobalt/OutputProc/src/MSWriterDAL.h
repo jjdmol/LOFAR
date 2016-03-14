@@ -44,13 +44,18 @@ namespace LOFAR
     public:
       MSWriterDAL(const std::string &filename, const Parset &parset, unsigned fileno);
       ~MSWriterDAL();
+
+      virtual void createMetaData();
+
       virtual void write(StreamableData *data);
+
     private:
+      const std::string itsFilename;
       const Parset &itsParset;
       unsigned itsNrChannels;
       unsigned itsNrSamples;
       unsigned itsNextSeqNr;
-      unsigned itsFileNr;
+      const unsigned itsFileNr;
       unsigned itsBlockSize; // the size of StreamableData::samples, in T
     };
   }

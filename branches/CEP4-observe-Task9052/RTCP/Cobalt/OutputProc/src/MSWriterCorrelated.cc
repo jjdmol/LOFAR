@@ -27,7 +27,6 @@
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <Common/SystemUtil.h>
 #include <MSLofar/FailedTileInfo.h>
 #include <CoInterface/CorrelatedData.h>
 #include <CoInterface/LTAFeedback.h>
@@ -48,18 +47,18 @@ namespace LOFAR
 
     MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex)
       :
-      MSWriterFile(
-        (makeMeasurementSet(logPrefix, msName, parset, subbandIndex),
-         str(format("%s/table.f0data") % msName))),
+      MSWriterFile(str(format("%s/table.f0data") % msName)),
       itsLogPrefix(logPrefix),
       itsMSname(msName),
-      itsParset(parset)
+      itsParset(parset),
+      itsSubbandIndex(subbandIndex)
     {
       // Add file-specific processing feedback
       LTAFeedback fb(itsParset.settings);
-      itsConfiguration.adoptCollection(fb.correlatedFeedback(subbandIndex));
-      itsConfigurationPrefix = fb.correlatedPrefix(subbandIndex);
+      itsConfiguration.adoptCollection(fb.correlatedFeedback(itsSubbandIndex));
+      itsConfigurationPrefix = fb.correlatedPrefix(itsSubbandIndex);
 
+      // Create Sequence file
       if (LofarStManVersion > 1) {
         string seqfilename = str(format("%s/table.f0seqnr") % msName);
 
@@ -69,40 +68,24 @@ namespace LOFAR
           LOG_WARN_STR(itsLogPrefix << "Could not open sequence numbers file " << seqfilename);
         }
       }
+    }
 
-#if 0
-      // derive baseline names
-      std::vector<std::string> stationNames = parset.mergedStationNames();
-      std::vector<std::string> baselineNames(parset.nrBaselines());
-      unsigned nrStations = stationNames.size();
 
-      // order of baselines as station indices:
-      // 0-0, 1-0, 1-1, 2-0, 2-1, 2-2 ... (see RTCP/CNProc/Correlator.cc)
+    void MSWriterCorrelated::createMetaData()
+    {
+      // Creaate MeasurementSet
+#if defined HAVE_AIPSPP
+      MeasurementSetFormat myFormat(itsParset, 512);
 
-      unsigned bl = 0;
+      myFormat.addSubband(itsMSname, itsSubbandIndex);
 
-      for(unsigned s1 = 0; s1 < nrStations; s1++)
-        for(unsigned s2 = 0; s2 <= s1; s2++)
-          //bl = s1 * (s1 + 1) / 2 + stat2 ;
-          baselineNames[bl++] = str(format("%s_%s") % stationNames[s1] % stationNames[s2]);
-#endif
+      LOG_DEBUG_STR(itsLogPrefix << "MeasurementSet created");
+#endif // defined HAVE_AIPSPP
     }
 
 
     MSWriterCorrelated::~MSWriterCorrelated()
     {
-    }
-
-
-    void MSWriterCorrelated::makeMeasurementSet(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex)
-    {
-#if defined HAVE_AIPSPP
-      MeasurementSetFormat myFormat(parset, 512);
-
-      myFormat.addSubband(msName, subbandIndex);
-
-      LOG_DEBUG_STR(logPrefix << "MeasurementSet created");
-#endif // defined HAVE_AIPSPP
     }
 
 

@@ -43,6 +43,8 @@ namespace LOFAR
       MSWriterCorrelated(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex);
       ~MSWriterCorrelated();
 
+      virtual void createMetaData();
+
       virtual void write(StreamableData *data);
 
       virtual void augment(const FinalMetaData &finalMetaData);
@@ -51,11 +53,9 @@ namespace LOFAR
       const std::string itsLogPrefix;
       const std::string itsMSname;
       const Parset &itsParset;
+      const unsigned itsSubbandIndex;
 
       SmartPtr<FileStream>             itsSequenceNumbersFile;
-
-    private:
-      void makeMeasurementSet(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex);
     };
 
 
