@@ -113,6 +113,7 @@ install(FILES
 
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg
+  ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg.CEP4
   ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg
   DESTINATION share/pipeline)
 
@@ -126,6 +127,29 @@ endif(HAVE_QPID)
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/pipeline.cfg.in
   ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg)
+
+# Convert configuration files through docker-template
+foreach(_file ${CMAKE_CURRENT_SOURCE_DIR}/pipeline.cfg.CEP4)
+  # _src -> _dst
+  set(_src ${CMAKE_CURRENT_SOURCE_DIR}/${_file}.in_docker-template)
+  set(_dst ${CMAKE_CURRENT_BINARY_DIR}/${_file})
+
+  # add generating command, and (any) target to force the generation
+  # when "all" is build.
+  add_custom_command(
+    OUTPUT ${_dst}
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/docker-template < ${_src} > ${_dst}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/docker-template ${_src} ${CMAKE_CURRENT_BINARY_DIR}/versiondocker
+  )
+  add_custom_target(${_file}_target ALL DEPENDS ${_dst})
+
+  # install resulting file
+  install(FILES
+    ${_dst}
+    DESTINATION share/pipeline
+    RENAME Dockerfile
+  )
+endforeach()
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/tasks.cfg.in

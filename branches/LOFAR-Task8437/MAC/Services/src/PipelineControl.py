@@ -351,10 +351,11 @@ class PipelineControl(OTDBBusListener):
         " -e LUSER=$UID"
         " -v $HOME/.ssh:/home/lofar/.ssh:ro"
         " -e SLURM_JOB_ID=$SLURM_JOB_ID"
-        " runPipeline.sh {obsid}"
+        " runPipeline.sh {obsid} --config /opt/lofar/share/pipeline/pipeline.cfg.{cluster}"
       .format(
         obsid = treeId,
         tag = parset.dockerTag(),
+        cluster = parset.processingCluster()
       ),
 
       sbatch_params=sbatch_params
