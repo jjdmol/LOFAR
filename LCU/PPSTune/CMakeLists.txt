@@ -2,6 +2,8 @@
 
 lofar_package(PPSTune 1.0)
 
+add_subdirectory(ppstune)
+
 # Install files matching regex pattern in current directory and below
 install(DIRECTORY . 
   DESTINATION sbin
