@@ -78,8 +78,13 @@ class RADBHandler(MessageHandlerInterface):
     def _getResourceClaimStatuses(self):
         return self.radb.getResourceClaimStatuses()
 
-    def _getResourceClaims(self):
-        return self.radb.getResourceClaims()
+    def _getResourceClaims(self, **kwargs):
+        return self.radb.getResourceClaims(lower_bound=kwargs.get('lower_bound'),
+                                           upper_bound=kwargs.get('upper_bound'),
+                                           task_id=kwargs.get('task_id'),
+                                           status=kwargs.get('status'),
+                                           resource_type=kwargs.get('resource_type'),
+                                           extended=kwargs.get('extended', False))
 
     def _getResourceClaim(self, **kwargs):
         claim = self.radb.getResourceClaim(kwargs['id'])
@@ -122,7 +127,7 @@ class RADBHandler(MessageHandlerInterface):
         return {'id': id, 'updated': updated}
 
     def _getResourceClaimsForTask(self, task_id):
-        claims = self.radb.getResourceClaimsForTask(task_id)
+        claims = self.radb.getResourceClaims(task_id=task_id)
         return claims
 
     def _updateTaskAndResourceClaims(self, **kwargs):
