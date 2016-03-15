@@ -12,31 +12,72 @@
 #
 # Syntax:
 #
-#   runPipeline.sh <obsid> || pipelineAborted.sh <obsid>
+#   runPipeline.sh -o <obsid> || pipelineAborted.sh -o <obsid>
 
-OBSID=$1
-shift
+# ======= Defaults
 
-if [ -z "$OBSID" ]; then
-  echo "Usage: $0 <obsid> <pipeline parameters>"
-  exit 1
-fi
+# Obs ID
+OBSID=
+
+# Parset (will be requested if not set)
+PARSET=
+
+# Location of pipeline-framework configuration file
+PIPELINE_CONFIG=$LOFARROOT/share/pipeline/pipeline.cfg
 
 # Queue on which to post status changes
 SETSTATUS_BUS=lofar.otdb.setStatus
 
+# ======= Parse command-line parameters
+
+function usage() {
+  echo "$0 -o OBSID [options]"
+  echo ""
+  echo "  -o OBSID           Task identifier"
+  echo "  -c pipeline.cfg    Override pipeline configuration file (default: $PIPELINE_CONFIG)"
+  echo "  -p pipeline.parset Provide parset (default: request through QPID)"
+  echo "  -b busname         Bus name to post status changes on (default: $SETSTATUS_BUS)"
+  exit 1
+}
+
+while getopts "o:c:p:b:" opt; do
+  case $opt in
+    h)  usage
+        ;;
+    o)  OBSID="$OPTARG"
+        ;;
+    c)  PIPELINE_CONFIG="$OPTARG"
+        ;;
+    p)  PARSET="$OPTARG"
+        ;;
+    b)  SETSTATUS_BUS="$OPTARG"
+        ;;
+    \?) error "Invalid option: -$OPTARG"
+        ;;
+    :)  error "Option requires an argument: -$OPTARG"
+        ;;
+  esac
+done
+[ -z "$OBSID" ] && usage
+
+# ======= Init
+
 # Mark as started
 setStatus.py -o $OBSID -s active -b $SETSTATUS_BUS || true
 
-# Fetch parset
-PARSET=${LOFARROOT}/var/run/Observation${OBSID}.parset
-getParset.py -o $OBSID >$PARSET
+if [ -z "$PARSET" ]; then
+  # Fetch parset
+  PARSET=${LOFARROOT}/var/run/Observation${OBSID}.parset
+  getParset.py -o $OBSID >$PARSET
+fi
+
+# ======= Run
 
 # Fetch parameters from parset
 PROGRAM_NAME=$(getparsetvalue $PARSET "ObsSW.Observation.ObservationControl.PythonControl.programName")
 
 # Run pipeline
-OPTIONS=" -d $@"
+OPTIONS=" -d -c $PIPELINE_CONFIG"
   
 # Set up the environment (information to propagate to the node scripts for monitoring and logging)
 export LOFAR_OBSID="$OBSID"
@@ -46,6 +87,8 @@ echo "**** $(date) ****"
 echo "Executing: ${PROGRAM_NAME} ${OPTIONS} ${PARSET}"
 ${PROGRAM_NAME} ${OPTIONS} ${PARSET}
 RESULT=$?
+
+# ======= Fini
 
 # Process the result
 setStatus.py -o $OBSID -s completing -b $SETSTATUS_BUS || true
@@ -60,3 +103,4 @@ fi
 
 # Propagate result to caller
 exit $RESULT
+
