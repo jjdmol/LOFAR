@@ -70,7 +70,7 @@ class RADatabase:
                 time.sleep(i*i)
         except psycopg2.IntegrityError as e:
             logger.error("Rolling back query=\'%s\' args=\'%s\' due to error: \'%s\'" % (query, ', '.join(str(x) for x in qargs), e))
-            self.conn.rollback()
+            self.rollback()
             return -1
 
         if fetch == _FETCH_ONE:
@@ -82,6 +82,9 @@ class RADatabase:
 
     def commit(self):
         self.conn.commit()
+
+    def rollback(self):
+        self.conn.rollback()
 
     def getTaskStatuses(self):
         query = '''SELECT * from resource_allocation.task_status;'''
@@ -530,6 +533,24 @@ class RADatabase:
             self.commit()
         return id
 
+    def insertResourceClaims(self, task_id, claims, session_id, username, user_id, commit=True):
+        '''bulk insert of resource claims for a task
+        claims is a list of dicts. Each dict is a claim for one resource containing the fields: starttime, endtime, status, claim_size, nr_of_parts
+        '''
+        claimIds = []
+        for c in claims:
+            id = self.insertResourceClaim(c['resource_id'], task_id, c['starttime'], c['endtime'], c['status'], session_id, c['claim_size'], username, user_id, c.get('nr_of_parts', 1), False)
+            claimIds.append(id)
+
+        if [x for x in claimIds if x < 0]:
+            logger.error("One or more claims cloud not be inserted. Rolling back.")
+            self.rollback()
+            return {'inserted': False, 'resource_claim_ids': None }
+
+        if commit:
+            self.commit()
+        return {'inserted': True, 'resource_claim_ids': claimIds }
+
     def deleteResourceClaim(self, resource_claim_id, commit=True):
         query = '''DELETE FROM resource_allocation.resource_claim
                    WHERE resource_allocation.resource_claim.id = %s;'''
@@ -684,7 +705,7 @@ class RADatabase:
                     self.commit()
                 return {'inserted': True, 'specification_id': specId, 'task_id': taskId}
         except:
-            self.conn.rollback()
+            self.rollback()
 
         return {'inserted': False, 'specification_id': None, 'task_id': None}
 
@@ -730,36 +751,8 @@ if __name__ == '__main__':
     #resultPrint(db.getSpecifications)
     #resultPrint(db.getResourceClaims)
 
-    #db.updateTaskAndResourceClaims(16, starttime= datetime.datetime.utcnow())
-
-    #import pprint
-    #pprint.pprint(db.getResourceGroupMemberships())
-
-    #rcId = db.insertResourceClaim(1, 1, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1, True)
-
-    #resultPrint(db.getResourceClaims)
-
-    #time.sleep(1)
-
-    #rcId = db.updateResourceClaim(rcId, starttime=datetime.datetime.utcnow(), status='ALLOCATED')
-
-    #resultPrint(db.getResourceClaims)
-
-    #taskId = db.insertTask(1234, 5678, 'active', 'OBSERVATION', 1)
-
-    #resultPrint(db.getTasks)
-
-    #print db.updateTask(taskId, task_status='scheduled', otdb_id=723, task_type='PIPELINE')
-
-    resultPrint(db.getSpecifications)
-    resultPrint(db.getTasks)
-
-    #raw_input()
-
     #for s in db.getSpecifications():
-        #db.deleteSpecification(s['id'])
-
-    #resultPrint(db.getSpecifications)
+        #db.deleteSpecification())
 
     result = db.insertSpecificationAndTask(1234, 5678, 600, 0, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), "", False)
     print result
@@ -767,12 +760,23 @@ if __name__ == '__main__':
     resultPrint(db.getSpecifications)
     resultPrint(db.getTasks)
 
-    #raw_input()
+    task = db.getTask(result['task_id'])
+    resources = db.getResources()
+
+    claims = [{'resource_id':r['id'],
+            'starttime':task['starttime'],
+            'endtime':task['endtime'],
+            'status':'claimed',
+            'claim_size':1} for r in resources]
+
+    db.insertResourceClaims(task['id'], claims, 1, 'paulus', 1, False)
+
+    resultPrint(db.getResourceClaims)
+    raw_input()
 
     db.commit()
 
-    resultPrint(db.getSpecifications)
-    resultPrint(db.getTasks)
+
 
     #claims = db.getResourceClaims()
     #for c in claims:
