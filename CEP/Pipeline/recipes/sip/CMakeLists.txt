@@ -138,8 +138,8 @@ foreach(_file pipeline.cfg.CEP4)
   # when "all" is build.
   add_custom_command(
     OUTPUT ${_dst}
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/docker-template < ${_src} > ${_dst}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/docker-template ${_src} ${CMAKE_CURRENT_BINARY_DIR}/versiondocker
+    COMMAND ${CMAKE_SOURCE_DIR}/Docker/docker-template -v ${CMAKE_BINARY_DIR}/Docker/versiondocker < ${_src} > ${_dst}
+    DEPENDS ${CMAKE_SOURCE_DIR}/Docker/docker-template ${_src} ${CMAKE_BINARY_DIR}/Docker/versiondocker
   )
   add_custom_target(${_file}_target ALL DEPENDS ${_dst})
 
