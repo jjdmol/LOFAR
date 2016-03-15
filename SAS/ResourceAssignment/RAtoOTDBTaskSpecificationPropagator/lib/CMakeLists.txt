@@ -7,5 +7,6 @@ python_install(
     config.py
     propagator.py
     rabuslistener.py
+    otdbrpc.py
     DESTINATION lofar/sas/resourceassignment/ratootdbtaskspecificationpropagator)
 
