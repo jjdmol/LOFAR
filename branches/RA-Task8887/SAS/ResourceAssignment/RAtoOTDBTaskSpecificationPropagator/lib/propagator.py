@@ -32,12 +32,14 @@ import time
 from lofar.messaging.RPC import RPC, RPCException
 from lofar.parameterset import parameterset
 
-from lofar.sas.resourceassignment.RAtoOTDBTaskSpecificationPropagator.rpc import RARPC
-from lofar.sas.resourceassignment.RAtoOTDBTaskSpecificationPropagator.config import DEFAULT_BUSNAME as RADB_BUSNAME
-from lofar.sas.resourceassignment.RAtoOTDBTaskSpecificationPropagator.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
-from lofar.sas.otdb.otdbservice.config import DEFAULT_BUSNAME as OTDB_BUSNAME
-from lofar.sas.otdb.otdbservice.config import DEFAULT_SERVICENAME as OTDB_SERVICENAME
-from lofar.sas.resourceassignment.RAtoOTDBTaskSpecificationPropagator.rpc import RAtoOTDBTranslator
+from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC
+from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME as RADB_BUSNAME
+from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
+
+from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import OTDBRPC
+from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import DEFAULT_BUSNAME as OTDB_BUSNAME
+from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import DEFAULT_SERVICENAME as OTDB_SERVICENAME
+from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.translator import RAtoOTDBTranslator
 
 logger = logging.getLogger(__name__)
 
@@ -65,8 +67,8 @@ class RAtoOTDBPropagator():
             radb_broker = broker
             otdb_broker = broker
 
-        self.radbrpc = RARPC(servicename=radb_servicename, busname=radb_busname, broker=radb_broker)
-        self.otdbrpc = RPC(otdb_servicename, busname=otdb_busname, broker=otdb_broker, ForwardExceptions=True)
+        self.radbrpc = RARPC(servicename=radb_servicename, busname=radb_busname, broker=radb_broker) ##ForwardExceptions=True?
+        self.otdbrpc = OTDBRPC(otdb_servicename, busname=otdb_busname, broker=otdb_broker, ForwardExceptions=True)
         self.translator = RAtoOTDBTranslator()
 
     def __enter__(self):
@@ -106,8 +108,8 @@ class RAtoOTDBPropagator():
     
     def getRAinfo(raId):
         info = {}
-        task = self.radbrpc.GetTask(raId)
-        claims = self.radbrpc.GetResourceClaimsForTask(raId)
+        task = self.radbrpc.getTask(raId)
+        claims = self.radbrpc.getResourceClaimsForTask(raId)
         resource_ids = [x['resource_id'] for x in claims]
         all_resources = self.radbrpc.getResources()
         resources = [all_resources[id] for id in resource_ids]
@@ -116,6 +118,6 @@ class RAtoOTDBPropagator():
         info["status"] = task["status"]
     
     def setOTDBinfo(otdbId, OTDBinfo, OTDBstatus)
-        r = self.otdbrpc.TaskSetSpecification(otdbId, OTDBinfo('OTDBkeys'))
+        r = self.otdbrpc.taskSetSpecification(otdbId, OTDBinfo('OTDBkeys'))
         if r:
-            r = self.otdbrpc.TaskSetStatus(otdbId, OTDBstatus)
+            r = self.otdbrpc.saskSetStatus(otdbId, OTDBstatus)
