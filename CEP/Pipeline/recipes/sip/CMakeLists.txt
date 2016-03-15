@@ -129,7 +129,7 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg)
 
 # Convert configuration files through docker-template
-foreach(_file ${CMAKE_CURRENT_SOURCE_DIR}/pipeline.cfg.CEP4)
+foreach(_file pipeline.cfg.CEP4)
   # _src -> _dst
   set(_src ${CMAKE_CURRENT_SOURCE_DIR}/${_file}.tmpl)
   set(_dst ${CMAKE_CURRENT_BINARY_DIR}/${_file})
