@@ -27,8 +27,13 @@ class RARPC(RPCWrapper):
     def getResourceClaimStatuses(self):
         return self.rpc('GetResourceClaimStatuses')
 
-    def getResourceClaims(self):
-        claims = self.rpc('GetResourceClaims')
+    def getResourceClaims(self, lower_bound=None, upper_bound=None, task_id=None, status=None, resource_type=None, extended=False):
+        claims = self.rpc('GetResourceClaims', lower_bound=lower_bound,
+                                               upper_bound=upper_bound,
+                                               task_id=task_id,
+                                               status=status,
+                                               resource_type=resource_type,
+                                               extended=extended)
         for claim in claims:
             claim['starttime'] = claim['starttime'].datetime()
             claim['endtime'] = claim['endtime'].datetime()

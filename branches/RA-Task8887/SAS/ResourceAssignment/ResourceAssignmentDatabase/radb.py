@@ -25,7 +25,7 @@ TODO: documentation
 import logging
 import psycopg2
 import psycopg2.extras
-import datetime
+from datetime import datetime, timedelta
 import time
 from optparse import OptionParser
 from lofar.common import dbcredentials
@@ -505,10 +505,53 @@ class RADatabase:
 
         return result
 
-    def getResourceClaims(self):
-        query = '''SELECT * from resource_allocation.resource_claim_view'''
+    def getResourceClaims(self, lower_bound=None, upper_bound=None, task_id=None, status=None, resource_type=None, extended=False):
+        extended |= resource_type is not None
+        query = '''SELECT * from %s''' % ('resource_allocation.resource_claim_extended_view' if extended else 'resource_allocation.resource_claim_view')
 
-        return list(self._executeQuery(query, fetch=_FETCH_ALL))
+        if lower_bound and not isinstance(lower_bound, datetime):
+            lower_bound = None
+
+        if upper_bound and not isinstance(upper_bound, datetime):
+            upper_bound = None
+
+        if status is not None and isinstance(status, basestring):
+            #convert status string to status.id
+            status = self.getResourceClaimStatusId(status)
+
+        if resource_type is not None and isinstance(resource_type, basestring):
+            #convert resource_type string to resource_type.id
+            resource_type = self.getResourceTypeId(resource_type)
+
+        qargs = None
+
+        if lower_bound or upper_bound or task_id is not None or status is not None or resource_type is not None:
+            conditions = []
+            qargs = []
+
+            if lower_bound:
+                conditions.append('endtime >= %s')
+                qargs.append(lower_bound)
+
+            if upper_bound:
+                conditions.append('starttime <= %s')
+                qargs.append(upper_bound)
+
+            if task_id is not None:
+                conditions.append('task_id = %s')
+                qargs.append(task_id)
+
+            if status is not None:
+                conditions.append('status_id = %s')
+                qargs.append(status)
+
+            if resource_type is not None and extended:
+                conditions.append('resource_type_id = %s')
+                qargs.append(resource_type)
+
+            query += ' WHERE ' + ' AND '.join(conditions)
+
+        return list(self._executeQuery(query, qargs, fetch=_FETCH_ALL))
 
     def getResourceClaim(self, id):
         query = '''SELECT * from resource_allocation.resource_claim_view rcv
@@ -622,11 +665,6 @@ class RADatabase:
 
         return self.cursor.rowcount > 0
 
-    def getResourceClaimsForTask(self, task_id):
-        query = '''SELECT * from resource_allocation.resource_claim_view
-        WHERE resource_allocation.resource_claim_view.task_id = %s'''
-
-        return list(self._executeQuery(query, [task_id], fetch=_FETCH_ALL))
 
     def updateTaskAndResourceClaims(self, task_id, starttime=None, endtime=None, task_status=None, claim_status=None, session_id=None, username=None, user_id=None, commit=True):
         if claim_status and isinstance(claim_status, basestring):
@@ -729,7 +767,19 @@ if __name__ == '__main__':
         print '\n-- ' + str(method.__name__) + ' --'
         print '\n'.join([str(x) for x in method()])
 
-
+    print db.getResourceClaims()
+    print
+    print db.getResourceClaims(task_id=440)
+    print
+    print db.getResourceClaims(lower_bound=datetime.utcnow() + timedelta(days=9))
+    print
+    print db.getResourceClaims(upper_bound=datetime.utcnow() + timedelta(days=19))
+    print
+    print db.getResourceClaims(status='allocated')
+    print
+    print db.getResourceClaims(status='claimed')
+    print
+    print db.getResourceClaims(resource_type='storage')
     #resultPrint(db.getTaskStatuses)
     #resultPrint(db.getTaskStatusNames)
     #resultPrint(db.getTaskTypes)
@@ -754,27 +804,27 @@ if __name__ == '__main__':
     #for s in db.getSpecifications():
         #db.deleteSpecification())
 
-    result = db.insertSpecificationAndTask(1234, 5678, 600, 0, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), "", False)
-    print result
+    #result = db.insertSpecificationAndTask(1234, 5678, 600, 0, datetime.utcnow(), datetime.utcnow() + timedelta(hours=1), "", False)
+    #print result
 
-    resultPrint(db.getSpecifications)
-    resultPrint(db.getTasks)
+    #resultPrint(db.getSpecifications)
+    #resultPrint(db.getTasks)
 
-    task = db.getTask(result['task_id'])
-    resources = db.getResources()
+    #task = db.getTask(result['task_id'])
+    #resources = db.getResources()
 
-    claims = [{'resource_id':r['id'],
-            'starttime':task['starttime'],
-            'endtime':task['endtime'],
-            'status':'claimed',
-            'claim_size':1} for r in resources]
+    #claims = [{'resource_id':r['id'],
+            #'starttime':task['starttime'],
+            #'endtime':task['endtime'],
+            #'status':'claimed',
+            #'claim_size':1} for r in resources]
 
-    db.insertResourceClaims(task['id'], claims, 1, 'paulus', 1, False)
+    #db.insertResourceClaims(task['id'], claims, 1, 'paulus', 1, False)
 
-    resultPrint(db.getResourceClaims)
-    raw_input()
+    #resultPrint(db.getResourceClaims)
+    #raw_input()
 
-    db.commit()
+    #db.commit()
 
 
 
@@ -785,7 +835,7 @@ if __name__ == '__main__':
 
     #predTaskId = None
     #for i in range(2):
-        #specId = db.insertSpecification(datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=4), "")
+        #specId = db.insertSpecification(datetime.utcnow(), datetime.utcnow() + timedelta(hours=4), "")
         #taskId = db.insertTask(1234+i, 5678+i, 600, 0, specId)
 
         #if predTaskId:
@@ -794,7 +844,7 @@ if __name__ == '__main__':
 
         #resources = db.getResources()
         #for r in resources:
-            #rcId = db.insertResourceClaim(r['id'], taskId, datetime.datetime.utcnow() + datetime.timedelta(hours=2*i), datetime.datetime.utcnow() + datetime.timedelta(hours=2*(i+1)), 0, 1, 10, 'einstein', -1)
+            #rcId = db.insertResourceClaim(r['id'], taskId, datetime.utcnow() + timedelta(hours=2*i), datetime.utcnow() + timedelta(hours=2*(i+1)), 0, 1, 10, 'einstein', -1)
 
 
     ##tasks = db.getTasks()
@@ -808,7 +858,7 @@ if __name__ == '__main__':
     ##for i in range(1):
         ##taskId = db.insertTask(1234, 5678, 600, 0, 1)
         ##for j in range(2*i):
-            ##rcId = db.insertResourceClaim(j, taskId, datetime.datetime.utcnow() + datetime.timedelta(hours=4*i), datetime.datetime.utcnow() + datetime.timedelta(hours=4*i+3.5), 0, 4, 10, 'einstein', -1)
+            ##rcId = db.insertResourceClaim(j, taskId, datetime.utcnow() + timedelta(hours=4*i), datetime.utcnow() + timedelta(hours=4*i+3.5), 0, 4, 10, 'einstein', -1)
 
         ##time.sleep(0.5)
 
