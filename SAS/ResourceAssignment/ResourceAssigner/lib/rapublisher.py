@@ -56,9 +56,9 @@ class RAPublisher():
     def close(self):
         self.tobus.close()
 
-    def notifyTaskSpecified(self, taskId, status):
-        content = { 'task_id' : taskId, 'status' : status }
-        logger.info('notifyTaskSpecified: %s' % content)
-        msg = EventMessage(context=self.notification_prefix + 'TaskSpecified', content=content)
+    def notifyTaskStatusChanged(self, taskId, momId, otdbId, status):
+        content = { 'task_id':taskId, 'status':status, 'mom_id':momId, 'otdb_id':otdbId }
+        logger.info('notifyTaskStatusChanged: %s' % content)
+        msg = EventMessage(context=self.notification_prefix + 'TaskStatusChanged', content=content)
         self.tobus.send(msg)
 
