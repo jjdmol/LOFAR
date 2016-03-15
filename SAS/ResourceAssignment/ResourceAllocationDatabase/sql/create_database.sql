@@ -261,7 +261,7 @@ COMMENT ON VIEW virtual_instrument.resource_view
 
 
 CREATE OR REPLACE VIEW resource_allocation.resource_claim_extended_view AS
- SELECT rcv.*, rv.*
+ SELECT rcv.*, rv.name as resource_name, rv.type_id as resource_type_id, rv.name as resource_type_name
    FROM resource_allocation.resource_claim_view rcv
    JOIN virtual_instrument.resource_view rv ON rcv.resource_id = rv.id;
 ALTER TABLE resource_allocation.resource_claim_extended_view
