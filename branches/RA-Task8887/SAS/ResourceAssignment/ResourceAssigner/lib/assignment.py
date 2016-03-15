@@ -141,10 +141,10 @@ class ResourceAssigner():
             if claimed:
                 self.radbrpc.updateTaskAndResourceClaims(taskId, claim_status='allocated')
                 self.radbrpc.updateTask(taskId, status='scheduled')
-                self.raPublisher.notifyTaskSpecified(taskId, status='scheduled')
+                self.raPublisher.notifyTaskStatusChanged(taskId, momId, sasId, 'scheduled')
             else:
                 self.radbrpc.updateTask(taskId, status='conflict')
-                self.raPublisher.notifyTaskSpecified(taskId, status='conflict')
+                self.raPublisher.notifyTaskStatusChanged(taskId, momId, sasId, 'conflict')
 
         try:
             predecessor_ids = [int(id) for id in parsets.keys() if id != str(sasId)]
