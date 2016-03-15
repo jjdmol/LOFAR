@@ -42,7 +42,6 @@ while getopts "hv:" opt; do
         ;;
   esac
 done
-[ $OPTIND -eq 1 ] && usage
 
 # Make sure we obtain info about the project source!
 VERSION_INFO=`$VERSION_DOCKER`
