@@ -132,7 +132,7 @@ CREATE TABLE resource_allocation.task (
   otdb_id integer,
   status_id integer NOT NULL REFERENCES resource_allocation.task_status DEFERRABLE INITIALLY IMMEDIATE,
   type_id integer NOT NULL REFERENCES resource_allocation.task_type DEFERRABLE INITIALLY IMMEDIATE,
-  specification_id integer NOT NULL REFERENCES resource_allocation.specification DEFERRABLE INITIALLY IMMEDIATE,
+  specification_id integer NOT NULL REFERENCES resource_allocation.specification  ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_allocation.task
