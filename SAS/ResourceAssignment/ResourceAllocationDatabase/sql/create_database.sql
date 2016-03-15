@@ -16,6 +16,7 @@ CREATE SCHEMA resource_allocation;
 BEGIN;
 
 -- This is insanity, but works, order needs to be the reverse of the CREATE TABLE statements
+DROP VIEW IF EXISTS virtual_instrument.resource_view CASCADE;
 DROP VIEW IF EXISTS resource_allocation.task_view CASCADE;
 DROP VIEW IF EXISTS resource_allocation.resource_claim_view CASCADE;
 DROP TABLE IF EXISTS resource_allocation.config CASCADE;
@@ -248,5 +249,24 @@ ALTER TABLE resource_allocation.resource_claim_view
 COMMENT ON VIEW resource_allocation.resource_claim_view
   IS 'plain view on resource_claim table, including resource_claim_status.name';
 
+
+CREATE OR REPLACE VIEW virtual_instrument.resource_view AS
+ SELECT r.id, r.name, r.type_id, rt.name as type_name
+   FROM virtual_instrument.resource r
+   JOIN virtual_instrument.resource_type rt ON rt.id = r.type_id;
+ALTER TABLE virtual_instrument.resource_view
+  OWNER TO resourceassignment;
+COMMENT ON VIEW virtual_instrument.resource_view
+  IS 'plain view on resource table including task_type.name';
+
+
+CREATE OR REPLACE VIEW resource_allocation.resource_claim_extended_view AS
+ SELECT rcv.*, rv.*
+   FROM resource_allocation.resource_claim_view rcv
+   JOIN virtual_instrument.resource_view rv ON rcv.resource_id = rv.id;
+ALTER TABLE resource_allocation.resource_claim_extended_view
+  OWNER TO resourceassignment;
+COMMENT ON VIEW resource_allocation.resource_claim_extended_view
+  IS 'extended view on resource_claim table, including resource_claim_status.name and the resource itself';
 
 COMMIT;
