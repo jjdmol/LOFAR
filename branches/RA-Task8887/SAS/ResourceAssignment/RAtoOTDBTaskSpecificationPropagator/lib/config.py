@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # $Id$
 
-DEFAULT_BUSNAME = 'lofar.ra.command'
-DEFAULT_SERVICENAME = 'RAService'
+#DEFAULT_BUSNAME = 'lofar.ra.command'
+#DEFAULT_SERVICENAME = 'RAtoORTBTaskSpecificationPropagationService'
 
 try:
     from lofar.sas.resourceassignment.resourceassigner.config import DEFAULT_NOTIFICATION_BUSNAME as RATASKSCHEDULED_NOTIFICATION_BUSNAME
