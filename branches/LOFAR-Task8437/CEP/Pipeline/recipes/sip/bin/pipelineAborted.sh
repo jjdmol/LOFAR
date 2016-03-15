@@ -8,17 +8,43 @@
 #
 # Syntax:
 #
-#   runPipeline.sh <obsid> || pipelineAborted.sh <obsid>
+#   runPipeline.sh -o <obsid> || pipelineAborted.sh -o <obsid>
 
-OBSID=$1
+# ======= Defaults
 
-if [ -z "$OBSID" ]; then
-  echo "Usage: $0 <obsid>"
-  exit 1
-fi
+# Obs ID
+OBSID=
 
 # Queue on which to post status changes
 SETSTATUS_BUS=lofar.otdb.setStatus
+
+# ======= Parse command-line parameters
+
+function usage() {
+  echo "$0 -o OBSID [options]"
+  echo ""
+  echo "  -o OBSID           Task identifier"
+  echo "  -b busname         Bus name to post status changes on (default: $SETSTATUS_BUS)"
+  exit 1
+}
+
+while getopts "o:c:p:b:" opt; do
+  case $opt in
+    h)  usage
+        ;;
+    o)  OBSID="$OPTARG"
+        ;;
+    b)  SETSTATUS_BUS="$OPTARG"
+        ;;
+    \?) error "Invalid option: -$OPTARG"
+        ;;
+    :)  error "Option requires an argument: -$OPTARG"
+        ;;
+  esac
+done
+[ -z "$OBSID" ] && usage
+
+# ======= Run
 
 # Mark as aborted
 setStatus.py -o $OBSID -s aborted -b $SETSTATUS_BUS || true

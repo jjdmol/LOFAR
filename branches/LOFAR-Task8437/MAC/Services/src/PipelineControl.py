@@ -351,11 +351,12 @@ class PipelineControl(OTDBBusListener):
         " -e LUSER=$UID"
         " -v $HOME/.ssh:/home/lofar/.ssh:ro"
         " -e SLURM_JOB_ID=$SLURM_JOB_ID"
-        " runPipeline.sh {obsid} --config /opt/lofar/share/pipeline/pipeline.cfg.{cluster}"
+        " runPipeline.sh -o {obsid} -c /opt/lofar/share/pipeline/pipeline.cfg.{cluster} -b {status_bus}"
       .format(
         obsid = treeId,
         tag = parset.dockerTag(),
-        cluster = parset.processingCluster()
+        cluster = parset.processingCluster(),
+        status_bus = self.setStatus_busname,
       ),
 
       sbatch_params=sbatch_params
@@ -369,10 +370,11 @@ class PipelineControl(OTDBBusListener):
       "docker run --rm lofar-pipeline:{tag}"
         " --net=host"
         " -e LUSER=$UID"
-        " pipelineAborted.sh {obsid}"
+        " pipelineAborted.sh -o {obsid} -b {status_bus}"
       .format(
         obsid = treeId,
         tag = parset.dockerTag(),
+        status_bus = self.setStatus_busname,
       ),
 
       sbatch_params=[
