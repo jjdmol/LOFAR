@@ -150,32 +150,37 @@ class Slurm(object):
 
     logger.debug("scancel output: %s" % (output,))
 
-  def jobs(self):
-    stdout = self._runCommand("scontrol show job --oneliner")
+  def jobs(self, maxage=datetime.timedelta(365)):
+    starttime = (datetime.datetime.utcnow() - maxage).strftime("%FT%T")
 
-    if stdout == "No jobs in the system":
-      return {}
+    stdout = self._runCommand("sacct --starttime=%s --noheader --parsable2 --format=jobid,jobname" % (starttime,))
 
     jobs = {}
     for l in stdout.split("\n"):
       # One line is one job
-      job_properties = {}
+      jobid, jobname = l.split("|")
+      jobs_properties = { "JobId": jobid, "JobName": jobname }
 
-      # Information is in k=v pairs
-      for i in l.split():
-        k,v = i.split("=", 1)
-        job_properties[k] = v
-
-      if "JobName" not in job_properties:
-        logger.warning("Could not find job name in line: %s" % (l,))
-        continue
-
-      name = job_properties["JobName"]
-      if name in jobs:
-        logger.warning("Duplicate job name: %s" % (name,))
-      jobs[name] = job_properties
+      # warn of duplicate names
+      if jobname in jobs:
+        logger.warning("Duplicate job name: %s" % (jobname,))
+      jobs[jobname] = job_properties
 
     return jobs
+
+  def jobid(self, jobname):
+    stdout = self._runCommand("sacct --starttime=2016-01-01 --noheader --parsable2 --format=jobid --name=%s" % (jobname,))
+
+    if stdout == "":
+      return None
+
+    lines = stdout.split("\n")
+
+    if len(lines) > 1:
+      logger.warning("Duplicate job name: %s" % (jobname,))
+
+    # Use last occurance if there are multiple
+    return lines[-1]
 
 class PipelineControl(OTDBBusListener):
   def __init__(self, otdb_busname=None, setStatus_busname=None, **kwargs):
@@ -216,19 +221,8 @@ class PipelineControl(OTDBBusListener):
 
     return True
 
-  @classmethod
-  def _slurmJobNames(self, parsets, allowed):
-    names = []
-
-    for p in parsets:
-      jobName = p.slurmJobName()
-
-      if jobName not in allowed:
-        raise KeyError("No SLURM job for predecessor %d (JobName '%s')." % (p.treeId(), jobName))
-
-      names.append(jobName)
-
-    return names
+  def _slurmJobIds(self, parsets):
+    return [self.slurm.jobid(p.slurmJobName()) for p in parsets]
 
   def _getParset(self, treeId):
     return Parset(self.parset_rpc( OtdbID=treeId, timeout=10 )[0])
@@ -293,19 +287,6 @@ class PipelineControl(OTDBBusListener):
     logger.info("Obtaining predecessor parsets")
     preparsets = self._getPredecessorParsets(parset)
 
-    # Collect SLURM job information
-    logger.info("Obtaining SLURM job list")
-    slurm_jobs = self.slurm.jobs()
-
-    """
-      Update OTDB before scheduling the SLURM jobs,
-      as the SLURM jobs will set the status too.
-    """
-
-    # Set OTDB status to QUEUED
-    logger.info("Setting status to QUEUED")
-    self._setStatus(treeId, "queued")
-
     """
       Schedule "docker-runPipeline.sh", which will fetch the parset and run the pipeline within
       a SLURM job.
@@ -337,7 +318,7 @@ class PipelineControl(OTDBBusListener):
     if min_starttime:
       sbatch_params.append("--begin=%s" % (min_starttime.strftime("%FT%T"),))
 
-    predecessor_jobs = self._slurmJobNames([x for x in preparsets if x.isPipeline()], slurm_jobs.keys())
+    predecessor_jobs = self._slurmJobIds([x for x in preparsets if x.isPipeline()])
     if predecessor_jobs:
       sbatch_params.append("--dependency=%s" % (",".join(("afterok:%s" % x for x in predecessor_jobs)),))
 
@@ -386,6 +367,17 @@ class PipelineControl(OTDBBusListener):
       ]
     )
     logger.info("Scheduled SLURM job %s" % (slurm_cancel_job_id,))
+
+    """
+      Update OTDB status. Note the possible race condition
+      as the SLURM jobs will set the status too.
+    """
+
+    # Set OTDB status to QUEUED
+    # TODO: How to avoid race condition with runPipeline.sh setting the status to STARTED
+    #       when the SLURM job starts running?
+    logger.info("Setting status to QUEUED")
+    self._setStatus(treeId, "queued")
 
     logger.info("Pipeline processed.")
 
