@@ -176,12 +176,29 @@ CREATE TABLE resource_allocation.resource_claim (
   status_id integer NOT NULL REFERENCES resource_allocation.resource_claim_status DEFERRABLE INITIALLY IMMEDIATE,
   session_id integer NOT NULL REFERENCES resource_allocation.claim_session DEFERRABLE INITIALLY IMMEDIATE,
   claim_size bigint NOT NULL,
-  nr_of_parts int NOT NULL DEFAULT 1,
   username text,
   user_id integer,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_allocation.resource_claim
+  OWNER TO resourceassignment;
+
+CREATE TABLE resource_allocation.resource_claim_property_type (
+  id serial NOT NULL,
+  name text NOT NULL,
+  PRIMARY KEY (id)
+) WITH (OIDS=FALSE);
+ALTER TABLE resource_allocation.resource_claim_property_type
+  OWNER TO resourceassignment;
+
+CREATE TABLE resource_allocation.resource_claim_property (
+  id serial NOT NULL,
+  resource_claim_id integer NOT NULL REFERENCES resource_allocation.resource_claim ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  type_id integer NOT NULL REFERENCES resource_allocation.resource_claim_property_type DEFERRABLE INITIALLY IMMEDIATE,
+  value int NOT NULL DEFAULT 1,
+  PRIMARY KEY (id)
+) WITH (OIDS=FALSE);
+ALTER TABLE resource_allocation.resource_claim_property
   OWNER TO resourceassignment;
 
 CREATE TABLE resource_monitoring.resource_capacity (
@@ -268,5 +285,19 @@ ALTER TABLE resource_allocation.resource_claim_extended_view
   OWNER TO resourceassignment;
 COMMENT ON VIEW resource_allocation.resource_claim_extended_view
   IS 'extended view on resource_claim table, including resource_claim_status.name and the resource itself';
+
+
+CREATE OR REPLACE VIEW resource_allocation.resource_claim_property_view AS
+  SELECT rcv.*, rcp.type_id as property_type_id, rcpt.name as property_type, rcp.value as property_value
+   FROM resource_allocation.resource_claim_view rcv
+   JOIN resource_allocation.resource_claim_property rcp ON rcv.id = rcp.resource_claim_id
+   JOIN resource_allocation.resource_claim_property_type rcpt ON rcpt.id = rcp.type_id;
+ALTER TABLE resource_allocation.resource_claim_property_view
+  OWNER TO resourceassignment;
+COMMENT ON VIEW resource_allocation.resource_claim_property_view
+  IS 'view including resource_claim_properties on resource_claim table for resource_claims with on or more properties';
+
+
+
 
 COMMIT;
