@@ -26,13 +26,13 @@ reads the info from the RA DB and sends it to OTDB in the correct format.
 """
 
 import logging
-from datetime import datetime
+import datetime
 import time
 
 from lofar.messaging.RPC import RPC, RPCException
 from lofar.parameterset import parameterset
 
-from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC
+from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC as RADBRPC
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME as RADB_BUSNAME
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
 
@@ -67,8 +67,8 @@ class RAtoOTDBPropagator():
             radb_broker = broker
             otdb_broker = broker
 
-        self.radbrpc = RARPC(servicename=radb_servicename, busname=radb_busname, broker=radb_broker) ##ForwardExceptions=True?
-        self.otdbrpc = OTDBRPC(otdb_servicename, busname=otdb_busname, broker=otdb_broker, ForwardExceptions=True)
+        self.radbrpc = RADBRPC(busname=radb_busname, servicename=radb_servicename, broker=radb_broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
+        self.otdbrpc = OTDBRPC(busname=otdb_busname, servicename=otdb_servicename, broker=otdb_broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
         self.translator = RAtoOTDBTranslator()
 
     def __enter__(self):
@@ -90,34 +90,37 @@ class RAtoOTDBPropagator():
         self.radbrpc.close()
         self.otdbrpc.close()
 
-    def doPropagation(self, raId, otdbId, momId, status): #status has no default.
-        logger.info('doPropagation: otdbId=%s momId=%s' % (otdbId, momId))
-        
-        if not otdbId:
-            logger.warning('doPropagation no valid otdbId: otdbId=%s' % (otdbId, momId))
+    def doTaskConflict(self, ra_id, otdb_id, mom_id):
+        logger.info('doTaskConflict: otdb_id=%s mom_id=%s' % (otdb_id, mom_id))
+        if not otdb_id:
+            logger.warning('doTaskConflict no valid otdb_id: otdb_id=%s' % (otdb_id,))
             return
-        
-        if status == 'conflict':
-            self.otdbrpc.TaskSetStatus(otdbId, 'conflict')
-        elif status == 'scheduled':
-            RAinfo = self.getRAinfo(raId)
-            OTDBinfo = self.translator.doTranslation(RAinfo)
-            self.setOTDBinfo(otdbId, OTDBinfo, 'scheduled')
-        else:
-            logger.warning('doPropagation received unknown status: %s' % (status,))
+        self.otdbrpc.taskSetStatus(otdb_id, 'conflict')
+
+    def doTaskScheduled(self, ra_id, otdb_id, mom_id):
+        logger.info('doTaskScheduled: otdb_id=%s mom_id=%s' % (otdb_id, mom_id))
+        if not otdb_id:
+            logger.warning('doTaskScheduled no valid otdb_id: otdb_id=%s' % (otdb_id,))
+            return
+        ra_info = self.getRAinfo(ra_id)
+        otdb_info = self.translator.CreateParset(mom_id, ra_info)
+        self.setOTDBinfo(otdb_id, otdb_info, 'scheduled')
     
-    def getRAinfo(raId):
+    def getRAinfo(self, ra_id):
         info = {}
-        task = self.radbrpc.getTask(raId)
-        claims = self.radbrpc.getResourceClaimsForTask(raId)
-        resource_ids = [x['resource_id'] for x in claims]
-        all_resources = self.radbrpc.getResources()
-        resources = [all_resources[id] for id in resource_ids]
-        info["starttime"] = task["starttime"]
-        info["endtime"] = task["endtime"]
+        task = self.radbrpc.getTask(ra_id)
+        claims = self.radbrpc.getResourceClaims(task_id=ra_id, extended=True)
+        for claim in claims:
+            print claim
+        #resource_ids = [x['resource_id'] for x in claims]
+        #all_resources = self.radbrpc.getResources()
+        #resources = [all_resources[id] for id in resource_ids]
+        info["starttime"] = task["starttime"] + datetime.timedelta(hours=1)
+        info["endtime"] = task["endtime"] + datetime.timedelta(hours=1)
         info["status"] = task["status"]
+        return info
     
-    def setOTDBinfo(otdbId, OTDBinfo, OTDBstatus)
-        r = self.otdbrpc.taskSetSpecification(otdbId, OTDBinfo('OTDBkeys'))
-        if r:
-            r = self.otdbrpc.saskSetStatus(otdbId, OTDBstatus)
+    def setOTDBinfo(self, otdb_id, otdb_info, otdb_status):
+        self.otdbrpc.taskSetSpecification(otdb_id, otdb_info)
+        #self.otdbrpc.taskPrepareForScheduling(otdb_id, otdb_info["LOFAR.ObsSW.Observation.startTime"], otdb_info["LOFAR.ObsSW.Observation.stopTime"])
+        self.otdbrpc.taskSetStatus(otdb_id, otdb_status)

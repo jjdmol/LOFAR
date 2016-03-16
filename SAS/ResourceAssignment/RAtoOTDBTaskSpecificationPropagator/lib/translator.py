@@ -27,9 +27,13 @@ reads the info from the RA DB and sends it to OTDB in the correct format.
 
 import logging
 
-from lofar.parameterset import parameterset
+#from lofar.parameterset import parameterset
 
 logger = logging.getLogger(__name__)
+
+""" Prefix that is common to all parset keys, depending on the exact source. """
+PREFIX="LOFAR.ObsSW."
+##TODO use this.
 
 class RAtoOTDBTranslator():
     def __init__(self):
@@ -37,16 +41,17 @@ class RAtoOTDBTranslator():
         RAtoOTDBTranslator translates values from the RADB into parset keys to be stored in an OTDB Tree
         """
 
-    def doTranslation(self, otdbId, momId, RAinfo):
-        logger.info('doTranslation: start=%s, end=%s' % (RAinfo['starttime'], RAinfo['endtime']))
+    def CreateParset(self, mom_id, ra_info):
+        logger.info('CreateParset: start=%s, end=%s' % (ra_info['starttime'], ra_info['endtime']))
 
-        parset = parameterset()
-        momId = parset.add('Observation.momID', momId) ##TODO probably add ObsSw. to all keys?
-        parset.add('Observation.startTime', RAinfo['starttime'].strpfime('%Y-%m-%d %H:%M:%S'))
-        parset.add('Observation.stopTime', RAinfo['endtime'].strpfime('%Y-%m-%d %H:%M:%S'))
+        parset = {}
+        #parset[PREFIX+'Observation.momID'] = str(mom_id)
+        parset[PREFIX+'Observation.startTime'] = ra_info['starttime'].strftime('%Y-%m-%d %H:%M:%S')
+        parset[PREFIX+'Observation.stopTime'] = ra_info['endtime'].strftime('%Y-%m-%d %H:%M:%S')
 
-        if stations in RAinfo:
-            parset.add('Observation.VirtualInstrument.stationList', stations)
+        if "stations" in ra_info.keys():
+            parset[PREFIX+'Observation.VirtualInstrument.stationList'] = stations
+        return parset
 
 
 
