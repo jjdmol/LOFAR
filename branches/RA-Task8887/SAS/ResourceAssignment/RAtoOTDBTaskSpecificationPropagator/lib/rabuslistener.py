@@ -28,7 +28,7 @@ Typical usage is to derive your own subclass from RABusListener and implement th
 """
 
 from lofar.messaging.messagebus import AbstractBusListener
-from .config import DEFAULT_NOTIFICATION_BUSNAME, RATASKSCHEDULED_NOTIFICATIONNAME
+from lofar.sas.resourceassignment.resourceassigner.config import RA_NOTIFICATION_BUSNAME, RA_NOTIFICATION_SUBJECTS
 
 import qpid.messaging
 import logging
@@ -37,11 +37,11 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 
-class RATaskScheduledBusListener(AbstractBusListener):
-    def __init__(self, busname=DEFAULT_NOTIFICATION_BUSNAME, subject=RATASKSCHEDULED_NOTIFICATIONNAME, broker=None, **kwargs):
+class RANotificationBusListener(AbstractBusListener):
+    def __init__(self, busname=RA_NOTIFICATION_BUSNAME, subject=RA_NOTIFICATION_SUBJECTS, broker=None, **kwargs):
         """
-        RATaskScheduledBusListener listens on the lofar ra message bus and calls (empty) on<SomeMessage> methods when such a message is received.
-        Typical usage is to derive your own subclass from RATaskScheduledBusListener and implement the specific on<SomeMessage> methods that you are interested in.
+        RANotificationBusListener listens on the lofar ra message bus and calls (empty) on<SomeMessage> methods when such a message is received.
+        Typical usage is to derive your own subclass from RANotificationBusListener and implement the specific on<SomeMessage> methods that you are interested in.
         :param address: valid Qpid address (default: lofar.ra.notification)
         :param broker: valid Qpid broker host (default: None, which means localhost)
         additional parameters in kwargs:
@@ -51,22 +51,27 @@ class RATaskScheduledBusListener(AbstractBusListener):
             verbose=   <bool>  Output extra logging over stdout (default: False)
         """
         address = "%s/%s" % (busname, subject)
-        super(RATaskScheduledBusListener, self).__init__(address, broker, **kwargs)
+        super(RANotificationBusListener, self).__init__(address, broker, **kwargs)
 
     def _handleMessage(self, msg):
-        logger.debug("RABusListener.handleMessage: %s" %str(msg))
+        logger.debug("RANotificationBusListener._handleMessage: %s" % str(msg))
 
-        otdbId = msg.content['otdbID']
-        momId = msg.content['momID']
-        modificationTime = msg.content['time_of_change'].datetime()
+        if msg.subject == "RA.TaskStatusChanged": ##maybe we should read the prefix from a config?
+            content = msg.content
+            logger.info('TaskStatusChanged received: status:%s id:%s otdb_id:%s mom_id:%s' % (content["status"], content["task_id"], content["otdb_id"], content["mom_id"]))
+            if content["status"] == "scheduled":
+                self.onTaskScheduled(content["task_id"], content["otdb_id"], content["mom_id"])
+            elif content["status"] == "conflict":
+                self.onTaskConflict(content["task_id"], content["otdb_id"], content["mom_id"])
+            else:
+                logger.warning('RANotificationBusListener received unknown status: %s' % (content["status"],))
 
-        self.onTaskScheduled(otdbId, momId, modificationTime)
 
-    def onTaskScheduled(self, otdbId, momId, modificationTime):
+    def onTaskScheduled(self, raId, otdbId, momId):
         pass
 
-##    def onTaskConflict(self, otdbId, momId, modificationTime):
-##        pass
+    def onTaskConflict(self, raId, otdbId, momId):
+        pass
 
 
-__all__ = ["RATaskScheduledBusListener"]
+__all__ = ["RANotificationBusListener"]

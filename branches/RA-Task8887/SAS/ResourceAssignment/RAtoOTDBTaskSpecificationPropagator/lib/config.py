@@ -5,9 +5,8 @@
 #DEFAULT_SERVICENAME = 'RAtoORTBTaskSpecificationPropagationService'
 
 try:
-    from lofar.sas.resourceassignment.resourceassigner.config import DEFAULT_NOTIFICATION_BUSNAME as RATASKSCHEDULED_NOTIFICATION_BUSNAME
-    from lofar.sas.resourceassignment.resourceassigner.config import RATASKSCHEDULED_NOTIFICATIONNAME as RATASKSCHEDULED_NOTIFICATIONNAME
+    from lofar.sas.resourceassignment.resourceassigner.config import RA_NOTIFICATION_BUSNAME
+    from lofar.sas.resourceassignment.resourceassigner.config import RA_NOTIFICATION_SUBJECTS
 except ImportError:
-    RATASKSCHEDULED_NOTIFICATION_BUSNAME = 'lofar.ra.notification'
-    RATASKSCHEDULED_NOTIFICATIONNAME = 'RA.TaskScheduled'
-#    RATASKCONFLICT_NOTIFICATIONNAME = 'RA.TaskConflict'
+    RA_NOTIFICATION_BUSNAME='lofar.ra.notification'
+    RA_NOTIFICATION_SUBJECTS='RA.*'
