@@ -43,7 +43,6 @@ class RADBHandler(MessageHandlerInterface):
             'InsertResourceClaim': self._insertResourceClaim,
             'DeleteResourceClaim': self._deleteResourceClaim,
             'UpdateResourceClaim': self._updateResourceClaim,
-            'GetResourceClaimsForTask': self._getResourceClaimsForTask,
             'UpdateTaskAndResourceClaims': self._updateTaskAndResourceClaims,
             'GetResourceGroupTypes': self._getResourceGroupTypes,
             'GetResourceGroups': self._getResourceGroups,
@@ -125,10 +124,6 @@ class RADBHandler(MessageHandlerInterface):
                                                 username=kwargs.get('username'),
                                                 user_id=kwargs.get('user_id'))
         return {'id': id, 'updated': updated}
-
-    def _getResourceClaimsForTask(self, task_id):
-        claims = self.radb.getResourceClaims(task_id=task_id)
-        return claims
 
     def _updateTaskAndResourceClaims(self, **kwargs):
         logger.info('UpdateTaskAndResourceClaims: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
