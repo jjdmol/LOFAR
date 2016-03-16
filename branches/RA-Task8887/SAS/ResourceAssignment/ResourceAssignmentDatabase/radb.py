@@ -505,7 +505,7 @@ class RADatabase:
 
         return result
 
-    def getResourceClaims(self, lower_bound=None, upper_bound=None, task_id=None, status=None, resource_type=None, extended=False):
+    def getResourceClaims(self, lower_bound=None, upper_bound=None, resource_id=None, task_id=None, status=None, resource_type=None, extended=False):
         extended |= resource_type is not None
         query = '''SELECT * from %s''' % ('resource_allocation.resource_claim_extended_view' if extended else 'resource_allocation.resource_claim_view')
 
@@ -525,7 +525,7 @@ class RADatabase:
 
         qargs = None
 
-        if lower_bound or upper_bound or task_id is not None or status is not None or resource_type is not None:
+        if lower_bound or upper_bound or resource_id is not None or task_id is not None or status is not None or resource_type is not None:
             conditions = []
             qargs = []
 
@@ -537,8 +537,12 @@ class RADatabase:
                 conditions.append('starttime <= %s')
                 qargs.append(upper_bound)
 
+            if resource_id is not None:
+                conditions.append('resource_id = %s')
+                qargs.append(resource_id)
+
             if task_id is not None:
-                conditions.append('task_id = %s')
+                conditions.append('task_id = %s' if task_id >= 0 else 'task_id != %s')
                 qargs.append(task_id)
 
             if status is not None:
@@ -660,6 +664,9 @@ class RADatabase:
                                                                                      rc_id_placeholder='%s')
 
         self._executeQuery(query, values)
+
+        self.validateResourceClaimsStatus([self.getResourceClaim(resource_claim_id)])
+
         if commit:
             self.commit()
 
@@ -718,10 +725,37 @@ class RADatabase:
         self._executeQuery(query, values)
         updated &= self.cursor.rowcount > 0
 
+        self.validateResourceClaimsStatusForTask(task_id)
+
         if commit:
             self.commit()
 
         return updated
+
+    def validateResourceClaimsStatusForTask(self, task_id, commit=True):
+        claims = self.getResourceClaims(task_id=task_id)
+        return self.validateResourceClaimsStatus(claims, commit)
+
+    def validateResourceClaimsStatus(self, claims, commit=True):
+        conflistStatusId = self.getResourceClaimStatusId('conflict')
+
+        for claim in claims:
+            otherClaims = self.getResourceClaims(resource_id=claim['resource_id'],
+                                                 lower_bound=claim['starttime'],
+                                                 upper_bound=claim['endtime'],
+                                                 task_id=-claim['task_id'])
+
+            if otherClaims:
+                self.updateResourceClaim(resource_claim_id=claim['id'], status=conflistStatusId, commit=False)
+
+        task_ids = set(c['task_id'] for x in claims)
+
+        for task_id in task_ids:
+            if self.getResourceClaims(task_id=task_id, status=conflistStatusId):
+                self.updateTask(task_id=task_id, task_status='conflict')
+
+        if commit:
+            self.commit()
 
     def insertSpecificationAndTask(self, mom_id, otdb_id, task_status, task_type, starttime, endtime, content, commit=True):
         '''
@@ -800,6 +834,11 @@ if __name__ == '__main__':
     #print db.getTaskSuccessorIds()
     #resultPrint(db.getSpecifications)
     #resultPrint(db.getResourceClaims)
+
+    claims = db.getResourceClaims()
+    db.updateTaskAndResourceClaims(claims[0]['task_id'], starttime=claims[1]['starttime'], endtime=claims[1]['endtime'])
+    print
+    print db.getResourceClaims()
 
     #for s in db.getSpecifications():
         #db.deleteSpecification())
