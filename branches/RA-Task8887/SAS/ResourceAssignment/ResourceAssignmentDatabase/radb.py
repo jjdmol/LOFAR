@@ -56,6 +56,12 @@ class RADatabase:
     def _executeQuery(self, query, qargs=None, fetch=_FETCH_NONE):
         '''execute the query and reconnect upon OperationalError'''
         try:
+            if logger.getEffectiveLevel() == logging.DEBUG: #prevent expensive string manipulation above debug level
+                log_query = ' '.join(query.replace('\n', ' ').split())
+                if qargs:
+                    log_query = log_query.format(tuple(qargs))
+                logger.debug('execute query: %s' % log_query)
+
             self.cursor.execute(query, qargs)
         except (psycopg2.OperationalError, AttributeError) as e:
             if isinstance(e, psycopg2.OperationalError):
@@ -68,7 +74,7 @@ class RADatabase:
                     self.cursor.execute(query, qargs)
                     break
                 time.sleep(i*i)
-        except psycopg2.IntegrityError as e:
+        except (psycopg2.IntegrityError, psycopg2.ProgrammingError)as e:
             logger.error("Rolling back query=\'%s\' args=\'%s\' due to error: \'%s\'" % (query, ', '.join(str(x) for x in qargs), e))
             self.rollback()
             return -1
@@ -542,8 +548,10 @@ class RADatabase:
                 qargs.append(resource_id)
 
             if task_id is not None:
+                #if task_id is normal positive we do a normal inclusive filter
+                #if task_id is negative we do an exclusive filter
                 conditions.append('task_id = %s' if task_id >= 0 else 'task_id != %s')
-                qargs.append(task_id)
+                qargs.append(abs(task_id))
 
             if status is not None:
                 conditions.append('status_id = %s')
@@ -555,7 +563,10 @@ class RADatabase:
 
             query += ' WHERE ' + ' AND '.join(conditions)
 
-        return list(self._executeQuery(query, qargs, fetch=_FETCH_ALL))
+        query += ';'
+        result = self._executeQuery(query, qargs, fetch=_FETCH_ALL)
+        result = list(result)
+        return result
 
     def getResourceClaim(self, id):
         query = '''SELECT * from resource_allocation.resource_claim_view rcv
@@ -584,10 +595,10 @@ class RADatabase:
         '''bulk insert of resource claims for a task
         claims is a list of dicts. Each dict is a claim for one resource containing the fields: starttime, endtime, status, claim_size, nr_of_parts
         '''
-        claimIds = []
+        claimIds = set()
         for c in claims:
             id = self.insertResourceClaim(c['resource_id'], task_id, c['starttime'], c['endtime'], c['status'], session_id, c['claim_size'], username, user_id, c.get('nr_of_parts', 1), False)
-            claimIds.append(id)
+            claimIds.add(id)
 
         if [x for x in claimIds if x < 0]:
             logger.error("One or more claims cloud not be inserted. Rolling back.")
@@ -596,6 +607,10 @@ class RADatabase:
 
         if commit:
             self.commit()
+
+        insertedClaims = [c for c in self.getResourceClaims(task_id=task_id) if c['id'] in claimIds]
+        self.validateResourceClaimsStatus(insertedClaims, False)
+
         return {'inserted': True, 'resource_claim_ids': claimIds }
 
     def deleteResourceClaim(self, resource_claim_id, commit=True):
@@ -740,15 +755,16 @@ class RADatabase:
         conflistStatusId = self.getResourceClaimStatusId('conflict')
 
         for claim in claims:
-            otherClaims = self.getResourceClaims(resource_id=claim['resource_id'],
-                                                 lower_bound=claim['starttime'],
-                                                 upper_bound=claim['endtime'],
-                                                 task_id=-claim['task_id'])
+            if claim['status_id'] != conflistStatusId:
+                otherClaims = self.getResourceClaims(resource_id=claim['resource_id'],
+                                                    lower_bound=claim['starttime'],
+                                                    upper_bound=claim['endtime'],
+                                                    task_id=-claim['task_id'])
 
-            if otherClaims:
-                self.updateResourceClaim(resource_claim_id=claim['id'], status=conflistStatusId, commit=False)
+                if otherClaims:
+                    self.updateResourceClaim(resource_claim_id=claim['id'], status=conflistStatusId, commit=False)
 
-        task_ids = set(c['task_id'] for x in claims)
+        task_ids = set(c['task_id'] for c in claims)
 
         for task_id in task_ids:
             if self.getResourceClaims(task_id=task_id, status=conflistStatusId):
@@ -784,7 +800,7 @@ class RADatabase:
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                        level=logging.INFO)
+                        level=logging.DEBUG)
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]",
@@ -801,19 +817,23 @@ if __name__ == '__main__':
         print '\n-- ' + str(method.__name__) + ' --'
         print '\n'.join([str(x) for x in method()])
 
-    print db.getResourceClaims()
-    print
-    print db.getResourceClaims(task_id=440)
-    print
-    print db.getResourceClaims(lower_bound=datetime.utcnow() + timedelta(days=9))
-    print
-    print db.getResourceClaims(upper_bound=datetime.utcnow() + timedelta(days=19))
-    print
-    print db.getResourceClaims(status='allocated')
-    print
-    print db.getResourceClaims(status='claimed')
-    print
-    print db.getResourceClaims(resource_type='storage')
+    for s in db.getSpecifications():
+        db.deleteSpecification(s['id'])
+
+    #print db.getResourceClaims()
+    #print
+    #print db.getResourceClaims(task_id=440)
+    #print
+    #print db.getResourceClaims(lower_bound=datetime.utcnow() + timedelta(days=9))
+    #print
+    #print db.getResourceClaims(upper_bound=datetime.utcnow() + timedelta(days=19))
+    #print
+    #print db.getResourceClaims(status='allocated')
+    #print
+    #print db.getResourceClaims(status='claimed')
+    #print
+    #print db.getResourceClaims(resource_type='storage')
+
     #resultPrint(db.getTaskStatuses)
     #resultPrint(db.getTaskStatusNames)
     #resultPrint(db.getTaskTypes)
@@ -835,35 +855,34 @@ if __name__ == '__main__':
     #resultPrint(db.getSpecifications)
     #resultPrint(db.getResourceClaims)
 
-    claims = db.getResourceClaims()
-    db.updateTaskAndResourceClaims(claims[0]['task_id'], starttime=claims[1]['starttime'], endtime=claims[1]['endtime'])
-    print
-    print db.getResourceClaims()
+    #claims = db.getResourceClaims()
+    #db.updateTaskAndResourceClaims(claims[0]['task_id'], starttime=claims[1]['starttime'], endtime=claims[1]['endtime'])
+    #print
+    #print db.getResourceClaims()
 
-    #for s in db.getSpecifications():
-        #db.deleteSpecification())
 
-    #result = db.insertSpecificationAndTask(1234, 5678, 600, 0, datetime.utcnow(), datetime.utcnow() + timedelta(hours=1), "", False)
-    #print result
+    for i in range(2):
+        result = db.insertSpecificationAndTask(1234+i, 5678+i, 600, 0, datetime.utcnow(), datetime.utcnow() + timedelta(hours=1), "", False)
+        print result
 
-    #resultPrint(db.getSpecifications)
-    #resultPrint(db.getTasks)
+        #resultPrint(db.getSpecifications)
+        #resultPrint(db.getTasks)
 
-    #task = db.getTask(result['task_id'])
-    #resources = db.getResources()
+        task = db.getTask(result['task_id'])
+        resources = db.getResources()
 
-    #claims = [{'resource_id':r['id'],
-            #'starttime':task['starttime'],
-            #'endtime':task['endtime'],
-            #'status':'claimed',
-            #'claim_size':1} for r in resources]
+        claims = [{'resource_id':r['id'],
+                'starttime':task['starttime'],
+                'endtime':task['endtime'],
+                'status':'claimed',
+                'claim_size':1} for r in resources[:1]]
 
-    #db.insertResourceClaims(task['id'], claims, 1, 'paulus', 1, False)
+        db.insertResourceClaims(task['id'], claims, 1, 'paulus', 1, False)
 
-    #resultPrint(db.getResourceClaims)
-    #raw_input()
+        #resultPrint(db.getResourceClaims)
+        #raw_input()
 
-    #db.commit()
+    db.commit()
 
 
 
