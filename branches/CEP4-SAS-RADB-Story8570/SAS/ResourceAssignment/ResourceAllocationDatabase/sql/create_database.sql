@@ -257,7 +257,7 @@ COMMENT ON VIEW resource_allocation.task_view
 
 CREATE OR REPLACE VIEW resource_allocation.resource_claim_view AS
  SELECT rc.id, rc.resource_id, rc.task_id, rc.starttime, rc.endtime,
-    rc.status_id, rc.session_id, rc.claim_size, rc.nr_of_parts, rc.username, rc.user_id,
+    rc.status_id, rc.session_id, rc.claim_size, rc.username, rc.user_id,
     rcs.name AS status
    FROM resource_allocation.resource_claim rc
    JOIN resource_allocation.resource_claim_status rcs ON rcs.id = rc.status_id;
