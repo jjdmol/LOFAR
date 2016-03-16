@@ -38,6 +38,9 @@ class RADBHandler(MessageHandlerInterface):
 
         self.service2MethodMap = {
             'GetResourceClaimStatuses': self._getResourceClaimStatuses,
+            'GetResourceClaimProperties': self._getResourceClaimProperties,
+            'InsertResourceClaimProperty': self._insertResourceClaimProperty,
+            'GetResourceClaimPropertyTypes': self._getResourceClaimPropertyTypes,
             'GetResourceClaims': self._getResourceClaims,
             'GetResourceClaim': self._getResourceClaim,
             'InsertResourceClaim': self._insertResourceClaim,
@@ -77,6 +80,16 @@ class RADBHandler(MessageHandlerInterface):
     def _getResourceClaimStatuses(self):
         return self.radb.getResourceClaimStatuses()
 
+    def _getResourceClaimPropertyTypes(self):
+        return self.radb.getResourceClaimPropertyTypes()
+
+    def _getResourceClaimProperties(self, **kwargs):
+        return self.radb.getResourceClaimProperties(claim_id=kwargs.get('claim_id'), task_id=kwargs.get('task_id'))
+
+    def _insertResourceClaimProperty(self, **kwargs):
+        id = self.radb.insertResourceClaimProperty(kwargs.get('claim_id'), kwargs.get('property_type'), kwargs.get('value'))
+        return {'id':id}
+
     def _getResourceClaims(self, **kwargs):
         return self.radb.getResourceClaims(lower_bound=kwargs.get('lower_bound'),
                                            upper_bound=kwargs.get('upper_bound'),
@@ -100,7 +113,7 @@ class RADBHandler(MessageHandlerInterface):
                                            kwargs['claim_size'],
                                            kwargs['username'],
                                            kwargs['user_id'],
-                                           kwargs['nr_of_parts'])
+                                           kwargs.get('properties'))
         return {'id':id}
 
     def _deleteResourceClaim(self, **kwargs):

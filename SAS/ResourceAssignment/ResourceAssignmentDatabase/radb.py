@@ -511,6 +511,62 @@ class RADatabase:
 
         return result
 
+    def getResourceClaimPropertyTypes(self):
+        query = '''SELECT * from resource_allocation.resource_claim_property_type;'''
+
+        return list(self._executeQuery(query, fetch=_FETCH_ALL))
+
+    def getResourceClaimPropertyTypeNames(self):
+        return [x['name'] for x in self.getResourceClaimPropertyTypes()]
+
+    def getResourceClaimPropertyTypeId(self, type_name):
+        query = '''SELECT id from resource_allocation.resource_claim_property_type
+                   WHERE name = %s;'''
+        result = self._executeQuery(query, [type_name], fetch=_FETCH_ONE)
+
+        if result:
+            return result['id']
+
+        raise KeyError('No such resource_claim_property_type: %s Valid values are: %s' % (type_name, ', '.join(self.getResourceClaimPropertyTypeNames())))
+
+
+    def getResourceClaimProperties(self, claim_id=None, task_id=None):
+        query = '''SELECT * from resource_allocation.resource_claim_property_view'''
+
+        qargs = None
+
+        if claim_id is not None or task_id is not None:
+            conditions = []
+            qargs = []
+
+            if claim_id is not None:
+                conditions.append('id = %s')
+                qargs.append(claim_id)
+
+            if task_id is not None:
+                conditions.append('task_id = %s')
+                qargs.append(task_id)
+
+            query += ' WHERE ' + ' AND '.join(conditions)
+
+        query += ';'
+        return list(self._executeQuery(query, qargs, fetch=_FETCH_ALL))
+
+    def insertResourceClaimProperty(self, claim_id, property_type, value, commit=False):
+        if property_type and isinstance(property_type, basestring):
+            #convert property_type string to id
+            property_type = self.getResourceClaimPropertyTypeId(property_type)
+
+        query = '''INSERT INTO resource_allocation.resource_claim_property
+        (resource_claim_id, type_id, value)
+        VALUES (%s, %s, %s)
+        RETURNING id;'''
+
+        id = self._executeQuery(query, (claim_id, property_type, value), fetch=_FETCH_ONE)['id']
+        if commit:
+            self.commit()
+        return id
+
     def getResourceClaims(self, lower_bound=None, upper_bound=None, resource_id=None, task_id=None, status=None, resource_type=None, extended=False):
         extended |= resource_type is not None
         query = '''SELECT * from %s''' % ('resource_allocation.resource_claim_extended_view' if extended else 'resource_allocation.resource_claim_view')
@@ -576,28 +632,43 @@ class RADatabase:
 
         return dict(result) if result else None
 
-    def insertResourceClaim(self, resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, nr_of_parts=1, commit=True):
+    def insertResourceClaim(self, resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, properties=None, commit=True):
         if status and isinstance(status, basestring):
             #convert status string to status.id
             status = self.getResourceClaimStatusId(status)
 
         query = '''INSERT INTO resource_allocation.resource_claim
-        (resource_id, task_id, starttime, endtime, status_id, session_id, claim_size, nr_of_parts, username, user_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        (resource_id, task_id, starttime, endtime, status_id, session_id, claim_size, username, user_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id;'''
 
-        id = self._executeQuery(query, (resource_id, task_id, starttime, endtime, status, session_id, claim_size, nr_of_parts, username, user_id), fetch=_FETCH_ONE)['id']
+        id = self._executeQuery(query, (resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id), fetch=_FETCH_ONE)['id']
+
+        try:
+            property_ids = set()
+            for p in properties:
+                property_ids.add(self.insertResourceClaimProperty(id, p['type'], p['value'], False))
+
+            if [x for x in property_ids if x < 0]:
+                logger.error("One or more properties cloud not be inserted. Rolling back.")
+                self.rollback()
+                return -1
+        except KeyError as ke:
+            logger.error(ke)
+            self.rollback()
+            return -1
+
         if commit:
             self.commit()
         return id
 
     def insertResourceClaims(self, task_id, claims, session_id, username, user_id, commit=True):
         '''bulk insert of resource claims for a task
-        claims is a list of dicts. Each dict is a claim for one resource containing the fields: starttime, endtime, status, claim_size, nr_of_parts
+        claims is a list of dicts. Each dict is a claim for one resource containing the fields: starttime, endtime, status, claim_size
         '''
         claimIds = set()
         for c in claims:
-            id = self.insertResourceClaim(c['resource_id'], task_id, c['starttime'], c['endtime'], c['status'], session_id, c['claim_size'], username, user_id, c.get('nr_of_parts', 1), False)
+            id = self.insertResourceClaim(c['resource_id'], task_id, c['starttime'], c['endtime'], c['status'], session_id, c['claim_size'], username, user_id, c.get('properties'), False)
             claimIds.add(id)
 
         if [x for x in claimIds if x < 0]:
@@ -622,7 +693,7 @@ class RADatabase:
             self.commit()
         return self.cursor.rowcount > 0
 
-    def updateResourceClaim(self, resource_claim_id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, nr_of_parts=None, username=None, user_id=None, commit=True):
+    def updateResourceClaim(self, resource_claim_id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, username=None, user_id=None, commit=True):
         if status and isinstance(status, basestring):
             #convert status string to status.id
             status = self.getResourceClaimStatusId(status)
@@ -657,10 +728,6 @@ class RADatabase:
         if claim_size:
             fields.append('claim_size')
             values.append(claim_size)
-
-        if nr_of_parts:
-            fields.append('nr_of_parts')
-            values.append(nr_of_parts)
 
         if username:
             fields.append('username')
@@ -875,12 +942,23 @@ if __name__ == '__main__':
                 'starttime':task['starttime'],
                 'endtime':task['endtime'],
                 'status':'claimed',
-                'claim_size':1} for r in resources[:1]]
+                'claim_size':1} for r in resources[:3]]
+
+        for c in claims:
+            c['properties'] = [{'type':0, 'value':10}, {'type':1, 'value':20}, {'type':2, 'value':30}]
 
         db.insertResourceClaims(task['id'], claims, 1, 'paulus', 1, False)
 
         #resultPrint(db.getResourceClaims)
         #raw_input()
+
+    resultPrint(db.getResourceClaims)
+    resultPrint(db.getResourceClaimPropertyTypes)
+    resultPrint(db.getResourceClaimPropertyTypeNames)
+    resultPrint(db.getResourceClaimProperties)
+
+    print
+    print db.getResourceClaimProperties(task_id=492)
 
     db.commit()
 

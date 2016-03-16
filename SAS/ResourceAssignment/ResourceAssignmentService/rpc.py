@@ -27,6 +27,15 @@ class RARPC(RPCWrapper):
     def getResourceClaimStatuses(self):
         return self.rpc('GetResourceClaimStatuses')
 
+    def getResourceClaimPropertyTypes(self):
+        return self.rpc('GetResourceClaimPropertyTypes')
+
+    def getResourceClaimProperties(self, claim_id=None, task_id=None):
+        return self.rpc('GetResourceClaimProperties', claim_id=claim_id, task_id=task_id)
+
+    def insertResourceClaimProperty(self, claim_id, property_type, value):
+        return self.rpc('InsertResourceClaimProperty', claim_id=claim_id, property_type=property_type, value=value)
+
     def getResourceClaims(self, lower_bound=None, upper_bound=None, task_id=None, status=None, resource_type=None, extended=False):
         claims = self.rpc('GetResourceClaims', lower_bound=lower_bound,
                                                upper_bound=upper_bound,
@@ -47,7 +56,7 @@ class RARPC(RPCWrapper):
         return resource_claim
 
 
-    def insertResourceClaim(self, resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, nr_of_parts=1):
+    def insertResourceClaim(self, resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, properties=None):
         return self.rpc('InsertResourceClaim', resource_id=resource_id,
                                                     task_id=task_id,
                                                     starttime=starttime,
@@ -57,12 +66,12 @@ class RARPC(RPCWrapper):
                                                     claim_size=claim_size,
                                                     username=username,
                                                     user_id=user_id,
-                                                    nr_of_parts=nr_of_parts)
+                                                    properties=properties)
 
     def deleteResourceClaim(self, id):
         return self.rpc('DeleteResourceClaim', id=id)
 
-    def updateResourceClaim(self, id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, nr_of_parts=None, username=None, user_id=None):
+    def updateResourceClaim(self, id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, username=None, user_id=None):
         return self.rpc('UpdateResourceClaim', id=id,
                                                     resource_id=resource_id,
                                                     task_id=task_id,
@@ -71,7 +80,6 @@ class RARPC(RPCWrapper):
                                                     status=status,
                                                     session_id=session_id,
                                                     claim_size=claim_size,
-                                                    nr_of_parts=nr_of_parts,
                                                     username=username,
                                                     user_id=user_id)
 
@@ -210,7 +218,15 @@ def do_tests(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME):
         #print rpc.getResourceClaims()
         #print rpc.getResources()
         #print rpc.getResourceGroups()
-        print rpc.getResourceGroupMemberships()
+        #print rpc.getResourceGroupMemberships()
+
+        for rc in rpc.getResourceClaims():
+            print rc
+            rpc.insertResourceClaimProperty(rc['id'], 'nr_of_CS_files', 42)
+            print rpc.getResourceClaimProperties(rc['id'])
+
+        print
+        print rpc.getResourceClaimProperties(task_id=493)
 
         #rpc.deleteTask(taskId)
 
