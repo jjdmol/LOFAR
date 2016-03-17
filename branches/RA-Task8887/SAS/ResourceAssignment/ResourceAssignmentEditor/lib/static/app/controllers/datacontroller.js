@@ -8,6 +8,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
     self.resourceClaims = [];
     self.tasktypes = [];
     self.taskstatustypes = [];
+    self.editableTaskStatusIds = [];
 
     self.taskDict = {};
     self.resourceDict = {};
@@ -139,6 +140,13 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         var defer = $q.defer();
         $http.get('/rest/taskstatustypes').success(function(result) {
             self.taskstatustypes = result.taskstatustypes;
+
+            self.editableTaskStatusIds = [];
+            for(var taskstatustype of self.taskstatustypes) {
+                if(taskstatustype.name == 'approved' || taskstatustype.name == 'conflict' || taskstatustype.name == 'prescheduled') {
+                    self.editableTaskStatusIds.push(taskstatustype.id);
+                }
+            }
 
             defer.resolve();
         });

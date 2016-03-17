@@ -109,6 +109,8 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
             return;
         }
 
+        var editableTaskStatusIds = $scope.dataService.editableTaskStatusIds;
+
         var ganntRowsDict = {};
 
         if(numProjecs > 0 && numTasks > 0 && numTasktypes > 0) {
@@ -157,7 +159,8 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
                             name: task.name,
                             'from': task.starttime,
                             'to': task.endtime,
-                            'color': self.taskStatusColors[task.status]
+                            'color': self.taskStatusColors[task.status],
+                            'movable': $.inArray(task.status_id, editableTaskStatusIds) > -1
                         };
 
                         if(task.predecessor_ids && task.predecessor_ids.length > 0) {
