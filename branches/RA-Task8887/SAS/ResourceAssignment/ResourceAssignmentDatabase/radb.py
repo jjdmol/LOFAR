@@ -805,16 +805,17 @@ class RADatabase:
             fields.append('user_id')
             values.append(user_id)
 
-        values.append(task_id)
+        if fields and values:
+            values.append(task_id)
 
-        query = '''UPDATE resource_allocation.resource_claim
-        SET ({fields}) = ({value_placeholders})
-        WHERE resource_allocation.resource_claim.task_id = {task_id_placeholder};'''.format(fields=', '.join(fields),
-                                                                                            value_placeholders=', '.join('%s' for x in fields),
-                                                                                            task_id_placeholder='%s')
+            query = '''UPDATE resource_allocation.resource_claim
+            SET ({fields}) = ({value_placeholders})
+            WHERE resource_allocation.resource_claim.task_id = {task_id_placeholder};'''.format(fields=', '.join(fields),
+                                                                                                value_placeholders=', '.join('%s' for x in fields),
+                                                                                                task_id_placeholder='%s')
 
-        self._executeQuery(query, values)
-        updated &= self.cursor.rowcount > 0
+            self._executeQuery(query, values)
+            updated &= self.cursor.rowcount > 0
 
         self.validateResourceClaimsStatusForTask(task_id, commit=False)
         self.validateResourceClaimsStatusForMovedClaims(claimsBeforeUpdate, commit=False)
