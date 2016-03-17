@@ -177,10 +177,9 @@ def putTask(task_id):
 
             logger.info('putTask: ' + str(updatedTask))
             rarpc.updateTaskAndResourceClaims(task_id,
-                                            starttime=updatedTask.get('starttime', None),
-                                            endtime=updatedTask.get('endtime', None),
-                                            task_status=updatedTask.get('task_status', None),
-                                            claim_status=updatedTask.get('claim_status', None))
+                                              starttime=updatedTask.get('starttime', None),
+                                              endtime=updatedTask.get('endtime', None),
+                                              task_status=updatedTask.get('status', None))
 
             return "", 204
         except KeyError:
