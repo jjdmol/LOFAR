@@ -37,10 +37,11 @@ _FETCH_ONE=1
 _FETCH_ALL=2
 
 class RADatabase:
-    def __init__(self, dbcreds=None):
+    def __init__(self, dbcreds=None, log_queries=False):
         self.dbcreds = dbcreds
         self.conn = None
         self.cursor = None
+        self.log_queries = log_queries
 
     def _connect(self):
         self.conn = None
@@ -62,8 +63,8 @@ class RADatabase:
     def _executeQuery(self, query, qargs=None, fetch=_FETCH_NONE):
         '''execute the query and reconnect upon OperationalError'''
         try:
-            if logger.getEffectiveLevel() == logging.DEBUG: #prevent expensive string manipulation above debug level
-                logger.debug('execute query: %s' % self._queryAsSingleLine(query, qargs))
+            if self.log_queries:
+                logger.info('executing query: %s' % self._queryAsSingleLine(query, qargs))
 
             self.cursor.execute(query, qargs)
         except (psycopg2.OperationalError, AttributeError) as e:
@@ -892,7 +893,7 @@ class RADatabase:
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                        level=logging.DEBUG)
+                        level=logging.INFO)
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]",
@@ -903,7 +904,7 @@ if __name__ == '__main__':
 
     dbcreds = dbcredentials.parse_options(options)
 
-    db = RADatabase(dbcreds=dbcreds)
+    db = RADatabase(dbcreds=dbcreds, log_queries=True)
 
     def resultPrint(method):
         print '\n-- ' + str(method.__name__) + ' --'
