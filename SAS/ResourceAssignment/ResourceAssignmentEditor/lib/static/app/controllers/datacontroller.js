@@ -249,6 +249,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                                 var task = self.taskDict[changedTask.id];
                                 if(task) {
                                     task.status = changedTask.status;
+                                    task.status_id = changedTask.status_id;
                                     task.mom_id = changedTask.mom_id;
                                     task.otdb_id = changedTask.otdb_id;
                                     task.starttime = new Date(changedTask.starttime);
@@ -277,6 +278,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                                 var claim = self.resourceClaimDict[changedClaim.id];
                                 if(claim) {
                                     claim.status = changedClaim.status;
+                                    claim.status_id = changedClaim.status_id;
                                     claim.starttime = new Date(changedClaim.starttime);
                                     claim.endtime = new Date(changedClaim.endtime);
                                 }
