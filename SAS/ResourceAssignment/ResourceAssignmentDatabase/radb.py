@@ -222,23 +222,23 @@ class RADatabase:
         fields = []
         values = []
 
-        if mom_id:
+        if mom_id is not None :
             fields.append('mom_id')
             values.append(mom_id)
 
-        if otdb_id:
+        if otdb_id is not None :
             fields.append('otdb_id')
             values.append(otdb_id)
 
-        if task_status:
+        if task_status is not None :
             fields.append('status_id')
             values.append(task_status)
 
-        if task_type:
+        if task_type is not None :
             fields.append('type_id')
             values.append(task_type)
 
-        if specification_id:
+        if specification_id is not None :
             fields.append('specification_id')
             values.append(specification_id)
 
@@ -352,7 +352,7 @@ class RADatabase:
             fields.append('endtime')
             values.append(endtime)
 
-        if content:
+        if content is not None :
             fields.append('content')
             values.append(content)
 
@@ -765,13 +765,13 @@ class RADatabase:
     def updateTaskAndResourceClaims(self, task_id, starttime=None, endtime=None, task_status=None, claim_status=None, session_id=None, username=None, user_id=None, commit=True):
         claimsBeforeUpdate = self.getResourceClaims(task_id=task_id)
 
-        if claim_status and isinstance(claim_status, basestring):
+        if claim_status is not None and isinstance(claim_status, basestring):
             #convert status string to status.id
             claim_status = self.getResourceClaimStatusId(claim_status)
 
         updated = True
 
-        if task_status:
+        if task_status is not None :
             updated &= self.updateTask(task_id, task_status=task_status, commit=False)
 
         if starttime or endtime:
@@ -789,19 +789,19 @@ class RADatabase:
             fields.append('endtime')
             values.append(endtime)
 
-        if claim_status:
+        if claim_status is not None :
             fields.append('status_id')
             values.append(claim_status)
 
-        if session_id:
+        if session_id is not None :
             fields.append('session_id')
             values.append(session_id)
 
-        if username:
+        if username is not None :
             fields.append('username')
             values.append(username)
 
-        if user_id:
+        if user_id is not None :
             fields.append('user_id')
             values.append(user_id)
 
@@ -955,7 +955,7 @@ if __name__ == '__main__':
 
     from lofar.common.datetimeutils import totalSeconds
     begin = datetime.utcnow()
-    for i in range(50):
+    for i in range(4):
         stepbegin = datetime.utcnow()
         result = db.insertSpecificationAndTask(1234+i, 5678+i, 600, 0, datetime.utcnow() + timedelta(hours=1.25*i), datetime.utcnow() + timedelta(hours=1.25*i+1), "", False)
 
@@ -969,7 +969,7 @@ if __name__ == '__main__':
                 'starttime':task['starttime'],
                 'endtime':task['endtime'],
                 'status':'claimed',
-                'claim_size':1} for r in resources[:]]
+                'claim_size':1} for r in resources[:10]]
 
         for c in claims:
             c['properties'] = [{'type':0, 'value':10}, {'type':1, 'value':20}, {'type':2, 'value':30}]
