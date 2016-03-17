@@ -99,6 +99,8 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
             return;
         }
 
+        var editableTaskStatusIds = $scope.dataService.editableTaskStatusIds;
+
         //dict resourceGroup2GanttRows for fast lookup of ganttrows based on groupId
         var resourceGroup2GanttRows = {};
 
@@ -241,7 +243,8 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                         from: claim.starttime,
                         to: claim.endtime,
                         color: self.taskStatusColors[task.status],
-                        raTask: task
+                        raTask: task,
+                        movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
                     };
 
                     ganttRow.tasks.push(claimTask);
@@ -309,7 +312,8 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                                 from: aggClaimForTask.starttime,
                                 to: aggClaimForTask.endtime,
                                 color: self.taskStatusColors[task.status],
-                                raTask: task
+                                raTask: task,
+                                movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
                             };
 
                             ganttRow.tasks.push(claimTask);

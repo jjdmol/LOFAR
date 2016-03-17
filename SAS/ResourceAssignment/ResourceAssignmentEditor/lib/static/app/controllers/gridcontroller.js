@@ -32,23 +32,29 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         }
     },
     { field: 'starttime',
+        displayName: 'Start',
         width: '*',
-        enableCellEditOnFocus: true,
+        enableCellEdit: false,
+        enableCellEditOnFocus: false,
         cellTemplate:'<div style=\'text-align:right\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
 //         editableCellTemplate: '<div><form name="inputForm"><div ui-grid-edit-datepicker row-field="MODEL_COL_FIELD" ng-class="\'colt\' + col.uid"></div></form></div>'
     },
-    { field: 'endtime', enableCellEdit: true,
+    { field: 'endtime',
+        displayName: 'End',
         width: '*',
-        enableCellEditOnFocus: true,
+        enableCellEdit: false,
+        enableCellEditOnFocus: false,
         cellTemplate:'<div style=\'text-align:right\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
     },
     { field: 'status',
-        enableCellEdit: false,
+        enableCellEdit: true,
         width: '*',
         filter: {
             type: uiGridConstants.filter.SELECT,
             selectOptions: []
-        }
+        },
+        editableCellTemplate: 'ui-grid/dropdownEditor',
+        editDropdownOptionsArray: []
     },
     { field: 'type',
         enableCellEdit: false,
@@ -72,10 +78,9 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
             $scope.gridApi.core.on.rowsRendered($scope, filterTasks);
 
             gridApi.edit.on.afterCellEdit($scope,function(rowEntity, colDef, newValue, oldValue){
-                console.log('edited row id:' + rowEntity.id + ' Column:' + colDef.name + ' newValue:' + newValue + ' oldValue:' + oldValue);
-
                 var task = $scope.dataService.taskDict[rowEntity.id];
-                $scope.dataService.putTask(task);
+                var newTask = { id: task.id, status: task.status };
+                $scope.dataService.putTask(newTask);
             });
         }
     };
@@ -118,6 +123,7 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     $scope.$watch('dataService.taskstatustypes', function() {
         taskstatustypenames = $scope.dataService.taskstatustypes.map(function(x) { return x.name; });
         fillColumFilterSelectOptions(taskstatustypenames, $scope.columns[4]);
+        $scope.columns[4].editDropdownOptionsArray = $scope.dataService.taskstatustypes.map(function(x) { return {id:x.name, value:x.name}; });
     });
 
     $scope.$watch('dataService.tasktypes', function() {
