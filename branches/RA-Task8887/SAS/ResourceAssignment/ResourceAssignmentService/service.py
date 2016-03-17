@@ -35,6 +35,7 @@ class RADBHandler(MessageHandlerInterface):
     def __init__(self, **kwargs):
         super(RADBHandler, self).__init__(**kwargs)
         self.dbcreds = kwargs.pop("dbcreds", None)
+        self.log_queries = kwargs.pop("log_queries", False)
 
         self.service2MethodMap = {
             'GetResourceClaimStatuses': self._getResourceClaimStatuses,
@@ -69,7 +70,7 @@ class RADBHandler(MessageHandlerInterface):
             'GetUnits': self._getUnits}
 
     def prepare_loop(self):
-        self.radb = radb.RADatabase(dbcreds=self.dbcreds)
+        self.radb = radb.RADatabase(dbcreds=self.dbcreds, log_queries=self.log_queries)
 
     def _getTaskStatuses(self):
         return self.radb.getTaskStatuses()
@@ -253,14 +254,14 @@ class RADBHandler(MessageHandlerInterface):
     def _getUnits(self):
         return self.radb.getUnits()
 
-def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker=None, dbcreds=None, verbose=False):
+def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker=None, dbcreds=None, log_queries=False, verbose=False):
     return Service(servicename,
                    RADBHandler,
                    busname=busname,
                    broker=broker,
                    use_service_methods=True,
                    numthreads=4,
-                   handler_args={'dbcreds': dbcreds},
+                   handler_args={'dbcreds': dbcreds, 'log_queries': log_queries},
                    verbose=verbose)
 
 def main():
@@ -270,6 +271,7 @@ def main():
     parser.add_option('-q', '--broker', dest='broker', type='string', default=None, help='Address of the qpid broker, default: localhost')
     parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_BUSNAME, help="Name of the bus exchange on the qpid broker, default: %s" % DEFAULT_BUSNAME)
     parser.add_option("-s", "--servicename", dest="servicename", type="string", default=DEFAULT_SERVICENAME, help="Name for this service, default: %s" % DEFAULT_SERVICENAME)
+    parser.add_option('-Q', '--log-queries', dest='log_queries', action='store_true', help='log all pqsl queries')
     parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
     parser.add_option_group(dbcredentials.options_group(parser))
     parser.set_defaults(dbcredentials="RADB")
@@ -285,6 +287,7 @@ def main():
                        servicename=options.servicename,
                        broker=options.broker,
                        verbose=options.verbose,
+                       log_queries=options.log_queries,
                        dbcreds=dbcreds):
         waitForInterrupt()
 
