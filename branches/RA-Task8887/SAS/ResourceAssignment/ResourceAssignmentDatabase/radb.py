@@ -861,7 +861,7 @@ class RADatabase:
         for task_id in task_ids:
             if self.getResourceClaims(task_id=task_id, status=conflistStatusId):
                 self.updateTask(task_id=task_id, task_status='conflict', commit=False)
-            else:
+            elif self.getTask(task_id)['status'] == 'conflict':
                 self.updateTask(task_id=task_id, task_status='prescheduled', commit=False)
 
         if commit:
