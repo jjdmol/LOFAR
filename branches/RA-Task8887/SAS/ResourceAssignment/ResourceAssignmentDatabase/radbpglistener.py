@@ -56,8 +56,8 @@ class RADBPGListener(PostgresListener):
         # so subscribe to specification_update, and use task_view as view_for_row
         self.subscribe('specification_update_with_task_view', self.onSpecificationUpdated)
 
-        self.subscribe('resource_claim_update', self.onResourceClaimUpdated)
-        self.subscribe('resource_claim_insert', self.onResourceClaimInserted)
+        self.subscribe('resource_claim_update_with_resource_claim_view', self.onResourceClaimUpdated)
+        self.subscribe('resource_claim_insert_with_resource_claim_view', self.onResourceClaimInserted)
         self.subscribe('resource_claim_delete', self.onResourceClaimDeleted)
 
     def onTaskUpdated(self, payload = None):
@@ -104,13 +104,14 @@ class RADBPGListener(PostgresListener):
                 if state in contentDict:
                     for field in fields:
                         try:
-                            timestampStr = contentDict[state][field]
-                            if timestampStr.rfind('.') > -1:
-                                timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S.%f')
-                            else:
-                                timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S')
+                            if field in contentDict[state]:
+                                timestampStr = contentDict[state][field]
+                                if timestampStr.rfind('.') > -1:
+                                    timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S.%f')
+                                else:
+                                    timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S')
 
-                            contentDict[state][field] = timestamp
+                                contentDict[state][field] = timestamp
                         except Exception as e:
                             logger.error('Could not convert field \'%s\' to datetime: %s' % (field, e))
 
