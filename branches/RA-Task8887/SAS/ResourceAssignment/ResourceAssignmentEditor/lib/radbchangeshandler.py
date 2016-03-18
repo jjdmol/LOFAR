@@ -81,13 +81,13 @@ class RADBChangesHandler(RADBBusListener):
         with self._changedCondition:
             self._changedCondition.notifyAll()
 
-    def onTaskUpdated(self, task):
+    def onTaskUpdated(self, old_task, new_task):
         '''onTaskUpdated is called upon receiving a TaskUpdated message.
         :param task: dictionary with the updated task'''
-        task['starttime'] = task['starttime'].datetime()
-        task['endtime'] = task['endtime'].datetime()
-        updateTaskMomDetails(task, self._momrpc)
-        task_change = {'changeType':CHANGE_UPDATE_TYPE, 'objectType':'task', 'value':task}
+        new_task['starttime'] = new_task['starttime'].datetime()
+        new_task['endtime'] = new_task['endtime'].datetime()
+        updateTaskMomDetails(new_task, self._momrpc)
+        task_change = {'changeType':CHANGE_UPDATE_TYPE, 'objectType':'task', 'value':new_task}
         self._handleChange(task_change)
 
     def onTaskInserted(self, task):
@@ -105,12 +105,12 @@ class RADBChangesHandler(RADBBusListener):
         task_change = {'changeType':CHANGE_DELETE_TYPE, 'objectType':'task', 'value':task}
         self._handleChange(task_change)
 
-    def onResourceClaimUpdated(self, claim):
+    def onResourceClaimUpdated(self, old_claim, new_claim):
         '''onResourceClaimUpdated is called upon receiving a ResourceClaimUpdated message.
         :param task: dictionary with the updated claim'''
-        claim['starttime'] = claim['starttime'].datetime()
-        claim['endtime'] = claim['endtime'].datetime()
-        claim_change = {'changeType':CHANGE_UPDATE_TYPE, 'objectType':'resourceClaim', 'value':claim}
+        new_claim['starttime'] = new_claim['starttime'].datetime()
+        new_claim['endtime'] = new_claim['endtime'].datetime()
+        claim_change = {'changeType':CHANGE_UPDATE_TYPE, 'objectType':'resourceClaim', 'value':new_claim}
         self._handleChange(claim_change)
 
     def onResourceClaimInserted(self, claim):
