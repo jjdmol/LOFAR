@@ -33,6 +33,85 @@ import psycopg2.extensions
 
 logger = logging.getLogger(__name__)
 
+def makePostgresNotificationQueries(schema, table, action, view_for_row=None, view_selection_id=None):
+    action = action.upper()
+    if action not in ('INSERT', 'UPDATE', 'DELETE'):
+        raise ValueError('''trigger_type '%s' not in ('INSERT', 'UPDATE', 'DELETE')''' % action)
+
+    if view_for_row and action == 'DELETE':
+        raise ValueError('You cannot use a view for results on action DELETE')
+
+    if view_for_row:
+        change_name = '''{table}_{action}_with_{view_for_row}'''.format(schema=schema,
+                                                                        table=table,
+                                                                        action=action,
+                                                                        view_for_row=view_for_row)
+        function_name = '''NOTIFY_{change_name}'''.format(change_name=change_name)
+        function_sql = '''
+        CREATE OR REPLACE FUNCTION {schema}.{function_name}()
+        RETURNS TRIGGER AS $$
+        DECLARE
+        new_row_from_view {schema}.{view_for_row}%ROWTYPE;
+        BEGIN
+        select * into new_row_from_view from {schema}.{view_for_row} where {view_selection_id} = NEW.id LIMIT 1;
+        PERFORM pg_notify(CAST('{change_name}' AS text),
+        '{{"old":' || {old} || ',"new":' || row_to_json(new_row_from_view)::text || '}}');
+        RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+        '''.format(schema=schema,
+                   function_name=function_name,
+                   table=table,
+                   action=action,
+                   old='row_to_json(OLD)::text' if action == 'UPDATE' or action == 'DELETE' else '\'null\'',
+                   view_for_row=view_for_row,
+                   view_selection_id=view_selection_id if view_selection_id else 'id',
+                   change_name=change_name.lower())
+    else:
+        change_name = '''{table}_{action}'''.format(table=table, action=action)
+        function_name = '''NOTIFY_{change_name}'''.format(change_name=change_name)
+        function_sql = '''
+        CREATE OR REPLACE FUNCTION {schema}.{function_name}()
+        RETURNS TRIGGER AS $$
+        BEGIN
+        PERFORM pg_notify(CAST('{change_name}' AS text),
+        '{{"old":' || {old} || ',"new":' || {new} || '}}');
+        RETURN {value};
+        END;
+        $$ LANGUAGE plpgsql;
+        '''.format(schema=schema,
+                   function_name=function_name,
+                   table=table,
+                   action=action,
+                   old='row_to_json(OLD)::text' if action == 'UPDATE' or action == 'DELETE' else '\'null\'',
+                   new='row_to_json(NEW)::text' if action == 'UPDATE' or action == 'INSERT' else '\'null\'',
+                   value='OLD' if action == 'DELETE' else 'NEW',
+                   change_name=change_name.lower())
+
+    trigger_name = 'TRIGGER_NOTIFY_%s' % function_name
+
+    trigger_sql = '''
+    CREATE TRIGGER {trigger_name}
+    AFTER {action} ON {schema}.{table}
+    FOR EACH ROW
+    EXECUTE PROCEDURE {schema}.{function_name}();
+    '''.format(trigger_name=trigger_name,
+                function_name=function_name,
+                schema=schema,
+                table=table,
+                action=action)
+
+    drop_sql = '''
+    DROP TRIGGER IF EXISTS {trigger_name} ON {schema}.{table} CASCADE;
+    DROP FUNCTION IF EXISTS {schema}.{function_name}();
+    '''.format(trigger_name=trigger_name,
+               function_name=function_name,
+               schema=schema,
+               table=table)
+
+    sql = drop_sql + '\n' + function_sql + '\n' + trigger_sql
+    sql_lines = '\n'.join([s.strip() for s in sql.split('\n')])
+    return sql_lines
 
 class PostgresListener(object):
     ''' This class lets you listen to postgress notifications
@@ -95,64 +174,6 @@ class PostgresListener(object):
             self.cursor.execute("UNLISTEN %s;", (psycopg2.extensions.AsIs(notification),))
             if notification in self.__callbacks:
                 del self.__callbacks[notification]
-
-    def setupPostgresNotifications(self, schema, table, updateNotification=True, insertNotification=True, deleteNotification=True, view_for_row=None):
-        items = []
-        if updateNotification:
-            items.append(('update', 'NEW'))
-
-        if insertNotification:
-            items.append(('insert', 'NEW'))
-
-        if deleteNotification:
-            items.append(('delete', 'OLD'))
-
-        for item in items:
-            if view_for_row and item[0] != 'delete':
-                function_sql = '''
-                CREATE OR REPLACE FUNCTION {schema}.notify_{table}_{action}()
-                RETURNS trigger AS $$
-                DECLARE
-                new_row_from_view {schema}.{view_for_row}%ROWTYPE;
-                BEGIN
-                select * into new_row_from_view from {schema}.{view_for_row} where id = {value}.id LIMIT 1;
-                PERFORM pg_notify(CAST('{table}_{action}' AS text), row_to_json(new_row_from_view)::text);
-                RETURN {value};
-                END;
-                $$ LANGUAGE plpgsql;
-                '''.format(schema=schema,
-                       table=table,
-                       action=item[0],
-                       value=item[1],
-                       view_for_row=view_for_row)
-            else:
-                function_sql = '''
-                CREATE OR REPLACE FUNCTION {schema}.notify_{table}_{action}()
-                RETURNS trigger AS $$
-                BEGIN
-                PERFORM pg_notify(CAST('{table}_{action}' AS text), row_to_json({value})::text);
-                RETURN {value};
-                END;
-                $$ LANGUAGE plpgsql;
-                '''.format(schema=schema,
-                       table=table,
-                       action=item[0],
-                       value=item[1])
-
-            trigger_sql = '''
-            DROP TRIGGER IF EXISTS trigger_notify_{table}_{action} ON {schema}.{table};
-
-            CREATE TRIGGER trigger_notify_{table}_{action}
-            AFTER {action} ON {schema}.{table}
-            FOR EACH ROW
-            EXECUTE PROCEDURE {schema}.notify_{table}_{action}();
-            '''.format(schema=schema,
-                       table=table,
-                       action=item[0],
-                       value=item[1])
-
-            sql = function_sql + trigger_sql
-            self.cursor.execute(sql)
 
     def isListening(self):
         '''Are we listening? Has the listener been started?'''
