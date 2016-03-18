@@ -571,7 +571,7 @@ class RADatabase:
             self.commit()
         return id
 
-    def getResourceClaims(self, lower_bound=None, upper_bound=None, resource_id=None, task_id=None, status=None, resource_type=None, extended=False):
+    def getResourceClaims(self, claim_ids=None, lower_bound=None, upper_bound=None, resource_ids=None, task_id=None, status=None, resource_type=None, extended=False):
         extended |= resource_type is not None
         query = '''SELECT * from %s''' % ('resource_allocation.resource_claim_extended_view' if extended else 'resource_allocation.resource_claim_view')
 
@@ -589,41 +589,56 @@ class RADatabase:
             #convert resource_type string to resource_type.id
             resource_type = self.getResourceTypeId(resource_type)
 
-        qargs = None
+        conditions = []
+        qargs = []
 
-        if lower_bound or upper_bound or resource_id is not None or task_id is not None or status is not None or resource_type is not None:
-            conditions = []
-            qargs = []
+        if claim_ids is not None:
+            if isinstance(claim_ids, int): # just a single id
+                conditions.append('id = %s')
+                qargs.append(claim_ids)
+            elif len(claim_ids) == 1:  # just a single id from a list
+                conditions.append('id = %s')
+                qargs.append(claim_ids[0])
+            else: # list of id's
+                conditions.append('id in %s')
+                qargs.append(tuple(claim_ids))
 
-            if lower_bound:
-                conditions.append('endtime >= %s')
-                qargs.append(lower_bound)
+        if lower_bound:
+            conditions.append('endtime >= %s')
+            qargs.append(lower_bound)
 
-            if upper_bound:
-                conditions.append('starttime <= %s')
-                qargs.append(upper_bound)
+        if upper_bound:
+            conditions.append('starttime <= %s')
+            qargs.append(upper_bound)
 
-            if resource_id is not None:
+        if resource_ids is not None:
+            if isinstance(resource_ids, int): # just a single id
                 conditions.append('resource_id = %s')
-                qargs.append(resource_id)
+                qargs.append(resource_ids)
+            elif len(resource_ids) == 1:  # just a single id from a list
+                conditions.append('resource_id = %s')
+                qargs.append(resource_ids[0])
+            else: # list of id's
+                conditions.append('resource_id in %s')
+                qargs.append(tuple(resource_ids))
 
-            if task_id is not None:
-                #if task_id is normal positive we do a normal inclusive filter
-                #if task_id is negative we do an exclusive filter
-                conditions.append('task_id = %s' if task_id >= 0 else 'task_id != %s')
-                qargs.append(abs(task_id))
+        if task_id is not None:
+            #if task_id is normal positive we do a normal inclusive filter
+            #if task_id is negative we do an exclusive filter
+            conditions.append('task_id = %s' if task_id >= 0 else 'task_id != %s')
+            qargs.append(abs(task_id))
 
-            if status is not None:
-                conditions.append('status_id = %s')
-                qargs.append(status)
+        if status is not None:
+            conditions.append('status_id = %s')
+            qargs.append(status)
 
-            if resource_type is not None and extended:
-                conditions.append('resource_type_id = %s')
-                qargs.append(resource_type)
+        if resource_type is not None and extended:
+            conditions.append('resource_type_id = %s')
+            qargs.append(resource_type)
 
+        if conditions:
             query += ' WHERE ' + ' AND '.join(conditions)
 
-        query += ';'
         result = self._executeQuery(query, qargs, fetch=_FETCH_ALL)
         result = list(result)
         return result
@@ -636,7 +651,7 @@ class RADatabase:
 
         return dict(result) if result else None
 
-    def insertResourceClaim(self, resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, properties=None, commit=True):
+    def insertResourceClaim(self, resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, properties=None, validate=True, commit=True):
         if status and isinstance(status, basestring):
             #convert status string to status.id
             status = self.getResourceClaimStatusId(status)
@@ -662,8 +677,9 @@ class RADatabase:
             self.rollback()
             return -1
 
-        insertedClaim = self.getResourceClaim(id)
-        self.validateResourceClaimsStatus([insertedClaim], False)
+        if validate:
+            insertedClaim = self.getResourceClaim(id)
+            self.validateResourceClaimsStatus([insertedClaim], False)
 
         if commit:
             self.commit()
@@ -673,15 +689,23 @@ class RADatabase:
         '''bulk insert of resource claims for a task
         claims is a list of dicts. Each dict is a claim for one resource containing the fields: starttime, endtime, status, claim_size
         '''
+        status_strings = set([c['status'] for c in claims if isinstance(c['status'], basestring)])
+        status_string2id = {s:self.getResourceClaimStatusId(s) for s in status_strings}
+
         claimIds = set()
         for c in claims:
-            id = self.insertResourceClaim(c['resource_id'], task_id, c['starttime'], c['endtime'], c['status'], session_id, c['claim_size'], username, user_id, c.get('properties'), False)
+            id = self.insertResourceClaim(c['resource_id'], task_id, c['starttime'], c['endtime'],
+                                          status_string2id[c['status']], session_id, c['claim_size'],
+                                          username, user_id, c.get('properties'), False, False)
             claimIds.add(id)
 
         if [x for x in claimIds if x < 0]:
             logger.error("One or more claims cloud not be inserted. Rolling back.")
             self.rollback()
             return {'inserted': False, 'resource_claim_ids': None }
+
+        insertedClaims = self.getResourceClaims(claim_ids=claimIds)
+        self.validateResourceClaimsStatus(insertedClaims, False)
 
         if commit:
             self.commit()
@@ -697,8 +721,9 @@ class RADatabase:
             self.commit()
         return self.cursor.rowcount > 0
 
-    def updateResourceClaim(self, resource_claim_id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, username=None, user_id=None, commit=True):
-        claimBeforeUpdate = self.getResourceClaim(resource_claim_id)
+    def updateResourceClaim(self, resource_claim_id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, username=None, user_id=None, validate=True, commit=True):
+        if validate:
+            claimBeforeUpdate = self.getResourceClaim(resource_claim_id)
 
         if status is not None and isinstance(status, basestring):
             #convert status string to status.id
@@ -753,8 +778,9 @@ class RADatabase:
 
         self._executeQuery(query, values)
 
-        self.validateResourceClaimsStatus([self.getResourceClaim(resource_claim_id)], commit=False)
-        self.validateResourceClaimsStatusForMovedClaims([claimBeforeUpdate], commit=False)
+        if validate:
+            self.validateResourceClaimsStatus([self.getResourceClaim(resource_claim_id)], commit=False)
+            self.validateResourceClaimsStatusForMovedClaims([claimBeforeUpdate], commit=False)
 
         if commit:
             self.commit()
@@ -827,7 +853,7 @@ class RADatabase:
 
     def validateResourceClaimsStatusForMovedClaims(self, moved_claims, commit=True):
         for moved_claim in moved_claims:
-            otherClaims = self.getResourceClaims(resource_id=moved_claim['resource_id'],
+            otherClaims = self.getResourceClaims(resource_ids=moved_claim['resource_id'],
                                                  lower_bound=moved_claim['starttime'],
                                                  upper_bound=moved_claim['endtime'],
                                                  task_id=-moved_claim['task_id'])
@@ -846,7 +872,7 @@ class RADatabase:
         claimedStatusId = self.getResourceClaimStatusId('claimed')
 
         for claim in claims:
-            otherClaims = self.getResourceClaims(resource_id=claim['resource_id'],
+            otherClaims = self.getResourceClaims(resource_ids=claim['resource_id'],
                                                  lower_bound=claim['starttime'],
                                                  upper_bound=claim['endtime'],
                                                  task_id=-claim['task_id'])
@@ -911,9 +937,6 @@ if __name__ == '__main__':
         print '\n-- ' + str(method.__name__) + ' --'
         print '\n'.join([str(x) for x in method()])
 
-    for s in db.getSpecifications():
-        db.deleteSpecification(s['id'])
-
     #print db.getResourceClaims()
     #print
     #print db.getResourceClaims(task_id=440)
@@ -954,9 +977,12 @@ if __name__ == '__main__':
     #print
     #print db.getResourceClaims()
 
+    for s in db.getSpecifications():
+        db.deleteSpecification(s['id'])
+
     from lofar.common.datetimeutils import totalSeconds
     begin = datetime.utcnow()
-    for i in range(4):
+    for i in range(15):
         stepbegin = datetime.utcnow()
         result = db.insertSpecificationAndTask(1234+i, 5678+i, 600, 0, datetime.utcnow() + timedelta(hours=1.25*i), datetime.utcnow() + timedelta(hours=1.25*i+1), "", False)
 
@@ -970,7 +996,7 @@ if __name__ == '__main__':
                 'starttime':task['starttime'],
                 'endtime':task['endtime'],
                 'status':'claimed',
-                'claim_size':1} for r in resources[:10]]
+                'claim_size':1} for r in resources[:]]
 
         for c in claims:
             c['properties'] = [{'type':0, 'value':10}, {'type':1, 'value':20}, {'type':2, 'value':30}]
