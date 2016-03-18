@@ -32,15 +32,15 @@ from optparse import OptionParser
 
 from lofar.common.postgres import PostgresListener, makePostgresNotificationQueries
 from lofar.messaging import EventMessage, ToBus
-from lofar.sas.resourceassignment.database.config import DEFAULT_BUSNAME, DEFAULT_NOTIFICATION_SUBJECT_PREFIX
+from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_BUSNAME, DEFAULT_NOTIFICATION_PREFIX
 from lofar.common import dbcredentials
 
 logger = logging.getLogger(__name__)
 
 class RADBPGListener(PostgresListener):
     def __init__(self,
-                 busname=DEFAULT_BUSNAME,
-                 notification_prefix=DEFAULT_NOTIFICATION_SUBJECT_PREFIX,
+                 busname=DEFAULT_NOTIFICATION_BUSNAME,
+                 notification_prefix=DEFAULT_NOTIFICATION_PREFIX,
                  dbcreds=None,
                  broker=None):
         super(RADBPGListener, self).__init__(dbcreds.host, dbcreds.database, dbcreds.user, dbcreds.password)
@@ -140,8 +140,8 @@ def main():
     parser = OptionParser("%prog [options]",
                           description='runs the radb postgres listener which listens to changes on some tables in the radb and publishes the changes as notifications on the bus.')
     parser.add_option('-q', '--broker', dest='broker', type='string', default=None, help='Address of the qpid broker, default: localhost')
-    parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_BUSNAME, help="Name of the publication bus on the qpid broker, [default: %default]")
-    parser.add_option("-n", "--notification_prefix", dest="notification_prefix", type="string", default=DEFAULT_NOTIFICATION_SUBJECT_PREFIX, help="The prefix for all notifications of this publisher, [default: %default]")
+    parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_NOTIFICATION_BUSNAME, help="Name of the publication bus on the qpid broker, [default: %default]")
+    parser.add_option("-n", "--notification_prefix", dest="notification_prefix", type="string", default=DEFAULT_NOTIFICATION_PREFIX, help="The prefix for all notifications of this publisher, [default: %default]")
     parser.add_option_group(dbcredentials.options_group(parser))
     parser.set_defaults(dbcredentials="RADB")
     (options, args) = parser.parse_args()
