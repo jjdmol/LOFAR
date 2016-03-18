@@ -37,7 +37,7 @@ from lofar.messaging.RPC import RPC, RPCException
 import lofar.sas.resourceassignment.resourceassignmentservice.rpc as rarpc ## RA DB
 from lofar.sas.resourceassignment.database.radbbuslistener import RADBBusListener
 from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_BUSNAME as RA_NOTIFICATION_BUSNAME
-from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_SUBJECTS as RA_NOTIFICATION_SUBJECTS
+from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_PREFIX as RA_NOTIFICATION_PREFIX
 from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.propagator import RAtoOTDBPropagator
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 class RATaskStatusChangedListener(RADBBusListener):
     def __init__(self,
                  busname=RA_NOTIFICATION_BUSNAME,
-                 subject=RA_NOTIFICATION_SUBJECTS,
+                 subject=RA_NOTIFICATION_PREFIX + 'TaskUpdated',
                  broker=None,
                  propagator=None, ## TODO also give translator?
                  **kwargs):
