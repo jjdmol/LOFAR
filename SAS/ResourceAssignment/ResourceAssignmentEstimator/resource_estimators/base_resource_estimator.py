@@ -24,6 +24,8 @@
 """
 import logging
 from datetime import datetime
+from lofar.common.datetimeutils import totalSeconds
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +56,12 @@ class BaseResourceEstimator(object):
     
     def _getDateTime(date_time):
         return datetime.strptime(date_time, '%Y-%m-%d %H:%M:%S')
+
+    def _getDuration(start, end):
+        startTime = _getDateTime(start)
+        endTime = _getDateTime(end)
+        return totalSeconds(endTime - startTime)
+        #TODO check if this makes duration = int(parset.get('duration', 0)) as a key reduntant?
 
     def _calculate(self, parset, input_files={}):
         raise NotImplementedError('estimate() in base class is called. Please implement estimate() in your subclass')
