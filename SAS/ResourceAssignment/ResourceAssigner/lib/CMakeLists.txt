@@ -5,6 +5,5 @@ python_install(
     raservice.py
     assignment.py
     config.py
-    rapublisher.py
     DESTINATION lofar/sas/resourceassignment/resourceassigner)
 
