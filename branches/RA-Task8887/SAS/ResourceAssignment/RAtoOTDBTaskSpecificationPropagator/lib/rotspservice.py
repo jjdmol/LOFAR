@@ -35,17 +35,18 @@ import time
 from lofar.messaging.RPC import RPC, RPCException
 
 import lofar.sas.resourceassignment.resourceassignmentservice.rpc as rarpc ## RA DB
-from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.rabuslistener import RANotificationBusListener
+from lofar.sas.resourceassignment.database.radbbuslistener import RADBBusListener
+from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_BUSNAME as RA_NOTIFICATION_BUSNAME
+from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_SUBJECTS as RA_NOTIFICATION_SUBJECTS
 from lofar.sas.resourceassignment.resourceassigner.config import RA_NOTIFICATION_BUSNAME, RA_NOTIFICATION_SUBJECTS
 from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.propagator import RAtoOTDBPropagator
 
 logger = logging.getLogger(__name__)
 
-class RATaskStatusChangedListener(RANotificationBusListener):
+class RATaskStatusChangedListener(RADBBusListener):
     def __init__(self,
                  busname=RA_NOTIFICATION_BUSNAME,
-      
-      subject=RA_NOTIFICATION_SUBJECTS,
+                 subject=RA_NOTIFICATION_SUBJECTS,
                  broker=None,
                  propagator=None, ## TODO also give translator?
                  **kwargs):
@@ -65,6 +66,15 @@ class RATaskStatusChangedListener(RANotificationBusListener):
         if not self.propagator:
             self.propagator =  RAtoOTDBPropagator()
 
+    def onTaskUpdated(self, old_task, new_task):
+        # override super onTaskUpdated
+        # check for status change, and call either onTaskScheduled or onTaskScheduled
+        if old_task['status_id'] != new_task['status_id']:
+            if new_task['status'] == 'scheduled':
+                self.onTaskScheduled(task['id'], task['otdb_id'], task['mom_id'])
+            elif new_task['status'] == 'conflict':
+                self.onTaskScheduled(task['id'], task['otdb_id'], task['mom_id'])
+                
     def onTaskScheduled(self, ra_id, otdb_id, mom_id):
         logger.info('onTaskScheduled: ra_id=%s otdb_id=%s mom_id=%s' % (ra_id, otdb_id, mom_id))
 
