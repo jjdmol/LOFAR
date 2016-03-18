@@ -102,7 +102,7 @@ def main():
                           description='runs the RAtoOTDBTaskSpecificationPropagator service')
     parser.add_option('-q', '--broker', dest='broker', type='string', default=None, help='Address of the qpid broker, default: localhost')
     parser.add_option("--notification_busname", dest="notification_busname", type="string", default=RA_NOTIFICATION_BUSNAME, help="Name of the notification bus on which messages are published, default: %default")
-    parser.add_option("--notification_subject", dest="notification_subject", type="string", default=DEFAULT_NOTIFICATION_PREFIX+'TaskUpdated', help="Subject of the published messages to listen for, default: %default")
+    parser.add_option("--notification_subject", dest="notification_subject", type="string", default=RA_NOTIFICATION_PREFIX+'TaskUpdated', help="Subject of the published messages to listen for, default: %default")
     parser.add_option("--radb_busname", dest="radb_busname", type="string", default=RADB_BUSNAME, help="Name of the bus on which the RADB service listens, default: %default")
     parser.add_option("--radb_servicename", dest="radb_servicename", type="string", default=RADB_SERVICENAME, help="Name of the RADB service, default: %default")
     parser.add_option("--otdb_busname", dest="otdb_busname", type="string", default=OTDB_BUSNAME, help="Name of the bus on which the OTDB service listens, default: %default")
