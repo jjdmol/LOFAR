@@ -1,5 +1,24 @@
-""" O
-"""
+# base_resource_estimator.py
+#
+# Copyright (C) 2016
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# $Id: base_resource_estimator.py 33534 2016-02-08 14:28:26Z schaap $
 
 import logging
 from math import ceil, floor
@@ -14,12 +33,9 @@ logger = logging.getLogger(__name__)
 class ObservationResourceEstimator(BaseResourceEstimator):
     """ ObservationResourceEstimator
     """
-    def __init__(self, parsetDict):
+    def __init__(self):
         logger.info("init ObservationResourceEstimator")
         super(ObservationResourceEstimator, self).__init__(name='Observation')
-        logger.info('parsetDict: %s ' % parsetDict)
-        self.parset = parameterset(parsetDict).makeSubset('Observation.')
-        logger.info('parset: %s ' % self.parset)
         self.required_keys = ('sampleClock',
                               'startTime',
                               'stopTime',
@@ -31,23 +47,23 @@ class ObservationResourceEstimator(BaseResourceEstimator):
                               'ObservationControl.OnlineControl.Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor',
                               'VirtualInstrument.stationList',
                               'DataProducts.Output_CoherentStokes.enabled',
-                              #'DataProducts.Output_CoherentStokes.type',
+                              'DataProducts.Output_CoherentStokes.type',
                               'DataProducts.Output_IncoherentStokes.enabled',
-                              #'DataProducts.Output_IncoherentStokes.type'
+                              'DataProducts.Output_IncoherentStokes.type'
                               )
 
-        if self.checkParsetForRequiredKeys():
-            self.estimate()
-
-    def estimate(self):
+    def _calculate(self, parset, input_files={}):
         """ estimate
         """
         logger.info("start estimate '{}'".format(self.name))
-        self.correlated()
-        self.coherentstokes()
-        self.incoherentstokes()
+        #logger.info('parsetDict: %s ' % parsetDict)
+        parset = parameterset(parset).makeSubset('Observation.')
+        logger.info('parset: %s ' % parset)
+        correlated       = self.correlated(parset)
+        coherentstokes   = self.coherentstokes(parset)
+        incoherentstokes = self.incoherentstokes(parset)
 
-    def correlated(self):
+    def correlated(self, parset):
         """ Estimate number of files and size of file"""
         logger.info("calculating correlated datasize")
         size_of_header = self.parset.getInt('size_of_header', 512)
@@ -60,10 +76,10 @@ class ObservationResourceEstimator(BaseResourceEstimator):
         nr_polarizations = self.parset.getInt('nr_polarizations', 2)
         channels_per_subband = self.parset.getInt('ObservationControl.OnlineControl.Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband', 64)
         intergration_time = self.parset.getFloat('ObservationControl.OnlineControl.Cobalt.Correlator.integrationTime', 1)
-        no_virtual_stations = self._virtual_stations()
+        nr_of_virtual_stations = self._virtual_stations()
 
         integrated_seconds = floor(duration / intergration_time)
-        nr_baselines = no_virtual_stations * (no_virtual_stations + 1.0) / 2.0
+        nr_baselines = no_virtual_stations * (nr_of_virtual_stations + 1.0) / 2.0
         data_size = ceil((nr_baselines * channels_per_subband * nr_polarizations**2 * size_of_complex) / 512.0) * 512.0
         n_sample_size = ceil((nr_baselines * channels_per_subband * size_of_short) / 512.0) * 512.0
 
@@ -84,7 +100,7 @@ class ObservationResourceEstimator(BaseResourceEstimator):
         self.total_bandwidth = ceil((self.total_data_size * 8) / duration)  # bits/second
 
 
-    def coherentstokes(self):
+    def coherentstokes(self, parset):
         """ calculate coherent stokes
         """
 
@@ -151,7 +167,7 @@ class ObservationResourceEstimator(BaseResourceEstimator):
         self.total_data_size += ceil(total_files_summed * max_nr_subbands * size_per_subband)
         self.total_bandwidth = ceil((self.total_data_size * 8) / duration)  # bits/second
 
-    def incoherentstokes(self):
+    def incoherentstokes(self, parset):
         """ Estimate incoherentstokes()
         calculates: datasize (number of files, file size), bandwidth
 
@@ -210,21 +226,21 @@ class ObservationResourceEstimator(BaseResourceEstimator):
             self.total_bandwidth = ceil((self.total_data_size * 8) / duration)  # bits/sec
         return
 
-    def _samples_per_second(self):
+    def _samples_per_second(self, parset):
         """ set samples per second
         """
         samples_160mhz = 155648
         samples_200mhz = 196608
-        samples = samples_160mhz if '160' in self.parset['sample_clock'] else samples_200mhz
+        samples = samples_160mhz if '160' in parset['sample_clock'] else samples_200mhz
         logger.info("samples per second for {} MHz clock = {}".format(self.parset['sample_clock'], samples))
         return samples
 
-    def _virtual_stations(self):
+    def _virtual_stations(self, parset):
         """ calculate virtualnumber of stations
         """
-        stationList = self.parset.getStringVector('VirtualInstrument.stationList')
+        stationList = parset.getStringVector('VirtualInstrument.stationList')
         nr_virtual_stations = 0
-        if self.parset['antennaSet'] in ('HBA_DUAL', 'HBA_DUAL_INNER'):
+        if parset['antennaSet'] in ('HBA_DUAL', 'HBA_DUAL_INNER'):
             for station in stationList:
                 if 'CS' in station:
                     nr_virtual_stations += 2

@@ -17,12 +17,22 @@ logger = logging.getLogger(__name__)
 class ResourceEstimatorHandler(MessageHandlerInterface):
     def __init__(self, **kwargs):
         super(ResourceEstimatorHandler, self).__init__(**kwargs)
+        self.observation = ObservationResourceEstimator()
+        self.longbaseline_pipeline = LongBaselinePipelineResourceEstimator()
+        self.calibration_pipeline = CalibrationPipelineResourceEstimator()
+        self.pulsar_pipeline = PulsarPipelineResourceEstimator()
+        self.imaging_pipeline = ImagePipelineResourceEstimator()
 
     def handle_message(self, msg):
-        return self._get_estimated_resources(msg)
+        otdb_id = msg.content["otdb_id"]
+        parsets = msg.content["parsets"]
+        return self._get_estimated_resources(otdb_id, parsets) ##TODO also handle MoM tasks in RA 1.2
 
-    def _get_estimated_resources(self, parsetDict):
-        logger.info('get_estimated_resources on: %s' % parsetDict)
+    #def _getPredecessors(self, parset):
+        
+
+    def _get_estimated_resources(self, otdb_id, parsets):
+        logger.info('get_estimated_resources on: %s' % parsets)
         result = {}
 
         observation = ObservationResourceEstimator(parsetDict)
