@@ -571,7 +571,7 @@ class RADatabase:
             self.commit()
         return id
 
-    def getResourceClaims(self, claim_ids=None, lower_bound=None, upper_bound=None, resource_ids=None, task_id=None, status=None, resource_type=None, extended=False):
+    def getResourceClaims(self, claim_ids=None, lower_bound=None, upper_bound=None, resource_ids=None, task_ids=None, status=None, resource_type=None, extended=False):
         extended |= resource_type is not None
         query = '''SELECT * from %s''' % ('resource_allocation.resource_claim_extended_view' if extended else 'resource_allocation.resource_claim_view')
 
@@ -622,11 +622,23 @@ class RADatabase:
                 conditions.append('resource_id in %s')
                 qargs.append(tuple(resource_ids))
 
-        if task_id is not None:
+        if task_ids is not None:
             #if task_id is normal positive we do a normal inclusive filter
             #if task_id is negative we do an exclusive filter
-            conditions.append('task_id = %s' if task_id >= 0 else 'task_id != %s')
-            qargs.append(abs(task_id))
+            if isinstance(task_ids, int): # just a single id
+                conditions.append('task_id = %s' if task_ids >= 0 else 'task_id != %s')
+                qargs.append(abs(task_ids))
+            else:
+                inclusive_task_ids = [t for t in task_ids if t >= 0]
+                exclusive_task_ids = [-t for t in task_ids if t < 0]
+
+                if inclusive_task_ids:
+                    conditions.append('task_id in %s')
+                    qargs.append(tuple(inclusive_task_ids))
+
+                if exclusive_task_ids:
+                    conditions.append('task_id not in %s')
+                    qargs.append(tuple(exclusive_task_ids))
 
         if status is not None:
             conditions.append('status_id = %s')
@@ -856,7 +868,7 @@ class RADatabase:
             otherClaims = self.getResourceClaims(resource_ids=moved_claim['resource_id'],
                                                  lower_bound=moved_claim['starttime'],
                                                  upper_bound=moved_claim['endtime'],
-                                                 task_id=-moved_claim['task_id'])
+                                                 task_ids=-moved_claim['task_id'])
             if otherClaims:
                 self.validateResourceClaimsStatus(otherClaims, commit=False)
 
@@ -871,21 +883,29 @@ class RADatabase:
         conflistStatusId = self.getResourceClaimStatusId('conflict')
         claimedStatusId = self.getResourceClaimStatusId('claimed')
 
-        for claim in claims:
-            otherClaims = self.getResourceClaims(resource_ids=claim['resource_id'],
-                                                 lower_bound=claim['starttime'],
-                                                 upper_bound=claim['endtime'],
-                                                 task_id=-claim['task_id'])
+        resource_ids = [c['resource_id'] for c in claims]
+        task_ids = [c['task_id'] for c in claims]
+        exclude_task_ids = [-t for t in task_ids]
+        min_starttime = min(c['starttime'] for c in claims)
+        max_endtime = min(c['endtime'] for c in claims)
 
-            if claim['status_id'] != conflistStatusId and otherClaims:
+        otherClaims = self.getResourceClaims(resource_ids=resource_ids,
+                                             lower_bound=min_starttime,
+                                             upper_bound=max_endtime,
+                                             task_ids=exclude_task_ids)
+
+        for claim in claims:
+            otherClaimsForResource = [c for c in otherClaims if c['resource_id'] == claim['resource_id']]
+
+            if claim['status_id'] != conflistStatusId and otherClaimsForResource:
                 self.updateResourceClaim(resource_claim_id=claim['id'], status=conflistStatusId, commit=False)
-            elif claim['status_id'] == conflistStatusId and not otherClaims:
+            elif claim['status_id'] == conflistStatusId and not otherClaimsForResource:
                 self.updateResourceClaim(resource_claim_id=claim['id'], status=claimedStatusId, commit=False)
 
         task_ids = set(c['task_id'] for c in claims)
 
         for task_id in task_ids:
-            if self.getResourceClaims(task_id=task_id, status=conflistStatusId):
+            if self.getResourceClaims(task_ids=task_id, status=conflistStatusId):
                 self.updateTask(task_id=task_id, task_status='conflict', commit=False)
             elif self.getTask(task_id)['status'] == 'conflict':
                 self.updateTask(task_id=task_id, task_status='prescheduled', commit=False)
