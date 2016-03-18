@@ -38,7 +38,6 @@ import lofar.sas.resourceassignment.resourceassignmentservice.rpc as rarpc ## RA
 from lofar.sas.resourceassignment.database.radbbuslistener import RADBBusListener
 from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_BUSNAME as RA_NOTIFICATION_BUSNAME
 from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_SUBJECTS as RA_NOTIFICATION_SUBJECTS
-from lofar.sas.resourceassignment.resourceassigner.config import RA_NOTIFICATION_BUSNAME, RA_NOTIFICATION_SUBJECTS
 from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.propagator import RAtoOTDBPropagator
 
 logger = logging.getLogger(__name__)
@@ -74,7 +73,7 @@ class RATaskStatusChangedListener(RADBBusListener):
                 self.onTaskScheduled(task['id'], task['otdb_id'], task['mom_id'])
             elif new_task['status'] == 'conflict':
                 self.onTaskScheduled(task['id'], task['otdb_id'], task['mom_id'])
-                
+
     def onTaskScheduled(self, ra_id, otdb_id, mom_id):
         logger.info('onTaskScheduled: ra_id=%s otdb_id=%s mom_id=%s' % (ra_id, otdb_id, mom_id))
 
