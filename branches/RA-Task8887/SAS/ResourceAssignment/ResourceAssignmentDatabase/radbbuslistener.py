@@ -28,7 +28,7 @@ Typical usage is to derive your own subclass from RADBBusListener and implement 
 """
 
 from lofar.messaging.messagebus import AbstractBusListener
-from lofar.sas.resourceassignment.database.config import DEFAULT_BUSNAME
+from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_BUSNAME, DEFAULT_NOTIFICATION_SUBJECTS
 from lofar.common.util import waitForInterrupt
 
 import qpid.messaging
@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 
 class RADBBusListener(AbstractBusListener):
-    def __init__(self, busname=DEFAULT_BUSNAME, subject='RADB.*', broker=None, **kwargs):
+    def __init__(self, busname=DEFAULT_NOTIFICATION_BUSNAME, subject=DEFAULT_NOTIFICATION_SUBJECTS, broker=None, **kwargs):
         """
         RADBBusListener listens on the lofar notification message bus and calls (empty) on<SomeMessage> methods when such a message is received.
         Typical usage is to derive your own subclass from RADBBusListener and implement the specific on<SomeMessage> methods that you are interested in.
