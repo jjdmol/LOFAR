@@ -27,7 +27,7 @@ RADBChangesHandler listens on the lofar notification message bus and calls (empt
 Typical usage is to derive your own subclass from RADBChangesHandler and implement the specific on<SomeMessage> methods that you are interested in.
 """
 
-from lofar.sas.resourceassignment.database.config import DEFAULT_BUSNAME
+from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_BUSNAME, DEFAULT_NOTIFICATION_SUBJECTS
 from lofar.sas.resourceassignment.database.radbbuslistener import RADBBusListener
 from lofar.common.util import waitForInterrupt
 from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
@@ -47,7 +47,7 @@ CHANGE_INSERT_TYPE = 'insert'
 CHANGE_DELETE_TYPE = 'delete'
 
 class RADBChangesHandler(RADBBusListener):
-    def __init__(self, busname=DEFAULT_BUSNAME, subject='RADB.*', broker=None, momrpc=None, **kwargs):
+    def __init__(self, busname=DEFAULT_NOTIFICATION_BUSNAME, subject=DEFAULT_NOTIFICATION_SUBJECTS, broker=None, momrpc=None, **kwargs):
         """
         RADBChangesHandler listens on the lofar notification message bus and keeps track of all the change notifications.
         :param busname: valid Qpid address (default: lofar.ra.notification)
