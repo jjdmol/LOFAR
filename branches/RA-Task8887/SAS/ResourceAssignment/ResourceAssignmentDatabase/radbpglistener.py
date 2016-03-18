@@ -30,7 +30,7 @@ import time
 import json
 from optparse import OptionParser
 
-from lofar.common.postgres import PostgresListener
+from lofar.common.postgres import PostgresListener, makePostgresNotificationQueries
 from lofar.messaging import EventMessage, ToBus
 from lofar.sas.resourceassignment.database.config import DEFAULT_BUSNAME, DEFAULT_NOTIFICATION_SUBJECT_PREFIX
 from lofar.common import dbcredentials
@@ -48,17 +48,14 @@ class RADBPGListener(PostgresListener):
         self.notification_prefix = notification_prefix
         self.event_bus = ToBus(busname, broker=broker)
 
-        self.setupPostgresNotifications('resource_allocation', 'task', view_for_row='task_view')
-        self.subscribe('task_update', self.onTaskUpdated)
-        self.subscribe('task_insert', self.onTaskInserted)
+        self.subscribe('task_update_with_task_view', self.onTaskUpdated)
+        self.subscribe('task_insert_with_task_view', self.onTaskInserted)
         self.subscribe('task_delete', self.onTaskDeleted)
 
         # when the specification starttime and endtime are updated, then that effects the task as well
         # so subscribe to specification_update, and use task_view as view_for_row
-        self.setupPostgresNotifications('resource_allocation', 'specification', updateNotification=True, insertNotification=False, deleteNotification=False, view_for_row='task_view')
-        self.subscribe('specification_update', self.onSpecificationUpdated)
+        self.subscribe('specification_update_with_task_view', self.onSpecificationUpdated)
 
-        self.setupPostgresNotifications('resource_allocation', 'resource_claim', view_for_row='resource_claim_view')
         self.subscribe('resource_claim_update', self.onResourceClaimUpdated)
         self.subscribe('resource_claim_insert', self.onResourceClaimInserted)
         self.subscribe('resource_claim_delete', self.onResourceClaimDeleted)
@@ -103,17 +100,19 @@ class RADBPGListener(PostgresListener):
         So, parse the requested fields, and return them as datetime.
         '''
         try:
-            for field in fields:
-                try:
-                    timestampStr = contentDict[field]
-                    if timestampStr.rfind('.') > -1:
-                        timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S.%f')
-                    else:
-                        timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S')
+            for state in ('old', 'new'):
+                if state in contentDict:
+                    for field in fields:
+                        try:
+                            timestampStr = contentDict[state][field]
+                            if timestampStr.rfind('.') > -1:
+                                timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S.%f')
+                            else:
+                                timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S')
 
-                    contentDict[field] = timestamp
-                except Exception as e:
-                    logger.error('Could not convert field \'%s\' to datetime: %s' % (field, e))
+                            contentDict[state][field] = timestamp
+                        except Exception as e:
+                            logger.error('Could not convert field \'%s\' to datetime: %s' % (field, e))
 
             return contentDict
         except Exception as e:
@@ -147,6 +146,9 @@ def main():
     parser.set_defaults(dbcredentials="RADB")
     (options, args) = parser.parse_args()
 
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                        level=logging.INFO)
+
     dbcreds = dbcredentials.parse_options(options)
 
     with RADBPGListener(busname=options.busname,
@@ -155,10 +157,14 @@ def main():
                         broker=options.broker) as listener:
         listener.waitWhileListening()
 
+def make_radb_postgres_notification_queries():
+    print makePostgresNotificationQueries('resource_allocation', 'task', 'INSERT', view_for_row='task_view')
+    print makePostgresNotificationQueries('resource_allocation', 'task', 'UPDATE', view_for_row='task_view')
+    print makePostgresNotificationQueries('resource_allocation', 'task', 'DELETE')
+    print makePostgresNotificationQueries('resource_allocation', 'specification', 'UPDATE', view_for_row='task_view', view_selection_id='specification_id')
+    print makePostgresNotificationQueries('resource_allocation', 'resource_claim', 'INSERT', view_for_row='resource_claim_view')
+    print makePostgresNotificationQueries('resource_allocation', 'resource_claim', 'UPDATE', view_for_row='resource_claim_view')
+    print makePostgresNotificationQueries('resource_allocation', 'resource_claim', 'DELETE')
+
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                        level=logging.INFO)
     main()
-
-
-
