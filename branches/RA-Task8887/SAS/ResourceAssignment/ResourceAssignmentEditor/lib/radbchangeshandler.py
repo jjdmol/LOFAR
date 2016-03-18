@@ -28,7 +28,7 @@ Typical usage is to derive your own subclass from RADBChangesHandler and impleme
 """
 
 from lofar.sas.resourceassignment.database.config import DEFAULT_BUSNAME
-from lofar.sas.resourceassignment.resourceassignmentservice.radbbuslistener import RADBBusListener
+from lofar.sas.resourceassignment.database.radbbuslistener import RADBBusListener
 from lofar.common.util import waitForInterrupt
 from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
 from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
