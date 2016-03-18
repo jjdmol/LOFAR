@@ -94,7 +94,7 @@ class RADBHandler(MessageHandlerInterface):
     def _getResourceClaims(self, **kwargs):
         return self.radb.getResourceClaims(lower_bound=kwargs.get('lower_bound'),
                                            upper_bound=kwargs.get('upper_bound'),
-                                           task_id=kwargs.get('task_id'),
+                                           task_ids=kwargs.get('task_id'),
                                            status=kwargs.get('status'),
                                            resource_type=kwargs.get('resource_type'),
                                            extended=kwargs.get('extended', False))
