@@ -1,0 +1,34 @@
+#!/usr/bin/python
+
+from ggsapi_ticket import client_token
+
+from lofar.messaging.RPC import RPC
+
+# Simple RPC server 'ToUpper'
+
+# create service function:
+
+tk=client_token("qpidd@robinhood.control.lofar")
+
+# Used settings
+#ServiceName="MyKerberizedService"
+#BusName="lofartestbus"
+
+ServiceName="ToUpper"
+BusName="amq.topic"
+
+Broker="robinhood.control.lofar"
+
+# Register function as a service handler listeneing at Bus BusName and ServiceName
+with RPC(ServiceName,busname=BusName,broker=Broker) as toupper:
+    token=tk.get_token()
+
+    try:
+       res,status = toupper("bla" ,UserName='peterzon',KRB5ticket=token,timeout=1)
+       print res
+       print status
+    except Exception as e:
+       print e
+
+    tk.validate_token(res)
+

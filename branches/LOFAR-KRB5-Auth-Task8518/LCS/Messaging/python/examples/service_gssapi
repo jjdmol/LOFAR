@@ -1,0 +1,48 @@
+#!/usr/bin/python
+
+from ggsapi_ticket import service_token
+
+from lofar.messaging.Service import Service
+from lofar.common.util import waitForInterrupt
+
+# Simple RPC server 'ToUpper'
+
+# create Kerberos token validator:
+tk=service_token("qpidd@robinhood.control.lofar")
+
+
+def ToUpper( Text ):
+    if (isinstance(Text,dict)):
+      ret={}
+      for name,value in Text.iteritems():
+        ret[name]=str(value).upper()
+      return ret
+    if (isinstance(Text,str) or isinstance(Text,unicode)):
+      print "ToUpper : %s" %(Text)
+      try:
+             ret = tk.validate_token(Text)
+             return ret
+      except Exception as e:
+             return "Failed verification" + str(e)
+
+    ret="Failed to convert to upper"
+    try:
+      ret="Cannot conver to upper object:" + str(Text) + " of type " + Text.__class__.__name__
+    except Exception as e:
+      ret="Cannot conver to upper object:" + str(e)
+    return ret
+
+# Used settings
+ServiceName="ToUpper"
+BusName="amq.topic"
+Broker="robinhood.control.lofar"
+
+# Register function as a service handler listeneing at Bus BusName and ServiceName
+myserv = Service(ServiceName,ToUpper,busname=BusName,numthreads=4,broker=Broker)
+
+# 'with' sets up the connection context and defines the scope of the service.
+with myserv:
+    waitForInterrupt()
+    logger.info("Keyboard interrupt received.")
+
+
