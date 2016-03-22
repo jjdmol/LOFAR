@@ -840,7 +840,7 @@ class RADatabase:
 
 
     def updateTaskAndResourceClaims(self, task_id, starttime=None, endtime=None, task_status=None, claim_status=None, session_id=None, username=None, user_id=None, commit=True):
-        claimsBeforeUpdate = self.getResourceClaims(task_id=task_id)
+        claimsBeforeUpdate = self.getResourceClaims(task_ids=task_id)
 
         if claim_status is not None and isinstance(claim_status, basestring):
             #convert status string to status.id
@@ -891,7 +891,7 @@ class RADatabase:
             self.commit()
 
     def validateResourceClaimsStatusForTask(self, task_id, commit=True):
-        claims = self.getResourceClaims(task_id=task_id)
+        claims = self.getResourceClaims(task_ids=task_id)
         return self.validateResourceClaimsStatus(claims, commit)
 
     def validateResourceClaimsStatus(self, claims, commit=True):
