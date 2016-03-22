@@ -830,7 +830,7 @@ class RADatabase:
         self._executeQuery(query, values)
 
         if validate:
-            self.validateResourceClaimsStatus([self.getResourceClaims(resource_claim_ids)], commit=False)
+            self.validateResourceClaimsStatus(self.getResourceClaims(resource_claim_ids), commit=False)
             self.validateResourceClaimsStatusForMovedClaims(claimsBeforeUpdate, commit=False)
 
         if commit:
@@ -895,11 +895,6 @@ class RADatabase:
         return self.validateResourceClaimsStatus(claims, commit)
 
     def validateResourceClaimsStatus(self, claims, commit=True):
-        # cache status_id's for conflift and claimed
-        claimsStatuses = self.getResourceClaimStatuses()
-        conflistStatusId = next(cs['id'] for cs in claimsStatuses if cs['name'] == 'conflict')
-        claimedStatusId = next(cs['id'] for cs in claimsStatuses if cs['name'] == 'claimed')
-
         resource_ids = [c['resource_id'] for c in claims]
         task_ids = list(set(c['task_id'] for c in claims))
         exclude_task_ids = [-t for t in task_ids]
@@ -907,6 +902,11 @@ class RADatabase:
         max_endtime = min(c['endtime'] for c in claims)
 
         logger.info("validating status of %d resource claim(s) for task_id(s) %s" % (len(claims), to_csv_string(task_ids)))
+
+        # cache status_id's for conflift and claimed
+        claimsStatuses = self.getResourceClaimStatuses()
+        conflistStatusId = next(cs['id'] for cs in claimsStatuses if cs['name'] == 'conflict')
+        claimedStatusId = next(cs['id'] for cs in claimsStatuses if cs['name'] == 'claimed')
 
         # get all claims for given resource_ids, within the given timeframe
         otherClaims = self.getResourceClaims(resource_ids=resource_ids,
