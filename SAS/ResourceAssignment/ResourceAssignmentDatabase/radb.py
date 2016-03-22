@@ -879,13 +879,17 @@ class RADatabase:
         return updated
 
     def validateResourceClaimsStatusForMovedClaims(self, moved_claims, commit=True):
-        for moved_claim in moved_claims:
-            otherClaims = self.getResourceClaims(resource_ids=moved_claim['resource_id'],
-                                                 lower_bound=moved_claim['starttime'],
-                                                 upper_bound=moved_claim['endtime'],
-                                                 task_ids=-moved_claim['task_id'])
-            if otherClaims:
-                self.validateResourceClaimsStatus(otherClaims, commit=False)
+        resource_ids = list(set([c['resource_id'] for c in moved_claims]))
+        min_starttime = min(c['starttime'] for c in moved_claims)
+        max_endtime = min(c['endtime'] for c in moved_claims)
+
+        otherClaims = self.getResourceClaims(resource_ids=resource_ids,
+                                             lower_bound=min_starttime,
+                                             upper_bound=max_endtime)
+
+        if otherClaims:
+            logger.info("validating %d claims which may have been freed" % len(otherClaims))
+            self.validateResourceClaimsStatus(otherClaims, commit=False)
 
         if commit:
             self.commit()
@@ -895,9 +899,8 @@ class RADatabase:
         return self.validateResourceClaimsStatus(claims, commit)
 
     def validateResourceClaimsStatus(self, claims, commit=True):
-        resource_ids = [c['resource_id'] for c in claims]
+        resource_ids = list(set([c['resource_id'] for c in claims]))
         task_ids = list(set(c['task_id'] for c in claims))
-        exclude_task_ids = [-t for t in task_ids]
         min_starttime = min(c['starttime'] for c in claims)
         max_endtime = min(c['endtime'] for c in claims)
 
