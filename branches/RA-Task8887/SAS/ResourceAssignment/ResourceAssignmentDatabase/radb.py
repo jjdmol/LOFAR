@@ -29,6 +29,7 @@ from datetime import datetime, timedelta
 import time
 from optparse import OptionParser
 from lofar.common import dbcredentials
+from lofar.common.util import to_csv_string
 
 logger = logging.getLogger(__name__)
 
@@ -677,8 +678,7 @@ class RADatabase:
 
         return dict(result) if result else None
 
-    def insertResourceClaim(self, resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, properties=None, validate=True, commit=True):
-
+    def insertResourceClaim(self, resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, properties=None, commit=True):
         # for code re-use:
         # put the one claim in a list
         # and do a bulk insert of the one-item-list
@@ -697,6 +697,8 @@ class RADatabase:
         '''bulk insert of resource claims for a task
         claims is a list of dicts. Each dict is a claim for one resource containing the fields: starttime, endtime, status, claim_size
         '''
+        logger.info('insertResourceClaims for task_id=%d with %d claim(s)' % (task_id, len(claims)))
+
         status_strings = set([c['status'] for c in claims if isinstance(c['status'], basestring)])
         if status_strings:
             status_string2id = {s:self.getResourceClaimStatusId(s) for s in status_strings}
@@ -753,6 +755,7 @@ class RADatabase:
         if commit:
             self.commit()
 
+        logger.info('inserted %d resource claim(s) for task_id=%d' % (len(claimIds), task_id))
         return claimIds
 
     def deleteResourceClaim(self, resource_claim_id, commit=True):
@@ -764,9 +767,14 @@ class RADatabase:
             self.commit()
         return self.cursor.rowcount > 0
 
-    def updateResourceClaim(self, resource_claim_id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, username=None, user_id=None, validate=True, commit=True):
+    def updateResourceClaim(self, resource_claim_id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, username=None, user_id=None, commit=True):
+        return self.updateResourceClaims([resource_claim_id], resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, commit)
+
+    def updateResourceClaims(self, resource_claim_ids, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, username=None, user_id=None, validate=True, commit=True):
+        logger.info("updateResourceClaims for %d claims" % len(resource_claim_ids))
+
         if validate:
-            claimBeforeUpdate = self.getResourceClaim(resource_claim_id)
+            claimsBeforeUpdate = self.getResourceClaims(resource_claim_ids)
 
         if status is not None and isinstance(status, basestring):
             #convert status string to status.id
@@ -811,19 +819,19 @@ class RADatabase:
             fields.append('user_id')
             values.append(user_id)
 
-        values.append(resource_claim_id)
+        values.append(tuple(resource_claim_ids))
 
         query = '''UPDATE resource_allocation.resource_claim
         SET ({fields}) = ({value_placeholders})
-        WHERE resource_allocation.resource_claim.id = {rc_id_placeholder};'''.format(fields=', '.join(fields),
-                                                                                     value_placeholders=', '.join('%s' for x in fields),
-                                                                                     rc_id_placeholder='%s')
+        WHERE resource_allocation.resource_claim.id in {rc_ids_placeholder};'''.format(fields=', '.join(fields),
+                                                                                         value_placeholders=', '.join('%s' for x in fields),
+                                                                                         rc_ids_placeholder='%s')
 
         self._executeQuery(query, values)
 
         if validate:
-            self.validateResourceClaimsStatus([self.getResourceClaim(resource_claim_id)], commit=False)
-            self.validateResourceClaimsStatusForMovedClaims([claimBeforeUpdate], commit=False)
+            self.validateResourceClaimsStatus([self.getResourceClaims(resource_claim_ids)], commit=False)
+            self.validateResourceClaimsStatusForMovedClaims(claimsBeforeUpdate, commit=False)
 
         if commit:
             self.commit()
@@ -847,47 +855,23 @@ class RADatabase:
             task = self.getTask(task_id)
             updated &= self.updateSpecification(task['specification_id'], starttime=starttime, endtime=endtime, commit=False)
 
-        fields = []
-        values = []
+        if (starttime or endtime or claim_status is not None or session_id is not None or
+            username is not None or user_id is not None):
+            # update the claims as well
+            # updateResourceClaims also validates the updated claims
+            claim_ids = [c['id'] for c in claimsBeforeUpdate]
+            updated &= self.updateResourceClaims(claim_ids,
+                                                 starttime=starttime,
+                                                 endtime=endtime,
+                                                 status=claim_status,
+                                                 session_id=session_id,
+                                                 username=username, user_id=user_id,
+                                                 commit=False)
 
-        if starttime:
-            fields.append('starttime')
-            values.append(starttime)
-
-        if endtime:
-            fields.append('endtime')
-            values.append(endtime)
-
-        if claim_status is not None :
-            fields.append('status_id')
-            values.append(claim_status)
-
-        if session_id is not None :
-            fields.append('session_id')
-            values.append(session_id)
-
-        if username is not None :
-            fields.append('username')
-            values.append(username)
-
-        if user_id is not None :
-            fields.append('user_id')
-            values.append(user_id)
-
-        if fields and values:
-            values.append(task_id)
-
-            query = '''UPDATE resource_allocation.resource_claim
-            SET ({fields}) = ({value_placeholders})
-            WHERE resource_allocation.resource_claim.task_id = {task_id_placeholder};'''.format(fields=', '.join(fields),
-                                                                                                value_placeholders=', '.join('%s' for x in fields),
-                                                                                                task_id_placeholder='%s')
-
-            self._executeQuery(query, values)
-            updated &= self.cursor.rowcount > 0
-
-        self.validateResourceClaimsStatusForTask(task_id, commit=False)
-        self.validateResourceClaimsStatusForMovedClaims(claimsBeforeUpdate, commit=False)
+            # because we moved or changed the status of these claims,
+            # validate the claims 'underneath' which may have been in conflict
+            # and which now may be 'freed'
+            self.validateResourceClaimsStatusForMovedClaims(claimsBeforeUpdate, commit=False)
 
         if commit:
             self.commit()
@@ -911,30 +895,62 @@ class RADatabase:
         return self.validateResourceClaimsStatus(claims, commit)
 
     def validateResourceClaimsStatus(self, claims, commit=True):
-        conflistStatusId = self.getResourceClaimStatusId('conflict')
-        claimedStatusId = self.getResourceClaimStatusId('claimed')
+        # cache status_id's for conflift and claimed
+        claimsStatuses = self.getResourceClaimStatuses()
+        conflistStatusId = next(cs['id'] for cs in claimsStatuses if cs['name'] == 'conflict')
+        claimedStatusId = next(cs['id'] for cs in claimsStatuses if cs['name'] == 'claimed')
 
         resource_ids = [c['resource_id'] for c in claims]
-        task_ids = [c['task_id'] for c in claims]
+        task_ids = list(set(c['task_id'] for c in claims))
         exclude_task_ids = [-t for t in task_ids]
         min_starttime = min(c['starttime'] for c in claims)
         max_endtime = min(c['endtime'] for c in claims)
 
+        logger.info("validating status of %d resource claim(s) for task_id(s) %s" % (len(claims), to_csv_string(task_ids)))
+
+        # get all claims for given resource_ids, within the given timeframe
         otherClaims = self.getResourceClaims(resource_ids=resource_ids,
                                              lower_bound=min_starttime,
-                                             upper_bound=max_endtime,
-                                             task_ids=exclude_task_ids)
+                                             upper_bound=max_endtime)
 
-        for claim in claims:
-            otherClaimsForResource = [c for c in otherClaims if c['resource_id'] == claim['resource_id']]
+        if otherClaims:
+            # check each claim against the other claims
+            # if there are other claims for the same resource
+            # then put the claim in conflict status
 
-            if claim['status_id'] != conflistStatusId and otherClaimsForResource:
-                self.updateResourceClaim(resource_claim_id=claim['id'], status=conflistStatusId, commit=False)
-            elif claim['status_id'] == conflistStatusId and not otherClaimsForResource:
-                self.updateResourceClaim(resource_claim_id=claim['id'], status=claimedStatusId, commit=False)
+            conflicting_claims = []
+            non_conflicting_claims = []
 
-        task_ids = set(c['task_id'] for c in claims)
+            for claim in claims:
+                hasOtherClaimsForResource = False
+                for oc in otherClaims:
+                    if (oc['resource_id'] == claim['resource_id'] and oc['id'] != claim['id'] and
+                        oc['starttime'] <= claim['endtime'] and oc['endtime'] >= claim['starttime']):
+                        hasOtherClaimsForResource = True
+                        break
 
+                if hasOtherClaimsForResource:
+                    conflicting_claims.append(claim)
+                else:
+                    non_conflicting_claims.append(claim)
+
+            conflicting_claim_ids_to_update = [c['id'] for c in conflicting_claims if c['status_id'] != conflistStatusId]
+            if conflicting_claim_ids_to_update:
+                logger.info("claim(s) %s are in conflict with existing claims" % conflicting_claim_ids_to_update)
+                self.updateResourceClaims(conflicting_claim_ids_to_update, status=conflistStatusId, validate=False, commit=False)
+
+            non_conflicting_claim_ids_to_update = [c['id'] for c in non_conflicting_claims if c['status_id'] == conflistStatusId]
+            if non_conflicting_claim_ids_to_update:
+                logger.info("claims %s are not in conflict (anymore) with existing claims" % non_conflicting_claim_ids_to_update)
+                self.updateResourceClaims(non_conflicting_claim_ids_to_update, status=claimedStatusId, validate=False, commit=False)
+
+            if not conflicting_claim_ids_to_update and not non_conflicting_claim_ids_to_update:
+                logger.info("no claim statuses need to be updated for task_id(s) %s with %d resource claim(s)" % (to_csv_string(task_ids), len(claims)))
+        else:
+            logger.info("no conflicting claims found for %d resource claim(s) for task_id(s) %s" % (len(claims), to_csv_string(task_ids)))
+
+        # update each task
+        # depending on the task's claims in conflict/other status
         for task_id in task_ids:
             if self.getResourceClaims(task_ids=task_id, status=conflistStatusId):
                 self.updateTask(task_id=task_id, task_status='conflict', commit=False)
@@ -1032,7 +1048,6 @@ if __name__ == '__main__':
     for s in db.getSpecifications():
         db.deleteSpecification(s['id'])
 
-
     #c = db.cursor
     #query = '''INSERT INTO resource_allocation.resource_claim
     #(resource_id, task_id, starttime, endtime, status_id, session_id, claim_size, username, user_id)
@@ -1042,24 +1057,24 @@ if __name__ == '__main__':
     #print c.mogrify(query, [(0, 0, datetime.utcnow(), datetime.utcnow(), 200, 1, 1, 'piet', 1)])
     #exit(0)
 
+    resources = db.getResources()
 
     from lofar.common.datetimeutils import totalSeconds
     begin = datetime.utcnow()
-    for i in range(15):
+    for i in range(4):
         stepbegin = datetime.utcnow()
-        result = db.insertSpecificationAndTask(1234+i, 5678+i, 600, 0, datetime.utcnow() + timedelta(hours=1.25*i), datetime.utcnow() + timedelta(hours=1.25*i+1), "", False)
+        result = db.insertSpecificationAndTask(1234+i, 5678+i, 600, 0, datetime.utcnow() + timedelta(hours=1.25*i*0), datetime.utcnow() + timedelta(hours=1.25*i+1), "", False)
 
         #resultPrint(db.getSpecifications)
         #resultPrint(db.getTasks)
 
         task = db.getTask(result['task_id'])
-        resources = db.getResources()
 
         claims = [{'resource_id':r['id'],
                 'starttime':task['starttime'],
                 'endtime':task['endtime'],
                 'status':'claimed',
-                'claim_size':1} for r in resources[:]]
+                'claim_size':1} for r in resources[:5]]
 
         for c in claims[:2]:
             c['properties'] = [{'type':0, 'value':10}, {'type':1, 'value':20}, {'type':2, 'value':30}]
