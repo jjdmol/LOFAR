@@ -153,3 +153,6 @@ def convertStringDigitKeysToInt(dct):
 
     #python2.6 using dict constructor and list comprehension
     return dict((int(k) if isinstance(k, basestring) and k.isdigit() else k, convertStringDigitKeysToInt(v) if isinstance(v, dict) else v) for k,v in dct.items())
+
+def to_csv_string(values):
+    return ','.join(str(x) for x in values)
