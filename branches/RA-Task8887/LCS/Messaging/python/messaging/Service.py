@@ -136,7 +136,7 @@ class Service(AbstractBusListener):
     def start_listening(self, numthreads=None):
         """
         Start the background threads and process incoming messages.
-        """ 
+        """
         if self.isListening():
             return
 
@@ -179,9 +179,9 @@ class Service(AbstractBusListener):
         return args
 
     def _send_reply(self, replymessage, status, reply_to, errtxt="",backtrace=""):
-	"""
-	Internal use only. Send a reply message to the RPC client including exception info.
-	"""
+        """
+        Internal use only. Send a reply message to the RPC client including exception info.
+        """
         # Compose Reply message from reply and status.
         if isinstance(replymessage,ReplyMessage):
             reply_msg = replymessage
@@ -309,7 +309,7 @@ class Service(AbstractBusListener):
             del rawbacktrace[0]
             del rawbacktrace[-1]
             backtrace = ''.join(rawbacktrace).encode('latin-1').decode('unicode_escape')
-            self._debug(backtrace)
+            logger.error("exception while handling message: %s\n%s" % (errtxt, backtrace))
             if self.verbose:
                 logger.info("[Service:] Status: %s", str(status))
                 logger.info("[Service:] ERRTXT: %s", str(errtxt))
