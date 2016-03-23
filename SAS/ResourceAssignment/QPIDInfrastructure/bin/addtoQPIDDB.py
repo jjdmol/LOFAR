@@ -1,16 +1,9 @@
 #!/usr/bin/python
 
-# setup PYTHONPATH while testing: export PYTHONPATH=../lib:$PYTHONPATH
 import sys
-from QPIDDB import qpidinfra
-
+from lofar.qpidinfrastructure.QPIDDB import qpidinfra
 
 from optparse import OptionParser
-
-
-
-
-
 
 if __name__ == '__main__':
     parser = OptionParser('%prog [options]',

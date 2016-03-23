@@ -1,13 +1,9 @@
 #!/usr/bin/python
 
-# setup PYTHONPATH while testing: export PYTHONPATH=../lib:$PYTHONPATH
-
-from QPIDDB import qpidinfra
+from lofar.qpidinfrastructure.QPIDDB import qpidinfra
 
 S_INDB = 1
 S_ONQPID = 2
-
-
 
 class host:
     def __init__(self):

@@ -1,9 +1,7 @@
 #!/usr/bin/python
 
 import sys
-from QPIDDB import qpidinfra
-
-
+from lofar.qpidinfrastructure.QPIDDB import qpidinfra
 
 
 todb=qpidinfra()
