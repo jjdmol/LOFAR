@@ -129,7 +129,7 @@ class Parset(dict):
     return str(self.treeId())
 
   def treeId(self):
-    return int(self[PARSET_PREFIX + "Observation.ObsID"])
+    return int(self[PARSET_PREFIX + "Observation.otdbID"])
 
 class Slurm(object):
   def __init__(self, headnode="head01.cep4"):
@@ -326,12 +326,13 @@ class PipelineControl(OTDBBusListener):
     logger.info("Scheduling SLURM job for runPipeline.sh")
     slurm_job_id = self.slurm.schedule(parset.slurmJobName(),
 
-      "docker run --rm lofar-pipeline:{tag}"
+      "docker run --rm"
         " --net=host"
         " -v /data:/data"
         " -e LUSER=$UID"
         " -v $HOME/.ssh:/home/lofar/.ssh:ro"
         " -e SLURM_JOB_ID=$SLURM_JOB_ID"
+        " lofar-pipeline:{tag}"
         " runPipeline.sh -o {obsid} -c /opt/lofar/share/pipeline/pipeline.cfg.{cluster} -b {status_bus}"
       .format(
         obsid = treeId,
@@ -348,9 +349,10 @@ class PipelineControl(OTDBBusListener):
     logger.info("Scheduling SLURM job for pipelineAborted.sh")
     slurm_cancel_job_id = self.slurm.schedule("%s-aborted" % parset.slurmJobName(),
 
-      "docker run --rm lofar-pipeline:{tag}"
+      "docker run --rm"
         " --net=host"
         " -e LUSER=$UID"
+        " lofar-pipeline:{tag}"
         " pipelineAborted.sh -o {obsid} -b {status_bus}"
       .format(
         obsid = treeId,
