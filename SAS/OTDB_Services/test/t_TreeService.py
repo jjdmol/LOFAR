@@ -60,7 +60,7 @@ def do_rpc(rpc_instance, arg_dict):
 if __name__ == "__main__":
     busname = sys.argv[1] if len(sys.argv) > 1 else "simpletest"
 
-    with RPC("OTDBService.TaskGetIDs", ForwardExceptions=True, busname="lofar.otdb.specification", timeout=10) as otdbRPC:
+    with RPC("OTDBService.TaskGetIDs", ForwardExceptions=True, busname=busname, timeout=10) as otdbRPC:
         # Existing: otdb_id:1099268, mom_id:353713
         do_rpc                    (otdbRPC, {'OtdbID': 1099268, 'MomID': 353713 })
         do_rpc                    (otdbRPC, {'OtdbID': 1099268, 'MomID': 5 })
