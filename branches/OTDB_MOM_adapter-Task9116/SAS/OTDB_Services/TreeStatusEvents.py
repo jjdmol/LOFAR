@@ -24,6 +24,8 @@
 Daemon that watches the OTDB database for status changes of trees and publishes those on the messagebus.
 """
 
+import os
+import os.path
 import sys, time, pg, datetime
 import logging
 from lofar.messaging import EventMessage, ToBus
@@ -122,7 +124,8 @@ if __name__ == "__main__":
             if connected:
                 # Get start_time (= creation time of last retrieved record if any)
                 try:
-                    with open('.treestatusevent', 'r') as f:
+                    treestatuseventfilename = os.path.expanduser('~/.lofar/otdb_treestatusevent_state')
+                    with open(treestatuseventfilename, 'r') as f:
                         line = f.readline()
                         if line.rfind('.') > 0:
                             start_time = datetime.datetime.strptime(line, "%Y-%m-%d %H:%M:%S.%f")
@@ -130,7 +133,19 @@ if __name__ == "__main__":
                             start_time = datetime.datetime.strptime(line, "%Y-%m-%d %H:%M:%S")
                 except Exception as e:
                     logger.warning(e)
-                    start_time = datetime.datetime(2015, 1, 1)
+                    # start scanning from events since 'now'
+                    # this timestamp will be stored in the treestatuseventfilename file
+                    start_time = datetime.datetime.utcnow()
+
+                    try:
+                        logger.info("creating %s" % (treestatuseventfilename,))
+                        if not os.path.exists(os.path.dirname(treestatuseventfilename)):
+                            os.mkdirs(os.path.dirname(treestatuseventfilename))
+
+                        with open(treestatuseventfilename, 'w') as f:
+                            f.write(start_time.strftime("%Y-%m-%d %H:%M:%S"))
+                    except Exception as e:
+                        logger.error(e)
 
                 try:
                     logger.info("start_time=%s, polling database" % (start_time,))
@@ -145,8 +160,11 @@ if __name__ == "__main__":
 
                         logger.info("new start_time:=%s" % (creation,))
 
-                        with open('.treestatusevent', 'w') as f:
-                            f.write(creation)
+                        try:
+                            with open(treestatuseventfilename, 'w') as f:
+                                f.write(creation)
+                        except Exception as e:
+                            logger.error(e)
                 except FunctionError, exc_info:
                     logger.error(exc_info)
                 except Exception as e:
