@@ -2,10 +2,9 @@
 
 lofar_add_bin_scripts(addtoQPIDDB.py
                       cep4_config.sh
-                      CMakeLists.txt
                       compareQPIDwithDB.py
                       configQPIDfromDB.py
                       gatherfrombrokers.sh
-                      # qpidinfra_dump.sql
                       route_to_struct.py)
 
+install_files(/share/qpidinfrastructure/sql qpidinfra_dump.sql)

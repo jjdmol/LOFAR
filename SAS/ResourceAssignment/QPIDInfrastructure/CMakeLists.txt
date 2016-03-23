@@ -6,5 +6,5 @@ include(PythonInstall)
 
 add_subdirectory(lib)
 add_subdirectory(bin)
-# add_subdirectory(sql)
+add_subdirectory(sql)
 # add_subdirectory(test)
