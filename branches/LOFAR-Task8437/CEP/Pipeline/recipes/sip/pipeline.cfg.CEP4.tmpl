@@ -69,8 +69,9 @@ max_per_node = 1
 #   * pseudo-tty to prevent buffering logs (ssh -tt, docker -t)
 
 #
-# host -> worker node:       srun -w {host} -N 1 -n 1 --jobid={slurm_job_id}
-#                            Needs the specific host, because the test system does not have a global file system.
+# host -> worker node:       srun -N 1 -n 1 --jobid={slurm_job_id}
+#                            (Add -w {host} for systems that do not have a global file system, to force job
+#                            execution on the host that contains the data)
 #
 # worker node -> container:  docker run -t --rm -e LUSER={uid} -w g -v /home/mol/.ssh:/home/lofar/.ssh:ro -v /globalhome/mol/regression_test:/globalhome/mol/regression_test -v /shared:/shared --net=host {docker_image}
 #                            Starts the container on the worker node, with pretty much the same parameters as the master container:
@@ -83,4 +84,4 @@ max_per_node = 1
 #                            /bin/bash -c
 #
 #                            Required because the pipeline framework needs some bash functionality in the commands it starts.
-cmdline = ssh -n -tt -x localhost srun -w {host} -N 1 -n 1 --jobid={slurm_job_id} docker run --rm -e LUSER={uid} -v %(runtime_directory)s:%(runtime_directory)s -v working_directory)s:%(working_directory)s -v /data:/data --net=host {docker_image} /bin/bash -c "\"{command}\""
+cmdline = ssh -n -tt -x localhost srun -N 1 -n 1 --jobid={slurm_job_id} docker run --rm -e LUSER={uid} -v %(runtime_directory)s:%(runtime_directory)s -v working_directory)s:%(working_directory)s -v /data:/data --net=host {docker_image} /bin/bash -c "\"{command}\""
