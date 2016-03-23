@@ -130,7 +130,7 @@ class ResourceAssigner():
         cluster = self.parseSpecification(mainParset)
         available = self.getAvailableResources(cluster)
 
-        needed = self.getNeededResouces(mainParset)
+        needed = self.getNeededResouces(sasId, parsets)
 
         if self.checkResources(needed, available):
             claimed, resourceIds = self.claimResources(needed, taskId, startTime, endTime)
@@ -155,11 +155,12 @@ class ResourceAssigner():
         cluster ="cep4"
         return cluster
 
-    def getNeededResouces(self, parset):
-        replymessage, status = self.rerpc(parset.dict(), timeout=10)
+    def getNeededResouces(self, otdb_id, parsets):
+        replymessage, status = self.rerpc({"otdb_id":otdb_id, "parsets":parsets}, timeout=10)
         logger.info('getNeededResouces: %s' % replymessage)
-        stations = parset.getStringVector('Observation.VirtualInstrument.stationList', '')
-        logger.info('Stations: %s' % stations)
+        #stations = replymessage['observation']['stations']
+        ##stations = parset.getStringVector('Observation.VirtualInstrument.stationList', '')
+        ##logger.info('Stations: %s' % stations)
         return replymessage
 
     def getAvailableResources(self, cluster):
@@ -199,7 +200,7 @@ class ResourceAssigner():
 
     def claimResources(self, resources, taskId, startTime, endTime):
         #TEMP HACK
-        cep4storage = resources['Observation']['total_data_size']
+        cep4storage = resources['observation']['total_data_size']
         resources = dict()
         resources['cep4storage'] = cep4storage
 
