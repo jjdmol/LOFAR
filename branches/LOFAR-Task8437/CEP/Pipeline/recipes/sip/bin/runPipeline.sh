@@ -74,7 +74,7 @@ fi
 # ======= Run
 
 # Fetch parameters from parset
-PROGRAM_NAME=$(getparsetvalue $PARSET "ObsSW.Observation.ObservationControl.PythonControl.programName")
+PROGRAM_NAME=$(getparsetvalue $PARSET "ObsSW.Observation.ObservationControl.PythonControl.pythonProgram")
 
 # Run pipeline
 OPTIONS=" -d -c $PIPELINE_CONFIG"
