@@ -686,8 +686,10 @@ class RADatabase:
                 'starttime':starttime,
                 'endtime':endtime,
                 'status':status,
-                'claim_size':1,
-                'properties':properties}
+                'claim_size':1}
+
+        if properties:
+            claim['properties'] = properties
 
         result = self.insertResourceClaims(task_id, [claim], session_id, username, user_id, commit)
         if result:
@@ -706,14 +708,24 @@ class RADatabase:
                 if isinstance(c['status'], basestring):
                     c['status'] = status_string2id[c['status']]
 
-        claim_values = [(c['resource_id'], task_id, c['starttime'], c['endtime'],
-                         c['status'], session_id, c['claim_size'],
-                         username, i) for i, c in enumerate(claims)]
+        try:
+            claim_values = [(c['resource_id'], task_id, c['starttime'], c['endtime'],
+                            c['status'], session_id, c['claim_size'],
+                            username, user_id) for c in claims]
+        except Exception as e:
+            logger.error("Invalid claim dict, rolling back. %s" % e)
+            self.rollback()
+            return None
 
-        # use psycopg2 mogrify to parse and build the insert values
-        # this way we can insert many values in one insert query, returning the id's of each inserted row.
-        # this is much faster than psycopg2's insertMany method
-        insert_values = ','.join(self.cursor.mogrify('(%s, %s, %s, %s, %s, %s, %s, %s, %s)', cv) for cv in claim_values)
+        try:
+            # use psycopg2 mogrify to parse and build the insert values
+            # this way we can insert many values in one insert query, returning the id's of each inserted row.
+            # this is much faster than psycopg2's executeMany method
+            insert_values = ','.join(self.cursor.mogrify('(%s, %s, %s, %s, %s, %s, %s, %s, %s)', cv) for cv in claim_values)
+        except Exception as e:
+            logger.error("Invalid input, rolling back: %s\n%s" % (claim_values, e))
+            self.rollback()
+            return None
 
         query = '''INSERT INTO resource_allocation.resource_claim
         (resource_id, task_id, starttime, endtime, status_id, session_id, claim_size, username, user_id)
@@ -1064,7 +1076,7 @@ if __name__ == '__main__':
 
     from lofar.common.datetimeutils import totalSeconds
     begin = datetime.utcnow()
-    for i in range(4):
+    for i in range(1):
         stepbegin = datetime.utcnow()
         result = db.insertSpecificationAndTask(1234+i, 5678+i, 600, 0, datetime.utcnow() + timedelta(hours=1.25*i*0), datetime.utcnow() + timedelta(hours=1.25*i+1), "", False)
 
@@ -1077,7 +1089,7 @@ if __name__ == '__main__':
                 'starttime':task['starttime'],
                 'endtime':task['endtime'],
                 'status':'claimed',
-                'claim_size':1} for r in resources[:5]]
+                'claim_size':1} for r in resources[:3]]
 
         for c in claims[:2]:
             c['properties'] = [{'type':0, 'value':10}, {'type':1, 'value':20}, {'type':2, 'value':30}]
@@ -1090,7 +1102,7 @@ if __name__ == '__main__':
         now = datetime.utcnow()
         print totalSeconds(now - begin), totalSeconds(now - stepbegin)
 
-    #resultPrint(db.getResourceClaims)
+    resultPrint(db.getResourceClaims)
     #resultPrint(db.getResourceClaimPropertyTypes)
     #resultPrint(db.getResourceClaimPropertyTypeNames)
     #resultPrint(db.getResourceClaimProperties)
