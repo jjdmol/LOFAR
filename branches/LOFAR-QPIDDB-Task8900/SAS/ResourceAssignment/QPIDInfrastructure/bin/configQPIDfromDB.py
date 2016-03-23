@@ -1,9 +1,6 @@
 #!/usr/bin/python
 
-# setup PYTHONPATH while testing: export PYTHONPATH=../lib:$PYTHONPATH
-
-from QPIDDB import qpidinfra
-
+from lofar.qpidinfrastructure.QPIDDB import qpidinfra
 
 def qpidconfig_add_queue(settings):
     print ("qpid-config -b %s add queue %s --durable" %(settings['hostname'],settings['queuename']))
