@@ -23,32 +23,31 @@
 import logging
 from math import ceil, floor
 from base_resource_estimator import BaseResourceEstimator
-from lofar.parameterset import parameterset
 
 logger = logging.getLogger(__name__)
 
-COBALT = "ObservationControl.OnlineControl.Cobalt."
+COBALT = "Observation.ObservationControl.OnlineControl.Cobalt."
 
 class ObservationResourceEstimator(BaseResourceEstimator):
     """ ResourceEstimator for LOFAR Observations
     """
     def __init__(self):
         logger.info("init ObservationResourceEstimator")
-        super(ObservationResourceEstimator, self).__init__(name='Observation')
-        self.required_keys = ('sampleClock',
-                              'startTime',
-                              'stopTime',
-                              'antennaSet',
+        super(ObservationResourceEstimator, self).__init__(name='observation')
+        self.required_keys = ('Observation.sampleClock',
+                              'Observation.startTime',
+                              'Observation.stopTime',
+                              'Observation.antennaSet',
                               COBALT + 'Correlator.nrChannelsPerSubband',
                               COBALT + 'Correlator.integrationTime',
                               COBALT + 'BeamFormer.flysEye',
                               COBALT + 'BeamFormer.CoherentStokes.timeIntegrationFactor',
                               COBALT + 'BeamFormer.IncoherentStokes.timeIntegrationFactor',
-                              'VirtualInstrument.stationList',
-                              'DataProducts.Output_CoherentStokes.enabled',
-                              'DataProducts.Output_CoherentStokes.type',
-                              'DataProducts.Output_IncoherentStokes.enabled',
-                              'DataProducts.Output_IncoherentStokes.type'
+                              'Observation.VirtualInstrument.stationList',
+                              'Observation.DataProducts.Output_CoherentStokes.enabled',
+                              COBALT + 'BeamFormer.CoherentStokes.which',
+                              'Observation.DataProducts.Output_IncoherentStokes.enabled',
+                              COBALT + 'BeamFormer.IncoherentStokes.which'
                               )
 
     def _calculate(self, parset, input_files={}):
@@ -56,22 +55,20 @@ class ObservationResourceEstimator(BaseResourceEstimator):
         can be in a single observation.
         """
         logger.info("start estimate '{}'".format(self.name))
-        #logger.info('parsetDict: %s ' % parsetDict)
-        parset = parameterset(parset).makeSubset('Observation.')
         logger.info('parset: %s ' % parset)
-        duration = _getDuration(parset.getString('startTime'), parset.getString('stopTime'))
+        duration = self._getDuration(parset.getString('Observation.startTime'), parset.getString('Observation.stopTime'))
         
         correlated_size, correlated_bandwidth, correlated_files = self.correlated(parset, duration)
         coherentstokes_size, coherentstokes_bandwidth, coherentstokes_files = self.coherentstokes(parset, duration)
-        incoherentstokes_size, incoherentstokes_bandwith, incoherentstokes_files = self.incoherentstokes(parset, duration)
+        incoherentstokes_size, incoherentstokes_bandwidth, incoherentstokes_files = self.incoherentstokes(parset, duration)
         
         result = {}
         result['total_data_size'] = correlated_size + coherentstokes_size + incoherentstokes_size
-        result['total_bandwidth'] = correlated_bandwidth + coherentstokes_bandwidth + incoherentstokes_bandwith
+        result['total_bandwidth'] = correlated_bandwidth + coherentstokes_bandwidth + incoherentstokes_bandwidth
         result['output_files'] = {}
-        result['output_files'].append(correlated_files)
-        result['output_files'].append(coherentstokes_files)
-        result['output_files'].append(incoherentstokes_files)
+        result['output_files'].update(correlated_files)
+        result['output_files'].update(coherentstokes_files)
+        result['output_files'].update(incoherentstokes_files)
         return result
 
     def correlated(self, parset, duration):
@@ -83,53 +80,55 @@ class ObservationResourceEstimator(BaseResourceEstimator):
         size_of_short    = 2
         size_of_complex  = 8
         nr_polarizations = 2
-        channels_per_subband = parset.getInt(COBALT + 'BeamFormer.CoherentStokes.nrChannelsPerSubband', 64)
+        channels_per_subband = parset.getInt(COBALT + 'Correlator.nrChannelsPerSubband', 64) #TODO should these have defaults?
         intergration_time = parset.getFloat(COBALT + 'Correlator.integrationTime', 1)
-        nr_of_virtual_stations = self._virtual_stations()
+        nr_virtual_stations = self._virtual_stations(parset)
 
         integrated_seconds = floor(duration / intergration_time)
-        nr_baselines = no_virtual_stations * (nr_of_virtual_stations + 1.0) / 2.0 #Why is this done in float?
+        nr_baselines = nr_virtual_stations * (nr_virtual_stations + 1.0) / 2.0 #Why is this done in float?
         data_size = ceil((nr_baselines * channels_per_subband * nr_polarizations**2 * size_of_complex) / 512.0) * 512.0
         n_sample_size = ceil((nr_baselines * channels_per_subband * size_of_short) / 512.0) * 512.0
 
         # sum of all subbands in all digital beams
         nr_subbands = 0
-        for beam_nr in xrange(parset.getInt(Observation.nrBeams)):
-            subbandList = parset.getStringVector('Beam[%d].subbandList' % beam_nr)
+        for sap_nr in xrange(parset.getInt('Observation.nrBeams')):
+            subbandList = parset.getStringVector('Observation.Beam[%d].subbandList' % sap_nr)
             nr_subbands += len(subbandList)
 
         file_size = (data_size + n_sample_size + size_of_header) * integrated_seconds + size_of_overhead
         output_files['correlated_uv'] = {'nr_files': nr_subbands, 'file_size': int(file_size)}
         logger.info("correlated_uv: {} files {} bytes each".format(nr_subbands, int(file_size)))
 
-        total_data_size += ceil(file_size * nr_subbands)  # bytes
-        total_bandwidth = ceil((self.total_data_size * 8) / duration)  # bits/second
+        total_data_size = ceil(file_size * nr_subbands)  # bytes
+        total_bandwidth = ceil((total_data_size * 8) / duration)  # bits/second
         return (total_data_size, total_bandwidth, output_files)
 
     def coherentstokes(self, parset, duration):
         """  Estimate number of files, file size and bandwidth needed for coherent stokes
         """
-        if not parset.getBool([DataProducts.Output_CoherentStokes.enabled) == 'false':
-            return (0,0, {"bf_coherentstokes": {'nr_files': 0, 'file_size': 0}})
+        if not parset.getBool('Observation.DataProducts.Output_CoherentStokes.enabled'):
+            return (0,0, {})
             
         logger.info("calculate coherentstokes datasize")
-        coherent_type = parset.getString('DataProducts.Output_CoherentStokes.type')
-        subbands_per_file = parset.getInt(COBALT + 'BeamFormer.CoherentStokes.subbandsPerFile') ##TODO 512.0
-        samples_per_second = self._samples_per_second()
+        coherent_type = parset.getString(COBALT + 'BeamFormer.CoherentStokes.which')
+        subbands_per_file = parset.getInt(COBALT + 'BeamFormer.CoherentStokes.subbandsPerFile', 512)
+        samples_per_second = self._samples_per_second(parset)
         integration_factor = parset.getInt(COBALT + 'BeamFormer.CoherentStokes.timeIntegrationFactor')
 
-        nr_coherent = 4 if coherent_type in ('DATA_TYPE_XXYY', 'DATA_TYPE_STOKES_IQUV') else 1
-        if coherent_type in ('DATA_TYPE_XXYY',):
+        nr_coherent = 4 if coherent_type in ('XXYY', 'IQUV') else 1
+        if coherent_type in ('XXYY',):
             size_per_subband = samples_per_second * 4.0 * duration
         else:
             size_per_subband = (samples_per_second * 4.0 * duration) / integration_factor
+
         total_files_summed = 0
         total_files = 0
-
         max_nr_subbands = 0
+        output_files = {}
+        
         for sap_nr in xrange(parset.getInt('Observation.nrBeams')):
             logger.info("checking SAP {}".format(sap_nr))
-            subbandList = parset.getStringVector('Beam[%d].subbandList' % sap_nr)
+            subbandList = parset.getStringVector('Observation.Beam[%d].subbandList' % sap_nr)
             nr_subbands = len(subbandList)
             max_nr_subbands = max(nr_subbands, max_nr_subbands)
             for tab_nr in xrange(parset.getInt('Observation.Beam[%d].nrTiedArrayBeams' % sap_nr)):
@@ -138,76 +137,63 @@ class ObservationResourceEstimator(BaseResourceEstimator):
                     logger.info("adding coherentstokes size")
                     total_files_min = nr_coherent #TODO what does min mean here?
                     total_files_summed += total_files_min
-                    total_files += total_files_min * ceil(nr_subbands / subbands_per_file)
+                    total_files += total_files_min * ceil(nr_subbands / float(subbands_per_file))
 
             nr_tab_rings = parset.getInt('Observation.Beam[%d].nrTabRings' % sap_nr)
             if nr_tab_rings > 0:
                 logger.info("adding size for {} tab_rings".format(nr_tab_rings))
                 total_files_min = (3 * nr_tab_rings * (nr_tab_rings + 1) + 1) * nr_coherent
                 total_files_summed += total_files_min
-                total_files += total_files_min * ceil(nr_subbands / subbands_per_file)
+                total_files += total_files_min * ceil(nr_subbands / float(subbands_per_file))
 
             if parset.getBool(COBALT + 'BeamFormer.flysEye'):
                 logger.info("adding flys eye data size")
                 total_files_min = self._virtual_stations() * nr_coherent
                 total_files_summed += total_files_min
-                total_files += total_files_min * ceil(nr_subbands / subbands_per_file)
+                total_files += total_files_min * ceil(nr_subbands / float(subbands_per_file))
 
         nr_subbands_per_file = min(subbands_per_file, max_nr_subbands)
         size_per_file = nr_subbands_per_file * size_per_subband
 
-        output_files['bf_coherentstokes'] = {'nr_files': int(total_files), 'file_size': int(size_per_file)}
+        output_files['bf_coherentstokes'] = {'nr_files': int(total_files), 'nr_stokes': nr_coherent, 'file_size': int(size_per_file)}
         logger.info("coherentstokes: {} files {} bytes each".format(int(total_files), int(size_per_file)))
 
         total_data_size = ceil(total_files_summed * max_nr_subbands * size_per_subband)
-        total_bandwidth = ceil((self.total_data_size * 8) / duration)  # bits/second
+        total_bandwidth = ceil((total_data_size * 8) / duration)  # bits/second
         return (total_data_size, total_bandwidth, output_files)
 
     def incoherentstokes(self, parset, duration):
         """  Estimate number of files, file size and bandwidth needed for incoherentstokes
         """
-        if not parset.getBool('DataProducts.Output_IncoherentStokes.enabled'):
-            return (0,0, {"bf_coherentstokes": {'nr_files': 0, 'file_size': 0}})
+        if not parset.getBool('Observation.DataProducts.Output_IncoherentStokes.enabled'):
+            return (0,0, {})
             
         logger.info("calculate incoherentstokes data size")
-        incoherent_type = self.parset['output']['inCoherentStokes']['type']
-        subbands_per_file = 512.0
+        incoherent_type = parset.getString(COBALT + 'BeamFormer.IncoherentStokes.which')
+        subbands_per_file = parset.getInt(COBALT + 'BeamFormer.CoherentStokes.subbandsPerFile', 512)
         samples_per_second = self._samples_per_second(parset)
-        time_integration_factor = self.parset.get('incoherent_time_integration_factor', 1)
-        channels_per_subband = int(self.parset.get('channels_per_subband', 64))
-        incoherent_channels_per_subband = self.parset.get('incoherent_channels_per_subband', 0)
+        time_integration_factor = parset.getInt(COBALT + 'BeamFormer.IncoherentStokes.timeIntegrationFactor')
+        channels_per_subband = parset.getInt(COBALT + 'Correlator.nrChannelsPerSubband', 64) #TODO should these have defaults?
+        incoherent_channels_per_subband = parset.getInt(COBALT + 'BeamFormer.IncoherentStokes.nrChannelsPerSubband', 0)
+
+        nr_incoherent = 4 if incoherent_type in ('IQUV',) else 1
 
         total_files_summed = 0
         total_files = 0
-
-        nr_incoherent = 4 if incoherent_type in ('DATA_TYPE_STOKES_IQUV',) else 1
-
         max_nr_subbands = 0
-TODO        for sap_nr in xrange(parset.getInt('Observation.nrBeams')):
+        output_files = {}
+
+        for sap_nr in xrange(parset.getInt('Observation.nrBeams')):
             logger.info("checking SAP {}".format(sap_nr))
-            subbandList = parset.getStringVector('Beam[%d].subbandList' % sap_nr)
+            subbandList = parset.getStringVector('Observation.Beam[%d].subbandList' % sap_nr)
             nr_subbands = len(subbandList)
             max_nr_subbands = max(nr_subbands, max_nr_subbands)
             for tab_nr in xrange(parset.getInt('Observation.Beam[%d].nrTiedArrayBeams' % sap_nr)):
                 logger.info("checking TAB {}".format(tab_nr))
-                if parset.getBool("Observation.Beam[%d].TiedArrayBeam[%d].coherent" % (sap_nr, tab_nr)):
-                    logger.info("adding coherentstokes size")
-                    total_files_min = nr_coherent #TODO what does min mean here?
-                    total_files_summed += total_files_min
-                    total_files += total_files_min * ceil(nr_subbands / subbands_per_file)
-#         while 'beam[{}]'.format(beam_nr) in self.parset:
-#             beam = self.parset['beam[{}]'.format(beam_nr)]
-#             logger.info("add beam {}".format(beam_nr))
-#             max_nr_subbands = max(max_nr_subbands, int(beam['nr_subbands']))
-#             tied_array_beam_nr = 0
-#             while 'tied_array_beam[{}]'.format(tied_array_beam_nr) in beam:
-#                 tied_array_beam = beam['tied_array_beam[{}]'.format(tied_array_beam_nr)]
-#                 logger.info("add tied_array_beam {}".format(tied_array_beam_nr))
-#                 if tied_array_beam['coherent'] == 'false':
-#                     total_files_summed += nr_incoherent
-#                     total_files += nr_incoherent * ceil(int(beam['nr_subbands']) / subbands_per_file)
-#                 tied_array_beam_nr += 1
-#             beam_nr += 1
+                if not parset.getBool("Observation.Beam[%d].TiedArrayBeam[%d].coherent" % (sap_nr, tab_nr)):
+                    logger.info("adding incoherentstokes size")
+                    total_files_summed += nr_incoherent
+                    total_files += nr_incoherent * ceil(nr_subbands / float(subbands_per_file))
 
         if incoherent_channels_per_subband > 0:
             channel_integration_factor = channels_per_subband / incoherent_channels_per_subband
@@ -219,11 +205,11 @@ TODO        for sap_nr in xrange(parset.getInt('Observation.nrBeams')):
             size_per_subband = (samples_per_second * 4) / time_integration_factor / channel_integration_factor * duration
             size_per_file = nr_subbands_per_file * size_per_subband
 
-            output_files['dp_inCoherentStokes'] = {'nr_files': int(total_files), 'file_size': int(size_per_file)}
-            logger.info("dp_inCoherentStokes: {} files {} bytes each".format(int(total_files), int(size_per_file)))
+        output_files['bf_incoherentstokes'] = {'nr_files': int(total_files), 'nr_stokes': nr_incoherent, 'file_size': int(size_per_file)}
+        logger.info("incoherentstokes: {} files {} bytes each".format(int(total_files), int(size_per_file)))
 
-            total_data_size = ceil(total_files_summed * max_nr_subbands * size_per_subband)  # bytes
-            total_bandwidth = ceil((total_data_size * 8) / duration)  # bits/sec
+        total_data_size = ceil(total_files_summed * max_nr_subbands * size_per_subband)  # bytes
+        total_bandwidth = ceil((total_data_size * 8) / duration)  # bits/sec
         return (total_data_size, total_bandwidth, output_files)
 
     def _samples_per_second(self, parset):
@@ -231,16 +217,17 @@ TODO        for sap_nr in xrange(parset.getInt('Observation.nrBeams')):
         """
         samples_160mhz = 155648
         samples_200mhz = 196608
-        samples = samples_160mhz if '160' in parset['sample_clock'] else samples_200mhz
-        logger.info("samples per second for {} MHz clock = {}".format(self.parset['sample_clock'], samples))
+        sample_clock = parset.getInt('Observation.sampleClock')
+        samples = samples_160mhz if 160 == sample_clock else samples_200mhz
+        logger.info("samples per second for {} MHz clock = {}".format(sample_clock, samples))
         return samples
 
     def _virtual_stations(self, parset):
         """ calculate virtualnumber of stations
         """
-        stationList = parset.getStringVector('VirtualInstrument.stationList')
+        stationList = parset.getStringVector('Observation.VirtualInstrument.stationList')
         nr_virtual_stations = 0
-        if parset['antennaSet'] in ('HBA_DUAL', 'HBA_DUAL_INNER'):
+        if parset.getString('Observation.antennaSet') in ('HBA_DUAL', 'HBA_DUAL_INNER'):
             for station in stationList:
                 if 'CS' in station:
                     nr_virtual_stations += 2

@@ -26,6 +26,7 @@ import logging
 from datetime import datetime
 from lofar.common.datetimeutils import totalSeconds
 from datetime import datetime, timedelta
+from lofar.parameterset import parameterset
 
 logger = logging.getLogger(__name__)
 
@@ -35,14 +36,7 @@ class BaseResourceEstimator(object):
     """
     def __init__(self, name):
         self.name = name
-        #self.error = ""
-        #self.parset = {}
         self.required_keys = ()
-        #self.input_files = {}
-        #self.output_files = {}
-        #self.duration = 0  # in seconds
-        #self.total_data_size = 0  # size in bytes
-        #self.total_bandwidth = 0  # in bytes/second
 
     def _checkParsetForRequiredKeys(self, parset):
         """ Check if all required keys needed are available """
@@ -54,12 +48,14 @@ class BaseResourceEstimator(object):
             return False
         return True
     
-    def _getDateTime(date_time):
+    def _getDateTime(self, date_time):
         return datetime.strptime(date_time, '%Y-%m-%d %H:%M:%S')
 
-    def _getDuration(start, end):
-        startTime = _getDateTime(start)
-        endTime = _getDateTime(end)
+    def _getDuration(self, start, end):
+        startTime = self._getDateTime(start)
+        endTime = self._getDateTime(end)
+        if startTime >= endTime:
+            return 1 ##TODO To prevent divide by zero later
         return totalSeconds(endTime - startTime)
         #TODO check if this makes duration = int(parset.get('duration', 0)) as a key reduntant?
 
@@ -69,7 +65,7 @@ class BaseResourceEstimator(object):
     def estimate(self, parset, input_files={}):
         """ Create estimates for a single process based on its parset and input files"""
         if self._checkParsetForRequiredKeys(parset):
-            estimates = self._calculate(parset, input_files)
+            estimates = self._calculate(parameterset(parset), input_files)
         else:
             raise ValueError('The parset is incomplete')
         result = {}
@@ -78,10 +74,3 @@ class BaseResourceEstimator(object):
         result[self.name]['total_bandwidth'] = estimates['total_bandwidth']
         result[self.name]['output_files']    = estimates['output_files']
         return result
-
-    def estimate(self):
-        raise NotImplementedError('estimate() in base class is called. Please implement estimate() in your subclass')
-
-#    def result_as_dict(self):
-#        """ return estimated values as dict """
-#        return result

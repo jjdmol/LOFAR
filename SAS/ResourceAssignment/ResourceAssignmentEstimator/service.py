@@ -18,14 +18,14 @@ class ResourceEstimatorHandler(MessageHandlerInterface):
     def __init__(self, **kwargs):
         super(ResourceEstimatorHandler, self).__init__(**kwargs)
         self.observation = ObservationResourceEstimator()
-        self.longbaseline_pipeline = LongBaselinePipelineResourceEstimator()
-        self.calibration_pipeline = CalibrationPipelineResourceEstimator()
-        self.pulsar_pipeline = PulsarPipelineResourceEstimator()
-        self.imaging_pipeline = ImagePipelineResourceEstimator()
+        #self.longbaseline_pipeline = LongBaselinePipelineResourceEstimator()
+        #self.calibration_pipeline = CalibrationPipelineResourceEstimator()
+        #self.pulsar_pipeline = PulsarPipelineResourceEstimator()
+        #self.imaging_pipeline = ImagePipelineResourceEstimator()
 
-    def handle_message(self, msg):
-        otdb_id = msg.content["otdb_id"]
-        parsets = msg.content["parsets"]
+    def handle_message(self, content):
+        otdb_id = content["otdb_id"]
+        parsets = content["parsets"]
         return self._get_estimated_resources(otdb_id, parsets) ##TODO also handle MoM tasks in RA 1.2
 
     #def _getPredecessors(self, parset):
@@ -35,8 +35,7 @@ class ResourceEstimatorHandler(MessageHandlerInterface):
         logger.info('get_estimated_resources on: %s' % parsets)
         result = {}
 
-        observation = ObservationResourceEstimator(parsetDict)
-        result.update(observation.result_as_dict())
+        result[str(otdb_id)] = self.observation.estimate(parsets[str(otdb_id)])
 
         #TODO: implement properly
         #pipeline_input_files = result['observation']['output_files']
@@ -53,7 +52,7 @@ class ResourceEstimatorHandler(MessageHandlerInterface):
         #image = ImagePipelineResourceEstimator(parsetDict, input_files=pipeline_input_files)
         #result.update(image.result_as_dict())
 
-        return result
+        return result[str(otdb_id)] ## temp hack
 
 
 def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker=None):
