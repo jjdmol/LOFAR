@@ -40,7 +40,7 @@ function usage() {
   exit 1
 }
 
-while getopts "o:c:p:b:" opt; do
+while getopts "ho:c:p:b:" opt; do
   case $opt in
     h)  usage
         ;;
