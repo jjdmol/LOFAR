@@ -1,5 +1,0 @@
-#!/bin/bash -e
-
-# Run the unit test
-source python-coverage.sh
-python_coverage_test "Messaging/python" t_messages.py

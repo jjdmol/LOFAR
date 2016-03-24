@@ -1,4 +1,0 @@
-# $Id: CMakeLists.txt 14274 2009-10-16 12:14:19Z loose $
-
-lofar_add_package(DP3)
-lofar_add_package(LMWCommon)

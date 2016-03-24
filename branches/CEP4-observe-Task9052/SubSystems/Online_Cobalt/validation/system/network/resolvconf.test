@@ -1,7 +1,0 @@
-#!/bin/bash
-
-# Check for the presence of the various LOFAR domains
-for DOMAIN in cep2.lofar online.lofar control.lofar
-do
-  grep "^search.*\b$DOMAIN\b" /etc/resolv.conf || exit 1
-done

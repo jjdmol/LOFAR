@@ -1,9 +1,0 @@
-@LTAINGEST_LOG_ROOT_DIR@log/*master.log @LTAINGEST_LOG_ROOT_DIR@log/*slave.log {
-  missingok
-  daily
-  rotate 3650 
-  compress
-  delaycompress
-  size 32M
-  dateext
-}
