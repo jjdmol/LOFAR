@@ -262,7 +262,7 @@ class RATaskSpecified(OTDBBusListener):
             "specification": pred_specification,
             "predecessors": []
             }
-            childNode['taskType'], childNode['subType'] = convertSchedulerProcessSubtype(parsets[pred_id].get(PARSET_PREFIX+"Observation.processSubtype", ""))
+            childNode['task_type'], childNode['task_subtype'] = convertSchedulerProcessSubtype(parsets[pred_id].get(PARSET_PREFIX+"Observation.processSubtype", ""))
 
             appendChildNodes(childNode)
             treeNode["predecessors"].append(childNode)
@@ -274,7 +274,7 @@ class RATaskSpecified(OTDBBusListener):
       "specification": specifications[main_obsID],
       "predecessors": []
     }
-    resultTree['taskType'], resultTree['subType'] = convertSchedulerProcessSubtype(main_parset.get(PARSET_PREFIX+"Observation.processSubtype", ""))
+    resultTree['task_type'], resultTree['task_subtype'] = convertSchedulerProcessSubtype(main_parset.get(PARSET_PREFIX+"Observation.processSubtype", ""))
 
     #recursively append predecessors as child nodes
     appendChildNodes(resultTree)
