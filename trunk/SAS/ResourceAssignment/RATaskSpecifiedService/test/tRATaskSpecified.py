@@ -2,7 +2,7 @@
 
 # Be able to find service python file
 import sys, os
-sys.path.insert(0, "{srcdir}/../src".format(**os.environ))
+sys.path.insert(0, "{srcdir}/../lib".format(**os.environ))
 
 from RATaskSpecified import *
 from RABusListener import RATaskSpecifiedBusListener
