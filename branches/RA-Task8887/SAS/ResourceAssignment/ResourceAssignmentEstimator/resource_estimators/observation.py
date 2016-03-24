@@ -59,20 +59,18 @@ class ObservationResourceEstimator(BaseResourceEstimator):
         duration = self._getDuration(parset.getString('Observation.startTime'), parset.getString('Observation.stopTime'))
         
         result = {}
-        result['output_files'] = {}
-        correlated_size, correlated_bandwidth, correlated_files = self.correlated(parset, duration, result['output_files'])
-        coherentstokes_size, coherentstokes_bandwidth, coherentstokes_files = self.coherentstokes(parset, duration, result['output_files'])
-        incoherentstokes_size, incoherentstokes_bandwidth, incoherentstokes_files = self.incoherentstokes(parset, duration, result['output_files'])
+        output_files = {}
+        correlated_size, correlated_bandwidth, output_files['uv'], correlated_saps = self.correlated(parset, duration)
+        coherentstokes_size, coherentstokes_bandwidth, output_files['cs'], coherentstokes_saps = self.coherentstokes(parset, duration)
+        incoherentstokes_size, incoherentstokes_bandwidth, output_files['is'], incoherentstokes_saps = self.incoherentstokes(parset, duration)
         
-        result['total_data_size'] = correlated_size + coherentstokes_size + incoherentstokes_size
-        result['total_bandwidth'] = correlated_bandwidth + coherentstokes_bandwidth + incoherentstokes_bandwidth
-        
-        #TODO not sure if I like the new solution better than this: result['output_files'].update(correlated_files)
-        #TODO not sure if I like the new solution better than this: result['output_files'].update(coherentstokes_files)
-        #TODO not sure if I like the new solution better than this: result['output_files'].update(incoherentstokes_files)
+        output_files['saps'] = correlated_saps + coherentstokes_saps + incoherentstokes_saps
+        total_data_size = correlated_size + coherentstokes_size + incoherentstokes_size
+        result['storage'] = {'total_size': total_data_size, 'output_files': output_files}
+        result['bandwidth'] = correlated_bandwidth + coherentstokes_bandwidth + incoherentstokes_bandwidth
         return result
 
-    def correlated(self, parset, duration, output_files):
+    def correlated(self, parset, duration):
         """ Estimate number of files, file size and bandwidth needed for correlated data"""
         logger.info("calculating correlated datasize")
         size_of_header   = 512 #TODO More magic numbers (probably from Alwin). ScS needs to check these. They look ok though.
@@ -91,25 +89,23 @@ class ObservationResourceEstimator(BaseResourceEstimator):
 
         # sum of all subbands in all digital beams
         total_files = 0
+        sap_files = []
+        
         for sap_nr in xrange(parset.getInt('Observation.nrBeams')):
             subbandList = parset.getStringVector('Observation.Beam[%d].subbandList' % sap_nr)
             nr_files = len(subbandList)
             total_files += nr_files
-            sap_files = {'correlated_uv': {'nr_files': nr_files}}
-            if not 'sap%d' % sap_nr in output_files.keys():
-                output_files['sap%d' % sap_nr] = sap_files
-            else:
-                output_files['sap%d' % sap_nr].update(sap_files)
+            sap_files.append({'number': sap_nr, 'nr_of_uv_files': nr_files})
 
         file_size = int((data_size + n_sample_size + size_of_header) * integrated_seconds + size_of_overhead)
-        output_files['correlated_uv'] = {'nr_files': total_files, 'file_size': file_size}
+        output_files = {'nr_of_uv_files': total_files, 'uv_file_size': file_size}
         logger.info("correlated_uv: {} files {} bytes each".format(total_files, file_size))
 
         total_data_size = int(ceil(file_size * total_files))  # bytes
         total_bandwidth = int(ceil((total_data_size * 8) / duration))  # bits/second
-        return (total_data_size, total_bandwidth, output_files)
+        return (total_data_size, total_bandwidth, output_files, sap_files)
 
-    def coherentstokes(self, parset, duration, output_files):
+    def coherentstokes(self, parset, duration):
         """  Estimate number of files, file size and bandwidth needed for coherent stokes
         """
         if not parset.getBool('Observation.DataProducts.Output_CoherentStokes.enabled'):
@@ -128,8 +124,9 @@ class ObservationResourceEstimator(BaseResourceEstimator):
             size_per_subband = (samples_per_second * 4.0 * duration) / integration_factor
 
         total_nr_stokes = 0
-        total_files = 0
+        total_files     = 0
         max_nr_subbands = 0
+        sap_files       = []
         
         for sap_nr in xrange(parset.getInt('Observation.nrBeams')):
             logger.info("checking SAP {}".format(sap_nr))
@@ -159,11 +156,7 @@ class ObservationResourceEstimator(BaseResourceEstimator):
                 total_nr_stokes += nr_stokes
                 nr_files += int(nr_stokes * ceil(nr_subbands / float(subbands_per_file)))
 
-            sap_files = {'bf_coherentstokes': {'nr_files': nr_files}}
-            if not 'sap%d' % sap_nr in output_files.keys():
-                output_files['sap%d' % sap_nr] = sap_files
-            else:
-                output_files['sap%d' % sap_nr].update(sap_files)
+            sap_files.append({'number': sap_nr, 'nr_of_uv_files': nr_files})
             total_files += nr_files
 
         nr_subbands_per_file = min(subbands_per_file, max_nr_subbands)
@@ -174,9 +167,9 @@ class ObservationResourceEstimator(BaseResourceEstimator):
 
         total_data_size = int(ceil(total_nr_stokes * max_nr_subbands * size_per_subband))
         total_bandwidth = int(ceil((total_data_size * 8) / duration)) # bits/second
-        return (total_data_size, total_bandwidth, output_files)
+        return (total_data_size, total_bandwidth, output_files, sap_files)
 
-    def incoherentstokes(self, parset, duration, output_files):
+    def incoherentstokes(self, parset, duration):
         """  Estimate number of files, file size and bandwidth needed for incoherentstokes
         """
         if not parset.getBool('Observation.DataProducts.Output_IncoherentStokes.enabled'):
@@ -193,8 +186,9 @@ class ObservationResourceEstimator(BaseResourceEstimator):
         nr_incoherent = 4 if incoherent_type in ('IQUV',) else 1
 
         total_nr_stokes = 0
-        total_files = 0
+        total_files     = 0
         max_nr_subbands = 0
+        sap_files       = []
 
         for sap_nr in xrange(parset.getInt('Observation.nrBeams')):
             logger.info("checking SAP {}".format(sap_nr))
@@ -209,11 +203,7 @@ class ObservationResourceEstimator(BaseResourceEstimator):
                     total_nr_stokes += nr_incoherent
                     nr_files += int(nr_incoherent * ceil(nr_subbands / float(subbands_per_file)))
 
-            sap_files = {'bf_incoherentstokes': {'nr_files': nr_files}}
-            if not 'sap%d' % sap_nr in output_files.keys():
-                output_files['sap%d' % sap_nr] = sap_files
-            else:
-                output_files['sap%d' % sap_nr].update(sap_files)
+            sap_files.append({'number': sap_nr, 'nr_of_uv_files': nr_files})
             total_files += nr_files
 
 
@@ -232,7 +222,7 @@ class ObservationResourceEstimator(BaseResourceEstimator):
 
         total_data_size = int(ceil(total_nr_stokes * max_nr_subbands * size_per_subband))  # bytes
         total_bandwidth = int(ceil((total_data_size * 8) / duration))  # bits/sec
-        return (total_data_size, total_bandwidth, output_files)
+        return (total_data_size, total_bandwidth, output_files, sap_files)
 
     def _samples_per_second(self, parset):
         """ set samples per second

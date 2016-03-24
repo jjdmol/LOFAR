@@ -108,14 +108,15 @@ class RAtoOTDBPropagator():
     
     def getRAinfo(self, ra_id):
         info = {}
+        info["storage"] = {}
         task = self.radbrpc.getTask(ra_id)
-        claims = self.radbrpc.getResourceClaims(task_id=ra_id, extended=True)
+        claims = self.radbrpc.getResourceClaims(task_id=ra_id, extended=True, include_properties=True)
         for claim in claims:
-            print claim
-        #resource_ids = [x['resource_id'] for x in claims]
-        #all_resources = self.radbrpc.getResources()
-        #resources = [all_resources[id] for id in resource_ids]
-        info["starttime"] = task["starttime"] + datetime.timedelta(hours=1)
+            logger.debug(claim)
+            for property in claim.properties:
+                if resource_type_name == "storage":
+                    info["storage"].update(resource)
+        info["starttime"] = task["starttime"] + datetime.timedelta(hours=1) #TODO Test code!!! FIXME FIXME before release
         info["endtime"] = task["endtime"] + datetime.timedelta(hours=1)
         info["status"] = task["status"]
         return info
