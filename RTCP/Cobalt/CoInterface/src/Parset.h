@@ -274,6 +274,9 @@ namespace LOFAR
 
       std::vector<struct Node> nodes;
 
+      // Cluster where data writers run
+      std::string outputCluster;
+
       /*
        * Spectral resolution information
        */

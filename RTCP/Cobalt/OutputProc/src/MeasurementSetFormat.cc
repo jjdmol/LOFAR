@@ -126,7 +126,7 @@ namespace LOFAR
     {
       ScopedLock scopedLock(sharedMutex);
 
-      /// First create a valid MeasurementSet with all required
+      /// Create the MeasurementSet with all required
       /// tables. Note that the MS object is destroyed immediately.
       createMSTables(MSname, subband);
       /// Next make a metafile which describes the raw datafile we're
@@ -152,9 +152,12 @@ namespace LOFAR
         }
 
         SetupNewTable newtab(MSname, td, Table::New);
+
         LofarStMan lofarstman;
         newtab.bindAll(lofarstman);
 
+        // MSLofar() constructor needs a NEW table, to avoid checks
+        // for subtables that aren't yet there.
         itsMS = new MSLofar(newtab);
         itsMS->createDefaultSubtables(Table::New);
 

@@ -263,9 +263,10 @@ int main(int argc, char **argv)
    */
 
   if (mpi.rank() == 0) {
-    LOG_INFO_STR("nr stations = " << ps.settings.antennaFields.size());
-    LOG_INFO_STR("nr subbands = " << ps.settings.subbands.size());
-    LOG_INFO_STR("bitmode     = " << ps.nrBitsPerSample());
+    LOG_INFO_STR("nr stations    = " << ps.settings.antennaFields.size());
+    LOG_INFO_STR("nr subbands    = " << ps.settings.subbands.size());
+    LOG_INFO_STR("bitmode        = " << ps.nrBitsPerSample());
+    LOG_INFO_STR("output cluster = " << ps.settings.outputCluster);
   }
 
   LOG_INFO("----- Initialising GPUs");
