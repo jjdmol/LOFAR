@@ -534,27 +534,31 @@ class RADatabase:
 
         raise KeyError('No such resource_claim_property_type: %s Valid values are: %s' % (type_name, ', '.join(self.getResourceClaimPropertyTypeNames())))
 
+    def getResourceClaimProperties(self, claim_ids=None, task_id=None):
+        query = '''SELECT rcpv.* from resource_allocation.resource_claim_property_view rcpv'''
 
-    def getResourceClaimProperties(self, claim_id=None, task_id=None):
-        query = '''SELECT * from resource_allocation.resource_claim_property_view'''
+        conditions = []
+        qargs = []
 
-        qargs = None
+        if claim_ids is not None:
+            if isinstance(claim_ids, int): # just a single id
+                conditions.append('resource_claim_id = %s')
+                qargs.append(claim_ids)
+            elif len(claim_ids) == 1:  # just a single id from a list
+                conditions.append('resource_claim_id = %s')
+                qargs.append(claim_ids[0])
+            else: # list of id's
+                conditions.append('resource_claim_id in %s')
+                qargs.append(tuple(claim_ids))
 
-        if claim_id is not None or task_id is not None:
-            conditions = []
-            qargs = []
+        if task_id is not None:
+            query += ' JOIN resource_allocation.resource_claim rc on rc.id = rcpv.resource_claim_id'
+            conditions.append('rc.task_id = %s')
+            qargs.append(task_id)
 
-            if claim_id is not None:
-                conditions.append('id = %s')
-                qargs.append(claim_id)
-
-            if task_id is not None:
-                conditions.append('task_id = %s')
-                qargs.append(task_id)
-
+        if conditions:
             query += ' WHERE ' + ' AND '.join(conditions)
 
-        query += ';'
         return list(self._executeQuery(query, qargs, fetch=_FETCH_ALL))
 
     def insertResourceClaimProperty(self, claim_id, property_type, value, commit=False):
@@ -588,7 +592,7 @@ class RADatabase:
             self.commit()
         return ids
 
-    def getResourceClaims(self, claim_ids=None, lower_bound=None, upper_bound=None, resource_ids=None, task_ids=None, status=None, resource_type=None, extended=False):
+    def getResourceClaims(self, claim_ids=None, lower_bound=None, upper_bound=None, resource_ids=None, task_ids=None, status=None, resource_type=None, extended=False, include_properties=False):
         extended |= resource_type is not None
         query = '''SELECT * from %s''' % ('resource_allocation.resource_claim_extended_view' if extended else 'resource_allocation.resource_claim_view')
 
@@ -668,7 +672,23 @@ class RADatabase:
         if conditions:
             query += ' WHERE ' + ' AND '.join(conditions)
 
-        return list(self._executeQuery(query, qargs, fetch=_FETCH_ALL))
+        claims = list(self._executeQuery(query, qargs, fetch=_FETCH_ALL))
+
+        if include_properties:
+            claimDict = {c['id']:c for c in claims}
+            claim_ids = claimDict.keys()
+            properties = self.getResourceClaimProperties(claim_ids=claim_ids)
+            for p in properties:
+                try:
+                    claim = claimDict[p['resource_claim_id']]
+                    if not 'properties' in claim:
+                        claim['properties'] = []
+                    del p['resource_claim_id']
+                    claim['properties'].append(p)
+                except KeyError:
+                    pass
+
+        return claims
 
     def getResourceClaim(self, id):
         query = '''SELECT * from resource_allocation.resource_claim_view rcv
@@ -743,15 +763,17 @@ class RADatabase:
         claimId2Props = { claim_id: [(p['type'], p['value']) for p in claim['properties']]
                          for claim_id, claim
                          in zip(claimIds, claims)
-                         if 'properties' in claim }
+                         if 'properties' in claim and
+                         len(claim['properties']) > 0 }
 
         # convert all type strings to id's
         # this saves a lot of lookup queries in the db
         prop_type_strings = set(p[0] for p in claimId2Props.values() if isinstance(p[0], basestring))
-        type_string2id = {t:self.getResourceClaimPropertyTypeId(t) for t in prop_type_strings}
-        for p in claimId2Props.values():
-            if isinstance(p[0], basestring):
-                p[0] = type_string2id[p[0]]
+        if prop_type_strings:
+            type_string2id = {t:self.getResourceClaimPropertyTypeId(t) for t in prop_type_strings}
+            for p in claimId2Props.values():
+                if isinstance(p[0], basestring):
+                    p[0] = type_string2id[p[0]]
 
         # and insert all properties for each claim with properties
         for claim_id, props in claimId2Props.items():
@@ -1076,7 +1098,7 @@ if __name__ == '__main__':
 
     from lofar.common.datetimeutils import totalSeconds
     begin = datetime.utcnow()
-    for i in range(1):
+    for i in range(2):
         stepbegin = datetime.utcnow()
         result = db.insertSpecificationAndTask(1234+i, 5678+i, 600, 0, datetime.utcnow() + timedelta(hours=1.25*i*0), datetime.utcnow() + timedelta(hours=1.25*i+1), "", False)
 
@@ -1102,10 +1124,14 @@ if __name__ == '__main__':
         now = datetime.utcnow()
         print totalSeconds(now - begin), totalSeconds(now - stepbegin)
 
-    resultPrint(db.getResourceClaims)
-    #resultPrint(db.getResourceClaimPropertyTypes)
+    #resultPrint(db.getResourceClaims)
+    resultPrint(db.getResourceClaimPropertyTypes)
     #resultPrint(db.getResourceClaimPropertyTypeNames)
     #resultPrint(db.getResourceClaimProperties)
+
+    print '\n'.join(str(x) for x in db.getResourceClaimProperties())
+    print '\n'.join(str(x) for x in db.getResourceClaimProperties(task_id=task['id']))
+    print '\n'.join(str(x) for x in db.getResourceClaims(include_properties=True))
 
     #db.commit()
 
