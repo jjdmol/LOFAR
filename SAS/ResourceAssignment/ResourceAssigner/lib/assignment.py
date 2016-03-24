@@ -97,19 +97,21 @@ class ResourceAssigner():
         self.ssdbGetActiveGroupNames.close()
         self.ssdbGetHostForGID.close()
 
-    def doAssignment(self, sasId, parsets, status='prescheduled'):
-        logger.info('doAssignment: sasId=%s parset=%s' % (sasId, parsets))
+    def doAssignment(self, specification_tree):
+        logger.info('doAssignment: specification_tree=%s' % (specification_tree))
+
+        otdb_id = specification_tree['otdb_id']
+        taskType = specification_tree.get('task_type', '').lower()
+        status = specification_tree.get('state', 'prescheduled').lower()
 
         #parse main parset...
-        mainParsetDict = parsets[str(sasId)]
-        mainParset = parameterset(mainParsetDict)
+        mainParset = parameterset(specification_tree['specification'])
         momId = mainParset.getInt('Observation.momID', -1)
-        taskType = mainParset.getString('Task.type', '').lower()
         startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
         endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
 
         #check if task already present in radb
-        existingTask = self.radbrpc.getTask(otdb_id=sasId)
+        existingTask = self.radbrpc.getTask(otdb_id=otdb_id)
 
         if existingTask:
             #present, delete it, and create a new task
@@ -120,32 +122,50 @@ class ResourceAssigner():
 
         #insert new task and specification in the radb
         logger.info('doAssignment: insertSpecification startTime=%s endTime=%s' % (startTime, endTime))
-        specificationId = self.radbrpc.insertSpecification(startTime, endTime, str(mainParsetDict))['id']
+        specificationId = self.radbrpc.insertSpecification(startTime, endTime, str(mainParset))['id']
         logger.info('doAssignment: insertSpecification specificationId=%s' % (specificationId,))
-        logger.info('doAssignment: insertTask momId=%s sasId=%s status=%s taskType=%s specificationId=%s' % (momId, sasId, status, taskType, specificationId))
-        taskId = self.radbrpc.insertTask(momId, sasId, status, taskType, specificationId)['id']
+
+        logger.info('doAssignment: insertTask momId=%s sasId=%s status=%s taskType=%s specificationId=%s' % (momId, otdb_id, status, taskType, specificationId))
+        taskId = self.radbrpc.insertTask(momId, otdb_id, status, taskType, specificationId)['id']
         logger.info('doAssignment: insertTask taskId=%s' % (taskId,))
 
         #analyze the parset for needed and available resources and claim these in the radb
         cluster = self.parseSpecification(mainParset)
         available = self.getAvailableResources(cluster)
 
-        needed = self.getNeededResouces(sasId, parsets)
+        needed = self.getNeededResouces(specification_tree)
+        logger.info('doAssignment: getNeededResouces=%s' % (needed,))
 
-        if self.checkResources(needed, available):
-            claimed, resourceIds = self.claimResources(needed, taskId, startTime, endTime)
+        if not str(otdb_id) in needed:
+            logger.error("no otdb_id %s found in estimator results %s" % (otdb_id, needed))
+            return
+
+        main_needed = needed[str(otdb_id)]
+        if self.checkResources(main_needed, available):
+            claimed, resourceIds = self.claimResources(main_needed, taskId, startTime, endTime)
             if claimed:
                 self.radbrpc.updateTaskAndResourceClaims(taskId, claim_status='allocated')
                 self.radbrpc.updateTask(taskId, status='scheduled')
             else:
                 self.radbrpc.updateTask(taskId, status='conflict')
 
+        self.processPredecessors(specification_tree)
+
+    def processPredecessors(self, specification_tree):
         try:
-            predecessor_ids = [int(id) for id in parsets.keys() if id != str(sasId)]
-            for predecessor_id in predecessor_ids:
-                predecessor_task = self.radbrpc.getTask(otdb_id=predecessor_id)
-                if predecessor_task:
-                    self.radbrpc.insertTaskPredecessor(sasId, predecessor_id)
+            predecessor_trees = specification_tree['predecessors']
+
+            if predecessor_trees:
+                otdb_id = specification_tree['otdb_id']
+                task = self.radbrpc.getTask(otdb_id=otdb_id)
+
+                for predecessor_tree in predecessor_trees:
+                    pred_otdb_id = predecessor_tree['otdb_id']
+                    predecessor_task = self.radbrpc.getTask(otdb_id=pred_otdb_id)
+                    if predecessor_task:
+                        self.radbrpc.insertTaskPredecessor(task['id'], predecessor_task['id'])
+                    self.processPredecessors(predecessor_tree)
+
         except Exception as e:
             logger.error(e)
 
@@ -155,8 +175,8 @@ class ResourceAssigner():
         cluster ="cep4"
         return cluster
 
-    def getNeededResouces(self, otdb_id, parsets):
-        replymessage, status = self.rerpc({"otdb_id":otdb_id, "parsets":parsets}, timeout=10)
+    def getNeededResouces(self, specification_tree):
+        replymessage, status = self.rerpc({"specification_tree":specification_tree}, timeout=10)
         logger.info('getNeededResouces: %s' % replymessage)
         #stations = replymessage['observation']['stations']
         ##stations = parset.getStringVector('Observation.VirtualInstrument.stationList', '')

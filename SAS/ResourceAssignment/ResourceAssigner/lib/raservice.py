@@ -64,10 +64,11 @@ class SpecifiedTaskListener(RATaskSpecifiedBusListener):
         if not self.assigner:
             self.assigner = ResourceAssigner()
 
-    def onTaskSpecified(self, sasId, resourceIndicators):
-        logger.info('onTaskSpecified: sasId=%s' % sasId)
+    def onTaskSpecified(self, otdb_id, specification_tree):
+        logger.info('onTaskSpecified: otdb_id=%s' % otdb_id)
+        status = specification_tree.get
 
-        self.assigner.doAssignment(sasId, resourceIndicators, 'prescheduled')
+        self.assigner.doAssignment(specification_tree)
 
 __all__ = ["SpecifiedTaskListener"]
 
