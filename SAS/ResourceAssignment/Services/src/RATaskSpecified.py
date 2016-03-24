@@ -115,6 +115,7 @@ def resourceIndicatorsFromParset( parsetDict ):
   add("Observation.startTime")
   add("Observation.stopTime")
   add("Observation.nrBeams")
+  add("Observation.Scheduler.predecessors")
 
   taskType, subType = convertSchedulerProcessSubtype(get("Observation.processSubtype", ""))
   subset['Task.type'] = taskType
