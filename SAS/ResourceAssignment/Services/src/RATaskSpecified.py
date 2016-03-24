@@ -148,12 +148,13 @@ def resourceIndicatorsFromParset( parsetDict ):
   add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor")
   add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.CoherentStokes.which")
   #add("Observation.ObservationControl.OnlineControl.Cobalt.IncoherentStokes.nrChannelsPerSubband") # only needed to determine Cobalt.blockSize
-  add("Observation.ObservationControl.OnlineControl.Cobalt.IncoherentStokes.subbandsPerFile")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.IncoherentStokes.subbandsPerFile")
   add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor")
-  add("Observation.ObservationControl.OnlineControl.Cobalt.IncoherentStokes.which")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.IncoherentStokes.which")
   for sap in xrange(0, nrSAPs):
     add("Observation.Beam[%d].nrTabRings" % (sap,))
 
+    add("Observation.Beam[%d].nrTiedArrayBeams" % (sap,))
     nrTABs = int(get("Observation.Beam[%d].nrTiedArrayBeams" % (sap,), 0))
     for tab in xrange(0, nrTABs):
       add("Observation.Beam[%d].TiedArrayBeam[%d].coherent" % (sap,tab), bool)
