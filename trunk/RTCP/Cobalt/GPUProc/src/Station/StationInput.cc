@@ -326,7 +326,7 @@ namespace LOFAR {
        * 3. We can receive old data from before `current'.
        */
 
-      const TimeStamp deadline = TimeStamp(current.to + mode.secondsToSamples(0.25), mode.clockHz());
+      const TimeStamp deadline = TimeStamp(current.to + mode.secondsToSamples(0.33), mode.clockHz());
 
       LOG_INFO_STR(logPrefix << "[block " << current.block << "] Waiting until " << deadline);
 
@@ -535,7 +535,7 @@ namespace LOFAR {
       if (ps.settings.realTime) {
         // Each board has its own pool to reduce lock contention
         for (size_t board = 0; board < nrBoards; ++board)
-          for (size_t i = 0; i < 16; ++i)
+          for (size_t i = 0; i < 24; ++i)
             rspDataPool[board]->free.append(new RSPData(RT_PACKET_BATCH_SIZE), false);
       } else {
         // We just process one packet at a time, merging all the streams into rspDataPool[0].
