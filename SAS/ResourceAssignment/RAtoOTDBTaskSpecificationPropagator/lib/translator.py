@@ -41,6 +41,19 @@ class RAtoOTDBTranslator():
         RAtoOTDBTranslator translates values from the RADB into parset keys to be stored in an OTDB Tree
         """
 
+    def CreateStorageKeys(self, storage):
+        result = {}
+        for property in storage:
+            if "uv" in x:
+                result[PREFIX + "Observation.DataProducts.Output_Correlated.filenames"] = CreateCorrelated(resource)
+            if "cs" in x:
+                result[PREFIX + "Observation.DataProducts.Output_Correlated.filenames"] = CreateCorrelated(resource)
+            if "is" in x:
+                result[PREFIX + "Observation.DataProducts.Output_Correlated.filenames"] = CreateCorrelated(resource)
+            if "correlated_uv" in x:
+                result[PREFIX + "Observation.DataProducts.Output_Correlated.filenames"] = CreateCorrelated(resource)
+                
+
     def CreateParset(self, mom_id, ra_info):
         logger.info('CreateParset: start=%s, end=%s' % (ra_info['starttime'], ra_info['endtime']))
 
@@ -49,8 +62,10 @@ class RAtoOTDBTranslator():
         parset[PREFIX+'Observation.startTime'] = ra_info['starttime'].strftime('%Y-%m-%d %H:%M:%S')
         parset[PREFIX+'Observation.stopTime'] = ra_info['endtime'].strftime('%Y-%m-%d %H:%M:%S')
 
-        if "stations" in ra_info.keys():
-            parset[PREFIX+'Observation.VirtualInstrument.stationList'] = stations
+        if "storage" in ra_info:
+            parset.update(CreateStorageKeys(ra_info["storage"]))
+        if "stations" in ra_info:
+            parset[PREFIX+'Observation.VirtualInstrument.stationList'] = ra_info["stations"]
         return parset
 
 
