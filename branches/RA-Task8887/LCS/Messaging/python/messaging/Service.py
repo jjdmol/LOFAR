@@ -142,7 +142,7 @@ class Service(AbstractBusListener):
 
         # only on a 'bus' we already connect the reply_bus
         if self.busname:
-            self.reply_bus = ToBus(self.busname)
+            self.reply_bus = ToBus(self.busname, broker=self.broker)
             self.reply_bus.open()
         else:
             self.reply_bus=None
@@ -204,7 +204,7 @@ class Service(AbstractBusListener):
             reply_busname=reply_address[num_parts-2]
             subject=reply_address[num_parts-1]
             try:
-                with ToBus(reply_busname) as dest:
+                with ToBus(reply_busname, broker=self.broker) as dest:
                     # remove any extra field if present
                     if ';' in subject:
                         subject = subject.split(';')[0]
