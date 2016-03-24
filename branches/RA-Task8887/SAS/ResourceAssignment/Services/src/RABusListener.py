@@ -56,12 +56,12 @@ class RATaskSpecifiedBusListener(AbstractBusListener):
     def _handleMessage(self, msg):
         logger.debug("RABusListener.handleMessage: %s" %str(msg))
 
-        sasId = msg.content['sasID']
-        resource_indicators = msg.content['resource_indicators']
+        specification_tree = msg.content
+        otdb_id = msg.content['otdb_id']
 
-        self.onTaskSpecified(sasId, resource_indicators)
+        self.onTaskSpecified(otdb_id, specification_tree)
 
-    def onTaskSpecified(self, sasId, resourceIndicators):
+    def onTaskSpecified(self, otdb_id, specification_tree):
         pass
 
 __all__ = ["RATaskSpecifiedBusListener"]

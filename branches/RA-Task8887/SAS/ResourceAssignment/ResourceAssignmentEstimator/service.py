@@ -24,18 +24,20 @@ class ResourceEstimatorHandler(MessageHandlerInterface):
         #self.imaging_pipeline = ImagePipelineResourceEstimator()
 
     def handle_message(self, content):
-        otdb_id = content["otdb_id"]
-        parsets = content["parsets"]
-        return self._get_estimated_resources(otdb_id, parsets) ##TODO also handle MoM tasks in RA 1.2
+        specification_tree = content["specification_tree"]
+        return self._get_estimated_resources(specification_tree) ##TODO also handle MoM tasks in RA 1.2
 
     #def _getPredecessors(self, parset):
         
 
-    def _get_estimated_resources(self, otdb_id, parsets):
-        logger.info('get_estimated_resources on: %s' % parsets)
+    def _get_estimated_resources(self, specification_tree):
+        logger.info('get_estimated_resources on: %s' % specification_tree)
         result = {}
 
-        result[str(otdb_id)] = self.observation.estimate(parsets[str(otdb_id)])
+        otdb_id = specification_tree['otdb_id']
+        main_parset = specification_tree['specification']
+        if specification_tree['task_type'] == 'observation':
+            result[str(otdb_id)] = self.observation.estimate(main_parset)
 
         #TODO: implement properly
         #pipeline_input_files = result['observation']['output_files']
@@ -52,7 +54,7 @@ class ResourceEstimatorHandler(MessageHandlerInterface):
         #image = ImagePipelineResourceEstimator(parsetDict, input_files=pipeline_input_files)
         #result.update(image.result_as_dict())
 
-        return result[str(otdb_id)] ## temp hack
+        return result
 
 
 def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker=None):
