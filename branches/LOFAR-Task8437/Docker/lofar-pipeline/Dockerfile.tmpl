@@ -51,6 +51,7 @@ RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y su
     cd ${INSTALLDIR}/lofar/build/gnu_opt && sed -i '29,31d' include/ApplCommon/PosixTime.h && \
     cd ${INSTALLDIR}/lofar/build/gnu_opt && make -j ${J} && \
     cd ${INSTALLDIR}/lofar/build/gnu_opt && make install && \
+    bash -c "mkdir -p ${INSTALLDIR}/lofar/var/{log,run}" && \
     bash -c "strip ${INSTALLDIR}/lofar/{bin,sbin,lib64}/* || true" && \
     bash -c "rm -rf ${INSTALLDIR}/lofar/{build,src}" && \
     sudo apt-get purge -y subversion cmake g++ gfortran bison flex liblog4cplus-dev libhdf5-dev libblitz0-dev libboost-dev libboost-python-dev python-dev libxml2-dev pkg-config libpng12-dev libfftw3-dev libunittest++-dev libxml++2.6-dev libgsl0-dev libboost-filesystem${BOOST_VERSION}-dev libboost-date-time${BOOST_VERSION}-dev libboost-thread${BOOST_VERSION}-dev binutils-dev wcslib-dev && \
