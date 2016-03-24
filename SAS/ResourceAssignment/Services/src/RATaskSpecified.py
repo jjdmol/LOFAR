@@ -57,8 +57,8 @@ def convertSchedulerProcessSubtype(processSubType):
         return "Pipeline", "Imaging Pipeline"
     elif processSubType == "Imaging Pipeline MSSS":
         return "Pipeline", "Imaging Pipeline MSSS"
-    elif processSubType == "Long Baseline  Pipeline":
-        return "Pipeline", "Long Baseline  Pipeline"
+    elif processSubType == "Long Baseline Pipeline":
+        return "Pipeline", "Long Baseline Pipeline"
     elif processSubType == "Pulsar Pipeline":
         return "Pipeline", "Pulsar Pipeline"
     elif processSubType == "Beam Observation":
@@ -115,11 +115,6 @@ def resourceIndicatorsFromParset( parsetDict ):
   add("Observation.startTime")
   add("Observation.stopTime")
   add("Observation.nrBeams")
-  add("Observation.Scheduler.predecessors")
-
-  taskType, subType = convertSchedulerProcessSubtype(get("Observation.processSubtype", ""))
-  subset['Task.type'] = taskType
-  subset['Task.subtype'] = subType
 
   nrSAPs = int(get("Observation.nrBeams", 0))
   for sap in xrange(0, nrSAPs):
@@ -192,7 +187,7 @@ class RATaskSpecified(OTDBBusListener):
   def __init__(self, servicename, otdb_listen_busname=None, otdb_listen_subject=None, otdb_request_busname=None, my_busname=None, broker=None, **kwargs):
     super(RATaskSpecified, self).__init__(busname=otdb_listen_busname, subject=otdb_listen_subject, broker=broker, **kwargs)
 
-    self.parset_rpc = RPC(service="OTDBService.TaskGetSpecification", busname=otdb_request_busname, broker=broker)
+    self.parset_rpc = RPC(service="OTDBService.TaskGetSpecification", busname=otdb_request_busname, broker='10.149.96.6')
     self.send_bus   = ToBus("%s/%s" % (my_busname, servicename), broker=broker)
 
   def start_listening(self, **kwargs):
@@ -227,6 +222,8 @@ class RATaskSpecified(OTDBBusListener):
 
     logger.info("Processing %s", request_obsIDs)
 
+    obsId2predId = {int(main_obsID):list(request_obsIDs)}
+
     # Iterate recursively over all known predecessor obsIDs, and request their parsets
     while request_obsIDs:
         obsID = request_obsIDs.pop()
@@ -240,27 +237,52 @@ class RATaskSpecified(OTDBBusListener):
         # Request predecessor parset
         parsets[obsID],_ = self.parset_rpc( OtdbID=obsID )
         parsets[obsID] = parsets[obsID]['TaskSpecification']
-        logger.info("predecessor parset [%s]: %s" % (obsID, parsets[obsID]))
+        #logger.info("predecessor parset [%s]: %s" % (obsID, parsets[obsID]))
 
         # Add the list of predecessors
-        request_obsIDs = request_obsIDs.union(predecessors(parsets[obsID]))
+        predecessor_ids = predecessors(parsets[obsID])
+        request_obsIDs = request_obsIDs.union(predecessor_ids)
+        obsId2predId[obsID] = predecessor_ids
+        logger.info("obsID %s: preds: %s" % (obsID, predecessor_ids))
+        logger.info("obsId2predId %s" % (obsId2predId))
 
     # Convert parsets to resource indicators
     logger.info("Extracting resource indicators")
-    resourceIndicators = dict([(str(obsID), resourceIndicatorsFromParset(parset)) for (obsID,parset) in parsets.iteritems()])
+    specifications = dict([(obsID, resourceIndicatorsFromParset(parset)) for (obsID,parset) in parsets.iteritems()])
 
-    # Construct and send result message
-    result = {
-      "sasID": main_obsID,
+    # recursive method to build the tree of obs and its predecessors
+    def appendChildNodes(treeNode):
+        node_otdb_id = treeNode['otdb_id']
+        node_pred_otdb_ids = obsId2predId[node_otdb_id]
+        node_pred_specifications = {pred_id:specifications[pred_id] for pred_id in node_pred_otdb_ids}
+
+        for pred_id, pred_specification in node_pred_specifications.items():
+            childNode = {
+            "otdb_id": pred_id,
+            "specification": pred_specification,
+            "predecessors": []
+            }
+            childNode['taskType'], childNode['subType'] = convertSchedulerProcessSubtype(parsets[pred_id].get(PARSET_PREFIX+"Observation.processSubtype", ""))
+
+            appendChildNodes(childNode)
+            treeNode["predecessors"].append(childNode)
+
+    # Construct root node of tree
+    resultTree = {
+      "otdb_id": int(main_obsID),
       "state": "prescheduled",
-      "time_of_change": modificationTime,
-      "resource_indicators": resourceIndicators,
+      "specification": specifications[main_obsID],
+      "predecessors": []
     }
+    resultTree['taskType'], resultTree['subType'] = convertSchedulerProcessSubtype(main_parset.get(PARSET_PREFIX+"Observation.processSubtype", ""))
 
-    logger.info("Sending result: %s" % result)
+    #recursively append predecessors as child nodes
+    appendChildNodes(resultTree)
+
+    logger.info("Sending result: %s" % resultTree)
 
     # Put result on bus
-    msg = EventMessage(content=result)
+    msg = EventMessage(content=resultTree)
     self.send_bus.send(msg)
 
     logger.info("Result sent")
