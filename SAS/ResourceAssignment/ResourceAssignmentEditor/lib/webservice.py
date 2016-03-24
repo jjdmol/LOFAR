@@ -124,7 +124,7 @@ def resourcegroupsmemberships():
 @app.route('/rest/resourceclaims')
 @gzipped
 def resourceclaims():
-    claims = rarpc.getResourceClaims()
+    claims = rarpc.getResourceClaims(include_properties=True)
     return jsonify({'resourceclaims': claims})
 
 @app.route('/rest/tasks')
