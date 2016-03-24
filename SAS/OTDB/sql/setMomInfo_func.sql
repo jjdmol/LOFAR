@@ -56,8 +56,18 @@ CREATE OR REPLACE FUNCTION setMomInfo(INT4, INT4, INT4, INT4, TEXT)
 		INTO   vCampaignID
 		WHERE  name = $5;
 		IF NOT FOUND THEN
-		  RAISE EXCEPTION 'Campaign information not found.';
-		  RETURN FALSE;
+		  INSERT INTO campaign(name)
+		  VALUES	  ($5);
+		  
+		  SELECT id
+		  FROM   campaign
+		  INTO 	 vCampaignID
+		  WHERE	 name = $5;
+
+		  IF NOT FOUND THEN
+			RAISE EXCEPTION ' Cannot add campaign information';
+			RETURN FALSE;
+		  END IF;
 		END IF;
 
 		-- Finally update tree

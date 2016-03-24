@@ -4,7 +4,7 @@ lofar_package(RAServices
                 DEPENDS OTDB_Services
                         MoMQueryService
                         ResourceAssignmentDatabase
-                        RATaskSpecifiedService
+                        ResourceAssignmentServices
                         ResourceAssignmentEditor
                         ResourceAssignmentService)
 

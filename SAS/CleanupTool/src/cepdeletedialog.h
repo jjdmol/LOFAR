@@ -66,7 +66,6 @@ private:
     int itsRow, itsExitCode, itsRetryCount;
     QProcess *fp;
     QString itsConnectCmd;
-    QString itsCEP4ConnectCmd;
 
     runState itsState;
     std::map<QString, QString> itsNodeCommands;

@@ -1,7 +1,13 @@
-# $Id: CMakeLists.txt 33404 2016-01-27 10:21:14Z mol $
+# $Id$
 
 lofar_add_bin_scripts(
   rataskspecifiedservice
+)
+
+python_install(
+  RATaskSpecified.py
+  RABusListener.py
+  DESTINATION lofar/sas/resourceassignment
 )
 
 # supervisord config files

@@ -10,11 +10,6 @@ lofar_add_bin_scripts(
   TreeStatusEvents.py
 )
 
-set(_py_files
-  config.py
-  OTDBBusListener.py
-)
-
 # supervisord config files
 install(FILES
   TreeService.ini
@@ -22,7 +17,8 @@ install(FILES
   OTDB_Services.ini
   DESTINATION etc/supervisord.d)
 
-python_install(${_py_files} DESTINATION lofar/sas/otdb)
+python_install(OTDBBusListener.py
+    DESTINATION lofar/sas/otdb)
 
 add_subdirectory(test)
 
