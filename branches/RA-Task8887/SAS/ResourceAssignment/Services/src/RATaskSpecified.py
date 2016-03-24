@@ -50,25 +50,25 @@ def predecessors( parset ):
 def convertSchedulerProcessSubtype(processSubType):
     '''convert scheduler processSubType as defined in SAS/Scheduler/src/OTDBTree.h to RA (type, subtype) tuple'''
     if processSubType == "Averaging Pipeline":
-        return "Pipeline", "Averaging Pipeline"
+        return "pipeline", "averaging pipeline"
     elif processSubType == "Calibration Pipeline":
-        return "Pipeline", "Calibration Pipeline"
+        return "pipeline", "calibration pipeline"
     elif processSubType == "Imaging Pipeline":
-        return "Pipeline", "Imaging Pipeline"
+        return "pipeline", "imaging pipeline"
     elif processSubType == "Imaging Pipeline MSSS":
-        return "Pipeline", "Imaging Pipeline MSSS"
+        return "pipeline", "imaging pipeline msss"
     elif processSubType == "Long Baseline Pipeline":
-        return "Pipeline", "Long Baseline Pipeline"
+        return "pipeline", "long baseline pipeline"
     elif processSubType == "Pulsar Pipeline":
-        return "Pipeline", "Pulsar Pipeline"
+        return "pipeline", "pulsar pipeline"
     elif processSubType == "Beam Observation":
-        return "Observation", "BFMeasurement"
+        return "observation", "bfmeasurement"
     elif processSubType == "Interferometer":
-        return "Observation", "Interferometer"
+        return "observation", "interferometer"
     elif processSubType == "TBB (piggyback)":
-        return "Observation", "TBBMeasurement"
+        return "observation", "tbbmeasurement"
     elif processSubType == "TBB (standalone)":
-        return "Observation", "TBBMeasurement"
+        return "observation", "tbbmeasurement"
 
     return "unknown", "unknown"
 
