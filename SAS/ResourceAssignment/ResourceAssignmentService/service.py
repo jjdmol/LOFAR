@@ -85,7 +85,7 @@ class RADBHandler(MessageHandlerInterface):
         return self.radb.getResourceClaimPropertyTypes()
 
     def _getResourceClaimProperties(self, **kwargs):
-        return self.radb.getResourceClaimProperties(claim_id=kwargs.get('claim_id'), task_id=kwargs.get('task_id'))
+        return self.radb.getResourceClaimProperties(claim_ids=kwargs.get('claim_ids'), task_id=kwargs.get('task_id'))
 
     def _insertResourceClaimProperty(self, **kwargs):
         id = self.radb.insertResourceClaimProperty(kwargs.get('claim_id'), kwargs.get('property_type'), kwargs.get('value'))
@@ -97,7 +97,8 @@ class RADBHandler(MessageHandlerInterface):
                                            task_ids=kwargs.get('task_id'),
                                            status=kwargs.get('status'),
                                            resource_type=kwargs.get('resource_type'),
-                                           extended=kwargs.get('extended', False))
+                                           extended=kwargs.get('extended', False),
+                                           include_properties=kwargs.get('include_properties'))
 
     def _getResourceClaim(self, **kwargs):
         claim = self.radb.getResourceClaim(kwargs['id'])
