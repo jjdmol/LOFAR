@@ -195,15 +195,20 @@ def taskResourceClaims(task_id):
 @app.route('/rest/tasktypes')
 def tasktypes():
     result = rarpc.getTaskTypes()
-    result = [x for x in result]
+    result = sorted(result, key=lambda q: q['id'])
     return jsonify({'tasktypes': result})
 
 @app.route('/rest/taskstatustypes')
 def getTaskStatusTypes():
     result = rarpc.getTaskStatuses()
     result = sorted(result, key=lambda q: q['id'])
-    result = [x for x in result]
     return jsonify({'taskstatustypes': result})
+
+@app.route('/rest/resourcetypes')
+def resourcetypes():
+    result = rarpc.getResourceTypes()
+    result = sorted(result, key=lambda q: q['id'])
+    return jsonify({'resourcetypes': result})
 
 @app.route('/rest/momprojects')
 def getMoMProjects():
