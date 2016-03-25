@@ -5,7 +5,7 @@ lofar_package(RAServices
                         MAC_Services
                         MoMQueryService
                         ResourceAssignmentDatabase
-                        ResourceAssignmentServices
+                        RATaskSpecifiedService
                         ResourceAssignmentEditor
                         ResourceAssignmentService)
 

@@ -54,7 +54,7 @@ namespace LOFAR
 
       void process();
 
-      void augment(const FinalMetaData &finalMetaData);
+      void fini(const FinalMetaData &finalMetaData);
 
       ParameterSet feedbackLTA() const;
 

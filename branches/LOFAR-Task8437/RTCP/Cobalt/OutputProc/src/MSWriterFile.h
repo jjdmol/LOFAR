@@ -25,7 +25,7 @@
 
 #include <CoInterface/StreamableData.h>
 #include "MSWriter.h"
-#include "FastFileStream.h"
+#include <Stream/FileStream.h>
 
 namespace LOFAR
 {
@@ -36,6 +36,11 @@ namespace LOFAR
     class MSWriterFile : public MSWriter
     {
     public:
+      /*
+       * Write data to the provided file name.
+       *
+       * Any parent directories are automatically created.
+       */
       MSWriterFile(const std::string &msName);
       ~MSWriterFile();
 
@@ -44,7 +49,7 @@ namespace LOFAR
       virtual size_t getDataSize();
 
     protected:
-      FastFileStream itsFile;
+      FileStream itsFile;
     };
 
 

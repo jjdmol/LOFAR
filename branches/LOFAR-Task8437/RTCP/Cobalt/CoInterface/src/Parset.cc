@@ -462,6 +462,8 @@ namespace LOFAR
 
 
       // Resource information
+      settings.outputCluster = getString("Observation.Cluster.ProcessingCluster.clusterName", "");
+
       vector<string> nodes = getStringVector("Cobalt.Nodes", emptyVectorString, true);
 
       // We can restrict cobalt nodes to the set that receives from antenna fields,
@@ -480,8 +482,20 @@ namespace LOFAR
         node.hostName = getString(prefix + "host", "localhost");
         node.cpu      = getUint32(prefix + "cpu",  0);
         node.mpi_nic  = getString(prefix + "mpi_nic",  "");
-        node.out_nic  = getString(prefix + "out_nic",  "");
         node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
+
+        // format: [CEP4:ib0,DragNet:ib0]
+        node.out_nic  = "";
+
+        vector<string> out_nic = getStringVector(prefix + "out_nic", emptyVectorString, true);
+        for(size_t n = 0; n < out_nic.size(); n++) {
+          // search for <outputCluster>:<nic>
+          const vector<string> cluster_nic = StringUtil::split(out_nic[n], ':');
+          if (cluster_nic[0] == settings.outputCluster) {
+            node.out_nic = cluster_nic[1];
+            break;
+          }
+        }
 
         settings.nodes.push_back(node);
       }
