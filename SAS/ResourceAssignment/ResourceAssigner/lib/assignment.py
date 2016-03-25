@@ -27,6 +27,7 @@ ResourceAssigner inserts/updates tasks and assigns resources to it based on inco
 import logging
 from datetime import datetime
 import time
+import collections
 
 from lofar.messaging.RPC import RPC, RPCException
 from lofar.parameterset import parameterset
@@ -140,9 +141,14 @@ class ResourceAssigner():
             logger.error("no otdb_id %s found in estimator results %s" % (otdb_id, needed))
             return
 
+        if not taskType in needed[str(otdb_id)]:
+            logger.error("no task type %s found in estimator results %s" % (taskType, needed[str(otdb_id)]))
+            return
+
         main_needed = needed[str(otdb_id)]
         if self.checkResources(main_needed, available):
-            claimed, resourceIds = self.claimResources(main_needed, taskId, startTime, endTime)
+            task = self.radbrpc.getTask(taskId)
+            claimed, resourceIds = self.claimResources(main_needed, task)
             if claimed:
                 self.radbrpc.updateTaskAndResourceClaims(taskId, claim_status='allocated')
                 self.radbrpc.updateTask(taskId, status='scheduled')
@@ -218,22 +224,66 @@ class ResourceAssigner():
     def checkResources(self, needed, available):
         return True
 
-    def claimResources(self, resources, taskId, startTime, endTime):
-        #TEMP HACK
-        cep4storage = resources['observation']['total_data_size']
-        resources = dict()
-        resources['cep4storage'] = cep4storage
+    def claimResources(self, needed_resources, task):
+        logger.info('claimResources: task %s needed_resources=%s' % (task, needed_resources))
 
-        resourceNameDict = {r['name']:r for r in self.radbrpc.getResources()}
-        claimedStatusId = next(x['id'] for x in self.radbrpc.getResourceClaimStatuses() if x['name'].lower() == 'claimed')
+        # get the needed resources for the task type
+        needed_resources_for_task_type = needed_resources[task['type']]
 
-        resourceClaimIds = []
+        # get db lists
+        rc_property_types = {rcpt['name']:rcpt['id'] for rcpt in self.radbrpc.getResourceClaimPropertyTypes()}
+        resource_types = {rt['name']:rt['id'] for rt in self.radbrpc.getResourceTypes()}
+        resources = self.radbrpc.getResources()
 
-        for r in resources:
-            if r in resourceNameDict:
-                resourceClaimIds.append(self.radbrpc.insertResourceClaim(resourceNameDict[r]['id'], taskId, startTime, endTime, claimedStatusId, 1, -1, 'anonymous', -1))
+        # loop over needed_resources -> resource_type -> claim (and props)
+        # flatten the tree dict to a list of claims (with props)
+        claims = []
+        for resource_type_name, needed_claim_for_resource_type in needed_resources_for_task_type.items():
+            if resource_type_name in resource_types:
+                logger.info('claimResources: processing resource_type: %s' % resource_type_name)
+                db_resource_type_id = resource_types[resource_type_name]
+                db_resources_for_type = [r for r in resources if r['type_id'] == db_resource_type_id]
 
-        success = len(resourceClaimIds) == len(resources)
-        return success, resourceClaimIds
+                # needed_claim_for_resource_type is a dict containing exactly one kvp of which the value is an int
+                # that value is the value for the claim
+                needed_claim_value = next((v for k,v in needed_claim_for_resource_type.items() if isinstance(v, int)))
 
+                # FIXME: right now we just pick the first resource from the 'cep4' resources.
+                # estimator will deliver this info in the future
+                db_cep4_resources_for_type = [r for r in db_resources_for_type if 'cep4' in r['name'].lower()]
+
+                if db_cep4_resources_for_type:
+                    claim = {'resource_id':db_cep4_resources_for_type[0]['id'],
+                            'starttime':task['starttime'],
+                            'endtime':task['endtime'],
+                            'status':'claimed',
+                            'claim_size':1}
+
+                    # if the needed_claim_for_resource_type dict contains more kvp's,
+                    # then the subdict contains groups of properties for the claim
+                    if len(needed_claim_for_resource_type) > 1:
+                        claim['properties'] = []
+                        needed_prop_groups = next((v for k,v in needed_claim_for_resource_type.items() if isinstance(v, collections.Iterable)))
+
+                        for group_name, needed_prop_group in needed_prop_groups.items():
+                            if group_name == 'saps':
+                                logger.info('skipping sap')
+                            else:
+                                for prop_type_name, prop_value in needed_prop_group.items():
+                                    if prop_type_name in rc_property_types:
+                                        rc_property_type_id = rc_property_types[prop_type_name]
+                                        property = {'type':rc_property_type_id, 'value':prop_value}
+                                        claim['properties'].append(property)
+                                    else:
+                                        logger.error('claimResources: unknown prop_type:%s' % prop_type_name)
+
+                    logger.info('claimResources: created claim:%s' % claim)
+                    claims.append(claim)
+            else:
+                logger.error('claimResources: unknown resource_type:%s' % resource_type_name)
+
+        logger.info('claimResources: inserting %d claims in the radb' % len(claims))
+        claim_ids = self.radbrpc.insertResourceClaims(task['id'], claims, 1, 'anonymous', -1)['ids']
+        logger.info('claimResources: %d claims were inserted in the radb' % len(claim_ids))
+        return len(claim_ids) == len(claims), claim_ids
 
