@@ -136,6 +136,9 @@ class Slurm(object):
   def __init__(self, headnode="head01.cep4"):
     self.headnode = headnode
 
+    # TODO: Derive SLURM partition name
+    self.partition = "cpu"
+
   def _runCommand(self, cmdline):
     cmdline = "ssh %s %s" % (self.headnode, cmdline)
     runCommand(cmdline)
@@ -144,7 +147,7 @@ class Slurm(object):
     if sbatch_params is None:
       sbatch_params = []
 
-    stdout = self._runCommand("sbatch --job-name=%s %s bash -c '%s'" % (jobName, " ".join(sbatch_params), cmdline))
+    stdout = self._runCommand("sbatch --partition=%s --job-name=%s %s bash -c '%s'" % (self.partition, jobName, " ".join(sbatch_params), cmdline))
 
     # Returns "Submitted batch job 3" -- extract ID
     match = re.search("Submitted batch job (\d+)", stdout)
