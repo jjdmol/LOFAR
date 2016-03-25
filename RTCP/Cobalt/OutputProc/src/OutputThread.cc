@@ -164,12 +164,14 @@ namespace LOFAR
     template<typename T> void OutputThread<T>::init()
     {
       try {
-        // fini the data product
         ASSERT(itsWriter.get());
 
         itsWriter->init();
       } catch (Exception &ex) {
         LOG_ERROR_STR(itsLogPrefix << "Could not create meta data: " << ex);
+
+        if (!itsParset.settings.realTime)   
+          THROW(StorageException, ex); 
       }
     }
 
@@ -183,6 +185,9 @@ namespace LOFAR
         itsWriter->fini(finalMetaData);
       } catch (Exception &ex) {
         LOG_ERROR_STR(itsLogPrefix << "Could not add final meta data: " << ex);
+
+        if (!itsParset.settings.realTime)   
+          THROW(StorageException, ex); 
       }
     }
 
@@ -266,7 +271,7 @@ namespace LOFAR
       catch (Exception &ex) 
       {
         LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
-        if ( !itsParset.settings.realTime)   
+        if (!itsParset.settings.realTime)
           THROW(StorageException, ex); 
 
         itsWriter = new MSWriterNull(itsParset);
