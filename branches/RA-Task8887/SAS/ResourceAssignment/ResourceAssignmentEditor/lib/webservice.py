@@ -210,6 +210,12 @@ def resourcetypes():
     result = sorted(result, key=lambda q: q['id'])
     return jsonify({'resourcetypes': result})
 
+@app.route('/rest/resourceclaimpropertytypes')
+def resourceclaimpropertytypes():
+    result = rarpc.getResourceClaimPropertyTypes()
+    result = sorted(result, key=lambda q: q['id'])
+    return jsonify({'resourceclaimpropertytypes': result})
+
 @app.route('/rest/momprojects')
 def getMoMProjects():
     projects = []
