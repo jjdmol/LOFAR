@@ -108,7 +108,16 @@ class RAtoOTDBPropagator():
 
     def parseStorageProperties(self, storage_properties):
         result = {}
-        
+        for p in storage_properties:
+            if p['type_name'] == 'nr_of_uv_files':
+                if  :
+                    result['uv'] = {'nr_of_uv_files': p['value'], 'uv_file_size': storage_properties['uv_file_size']}
+        if p['type_name'] ==  'nr_of_cs_files' in storage_properties:
+            result['cs'] = {'nr_of_cs_files': storage_properties['nr_of_cs_files'], 'cs_file_size': storage_properties['cs_file_size'], 'nr_of_cs_stokes': storage_properties['nr_of_cs_stokes']}
+        if p['type_name'] ==  'nr_of_is_files':
+            result['is'] = {'nr_of_is_files': storage_properties['nr_of_is_files'], 'is_file_size': storage_properties['is_file_size'], 'nr_of_is_stokes': storage_properties['nr_of_is_stokes']}
+        if p['type_name'] ==  'nr_of_is_files':
+        if p['type_name'] ==  'nr_of_is_files':
         return result
     
     def getRAinfo(self, ra_id):
