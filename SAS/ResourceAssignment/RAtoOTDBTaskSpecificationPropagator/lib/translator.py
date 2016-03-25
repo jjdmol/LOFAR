@@ -26,13 +26,14 @@ reads the info from the RA DB and sends it to OTDB in the correct format.
 """
 
 import logging
+from lofar.common.util import to_csv_string
 
 #from lofar.parameterset import parameterset
 
 logger = logging.getLogger(__name__)
 
 """ Prefix that is common to all parset keys, depending on the exact source. """
-PREFIX="LOFAR.ObsSW."
+PREFIX="LOFAR.ObsSW.Observation."
 ##TODO use this.
 
 class RAtoOTDBTranslator():
@@ -41,31 +42,113 @@ class RAtoOTDBTranslator():
         RAtoOTDBTranslator translates values from the RADB into parset keys to be stored in an OTDB Tree
         """
 
-    def CreateStorageKeys(self, storage):
+    def CreateCorrelated(self, otdb_id, storage_properties):
+        sb_nr = 0
+        locations  = []
+        filesnames = []
         result = {}
-        for property in storage:
-            if "uv" in x:
-                result[PREFIX + "Observation.DataProducts.Output_Correlated.filenames"] = CreateCorrelated(resource)
-            if "cs" in x:
-                result[PREFIX + "Observation.DataProducts.Output_Correlated.filenames"] = CreateCorrelated(resource)
-            if "is" in x:
-                result[PREFIX + "Observation.DataProducts.Output_Correlated.filenames"] = CreateCorrelated(resource)
-            if "correlated_uv" in x:
-                result[PREFIX + "Observation.DataProducts.Output_Correlated.filenames"] = CreateCorrelated(resource)
-                
+        for sap in storage_properties["saps"]: ##We might need to sort saps?
+            if "nr_of_uv_files" in sap:
+                for sap['nr_of_uv_files']:
+                    locations.append("CEP4:/data/projects/test/L%d" % otdb_id)
+                    filenames.append("L%d_SAP%03d_SB%03d_uv.MS" % (otdb_id, sb_nr, sap['sap_nr']))
+        result[PREFIX + 'DataProducts.Output_Correlated.locations'] = to_csv_string(locations)
+        result[PREFIX + 'DataProducts.Output_Correlated.filenames'] = to_csv_string(filenames)
 
-    def CreateParset(self, mom_id, ra_info):
+    def CreateCoherentStokes(self, otdb_id, storage_properties):
+        SB_nr = 0
+        locations  = []
+        filesnames = []
+        result = {}
+        for sap in storage_properties["saps"]: ##We might need to sort saps?
+            if "nr_of_cs_files" in sap:
+                for sap['nr_of_cs_files']:
+                    locations.append("CEP4:/data/projects/project/L%d" % otdb_id)
+                    filenames.append("L%d_SAP%03d_SB%03d_bf.h5" % (otdb_id, sb_nr, sap['sap_nr']))
+        result[PREFIX + 'DataProducts.Output_CoherentStokes.locations'] = to_csv_string(locations)
+        result[PREFIX + 'DataProducts.Output_CoherentStokes.filenames'] = to_csv_string(filenames)
+
+    def CreateIncoherentStokes(self, otdb_id, storage_properties):
+        SB_nr = 0
+        locations  = []
+        filesnames = []
+        result = {}
+        for sap in storage_properties["saps"]: ##We might need to sort saps?
+            if "nr_of_is_files" in sap:
+                for sap['nr_of_is_files']:
+                    locations.append("CEP4:/data/projects/project/L%d" % otdb_id)
+                    filenames.append("L%d_SAP%03d_SB%03d_bf.h5" % (otdb_id, sb_nr, sap['sap_nr']))
+        result[PREFIX + 'DataProducts.Output_IncoherentStokes.locations'] = to_csv_string(locations)
+        result[PREFIX + 'DataProducts.Output_IncoherentStokes.filenames'] = to_csv_string(filenames)
+
+    def CreateCreateInstrumentModel(self, otdb_id, storage_properties):
+        SB_nr = 0
+        locations  = []
+        filesnames = []
+        result = {}
+        for sap in storage_properties["saps"]: ##We might need to sort saps?
+            if "nr_of_im_files" in sap:
+                for sap['nr_of_im_files']:
+                    locations.append("CEP4:/data/projects/project/L%d" % otdb_id)
+                    filenames.append("L%d_SAP%03d_SB%03d_inst.INST" % (otdb_id, sb_nr, sap['sap_nr']))
+        result[PREFIX + 'DataProducts.Output_InstrumentModel.locations'] = to_csv_string(locations)
+        result[PREFIX + 'DataProducts.Output_InstrumentModel.filenames'] = to_csv_string(filenames)
+
+    def CreateSkyImage(self, otdb_id, storage_properties):
+        SB_nr = 0
+        locations  = []
+        filesnames = []
+        result = {}
+        for sap in storage_properties["saps"]: ##We might need to sort saps?
+            if "nr_of_img_files" in sap:
+                for sap['nr_of_img_files']:
+                    locations.append("CEP4:/data/projects/project/L%d" % otdb_id)
+                    filenames.append("L%d_SAP%03d_SB%03d_sky.IM" % (otdb_id, sb_nr, sap['sap_nr']))
+        result[PREFIX + 'DataProducts.Output_SkyImage.locations'] = to_csv_string(locations)
+        result[PREFIX + 'DataProducts.Output_SkyImage.filenames'] = to_csv_string(filenames)
+
+    def CreatePulsarPipeline(self, otdb_id, storage_properties):
+        SB_nr = 0
+        locations  = []
+        filesnames = []
+        result = {}
+        for sap in storage_properties["saps"]: ##We might need to sort saps?
+            if "nr_of_uv_files" in sap:
+                for sap['nr_of_uv_files']:
+                    locations.append("CEP4:/data/projects/project/L%d" % otdb_id)
+                    filenames.append("L%d_SAP%03d_SB%03d_bf.h5" % (otdb_id, sb_nr, sap['sap_nr']))
+        result[PREFIX + 'DataProducts.Output_Pulsar.locations'] = to_csv_string(locations)
+        result[PREFIX + 'DataProducts.Output_Pulsar.filenames'] = to_csv_string(filenames)
+
+
+    def CreateStorageKeys(self, otdb_id, storage_properties):
+        result = {}
+        for property in storage_properties:
+            if property = 'uv':
+                result.update(CreateCorrelated(otdb_id, storage_properties))
+            if property = 'cs':
+                result.update(CreateCoherentStokes(otdb_id, storage_properties))
+            if property = 'is':
+                result.update(CreateIncoherentStokes(otdb_id, storage_properties))
+            if property = 'im':
+                result.update(CreateInstrumentModel(otdb_id, storage_properties))
+            if property = 'img':
+                result.update(CreateSkyImage(otdb_id, storage_properties))
+            if property = 'pulp':
+                result.update(CreatePulsarPipeline(otdb_id, storage_properties))
+
+    def CreateParset(self, otdb_id, ra_info):
         logger.info('CreateParset: start=%s, end=%s' % (ra_info['starttime'], ra_info['endtime']))
 
         parset = {}
-        #parset[PREFIX+'Observation.momID'] = str(mom_id)
-        parset[PREFIX+'Observation.startTime'] = ra_info['starttime'].strftime('%Y-%m-%d %H:%M:%S')
-        parset[PREFIX+'Observation.stopTime'] = ra_info['endtime'].strftime('%Y-%m-%d %H:%M:%S')
+        #parset[PREFIX+'momID'] = str(mom_id)
+        parset[PREFIX+'startTime'] = ra_info['starttime'].strftime('%Y-%m-%d %H:%M:%S')
+        parset[PREFIX+'stopTime'] = ra_info['endtime'].strftime('%Y-%m-%d %H:%M:%S')
 
-        if "storage" in ra_info:
-            parset.update(CreateStorageKeys(ra_info["storage"]))
-        if "stations" in ra_info:
-            parset[PREFIX+'Observation.VirtualInstrument.stationList'] = ra_info["stations"]
+        if 'storage' in ra_info:
+            parset.update(CreateStorageKeys(ra_info['storage']['properties']))
+        if 'stations' in ra_info:
+            parset[PREFIX+'VirtualInstrument.stationList'] = ra_info["stations"]
         return parset
 
 

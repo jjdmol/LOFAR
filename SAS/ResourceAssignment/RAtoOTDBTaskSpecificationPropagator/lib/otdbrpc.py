@@ -56,7 +56,7 @@ class OTDBRPC(RPCWrapper):
     
     def taskSetSpecification(self, otdb_id=None, specification={}):
         answer = self.rpc('TaskSetSpecification', OtdbID=otdb_id, Specification=specification)
-        if "Errors" in answer.keys():
+        if "Errors" in answer:
             for key, problem in answer["Errors"].iteritems():
                 logger.warning("TaskSetSpecification for %i failed to set key %s because of %s" % (otdb_id, key, problem))
             raise OTDBPRCException("TaskSetSpecification failed to set all keys for %i" % (otdb_id,))
