@@ -103,8 +103,13 @@ class RAtoOTDBPropagator():
             logger.warning('doTaskScheduled no valid otdb_id: otdb_id=%s' % (otdb_id,))
             return
         ra_info = self.getRAinfo(ra_id)
-        otdb_info = self.translator.CreateParset(mom_id, ra_info)
+        otdb_info = self.translator.CreateParset(otdb_id, ra_info)
         self.setOTDBinfo(otdb_id, otdb_info, 'scheduled')
+
+    def parseStorageProperties(self, storage_properties):
+        result = {}
+        
+        return result
     
     def getRAinfo(self, ra_id):
         info = {}
@@ -113,9 +118,8 @@ class RAtoOTDBPropagator():
         claims = self.radbrpc.getResourceClaims(task_id=ra_id, extended=True, include_properties=True)
         for claim in claims:
             logger.debug(claim)
-            for property in claim.properties:
-                if resource_type_name == "storage":
-                    info["storage"].update(resource)
+            if resource_type_name == "storage":
+                info["storage"].update(parseStorageProperties(claim["properties"]))
         info["starttime"] = task["starttime"] + datetime.timedelta(hours=1) #TODO Test code!!! FIXME FIXME before release
         info["endtime"] = task["endtime"] + datetime.timedelta(hours=1)
         info["status"] = task["status"]
