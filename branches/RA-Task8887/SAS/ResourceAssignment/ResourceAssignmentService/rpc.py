@@ -69,6 +69,13 @@ class RARPC(RPCWrapper):
                                                     user_id=user_id,
                                                     properties=properties)
 
+    def insertResourceClaims(self, task_id, claims, session_id, username, user_id):
+        return self.rpc('InsertResourceClaims', task_id=task_id,
+                                                claims=claims,
+                                                session_id=session_id,
+                                                username=username,
+                                                user_id=user_id)
+
     def deleteResourceClaim(self, id):
         return self.rpc('DeleteResourceClaim', id=id)
 
