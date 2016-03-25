@@ -115,6 +115,7 @@ install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg
   ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg.CEP4
   ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg
+  ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg.CEP4
   DESTINATION share/pipeline)
 
 # PIPELINE_FEEDBACK_METHOD is used in pipeline.cfg.in to enable/disable qpid feedback
@@ -154,4 +155,8 @@ endforeach()
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/tasks.cfg.in
   ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg)
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/tasks.cfg.CEP4.in
+  ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg.CEP4)
 
