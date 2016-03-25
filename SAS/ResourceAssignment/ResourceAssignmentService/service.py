@@ -44,6 +44,7 @@ class RADBHandler(MessageHandlerInterface):
             'GetResourceClaimPropertyTypes': self._getResourceClaimPropertyTypes,
             'GetResourceClaims': self._getResourceClaims,
             'GetResourceClaim': self._getResourceClaim,
+            'InsertResourceClaims': self._insertResourceClaims,
             'InsertResourceClaim': self._insertResourceClaim,
             'DeleteResourceClaim': self._deleteResourceClaim,
             'UpdateResourceClaim': self._updateResourceClaim,
@@ -103,6 +104,15 @@ class RADBHandler(MessageHandlerInterface):
     def _getResourceClaim(self, **kwargs):
         claim = self.radb.getResourceClaim(kwargs['id'])
         return claim
+
+    def _insertResourceClaims(self, **kwargs):
+        logger.info('InsertResourceClaims: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
+        ids = self.radb.insertResourceClaims(kwargs['task_id'],
+                                             kwargs['claims'],
+                                             kwargs['session_id'],
+                                             kwargs['username'],
+                                             kwargs['user_id'])
+        return {'ids':ids}
 
     def _insertResourceClaim(self, **kwargs):
         logger.info('InsertResourceClaim: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
