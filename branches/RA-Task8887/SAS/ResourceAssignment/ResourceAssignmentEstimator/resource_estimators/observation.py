@@ -70,10 +70,21 @@ class ObservationResourceEstimator(BaseResourceEstimator):
             output_files['cs'] = output_files_cs
         if output_files_is:
             output_files['is'] = output_files_is
-        output_files['saps'] = correlated_saps + coherentstokes_saps + incoherentstokes_saps
+
+        output_files['saps'] = []
+        for sap_nr in xrange(parset.getInt('Observation.nrBeams')):
+            sap = {'sap_nr': sap_nr, 'properties': {}}
+            if sap_nr in correlated_saps:
+                sap['properties'].update(correlated_saps[sap_nr])
+            if sap_nr in coherentstokes_saps:
+                sap['properties'].update(coherentstokes_saps[sap_nr])
+            if sap_nr in incoherentstokes_saps:
+                sap['properties'].update(incoherentstokes_saps[sap_nr])
+            output_files['saps'].append(sap)
+
         total_data_size = correlated_size + coherentstokes_size + incoherentstokes_size
         result['storage'] = {'total_size': total_data_size, 'output_files': output_files}
-        result['bandwidth'] = correlated_bandwidth + coherentstokes_bandwidth + incoherentstokes_bandwidth
+        result['bandwidth'] = {'total_size': correlated_bandwidth + coherentstokes_bandwidth + incoherentstokes_bandwidth}
         return result
 
     def correlated(self, parset, duration):
@@ -95,13 +106,13 @@ class ObservationResourceEstimator(BaseResourceEstimator):
 
         # sum of all subbands in all digital beams
         total_files = 0
-        sap_files = []
+        sap_files = {}
         
         for sap_nr in xrange(parset.getInt('Observation.nrBeams')):
             subbandList = parset.getStringVector('Observation.Beam[%d].subbandList' % sap_nr)
             nr_files = len(subbandList)
             total_files += nr_files
-            sap_files.append({'sap_nr': sap_nr, 'nr_of_uv_files': nr_files})
+            sap_files[sap_nr]= {'nr_of_uv_files': nr_files}
 
         file_size = int((data_size + n_sample_size + size_of_header) * integrated_seconds + size_of_overhead)
         output_files = {'nr_of_uv_files': total_files, 'uv_file_size': file_size}
@@ -115,7 +126,7 @@ class ObservationResourceEstimator(BaseResourceEstimator):
         """  Estimate number of files, file size and bandwidth needed for coherent stokes
         """
         if not parset.getBool('Observation.DataProducts.Output_CoherentStokes.enabled'):
-            return (0,0, {}, [])
+            return (0,0, {}, {})
             
         logger.info("calculate coherentstokes datasize")
         coherent_type = parset.getString(COBALT + 'BeamFormer.CoherentStokes.which')
@@ -132,7 +143,7 @@ class ObservationResourceEstimator(BaseResourceEstimator):
         total_nr_stokes = 0
         total_files     = 0
         max_nr_subbands = 0
-        sap_files       = []
+        sap_files       = {}
         
         for sap_nr in xrange(parset.getInt('Observation.nrBeams')):
             logger.info("checking SAP {}".format(sap_nr))
@@ -140,29 +151,35 @@ class ObservationResourceEstimator(BaseResourceEstimator):
             nr_subbands = len(subbandList)
             max_nr_subbands = max(nr_subbands, max_nr_subbands)
             nr_files = 0
+            total_nr_tabs = 0
             
             for tab_nr in xrange(parset.getInt('Observation.Beam[%d].nrTiedArrayBeams' % sap_nr)):
                 logger.info("checking TAB {}".format(tab_nr))
                 if parset.getBool("Observation.Beam[%d].TiedArrayBeam[%d].coherent" % (sap_nr, tab_nr)):
                     logger.info("adding coherentstokes size")
                     nr_stokes = nr_coherent #TODO what does min mean here?
+                    total_nr_tabs += 1
                     total_nr_stokes += nr_stokes
                     nr_files += int(nr_stokes * ceil(nr_subbands / float(subbands_per_file)))
 
             nr_tab_rings = parset.getInt('Observation.Beam[%d].nrTabRings' % sap_nr)
             if nr_tab_rings > 0:
                 logger.info("adding size for {} tab_rings".format(nr_tab_rings))
-                nr_stokes = (3 * nr_tab_rings * (nr_tab_rings + 1) + 1) * nr_coherent
+                nr_tabs = (3 * nr_tab_rings * (nr_tab_rings + 1) + 1)
+                total_nr_tabs += nr_tabs
+                nr_stokes = nr_tabs * nr_coherent
                 total_nr_stokes += nr_stokes
                 nr_files += int(nr_stokes * ceil(nr_subbands / float(subbands_per_file)))
 
             if parset.getBool(COBALT + 'BeamFormer.flysEye'):
                 logger.info("adding flys eye data size")
-                nr_stokes = self._virtual_stations() * nr_coherent
+                nr_tabs = self._virtual_stations(parset)
+                total_nr_tabs += nr_tabs
+                nr_stokes = nr_tabs * nr_coherent
                 total_nr_stokes += nr_stokes
                 nr_files += int(nr_stokes * ceil(nr_subbands / float(subbands_per_file)))
 
-            sap_files.append({'sap_nr': sap_nr, 'nr_of_cs_files': nr_files})
+            sap_files[sap_nr]= {'nr_of_cs_files': nr_files, 'nr_of_tabs': total_nr_tabs}
             total_files += nr_files
 
         nr_subbands_per_file = min(subbands_per_file, max_nr_subbands)
@@ -179,7 +196,7 @@ class ObservationResourceEstimator(BaseResourceEstimator):
         """  Estimate number of files, file size and bandwidth needed for incoherentstokes
         """
         if not parset.getBool('Observation.DataProducts.Output_IncoherentStokes.enabled'):
-            return (0,0, {}, [])
+            return (0,0, {}, {})
             
         logger.info("calculate incoherentstokes data size")
         incoherent_type = parset.getString(COBALT + 'BeamFormer.IncoherentStokes.which')
@@ -194,7 +211,7 @@ class ObservationResourceEstimator(BaseResourceEstimator):
         total_nr_stokes = 0
         total_files     = 0
         max_nr_subbands = 0
-        sap_files       = []
+        sap_files       = {}
 
         for sap_nr in xrange(parset.getInt('Observation.nrBeams')):
             logger.info("checking SAP {}".format(sap_nr))
@@ -202,16 +219,16 @@ class ObservationResourceEstimator(BaseResourceEstimator):
             nr_subbands = len(subbandList)
             max_nr_subbands = max(nr_subbands, max_nr_subbands)
             nr_files = 0
-            for tab_nr in xrange(parset.getInt('Observation.Beam[%d].nrTiedArrayBeams' % sap_nr)):
+            total_nr_tabs = parset.getInt('Observation.Beam[%d].nrTiedArrayBeams' % sap_nr)
+            for tab_nr in xrange(total_nr_tabs):
                 logger.info("checking TAB {}".format(tab_nr))
                 if not parset.getBool("Observation.Beam[%d].TiedArrayBeam[%d].coherent" % (sap_nr, tab_nr)):
                     logger.info("adding incoherentstokes size")
                     total_nr_stokes += nr_incoherent
                     nr_files += int(nr_incoherent * ceil(nr_subbands / float(subbands_per_file)))
 
-            sap_files.append({'sap_nr': sap_nr, 'nr_of_is_files': nr_files})
+            sap_files[sap_nr]= {'nr_of_is_files': nr_files, 'nr_of_tabs': total_nr_tabs}
             total_files += nr_files
-
 
         if incoherent_channels_per_subband > 0:
             channel_integration_factor = channels_per_subband / incoherent_channels_per_subband
