@@ -13,7 +13,7 @@ Repository web interface: https://svn.astron.nl/viewvc/LOFAR/
 
 
 Top-level LOFAR Project Content (incomplete summary)
--------------------------------
+--------------------------------
 
 CEP/			CEntral Processing software
 CEP/Calibration/	Calibration: BBS, antenna and station responses
