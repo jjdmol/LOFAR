@@ -107,8 +107,13 @@ class RADBHandler(MessageHandlerInterface):
 
     def _insertResourceClaims(self, **kwargs):
         logger.info('InsertResourceClaims: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
+        claims = kwargs['claims']
+        for claim in claims:
+            claim['starttime'] = claim['starttime'].datetime()
+            claim['endtime'] = claim['endtime'].datetime()
+
         ids = self.radb.insertResourceClaims(kwargs['task_id'],
-                                             kwargs['claims'],
+                                             claims,
                                              kwargs['session_id'],
                                              kwargs['username'],
                                              kwargs['user_id'])
