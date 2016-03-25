@@ -535,20 +535,22 @@ class RADatabase:
         raise KeyError('No such resource_claim_property_type: %s Valid values are: %s' % (type_name, ', '.join(self.getResourceClaimPropertyTypeNames())))
 
     def getResourceClaimProperties(self, claim_ids=None, task_id=None):
-        query = '''SELECT rcpv.* from resource_allocation.resource_claim_property_view rcpv'''
+        query = '''SELECT rcpv.id, rcpv.resource_claim_id, rcpv.value, rcpv.type_id, rcpv.type_name, sap.number as sap_nr
+                   FROM resource_allocation.resource_claim_property_view rcpv
+                   LEFT JOIN resource_allocation.sap sap on rcpv.sap_id = sap.id'''
 
         conditions = []
         qargs = []
 
         if claim_ids is not None:
             if isinstance(claim_ids, int): # just a single id
-                conditions.append('resource_claim_id = %s')
+                conditions.append('rcpv.resource_claim_id = %s')
                 qargs.append(claim_ids)
             elif len(claim_ids) == 1:  # just a single id from a list
-                conditions.append('resource_claim_id = %s')
+                conditions.append('rcpv.resource_claim_id = %s')
                 qargs.append(claim_ids[0])
             else: # list of id's
-                conditions.append('resource_claim_id in %s')
+                conditions.append('rcpv.resource_claim_id in %s')
                 qargs.append(tuple(claim_ids))
 
         if task_id is not None:
@@ -559,7 +561,12 @@ class RADatabase:
         if conditions:
             query += ' WHERE ' + ' AND '.join(conditions)
 
-        return list(self._executeQuery(query, qargs, fetch=_FETCH_ALL))
+        properties = list(self._executeQuery(query, qargs, fetch=_FETCH_ALL))
+        for p in properties:
+            if p['sap_nr'] is None:
+                del p['sap_nr']
+
+        return properties
 
     def insertResourceClaimProperty(self, claim_id, property_type, value, commit=False):
         return self.insertResourceClaimProperties(claim_id, [(property_type, value)], commit)
@@ -707,12 +714,24 @@ class RADatabase:
             for p in properties:
                 try:
                     claim = claimDict[p['resource_claim_id']]
-                    if not 'properties' in claim:
-                        claim['properties'] = []
                     del p['resource_claim_id']
-                    claim['properties'].append(p)
+                    if 'sap_nr' in p:
+                        if not 'saps' in claim:
+                            claim['saps'] = {}
+                        if not p['sap_nr'] in claim['saps']:
+                            claim['saps'][p['sap_nr']] = []
+                        claim['saps'][p['sap_nr']].append(p)
+                        del p['sap_nr']
+                    else:
+                        if not 'properties' in claim:
+                            claim['properties'] = []
+                        claim['properties'].append(p)
                 except KeyError:
                     pass
+
+            for claim in claims:
+                if 'saps' in claim:
+                    claim['saps'] = [{'sap_nr':sap_nr, 'properties':props} for sap_nr, props in claim['saps'].items()]
 
         return claims
 
@@ -1107,7 +1126,10 @@ if __name__ == '__main__':
     #print
     #print db.getResourceClaims()
 
+    resultPrint(db.getResourceClaims)
 
+
+    exit(0)
     for s in db.getSpecifications():
         db.deleteSpecification(s['id'])
 
