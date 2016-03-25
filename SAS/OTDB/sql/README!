@@ -1,3 +1,3 @@
-This version needs a modification on the statehistory table.
+This version needs a getStations) function
 
 please execute (with \i) the upgrade_OTDB.sql script to upgrade an existing database to the new format.

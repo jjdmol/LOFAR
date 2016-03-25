@@ -74,7 +74,7 @@ if $SLURM; then
     SLURM_VARS+=" $s=\$$s"
   done
 
-  COMMAND="ssh -tt $HEADNODE salloc -N $NRCOMPUTENODES bash -c 'ssh `hostname -f` -tt $SLURM_VARS $COMMAND'"
+  COMMAND="ssh -tt $HEADNODE salloc -N $NRCOMPUTENODES -J $OBSID bash -c 'ssh `hostname -f` -tt $SLURM_VARS $COMMAND'"
 fi
 
 # Start observation in the background

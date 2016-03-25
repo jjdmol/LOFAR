@@ -444,6 +444,32 @@ SUITE(stations) {
   }
 }
 
+SUITE(OutputCluster) {
+  TEST(clusterName) {
+    Parset ps = makeDefaultTestParset();
+
+    ps.replace("Observation.Cluster.ProcessingCluster.clusterName", "foo");
+    ps.updateSettings();
+
+    CHECK_EQUAL("foo", ps.settings.outputCluster);
+  }
+
+  TEST(NIC_binding) {
+    Parset ps = makeDefaultTestParset();
+
+    ps.replace("Observation.Cluster.ProcessingCluster.clusterName", "CEP4");
+    ps.replace("Cobalt.Nodes", "[node01_0, node01_1]");
+    ps.replace("PIC.Core.Cobalt.node01_0.out_nic", "[foo:bar, CEP4:mlx4_0]");
+    ps.replace("PIC.Core.Cobalt.node01_1.out_nic", "[foo:bar, CEP4:mlx4_1]");
+    ps.updateSettings();
+
+    CHECK_EQUAL("CEP4",   ps.settings.outputCluster);
+    CHECK_EQUAL(2U,       ps.settings.nodes.size());
+    CHECK_EQUAL("mlx4_0", ps.settings.nodes[0].out_nic);
+    CHECK_EQUAL("mlx4_1", ps.settings.nodes[1].out_nic);
+  }
+}
+
 SUITE(StationStreams) {
 
 
