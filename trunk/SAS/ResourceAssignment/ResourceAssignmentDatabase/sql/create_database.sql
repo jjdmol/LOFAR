@@ -288,16 +288,13 @@ COMMENT ON VIEW resource_allocation.resource_claim_extended_view
 
 
 CREATE OR REPLACE VIEW resource_allocation.resource_claim_property_view AS
-  SELECT rcv.*, rcp.type_id as property_type_id, rcpt.name as property_type, rcp.value as property_value
-   FROM resource_allocation.resource_claim_view rcv
-   JOIN resource_allocation.resource_claim_property rcp ON rcv.id = rcp.resource_claim_id
+ SELECT rcp.id, rcp.resource_claim_id, rcp.value, rcp.type_id,
+    rcpt.name AS type_name
+   FROM resource_allocation.resource_claim_property rcp
    JOIN resource_allocation.resource_claim_property_type rcpt ON rcpt.id = rcp.type_id;
 ALTER TABLE resource_allocation.resource_claim_property_view
   OWNER TO resourceassignment;
 COMMENT ON VIEW resource_allocation.resource_claim_property_view
-  IS 'view including resource_claim_properties on resource_claim table for resource_claims with on or more properties';
-
-
-
+  IS 'plain view on resource_claim_property table, including resource_claim_property_type.name';
 
 COMMIT;
