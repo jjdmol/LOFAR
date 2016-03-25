@@ -46,7 +46,7 @@ with patch('lofar.sas.resourceassignment.resourceassignmentservice.rpc.RARPC', a
 
         #give pre-cooked answer depending on called service
         if servicename == 'ResourceEstimation':
-            return {'1290472': {'observation': {'bandwidth': {'total_size': 9372800}, 'storage': {'total_size': 140592000, 'output_files': {'is': {'is_nr_stokes': 1, 'is_file_size': 36864000, 'nr_of_is_files': 1}, 'uv': {'nr_of_uv_files': 50, 'uv_file_size': 2074560}, 'saps': [{'nr_of_uv_files': 50, 'sap_nr': 0}, {'sap_nr': 0, 'nr_of_is_files': 1}]}}}}}, "OK"
+            return {'1290472': {'observation': {'bandwidth': {'total_size': 9372800}, 'storage': {'total_size': 140592000, 'output_files': {'is': {'is_nr_stokes': 1, 'is_file_size': 36864000, 'nr_of_is_files': 1}, 'uv': {'nr_of_uv_files': 50, 'uv_file_size': 2074560}, 'saps': [{'sap_nr': 0, 'properties': {'nr_of_uv_files': 50, 'nr_of_is_files': 1}}]}}}}}, "OK"
         elif servicename == 'SSDBService.GetActiveGroupNames':
             return {0:'storagenodes', 1:'computenodes', 2:'archivenodes', 3:'locusnodes', 4:'cep4'}, "OK"
         elif servicename == 'SSDBService.GetHostForGID':
