@@ -60,10 +60,16 @@ class ObservationResourceEstimator(BaseResourceEstimator):
         
         result = {}
         output_files = {}
-        correlated_size, correlated_bandwidth, output_files['uv'], correlated_saps = self.correlated(parset, duration)
-        coherentstokes_size, coherentstokes_bandwidth, output_files['cs'], coherentstokes_saps = self.coherentstokes(parset, duration)
-        incoherentstokes_size, incoherentstokes_bandwidth, output_files['is'], incoherentstokes_saps = self.incoherentstokes(parset, duration)
+        correlated_size, correlated_bandwidth, output_files_uv, correlated_saps = self.correlated(parset, duration)
+        coherentstokes_size, coherentstokes_bandwidth, output_files_cs, coherentstokes_saps = self.coherentstokes(parset, duration)
+        incoherentstokes_size, incoherentstokes_bandwidth, output_files_is, incoherentstokes_saps = self.incoherentstokes(parset, duration)
         
+        if output_files_uv:
+            output_files['uv'] = output_files_uv
+        if output_files_cs:
+            output_files['cs'] = output_files_cs
+        if output_files_is:
+            output_files['is'] = output_files_is
         output_files['saps'] = correlated_saps + coherentstokes_saps + incoherentstokes_saps
         total_data_size = correlated_size + coherentstokes_size + incoherentstokes_size
         result['storage'] = {'total_size': total_data_size, 'output_files': output_files}
@@ -95,7 +101,7 @@ class ObservationResourceEstimator(BaseResourceEstimator):
             subbandList = parset.getStringVector('Observation.Beam[%d].subbandList' % sap_nr)
             nr_files = len(subbandList)
             total_files += nr_files
-            sap_files.append({'number': sap_nr, 'nr_of_uv_files': nr_files})
+            sap_files.append({'sap_nr': sap_nr, 'nr_of_uv_files': nr_files})
 
         file_size = int((data_size + n_sample_size + size_of_header) * integrated_seconds + size_of_overhead)
         output_files = {'nr_of_uv_files': total_files, 'uv_file_size': file_size}
@@ -109,7 +115,7 @@ class ObservationResourceEstimator(BaseResourceEstimator):
         """  Estimate number of files, file size and bandwidth needed for coherent stokes
         """
         if not parset.getBool('Observation.DataProducts.Output_CoherentStokes.enabled'):
-            return (0,0, {})
+            return (0,0, {}, [])
             
         logger.info("calculate coherentstokes datasize")
         coherent_type = parset.getString(COBALT + 'BeamFormer.CoherentStokes.which')
@@ -156,13 +162,13 @@ class ObservationResourceEstimator(BaseResourceEstimator):
                 total_nr_stokes += nr_stokes
                 nr_files += int(nr_stokes * ceil(nr_subbands / float(subbands_per_file)))
 
-            sap_files.append({'number': sap_nr, 'nr_of_uv_files': nr_files})
+            sap_files.append({'sap_nr': sap_nr, 'nr_of_cs_files': nr_files})
             total_files += nr_files
 
         nr_subbands_per_file = min(subbands_per_file, max_nr_subbands)
         size_per_file = int(nr_subbands_per_file * size_per_subband)
 
-        output_files['bf_coherentstokes'] = {'nr_files': total_files, 'nr_stokes': nr_coherent, 'file_size': size_per_file}
+        output_files = {'nr_of_cs_files': total_files, 'nr_of_cs_stokes': nr_coherent, 'cs_file_size': size_per_file}
         logger.info("coherentstokes: {} files {} bytes each".format(total_files, size_per_file))
 
         total_data_size = int(ceil(total_nr_stokes * max_nr_subbands * size_per_subband))
@@ -173,7 +179,7 @@ class ObservationResourceEstimator(BaseResourceEstimator):
         """  Estimate number of files, file size and bandwidth needed for incoherentstokes
         """
         if not parset.getBool('Observation.DataProducts.Output_IncoherentStokes.enabled'):
-            return (0,0, {})
+            return (0,0, {}, [])
             
         logger.info("calculate incoherentstokes data size")
         incoherent_type = parset.getString(COBALT + 'BeamFormer.IncoherentStokes.which')
@@ -203,7 +209,7 @@ class ObservationResourceEstimator(BaseResourceEstimator):
                     total_nr_stokes += nr_incoherent
                     nr_files += int(nr_incoherent * ceil(nr_subbands / float(subbands_per_file)))
 
-            sap_files.append({'number': sap_nr, 'nr_of_uv_files': nr_files})
+            sap_files.append({'sap_nr': sap_nr, 'nr_of_is_files': nr_files})
             total_files += nr_files
 
 
@@ -217,7 +223,7 @@ class ObservationResourceEstimator(BaseResourceEstimator):
             size_per_subband = int((samples_per_second * 4) / time_integration_factor / channel_integration_factor * duration)
             size_per_file = nr_subbands_per_file * size_per_subband
 
-        output_files['bf_incoherentstokes'] = {'nr_files': total_files, 'nr_stokes': nr_incoherent, 'file_size': int(size_per_file)}
+        output_files = {'nr_of_is_files': total_files, 'nr_of_is_stokes': nr_incoherent, 'is_file_size': int(size_per_file)}
         logger.info("incoherentstokes: {} files {} bytes each".format(total_files, size_per_file))
 
         total_data_size = int(ceil(total_nr_stokes * max_nr_subbands * size_per_subband))  # bytes

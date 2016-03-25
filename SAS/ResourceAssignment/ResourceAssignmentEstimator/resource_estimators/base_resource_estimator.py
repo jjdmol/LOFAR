@@ -70,7 +70,6 @@ class BaseResourceEstimator(object):
             raise ValueError('The parset is incomplete')
         result = {}
         result[self.name] = {}
-        result[self.name]['total_data_size'] = estimates['total_data_size']
-        result[self.name]['total_bandwidth'] = estimates['total_bandwidth']
-        result[self.name]['output_files']    = estimates['output_files']
+        result[self.name]['storage'] = estimates['storage']
+        result[self.name]['bandwidth'] = estimates['bandwidth']
         return result
