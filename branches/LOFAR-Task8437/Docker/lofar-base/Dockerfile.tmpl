@@ -39,7 +39,8 @@ ENV J=4
 #RUN sed -i 's/archive.ubuntu.com/osmirror.rug.nl/' /etc/apt/sources.list 
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y sudo python2.7 libpython2.7 && \
-    apt-get install -y libblas3 liblapacke python-numpy libcfitsio3 libwcs4 libfftw3-bin libhdf5-7 libboost-python${BOOST_VERSION}.0
+    apt-get install -y libblas3 liblapacke python-numpy libcfitsio3 libwcs4 libfftw3-bin libhdf5-7 libboost-python${BOOST_VERSION}.0 && \
+    apt-get install -y nano
 
 #
 # setup-account
