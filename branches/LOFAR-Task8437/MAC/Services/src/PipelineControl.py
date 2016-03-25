@@ -70,6 +70,7 @@ from lofar.messaging.RPC import RPC, RPCTimeoutException
 import subprocess
 import datetime
 import os
+import re
 
 import logging
 logger = logging.getLogger(__name__)
@@ -139,11 +140,18 @@ class Slurm(object):
     cmdline = "ssh %s %s" % (self.headnode, cmdline)
     runCommand(cmdline)
 
-  def schedule(self, jobName, cmdline, sbatch_params=None):
+  def submit(self, jobName, cmdline, sbatch_params=None):
     if sbatch_params is None:
       sbatch_params = []
 
-    self._runCommand("sbatch --job-name=%s %s bash -c '%s'" % (jobName, " ".join(sbatch_params), cmdline))
+    stdout = self._runCommand("sbatch --job-name=%s %s bash -c '%s'" % (jobName, " ".join(sbatch_params), cmdline))
+
+    # Returns "Submitted batch job 3" -- extract ID
+    match = re.search("Submitted batch job (\d+)", stdout)
+    if not match:
+      return None
+
+    return match.group(1)
 
   def cancel(self, jobName):
     stdout = self._runCommand("scancel --jobname %s" % (jobName,))
@@ -324,7 +332,7 @@ class PipelineControl(OTDBBusListener):
 
     # Schedule runPipeline.sh
     logger.info("Scheduling SLURM job for runPipeline.sh")
-    slurm_job_id = self.slurm.schedule(parset.slurmJobName(),
+    slurm_job_id = self.slurm.submit(parset.slurmJobName(),
 
       "docker run --rm"
         " --net=host"
@@ -347,7 +355,7 @@ class PipelineControl(OTDBBusListener):
 
     # Schedule pipelineAborted.sh
     logger.info("Scheduling SLURM job for pipelineAborted.sh")
-    slurm_cancel_job_id = self.slurm.schedule("%s-aborted" % parset.slurmJobName(),
+    slurm_cancel_job_id = self.slurm.submit("%s-aborted" % parset.slurmJobName(),
 
       "docker run --rm"
         " --net=host"
