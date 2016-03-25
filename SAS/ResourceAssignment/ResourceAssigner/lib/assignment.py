@@ -265,17 +265,23 @@ class ResourceAssigner():
                         claim['properties'] = []
                         needed_prop_groups = next((v for k,v in needed_claim_for_resource_type.items() if isinstance(v, collections.Iterable)))
 
+                        def processProperties(propertiesDict, sap_nr=None):
+                            for prop_type_name, prop_value in propertiesDict.items():
+                                if prop_type_name in rc_property_types:
+                                    rc_property_type_id = rc_property_types[prop_type_name]
+                                    property = {'type':rc_property_type_id, 'value':prop_value}
+                                    if sap_nr is not None:
+                                        property['sap_nr'] = sap_nr
+                                    claim['properties'].append(property)
+                                else:
+                                    logger.error('claimResources: unknown prop_type:%s' % prop_type_name)
+
                         for group_name, needed_prop_group in needed_prop_groups.items():
                             if group_name == 'saps':
-                                logger.info('skipping sap')
+                                for sap_dict in needed_prop_group:
+                                    processProperties(sap_dict['properties'], sap_dict['sap_nr'])
                             else:
-                                for prop_type_name, prop_value in needed_prop_group.items():
-                                    if prop_type_name in rc_property_types:
-                                        rc_property_type_id = rc_property_types[prop_type_name]
-                                        property = {'type':rc_property_type_id, 'value':prop_value}
-                                        claim['properties'].append(property)
-                                    else:
-                                        logger.error('claimResources: unknown prop_type:%s' % prop_type_name)
+                                processProperties(needed_prop_group)
 
                     logger.info('claimResources: created claim:%s' % claim)
                     claims.append(claim)
