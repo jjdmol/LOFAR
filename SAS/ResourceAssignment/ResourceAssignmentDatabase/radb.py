@@ -564,20 +564,46 @@ class RADatabase:
     def insertResourceClaimProperty(self, claim_id, property_type, value, commit=False):
         return self.insertResourceClaimProperties(claim_id, [(property_type, value)], commit)
 
-    def insertResourceClaimProperties(self, claim_id, type_value_pairs, commit=False):
-        type_strings = set([tv[0] for tv in type_value_pairs if isinstance(tv[0], basestring)])
+    def insertResourceClaimProperties(self, claim_id, type_value_sap, commit=False):
+        # first insert unique sap numbers
+        sap_nrs = list(set([tvs[2] for tvs in type_value_sap if tvs[2] is not None]))
+
+        if sap_nrs:
+            insert_values = ','.join(self.cursor.mogrify('(%s, %s)', (claim_id, sap_nr)) for sap_nr in sap_nrs)
+
+            query = '''INSERT INTO resource_allocation.sap
+            (resource_claim_id, number)
+            VALUES {values}
+            RETURNING id;'''.format(values=insert_values)
+
+            sap_ids = [x['id'] for x in self._executeQuery(query, fetch=_FETCH_ALL)]
+
+            if [x for x in sap_ids if x < 0]:
+                logger.error("One or more sap_nr's could not be inserted. Rolling back.")
+                self.rollback()
+                return None
+
+            sapnr2id = {nr:id for nr,id in zip(sap_nrs, sap_ids)}
+        else:
+            sapnr2id = {}
+
+        # then insert properties and link them to the sap ids
+        # convert type string first to ids
+        type_strings = set([tvs[0] for tvs in type_value_sap if isinstance(tvs[0], basestring)])
 
         if type_strings:
             # convert all type strings to id's
             type_string2id = {t:self.getResourceClaimPropertyTypeId(t) for t in type_strings}
-            for tv in type_value_pairs:
-                if isinstance(tv[0], basestring):
-                    tv[0] = type_string2id[tv[0]]
+            for tvs in type_value_sap:
+                if isinstance(tvs[0], basestring):
+                    tvs[0] = type_string2id[tvs[0]]
 
-        insert_values = ','.join(self.cursor.mogrify('(%s, %s, %s)', (claim_id, tv[0], tv[1])) for tv in type_value_pairs)
+        insert_values = ','.join(self.cursor.mogrify('(%s, %s, %s, %s)',
+                                                     (claim_id, tvs[0], tvs[1], sapnr2id.get(tvs[2])))
+                                                     for tvs in type_value_sap)
 
         query = '''INSERT INTO resource_allocation.resource_claim_property
-        (resource_claim_id, type_id, value)
+        (resource_claim_id, type_id, value, sap_id)
         VALUES {values}
         RETURNING id;'''.format(values=insert_values)
 
@@ -760,7 +786,7 @@ class RADatabase:
             return None
 
         # map properties as tuple of claims with properties to claim_id
-        claimId2Props = { claim_id: [(p['type'], p['value']) for p in claim['properties']]
+        claimId2Props = { claim_id: [(p['type'], p['value'], p.get('sap_nr')) for p in claim['properties']]
                          for claim_id, claim
                          in zip(claimIds, claims)
                          if 'properties' in claim and
