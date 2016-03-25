@@ -61,7 +61,9 @@ export LOFAR_BRANCH_URL="https://svn.astron.nl/LOFAR/${LOFAR_BRANCH_NAME}"
 
 case "${LOFAR_BRANCH_NAME}" in
   trunk)      export LOFAR_TAG=trunk ;;
-  tags/*)     export LOFAR_TAG=${LOFAR_BRANCH_NAME##tags/LOFAR-Release-} ;;
+  */LOFAR-Release-*)
+              # support releases in both tags/ and branches/
+              export LOFAR_TAG=${LOFAR_BRANCH_NAME##*/LOFAR-Release-} ;;
   branches/*) export LOFAR_TAG=${LOFAR_BRANCH_NAME##branches/*Task} ;;
   *)          export LOFAR_TAG=latest ;;
 esac
