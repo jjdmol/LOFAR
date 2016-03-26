@@ -104,31 +104,18 @@ class RAtoOTDBPropagator():
             return
         ra_info = self.getRAinfo(ra_id)
         otdb_info = self.translator.CreateParset(otdb_id, ra_info)
+        logger.debug("Parset info for OTDB: %s" %otdb_info)
         self.setOTDBinfo(otdb_id, otdb_info, 'scheduled')
 
-    def parseStorageProperties(self, storage_properties):
-        result = {}
-        for p in storage_properties:
-            if p['type_name'] == 'nr_of_uv_files':
-                if  :
-                    result['uv'] = {'nr_of_uv_files': p['value'], 'uv_file_size': storage_properties['uv_file_size']}
-        if p['type_name'] ==  'nr_of_cs_files' in storage_properties:
-            result['cs'] = {'nr_of_cs_files': storage_properties['nr_of_cs_files'], 'cs_file_size': storage_properties['cs_file_size'], 'nr_of_cs_stokes': storage_properties['nr_of_cs_stokes']}
-        if p['type_name'] ==  'nr_of_is_files':
-            result['is'] = {'nr_of_is_files': storage_properties['nr_of_is_files'], 'is_file_size': storage_properties['is_file_size'], 'nr_of_is_stokes': storage_properties['nr_of_is_stokes']}
-        if p['type_name'] ==  'nr_of_is_files':
-        if p['type_name'] ==  'nr_of_is_files':
-        return result
-    
     def getRAinfo(self, ra_id):
         info = {}
         info["storage"] = {}
         task = self.radbrpc.getTask(ra_id)
         claims = self.radbrpc.getResourceClaims(task_id=ra_id, extended=True, include_properties=True)
         for claim in claims:
-            logger.debug(claim)
-            if resource_type_name == "storage":
-                info["storage"].update(parseStorageProperties(claim["properties"]))
+            logger.debug("Processing claim: %s" % claim)
+            if claim['resource_type_name'] == 'storage':
+                info['storage'] = claim
         info["starttime"] = task["starttime"] + datetime.timedelta(hours=1) #TODO Test code!!! FIXME FIXME before release
         info["endtime"] = task["endtime"] + datetime.timedelta(hours=1)
         info["status"] = task["status"]
@@ -136,5 +123,5 @@ class RAtoOTDBPropagator():
     
     def setOTDBinfo(self, otdb_id, otdb_info, otdb_status):
         self.otdbrpc.taskSetSpecification(otdb_id, otdb_info)
-        #self.otdbrpc.taskPrepareForScheduling(otdb_id, otdb_info["LOFAR.ObsSW.Observation.startTime"], otdb_info["LOFAR.ObsSW.Observation.stopTime"])
+        self.otdbrpc.taskPrepareForScheduling(otdb_id, otdb_info["LOFAR.ObsSW.Observation.startTime"], otdb_info["LOFAR.ObsSW.Observation.stopTime"])
         self.otdbrpc.taskSetStatus(otdb_id, otdb_status)
