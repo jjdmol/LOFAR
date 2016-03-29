@@ -101,7 +101,7 @@ class TestPipelineControl(unittest.TestCase):
       def __init__(self, *args, **kwargs):
         self.scheduled_jobs = {}
 
-      def schedule(self, jobName, *args, **kwargs):
+      def submit(self, jobName, *args, **kwargs):
         print "Schedule SLURM job '%s': %s, %s" % (jobName, args, kwargs)
 
         self.scheduled_jobs[jobName] = (args, kwargs)
