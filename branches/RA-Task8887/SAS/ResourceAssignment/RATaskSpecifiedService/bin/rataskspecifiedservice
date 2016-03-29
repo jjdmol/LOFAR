@@ -30,16 +30,18 @@ from lofar.sas.resourceassignment.rataskspecified.RATaskSpecified import RATaskS
 if __name__ == "__main__":
     import sys
     from optparse import OptionParser
+    from lofar.sas.otdb.config import DEFAULT_NOTIFICATION_BUSNAME as OTDB_STATUS_BUSNAME
+    from lofar.common.util import waitForInterrupt
 
     # Check the invocation arguments
     parser = OptionParser("%prog -O otdb_bus -B my_bus [options]")
-    parser.add_option("-O", "--otdb_bus", dest="otdb_busname", type="string", default="",
-                      help="Bus or queue OTDB operates on")
+    parser.add_option("-O", "--otdb_bus", dest="otdb_busname", type="string", default=OTDB_STATUS_BUSNAME,
+                      help="Bus or queue OTDB publishes status changes on. [default: %default]")
     parser.add_option("-B", "--my_bus", dest="my_busname", type="string", default="",
                       help="Bus or queue we publish resource requests on")
     (options, args) = parser.parse_args()
 
-    if not options.statusbus or not options.parsetbus or not options.busname:
+    if not options.otdb_busname or not options.my_busname:
         parser.print_help()
         sys.exit(1)
 
