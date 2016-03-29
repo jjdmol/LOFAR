@@ -12,4 +12,4 @@ set(_py_files
 
 python_install(${_py_files} DESTINATION lofar/sas/systemstatus/database)
 
-# add_subdirectory(test)
+add_subdirectory(sql)

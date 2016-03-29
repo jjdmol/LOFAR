@@ -22,4 +22,4 @@ install(FILES
   radbpglistener.ini
   DESTINATION etc/supervisord.d)
 
-# add_subdirectory(test)
+add_subdirectory(sql)
