@@ -28,7 +28,7 @@ Typical usage is to derive your own subclass from RADBBusListener and implement 
 """
 
 from lofar.messaging.messagebus import AbstractBusListener
-from lofar.sas.resourceassignment.database.config import DEFAULT_BUSNAME
+from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_BUSNAME, DEFAULT_NOTIFICATION_SUBJECTS
 from lofar.common.util import waitForInterrupt
 
 import qpid.messaging
@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 
 class RADBBusListener(AbstractBusListener):
-    def __init__(self, busname=DEFAULT_BUSNAME, subject='RADB.*', broker=None, **kwargs):
+    def __init__(self, busname=DEFAULT_NOTIFICATION_BUSNAME, subject=DEFAULT_NOTIFICATION_SUBJECTS, broker=None, **kwargs):
         """
         RADBBusListener listens on the lofar notification message bus and calls (empty) on<SomeMessage> methods when such a message is received.
         Typical usage is to derive your own subclass from RADBBusListener and implement the specific on<SomeMessage> methods that you are interested in.
@@ -58,48 +58,50 @@ class RADBBusListener(AbstractBusListener):
         logger.debug("RADBBusListener.handleMessage: %s" %str(msg))
 
         if msg.subject == 'RADB.TaskUpdated':
-            self.onTaskUpdated(msg.content)
+            self.onTaskUpdated(msg.content.get('old'), msg.content.get('new'))
         elif msg.subject == 'RADB.TaskInserted':
-            self.onTaskInserted(msg.content)
+            self.onTaskInserted(msg.content.get('new'))
         elif msg.subject == 'RADB.TaskDeleted':
-            self.onTaskDeleted(msg.content)
+            self.onTaskDeleted(msg.content.get('old'))
         elif msg.subject == 'RADB.ResourceClaimUpdated':
-            self.onResourceClaimUpdated(msg.content)
+            self.onResourceClaimUpdated(msg.content.get('old'), msg.content.get('new'))
         elif msg.subject == 'RADB.ResourceClaimInserted':
-            self.onResourceClaimInserted(msg.content)
+            self.onResourceClaimInserted(msg.content.get('new'))
         elif msg.subject == 'RADB.ResourceClaimDeleted':
-            self.onResourceClaimDeleted(msg.content)
+            self.onResourceClaimDeleted(msg.content.get('old'))
         else:
             logger.error("RADBBusListener.handleMessage: unknown subject: %s" %str(msg.subject))
 
-    def onTaskUpdated(self, task):
+    def onTaskUpdated(self, old_task, new_task):
         '''onTaskUpdated is called upon receiving a TaskUpdated message.
-        :param task: dictionary with the updated task'''
+        :param old_task: dictionary with the updated task
+        :param new_task: dictionary with the updated task'''
         pass
 
-    def onTaskInserted(self, task):
+    def onTaskInserted(self, new_task):
         '''onTaskInserted is called upon receiving a TaskInserted message.
-        :param task: dictionary with the inserted task'''
+        :param new_task: dictionary with the inserted task'''
         pass
 
-    def onTaskDeleted(self, task):
+    def onTaskDeleted(self, old_task):
         '''onTaskDeleted is called upon receiving a TaskDeleted message.
-        :param task: dictionary with the deleted task'''
+        :param old_task: dictionary with the deleted task'''
         pass
 
-    def onResourceClaimUpdated(self, claim):
+    def onResourceClaimUpdated(self, old_claim, new_claim):
         '''onResourceClaimUpdated is called upon receiving a ResourceClaimUpdated message.
-        :param task: dictionary with the updated claim'''
+        :param old_claim: dictionary with the claim before the update
+        :param new_claim: dictionary with the updated claim'''
         pass
 
-    def onResourceClaimInserted(self, claim):
+    def onResourceClaimInserted(self, new_claim):
         '''onResourceClaimInserted is called upon receiving a ResourceClaimInserted message.
-        :param task: dictionary with the inserted claim'''
+        :param new_claim: dictionary with the inserted claim'''
         pass
 
-    def onResourceClaimDeleted(self, claim):
+    def onResourceClaimDeleted(self, old_claim):
         '''onResourceClaimDeleted is called upon receiving a ResourceClaimDeleted message.
-        :param task: dictionary with the deleted claim'''
+        :param old_claim: dictionary with the deleted claim'''
         pass
 
 if __name__ == '__main__':

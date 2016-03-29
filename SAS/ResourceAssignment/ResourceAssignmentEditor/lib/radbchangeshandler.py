@@ -27,9 +27,13 @@ RADBChangesHandler listens on the lofar notification message bus and calls (empt
 Typical usage is to derive your own subclass from RADBChangesHandler and implement the specific on<SomeMessage> methods that you are interested in.
 """
 
-from lofar.sas.resourceassignment.database.config import DEFAULT_BUSNAME
-from lofar.sas.resourceassignment.resourceassignmentservice.radbbuslistener import RADBBusListener
+from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_BUSNAME, DEFAULT_NOTIFICATION_SUBJECTS
+from lofar.sas.resourceassignment.database.radbbuslistener import RADBBusListener
 from lofar.common.util import waitForInterrupt
+from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
+from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
+from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
+from lofar.sas.resourceassignment.resourceassignmenteditor.mom import updateTaskMomDetails
 
 import qpid.messaging
 import logging
@@ -43,7 +47,7 @@ CHANGE_INSERT_TYPE = 'insert'
 CHANGE_DELETE_TYPE = 'delete'
 
 class RADBChangesHandler(RADBBusListener):
-    def __init__(self, busname=DEFAULT_BUSNAME, subject='RADB.*', broker=None, **kwargs):
+    def __init__(self, busname=DEFAULT_NOTIFICATION_BUSNAME, subject=DEFAULT_NOTIFICATION_SUBJECTS, broker=None, momrpc=None, **kwargs):
         """
         RADBChangesHandler listens on the lofar notification message bus and keeps track of all the change notifications.
         :param busname: valid Qpid address (default: lofar.ra.notification)
@@ -61,6 +65,7 @@ class RADBChangesHandler(RADBBusListener):
         self._lock = Lock()
         self._changedCondition = Condition()
         self._changeNumber = 0L
+        self._momrpc = momrpc
 
     def _handleChange(self, change):
         '''_handleChange appends a change in the changes list and calls the onChangedCallback.
@@ -76,12 +81,13 @@ class RADBChangesHandler(RADBBusListener):
         with self._changedCondition:
             self._changedCondition.notifyAll()
 
-    def onTaskUpdated(self, task):
+    def onTaskUpdated(self, old_task, new_task):
         '''onTaskUpdated is called upon receiving a TaskUpdated message.
         :param task: dictionary with the updated task'''
-        task['starttime'] = task['starttime'].datetime()
-        task['endtime'] = task['endtime'].datetime()
-        task_change = {'changeType':CHANGE_UPDATE_TYPE, 'objectType':'task', 'value':task}
+        new_task['starttime'] = new_task['starttime'].datetime()
+        new_task['endtime'] = new_task['endtime'].datetime()
+        updateTaskMomDetails(new_task, self._momrpc)
+        task_change = {'changeType':CHANGE_UPDATE_TYPE, 'objectType':'task', 'value':new_task}
         self._handleChange(task_change)
 
     def onTaskInserted(self, task):
@@ -89,6 +95,7 @@ class RADBChangesHandler(RADBBusListener):
         :param task: dictionary with the inserted task'''
         task['starttime'] = task['starttime'].datetime()
         task['endtime'] = task['endtime'].datetime()
+        updateTaskMomDetails(task, self._momrpc)
         task_change = {'changeType':CHANGE_INSERT_TYPE, 'objectType':'task', 'value':task}
         self._handleChange(task_change)
 
@@ -98,12 +105,12 @@ class RADBChangesHandler(RADBBusListener):
         task_change = {'changeType':CHANGE_DELETE_TYPE, 'objectType':'task', 'value':task}
         self._handleChange(task_change)
 
-    def onResourceClaimUpdated(self, claim):
+    def onResourceClaimUpdated(self, old_claim, new_claim):
         '''onResourceClaimUpdated is called upon receiving a ResourceClaimUpdated message.
         :param task: dictionary with the updated claim'''
-        claim['starttime'] = claim['starttime'].datetime()
-        claim['endtime'] = claim['endtime'].datetime()
-        claim_change = {'changeType':CHANGE_UPDATE_TYPE, 'objectType':'resourceClaim', 'value':claim}
+        new_claim['starttime'] = new_claim['starttime'].datetime()
+        new_claim['endtime'] = new_claim['endtime'].datetime()
+        claim_change = {'changeType':CHANGE_UPDATE_TYPE, 'objectType':'resourceClaim', 'value':new_claim}
         self._handleChange(claim_change)
 
     def onResourceClaimInserted(self, claim):
@@ -120,10 +127,16 @@ class RADBChangesHandler(RADBBusListener):
         claim_change = {'changeType':CHANGE_DELETE_TYPE, 'objectType':'resourceClaim', 'value':claim}
         self._handleChange(claim_change)
 
+    def getMostRecentChangeNumber(self):
+        with self._lock:
+            if self._changes:
+                return self._changes[-1]['changeNumber']
+        return -1L
+
     def clearChangesBefore(self, timestamp):
         if isinstance(timestamp, datetime):
             timestamp = timestamp.isoformat()
-            
+
         with self._lock:
             self._changes = [x for x in self._changes if x['timestamp'] >= timestamp]
 

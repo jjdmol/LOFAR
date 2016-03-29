@@ -1,27 +1,36 @@
 // $Id$
 
-angular.module('raeApp').factory("dataService", ['$http', function($http){
+angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, $q){
     var self = this;
     self.tasks = [];
     self.resources = [];
     self.resourceGroups = [];
     self.resourceClaims = [];
-    self.resourceGroupClaims = [];
     self.tasktypes = [];
     self.taskstatustypes = [];
+    self.editableTaskStatusIds = [];
 
     self.taskDict = {};
     self.resourceDict = {};
     self.resourceGroupsDict = {};
+    self.resourceGroupMemberships = {};
     self.resourceClaimDict = {};
-    self.resourceGroupClaimDict = {};
-    self.resourceIdToGroupIdsDict = {};
+    self.tasktypesDict = {};
+
+    self.momProjects = [];
     self.momProjectsDict = {};
 
     self.resourcesWithClaims = [];
 
     self.filteredTasks = [];
     self.filteredTaskDict = {};
+
+    self.initialLoadComplete = false;
+
+    //start with local client time
+    //lofarTime will be synced with server,
+    //because local machine might have incorrect clock
+    self.lofarTime = new Date(Date.now());
 
     self.toIdBasedDict = function(list) {
         var dict = {}
@@ -32,38 +41,15 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
         return dict;
     };
 
-    self.mapResourcesToGroups = function () {
-        var dict = {}
-        var resources = self.resources;
-        var resourceGroups = self.resourceGroups;
-
-        if(resources.length > 0) {
-            for(var i = resources.length-1; i >=0; i--)
-                dict[resources[i].id] = []
-
-                for(var i = resourceGroups.length-1; i >=0; i--) {
-                    var group = resourceGroups[i];
-                    var childResourceIds = group.resourceIds;
-
-                    for(var j = childResourceIds.length-1; j >=0; j--) {
-                        var childResourceId = childResourceIds[j];
-                        dict[childResourceId].push(group.id);
-                    }
-                }
-        }
-
-        self.resourceIdToGroupIdsDict = dict;
-    };
-
     self.getTasks = function() {
+        var defer = $q.defer();
+
         $http.get('/rest/tasks').success(function(result) {
             //convert datetime strings to Date objects
             for(var i = result.tasks.length-1; i >=0; i--) {
                 var task = result.tasks[i];
                 task.starttime = new Date(task.starttime);
                 task.endtime = new Date(task.endtime);
-
-                self.getMoMObjectDetailsForTask(task);
             }
 
             self.tasks = result.tasks;
@@ -71,7 +57,11 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
 
             self.filteredTasks = self.tasks;
             self.filteredTaskDict = self.taskDict;
+
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     self.putTask = function(task) {
@@ -81,14 +71,19 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
     };
 
     self.getResources = function() {
-        $http.get('/rest/resourceitems').success(function(result) {
-            self.resources = result.resourceitems;
+        var defer = $q.defer();
+        $http.get('/rest/resources').success(function(result) {
+            self.resources = result.resources;
             self.resourceDict = self.toIdBasedDict(self.resources);
-            self.mapResourcesToGroups();
+
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     self.getResourceClaims = function() {
+        var defer = $q.defer();
         $http.get('/rest/resourceclaims').success(function(result) {
             //convert datetime strings to Date objects
             for(var i = result.resourceclaims.length-1; i >=0; i--) {
@@ -99,69 +94,139 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
 
             self.resourceClaims = result.resourceclaims;
             self.resourceClaimDict = self.toIdBasedDict(self.resourceClaims);
+
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     self.getResourceGroups = function() {
+        var defer = $q.defer();
         $http.get('/rest/resourcegroups').success(function(result) {
             self.resourceGroups = result.resourcegroups;
             self.resourceGroupsDict = self.toIdBasedDict(self.resourceGroups);
-            self.mapResourcesToGroups();
+
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
-    self.getResourceGroupClaims = function() {
-        $http.get('/rest/resourcegroupclaims').success(function(result) {
-            //convert datetime strings to Date objects
-            for(var i = result.resourcegroupclaims.length-1; i >=0; i--) {
-                var resourcegroupclaim = result.resourcegroupclaims[i];
-                resourcegroupclaim.starttime = new Date(resourcegroupclaim.starttime);
-                resourcegroupclaim.endtime = new Date(resourcegroupclaim.endtime);
-            }
+    self.getResourceGroupMemberships = function() {
+        var defer = $q.defer();
+        $http.get('/rest/resourcegroupmemberships').success(function(result) {
+            self.resourceGroupMemberships = result.resourcegroupmemberships;
 
-            self.resourceGroupClaims = result.resourcegroupclaims;
-            self.resourceGroupClaimDict = self.toIdBasedDict(self.resourceGroupClaims);
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     self.getTaskTypes = function() {
+        var defer = $q.defer();
         $http.get('/rest/tasktypes').success(function(result) {
             self.tasktypes = result.tasktypes;
+            self.tasktypesDict = self.toIdBasedDict(self.tasktypes);
+
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     self.getTaskStatusTypes = function() {
+        var defer = $q.defer();
         $http.get('/rest/taskstatustypes').success(function(result) {
             self.taskstatustypes = result.taskstatustypes;
+
+            self.editableTaskStatusIds = [];
+            for(var taskstatustype of self.taskstatustypes) {
+                if(taskstatustype.name == 'approved' || taskstatustype.name == 'conflict' || taskstatustype.name == 'prescheduled') {
+                    self.editableTaskStatusIds.push(taskstatustype.id);
+                }
+            }
+
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     self.getMoMProjects = function() {
+        var defer = $q.defer();
         $http.get('/rest/momprojects').success(function(result) {
             //convert datetime strings to Date objects
             var dict = {};
+            var list = [];
             for(var i = result.momprojects.length-1; i >=0; i--) {
                 var momproject = result.momprojects[i];
                 momproject.statustime = new Date(momproject.statustime);
-                dict[momproject.mom2id] = momproject;
+                dict[momproject.mom_id] = momproject;
+                list.push(momproject);
             }
+
+            list.sort(function(a, b) { return ((a.name < b.name) ? -1 : ((a.name > b.name) ? 1 : 0)); });
+
+            self.momProjects = list;
             self.momProjectsDict = dict;
+
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     self.getMoMObjectDetailsForTask = function(task) {
         $http.get('/rest/momobjectdetails/'+task.mom_id).success(function(result) {
             if(result.momobjectdetails) {
                 task.name = result.momobjectdetails.object_name;
-                task.projectName = result.momobjectdetails.project_name;
-                task.projectId = result.momobjectdetails.project_mom2id;
+                task.project_name = result.momobjectdetails.project_name;
+                task.project_id = result.momobjectdetails.project_mom_id;
             }
         });
     };
 
+    self._syncLofarTimeWithServer = function() {
+        $http.get('/rest/lofarTime', {timeout:1000}).success(function(result) {
+            self.lofarTime = new Date(result.lofarTime);
+        });
+
+        setTimeout(self._syncLofarTimeWithServer, 60000);
+    };
+    self._syncLofarTimeWithServer();
 
 
     self.lastUpdateChangeNumber = undefined;
+
+    self.initialLoad = function() {
+        $http.get('/rest/mostRecentChangeNumber').success(function(result) {
+            if(result.mostRecentChangeNumber >= 0) {
+                self.lastUpdateChangeNumber = result.mostRecentChangeNumber;
+            }
+
+            var nrOfItemsToLoad = 8;
+            var nrOfItemsLoaded = 0;
+            var checkInitialLoadCompleteness = function() {
+                nrOfItemsLoaded += 1;
+                if(nrOfItemsLoaded >= nrOfItemsToLoad) {
+                    self.initialLoadComplete = true;
+                }
+            };
+
+            self.getMoMProjects().then(checkInitialLoadCompleteness);
+            self.getTaskTypes().then(checkInitialLoadCompleteness);
+            self.getTaskStatusTypes().then(checkInitialLoadCompleteness);
+            self.getTasks().then(checkInitialLoadCompleteness);
+            self.getResourceGroups().then(checkInitialLoadCompleteness);
+            self.getResources().then(checkInitialLoadCompleteness);
+            self.getResourceGroupMemberships().then(checkInitialLoadCompleteness);
+            self.getResourceClaims().then(checkInitialLoadCompleteness);
+
+            self.subscribeToUpdates();
+        });
+    };
 
     self.subscribeToUpdates = function() {
         var url = '/rest/updates';
@@ -182,16 +247,22 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
                             var changedTask = change.value;
                             if(change.changeType == 'update') {
                                 var task = self.taskDict[changedTask.id];
-                                task.status = changedTask.status;
-                                task.mom_id = changedTask.mom_id;
-                                task.otdb_id = changedTask.otdb_id;
-                                task.starttime = new Date(changedTask.starttime);
-                                task.endtime = new Date(changedTask.endtime);
-                                self.getMoMObjectDetailsForTask(task);
+                                if(task) {
+                                    task.status = changedTask.status;
+                                    task.status_id = changedTask.status_id;
+                                    task.mom_id = changedTask.mom_id;
+                                    task.otdb_id = changedTask.otdb_id;
+                                    task.starttime = new Date(changedTask.starttime);
+                                    task.endtime = new Date(changedTask.endtime);
+                                    task.predecessor_ids = changedTask.predecessor_ids;
+                                    task.successor_ids = changedTask.successor_ids;
+                                }
                             } else if(change.changeType == 'insert') {
-                                self.getMoMObjectDetailsForTask(changedTask);
-                                self.tasks.push(changedTask);
-                                self.taskDict[changedTask.id] = changedTask;
+                                var task = self.taskDict[changedTask.id];
+                                if(!task) {
+                                    self.tasks.push(changedTask);
+                                    self.taskDict[changedTask.id] = changedTask;
+                                }
                             } else if(change.changeType == 'delete') {
                                 delete self.taskDict[changedTask.id]
                                 for(var k = self.tasks.length-1; k >= 0; k--) {
@@ -205,12 +276,18 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
                             var changedClaim = change.value;
                             if(change.changeType == 'update') {
                                 var claim = self.resourceClaimDict[changedClaim.id];
-                                claim.status = changedClaim.status;
-                                claim.starttime = new Date(changedClaim.starttime);
-                                claim.endtime = new Date(changedClaim.endtime);
+                                if(claim) {
+                                    claim.status = changedClaim.status;
+                                    claim.status_id = changedClaim.status_id;
+                                    claim.starttime = new Date(changedClaim.starttime);
+                                    claim.endtime = new Date(changedClaim.endtime);
+                                }
                             } else if(change.changeType == 'insert') {
-                                self.resourceClaims.push(changedClaim);
-                                self.resourceClaimDict[changedClaim.id] = changedClaim;
+                                var claim = self.resourceClaimDict[changedClaim.id];
+                                if(!claim) {
+                                    self.resourceClaims.push(changedClaim);
+                                    self.resourceClaimDict[changedClaim.id] = changedClaim;
+                                }
                             } else if(change.changeType == 'delete') {
                                 delete self.resourceClaimDict[changedClaim.id]
                                 for(var k = self.resourceClaims.length-1; k >= 0; k--) {
@@ -220,11 +297,6 @@ angular.module('raeApp').factory("dataService", ['$http', function($http){
                                     }
                                 }
                             }
-                        } else if(change.objectType == 'resourceGroupClaim') {
-                            var changedGroupClaim = change.value;
-                            var claim = self.resourceGroupClaimDict[changedGroupClaim.id];
-                            claim.starttime = new Date(changedGroupClaim.starttime);
-                            claim.endtime = new Date(changedGroupClaim.endtime);
                         }
                     } catch(err) {
                         console.log(err)
@@ -252,16 +324,21 @@ dataControllerMod.controller('DataController',
     var self = this;
     self.dataService = dataService;
 
+    dataService.initialLoad();
 
-    dataService.getTaskTypes();
-    dataService.getTaskStatusTypes();
-    dataService.getTasks();
-//     dataService.getResourceGroups();
-//     dataService.getResourceGroupClaims();
-    dataService.getResources();
-    dataService.getResourceClaims();
-    dataService.getMoMProjects();
+    //clock ticking every second
+    //updating current lofarTime by the elapsed time since previous tick
+    //lofarTime is synced every minute with server utc time.
+    self._prevTick = Date.now();
+    self._doTimeTick = function() {
+        var tick = Date.now();
+        var elapsed = tick - self._prevTick;
+        self._prevTick = tick;
+        //evalAsync, so lofarTime will be seen by watches
+        $scope.$evalAsync(function() { dataService.lofarTime = new Date(dataService.lofarTime.getTime() + elapsed); });
 
-    dataService.subscribeToUpdates();
+        setTimeout(self._doTimeTick, 1000);
+    };
+    self._doTimeTick();
 }
 ]);
