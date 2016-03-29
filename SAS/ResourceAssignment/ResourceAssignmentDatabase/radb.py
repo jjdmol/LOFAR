@@ -92,9 +92,11 @@ class RADatabase:
 
 
     def commit(self):
+        logger.info('commit')
         self.conn.commit()
 
     def rollback(self):
+        logger.info('rollback')
         self.conn.rollback()
 
     def getTaskStatuses(self):
@@ -196,6 +198,8 @@ class RADatabase:
         return task_status, task_type
 
     def insertTask(self, mom_id, otdb_id, task_status, task_type, specification_id, commit=True):
+        logger.info('insertTask mom_id=%s, otdb_id=%s, task_status=%s, task_type=%s, specification_id=%s' %
+                    (mom_id, otdb_id, task_status, task_type, specification_id))
         task_status, task_type = self._convertTaskTypeAndStatusToIds(task_status, task_type)
 
         query = '''INSERT INTO resource_allocation.task
@@ -209,6 +213,7 @@ class RADatabase:
         return id
 
     def deleteTask(self, task_id, commit=True):
+        logger.info('deleteTask task_id=%s' % task_id)
         query = '''DELETE FROM resource_allocation.task
                    WHERE resource_allocation.task.id = %s;'''
 
@@ -322,6 +327,7 @@ class RADatabase:
         return list(self._executeQuery(query, [specification_id], fetch=_FETCH_ALL))
 
     def insertSpecification(self, starttime, endtime, content, commit=True):
+        logger.info('insertSpecification starttime=%s, endtime=%s' % (starttime, endtime))
         query = '''INSERT INTO resource_allocation.specification
         (starttime, endtime, content)
         VALUES (%s, %s, %s)
@@ -333,6 +339,7 @@ class RADatabase:
         return id
 
     def deleteSpecification(self, specification_id, commit=True):
+        logger.info('deleteSpecification specification_id=%s' % (specification_id))
         query = '''DELETE FROM resource_allocation.specification
                    WHERE resource_allocation.specification.id = %s;'''
 
@@ -568,46 +575,45 @@ class RADatabase:
 
         return properties
 
-    def insertResourceClaimProperty(self, claim_id, property_type, value, commit=False):
-        return self.insertResourceClaimProperties(claim_id, [(property_type, value)], commit)
+    def insertResourceClaimProperty(self, claim_id, property_type, value, commit=True):
+        return self.insertResourceClaimProperties([(claim_id, property_type, value)], commit)
 
-    def insertResourceClaimProperties(self, claim_id, type_value_sap, commit=False):
+    def insertResourceClaimProperties(self, props, commit=True):
+        if not props:
+            return []
+
         # first insert unique sap numbers
-        sap_nrs = list(set([tvs[2] for tvs in type_value_sap if tvs[2] is not None]))
+        claim_sap_nrs = list(set([(p[0], p[3]) for p in props if p[3] is not None]))
+        sap_ids = self.insertSAPNumbers(claim_sap_nrs, False)
 
-        if sap_nrs:
-            insert_values = ','.join(self.cursor.mogrify('(%s, %s)', (claim_id, sap_nr)) for sap_nr in sap_nrs)
+        if sap_ids == None:
+            return None
 
-            query = '''INSERT INTO resource_allocation.sap
-            (resource_claim_id, number)
-            VALUES {values}
-            RETURNING id;'''.format(values=insert_values)
+        # make sap_nr to sap_id mapping per claim_id
+        claim_id2sap_nr2sap_id = {}
+        for claim_sap_nr,sap_id in zip(claim_sap_nrs, sap_ids):
+            claim_id = claim_sap_nr[0]
+            sap_nr = claim_sap_nr[1]
+            if claim_id not in claim_id2sap_nr2sap_id:
+                claim_id2sap_nr2sap_id[claim_id] = {}
+            claim_id2sap_nr2sap_id[claim_id][sap_nr] = sap_id
 
-            sap_ids = [x['id'] for x in self._executeQuery(query, fetch=_FETCH_ALL)]
+        logger.info('insertResourceClaimProperties inserting %d properties' % len(props))
 
-            if [x for x in sap_ids if x < 0]:
-                logger.error("One or more sap_nr's could not be inserted. Rolling back.")
-                self.rollback()
-                return None
+        # convert all property type strings to id's
+        type_strings = set([p[1] for p in props if isinstance(p[1], basestring)])
+        type_string2id = {t:self.getResourceClaimPropertyTypeId(t) for t in type_strings}
 
-            sapnr2id = {nr:id for nr,id in zip(sap_nrs, sap_ids)}
-        else:
-            sapnr2id = {}
-
-        # then insert properties and link them to the sap ids
-        # convert type string first to ids
-        type_strings = set([tvs[0] for tvs in type_value_sap if isinstance(tvs[0], basestring)])
-
-        if type_strings:
-            # convert all type strings to id's
-            type_string2id = {t:self.getResourceClaimPropertyTypeId(t) for t in type_strings}
-            for tvs in type_value_sap:
-                if isinstance(tvs[0], basestring):
-                    tvs[0] = type_string2id[tvs[0]]
-
+        # finally we have all the info we need,
+        # so we can build the bulk property insert query
         insert_values = ','.join(self.cursor.mogrify('(%s, %s, %s, %s)',
-                                                     (claim_id, tvs[0], tvs[1], sapnr2id.get(tvs[2])))
-                                                     for tvs in type_value_sap)
+                                                     (p[0],
+                                                      type_string2id[p[1]] if
+                                                      isinstance(p[1], basestring) else p[1],
+                                                      p[2],
+                                                      claim_id2sap_nr2sap_id[p[0]].get(p[3]) if
+                                                      p[0] in claim_id2sap_nr2sap_id else None))
+                                                     for p in props)
 
         query = '''INSERT INTO resource_allocation.resource_claim_property
         (resource_claim_id, type_id, value, sap_id)
@@ -624,6 +630,31 @@ class RADatabase:
         if commit:
             self.commit()
         return ids
+
+    def insertSAPNumbers(self, sap_numbers, commit=True):
+        if not sap_numbers:
+            return []
+
+        logger.info('insertSAPNumbers inserting %d sap numbers' % len(sap_numbers))
+
+        insert_values = ','.join(self.cursor.mogrify('(%s, %s)', rcid_sapnr) for rcid_sapnr in sap_numbers)
+
+        query = '''INSERT INTO resource_allocation.sap
+        (resource_claim_id, number)
+        VALUES {values}
+        RETURNING id;'''.format(values=insert_values)
+
+        sap_ids = [x['id'] for x in self._executeQuery(query, fetch=_FETCH_ALL)]
+
+        if [x for x in sap_ids if x < 0]:
+            logger.error("One or more sap_nr's could not be inserted. Rolling back.")
+            self.rollback()
+            return None
+
+        if commit:
+            self.commit()
+
+        return sap_ids
 
     def getResourceClaims(self, claim_ids=None, lower_bound=None, upper_bound=None, resource_ids=None, task_ids=None, status=None, resource_type=None, extended=False, include_properties=False):
         extended |= resource_type is not None
@@ -804,25 +835,16 @@ class RADatabase:
             self.rollback()
             return None
 
-        # map properties as tuple of claims with properties to claim_id
-        claimId2Props = { claim_id: [(p['type'], p['value'], p.get('sap_nr')) for p in claim['properties']]
-                         for claim_id, claim
-                         in zip(claimIds, claims)
-                         if 'properties' in claim and
-                         len(claim['properties']) > 0 }
+        # gather all properties for all claims
+        # store them as list of (claim_id, prop_type, prop_value, sap_nr) tuples
+        properties = []
+        for claim_id, claim in zip(claimIds, claims):
+            if 'properties' in claim and len(claim['properties']) > 0:
+                claim_props = [(claim_id, p['type'], p['value'], p.get('sap_nr')) for p in claim['properties']]
+                properties += claim_props
 
-        # convert all type strings to id's
-        # this saves a lot of lookup queries in the db
-        prop_type_strings = set(p[0] for p in claimId2Props.values() if isinstance(p[0], basestring))
-        if prop_type_strings:
-            type_string2id = {t:self.getResourceClaimPropertyTypeId(t) for t in prop_type_strings}
-            for p in claimId2Props.values():
-                if isinstance(p[0], basestring):
-                    p[0] = type_string2id[p[0]]
-
-        # and insert all properties for each claim with properties
-        for claim_id, props in claimId2Props.items():
-            property_ids = self.insertResourceClaimProperties(claim_id, props, False)
+        if properties:
+            property_ids = self.insertResourceClaimProperties(properties, False)
             if property_ids == None:
                 return None
 
@@ -1080,7 +1102,7 @@ if __name__ == '__main__':
 
     dbcreds = dbcredentials.parse_options(options)
 
-    db = RADatabase(dbcreds=dbcreds, log_queries=True)
+    db = RADatabase(dbcreds=dbcreds, log_queries=False)
 
     def resultPrint(method):
         print '\n-- ' + str(method.__name__) + ' --'
@@ -1126,12 +1148,60 @@ if __name__ == '__main__':
     #print
     #print db.getResourceClaims()
 
-    resultPrint(db.getResourceClaims)
+    #resultPrint(db.getResourceClaims)
 
 
-    exit(0)
+    #exit(0)
     for s in db.getSpecifications():
         db.deleteSpecification(s['id'])
+
+    resources = db.getResources()
+
+    task_id = db.insertSpecificationAndTask(1234, 5678, 600, 0, datetime.utcnow(), datetime.utcnow() + timedelta(hours=1), "", False)['task_id']
+    task = db.getTask(task_id)
+
+    claim = {'resource_id':resources[0]['id'],
+            'starttime':task['starttime'],
+            'endtime':task['endtime'],
+            'status':'claimed',
+            'claim_size':1}
+    db.insertResourceClaims(task_id, [claim], 1, 'anonymous', -1, False)
+
+    claim = {'resource_id':resources[1]['id'],
+            'starttime':task['starttime'],
+            'endtime':task['endtime'],
+            'status':'claimed',
+            'claim_size':1,
+            'properties':[{'type':'nr_of_is_files', 'value':10},{'type':'nr_of_cs_files', 'value':20}]}
+    db.insertResourceClaims(task_id, [claim], 1, 'anonymous', -1, False)
+
+    claim = {'resource_id':resources[2]['id'],
+            'starttime':task['starttime'],
+            'endtime':task['endtime'],
+            'status':'claimed',
+            'claim_size':1,
+            'properties':[{'type':'nr_of_is_files', 'value':10, 'sap_nr':0 },
+                          {'type':'nr_of_cs_files', 'value':20, 'sap_nr':0},
+                          {'type':'nr_of_uv_files', 'value':30, 'sap_nr':1},]}
+    db.insertResourceClaims(task_id, [claim], 1, 'anonymous', -1, False)
+
+    claim = {'resource_id':resources[3]['id'],
+            'starttime':task['starttime'],
+            'endtime':task['endtime'],
+            'status':'claimed',
+            'claim_size':1,
+            'properties':[{'type':'nr_of_is_files', 'value':15 },
+                          {'type':'nr_of_cs_files', 'value':25 },
+                          {'type':'nr_of_is_files', 'value':10, 'sap_nr':0 },
+                          {'type':'nr_of_cs_files', 'value':20, 'sap_nr':0},
+                          {'type':'nr_of_uv_files', 'value':30, 'sap_nr':1},]}
+    db.insertResourceClaims(task_id, [claim], 1, 'anonymous', -1, False)
+
+    db.commit()
+    import pprint
+    pprint.pprint(db.getResourceClaims(include_properties=True))
+    #print '\n'.join(str(x) for x in db.getResourceClaims(include_properties=True))
+
 
     #c = db.cursor
     #query = '''INSERT INTO resource_allocation.resource_claim
@@ -1142,44 +1212,49 @@ if __name__ == '__main__':
     #print c.mogrify(query, [(0, 0, datetime.utcnow(), datetime.utcnow(), 200, 1, 1, 'piet', 1)])
     #exit(0)
 
-    resources = db.getResources()
 
-    from lofar.common.datetimeutils import totalSeconds
-    begin = datetime.utcnow()
-    for i in range(2):
-        stepbegin = datetime.utcnow()
-        result = db.insertSpecificationAndTask(1234+i, 5678+i, 600, 0, datetime.utcnow() + timedelta(hours=1.25*i*0), datetime.utcnow() + timedelta(hours=1.25*i+1), "", False)
+    #for s in db.getSpecifications():
+        #db.deleteSpecification(s['id'])
 
-        #resultPrint(db.getSpecifications)
-        #resultPrint(db.getTasks)
+    #from lofar.common.datetimeutils import totalSeconds
+    #begin = datetime.utcnow()
+    #for i in range(50):
+        #stepbegin = datetime.utcnow()
+        #result = db.insertSpecificationAndTask(1234+i, 5678+i, 600, 0, datetime.utcnow() + timedelta(hours=1.25*i*0), datetime.utcnow() + timedelta(hours=1.25*i+1), "", False)
 
-        task = db.getTask(result['task_id'])
+        ##resultPrint(db.getSpecifications)
+        ##resultPrint(db.getTasks)
 
-        claims = [{'resource_id':r['id'],
-                'starttime':task['starttime'],
-                'endtime':task['endtime'],
-                'status':'claimed',
-                'claim_size':1} for r in resources[:3]]
+        #task = db.getTask(result['task_id'])
 
-        for c in claims[:2]:
-            c['properties'] = [{'type':0, 'value':10}, {'type':1, 'value':20}, {'type':2, 'value':30}]
+        #claims = [{'resource_id':r['id'],
+                #'starttime':task['starttime'],
+                #'endtime':task['endtime'],
+                #'status':'claimed',
+                #'claim_size':1} for r in resources[:]]
 
-        db.insertResourceClaims(task['id'], claims, 1, 'paulus', 1, False)
+        #for c in claims[:]:
+            #c['properties'] = [{'type':0, 'value':10}, {'type':1, 'value':20}, {'type':2, 'value':30}]
 
-        #resultPrint(db.getResourceClaims)
-        #raw_input()
-        db.commit()
-        now = datetime.utcnow()
-        print totalSeconds(now - begin), totalSeconds(now - stepbegin)
+        #for i, c in enumerate(claims[:4]):
+            #c['properties'][0]['sap_nr'] = i % 2
+
+        #db.insertResourceClaims(task['id'], claims, 1, 'paulus', 1, False)
+
+        ##resultPrint(db.getResourceClaims)
+        ##raw_input()
+        #db.commit()
+        #now = datetime.utcnow()
+        #print totalSeconds(now - begin), totalSeconds(now - stepbegin)
 
     #resultPrint(db.getResourceClaims)
-    resultPrint(db.getResourceClaimPropertyTypes)
-    #resultPrint(db.getResourceClaimPropertyTypeNames)
-    #resultPrint(db.getResourceClaimProperties)
+    #resultPrint(db.getResourceClaimPropertyTypes)
+    ##resultPrint(db.getResourceClaimPropertyTypeNames)
+    ##resultPrint(db.getResourceClaimProperties)
 
-    print '\n'.join(str(x) for x in db.getResourceClaimProperties())
-    print '\n'.join(str(x) for x in db.getResourceClaimProperties(task_id=task['id']))
-    print '\n'.join(str(x) for x in db.getResourceClaims(include_properties=True))
+    #print '\n'.join(str(x) for x in db.getResourceClaimProperties())
+    #print '\n'.join(str(x) for x in db.getResourceClaimProperties(task_id=task['id']))
+    #print '\n'.join(str(x) for x in db.getResourceClaims(include_properties=True))
 
     #db.commit()
 
