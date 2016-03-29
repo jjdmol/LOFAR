@@ -81,11 +81,12 @@ if __name__ == "__main__":
     from optparse import OptionParser
     from lofar.common import dbcredentials
     import signal
+    from lofar.sas.otdb.config import DEFAULT_NOTIFICATION_BUSNAME
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]")
-    parser.add_option("-B", "--busname", dest="busname", type="string", default="",
-                      help="Busname or queue-name the status changes are published on")
+    parser.add_option("-B", "--busname", dest="busname", type="string", default=DEFAULT_NOTIFICATION_BUSNAME,
+                      help="Busname or queue-name the status changes are published on. [default: %default]")
     parser.add_option_group(dbcredentials.options_group(parser))
     (options, args) = parser.parse_args()
 
