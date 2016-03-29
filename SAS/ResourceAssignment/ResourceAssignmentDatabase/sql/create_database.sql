@@ -23,6 +23,9 @@ DROP TABLE IF EXISTS resource_allocation.config CASCADE;
 DROP TABLE IF EXISTS resource_monitoring.resource_group_availability CASCADE;
 DROP TABLE IF EXISTS resource_monitoring.resource_availability CASCADE;
 DROP TABLE IF EXISTS resource_monitoring.resource_capacity CASCADE;
+DROP TABLE IF EXISTS resource_allocation.resource_claim_property CASCADE;
+DROP TABLE IF EXISTS resource_allocation.resource_claim_property_type CASCADE;
+DROP TABLE IF EXISTS resource_allocation.sap CASCADE;
 DROP TABLE IF EXISTS resource_allocation.resource_claim CASCADE;
 DROP TABLE IF EXISTS resource_allocation.resource_claim_status CASCADE;
 DROP TABLE IF EXISTS resource_allocation.claim_session CASCADE;
@@ -183,6 +186,15 @@ CREATE TABLE resource_allocation.resource_claim (
 ALTER TABLE resource_allocation.resource_claim
   OWNER TO resourceassignment;
 
+CREATE TABLE resource_allocation.sap (
+  id serial NOT NULL,
+  resource_claim_id integer NOT NULL REFERENCES resource_allocation.resource_claim ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  number int NOT NULL,
+  PRIMARY KEY (id)
+) WITH (OIDS=FALSE);
+ALTER TABLE resource_allocation.sap
+  OWNER TO resourceassignment;
+
 CREATE TABLE resource_allocation.resource_claim_property_type (
   id serial NOT NULL,
   name text NOT NULL,
@@ -194,6 +206,7 @@ ALTER TABLE resource_allocation.resource_claim_property_type
 CREATE TABLE resource_allocation.resource_claim_property (
   id serial NOT NULL,
   resource_claim_id integer NOT NULL REFERENCES resource_allocation.resource_claim ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  sap_id integer REFERENCES resource_allocation.sap ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
   type_id integer NOT NULL REFERENCES resource_allocation.resource_claim_property_type DEFERRABLE INITIALLY IMMEDIATE,
   value int NOT NULL DEFAULT 1,
   PRIMARY KEY (id)
