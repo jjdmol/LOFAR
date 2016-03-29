@@ -23,7 +23,7 @@
 import logging
 from math import ceil
 from base_resource_estimator import BaseResourceEstimator
-from .parameterset import ParameterSet
+from lofar.parameterset import parameterset
 
 logger = logging.getLogger(__name__)
 

@@ -19,14 +19,30 @@
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
-# $Id: rataskspecifiedservice.py 33364 2016-01-21 21:21:12Z mol $
+# $Id: JobsToSchedule.py 33364 2016-01-21 21:21:12Z mol $
 """
 Daemon that listens to OTDB status changes to PRESCHEDULED, requests
 the parset of such jobs (+ their predecessors), and posts them on the bus.
 """
 
-from lofar.sas.resourceassignment.rataskspecified.RATaskSpecified import main
+from lofar.sas.resourceassignment.rataskspecified.RATaskSpecified import RATaskSpecified
 
 if __name__ == "__main__":
-    main()
+    import sys
+    from optparse import OptionParser
+
+    # Check the invocation arguments
+    parser = OptionParser("%prog -O otdb_bus -B my_bus [options]")
+    parser.add_option("-O", "--otdb_bus", dest="otdb_busname", type="string", default="",
+                      help="Bus or queue OTDB operates on")
+    parser.add_option("-B", "--my_bus", dest="my_busname", type="string", default="",
+                      help="Bus or queue we publish resource requests on")
+    (options, args) = parser.parse_args()
+
+    if not options.statusbus or not options.parsetbus or not options.busname:
+        parser.print_help()
+        sys.exit(1)
+
+    with RATaskSpecified("OTDB.TaskSpecified", otdb_busname=options.otdb_busname, my_busname=options.my_busname) as jts:
+        waitForInterrupt()
 
