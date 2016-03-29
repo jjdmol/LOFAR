@@ -136,13 +136,13 @@ class Service(AbstractBusListener):
     def start_listening(self, numthreads=None):
         """
         Start the background threads and process incoming messages.
-        """ 
+        """
         if self.isListening():
             return
 
         # only on a 'bus' we already connect the reply_bus
         if self.busname:
-            self.reply_bus = ToBus(self.busname)
+            self.reply_bus = ToBus(self.busname, broker=self.broker)
             self.reply_bus.open()
         else:
             self.reply_bus=None
@@ -179,9 +179,9 @@ class Service(AbstractBusListener):
         return args
 
     def _send_reply(self, replymessage, status, reply_to, errtxt="",backtrace=""):
-	"""
-	Internal use only. Send a reply message to the RPC client including exception info.
-	"""
+        """
+        Internal use only. Send a reply message to the RPC client including exception info.
+        """
         # Compose Reply message from reply and status.
         if isinstance(replymessage,ReplyMessage):
             reply_msg = replymessage
@@ -204,7 +204,7 @@ class Service(AbstractBusListener):
             reply_busname=reply_address[num_parts-2]
             subject=reply_address[num_parts-1]
             try:
-                with ToBus(reply_busname) as dest:
+                with ToBus(reply_busname, broker=self.broker) as dest:
                     # remove any extra field if present
                     if ';' in subject:
                         subject = subject.split(';')[0]
@@ -309,7 +309,7 @@ class Service(AbstractBusListener):
             del rawbacktrace[0]
             del rawbacktrace[-1]
             backtrace = ''.join(rawbacktrace).encode('latin-1').decode('unicode_escape')
-            self._debug(backtrace)
+            logger.error("exception while handling message: %s\n%s" % (errtxt, backtrace))
             if self.verbose:
                 logger.info("[Service:] Status: %s", str(status))
                 logger.info("[Service:] ERRTXT: %s", str(errtxt))

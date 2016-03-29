@@ -24,6 +24,10 @@ import os
 import pwd
 from ConfigParser import SafeConfigParser, NoSectionError, DuplicateSectionError
 from optparse import OptionGroup
+from os import stat, path, chmod
+import logging
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["Credentials", "DBCredentials", "options_group", "parse_options"]
 
@@ -64,6 +68,9 @@ class Credentials:
   def __str__(self):
     return "type={type} addr={host}:{port} auth={user}:{password} db={database}".format(**self.__dict__)
 
+  def stringWithHiddenPassword(self):
+    return "type={type} addr={host}:{port} auth={user}:XXXXXX db={database}".format(**self.__dict__)
+
   def pg_connect_options(self):
     """
       Returns a dict of options to provide to PyGreSQL's pg.connect function. Use:
@@ -80,6 +87,23 @@ class Credentials:
       "dbname": self.database,
     }
 
+
+  def mysql_connect_options(self):
+    """
+      Returns a dict of options to provide to python's mysql.connector.connect function. Use:
+
+      from mysql import connector
+      conn = connector.connect(**dbcreds.mysql_connect_options())
+    """
+    options = { "host": self.host,
+                "user": self.user,
+                "passwd": self.password,
+                "database": self.database }
+
+    if self.port:
+        options["port"] = self.port
+
+    return options
 
 class DBCredentials:
   def __init__(self, filepatterns=None):
@@ -110,11 +134,20 @@ class DBCredentials:
         "{HOME}/.lofar/dbcredentials/*.ini",
         ]
 
-    self.config = SafeConfigParser()
-
     self.files = sum([findfiles(p) for p in filepatterns],[])
-    self.config.read(self.files)
 
+    # make sure the files are mode 600 to hide passwords
+    for file in self.files:
+        if oct(stat(file).st_mode & 0777) != '0600':
+            logger.info('Changing permissions of %s to 600' % file)
+            try:
+                chmod(file, 0600)
+            except Exception as e:
+                logger.error('Error: Could not change permissions on %s: %s' % (file, str(e)))
+
+    #read the files into config
+    self.config = SafeConfigParser()
+    self.config.read(self.files)
 
   def get(self, database):
     """
@@ -137,6 +170,8 @@ class DBCredentials:
     if "password" in d: creds.password = d["password"]
 
     if "database" in d: creds.database = d["database"]
+
+    if "type" in d:     creds.type = d["type"]
 
     return creds
 
@@ -190,7 +225,7 @@ def options_group(parser):
   group.add_option("-P", "--password", dest="dbPassword", type="string", default="",
                    help="Password of the database server")
   group.add_option("-C", "--dbcredentials", dest="dbcredentials", type="string", default="",
-                   help="Name of database credential set to use")
+                   help="Name of database credential set to use [default=%default]")
 
   return group
 

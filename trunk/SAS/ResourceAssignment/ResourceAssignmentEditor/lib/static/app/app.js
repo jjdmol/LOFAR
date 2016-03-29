@@ -2,10 +2,12 @@
 
 var app = angular.module('raeApp',
                          ['DataControllerMod',
-                         'GanttControllerMod',
+                         'GanttResourceControllerMod',
+                         'GanttProjectControllerMod',
                          'GridControllerMod',
                          'ui.layout',
-                         'ui.bootstrap.datetimepicker'
+                         'ui.bootstrap.datetimepicker',
+                         'ui.bootstrap.tabs'
                         ]);
 
 app.config(['$compileProvider', function ($compileProvider) {
