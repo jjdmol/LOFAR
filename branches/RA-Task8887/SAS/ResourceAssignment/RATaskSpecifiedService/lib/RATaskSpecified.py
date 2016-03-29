@@ -29,6 +29,7 @@ from lofar.messaging import FromBus, ToBus, RPC, EventMessage
 from lofar.parameterset import PyParameterValue
 from lofar.sas.otdb.OTDBBusListener import OTDBBusListener
 from lofar.common.util import waitForInterrupt
+from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_BUSNAME, DEFAULT_RA_NOTIFICATION_BUSNAME
 
 import logging
 logger = logging.getLogger(__name__)
@@ -155,7 +156,7 @@ def resourceIndicatorsFromParset( parset ):
   return subset
 
 class RATaskSpecified(OTDBBusListener):
-  def __init__(self, servicename, otdb_busname=None, my_busname=None, **kwargs):
+  def __init__(self, servicename, otdb_busname=DEFAULT_OTDB_NOTIFICATION_BUSNAME, my_busname=DEFAULT_RA_NOTIFICATION_BUSNAME, **kwargs):
     super(RATaskSpecified, self).__init__(busname=otdb_busname, subject="TaskStatus", **kwargs)
 
     self.parset_rpc = RPC(service="TaskSpecification", busname=otdb_busname)
