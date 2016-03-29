@@ -1,7 +1,6 @@
 """ resource_estimators __init__()
 """
-
-from parameterset import ParameterSet
+from lofar.parameterset import parameterset
 from observation import ObservationResourceEstimator
 from longbaseline_pipeline import LongBaselinePipelineResourceEstimator
 from calibration_pipeline import CalibrationPipelineResourceEstimator

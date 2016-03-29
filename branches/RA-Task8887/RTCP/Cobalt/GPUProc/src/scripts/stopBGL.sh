@@ -27,13 +27,7 @@ PIDFILE=$LOFARROOT/var/run/rtcp-$OBSID.pid
 # The FIFO used for communication with rtcp
 COMMANDPIPE=$LOFARROOT/var/run/rtcp-$OBSID.pipe
 
-function addlogprefix {
-  ME="`basename "$0" .sh`@`hostname`"
-  while read LINE
-  do
-    echo "$ME" "`date "+%F %T.%3N"`" "$LINE"
-  done
-}
+source cobalt_functions.sh
 
 function writecommand {
   PID=$1

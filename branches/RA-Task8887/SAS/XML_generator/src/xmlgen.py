@@ -1659,6 +1659,8 @@ def checkSettings(settings, blockNr):
     settings["do_imaging"] = False
 
   if settings["processing"] == "LongBaseline": #TODO issue 8357, needs better function name
+    if (settings["calibration_mode"] == "none"):
+      raise GenException("LongBaseline does not work with calibration=none for BLOCK: %i" % blockNr)
     determineNrImages(settings["targetBeams"], settings["subbandsPerSubbandGroup"], "subbandsPerSubbandGroup")
     determineNrImages(settings["targetBeams"], settings["subbandGroupsPerMS"], "subbandGroupsPerMS")
 

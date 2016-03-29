@@ -59,7 +59,10 @@ class OTDBBusListener(AbstractBusListener):
         modificationTime = datetime.utcnow()
         if 'time_of_change' in msg.content:
             try:
-                modificationTime = datetime.strptime(msg.content['time_of_change'], '%Y-%m-%dT%H:%M:%S.%f')
+                if msg.content['time_of_change'][-7] == '.':
+                    modificationTime = datetime.strptime(msg.content['time_of_change'], '%Y-%m-%dT%H:%M:%S.%f')
+                else:
+                    modificationTime = datetime.strptime(msg.content['time_of_change'], '%Y-%m-%dT%H:%M:%S')
             except:
                 pass
 

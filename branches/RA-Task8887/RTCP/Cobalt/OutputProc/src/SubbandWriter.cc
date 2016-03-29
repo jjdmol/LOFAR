@@ -67,9 +67,9 @@ namespace LOFAR
     }
 
 
-    void SubbandWriter::augment( const FinalMetaData &finalMetaData )
+    void SubbandWriter::fini( const FinalMetaData &finalMetaData )
     {
-      itsOutputThread.augment(finalMetaData);
+      itsOutputThread.fini(finalMetaData);
     }
 
 

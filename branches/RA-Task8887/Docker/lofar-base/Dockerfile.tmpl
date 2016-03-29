@@ -119,9 +119,16 @@ RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y gi
 # *******************
 #
 
-# Allow auto-checkout from lofar repo
+# Allow auto-checkout from lofar repo. We create ~/.subversion/servers in-line to prevent Docker cache invalidation
 RUN mkdir /home/${USER}/.subversion
-COPY subversion_servers /home/${USER}/.subversion/servers
+RUN echo '\
+[groups] \n\
+astron = svn.astron.nl \n\
+\n\
+[astron] \n\
+store-passwords = yes \n\
+store-plaintext-passwords = yes \n\
+' > /home/${USER}/.subversion/servers
 
 # Run-time dependencies
 # QPID daemon legacy store would require: libaio1 libdb5.1++

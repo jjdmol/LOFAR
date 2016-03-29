@@ -2,13 +2,15 @@
 
 lofar_package(RAServices
                 DEPENDS MoMQueryService
+                        RATaskSpecifiedService
+                        RAtoOTDBTaskSpecificationPropagator
+                        ResourceAssigner
                         ResourceAssignmentDatabase
-                        ResourceAssignmentServices
                         ResourceAssignmentEditor
                         ResourceAssignmentEstimator
                         ResourceAssignmentService
-                        ResourceAssigner
-                        RAtoOTDBTaskSpecificationPropagator)
+                        SystemStatusDatabase
+                        SystemStatusService)
 
 # supervisord config files
 install(FILES
