@@ -83,4 +83,4 @@ method = custom_cmdline
 #                            /bin/bash -c
 #
 #                            Required because the pipeline framework needs some bash functionality in the commands it starts.
-cmdline = ssh -n -tt -x localhost srun -N 1 -n 1 --jobid={slurm_job_id} docker run --rm -e LUSER={uid} -v %(runtime_directory)s:%(runtime_directory)s -v %(working_directory)s:%(working_directory)s -v /data:/data --net=host {docker_image} /bin/bash -c "\"{command}\""
+cmdline = ssh -n -tt -x localhost srun --exclusive --cpus-per-task=8 --ntasks=1 --jobid={slurm_job_id} docker run --rm -e LUSER={uid} -v %(runtime_directory)s:%(runtime_directory)s -v %(working_directory)s:%(working_directory)s -v /data:/data --net=host {docker_image} /bin/bash -c "\"{command}\""
