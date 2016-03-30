@@ -236,7 +236,10 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
                         self.inputs['data_end_time'],
                         self.inputs['nthreads'],
                         self.inputs['clobber']
-                    ]
+                    ],
+                    resources={
+                        "cores": self.inputs['nthreads']
+                    }
                 )
             )
         self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])

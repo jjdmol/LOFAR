@@ -112,7 +112,10 @@ class rficonsole(BaseRecipe, RemoteCommandRecipeMixIn):
                             self.inputs['indirect_read'],
                             self.inputs['skip_flagged'],
                             self.inputs['working_dir']
-                        ] + file_list
+                        ] + file_list,
+                        resources={
+                            "cores": self.inputs['nthreads']
+                        }
                     )
                 )
         self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
