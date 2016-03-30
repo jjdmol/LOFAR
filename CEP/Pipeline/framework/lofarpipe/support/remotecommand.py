@@ -199,8 +199,8 @@ def run_via_custom_cmdline(logger, host, command, environment, arguments, config
       {command}      := bash command line to be executed
       {uid}          := uid of the calling user
 
-      {image}        := docker.image configuration option
       {slurm_job_id} := the SLURM job id to allocate resources in
+      {job_name}     := name of this executable or script
 
     """
     commandArray = ["%s=%s" % (key, value) for key, value in environment.items()]
@@ -208,19 +208,23 @@ def run_via_custom_cmdline(logger, host, command, environment, arguments, config
     commandArray.extend(re.escape(str(arg)) for arg in arguments)
     commandStr = " ".join(commandArray)
 
-    try:
-        image = config.get('docker', 'image')
-    except:
-        image = "lofar-pipeline"
+    # Determine job name
+    def jobname(commandstr):
+      args = [os.path.basename(x) for x in commandstr.split()]
+
+      if len(args) == 1:
+        return args[0]
+
+      return args[1] if args[0] == "python" else args[0]
 
     # Construct the full command line, except for {command}, as that itself
     # can contain spaces which we don't want to split on.
     full_command_line = config.get('remote', 'cmdline').format(
       uid          = os.geteuid(),
       slurm_job_id = os.environ.get("SLURM_JOB_ID"),
-      docker_image = image,
       host         = host,
-      command      = "{command}"
+      command      = "{command}",
+      job_name     = jobname(command),
     ).split(' ')
 
     # Fill in {command} somewhere
