@@ -81,7 +81,7 @@ if __name__ == "__main__":
     from optparse import OptionParser
     from lofar.common import dbcredentials
     import signal
-    from lofar.sas.otdb.config import DEFAULT_NOTIFICATION_BUSNAME
+    from lofar.sas.otdb.config import DEFAULT_BUSNAME as DEFAULT_NOTIFICATION_BUSNAME
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]")
