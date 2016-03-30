@@ -61,7 +61,7 @@ class ParamikoWrapper(object):
     def kill(self):
         self.chan.close()
 
-def run_remote_command(config, logger, host, command, env, arguments = None):
+def run_remote_command(config, logger, host, command, env, arguments = None, resources = {}):
     """
     Run command on host, passing it arguments from the arguments list and
     exporting key/value pairs from env(a dictionary).
@@ -97,7 +97,7 @@ def run_remote_command(config, logger, host, command, env, arguments = None):
     elif method == "slurm_srun_cep3":
         return run_via_slurm_srun_cep3(logger, command, arguments, host)
     elif method == "custom_cmdline":
-        return run_via_custom_cmdline(logger, host, command, env, arguments, config)
+        return run_via_custom_cmdline(logger, host, command, env, arguments, config, resources)
     else:
         return run_via_ssh(logger, host, command, env, arguments)
 
@@ -185,7 +185,7 @@ def run_via_ssh(logger, host, command, environment, arguments):
     process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
     return process
 
-def run_via_custom_cmdline(logger, host, command, environment, arguments, config):
+def run_via_custom_cmdline(logger, host, command, environment, arguments, config, resources):
     """
     Dispatch a remote command via a customisable command line
 
@@ -201,6 +201,8 @@ def run_via_custom_cmdline(logger, host, command, environment, arguments, config
 
       {slurm_job_id} := the SLURM job id to allocate resources in
       {job_name}     := name of this executable or script
+
+      {nr_cores}     := number of cores to allocate for this job
 
     """
     commandArray = ["%s=%s" % (key, value) for key, value in environment.items()]
@@ -225,6 +227,7 @@ def run_via_custom_cmdline(logger, host, command, environment, arguments, config
       host         = host,
       command      = "{command}",
       job_name     = jobname(command),
+      nr_cores     = resources.get("cores", 1),
     ).split(' ')
 
     # Fill in {command} somewhere
@@ -288,10 +291,11 @@ class ComputeJob(object):
     :param command: Full path to command to be run on target host
     :param arguments: List of arguments which will be passed to command
     """
-    def __init__(self, host, command, arguments = []):
+    def __init__(self, host, command, arguments = [], resources = {}):
         self.host = host
         self.command = command
         self.arguments = arguments
+        self.resources = resources
         self.results = {}
         self.results['returncode'] = 123456  # Default to obscure code to allow
         # test of failing ssh connections 
@@ -329,7 +333,8 @@ class ComputeJob(object):
                     "LOFARROOT" : os.environ.get('LOFARROOT'),
                     "QUEUE_PREFIX" : os.environ.get('QUEUE_PREFIX','')
                 },
-                arguments = [id, jobhost, jobport]
+                arguments = [id, jobhost, jobport],
+                resources = self.resources
             )
             # Wait for process to finish. In the meantime, if the killswitch
             # is set (by an exception in the main thread), forcibly kill our
