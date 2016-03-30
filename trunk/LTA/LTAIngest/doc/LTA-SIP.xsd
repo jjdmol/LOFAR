@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema targetNamespace="http://www.astron.nl/SIP-Lofar" version="2.6.0" xmlns="http://www.astron.nl/SIP-Lofar" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema targetNamespace="http://www.astron.nl/SIP-Lofar" version="2.6.1" xmlns="http://www.astron.nl/SIP-Lofar" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 	<xs:annotation>
 		<xs:documentation>
 		XML Schema for data model Submission Information Package LOFAR Long Term Archive
@@ -121,6 +121,7 @@
 			<xs:enumeration value="B1950"/>
 			<xs:enumeration value="J2000"/>
 			<xs:enumeration value="SUN"/>
+			<xs:enumeration value="JUPITER"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:annotation>
