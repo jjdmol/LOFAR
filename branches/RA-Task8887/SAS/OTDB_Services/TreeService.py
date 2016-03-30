@@ -51,7 +51,7 @@ HARDWARE_TREE = 10
 TEMPLATE_TREE = 20
 VIC_TREE = 30
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Define our own exceptions
