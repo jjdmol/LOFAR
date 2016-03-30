@@ -553,6 +553,8 @@ class RADatabase:
             if isinstance(claim_ids, int): # just a single id
                 conditions.append('rcpv.resource_claim_id = %s')
                 qargs.append(claim_ids)
+            elif len(claim_ids) == 0:  # empty list
+                return []
             elif len(claim_ids) == 1:  # just a single id from a list
                 conditions.append('rcpv.resource_claim_id = %s')
                 qargs.append(claim_ids[0])
@@ -738,7 +740,7 @@ class RADatabase:
 
         claims = list(self._executeQuery(query, qargs, fetch=_FETCH_ALL))
 
-        if include_properties:
+        if include_properties and claims:
             claimDict = {c['id']:c for c in claims}
             claim_ids = claimDict.keys()
             properties = self.getResourceClaimProperties(claim_ids=claim_ids)
