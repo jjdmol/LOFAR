@@ -832,7 +832,7 @@ class RADatabase:
 
         claimIds = [x['id'] for x in self._executeQuery(query, fetch=_FETCH_ALL)]
 
-        if [x for x in claimIds if x < 0]:
+        if not claimIds or [x for x in claimIds if x < 0]:
             logger.error("One or more claims cloud not be inserted. Rolling back.")
             self.rollback()
             return None
@@ -1002,6 +1002,9 @@ class RADatabase:
         return self.validateResourceClaimsStatus(claims, commit)
 
     def validateResourceClaimsStatus(self, claims, commit=True):
+        if not claims:
+            return
+
         resource_ids = list(set([c['resource_id'] for c in claims]))
         task_ids = list(set(c['task_id'] for c in claims))
         min_starttime = min(c['starttime'] for c in claims)
