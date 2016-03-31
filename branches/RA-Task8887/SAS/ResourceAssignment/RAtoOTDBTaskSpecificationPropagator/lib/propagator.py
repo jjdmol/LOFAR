@@ -115,8 +115,8 @@ class RAtoOTDBPropagator():
             logger.debug("Processing claim: %s" % claim)
             if claim['resource_type_name'] == 'storage':
                 info['storage'] = claim
-        info["starttime"] = task["starttime"] + datetime.timedelta(hours=1) #TODO Test code!!! FIXME FIXME before release
-        info["endtime"] = task["endtime"] + datetime.timedelta(hours=1)
+        info["starttime"] = task["starttime"]
+        info["endtime"] = task["endtime"]
         info["status"] = task["status"]
         return info
     
