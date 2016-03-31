@@ -32,6 +32,7 @@ from lofar.common.util import waitForInterrupt
 from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_BUSNAME, DEFAULT_OTDB_NOTIFICATION_SUBJECT
 from lofar.sas.resourceassignment.rataskspecified.config import DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_BUSNAME
 from lofar.sas.resourceassignment.rataskspecified.config import DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_SUBJECT
+from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
 
 import logging
 logger = logging.getLogger(__name__)
@@ -161,12 +162,14 @@ class RATaskSpecified(OTDBBusListener):
   def __init__(self,
                otdb_notification_busname=DEFAULT_OTDB_NOTIFICATION_BUSNAME,
                otdb_notification_subject=DEFAULT_OTDB_NOTIFICATION_SUBJECT,
+               otdb_service_busname=DEFAULT_OTDB_SERVICE_BUSNAME,
+               otdb_service_subject=DEFAULT_OTDB_SERVICENAME + '.TaskGetSpecification',
                notification_busname=DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_BUSNAME,
                notification_subject=DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_SUBJECT,
                **kwargs):
     super(RATaskSpecified, self).__init__(busname=otdb_notification_busname, subject=otdb_notification_subject, **kwargs)
 
-    self.parset_rpc = RPC(service="TaskSpecification", busname=otdb_notification_busname)
+    self.parset_rpc = RPC(service=otdb_service_subject, busname=otdb_service_busname)
     self.send_bus   = ToBus("%s/%s" % (notification_busname, notification_subject))
 
   def start_listening(self, **kwargs):
