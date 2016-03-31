@@ -82,7 +82,7 @@ class RADatabase:
         except (psycopg2.IntegrityError, psycopg2.ProgrammingError)as e:
             logger.error("Rolling back query=\'%s\' due to error: \'%s\'" % (self._queryAsSingleLine(query, qargs), e))
             self.rollback()
-            return -1
+            return []
 
         if fetch == _FETCH_ONE:
             return self.cursor.fetchone()
