@@ -147,7 +147,7 @@ class TestService(unittest.TestCase):
 
         3 requires nothing
     """
-    with RATaskSpecified("OTDB.TaskSpecified", otdb_notification_busname=self.busname, notification_busname=self.busname) as jts:
+    with RATaskSpecified(otdb_notification_busname=self.busname, notification_busname=self.busname) as jts:
       # Send fake status update
       with ToBus(self.status_service) as tb:
         msg = EventMessage(content={
@@ -178,7 +178,7 @@ class TestService(unittest.TestCase):
         3 requires nothing
     """
 
-    with RATaskSpecified("OTDB.TaskSpecified", otdb_notification_busname=self.busname, notification_busname=self.busname) as jts:
+    with RATaskSpecified(otdb_notification_busname=self.busname, notification_busname=self.busname) as jts:
       # Send fake status update
       with ToBus(self.status_service) as tb:
         msg = EventMessage(content={
