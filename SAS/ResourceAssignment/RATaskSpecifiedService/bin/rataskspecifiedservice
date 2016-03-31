@@ -32,9 +32,10 @@ if __name__ == "__main__":
     from optparse import OptionParser
     from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_BUSNAME, DEFAULT_RA_NOTIFICATION_BUSNAME
     from lofar.common.util import waitForInterrupt
+    import logging
 
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
-    
+
     # Check the invocation arguments
     parser = OptionParser("%prog -O otdb_bus -B my_bus [options]")
     parser.add_option("-O", "--otdb_bus", dest="otdb_busname", type="string", default=DEFAULT_OTDB_NOTIFICATION_BUSNAME,
