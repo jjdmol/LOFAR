@@ -623,15 +623,17 @@ if __name__ == "__main__":
     from optparse import OptionParser
     from lofar.common import dbcredentials
     from lofar.common.util import waitForInterrupt
-    from lofar.sas.otdb.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
+    from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
     from lofar.messaging import setQpidLogLevel
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]")
-    parser.add_option("-B", "--busname", dest="busname", type="string", default=DEFAULT_BUSNAME,
-           help="Busname or queue-name on which RPC commands are received, default: %s" % DEFAULT_BUSNAME)
-    parser.add_option("-S", "--servicename", dest="servicename", type="string", default=DEFAULT_SERVICENAME,
-           help="Name for this service, default: %s" % DEFAULT_SERVICENAME)
+    parser.add_option("-B", "--busname", dest="busname", type="string",
+                      default=DEFAULT_OTDB_SERVICE_BUSNAME,
+                      help="Busname or queue-name on which RPC commands are received. [default: %default")
+    parser.add_option("-S", "--servicename", dest="servicename", type="string",
+                      default=DEFAULT_OTDB_SERVICENAME,
+                      help="Name for this service. [default: %default")
     parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
     # Add options of dbcredentials: --database, --host, ...
     parser.add_option_group(dbcredentials.options_group(parser))
