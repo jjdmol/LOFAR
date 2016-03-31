@@ -94,8 +94,8 @@ def main():
 
     from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME as RADB_BUSNAME
     from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
-    from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import DEFAULT_BUSNAME as OTDB_BUSNAME
-    from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import DEFAULT_SERVICENAME as OTDB_SERVICENAME
+    from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
+
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]",
@@ -105,8 +105,8 @@ def main():
     parser.add_option("--notification_subject", dest="notification_subject", type="string", default=RA_NOTIFICATION_PREFIX+'TaskUpdated', help="Subject of the published messages to listen for, default: %default")
     parser.add_option("--radb_busname", dest="radb_busname", type="string", default=RADB_BUSNAME, help="Name of the bus on which the RADB service listens, default: %default")
     parser.add_option("--radb_servicename", dest="radb_servicename", type="string", default=RADB_SERVICENAME, help="Name of the RADB service, default: %default")
-    parser.add_option("--otdb_busname", dest="otdb_busname", type="string", default=OTDB_BUSNAME, help="Name of the bus on which the OTDB service listens, default: %default")
-    parser.add_option("--otdb_servicename", dest="otdb_servicename", type="string", default=OTDB_SERVICENAME, help="Name of the OTDB service, default: %default")
+    parser.add_option("--otdb_busname", dest="otdb_busname", type="string", default=DEFAULT_OTDB_SERVICE_BUSNAME, help="Name of the bus on which the OTDB service listens, default: %default")
+    parser.add_option("--otdb_servicename", dest="otdb_servicename", type="string", default=DEFAULT_OTDB_SERVICENAME, help="Name of the OTDB service, default: %default")
     parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
     (options, args) = parser.parse_args()
 
