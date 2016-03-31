@@ -299,6 +299,8 @@ def main():
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                         level=logging.DEBUG if options.verbose else logging.INFO)
 
+    logger.info("Using dbcreds: %s" % dbcreds.stringWithHiddenPassword())
+
     with createService(busname=options.busname,
                        servicename=options.servicename,
                        broker=options.broker,

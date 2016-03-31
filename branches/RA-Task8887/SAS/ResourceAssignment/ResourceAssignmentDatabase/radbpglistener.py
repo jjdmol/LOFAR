@@ -152,6 +152,8 @@ def main():
 
     dbcreds = dbcredentials.parse_options(options)
 
+    logger.info("Using dbcreds: %s" % dbcreds.stringWithHiddenPassword())
+
     with RADBPGListener(busname=options.busname,
                         notification_prefix=options.notification_prefix,
                         dbcreds=dbcreds,
