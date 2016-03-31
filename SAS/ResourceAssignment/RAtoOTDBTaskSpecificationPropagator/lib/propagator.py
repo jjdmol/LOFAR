@@ -37,7 +37,7 @@ from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAUL
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
 
 from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import OTDBRPC
-from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_DEFAULT_OTDB_SERVICENAME
+from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
 from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.translator import RAtoOTDBTranslator
 
 logger = logging.getLogger(__name__)
@@ -48,8 +48,8 @@ class RAtoOTDBPropagator():
                  radb_busname=RADB_BUSNAME,
                  radb_servicename=RADB_SERVICENAME,
                  radb_broker=None,
-                 DEFAULT_OTDB_SERVICE_BUSNAME=DEFAULT_OTDB_SERVICE_BUSNAME,
-                 DEFAULT_OTDB_SERVICENAME=DEFAULT_OTDB_SERVICENAME,
+                 otdb_busname=DEFAULT_OTDB_SERVICE_BUSNAME,
+                 otdb_servicename=DEFAULT_OTDB_SERVICENAME,
                  otdb_broker=None,
                  broker=None):
         """
@@ -57,8 +57,8 @@ class RAtoOTDBPropagator():
         :param radb_busname: busname on which the radb service listens (default: lofar.ra.command)
         :param radb_servicename: servicename of the radb service (default: RADBService)
         :param radb_broker: valid Qpid broker host (default: None, which means localhost)
-        :param DEFAULT_OTDB_SERVICE_BUSNAME: busname on which the OTDB service listens (default: lofar.otdb.command)
-        :param DEFAULT_OTDB_SERVICENAME: servicename of the OTDB service (default: OTDBService)
+        :param otdb_busname: busname on which the OTDB service listens (default: lofar.otdb.command)
+        :param otdb_servicename: servicename of the OTDB service (default: OTDBService)
         :param otdb_broker: valid Qpid broker host (default: None, which means localhost)
         :param broker: if specified, overrules radb_broker and otdb_broker. Valid Qpid broker host (default: None, which means localhost)
         """
@@ -67,7 +67,7 @@ class RAtoOTDBPropagator():
             otdb_broker = broker
 
         self.radbrpc = RADBRPC(busname=radb_busname, servicename=radb_servicename, broker=radb_broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
-        self.otdbrpc = OTDBRPC(busname=DEFAULT_OTDB_SERVICE_BUSNAME, servicename=DEFAULT_OTDB_SERVICENAME, broker=otdb_broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
+        self.otdbrpc = OTDBRPC(busname=otdb_busname, servicename=otdb_servicename, broker=otdb_broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
         self.translator = RAtoOTDBTranslator()
 
     def __enter__(self):
