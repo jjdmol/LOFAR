@@ -72,7 +72,7 @@ class RATaskStatusChangedListener(RADBBusListener):
             if new_task['status'] == 'scheduled':
                 self.onTaskScheduled(new_task['id'], new_task['otdb_id'], new_task['mom_id'])
             elif new_task['status'] == 'conflict':
-                self.onTaskScheduled(new_task['id'], new_task['otdb_id'], new_task['mom_id'])
+                self.onTaskConflict(new_task['id'], new_task['otdb_id'], new_task['mom_id'])
 
     def onTaskScheduled(self, ra_id, otdb_id, mom_id):
         logger.info('onTaskScheduled: ra_id=%s otdb_id=%s mom_id=%s' % (ra_id, otdb_id, mom_id))
