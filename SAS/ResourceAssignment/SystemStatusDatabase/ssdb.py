@@ -5,21 +5,16 @@ import psycopg2 as pg
 import psycopg2.extras as pgdefs
 from lofar.messaging import Service
 from lofar.common.util import waitForInterrupt
+from lofar.common import dbcredentials
 
 import logging
 import sys
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DATABASE    = "datamonitor"
-USER        = "lofarsys"
-PASSWORD    = "welkom001"
-
 class SSDB:
     def __init__(self,**kwargs):
-        self.username = kwargs.pop("username", USER)
-        self.password = kwargs.pop("password", PASSWORD)
-        self.database = kwargs.pop("database", DATABASE)
+        self.dbcreds =  kwargs.pop("dbcreds", None)
         self.conn = None
         self.DBconnected = (self.conn and self.conn.status==1)
         self.Qlistall="select * from hosts inner join datapaths on hosts.id = datapaths.hostid;"
@@ -42,10 +37,14 @@ class SSDB:
         self.DBconnected = (self.conn and self.conn.status==1)
         if not self.DBconnected:
             try:
-                self.conn= pg.connect("dbname=%s user=%s password=%s" % (DATABASE,USER,PASSWORD))
+                self.conn = pg.connect(host=self.dbcreds.host,
+                                       user=self.dbcreds.user,
+                                       password=self.dbcreds.password,
+                                       database=self.dbcreds.database,
+                                       connect_timeout=5)
                 self.DBconnected = (self.conn and self.conn.status==1)
             except Exception as e:
-                logger.error("[SSDBconnector]: DB connection could not be restored.")
+                logger.error("[SSDBconnector]: DB connection could not be restored: %s" % (e,))
         return self.DBconnected
 
     def _doquery(self,q):

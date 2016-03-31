@@ -3,6 +3,7 @@
 from lofar.messaging import Service, MessageHandlerInterface
 from lofar.common.util import waitForInterrupt
 from lofar.sas.systemstatus.database.ssdb import SSDB
+from lofar.common import dbcredentials
 
 import logging
 import sys
@@ -11,18 +12,13 @@ logger = logging.getLogger(__name__)
 
 SERVICENAME = "GetServerState"
 BUSNAME     = "simpletest"
-DATABASE    = "datamonitor"
-USER        = "lofarsys"
-PASSWORD    = "welkom001"
 
 class DataMonitorQueryService(MessageHandlerInterface):
 
     def __init__(self,**kwargs):
         super(DataMonitorQueryService,self).__init__(**kwargs)
 
-        self.username = kwargs.pop("username", USER)
-        self.password = kwargs.pop("password", PASSWORD)
-        self.database = kwargs.pop("database", DATABASE)
+        self.dbcreds = kwargs.pop("dbcreds", None)
 
         self.service2MethodMap = {
             'GetStateNames':self.getstatenames,
@@ -35,7 +31,7 @@ class DataMonitorQueryService(MessageHandlerInterface):
 
 
     def prepare_loop(self):
-        self.ssdb = SSDB(username=self.username,password=self.password,database=self.database)
+        self.ssdb = SSDB(dbcreds=self.dbcreds)
 
     def prepare_receive(self):
         self.ssdb.ensure_connected()
@@ -99,9 +95,14 @@ class DataMonitorQueryService(MessageHandlerInterface):
         jobinfo  = self.ssdb.getIngestJobs()
         return { "main" : maininfo, "jobs" : jobinfo };
 
-def createService(busname=BUSNAME,servicename=SERVICENAME):
-    return Service(servicename,DataMonitorQueryService,busname=busname,numthreads=4,use_service_methods=True)
+def createService(busname=BUSNAME,servicename=SERVICENAME, dbcreds=None):
+    return Service(servicename,
+                   DataMonitorQueryService,
+                   busname=busname,
+                   numthreads=4,
+                   handler_args={'dbcreds': dbcreds},
+                   use_service_methods=True)
 
-def runservice(busname=BUSNAME,servicename=SERVICENAME):
-    with createService(busname,servicename) as GetServerState:
+def runservice(busname=BUSNAME,servicename=SERVICENAME, dbcreds=None):
+    with createService(busname,servicename,dbcreds) as GetServerState:
         waitForInterrupt()
