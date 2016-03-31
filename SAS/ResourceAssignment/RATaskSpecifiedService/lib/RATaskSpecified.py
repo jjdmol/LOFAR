@@ -51,7 +51,32 @@ def predecessors( parset ):
 
   return result
 
-def resourceIndicatorsFromParset( parset ):
+def convertSchedulerProcessSubtype(processSubType):
+    '''convert scheduler processSubType as defined in SAS/Scheduler/src/OTDBTree.h to RA (type, subtype) tuple'''
+    if processSubType == "Averaging Pipeline":
+        return "pipeline", "averaging pipeline"
+    elif processSubType == "Calibration Pipeline":
+        return "pipeline", "calibration pipeline"
+    elif processSubType == "Imaging Pipeline":
+        return "pipeline", "imaging pipeline"
+    elif processSubType == "Imaging Pipeline MSSS":
+        return "pipeline", "imaging pipeline msss"
+    elif processSubType == "Long Baseline Pipeline":
+        return "pipeline", "long baseline pipeline"
+    elif processSubType == "Pulsar Pipeline":
+        return "pipeline", "pulsar pipeline"
+    elif processSubType == "Beam Observation":
+        return "observation", "bfmeasurement"
+    elif processSubType == "Interferometer":
+        return "observation", "interferometer"
+    elif processSubType == "TBB (piggyback)":
+        return "observation", "tbbmeasurement"
+    elif processSubType == "TBB (standalone)":
+        return "observation", "tbbmeasurement"
+
+    return "unknown", "unknown"
+
+def resourceIndicatorsFromParset( parsetDict ):
   """ Extract the parset keys that are required for resource assignment. """
 
   subset = {}
@@ -59,7 +84,7 @@ def resourceIndicatorsFromParset( parset ):
   def get(key, default=None):
     """ Return the value of parset key `key', or `default' if the key
         is not defined. """
-    return parset.get(PARSET_PREFIX + key, default)
+    return parsetDict.get(PARSET_PREFIX + key, default)
 
   def add(key, conversion=lambda x: x):
     """ Add the given key to our subset selection, using an optional
@@ -70,22 +95,23 @@ def resourceIndicatorsFromParset( parset ):
 
   """ Some conversion functions for common parameter-value types."""
   def strvector(value):
-    return PyParameterValue(value, True).getStringVector()
+    return PyParameterValue(str(value), True).getStringVector()
 
   def intvector(value):
-    return PyParameterValue(value, True).getIntVector()
+    return PyParameterValue(str(value), True)._expand().getIntVector()
 
   def bool(value):
-    return PyParameterValue(value, True).getBool()
+    return PyParameterValue(str(value), True).getBool()
 
   # =====================================
   # Parset meta info
   # =====================================
-  subset["Version.number"] = parset.get("Version.number")
+  subset["Version.number"] = parsetDict.get("Version.number")
 
   # =====================================
   # Observation settings
   # =====================================
+  add("Observation.momID")
   add("Observation.sampleClock")
   add("Observation.nrBitsPerSample")
   add("Observation.antennaSet")
@@ -93,6 +119,7 @@ def resourceIndicatorsFromParset( parset ):
   add("Observation.startTime")
   add("Observation.stopTime")
   add("Observation.nrBeams")
+
   nrSAPs = int(get("Observation.nrBeams", 0))
   for sap in xrange(0, nrSAPs):
     add("Observation.Beam[%d].subbandList" % (sap,), intvector)
@@ -101,30 +128,32 @@ def resourceIndicatorsFromParset( parset ):
   # Correlator settings
   # =====================================
   add("Observation.DataProducts.Output_Correlated.enabled", bool)
-  add("Cobalt.Correlator.integrationTime")
-  add("Cobalt.Correlator.nrChannelsPerSubband")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.Correlator.integrationTime")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.Correlator.nrChannelsPerSubband")
   # TODO: We need a service that computes these 3 values
   add("Cobalt.Correlator.nrBlocksPerIntegration")
   add("Cobalt.Correlator.nrIntegrationsPerBlock")
   add("Cobalt.blockSize")
+
 
   # =====================================
   # Beamformer settings
   # =====================================
   add("Observation.DataProducts.Output_IncoherentStokes.enabled", bool)
   add("Observation.DataProducts.Output_CoherentStokes.enabled", bool)
-  add("Cobalt.BeamFormer.flysEye", bool)
-  #add("Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband") # only needed to determine Cobalt.blockSize
-  add("Cobalt.BeamFormer.CoherentStokes.subbandsPerFile")
-  add("Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor")
-  add("Cobalt.BeamFormer.CoherentStokes.which")
-  #add("Cobalt.BeamFormer.IncoherentStokes.nrChannelsPerSubband") # only needed to determine Cobalt.blockSize
-  add("Cobalt.BeamFormer.IncoherentStokes.subbandsPerFile")
-  add("Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor")
-  add("Cobalt.BeamFormer.IncoherentStokes.which")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.flysEye", bool)
+  #add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband") # only needed to determine Cobalt.blockSize
+  add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.CoherentStokes.subbandsPerFile")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.CoherentStokes.which")
+  #add("Observation.ObservationControl.OnlineControl.Cobalt.IncoherentStokes.nrChannelsPerSubband") # only needed to determine Cobalt.blockSize
+  add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.IncoherentStokes.subbandsPerFile")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor")
+  add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.IncoherentStokes.which")
   for sap in xrange(0, nrSAPs):
     add("Observation.Beam[%d].nrTabRings" % (sap,))
 
+    add("Observation.Beam[%d].nrTiedArrayBeams" % (sap,))
     nrTABs = int(get("Observation.Beam[%d].nrTiedArrayBeams" % (sap,), 0))
     for tab in xrange(0, nrTABs):
       add("Observation.Beam[%d].TiedArrayBeam[%d].coherent" % (sap,tab), bool)
@@ -166,7 +195,7 @@ class RATaskSpecified(OTDBBusListener):
                otdb_service_subject=DEFAULT_OTDB_SERVICENAME + '.TaskGetSpecification',
                notification_busname=DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_BUSNAME,
                notification_subject=DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_SUBJECT,
-               **kwargs):
+               broker=None, **kwargs):
     super(RATaskSpecified, self).__init__(busname=otdb_notification_busname, subject=otdb_notification_subject, **kwargs)
 
     self.parset_rpc = RPC(service=otdb_service_subject, busname=otdb_service_busname)
@@ -190,6 +219,8 @@ class RATaskSpecified(OTDBBusListener):
     # Request the parset
     main_obsID  = treeId
     main_parset,_ = self.parset_rpc( OtdbID=main_obsID )
+    main_parset = main_parset['TaskSpecification']
+    logger.info("main_parset [%s]: %s" % (main_obsID, main_parset))
 
     # Construct a dict of all the parsets we retrieved
     parsets = {}
@@ -201,6 +232,8 @@ class RATaskSpecified(OTDBBusListener):
     request_obsIDs = set(predecessors(main_parset))
 
     logger.info("Processing %s", request_obsIDs)
+
+    obsId2predId = {int(main_obsID):list(request_obsIDs)}
 
     # Iterate recursively over all known predecessor obsIDs, and request their parsets
     while request_obsIDs:
@@ -214,26 +247,95 @@ class RATaskSpecified(OTDBBusListener):
 
         # Request predecessor parset
         parsets[obsID],_ = self.parset_rpc( OtdbID=obsID )
+        parsets[obsID] = parsets[obsID]['TaskSpecification']
+        #logger.info("predecessor parset [%s]: %s" % (obsID, parsets[obsID]))
 
         # Add the list of predecessors
-        request_obsIDs = request_obsIDs.union(predecessors(parsets[obsID]))
+        predecessor_ids = predecessors(parsets[obsID])
+        request_obsIDs = request_obsIDs.union(predecessor_ids)
+        obsId2predId[obsID] = predecessor_ids
+        logger.info("obsID %s: preds: %s" % (obsID, predecessor_ids))
+        logger.info("obsId2predId %s" % (obsId2predId))
 
     # Convert parsets to resource indicators
     logger.info("Extracting resource indicators")
-    resourceIndicators = dict([(str(obsID), resourceIndicatorsFromParset(parset)) for (obsID,parset) in parsets.iteritems()])
+    specifications = dict([(obsID, resourceIndicatorsFromParset(parset)) for (obsID,parset) in parsets.iteritems()])
 
-    # Construct and send result message
-    logger.info("Sending result")
-    result = {
-      "sasID": main_obsID,
+    # recursive method to build the tree of obs and its predecessors
+    def appendChildNodes(treeNode):
+        node_otdb_id = treeNode['otdb_id']
+        node_pred_otdb_ids = obsId2predId[node_otdb_id]
+        node_pred_specifications = {pred_id:specifications[pred_id] for pred_id in node_pred_otdb_ids}
+
+        for pred_id, pred_specification in node_pred_specifications.items():
+            childNode = {
+            "otdb_id": pred_id,
+            "specification": pred_specification,
+            "predecessors": []
+            }
+            childNode['task_type'], childNode['task_subtype'] = convertSchedulerProcessSubtype(parsets[pred_id].get(PARSET_PREFIX+"Observation.processSubtype", ""))
+
+            appendChildNodes(childNode)
+            treeNode["predecessors"].append(childNode)
+
+    # Construct root node of tree
+    resultTree = {
+      "otdb_id": int(main_obsID),
       "state": "prescheduled",
-      "time_of_change": modificationTime,
-      "resource_indicators": resourceIndicators,
+      "specification": specifications[main_obsID],
+      "predecessors": []
     }
+    resultTree['task_type'], resultTree['task_subtype'] = convertSchedulerProcessSubtype(main_parset.get(PARSET_PREFIX+"Observation.processSubtype", ""))
+
+    #recursively append predecessors as child nodes
+    appendChildNodes(resultTree)
+
+    logger.info("Sending result: %s" % resultTree)
 
     # Put result on bus
-    msg = EventMessage(content=result)
+    msg = EventMessage(content=resultTree)
     self.send_bus.send(msg)
 
     logger.info("Result sent")
 
+def main():
+    import logging
+    import sys
+    from optparse import OptionParser
+    from lofar.common.util import waitForInterrupt
+
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+
+    # Check the invocation arguments
+    parser = OptionParser("%prog [options]",
+                          description="run the rataskspecified service")
+    parser.add_option("-b", "--notification_bus", dest="notification_bus", type="string",
+                      default=DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_BUSNAME,
+                      help="Bus or queue we publish resource requests on. [default: %default]")
+    parser.add_option("-s", "--notification_subject", dest="notification_subject", type="string",
+                      default=DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_SUBJECT,
+                      help="The subject of the event messages which this service publishes. [default: %default]")
+    parser.add_option("--otdb_notification_bus", dest="otdb_notification_bus", type="string",
+                      default=DEFAULT_OTDB_NOTIFICATION_BUSNAME,
+                      help="Bus or queue where the OTDB notifications are published. [default: %default]")
+    parser.add_option("--otdb_notification_subject", dest="otdb_notification_subject", type="string",
+                      default=DEFAULT_OTDB_NOTIFICATION_SUBJECT,
+                      help="Subject of OTDB notifications on otdb_notification_bus. [default: %default]")
+    parser.add_option("--otdb_request_bus", dest="otdb_request_bus", type="string",
+                      default=DEFAULT_OTDB_SERVICE_BUSNAME,
+                      help="Bus or queue where the OTDB requests are handled. [default: %default]")
+    parser.add_option('-q', '--broker', dest='broker', type='string', default=None, help='Address of the qpid broker, default: localhost')
+    (options, args) = parser.parse_args()
+
+    with RATaskSpecified(otdb_notification_busname=options.otdb_notification_bus,
+                         otdb_notification_subject=options.otdb_notification_subject,
+                         otdb_service_busname=options.otdb_request_bus,
+                         otdb_service_subject=DEFAULT_OTDB_SERVICENAME + '.TaskGetSpecification',
+                         notification_busname=options.notification_bus,
+                         notification_subject=options.notification_subject,
+                         broker=options.broker):
+        waitForInterrupt()
+
+
+if __name__ == "__main__":
+    main()
