@@ -28,11 +28,11 @@ the parset of such jobs (+ their predecessors), and posts them on the bus.
 from lofar.sas.resourceassignment.rataskspecified.RATaskSpecified import RATaskSpecified
 
 if __name__ == "__main__":
+    import logging
     import sys
     from optparse import OptionParser
     from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_BUSNAME, DEFAULT_RA_NOTIFICATION_BUSNAME
     from lofar.common.util import waitForInterrupt
-    import logging
 
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
