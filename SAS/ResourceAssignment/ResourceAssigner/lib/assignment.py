@@ -152,7 +152,7 @@ class ResourceAssigner():
             if claimed:
                 self.radbrpc.updateTaskAndResourceClaims(taskId, claim_status='allocated')
                 claims = self.radbrpc.getResourceClaims(task_id=taskId)
-                if len(claim_ids) == len([x for x in claims if x['status'] == 'allocated'):
+                if len(claim_ids) == len([x for x in claims if x['status'] == 'allocated']):
                     self.radbrpc.updateTask(taskId, status='scheduled')
                 else:
                     self.radbrpc.updateTask(taskId, status='conflict')
