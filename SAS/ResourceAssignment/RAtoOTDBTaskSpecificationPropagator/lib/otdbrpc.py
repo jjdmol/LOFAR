@@ -4,9 +4,7 @@ import logging
 import datetime
 from lofar.messaging.RPC import RPC, RPCException, RPCWrapper
 #from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
-DEFAULT_BUSNAME="lofar.otdb.specification"
-DEFAULT_SERVICENAME="OTDBService"
-#from lofar.common.util import convertStringDigitKeysToInt
+from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
 
 ''' Simple RPC client for Service lofarbus.*Z
 '''
@@ -21,8 +19,8 @@ class OTDBPRCException(Exception):
         return "OTDBPRCException: " + str(self.message)
 
 class OTDBRPC(RPCWrapper):
-    def __init__(self, busname=DEFAULT_BUSNAME,
-                 servicename=DEFAULT_SERVICENAME,
+    def __init__(self, busname=DEFAULT_OTDB_SERVICE_BUSNAME,
+                 servicename=DEFAULT_OTDB_SERVICENAME,
                  broker=None):
         super(OTDBRPC, self).__init__(busname, servicename, broker)
 
@@ -93,7 +91,7 @@ class OTDBRPC(RPCWrapper):
         return {"project_id": answer["projectID"]}
 
 
-def do_tests(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME):
+def do_tests(busname=DEFAULT_OTDB_SERVICE_BUSNAME, servicename=DEFAULT_OTDB_SERVICENAME):
     with OTDBPRC(busname=busname, servicename=servicename) as rpc:
         #for i in range(0, 10):
             #taskId = rpc.insertTask(1234, 5678, 'active', 'OBSERVATION', 1)['id']
