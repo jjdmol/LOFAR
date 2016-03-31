@@ -162,11 +162,12 @@ class RAtoOTDBTranslator():
     def parseStorageProperties(self, storage_claim):
         result = {}
         result['saps'] = []
-        for s in storage_claim['saps']:
-            properties = {}
-            for p in s['properties']:
-                properties[p['type_name']] = p['value']
-            result['saps'].append({'sap_nr' : s['sap_nr'], 'properties': properties})
+        if 'saps' in storage_claim:
+            for s in storage_claim['saps']:
+                properties = {}
+                for p in s['properties']:
+                    properties[p['type_name']] = p['value']
+                result['saps'].append({'sap_nr' : s['sap_nr'], 'properties': properties})
         for p in storage_claim['properties']:
             result[p['type_name']] = p['value']
         return result
