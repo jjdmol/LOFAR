@@ -28,6 +28,8 @@ Typical usage is to derive your own subclass from RABusListener and implement th
 """
 
 from lofar.messaging.messagebus import AbstractBusListener
+from lofar.sas.resourceassignment.rataskspecified.config import DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_BUSNAME
+from lofar.sas.resourceassignment.rataskspecified.config import DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_SUBJECT
 
 import qpid.messaging
 import logging
@@ -37,7 +39,10 @@ logger = logging.getLogger(__name__)
 
 
 class RATaskSpecifiedBusListener(AbstractBusListener):
-    def __init__(self, busname='lofar.ra.notification', subject='OTDB.TaskSpecified', broker=None, **kwargs):
+    def __init__(self,
+                 busname=DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_BUSNAME,
+                 subject=DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_SUBJECT,
+                 broker=None, **kwargs):
         """
         RATaskSpecifiedBusListener listens on the lofar ra message bus and calls (empty) on<SomeMessage> methods when such a message is received.
         Typical usage is to derive your own subclass from RATaskSpecifiedBusListener and implement the specific on<SomeMessage> methods that you are interested in.
@@ -55,13 +60,12 @@ class RATaskSpecifiedBusListener(AbstractBusListener):
     def _handleMessage(self, msg):
         logger.debug("RABusListener.handleMessage: %s" %str(msg))
 
-        sasId = msg.content['sasID']
-        modificationTime = msg.content['time_of_change'].datetime()
-        resource_indicators = msg.content['resource_indicators']
+        otdb_id = msg.content['otdb_id']
+        specification_tree = msg.content
 
-        self.onTaskSpecified(sasId, modificationTime, resource_indicators)
+        self.onTaskSpecified(otdb_id, specification_tree)
 
-    def onTaskSpecified(self, sasId, modificationTime, resourceIndicators):
+    def onTaskSpecified(self, otdb_id, specification_tree):
         pass
 
 __all__ = ["RATaskSpecifiedBusListener"]

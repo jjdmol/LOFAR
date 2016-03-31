@@ -67,7 +67,6 @@ class SpecifiedTaskListener(RATaskSpecifiedBusListener):
 
     def onTaskSpecified(self, otdb_id, specification_tree):
         logger.info('onTaskSpecified: otdb_id=%s' % otdb_id)
-        status = specification_tree.get
 
         self.assigner.doAssignment(specification_tree)
 
