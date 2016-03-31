@@ -92,9 +92,9 @@ app = Flask('ResourceAssignmentEditor',
 app.config.from_object('lofar.sas.resourceassignment.resourceassignmenteditor.config.default')
 app.json_encoder = CustomJSONEncoder
 
-rarpc = RARPC(busname=DEFAULT_RADB_BUSNAME, servicename=DEFAULT_RADB_SERVICENAME, broker='10.149.96.6')
-momrpc = MoMRPC(busname=DEFAULT_MOM_BUSNAME, servicename=DEFAULT_MOM_SERVICENAME, timeout=2, broker='10.149.96.6')
-radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker='10.149.96.6', momrpc=momrpc)
+rarpc = None
+momrpc = None
+radbchangeshandler = None
 
 @app.route('/')
 @app.route('/index.htm')
@@ -276,6 +276,13 @@ def main():
 
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                         level=logging.DEBUG if options.verbose else logging.INFO)
+
+    global rarpc
+    rarpc = RARPC(busname=DEFAULT_RADB_BUSNAME, servicename=DEFAULT_RADB_SERVICENAME, broker=options.broker)
+    global momrpc
+    momrpc = MoMRPC(busname=DEFAULT_MOM_BUSNAME, servicename=DEFAULT_MOM_SERVICENAME, timeout=5, broker=options.broker)
+    global radbchangeshandler
+    radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker=options.broker, momrpc=momrpc)
 
     with radbchangeshandler, rarpc, momrpc:
         '''Start the webserver'''
