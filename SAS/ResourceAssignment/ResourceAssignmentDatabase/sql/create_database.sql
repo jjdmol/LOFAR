@@ -299,10 +299,9 @@ ALTER TABLE resource_allocation.resource_claim_extended_view
 COMMENT ON VIEW resource_allocation.resource_claim_extended_view
   IS 'extended view on resource_claim table, including resource_claim_status.name and the resource itself';
 
-
 CREATE OR REPLACE VIEW resource_allocation.resource_claim_property_view AS
  SELECT rcp.id, rcp.resource_claim_id, rcp.value, rcp.type_id,
-    rcpt.name AS type_name
+    rcpt.name AS type_name, rcp.sap_id
    FROM resource_allocation.resource_claim_property rcp
    JOIN resource_allocation.resource_claim_property_type rcpt ON rcpt.id = rcp.type_id;
 ALTER TABLE resource_allocation.resource_claim_property_view
