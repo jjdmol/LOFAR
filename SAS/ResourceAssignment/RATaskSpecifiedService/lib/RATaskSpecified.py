@@ -164,9 +164,9 @@ class RATaskSpecified(OTDBBusListener):
                notification_busname=DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_BUSNAME,
                notification_subject=DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_SUBJECT,
                **kwargs):
-    super(RATaskSpecified, self).__init__(busname=otdb_busname, subject=otdb_notification_subject, **kwargs)
+    super(RATaskSpecified, self).__init__(busname=otdb_notification_busname, subject=otdb_notification_subject, **kwargs)
 
-    self.parset_rpc = RPC(service="TaskSpecification", busname=otdb_busname)
+    self.parset_rpc = RPC(service="TaskSpecification", busname=otdb_notification_busname)
     self.send_bus   = ToBus("%s/%s" % (notification_busname, notification_subject))
 
   def start_listening(self, **kwargs):
