@@ -31,7 +31,9 @@ if __name__ == "__main__":
     import logging
     import sys
     from optparse import OptionParser
-    from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_BUSNAME, DEFAULT_RA_NOTIFICATION_BUSNAME
+    from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_BUSNAME, DEFAULT_OTDB_NOTIFICATION_SUBJECT
+    from lofar.sas.resourceassignment.rataskspecified.config import DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_BUSNAME
+    from lofar.sas.resourceassignment.rataskspecified.config import DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_SUBJECT
     from lofar.common.util import waitForInterrupt
 
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
@@ -40,14 +42,18 @@ if __name__ == "__main__":
     parser = OptionParser("%prog -O otdb_bus -B my_bus [options]")
     parser.add_option("-O", "--otdb_bus", dest="otdb_busname", type="string", default=DEFAULT_OTDB_NOTIFICATION_BUSNAME,
                       help="Bus or queue OTDB publishes status changes on. [default: %default]")
-    parser.add_option("-B", "--my_bus", dest="my_busname", type="string", default=DEFAULT_RA_NOTIFICATION_BUSNAME,
+    parser.add_option("-B", "--notification_bus", dest="notification_bus", type="string",
+                      default=DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_BUSNAME,
                       help="Bus or queue we publish resource requests on. [default: %default]")
     (options, args) = parser.parse_args()
 
-    if not options.otdb_busname or not options.my_busname:
+    if not options.otdb_busname or not options.notification_bus:
         parser.print_help()
         sys.exit(1)
 
-    with RATaskSpecified("OTDB.TaskSpecified", otdb_busname=options.otdb_busname, my_busname=options.my_busname) as jts:
+    with RATaskSpecified(otdb_notification_busname=options.otdb_busname,
+                         otdb_notification_subject=DEFAULT_OTDB_NOTIFICATION_SUBJECT,
+                         notification_busname=options.notification_bus,
+                         notification_subject=DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_SUBJECT):
         waitForInterrupt()
 
