@@ -105,7 +105,7 @@ class RADBBusListener(AbstractBusListener):
         pass
 
 if __name__ == '__main__':
-    with RADBBusListener(broker='10.149.96.6') as listener:
+    with RADBBusListener(broker=None) as listener:
         waitForInterrupt()
 
 __all__ = ["RADBBusListener"]
