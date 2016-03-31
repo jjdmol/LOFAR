@@ -148,10 +148,14 @@ class ResourceAssigner():
         main_needed = needed[str(otdb_id)]
         if self.checkResources(main_needed, available):
             task = self.radbrpc.getTask(taskId)
-            claimed, resourceIds = self.claimResources(main_needed, task)
+            claimed, claim_ids = self.claimResources(main_needed, task)
             if claimed:
                 self.radbrpc.updateTaskAndResourceClaims(taskId, claim_status='allocated')
-                self.radbrpc.updateTask(taskId, status='scheduled')
+                claims = self.radbrpc.getResourceClaims(task_id=taskId)
+                if len(claim_ids) == len([x for x in claims if x['status'] == 'allocated'):
+                    self.radbrpc.updateTask(taskId, status='scheduled')
+                else:
+                    self.radbrpc.updateTask(taskId, status='conflict')
             else:
                 self.radbrpc.updateTask(taskId, status='conflict')
 
