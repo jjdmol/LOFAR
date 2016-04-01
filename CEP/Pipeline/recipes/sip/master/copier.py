@@ -249,7 +249,7 @@ class copier(MasterNodeInterface):
         # Run the compute nodes with the node specific mapfiles
         for source, target in zip(self.source_map, self.target_map):
             args = [source.host, source.file, target.file, globalfs]
-            self.append_job(target.host args)
+            self.append_job(target.host, args)
 
         # start the jobs, return the exit status.
         return self.run_jobs()
