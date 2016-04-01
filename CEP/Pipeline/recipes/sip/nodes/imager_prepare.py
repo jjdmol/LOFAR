@@ -44,11 +44,12 @@ class imager_prepare(LOFARnodeTCP):
             ndppp_executable, output_measurement_set,
             time_slices_per_image, subbands_per_group, input_ms_mapfile,
             asciistat_executable, statplot_executable, msselect_executable,
-            rficonsole_executable, do_rficonsole, add_beam_tables):
+            rficonsole_executable, do_rficonsole, add_beam_tables, globalfs):
         """
         Entry point for the node recipe
         """
         self.environment.update(environment)
+        self.globalfs = globalfs
         with log_time(self.logger):
             input_map = DataMap.load(input_ms_mapfile)
 
@@ -178,7 +179,7 @@ class imager_prepare(LOFARnodeTCP):
                 command = ["rsync", "-r", "{0}:{1}".format(
                                 input_item.host, input_item.file),
                                    "{0}".format(processed_ms_dir)]
-                if input_item.host == "localhost":
+                if self.globalfs or input_item.host == "localhost":
                     command = ["cp", "-r", "{0}".format(input_item.file),
                                            "{0}".format(processed_ms_dir)]
 
