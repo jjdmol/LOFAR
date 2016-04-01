@@ -16,6 +16,7 @@ nproc = 0
 
 [long_baseline]
 nproc = 0
+rficonsole_executable = /opt/aoflagger/bin/rficonsole
 
 [dppp]
 max_per_node = 0 
@@ -24,4 +25,8 @@ max_per_node = 0
 max_per_node = 0 
 
 [rficonsole]
+executable = /opt/aoflagger/bin/rficonsole
 max_per_node = 0 
+
+[imager_prepare]
+rficonsole_executable = /opt/aoflagger/bin/rficonsole
