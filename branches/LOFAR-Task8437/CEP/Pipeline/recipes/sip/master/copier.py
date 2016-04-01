@@ -236,6 +236,8 @@ class copier(MasterNodeInterface):
         self.logger.info("Starting copier run")
         super(copier, self).go()
 
+        globalfs = self.config.has_option("remote", "globalfs") and self.config.getboolean("remote", "globalfs")
+
         # Load data from mapfiles
         self.source_map = DataMap.load(self.inputs['mapfile_source'])
         self.target_map = DataMap.load(self.inputs['mapfile_target'])
@@ -246,8 +248,8 @@ class copier(MasterNodeInterface):
 
         # Run the compute nodes with the node specific mapfiles
         for source, target in zip(self.source_map, self.target_map):
-            args = [source.host, source.file, target.file]
-            self.append_job(target.host, args)
+            args = [source.host, source.file, target.file, globalfs]
+            self.append_job(target.host args)
 
         # start the jobs, return the exit status.
         return self.run_jobs()

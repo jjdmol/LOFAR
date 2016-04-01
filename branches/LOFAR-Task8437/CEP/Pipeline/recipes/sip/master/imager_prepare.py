@@ -160,6 +160,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         paths_to_image_mapfiles = []
         n_subband_groups = len(output_map)  # needed for subsets in sb list
 
+        globalfs = self.config.has_option("remote", "globalfs") and self.config.getboolean("remote", "globalfs")
+
         for idx_sb_group, item in enumerate(output_map):
             #create the input files for this node
             self.logger.debug("Creating input data subset for processing"
@@ -203,7 +205,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['msselect_executable'],
                          self.inputs['rficonsole_executable'],
                          self.inputs['do_rficonsole'],
-                         self.inputs['add_beam_tables']]
+                         self.inputs['add_beam_tables'],
+                         globalfs]
 
             jobs.append(ComputeJob(item.host, node_command, arguments))
 

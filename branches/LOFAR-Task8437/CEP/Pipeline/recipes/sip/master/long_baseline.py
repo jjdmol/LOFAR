@@ -166,6 +166,8 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
         paths_to_image_mapfiles = []
         n_subband_groups = len(output_map)
 
+        globalfs = self.config.has_option("remote", "globalfs") and self.config.getboolean("remote", "globalfs")
+
         output_map.iterator = final_output_map.iterator = DataMap.SkipIterator
         for idx_sb_group, (output_item, final_item) in enumerate(zip(output_map, 
                                                             final_output_map)):
@@ -204,6 +206,7 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['msselect_executable'],
                          self.inputs['rficonsole_executable'],
                          self.inputs['add_beam_tables'],
+                         globalfs,
                          final_item.file]
 
             jobs.append(ComputeJob(output_item.host, node_command, arguments))
