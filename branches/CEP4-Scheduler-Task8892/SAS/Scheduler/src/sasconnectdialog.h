@@ -14,7 +14,7 @@
 #ifndef SASCONNECTDIALOG_H
 #define SASCONNECTDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_sasconnectdialog.h"
 #include <QString>
 #include <QStringList>

@@ -33,7 +33,7 @@ public:
 
 private:
     GraphicResourceScene *itsScene;
-	unsigned int itsStationID, itsCurrentHighlightTask;
+    unsigned int itsStationID; //, itsCurrentHighlightTask;
 	int itsWidth, itsHeight;
 };
 

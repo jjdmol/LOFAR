@@ -3,9 +3,6 @@
  *
  * Author         : Alwin de Jong
  * e-mail         : jong@astron.nl
- * Revision       : $Revision$
- * Last change by : $Author$
- * Change date	  : $Date$
  * First creation : 4-feb-2009
  * URL            : $URL: https://svn.astron.nl/ROD/trunk/LOFAR_Scheduler/Controller.cpp $
  *
@@ -53,8 +50,8 @@ SchedulerSettings Controller::theSchedulerSettings = SchedulerSettings();
 unsigned Controller::itsFileVersion = 0;
 
 Controller::Controller(QApplication &app) :
-    application(&app) , gui(0), itsSettingsDialog(0),
-    possiblySaveMessageBox(0),itsConflictDialog(0)
+     possiblySaveMessageBox(0), application(&app), gui(0),
+    itsSettingsDialog(0), itsConflictDialog(0)
 {
     itsAutoPublishAllowed = currentUser == "lofarsys" ? true : false;
 #if defined Q_OS_WINDOWS || _DEBUG_
@@ -1305,7 +1302,7 @@ void Controller::applyTableItemChange(unsigned taskID, data_headers property, co
 		QString newstatus(value.toString());
 		if ((newstatus == task_states_str[Task::PRESCHEDULED]) || (newstatus == task_states_str[Task::SCHEDULED])) {
 			std::pair<unscheduled_reasons, QString> errCode = doPreScheduleChecks(pTask);
-			if ((errCode.first == BEAM_DURATION_DIFFERENT)) {
+            if (errCode.first == BEAM_DURATION_DIFFERENT) {
 				if (QMessageBox::question(gui, tr("Beam duration different"),
 						errCode.second.replace('$','\n') + "\nDo you still want to set the task to " + newstatus + "?",
 						QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::No) {
@@ -3321,6 +3318,11 @@ std::pair<unscheduled_reasons, QString> Controller::doPreScheduleChecks(Task *ta
             }
         }
 
+        // TODO: setInputFilesForPipeline should probably not be done here. Only set the input files when a task is downloaded from SAS or when it is just loaded from disk
+        // now the enabled flags (user selection) gets reset by calling setInputFilesForPipeline which is also a bug. This should not be the case
+        error = setInputFilesForPipeline(pPipe);
+
+        //WK code commented out
 //        if (pPipe->isCalibrationPipeline() &&
 //            !task->storage()->getEqualityInputOutputProducts())
 //        {
@@ -3339,13 +3341,13 @@ std::pair<unscheduled_reasons, QString> Controller::doPreScheduleChecks(Task *ta
             task->storage()->generateFileList();
         }
 	}
-//    // Check here if the input output locations are the same
-//    // Check added due to #8174
+    // Check here if the input output locations are the same
+    // Check added due to #8174
 //    if (task->isPipeline())
 //    {
 //        // TODO: This is incredibly ugly!!!
 //        Pipeline *pipeline = dynamic_cast<Pipeline *>(task);
-
+//
 //        if (pipeline->isCalibrationPipeline() &&
 //            !task->storage()->getEqualityInputOutputProducts())
 //        {
@@ -3849,7 +3851,7 @@ void Controller::copyTask(unsigned int taskID) {
                 }
                 if (newState == Task::PRESCHEDULED) {
                     std::pair<unscheduled_reasons, QString> errCode(doPreScheduleChecks(newTask));
-                    if ((errCode.first == BEAM_DURATION_DIFFERENT)) {
+                    if (errCode.first == BEAM_DURATION_DIFFERENT) {
                         if (QMessageBox::question(gui, tr("Beam duration different"),
                                                   errCode.second.replace('$','\n') + "\nDo you want to maximize the beam durations (Recommended)",
                                                   QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes) {
@@ -4093,22 +4095,20 @@ bool Controller::doScheduleChecks(Task *pTask) {
 		return false;
 	}
 
+//WK code commented out
 //    if (pTask->isPipeline())
 //    {
 //        // TODO: This is incredibly ugly!!!
 //        Pipeline *pipeline = dynamic_cast<Pipeline *>(pTask);
-
 //        if (pipeline->isCalibrationPipeline() &&
 //            !pTask->storage()->getEqualityInputOutputProducts())
 //        {
 //            QMessageBox::warning(gui,
 //              tr("Error during scheduling")
-//                     ,"Task input and output are different, #8174, LOC3. Retry assigning resources");
+//                     ,tr("Task input and output are different, #8174, LOC3. Retry assigning resources"));
 //            return false;
-
 //        }
 //    }
-
 
 	return true;
 }
@@ -4243,7 +4243,7 @@ void Controller::scheduleTask(unsigned taskID, Task::task_status new_status) {
                 gui->updateTask(pTask);
 				return;
 			}
-			if ((errCode.first == BEAM_DURATION_DIFFERENT)) {
+            if (errCode.first == BEAM_DURATION_DIFFERENT) {
 				if (QMessageBox::question(gui, tr("Beam duration different"),
 						errCode.second.replace('$','\n') + "\nDo you still want to set the task to PRESCHEDULED?",
 						QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::No) {
@@ -4390,7 +4390,7 @@ void Controller::scheduleSelectedTasks(Task::task_status new_status) {
 				if (errCode.first == NO_ERROR) {
 					apply_prescheduled = true;
 				}
-				else if ((errCode.first == BEAM_DURATION_DIFFERENT)) {
+                else if (errCode.first == BEAM_DURATION_DIFFERENT) {
 					if (apply_all_beam_duration_diffs) apply_prescheduled = true;
 					else {
 						int choice(QMessageBox::question(gui, tr("Beam duration different"),
