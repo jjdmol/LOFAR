@@ -621,8 +621,10 @@ class RADatabase:
         (resource_claim_id, type_id, value, sap_id)
         VALUES {values}
         RETURNING id;'''.format(values=insert_values)
-
-        ids = [x['id'] for x in self._executeQuery(query, fetch=_FETCH_ALL)]
+        
+        test_list = self._executeQuery(query, fetch=_FETCH_ALL)
+        logger.info("TEST this sometimes doesn't work: %s" % str(test_list)) #FIXME TODO
+        ids = [x['id'] for x in test_list]
 
         if [x for x in ids if x < 0]:
             logger.error("One or more properties could not be inserted. Rolling back.")
