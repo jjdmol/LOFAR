@@ -139,8 +139,7 @@ FORMS += \
     tablecolumnselectdialog.ui \
     taskcopydialog.ui \
     taskdialog.ui \
-    thrashbin.ui \
-    storageresourceview.ui
+    thrashbin.ui
 SOURCES += \
     ListWidget.cpp \
     redistributetasksdialog.cpp \
