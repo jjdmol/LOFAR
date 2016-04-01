@@ -24,17 +24,17 @@ function usage() {
   echo "$0 -o OBSID [options]"
   echo ""
   echo "  -o OBSID           Task identifier"
-  echo "  -b busname         Bus name to post status changes on (default: $SETSTATUS_BUS)"
+  echo "  -B busname         Bus name to post status changes on (default: $SETSTATUS_BUS)"
   exit 1
 }
 
-while getopts "o:c:p:b:" opt; do
+while getopts "o:c:p:B:" opt; do
   case $opt in
     h)  usage
         ;;
     o)  OBSID="$OPTARG"
         ;;
-    b)  SETSTATUS_BUS="$OPTARG"
+    B)  SETSTATUS_BUS="$OPTARG"
         ;;
     \?) error "Invalid option: -$OPTARG"
         ;;
@@ -47,6 +47,6 @@ done
 # ======= Run
 
 # Mark as aborted
-setStatus.py -o $OBSID -s aborted -b $SETSTATUS_BUS || true
+setStatus.py -o $OBSID -s aborted -B $SETSTATUS_BUS || true
 
 exit 0

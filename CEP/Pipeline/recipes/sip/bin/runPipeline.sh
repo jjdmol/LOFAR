@@ -36,11 +36,11 @@ function usage() {
   echo "  -o OBSID           Task identifier"
   echo "  -c pipeline.cfg    Override pipeline configuration file (default: $PIPELINE_CONFIG)"
   echo "  -p pipeline.parset Provide parset (default: request through QPID)"
-  echo "  -b busname         Bus name to post status changes on (default: $SETSTATUS_BUS)"
+  echo "  -B busname         Bus name to post status changes on (default: $SETSTATUS_BUS)"
   exit 1
 }
 
-while getopts "ho:c:p:b:" opt; do
+while getopts "ho:c:p:B:" opt; do
   case $opt in
     h)  usage
         ;;
@@ -50,7 +50,7 @@ while getopts "ho:c:p:b:" opt; do
         ;;
     p)  PARSET="$OPTARG"
         ;;
-    b)  SETSTATUS_BUS="$OPTARG"
+    B)  SETSTATUS_BUS="$OPTARG"
         ;;
     \?) error "Invalid option: -$OPTARG"
         ;;
@@ -63,7 +63,7 @@ done
 # ======= Init
 
 # Mark as started
-setStatus.py -o $OBSID -s active -b $SETSTATUS_BUS || true
+setStatus.py -o $OBSID -s active -B $SETSTATUS_BUS || true
 
 if [ -z "$PARSET" ]; then
   # Fetch parset
@@ -91,14 +91,14 @@ RESULT=$?
 # ======= Fini
 
 # Process the result
-setStatus.py -o $OBSID -s completing -b $SETSTATUS_BUS || true
+setStatus.py -o $OBSID -s completing -B $SETSTATUS_BUS || true
 
 if [ $RESULT -eq 0 ]; then
   # Wait for feedback to propagate
   sleep 60
 
   # Mark as succesful
-  setStatus.py -o $OBSID -s finished -b $SETSTATUS_BUS || true
+  setStatus.py -o $OBSID -s finished -B $SETSTATUS_BUS || true
 fi
 
 # Propagate result to caller
