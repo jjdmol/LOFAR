@@ -17,6 +17,7 @@
 #include <QTableView>
 #include <QDesktopWidget>
 #include <QLCDNumber>
+#include <QFileDialog>
 #include <sstream>
 #include <vector>
 #include <algorithm>
@@ -235,7 +236,7 @@ void SchedulerGUI::createMainToolbar(void) {
     itsLCDtimer->setSegmentStyle(QLCDNumber::Flat);
     itsLCDtimer->setFrameStyle(QLCDNumber::Sunken);
     itsLCDtimer->setFrameShape(QLCDNumber::WinPanel);
-    itsLCDtimer->setNumDigits(8);
+    itsLCDtimer->setDigitCount(8);
     itsLCDtimer->setToolTip("current UTC");
     itsLCDtimer->display("00:00:00");
     itsMainToolBar->addWidget(itsLCDtimer);
@@ -361,16 +362,21 @@ void SchedulerGUI::updateGraphicTasks(const scheduledTasksMap &scheduledTasks, c
 
 void SchedulerGUI::createTableDock(void) {
     // create table dock and its layout
-	itsTableDock = new QDockWidget(tr("Table schedule view"), this);
+    itsTableDock = new QDockWidget("Table schedule view", this);
 	itsTableDockWidgetContents = new QWidget();
     itsTableDockMainLayout = new QGridLayout(itsTableDockWidgetContents);
     itsTableDockMainLayout->setMargin(5);
     // create the table view
 	itsTableView = new TableView(itsTableDockWidgetContents);
 	itsTableView->setWordWrap(false);
-	itsTableView->verticalHeader()->setResizeMode(QHeaderView::Fixed);
+#if QT_VERSION >= 0x050000
+    itsTableView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    itsTableView->horizontalHeader()->setSectionsMovable(true);
+#else
+    itsTableView->verticalHeader()->setResizeMode(QHeaderView::Fixed);
+    itsTableView->horizontalHeader()->setMovable(true);
+#endif
 	itsTableView->setDragEnabled(false);
-	itsTableView->horizontalHeader()->setMovable(true);
 	itsTableView->setDropIndicatorShown(true);
 	itsTableView->setAcceptDrops(false);
 	itsTableView->setAlternatingRowColors(true);
@@ -721,7 +727,11 @@ void SchedulerGUI::newTable(SchedulerData const &data) {
 	itsTableView->setModel(itsModel);
 	itsTableView->setItemDelegate(&itsDelegate);
 	itsTableView->horizontalHeader()->setStretchLastSection(true);
-	itsTableView->horizontalHeader()->setClickable(true);
+#if QT_VERSION >= 0x050000
+    itsTableView->horizontalHeader()->setSectionsClickable(true);
+#else
+    itsTableView->horizontalHeader()->setClickable(true);
+#endif
 	itsTableView->horizontalHeader()->setSortIndicatorShown(true);
 	writeTableData(data);
 }
@@ -2101,7 +2111,7 @@ QString SchedulerGUI::fileDialog(const QString &title, const QString &def_suffix
 	QFileDialog dialog;
 	QFileInfo fi;
 	QString path="";
-	dialog.setFilters(filter.split('\n'));
+    dialog.setNameFilters(filter.split('\n'));
 	dialog.setWindowTitle(title);
 
 

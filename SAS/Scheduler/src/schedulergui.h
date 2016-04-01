@@ -17,9 +17,11 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <QtGui/QMainWindow>
+#include <QMainWindow>
 #include <QFileInfo>
 #include <QToolBar>
+#include <QGraphicsView>
+#include <QScrollBar>
 #include "lofar_scheduler.h"
 #include "ui_schedulergui.h"
 #include "taskdialog.h"
@@ -37,7 +39,7 @@ class SchedulerData;
 class QPushButton;
 class QCheckBox;
 class QTableWidgetItem;
-class QGraphicsView;
+//class QGraphicsView;
 class QWidget;
 class QDockWidget;
 class QStatusBar;
