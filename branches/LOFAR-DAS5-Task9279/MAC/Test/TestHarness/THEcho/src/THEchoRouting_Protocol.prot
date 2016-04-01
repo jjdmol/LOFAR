@@ -1,0 +1,302 @@
+//
+// Protocol definition for the TestHarness Echo Routing server
+// Ping messages are sent from a client in app1 to a server in app2
+// Echo replies  are sent from a client in app2 to a server in app1
+// So all message have dir=IN because they go from client to server
+// 
+// The relation between the THEcho protocol and the THEchoRouting protocol
+// is shown here: The THEcho protocol is used between 1 client and 1 server
+// The THEchoRouting protocol is used to send messages from TH and receive
+// answers througn another connection.
+//
+//  __________                                    __________
+// |  TH      |                                  |  Echo    |
+// |   _______|_    THEcho_Protocol             _|______    |
+// |  | client_1|----------------------------->|server_1|   |
+// |  |_________|<-----------------------------|________|   |
+// |          |                                  |          |
+// |          |                                  |          |
+// |          |                                  |          |
+// |   _______|_    THEchoRouting_Protocol      _|______    |
+// |  | client_2|----------------------------->|server_2|   |
+// |  |_________|                              |________|   |
+// |          |                                  |   ||     |
+// |          |                                  |   \/     |
+// |   _______|_    THEchoRouting_Protocol      _|______    |
+// |  | server_2|<-----------------------------|client_2|   |
+// |  |_________|                              |________|   |
+// |          |                                  |          |
+// |__________|                                  |__________|
+//
+
+autogen definitions protocol;
+
+description = "Protocol for the TestHarness Echo Routing server";
+prefix = "THEchoRouting"; // for the signal names
+id = 'GCF::TM::F_APL_PROTOCOL+1';
+
+// specify extra include files
+// e.g. include = '<sys/time.h>';
+
+prelude = << PRELUDE_END
+// define namespace and enumerations here
+
+enum TEchoRoutingEnum
+{
+  ECHOROUTING_ENUM_FIRST = 1, 
+  ECHOROUTING_ENUM_SECOND, 
+  ECHOROUTING_ENUM_THIRD,
+};
+
+PRELUDE_END;
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" (from client to server) or "OUT" (from server to client).
+// A "param" has a "name" and a "type".
+//
+event = {
+  signal = PING_UINT;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "uintParam";
+    type = "unsigned int";
+  };
+};
+
+event = {
+  signal = ECHO_UINT;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "uintParam";
+    type = "unsigned int";
+  };
+};
+
+event = {
+  signal = PING_INT;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "intParam";
+    type = "int";
+  };
+};
+
+event = {
+  signal = ECHO_INT;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "intParam";
+    type = "int";
+  };
+};
+
+event = {
+  signal = PING_LONG;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "longParam";
+    type = "long";
+  };
+};
+
+event = {
+  signal = ECHO_LONG;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "longParam";
+    type = "long";
+  };
+};
+
+
+event = {
+  signal = PING_ENUM;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "enumParam";
+    type = "TEchoRoutingEnum";
+  };
+};
+
+event = {
+  signal = ECHO_ENUM;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "enumParam";
+    type = "TEchoRoutingEnum";
+  };
+};
+
+event = {
+  signal = PING_DOUBLE;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "doubleParam";
+    type = "double";
+  };
+};
+
+event = {
+  signal = ECHO_DOUBLE;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "doubleParam";
+    type = "double";
+  };
+};
+
+event = {
+  signal = PING_STRING;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "stringParam";
+    type = "string";
+  };
+};
+
+event = {
+  signal = ECHO_STRING;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "stringParam";
+    type = "string";
+  };
+};
+
+event = {
+  signal = PING_STOP;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+};
+
+event = {
+  signal = PING_INT_ARRAY;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "intArrayParam";
+    type = "int[10]";
+  };
+};
+
+event = {
+  signal = ECHO_INT_ARRAY;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "intArrayParam";
+    type = "int[10]";
+  };
+};
+
+event = {
+  signal = PING_INT_ARRAY_20;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "intArrayParam";
+    type = "int[20]";
+  };
+};
+
+event = {
+  signal = ECHO_INT_ARRAY_20;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "intArrayParam";
+    type = "int[20]";
+  };
+};
+
+event = {
+  signal = PING_INT_ARRAY_61;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "intArrayParam";
+    type = "int[61]";
+  };
+};
+
+event = {
+  signal = ECHO_INT_ARRAY_61;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "intArrayParam";
+    type = "int[61]";
+  };
+};
+

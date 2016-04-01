@@ -1,0 +1,6 @@
+#!/bin/bash
+
+source MessageFuncs.sh
+create_queue test
+
+python tPyMsgBus.py
