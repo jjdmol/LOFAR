@@ -82,7 +82,7 @@ class RATaskStatusChangedListener(RADBBusListener):
     def onTaskConflict(self, ra_id, otdb_id, mom_id):
         logger.info('onTaskConflict: ra_id=%s otdb_id=%s mom_id=%s' % (ra_id, otdb_id, mom_id))
 
-        self.propagator.doTaskConflict(otdb_id, mom_id)
+        self.propagator.doTaskConflict(ra_id, otdb_id, mom_id)
 
 
 __all__ = ["RATaskStatusChangedListener"]
