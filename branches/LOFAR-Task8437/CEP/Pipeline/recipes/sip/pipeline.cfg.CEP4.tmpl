@@ -1,18 +1,4 @@
-# This pipeline.cfg was used on the CEP4 test system to show how Docker and SLURM
-# can be used to distribute and run jobs.
-#
-# Is called as follows (inside a SLURM job allocation, f.e. "salloc -N 2"). Replace directory names
-# where needed:
-#
-# # Create this on every node
-# CONFIGDIR=/globalhome/mol/regression_test
-# HOSTS=(`scontrol show hostnames $SLURM_JOB_NODELIST`)
-#
-# # $CONFIGDIR is local, and ocntains both the working_dir (for input/output data) and the config files
-# # /share is a shared disk for the vds files, map files, logs.
-#
-# docker run --rm -e SLURM_JOB_ID=${SLURM_JOB_ID} -e LUSER=${UID} -v $HOME/.ssh:/home/lofar/.ssh:ro -v $CONFIGDIR:$CONFIGDIR -v /shared:/shared --net=host lofar-patched /bin/bash -c "\"$EXTRA_CMDS;python $CONFIGDIR/regression_test_runner.py preprocessing_pipeline --pipelinecfg $CONFIGDIR/pipeline.cfg --testdata $CONFIGDIR/data --computehost1 ${HOSTS[0]} --computehost2 ${HOSTS[1]} --workdir $CONFIGDIR/working_dir --rundir $CONFIGDIR/rundir\""
-
+# This pipeline.cfg is used on CEP4, to run jobs through Docker and SLURM.
 
 [DEFAULT]
 lofarroot = /opt/lofar
@@ -66,19 +52,19 @@ globalfs = yes
 #   * pseudo-tty to prevent buffering logs (ssh -tt, docker -t)
 
 #
-# host -> worker node:       srun -N 1 -n 1 --jobid={slurm_job_id}
+# host -> worker node:       srun ...
 #                            (Add -w {host} for systems that do not have a global file system, to force job
 #                            execution on the host that contains the data)
 #
-# worker node -> container:  docker run -t --rm -e LUSER={uid} -w g -v /home/mol/.ssh:/home/lofar/.ssh:ro -v /globalhome/mol/regression_test:/globalhome/mol/regression_test -v /shared:/shared --net=host {docker_image}
+# worker node -> container:  docker run ...
 #                            Starts the container on the worker node, with pretty much the same parameters as the master container:
 #
 #                            --rm: don't linger resources when the container exits
 #                            -e LUSER=(uid): set the user to run as (the calling user)
 #                            -h {host}: set container hostname (for easier debugging) (doesnt work yet, using --net=host instead)
-#                            -v:   map the directories for input/output data, shared storage (parsets, vds files, etc)
+#                            -v /data:/data:  map CEP4's global fs. This includes %(working_directory)s and %(runtime_directory)s so those do not have to be mapped as well.
 #
 #                            /bin/bash -c
 #
 #                            Required because the pipeline framework needs some bash functionality in the commands it starts.
-cmdline = ssh -n -tt -x localhost srun --exclusive --distribution=cyclic --cpus-per-task={nr_cores} --ntasks=1 --jobid={slurm_job_id} --job-name={job_name} docker run --rm -e LUSER={uid} -v %(runtime_directory)s:%(runtime_directory)s -v %(working_directory)s:%(working_directory)s -v /data:/data --net=host lofar-pipeline:${LOFAR_TAG} /bin/bash -c "\"{command}\""
+cmdline = ssh -n -tt -x localhost srun --exclusive --cpus-per-task={nr_cores} --jobid={slurm_job_id} --job-name={job_name} docker run --rm -e LUSER={uid} -v /data:/data --net=host lofar-pipeline:${LOFAR_TAG} /bin/bash -c "\"{command}\""
