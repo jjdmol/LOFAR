@@ -16,9 +16,6 @@ class SSDBRPC(RPCWrapper):
                  broker=None):
         super(SSDBRPC, self).__init__(busname, servicename, broker)
 
-    def getResourceClaimStatuses(self):
-        return self.rpc('GetResourceClaimStatuses')
-
     def getstatenames(self):
         return self.rpc('GetStateNames')
 
@@ -29,7 +26,7 @@ class SSDBRPC(RPCWrapper):
         return self.rpc('GetHostForGID', gid=gid)
 
     def counthostsforgroups(self,groups,states):
-        return self.rpc('CountHostsForGroups')
+        return self.rpc('CountHostsForGroups', groups=groups, states=states)
 
     def listall(self):
         return self.rpc('ListAll')
@@ -39,4 +36,44 @@ class SSDBRPC(RPCWrapper):
 
     def getArchivingStatus(self,*args,**kwargs):
         return self.rpc('GetArchivingStatus')
+
+
+# test code for all methods
+if __name__ == '__main__':
+    import pprint
+
+    with SSDBRPC(broker='10.149.96.22') as ssdb:
+        print '\n------------------'
+        print 'getstatenames'
+        states = ssdb.getstatenames()
+        pprint.pprint(states)
+
+
+        print '\n------------------'
+        print 'getactivegroupnames'
+        groups = ssdb.getactivegroupnames()
+        pprint.pprint(ssdb.getactivegroupnames())
+
+        for gid, groupname in groups.items():
+            print '\n------------------'
+            print 'gethostsforgid'
+            pprint.pprint(ssdb.gethostsforgid(gid))
+
+        for gid, groupname in groups.items():
+            for sid, statename in states.items():
+                print '\n------------------'
+                print 'counthostsforgroups'
+                pprint.pprint(ssdb.counthostsforgroups({gid:groupname}, {sid:statename}))
+
+        print '\n------------------'
+        print 'listall'
+        pprint.pprint(ssdb.listall())
+
+        print '\n------------------'
+        print 'countactivehosts'
+        pprint.pprint(ssdb.countactivehosts())
+
+        print '\n------------------'
+        print 'getArchivingStatus'
+        pprint.pprint(ssdb.getArchivingStatus())
 
