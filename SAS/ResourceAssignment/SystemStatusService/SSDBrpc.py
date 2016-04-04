@@ -1,53 +1,42 @@
 #!/usr/bin/python
 
-from lofar.messaging import RPC
+from lofar.messaging.RPC import RPC, RPCException, RPCWrapper
 
 import logging
 import sys
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-SERVICENAME = "GetServerState"
-BUSNAME     = "simpletest"
+from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_BUSNAME
+from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_SERVICENAME
 
-class SSDBrpc:
+class SSDBRPC(RPCWrapper):
+    def __init__(self,
+                 busname=DEFAULT_SSDB_BUSNAME,
+                 servicename=DEFAULT_SSDB_SERVICENAME,
+                 broker=None):
+        super(SSDBRPC, self).__init__(busname, servicename, broker)
 
-    def __init__(self,**kwargs):
-        self.servicename = kwargs.pop("servicename", SERVICENAME)
-        self.busname = kwargs.pop("busname",BUSNAME)
-        self.timeout = kwargs.pop("timeout",None)
+    def getResourceClaimStatuses(self):
+        return self.rpc('GetResourceClaimStatuses')
 
     def getstatenames(self):
-        servicename="%s.GetStateNames" %(self.servicename)
-        with RPC(servicename,busname=self.busname,timeout=self.timeout) as ssdb:
-            return ssdb()
+        return self.rpc('GetStateNames')
 
     def getactivegroupnames(self):
-        servicename="%s.GetActiveGroupNames" %(self.servicename)
-        with RPC(servicename,busname=self.busname,timeout=self.timeout) as ssdb:
-            return ssdb()
+        return self.rpc('GetActiveGroupNames')
 
     def gethostsforgid(self,gid):
-        servicename="%s.GetHostForGID" %(self.servicename)
-        with RPC(servicename,busname=self.busname,timeout=self.timeout) as ssdb:
-            return ssdb(gid)
+        return self.rpc('GetHostForGID', gid=gid)
 
     def counthostsforgroups(self,groups,states):
-        servicename="%s.CountHostsForGroups" %(self.servicename)
-        with RPC(servicename,busname=self.busname,timeout=self.timeout) as ssdb:
-            return ssdb(groups,states)
+        return self.rpc('CountHostsForGroups')
 
     def listall(self):
-        servicename="%s.ListAll" %(self.servicename)
-        with RPC(servicename,busname=self.busname,timeout=self.timeout) as ssdb:
-            return ssdb()
+        return self.rpc('ListAll')
 
     def countactivehosts(self):
-        servicename="%s.CountActiveHosts" %(self.servicename)
-        with RPC(servicename,busname=self.busname,timeout=self.timeout) as ssdb:
-            return ssdb()
+        return self.rpc('CountActiveHosts')
 
     def getArchivingStatus(self,*args,**kwargs):
-        servicename="%s.GetArchivingStatus" %(self.servicename)
-        with RPC(servicename,busname=self.busname,timeout=self.timeout) as ssdb:
-            return ssdb(*args,**kwargs)
+        return self.rpc('GetArchivingStatus')
+

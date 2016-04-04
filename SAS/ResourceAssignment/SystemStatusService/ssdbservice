@@ -4,33 +4,7 @@
 '''
 runs the systemstatus database service
 '''
-import logging
-from optparse import OptionParser
-from lofar.sas.systemstatus.service.SSDBQueryService import runservice
-from lofar.common import dbcredentials
-
-logger = logging.getLogger(__name__)
-DEFAULT_BUSNAME="amq.topic"
-DEFAULT_SERVICENAME="SSDBQueryService"
+from lofar.sas.systemstatus.service.SSDBQueryService import main
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
-
-    # Check the invocation arguments
-    parser = OptionParser("%prog [options]",
-                          description='runs the systemstatus database service')
-    parser.add_option("-b", "--busname", dest="busname", type="string",
-                      default=DEFAULT_BUSNAME,
-                      help="Name of the bus exchange on the qpid broker, default: %s" % DEFAULT_BUSNAME)
-    parser.add_option("-s", "--servicename", dest="servicename", type="string",
-                      default=DEFAULT_SERVICENAME,
-                      help="Name for this service, default: %s" % DEFAULT_SERVICENAME)
-    parser.add_option_group(dbcredentials.options_group(parser))
-    parser.set_defaults(dbcredentials="SSDB")
-    (options, args) = parser.parse_args()
-
-    dbcreds = dbcredentials.parse_options(options)
-
-    logger.info("Using dbcreds: %s" % dbcreds.stringWithHiddenPassword())
-
-    runservice(busname=options.busname, servicename=options.servicename, dbcreds=dbcreds)
+    main()

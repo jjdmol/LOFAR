@@ -35,8 +35,13 @@ from lofar.parameterset import parameterset
 from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME as RADB_BUSNAME
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
+
 from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_BUSNAME as RE_BUSNAME
 from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_SERVICENAME as RE_SERVICENAME
+
+from lofar.sas.systemstatus.service.SSDBrpc import SSDBRPC
+from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_BUSNAME
+from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_SERVICENAME
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +53,8 @@ class ResourceAssigner():
                  re_busname=RE_BUSNAME,
                  re_servicename=RE_SERVICENAME,
                  re_broker=None,
-                 ssdb_busname='lofar.system',
-                 ssdb_servicename='SSDBService',
+                 ssdb_busname=DEFAULT_SSDB_BUSNAME,
+                 ssdb_servicename=DEFAULT_SSDB_SERVICENAME,
                  ssdb_broker=None,
                  broker=None):
         """
@@ -72,8 +77,7 @@ class ResourceAssigner():
 
         self.radbrpc = RARPC(servicename=radb_servicename, busname=radb_busname, broker=radb_broker)
         self.rerpc = RPC(re_servicename, busname=re_busname, broker=re_broker, ForwardExceptions=True)
-        self.ssdbGetActiveGroupNames = RPC(ssdb_servicename+'.GetActiveGroupNames', busname=ssdb_busname, broker=ssdb_broker, ForwardExceptions=True)
-        self.ssdbGetHostForGID = RPC(ssdb_servicename+'.GetHostForGID', busname=ssdb_busname, broker=ssdb_broker, ForwardExceptions=True)
+        self.ssdbrpc = SSDBRPC(servicename=ssdb_servicename, busname=ssdb_busname, broker=ssdb_broker)
 
     def __enter__(self):
         """Internal use only. (handles scope 'with')"""
@@ -88,15 +92,13 @@ class ResourceAssigner():
         """Open rpc connections to radb service and resource estimator service"""
         self.radbrpc.open()
         self.rerpc.open()
-        self.ssdbGetActiveGroupNames.open()
-        self.ssdbGetHostForGID.open()
+        self.ssdbrpc.open()
 
     def close(self):
         """Close rpc connections to radb service and resource estimator service"""
         self.radbrpc.close()
         self.rerpc.close()
-        self.ssdbGetActiveGroupNames.close()
-        self.ssdbGetHostForGID.close()
+        self.ssdbrpc.close()
 
     def doAssignment(self, specification_tree):
         logger.info('doAssignment: specification_tree=%s' % (specification_tree))
@@ -199,23 +201,13 @@ class ResourceAssigner():
         available    = {}
         while True:
             try:
-                replymessage, status = self.ssdbGetActiveGroupNames()
-                if status == 'OK':
-                    groupnames = replymessage
-                    logger.info('SSDBService ActiveGroupNames: %s' % groupnames)
-                else:
-                    logger.error("Could not get active group names from SSDBService: %s" % status)
-
+                groupnames = self.ssdbrpc.getactivegroupnames()
                 groupnames = {v:k for k,v in groupnames.items()} #swap key/value for name->id lookup
                 logger.info('groupnames: %s' % groupnames)
                 if cluster in groupnames.keys():
                     groupId = groupnames[cluster]
-                    replymessage, status = self.ssdbGetHostForGID(groupId)
-                    if status == 'OK':
-                        available = replymessage
-                        logger.info('available: %s' % available)
-                    else:
-                        logger.error("Could not get hosts for group %s (gid=%s) from SSDBService: %s" % (cluster, groupId, status))
+                    available = self.ssdbrpc.gethostsforgid(groupId)
+                    logger.info('available: %s' % available)
                 else:
                     logger.error("group \'%s\' not known in SSDBService active groups (%s)" % (cluster, ', '.join(groupnames.keys())))
                 return available

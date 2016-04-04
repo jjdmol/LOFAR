@@ -3,15 +3,14 @@
 from lofar.messaging import Service, MessageHandlerInterface
 from lofar.common.util import waitForInterrupt
 from lofar.sas.systemstatus.database.ssdb import SSDB
+from optparse import OptionParser
 from lofar.common import dbcredentials
+from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_BUSNAME
+from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_SERVICENAME
 
 import logging
 import sys
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-SERVICENAME = "GetServerState"
-BUSNAME     = "simpletest"
 
 class DataMonitorQueryService(MessageHandlerInterface):
 
@@ -95,14 +94,37 @@ class DataMonitorQueryService(MessageHandlerInterface):
         jobinfo  = self.ssdb.getIngestJobs()
         return { "main" : maininfo, "jobs" : jobinfo };
 
-def createService(busname=BUSNAME,servicename=SERVICENAME, dbcreds=None):
+def createService(busname=DEFAULT_SSDB_BUSNAME,servicename=DEFAULT_SSDB_SERVICENAME, dbcreds=None, broker=None):
     return Service(servicename,
                    DataMonitorQueryService,
                    busname=busname,
-                   numthreads=4,
+                   numthreads=1,
+                   broker=broker,
                    handler_args={'dbcreds': dbcreds},
                    use_service_methods=True)
 
-def runservice(busname=BUSNAME,servicename=SERVICENAME, dbcreds=None):
-    with createService(busname,servicename,dbcreds) as GetServerState:
+def main():
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+
+    # Check the invocation arguments
+    parser = OptionParser("%prog [options]",
+                          description='runs the systemstatus database service')
+    parser.add_option('-q', '--broker', dest='broker', type='string',
+                      default=None,
+                      help='Address of the qpid broker, default: localhost')
+    parser.add_option("-b", "--busname", dest="busname", type="string",
+                      default=DEFAULT_SSDB_BUSNAME,
+                      help="Name of the bus exchange on the qpid broker. [default: %default]")
+    parser.add_option("-s", "--servicename", dest="servicename", type="string",
+                      default=DEFAULT_SSDB_SERVICENAME,
+                      help="Name for this service. [default: %default]")
+    parser.add_option_group(dbcredentials.options_group(parser))
+    parser.set_defaults(dbcredentials="SSDB")
+    (options, args) = parser.parse_args()
+
+    dbcreds = dbcredentials.parse_options(options)
+
+    logger.info("Using dbcreds: %s" % dbcreds.stringWithHiddenPassword())
+
+    with createService(busname=options.busname, servicename=options.servicename, dbcreds=dbcreds, broker=options.broker):
         waitForInterrupt()
