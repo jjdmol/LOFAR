@@ -2,6 +2,7 @@
 
 lofar_package(RAServices
                 DEPENDS MoMQueryService
+                        OTDBtoRATaskStatusPropagator
                         RATaskSpecifiedService
                         RAtoOTDBTaskSpecificationPropagator
                         ResourceAssigner
