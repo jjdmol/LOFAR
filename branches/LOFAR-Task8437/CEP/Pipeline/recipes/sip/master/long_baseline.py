@@ -63,6 +63,11 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
             '-w', '--working-directory',
             help="Working directory used by the nodes: local data"
         ),
+        'nthreads': ingredient.IntField(
+            '--nthreads',
+            default=8,
+            help="Number of threads per process"
+        ),
         'target_mapfile': ingredient.StringField(
             '--target-mapfile',
             help="Contains the node and path to target files, defines"
@@ -212,7 +217,10 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
                          globalfs,
                          final_item.file]
 
-            jobs.append(ComputeJob(output_item.host, node_command, arguments))
+            jobs.append(ComputeJob(output_item.host, node_command, arguments,
+                    resources={
+                        "cores": self.inputs['nthreads']
+                    }))
 
         # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
