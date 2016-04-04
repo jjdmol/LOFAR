@@ -208,7 +208,7 @@ CREATE TABLE resource_allocation.resource_claim_property (
   resource_claim_id integer NOT NULL REFERENCES resource_allocation.resource_claim ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
   sap_id integer REFERENCES resource_allocation.sap ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
   type_id integer NOT NULL REFERENCES resource_allocation.resource_claim_property_type DEFERRABLE INITIALLY IMMEDIATE,
-  value int NOT NULL DEFAULT 1,
+  value bigint NOT NULL DEFAULT 1,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_allocation.resource_claim_property
