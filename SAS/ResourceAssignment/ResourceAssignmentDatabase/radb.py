@@ -79,7 +79,7 @@ class RADatabase:
                     self.cursor.execute(query, qargs)
                     break
                 time.sleep(i*i)
-        except (psycopg2.IntegrityError, psycopg2.ProgrammingError)as e:
+        except (psycopg2.IntegrityError, psycopg2.ProgrammingError, psycopg2.InternalError, psycopg2.DataError)as e:
             logger.error("Rolling back query=\'%s\' due to error: \'%s\'" % (self._queryAsSingleLine(query, qargs), e))
             self.rollback()
             return []
