@@ -57,6 +57,11 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             '-w', '--working-directory',
             help="Working directory used by the nodes: local data"
         ),
+        'nthreads': ingredient.IntField(
+            '--nthreads',
+            default=8,
+            help="Number of threads per process"
+        ),
         'target_mapfile': ingredient.StringField(
             '--target-mapfile',
             help="Contains the node and path to target files, defines"
@@ -191,7 +196,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             paths_to_image_mapfiles.append(
                 tuple([item.host, inputs_for_image_mapfile_path, False]))
 
-            # use a unique working directory per job, to prevent interference between jobs on a global fs
+            # use unique working directories per job, to prevent interference between jobs on a global fs
             working_dir = os.path.join(self.inputs['working_directory'], "ms_per_image_{0}".format(idx_sb_group))
 
             arguments = [self.environment,
@@ -211,7 +216,10 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['add_beam_tables'],
                          globalfs]
 
-            jobs.append(ComputeJob(item.host, node_command, arguments))
+            jobs.append(ComputeJob(item.host, node_command, arguments,
+                    resources={
+                        "cores": self.inputs['nthreads']
+                    }))
 
         # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs)

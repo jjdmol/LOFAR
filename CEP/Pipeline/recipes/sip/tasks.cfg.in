@@ -62,6 +62,7 @@ asciistat_executable = %(lofarroot)s/bin/asciistats.py
 statplot_executable = %(lofarroot)s/bin/statsplot.py
 msselect_executable = %(casaroot)s/bin/msselect
 rficonsole_executable = %(lofarroot)s/bin/rficonsole
+nthreads = 8
 
 [long_baseline]
 recipe = long_baseline
@@ -71,6 +72,7 @@ statplot_executable = %(lofarroot)s/bin/statsplot.py
 msselect_executable = %(casaroot)s/bin/msselect
 rficonsole_executable = %(lofarroot)s/bin/rficonsole
 nproc = 1
+nthreads = 8
 
 [imager_awimager]
 recipe = imager_awimager
@@ -134,6 +136,7 @@ inplace = False
 outputsuffixes = []
 parsetasfile = False
 #args_format=gnu
+nthreads = 8
 
 [casapy-imager]
 recipe = executable_args
@@ -141,20 +144,24 @@ parsetasfile = True
 #executable = /path/to/your/casapy/bin/casa
 outputsuffixes = [flux,image,model,residual,psf]
 nodescript = executable_casa
+nthreads = 8
 
 [pythonplugin]
 recipe = executable_args
 nodescript = python_plugin
+nthreads = 8
 
 [python-calibrate-stand-alone]
 recipe=executable_args
 nodescript=calibrate-stand-alone
 executable=%(lofarroot)s/bin/bbs-reducer
 parsetasfile=True
+nthreads = 8
 
 [calibrate-stand-alone]
 recipe = executable_args
 executable = %(lofarroot)s/bin/calibrate-stand-alone
+nthreads = 8
 
 [dppp]
 recipe = executable_args
@@ -163,6 +170,7 @@ executable = %(lofarroot)s/bin/NDPPP
 outputsuffixes = []
 args_format=lofar
 outputkey=msout
+nthreads = 8
 
 [awimager]
 recipe = executable_args
@@ -172,7 +180,9 @@ outputsuffixes = [.model, .model.corr, .residual, .residual.corr, .restored, .re
 max_per_node = 1 
 args_format=lofar
 outputkey=image
+nthreads = 8
 
 [rficonsole]
 recipe = executable_args
 executable = %(lofarroot)s/bin/rficonsole
+nthreads = 8
