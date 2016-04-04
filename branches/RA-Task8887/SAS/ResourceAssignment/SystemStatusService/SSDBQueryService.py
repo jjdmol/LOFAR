@@ -64,7 +64,8 @@ class DataMonitorQueryService(MessageHandlerInterface):
             for sid,sname in states.iteritems():
                 ret[name][sname]=0
         for row in qres:
-            ret[groups[str(row['groupid'])]][states[str(row['statusid'])]]+=1
+            if str(row['groupid']) in groups and str(row['statusid']) in states:
+                ret[groups[str(row['groupid'])]][states[str(row['statusid'])]] += 1
         return ret
 
     def listall(self):
