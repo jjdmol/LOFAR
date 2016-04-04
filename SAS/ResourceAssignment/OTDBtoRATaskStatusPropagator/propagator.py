@@ -46,7 +46,7 @@ class OTDBtoRATaskStatusPropagator(OTDBBusListener):
 
         task_id = task['id']
         logger.info("updating task %s with otdb_id %s to status %s" % (task_id, otdb_id, task_status))
-        self.radb.updateTask(task_id=task_id, task_status=task_status)
+        self.radb.updateTask(task_id=task_id, status=task_status)
 
     def onObservationPrepared(self, treeId, modificationTime):
         self._update_radb_task_status(treeId, 'prepared')
