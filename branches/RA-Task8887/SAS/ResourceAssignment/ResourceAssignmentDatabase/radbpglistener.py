@@ -104,7 +104,7 @@ class RADBPGListener(PostgresListener):
                 if state in contentDict:
                     for field in fields:
                         try:
-                            if field in contentDict[state]:
+                            if contentDict[state] and field in contentDict[state]:
                                 timestampStr = contentDict[state][field]
                                 if timestampStr.rfind('.') > -1:
                                     timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S.%f')
@@ -124,7 +124,7 @@ class RADBPGListener(PostgresListener):
         try:
             content = json.loads(payload)
 
-            if 'new' in content and 'old' in content:
+            if 'new' in content and content['new'] and 'old' in content and content['old']:
                 # check if new and old are equal.
                 # however, new and old can be based on different views,
                 # so, only check the values for the keys they have in common
