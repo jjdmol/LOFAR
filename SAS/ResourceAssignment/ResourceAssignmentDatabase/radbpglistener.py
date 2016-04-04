@@ -125,7 +125,14 @@ class RADBPGListener(PostgresListener):
             content = json.loads(payload)
 
             if 'new' in content and 'old' in content:
-                if content['new'] == content['old']:
+                # check if new and old are equal.
+                # however, new and old can be based on different views,
+                # so, only check the values for the keys they have in common
+                new_keys = set(content['new'].keys())
+                old_keys = set(content['old'].keys())
+                common_keys = new_keys & old_keys
+                equal_valued_keys = [k for k in common_keys if content['new'][k] == content['old'][k]]
+                if len(equal_valued_keys) == len(common_keys):
                     logger.info('new and old values are equal, not sending notification. %s' % (content['new']))
                     return
 
