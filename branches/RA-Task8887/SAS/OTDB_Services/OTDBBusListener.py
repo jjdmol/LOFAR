@@ -67,6 +67,8 @@ class OTDBBusListener(AbstractBusListener):
             except:
                 pass
 
+        logger.info("otdb task status changed: otdb_id=%s status=%s" % (treeId, msg.content['state']))
+
         if msg.content['state'] == 'described':
             self.onObservationDescribed(treeId, modificationTime)
         elif msg.content['state'] == 'prepared':

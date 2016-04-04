@@ -10,5 +10,6 @@ lofar_add_package(ResourceAssignmentEstimator)
 lofar_add_package(ResourceAssignmentService)
 lofar_add_package(SystemStatusDatabase)
 lofar_add_package(SystemStatusService)
+lofar_add_package(OTDBtoRATaskStatusPropagator)
 
 
