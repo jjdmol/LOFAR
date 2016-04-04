@@ -191,9 +191,12 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             paths_to_image_mapfiles.append(
                 tuple([item.host, inputs_for_image_mapfile_path, False]))
 
+            # use a unique working directory per job, to prevent interference between jobs on a global fs
+            working_dir = os.path.join(self.inputs['working_directory'], "ms_per_image_{0}".format(idx_sb_group))
+
             arguments = [self.environment,
                          self.inputs['parset'],
-                         self.inputs['working_directory'],
+                         working_dir,
                          self.inputs['processed_ms_dir'],
                          self.inputs['ndppp_exec'],
                          item.file,
