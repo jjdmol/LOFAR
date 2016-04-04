@@ -123,6 +123,12 @@ class RADBPGListener(PostgresListener):
     def _sendNotification(self, subject, payload, timestampFields = None):
         try:
             content = json.loads(payload)
+
+            if 'new' in content and 'old' in content:
+                if content['new'] == content['old']:
+                    logger.info('new and old values are equal, not sending notification. %s' % (content['new']))
+                    return
+
             if timestampFields:
                 content = self._formatTimestampsAsIso(timestampFields, content)
         except Exception as e:
