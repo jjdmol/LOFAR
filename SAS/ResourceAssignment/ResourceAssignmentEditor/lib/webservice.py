@@ -105,8 +105,8 @@ def index():
 
 @app.route('/rest/resources')
 @gzipped
-def resourcesitems():
-    result = rarpc.getResources()
+def resources():
+    result = rarpc.getResources(include_availability=True)
     return jsonify({'resources': result})
 
 @app.route('/rest/resourcegroups')
