@@ -123,6 +123,10 @@ std::vector<storageResult> Storage::addStorageToTask(Task *pTask, const storageM
             }
         }
         itsLastStorageCheckResult.clear();
+        if  (pTask->getOutputDataproductCluster() != "CEP4") { //Can we just skip this for CEP4 ? /AR
+            debugWarn("sis","Storage::addStorageToTask: Did not check storage for task:", pTask->getID(), " (CEP4 detected)");
+            return itsLastStorageCheckResult;
+        }
         // check if the total bandwidths for the nodes used do not exceed the nodes their available bandwidths
         for (std::map<int, double>::const_iterator nit = totalBWPerNodeMap.begin(); nit != totalBWPerNodeMap.end(); ++nit) {
             storageNodesMap::const_iterator nodeit = itsStorageNodes.find(nit->first);
