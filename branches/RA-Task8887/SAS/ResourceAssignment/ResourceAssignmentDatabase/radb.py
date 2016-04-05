@@ -466,6 +466,33 @@ class RADatabase:
 
         return list(self._executeQuery(query, qargs, fetch=_FETCH_ALL))
 
+    def updateResourceAvailability(self, resource_id, active=None, available_capacity=None, total_capacity=None, commit=True):
+        if active is not None:
+            query = '''UPDATE resource_monitoring.resource_availability
+            SET (available) = (%s)
+            WHERE resource_id = %s;'''
+
+            self._executeQuery(query, (active, resource_id))
+
+        if available_capacity is not None and total_capacity is not None:
+            query = '''UPDATE resource_monitoring.resource_capacity
+            SET (available, total) = (%s, %s)
+            WHERE resource_id = %s;'''
+            self._executeQuery(query, (available_capacity, total_capacity, resource_id))
+        elif available_capacity is not None:
+            query = '''UPDATE resource_monitoring.resource_capacity
+            SET (available) = (%s)
+            WHERE resource_id = %s;'''
+            self._executeQuery(query, (available_capacity, resource_id))
+        elif total_capacity is not None:
+            query = '''UPDATE resource_monitoring.resource_capacity
+            SET (total) = (%s)
+            WHERE resource_id = %s;'''
+            self._executeQuery(query, (total_capacity, resource_id))
+
+        if commit:
+            self.commit()
+
     def getResourceGroups(self):
         query = '''SELECT rg.*, rgt.name as type
         from virtual_instrument.resource_group rg

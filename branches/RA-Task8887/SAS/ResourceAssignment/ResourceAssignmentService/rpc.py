@@ -118,6 +118,13 @@ class RARPC(RPCWrapper):
     def getResources(self, resource_types=None, include_availability=False):
         return self.rpc('GetResources', resource_types=resource_types, include_availability=include_availability)
 
+    def updateResourceAvailability(self, resource_id, active=None, available_capacity=None, total_capacity=None):
+        return self.rpc('UpdateResourceAvailability',
+                        resource_id=resource_id,
+                        active=active,
+                        available_capacity=available_capacity,
+                        total_capacity=total_capacity)
+
     def getTask(self, id=None, mom_id=None, otdb_id=None):
         '''get a task for either the given (task)id, or for the given mom_id, or for the given otdb_id'''
         task = self.rpc('GetTask', id=id, mom_id=mom_id, otdb_id=otdb_id)

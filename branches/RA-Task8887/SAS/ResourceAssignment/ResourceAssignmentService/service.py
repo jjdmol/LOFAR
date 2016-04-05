@@ -54,6 +54,7 @@ class RADBHandler(MessageHandlerInterface):
             'GetResourceGroupMemberships': self._getResourceGroupMemberships,
             'GetResourceTypes': self._getResourceTypes,
             'GetResources': self._getResources,
+            'UpdateResourceAvailability': self._updateResourceAvailability,
             'GetTasks': self._getTasks,
             'GetTask': self._getTask,
             'InsertTask': self._insertTask,
@@ -193,6 +194,12 @@ class RADBHandler(MessageHandlerInterface):
     def _getResources(self, **kwargs):
         return self.radb.getResources(resource_types=kwargs.get('resource_types'),
                                       include_availability=kwargs.get('include_availability', False))
+
+    def _updateResourceAvailability(self, **kwargs):
+        return self.radb.updateResourceAvailability(resource_id=kwargs['resource_id'],
+                                                    active=kwargs.get('active'),
+                                                    available_capacity=kwargs.get('available_capacity'),
+                                                    total_capacity=kwargs.get('total_capacity'))
 
     def _getTasks(self):
         return self.radb.getTasks()
