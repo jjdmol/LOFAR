@@ -1,6 +1,86 @@
 import subprocess
+import select
 import time
 from lofarpipe.support.lofarexceptions import PipelineException
+
+class SubProcess(object):
+    STDOUT = 1
+    STDERR = 2
+
+    def __init__(self, logger, cmd, cwd):
+        """
+          Start a subprocess for `cmd' in working directory `cwd'.
+
+          Output is sent to `logger'.
+        """
+
+        self.cmd       = cmd
+        self.completed = False
+
+        self.process = subprocess.Popen(
+                       cmd,
+                       cwd=cwd,
+                       stdin=subprocess.PIPE,
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE)
+        self.pid     = self.process.pid
+        self.exit_status = None
+
+        self.output_buffers = { self.STDOUT: "",
+                                self.STDERR: "" }
+
+        def print_logger(line):
+            print line
+
+        self.output_loggers = { self.STDOUT: logger.debug if logger else print_logger,
+                                self.STDERR: logger.warn  if logger else print_logger }
+        self.logger         = logger.info if logger else print_logger
+
+    	self.logger("Subprocess started: %s" % self.cmd)
+
+    def done(self):
+        if self.completed:
+            return True
+
+        if self.process.poll() is None:
+            return False
+
+        # Process is finished, read remaining data and exit code
+        (stdout, stderr) = self.process.communicate()
+        self.exit_status = self.process.returncode
+
+        self._addoutput(self.STDOUT, stdout, flush=True)
+        self._addoutput(self.STDERR, stderr, flush=True)
+
+        self.completed = True
+
+    	self.logger("Subprocess completed: %s" % self.cmd)
+
+        return True
+
+    def fds(self):
+        return [self.process.stdout, self.process.stderr]
+
+    def read(self, fds):
+        for fd in fds:
+            if fd == self.process.stdout:
+                self._addoutput(self.STDOUT, fd.read(4096))
+            if fd == self.process.stderr:
+                self._addoutput(self.STDERR, fd.read(4096))
+
+    def _addoutput(self, stdtype, output, flush=False):
+        buf = self.output_buffers[stdtype] + output
+        lines = buf.split("\n")
+        remainder = lines.pop() if lines else ""
+
+        for l in lines:
+            self.output_loggers[stdtype](l)
+
+        if flush:
+            self.output_loggers[stdtype](remainder)
+            remainder = ""
+             
+        self.output_buffers[stdtype] = remainder
 
 
 class SubProcessGroup(object):
@@ -34,25 +114,14 @@ class SubProcessGroup(object):
             self.running_process_count += 1
 
             # Run subprocess
-            process = subprocess.Popen(
-                        cmd,
-                        cwd=cwd,
-                        stdin=subprocess.PIPE,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
+            process = SubProcess(self.logger, cmd, cwd)
             
             # save the process
-            self.process_group.append((False, (cmd, process)))
+            self.process_group.append(process)
 
             # add to resource monitor if available
             if self.usageStats:
                 self.usageStats.addPID(process.pid)
-
-            if self.logger == None:
-                print "Subprocess started: {0}".format(cmd)
-            else:
-                self.logger.info("Subprocess started: {0}".format(cmd))
-
 
         def run(self, cmd_in, unsave=False, cwd=None):
             """
@@ -88,65 +157,53 @@ class SubProcessGroup(object):
             """
             collected_exit_status = []
 
-            while (True):
-                # The exit test
-                if (self.running_process_count == 0 and 
-                   len(self.processes_waiting_for_execution) == 0):
-                    break # the while loop
+            while self.running_process_count or self.processes_waiting_for_execution:
+                # collect all unfinished processes
+                processes = [p for p in self.process_group if not p.completed]
 
-                # start with waiting 
-                time.sleep(self.polling_interval)
+                # collect fds we need to poll
+                fds = []
+                for process in processes:
+                    fds.extend(process.fds())
+
+                # poll for data
+                rlist, _, _ = select.select(fds, [], [], self.polling_interval)
+
+                # let processed read their data
+                for process in processes:
+                    process.read(rlist)
 
                 # check all the running processes for completion
-                for idx, (completed, (cmd, process)) in \
-                                enumerate(self.process_group):
-                    if completed:
+                for process in self.process_group:
+                    if process.completed:
+                        # process completed earlier
                         continue
 
-                    # poll returns null if the process is not completed
-                    if process.poll() == None:
+                    if not process.done():
+                        # process still running
                         continue
 
                     # We have a completed process
-                    # communicate with the process
-                    # TODO: This would be the best place to create a
-                    # non mem caching interaction with the processes!
-                    (stdoutdata, stderrdata) = process.communicate()
-                    exit_status = process.returncode
+                    exit_status = process.exit_status
 
                     # get the exit status
                     if  exit_status != 0:
                         collected_exit_status.append((cmd, exit_status))
 
-                    # log the std out and err
-                    if self.logger != None:
-                        self.logger.info(
-                             "Subprocesses group, completed command: ")
-                        self.logger.info(cmd)
-                        self.logger.debug(stdoutdata)
-                        self.logger.warn(stderrdata)
-                    else:
-                        print "Subprocesses group, completed command: "
-                        print cmd
-                        print stdoutdata
-                        print stderrdata
-
                     # Now update the state of the internal state
-                    self.process_group[idx] = (True, (cmd, process))
                     self.running_process_count -= 1
-                                
-                   
+
                 # if there are less then the allowed processes running and
                 # we have waiting processes start another on
-                while (self.running_process_count < self.max_concurrent_processes 
-                    and
-                    len(self.processes_waiting_for_execution) != 0): 
+                while self.running_process_count < self.max_concurrent_processes and self.processes_waiting_for_execution: 
                     # Get the last process
-                    cmd , cwd = self.processes_waiting_for_execution.pop()
+                    cmd, cwd = self.processes_waiting_for_execution.pop()
+
                     # start it
                     self._start_process(cmd, cwd)
 
             # If none of the processes return with error status
             if len(collected_exit_status) == 0:
                 collected_exit_status = None
+
             return collected_exit_status
