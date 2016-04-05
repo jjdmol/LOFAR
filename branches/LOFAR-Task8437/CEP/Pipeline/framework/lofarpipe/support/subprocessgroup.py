@@ -36,7 +36,7 @@ class SubProcess(object):
                                 self.STDERR: logger.warn  if logger else print_logger }
         self.logger         = logger.info if logger else print_logger
 
-    	self.logger("Subprocess started: %s" % self.cmd)
+    	  self.logger("Subprocess started: %s" % self.cmd)
 
     def done(self):
         if self.completed:
