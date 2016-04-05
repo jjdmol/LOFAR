@@ -81,8 +81,8 @@ def main():
     from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
     from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_BUSNAME as RE_BUSNAME
     from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_SERVICENAME as RE_SERVICENAME
-    SSDB_BUSNAME = 'lofar.system' #TODO, import from future ssdb config
-    SSDB_SERVICENAME = 'SSDBService' #TODO, import from future ssdb config
+    from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_BUSNAME
+    from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_SERVICENAME
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]",
@@ -109,10 +109,10 @@ def main():
                       default=RE_SERVICENAME,
                       help="Name of the resource estimator service. [default: %default]")
     parser.add_option("--ssdb_busname", dest="ssdb_busname", type="string",
-                      default=SSDB_BUSNAME,
+                      default=DEFAULT_SSDB_BUSNAME,
                       help="Name of the bus on which the ssdb service listens. [default: %default]")
     parser.add_option("--ssdb_servicename", dest="ssdb_servicename", type="string",
-                      default=SSDB_SERVICENAME,
+                      default=DEFAULT_SSDB_SERVICENAME,
                       help="Name of the ssdb service. [default: %default]")
     parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
     (options, args) = parser.parse_args()
