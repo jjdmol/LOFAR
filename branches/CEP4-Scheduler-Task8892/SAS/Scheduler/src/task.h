@@ -319,6 +319,7 @@ public:
 	bool getPenaltyCalculationNeeded(void) const {return penaltyCalculationNeeded;}
 	bool getShiftDirection(void) const {return itsShiftDirection;}
     const task_conflicts &getConflicts(void) const {return itsConflicts;}
+    const QString &getOutputDataproductCluster(void) const {return itsOutputDataproductCluster;} // Added to support CEP4, maybe should be std::string /AR
 
 	// set methods
 	void setID(unsigned id) {taskID = id;}
@@ -378,6 +379,8 @@ public:
 	inline void setSASTreeID(int treeID) {itsSASTree.itsTreeID = treeID;}
 	inline void setGroupID(unsigned groupID) {itsSASTree.itsGroupID = groupID;}
 	inline void setMoMID(int momID) {itsSASTree.itsMomID = momID;}
+    inline void setOutputDataproductCluster(const QString &clusterName) {itsOutputDataproductCluster = clusterName;} // Added to support CEP4, maybe should be std::string /AR
+
 
 	void clearAllStorageConflicts(void);
 
@@ -409,6 +412,7 @@ protected:
 	bool itsShiftDirection;
 	IDvector itsPredecessors, itsSuccessors;
 	task_conflicts itsConflicts;
+    QString itsOutputDataproductCluster; // Added to support CEP4, maybe should be std::string /AR
 
 	// objects
 //	std::vector<unsigned int> successors;

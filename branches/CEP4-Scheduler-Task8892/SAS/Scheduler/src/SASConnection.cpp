@@ -2690,6 +2690,9 @@ bool SASConnection::saveInputStorageSettings(int treeID, const Task &task) {
 
 bool SASConnection::saveOutputStorageSettings(int treeID, const Task &task, const task_diff *diff) {
     bool bResult(true);
+    if (task.getOutputDataproductCluster() == "CEP4") { //For CEP4 we're skipping this. /AR
+        return bResult;
+    }
     const TaskStorage *task_storage(task.storage());
     if (task_storage) {
         QString trueStr("true"), falseStr("false");
@@ -2731,7 +2734,7 @@ bool SASConnection::saveOutputDataProducts(int treeID, const Task &task) {
         Task::task_type type(task.getType());
         std::map<dataProductTypes, TaskStorage::outputDataProduct>::const_iterator flit;
         for (dataProductTypes dp = _BEGIN_DATA_PRODUCTS_ENUM_; dp < _END_DATA_PRODUCTS_ENUM_-1; dp = dataProductTypes(dp + 1)) {
-            flit = outputDataProdukt.find(dp);
+            flit = outputDataProdukt.find(dp); //flit = file list iterator
             if (flit != outputDataProdukt.end()) {
                 if (task_storage->isOutputDataProduktAssigned(dp)) {
                     // compile the vector strings for SAS
@@ -3023,6 +3026,7 @@ void SASConnection::getOutputStorageSettings(int treeID, Task &task) {
     if (task_storage) {
         QStringList nodeList, raidList;
         QString storageLocationsKey, keyPrefix;
+        QString outputCluster; // Added to support CEP2/4 switch /AR
         QVariant enabledKey;
         bool enabledValue;
         task_storage->unAssignStorage(); // clear the tasks storage, we will be adding incrementally (Task::setStorage() doesn't delete existing storage locations
@@ -3149,6 +3153,29 @@ void SASConnection::getOutputStorageSettings(int treeID, Task &task) {
                 QStringList identificationsList = value.toString().remove('[').remove(']').split(',',QString::SkipEmptyParts);// string2VectorOfStrings(value.toString());
                 task_storage->addOutputDataProductID(*dpit, identificationsList);
             }
+
+            // get values for storage cluster /AR
+            value = getNodeValue(treeID, keyPrefix + "storageClusterName");
+            if (value.isValid()) {
+                QString cluster = value.toString();
+                if (!cluster.isEmpty()) {
+                    if (outputCluster.isEmpty()) {
+                        outputCluster = cluster;
+                    }
+                    else {
+                        if (cluster != outputCluster) {
+                            itsProgressDialog.addError(QString("tree:") + QString::number(treeID) + " output data product type:" + DATA_PRODUCTS[*dpit] + " different output clusters are not supported");
+                        }
+                    }
+                }
+                //We probably will not need to support this: task_storage->addOutputDataProductCluster(*dpit, ?); /AR
+            }
+        }
+        if (!outputCluster.isEmpty()) {
+            task.setOutputDataproductCluster(outputCluster);
+        }
+        else {
+            task.setOutputDataproductCluster("CEP2"); // CEP2 is default for backward compatibility /AR
         }
     }
 }
@@ -4470,7 +4497,7 @@ bool SASConnection::saveTaskToSAS(int treeID, Task &task, const task_diff *diff)
 	Task::task_status status = task.getStatus();
 	bResult &= saveSchedulerProperties(treeID, task, diff);
 
-    if (task.isStationTask()) {
+    if (task.isStationTask()) { //OBSERVATION, RESERVATION or MAINTENANCE
         bResult &= saveStationSettings(treeID, static_cast<StationTask &>(task), diff);
 
         if (task.isObservation()) {
@@ -4487,7 +4514,7 @@ bool SASConnection::saveTaskToSAS(int treeID, Task &task, const task_diff *diff)
             }
 
             // Cobalt Correlator BlockSize
-            if (status == Task::SCHEDULED) { // in SCHEDULED state always update BlockSize
+            if (status == Task::PRESCHEDULED || status == Task::SCHEDULED) { // in SCHEDULED state always update BlockSize //FIXME? Added PRESCHEDULED for CEP4 /AR
                 bResult &= saveCobaltBlockSize(treeID, obs);
             }
             else if (diff) {
@@ -4515,7 +4542,7 @@ bool SASConnection::saveTaskToSAS(int treeID, Task &task, const task_diff *diff)
         }
 	}
 
-	if (diff) {
+    if (diff) { //FIXME if diff than we do this, otherwise we do it any way? This seems redundant. /AR
 		// all the following differences can potentially change the number of output files being written,
 	    // therefore, we update the storage keys in SAS when anyone of them has changed
 		if (diff->output_data_types || diff->output_storage_settings || diff->output_data_products ||

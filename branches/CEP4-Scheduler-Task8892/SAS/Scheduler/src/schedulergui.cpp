@@ -39,9 +39,9 @@ using std::string;
 using std::endl;
 
 const char * DATA_HEADERS[NR_DATA_HEADERS] = { "task ID", "SAS ID", "MoM ID", "group ID", "project ID", "task name", "planned start (UTC)", "planned end (UTC)", "duration",
-        "task type", "task status", "error reason", "task description", "stations", "reservation", "priority", "fix day", "fix time",
+        "task type", "task status" , "cluster", "error reason", "task description", "stations", "reservation", "priority", "fix day", "fix time",
 		"first possible date", "last possible date", "window min time", "window max time", "antenna mode", "clock", "filter", "# subbands",
-		"contact name", "phone", "e-mail", "predecessors", "pred. min time dif", "pred. max time dif", "night wf.", "data size" };
+        "contact name", "phone", "e-mail", "predecessors", "pred. min time dif", "pred. max time dif", "night wf.", "data size"};
 
 extern QString currentUser;
 
@@ -789,6 +789,7 @@ void SchedulerGUI::setDefaultColumnWidths(void) {
 	itsTableView->setColumnWidth(FIXED_DAY,50);
 	itsTableView->setColumnWidth(FIXED_TIME,50);
 	itsTableView->setColumnWidth(PRIORITY,50);
+    itsTableView->setColumnWidth(CLUSTER_NAME,50);
 }
 
 void SchedulerGUI::writeTableData(SchedulerData const &data) {
@@ -941,6 +942,8 @@ void SchedulerGUI::updateTableTask(const Task *pTask, int row) {
         itsModel->setData(itsModel->index(row, CONTACT_EMAIL), pTask->getContactEmail(), Qt::UserRole); // for sorting
         itsModel->setData(itsModel->index(row, TASK_TYPE), pTask->getTypeStr());
         itsModel->setData(itsModel->index(row, TASK_TYPE), pTask->getTypeStr(), Qt::UserRole); // for sorting
+        itsModel->setData(itsModel->index(row, CLUSTER_NAME), pTask->getOutputDataproductCluster());
+        itsModel->setData(itsModel->index(row, CLUSTER_NAME), pTask->getOutputDataproductCluster(), Qt::UserRole); // for sorting
 
         const StationTask *pStationTask = dynamic_cast<const StationTask *>(pTask);
         if (pStationTask) { // is this a stationTask?
