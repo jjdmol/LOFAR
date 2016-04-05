@@ -27,6 +27,7 @@ import psycopg2
 import psycopg2.extras
 from datetime import datetime, timedelta
 import time
+import collections
 from optparse import OptionParser
 from lofar.common import dbcredentials
 from lofar.common.util import to_csv_string
@@ -435,14 +436,35 @@ class RADatabase:
 
         raise KeyError('No such unit: %s Valid values are: %s' % (unit_name, ', '.join(self.getUnitNames())))
 
-    def getResources(self):
-        query = '''SELECT r.*, rt.name as type, rtu.units as unit
-        from virtual_instrument.resource r
-        inner join virtual_instrument.resource_type rt on rt.id = r.type_id
-        inner join virtual_instrument.unit rtu on rtu.id = rt.unit_id;
-        '''
+    def getResources(self, resource_types=None, include_availability=False):
+        if include_availability:
+            query = '''SELECT * from resource_monitoring.resource_view'''
+        else:
+            query = '''SELECT * from virtual_instrument.resource_view'''
 
-        return list(self._executeQuery(query, fetch=_FETCH_ALL))
+        conditions = []
+        qargs = []
+
+        if resource_types is not None:
+            if isinstance(resource_types, basestring):
+                resource_types = [resource_types]
+            elif not isinstance(resource_types, collections.Iterable):
+                resource_types = [resource_types]
+
+            # convert any resource_type name to id
+            resource_type_names = set([x for x in resource_types if isinstance(x, basestring)])
+            if resource_type_names:
+                resource_type_name_to_id = {x['name']:x['id'] for x in self.getResourceTypes()}
+                resource_types = [resource_type_name_to_id[x] if isinstance(x, basestring) else x
+                                  for x in resource_types]
+
+            conditions.append('type_id in %s')
+            qargs.append(tuple(resource_types))
+
+        if conditions:
+            query += ' WHERE ' + ' AND '.join(conditions)
+
+        return list(self._executeQuery(query, qargs, fetch=_FETCH_ALL))
 
     def getResourceGroups(self):
         query = '''SELECT rg.*, rgt.name as type
@@ -1113,8 +1135,17 @@ if __name__ == '__main__':
         print '\n-- ' + str(method.__name__) + ' --'
         print '\n'.join([str(x) for x in method()])
 
-    #print db.getResourceClaims()
-    #print
+    print db.getResources()
+    print
+
+    print db.getResources('storage')
+    print
+
+    print db.getResources(['storage', 'processor'], False)
+    print
+
+    exit()
+
     #print db.getResourceClaims(task_id=440)
     #print
     #print db.getResourceClaims(lower_bound=datetime.utcnow() + timedelta(days=9))
