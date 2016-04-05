@@ -1,5 +1,7 @@
 import subprocess
 import select
+import fcntl
+import os
 import time
 from lofarpipe.support.lofarexceptions import PipelineException
 
@@ -11,11 +13,18 @@ class SubProcess(object):
         """
           Start a subprocess for `cmd' in working directory `cwd'.
 
-          Output is sent to `logger'.
+          Output is sent to `logger', or stdout if logger is None.
         """
+
+        def print_logger(line):
+            print line
 
         self.cmd       = cmd
         self.completed = False
+        self.logger    = logger.info if logger else print_logger
+
+        # report we are starting
+        self.logger("Subprocess starting: %s" % self.cmd)
 
         # start process
         self.process = subprocess.Popen(
@@ -45,15 +54,15 @@ class SubProcess(object):
                                 self.STDERR: "" }
 
         # output sink
-        def print_logger(line):
-            print line
-
         self.output_loggers = { self.STDOUT: logger.debug if logger else print_logger,
                                 self.STDERR: logger.warn  if logger else print_logger }
 
-        # report we started
-        self.logger         = logger.info if logger else print_logger
-        self.logger("Subprocess started: %s" % self.cmd)
+
+        # Set fds to non-blocking to allow <4k reads. This is needed if the process
+        # alternates between stdout and stderr output.
+        for f in self.output_streams.values():
+            flag = fcntl.fcntl(f, fcntl.F_GETFL)
+            fcntl.fcntl(f, fcntl.F_SETFL, flag | os.O_NONBLOCK)
 
     def done(self):
         if self.completed:
@@ -96,7 +105,7 @@ class SubProcess(object):
         if flush:
             self.output_loggers[stdtype](remainder)
             remainder = ""
-             
+
         self.output_buffers[stdtype] = remainder
 
         # 0-byte read means they closed the fd

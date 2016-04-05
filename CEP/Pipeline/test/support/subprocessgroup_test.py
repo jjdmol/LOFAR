@@ -25,11 +25,11 @@ class SubProcessGroupTest(unittest.TestCase):
         """
 
 
-    def test_output_bigger_than_pipe(self):
+    def test_alternating_output(self):
         process_group = SubProcessGroup(polling_interval=1)
 
         # print a lot of numbers
-        cmd = 'seq -s, 1 4096'
+        cmd = '%s/output_stderr_stdout.sh' % (os.path.dirname(__file__) or ".",)
         start_time = time.time()
 
         # Start it multiple times
