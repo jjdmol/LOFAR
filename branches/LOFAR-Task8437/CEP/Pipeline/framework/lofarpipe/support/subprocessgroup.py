@@ -187,8 +187,8 @@ class SubProcessGroup(object):
                     exit_status = process.exit_status
 
                     # get the exit status
-                    if  exit_status != 0:
-                        collected_exit_status.append((cmd, exit_status))
+                    if exit_status != 0:
+                        collected_exit_status.append((process.cmd, exit_status))
 
                     # Now update the state of the internal state
                     self.running_process_count -= 1
@@ -207,3 +207,4 @@ class SubProcessGroup(object):
                 collected_exit_status = None
 
             return collected_exit_status
+
