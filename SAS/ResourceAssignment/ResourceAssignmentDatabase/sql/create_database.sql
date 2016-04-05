@@ -19,6 +19,7 @@ BEGIN;
 DROP VIEW IF EXISTS virtual_instrument.resource_view CASCADE;
 DROP VIEW IF EXISTS resource_allocation.task_view CASCADE;
 DROP VIEW IF EXISTS resource_allocation.resource_claim_view CASCADE;
+DROP VIEW IF EXISTS resource_monitoring.resource_view CASCADE;
 DROP TABLE IF EXISTS resource_allocation.config CASCADE;
 DROP TABLE IF EXISTS resource_monitoring.resource_group_availability CASCADE;
 DROP TABLE IF EXISTS resource_monitoring.resource_availability CASCADE;
@@ -308,5 +309,21 @@ ALTER TABLE resource_allocation.resource_claim_property_view
   OWNER TO resourceassignment;
 COMMENT ON VIEW resource_allocation.resource_claim_property_view
   IS 'plain view on resource_claim_property table, including resource_claim_property_type.name';
+
+CREATE OR REPLACE VIEW resource_monitoring.resource_view AS
+ SELECT r.id, r.name, r.type_id,
+   rt.name AS type_name,
+   rc.id as resource_capacity_id, rc.available as available_capacity, rc.total as total_capacity,
+   u.units,
+   ra.id as resource_availibility_id, ra.available as active
+   FROM virtual_instrument.resource r
+   JOIN virtual_instrument.resource_type rt ON rt.id = r.type_id
+   JOIN virtual_instrument.unit u ON u.id = rt.unit_id
+   LEFT JOIN resource_monitoring.resource_capacity rc on rc.resource_id = r .id
+   LEFT JOIN resource_monitoring.resource_availability ra on ra.resource_id = r .id;
+ALTER TABLE resource_monitoring.resource_view
+  OWNER TO resourceassignment;
+COMMENT ON VIEW resource_monitoring.resource_view
+  IS 'view on resource table including availability, monitored values and units';
 
 COMMIT;
