@@ -17,25 +17,42 @@ class SubProcess(object):
         self.cmd       = cmd
         self.completed = False
 
+        # start process
         self.process = subprocess.Popen(
                        cmd,
                        cwd=cwd,
-                       stdin=subprocess.PIPE,
+
+                       # Set buffering parameters
+                       bufsize=1, # 1 = line buffering
+                       universal_newlines=True, # translate ^M output by ssh -tt
+
+                       # Don't inherit our fds after fork()
+                       close_fds=True,
+
+                       # I/O redirection: block stdin, read stdout/stderr separately
+                       stdin=file("/dev/null"),
                        stdout=subprocess.PIPE,
                        stderr=subprocess.PIPE)
         self.pid     = self.process.pid
         self.exit_status = None
 
+        # output source streams
+        self.output_streams = { self.STDOUT: self.process.stdout,
+                                self.STDERR: self.process.stderr }
+
+        # output buffer
         self.output_buffers = { self.STDOUT: "",
                                 self.STDERR: "" }
 
+        # output sink
         def print_logger(line):
             print line
 
         self.output_loggers = { self.STDOUT: logger.debug if logger else print_logger,
                                 self.STDERR: logger.warn  if logger else print_logger }
-        self.logger         = logger.info if logger else print_logger
 
+        # report we started
+        self.logger         = logger.info if logger else print_logger
         self.logger("Subprocess started: %s" % self.cmd)
 
     def done(self):
@@ -59,7 +76,7 @@ class SubProcess(object):
         return True
 
     def fds(self):
-        return [self.process.stdout, self.process.stderr]
+        return self.output_streams.values()
 
     def read(self, fds):
         for fd in fds:
@@ -82,6 +99,12 @@ class SubProcess(object):
              
         self.output_buffers[stdtype] = remainder
 
+        # 0-byte read means they closed the fd
+        if not output:
+            if stdtype in self.output_streams:
+                # Don't close (subprocess doesn't like that),
+                # but do registera to prevent further select()s.
+                del self.output_streams[stdtype]
 
 class SubProcessGroup(object):
         """
