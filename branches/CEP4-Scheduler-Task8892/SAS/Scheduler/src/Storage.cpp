@@ -123,7 +123,7 @@ std::vector<storageResult> Storage::addStorageToTask(Task *pTask, const storageM
             }
         }
         itsLastStorageCheckResult.clear();
-        if  (pTask->getOutputDataproductCluster() != "CEP4") { //Can we just skip this for CEP4 ? /AR
+        if  (pTask->getOutputDataproductCluster() == "CEP4") { //Can we just skip this for CEP4 ? /AR
             debugWarn("sis","Storage::addStorageToTask: Did not check storage for task:", pTask->getID(), " (CEP4 detected)");
             return itsLastStorageCheckResult;
         }
