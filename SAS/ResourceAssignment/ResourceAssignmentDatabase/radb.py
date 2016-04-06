@@ -1051,6 +1051,9 @@ class RADatabase:
         return self.validateResourceClaimsStatus(claims, commit)
 
     def validateResourceClaimsStatus(self, claims, commit=True):
+        #FIXME
+        return
+
         if not claims:
             return
 
