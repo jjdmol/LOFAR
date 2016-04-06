@@ -85,7 +85,15 @@ export LOFAR_OBSID="$OBSID"
 # Start the Python program
 echo "**** $(date) ****"
 echo "Executing: ${PROGRAM_NAME} ${OPTIONS} ${PARSET}"
-${PROGRAM_NAME} ${OPTIONS} ${PARSET}
+
+# Run and propagate SIGTERM, SIGINT
+trap 'kill -TERM $PID' TERM INT
+${PROGRAM_NAME} ${OPTIONS} ${PARSET} &
+PID=$!
+wait $PID # This will return >128 if this shell is killed
+trap - TERM INT
+wait $PID # This will return the actual exit status of our program
+
 RESULT=$?
 
 # ======= Fini
