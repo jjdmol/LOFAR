@@ -7,7 +7,7 @@ CREATE OR REPLACE FUNCTION resource_allocation.delete_resource_claims_for_approv
   RETURNS trigger AS
 $BODY$
 BEGIN
-  IF NEW.status_id = 300 THEN
+  IF NEW.status_id <> OLD.status_id AND NEW.status_id = 300 THEN
     DELETE FROM resource_allocation.resource_claim rc WHERE rc.task_id = NEW.id;
   END IF;
 RETURN NEW;
