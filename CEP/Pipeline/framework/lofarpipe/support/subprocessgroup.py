@@ -1,7 +1,8 @@
 import subprocess
 import select
-import fcntl
 import os
+import signal
+import fcntl
 import time
 from lofarpipe.support.lofarexceptions import PipelineException
 
@@ -20,6 +21,7 @@ class SubProcess(object):
             print line
 
         self.cmd       = cmd
+        self.killed    = False
         self.completed = False
         self.logger    = logger.info if logger else print_logger
 
@@ -84,6 +86,13 @@ class SubProcess(object):
 
         return True
 
+    def kill(self):
+        if self.killed:
+            return
+
+        os.signal(self.pid, signal.SIGTERM)
+        self.killed = True
+
     def fds(self):
         return self.output_streams.values()
 
@@ -126,7 +135,8 @@ class SubProcessGroup(object):
                      max_concurrent_processes = 8,  
                      # poll each 10 seconds: we have a mix of short and long 
                      # running processes
-                     polling_interval = 10):        
+                     polling_interval = 10,
+                     killSwitch = None):
             self.process_group = []
             self.logger = logger
             self.usageStats = usageStats
@@ -138,10 +148,17 @@ class SubProcessGroup(object):
             self.processes_waiting_for_execution = []
             self.polling_interval = polling_interval
 
+            self.killSwitch = killSwitch
+
         def _start_process(self, cmd, cwd):
             """
             Helper function collection all the coded needed to start a process
             """
+
+            # Do nothing if we're stopping
+            if self.killSwitch and self.killSwitch.isSet():
+                return
+
             # About to start a process, increase the counter
             self.running_process_count += 1
 
@@ -192,6 +209,11 @@ class SubProcessGroup(object):
             while self.running_process_count or self.processes_waiting_for_execution:
                 # collect all unfinished processes
                 processes = [p for p in self.process_group if not p.completed]
+
+                # check whether we're stopping
+                if self.killSwitch and self.killSwitch.isSet():
+                    for process in processes:
+                        process.kill()
 
                 # collect fds we need to poll
                 fds = []
