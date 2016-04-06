@@ -266,7 +266,7 @@ class ResourceAssigner():
                 if db_cep4_resources_for_type:
                     claim = {'resource_id':db_cep4_resources_for_type[0]['id'],
                             'starttime':task['starttime'],
-                            'endtime':task['endtime'] + datetime.timedelta(days=31),
+                            'endtime':task['endtime'] + timedelta(days=31),
                             'status':'claimed',
                             'claim_size':needed_claim_value}
 
