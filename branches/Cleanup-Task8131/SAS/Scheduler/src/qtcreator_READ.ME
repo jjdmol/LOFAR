@@ -1,0 +1,43 @@
+The qtcreator GUI design tool can be used to edit, run, and debug the Scheduler. To do so, follow these steps:
+
+-----------------
+Build in qtcreator
+-----------------
+
+0) Go to the SAS/Scheduler/src source directory
+
+1) Run `qtcreator'
+
+2) Open the menu:
+	File -> Open File or Project...
+
+3) Select
+	'CMakeLists.txt', 
+   click
+	'Open'.
+
+4) Set the build directory to (remove the full path)
+	'gnu_debug' or 'gnu_opt',
+   click
+	'Next >'
+
+5) CMake arguments:
+	../../../.. -DBUILD_PACKAGES=Scheduler
+6) Click 'Run CMake', and scan the output for errors
+7) Click 'Finish'
+
+Note that the build will be running in the src/gnu_{debug,opt}/SAS/Scheduler/src directory.
+
+-----------------
+First run
+-----------------
+
+The Scheduler needs to have the .default_settings.set available in the running directory.
+To make it available, simply symlink it from the source directory. In SAS/Scheduler/src, run:
+
+   ln -sf `pwd`/.default_settings.set gnu_*/SAS/Scheduler/src/
+
+(Note that gnu_* will match either gnu_debug or gnu_opt).
+
+Enjoy!
+
