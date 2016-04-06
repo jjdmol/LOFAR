@@ -185,7 +185,7 @@ def run_via_custom_cmdline(logger, host, command, environment, arguments, config
       command      = commandStr,
       job_name     = jobname(command),
       nr_cores     = resources.get("cores", 1),
-    ).split(' ')
+    ).split()
 
     logger.debug("Dispatching command to %s with custom_cmdline: %s" % (host, full_command_line))
     return full_command_line
