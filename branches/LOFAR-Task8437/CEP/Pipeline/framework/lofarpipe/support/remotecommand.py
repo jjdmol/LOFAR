@@ -275,7 +275,7 @@ class ComputeJob(object):
             # Run and wait for process to finish.
             pg = SubProcessGroup(logger=logger, killSwitch=killswitch)
             pg.run(cmdarray)
-            pg.wait_for_finish()
+            job_successful = (pg.wait_for_finish() is None)
 
         except Exception, e:
             logger.exception("Failed to run remote process %s (%s)" % (self.command, str(e)))
@@ -285,10 +285,10 @@ class ComputeJob(object):
         finally:
             limiter[self.host].release()
 
-        if process.returncode != 0:
+        if not job_successful:
             logger.error(
-                "Remote process %s %s failed on %s (status: %d)" % \
-                (self.command, self.arguments, self.host, process.returncode)
+                "Remote process %s %s failed on %s" % \
+                (self.command, self.arguments, self.host)
             )
             error.set()
 
@@ -296,13 +296,13 @@ class ComputeJob(object):
         # add the duration of
         time_info_end = time.time()
         self.results["job_duration"] = str(time_info_end - time_info_start)
-        self.results['returncode'] = process.returncode
+        self.results['returncode'] = 0 if job_successful else 1
 
         logger.debug(
             "compute.dispatch results job {0}: {1}: {2}, {3}: {4} ".format(
               self.id, "job_duration", self.results["job_duration"],
                      "returncode", self.results["returncode"] ))
-        return process.returncode
+        return self.results["returncode"]
 
 
 def threadwatcher(threadpool, logger, killswitch):
