@@ -26,7 +26,7 @@ class SubProcess(object):
         self.logger    = logger.info if logger else print_logger
 
         # report we are starting
-        self.logger("Subprocess starting: %s (%s)" % (" ".join(self.cmd), self.cmd)
+        self.logger("Subprocess starting: %s (%s)" % (" ".join(self.cmd), self.cmd))
 
         # start process
         self.process = subprocess.Popen(
