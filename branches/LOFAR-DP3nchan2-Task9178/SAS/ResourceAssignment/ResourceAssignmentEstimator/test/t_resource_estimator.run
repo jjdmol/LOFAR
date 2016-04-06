@@ -1,0 +1,4 @@
+#!/bin/bash
+
+source python-coverage.sh
+python_coverage_test "ResourceAssignmentEstimator*" t_resource_estimator.py

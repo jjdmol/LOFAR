@@ -1,0 +1,250 @@
+V 11
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 284 128 N "_3DFace" 1
+"$CabinetNr"
+"main()
+{
+  baseDP = g_currentDatapoint;
+ 
+  if (!isCabinet()) {
+    cNr = $CabinetNr;
+  }
+   
+  if (strpos(g_currentDatapoint,\"_Cabinet\") > -1){
+    baseDP += \"_UniBoard\";         
+  } else {
+    baseDP += \"_Cabinet\" + cNr + \"_UniBoard\";         
+  }
+
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
+  if (dpExists(baseDP) && navFunct_hasAARTFAAC(sysName) ){
+    // connect for childUpdates
+    showChildState(baseDP);
+    // connect for selfUpdates
+    showSelfState(baseDP);
+  } else {
+    uniBoard_highLight.visible(false);
+    setValue(\"selfState.light\",\"visible\",false);
+    childStateBorder.visible(false);
+    uniTxt.visible(false);
+  }   
+}" 0
+ E "main()
+{
+  click();
+  
+}" 0
+ "main()
+{
+  rClick();
+  
+}" 0
+ "main()
+{
+  dblClick();
+  
+}" 0
+ 1 -1 -1 0  20 60
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string     baseDP          = \"\";
+int        cNr             = \"\";
+bool       bDoubleClicked  = false;
+
+bool isCabinet() {
+  dyn_string dpAr= strsplit(dpSubStr(baseDP,DPSUB_DP),\"_\");
+  for (int i = 1; i <= dynlen(dpAr);i++ ) {
+    if (strpos(dpAr[i],\"Cabinet\") > -1) {
+      cNr = substr(dpAr[i],7,strlen(dpAr[i]));
+      return true;
+    }
+  }
+  return false;
+}
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"UniBoard\",\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"AARTFAAC-UNIBoard_small:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(\"UniBoard\",\"ChangePanel\"); 
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"UniBoard\",\"EventRightClick\");
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 5
+"uniBoard_highLight"
+""
+1 200 20 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+  
+}" 0
+ "main()
+{
+  dblClick();
+  
+}" 0
+
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  if (navFunct_hasAARTFAAC(sysName)) {
+    dpConnect( \"UniCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+  }
+}
+
+void UniCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"AARTFAAC-UNIBoard_small:UriCallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"AARTFAAC-UNIBoard_small:UriCallback|Found highlight : \" + highlight + \" Looking for: UniBoard\");
+  bool bHighlight=false;
+  if (dynContains(highlight,\"UniBoard\")) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"AARTFAAC-UNIBoard_small:UriCallback|Highlight request: \"+bHighlight);
+  uniBoard_highLight.visible = bHighlight;  
+}" 0
+ "main()
+{
+  click();
+  
+}" 0
+ 0 1 1 2 1 E U  1 E 15 15 148 94
+6 0
+"childStateBorder"
+""
+1 20 60 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ "main()
+{
+  rClick();
+  
+}" 0
+ "main()
+{
+  dblClick();
+  
+}" 0
+
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+  
+}" 0
+ 0 2 1 0 1 E U  1 E 20 20 143 89
+2 3
+"uniTxt"
+""
+1 48 58 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+  
+}" 0
+ "main()
+{
+  dblClick();
+  
+}" 0
+
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+  
+}" 0
+ 0 1 1 0 1 E U  0 E 50 60 110 76
+0 2 0 "0s" 0 0 0 192 0 0  50 60 1
+1
+LANG:1 26 Arial,10,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 UNIBoard
+1 6 0 "" 1
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 "selfState" -1
+"objects\\lofar_self_state.pnl" 12 32 T 7 1 0 1 11 -7
+0
+0
