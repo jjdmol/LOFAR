@@ -389,6 +389,12 @@ def TaskPrepareForScheduling(input_dict, db_connection):
             delete_old_task = True
         except QUERY_EXCEPTIONS, exc_info:
             raise FunctionError("TaskPrepareForScheduling: failed for task {}: {}".format(otdb_id, exc_info))
+        # make sure the tree is in the right state
+        if task_state != state_names['approved']:
+            try:
+                db_connection.query("select setTreeState(1,{},{}::INT2,True)".format(task_id, state_names['approved']))
+            except QUERY_EXCEPTIONS, exc_info:
+                raise FunctionError("Error while setting task {} to 'approved': {}".format(task_id, exc_info))
 
     # Get list of defines tree states
     state_names = {}
@@ -399,13 +405,6 @@ def TaskPrepareForScheduling(input_dict, db_connection):
             state_nrs[nr]     = name
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("Error while getting list of task states for tree {}: {}".format(otdb_id, exc_info))
-
-    # make sure the tree is in the right state
-    if task_state != state_names['approved']:
-        try:
-            db_connection.query("select setTreeState(1,{},{}::INT2,True)".format(task_id, state_names['approved']))
-        except QUERY_EXCEPTIONS, exc_info:
-            raise FunctionError("Error while setting task {} to 'approved': {}".format(task_id, exc_info))
 
     if delete_old_task:
         TaskDelete({'OtdbID':otdb_id}, db_connection)
