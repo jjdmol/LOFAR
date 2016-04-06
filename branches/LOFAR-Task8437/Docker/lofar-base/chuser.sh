@@ -21,7 +21,10 @@ if [ -n "${LUSER}" ]; then
   chown --from=${OLDID} -R ${LUSER}:${LGROUP} /opt
 fi
 
-# Switch to the updated user
+# Update environment for updated user
 export HOME=/home/${USER}
 touch -a $HOME/.bashrc
-sudo -u ${USER} -E -s /bin/bash -c "source $HOME/.bashrc;$*"
+source $HOME/.bashrc
+
+# Use exec to make sure we propagate signals
+exec sudo -u ${USER} -E "$@"
