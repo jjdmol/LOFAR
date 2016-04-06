@@ -23,8 +23,10 @@ fi
 
 # Update environment for updated user
 export HOME=/home/${USER}
-touch -a $HOME/.bashrc
-source $HOME/.bashrc
+
+# Import bashrc for software in /opt
+source /opt/bashrc
 
 # Use exec to make sure we propagate signals
-exec sudo -u ${USER} -E "$@"
+# `env' is needed to propagate PATH variables through sudo.
+exec sudo -u ${USER} -E env "PATH=$PATH" "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" "PYTHONPATH=$PYTHONPATH" "$@"

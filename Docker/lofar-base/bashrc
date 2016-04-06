@@ -2,6 +2,7 @@
 
 # lofar
 [ -r ${INSTALLDIR}/lofar/lofarinit.sh ] && source ${INSTALLDIR}/lofar/lofarinit.sh
+export PATH PYTHONPATH LD_LIBRARY_PATH LOFARROOT
 
 # qpid
 source ${INSTALLDIR}/qpid/.profile
