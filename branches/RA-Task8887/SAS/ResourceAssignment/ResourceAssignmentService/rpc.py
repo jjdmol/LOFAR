@@ -36,8 +36,9 @@ class RARPC(RPCWrapper):
     def insertResourceClaimProperty(self, claim_id, property_type, value):
         return self.rpc('InsertResourceClaimProperty', claim_id=claim_id, property_type=property_type, value=value)
 
-    def getResourceClaims(self, lower_bound=None, upper_bound=None, task_id=None, status=None, resource_type=None, extended=False, include_properties=False):
-        claims = self.rpc('GetResourceClaims', lower_bound=lower_bound,
+    def getResourceClaims(self, claim_ids=None, lower_bound=None, upper_bound=None, task_id=None, status=None, resource_type=None, extended=False, include_properties=False):
+        claims = self.rpc('GetResourceClaims', claim_ids=claim_ids,
+                                               lower_bound=lower_bound,
                                                upper_bound=upper_bound,
                                                task_id=task_id,
                                                status=status,
@@ -100,6 +101,20 @@ class RARPC(RPCWrapper):
                                                         session_id=session_id,
                                                         username=username,
                                                         user_id=user_id)
+
+    def getResourceUsages(self, lower_bound=None, upper_bound=None, resource_ids=None, task_ids=None, status=None, resource_type=None):
+        usageDict = self.rpc('GetResourceUsages', lower_bound=lower_bound,
+                                                  upper_bound=upper_bound,
+                                                  resource_ids=resource_ids,
+                                                  task_ids=task_ids,
+                                                  status=status,
+                                                  resource_type=resource_type)
+
+        for resource_id, usages in usageDict.items():
+            for usage in usages:
+                usage['timestamp'] = usage['timestamp'].datetime()
+
+        return usageDict
 
     def getResourceGroupTypes(self):
         return self.rpc('GetResourceGroupTypes')
