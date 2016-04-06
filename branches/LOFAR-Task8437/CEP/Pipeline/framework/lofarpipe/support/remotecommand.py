@@ -17,7 +17,7 @@ import time
 import xml.dom.minidom as xml
 
 from lofarpipe.support.pipelinelogging import log_process_output
-from lofarpipe.support.utilities import spawn_process
+from lofarpipe.support.subprocess import spawn_process
 from lofarpipe.support.lofarexceptions import PipelineQuit
 from lofarpipe.support.jobserver import job_server
 import lofarpipe.support.lofaringredient as ingredient
@@ -27,39 +27,6 @@ from lofarpipe.support.xmllogging import add_child
 # frame. When multiplexing lots of threads, that will cause memory issues.
 threading.stack_size(1048576)
 
-class ParamikoWrapper(object):
-    """
-    Sends an SSH command to a host using paramiko, then emulates a Popen-like
-    interface so that we can pass it back to pipeline recipes.
-    """
-    def __init__(self, paramiko_client, command):
-        self.returncode = None
-        self.client = paramiko_client
-        self.chan = paramiko_client.get_transport().open_session()
-        self.chan.get_pty()
-        self.chan.exec_command(command)
-        self.stdout = self.chan.makefile('rb', -1)
-        self.stderr = self.chan.makefile_stderr('rb', -1)
-
-    def communicate(self):
-        if not self.returncode:
-            self.returncode = self.chan.recv_exit_status()
-        stdout = "\n".join(line.strip() for line in self.stdout.readlines()) + "\n"
-        stderr = "\n".join(line.strip() for line in self.stdout.readlines()) + "\n"
-        return stdout, stderr
-
-    def poll(self):
-        if not self.returncode and self.chan.exit_status_ready():
-            self.returncode = self.chan.recv_exit_status()
-        return self.returncode
-
-    def wait(self):
-        if not self.returncode:
-            self.returncode = self.chan.recv_exit_status()
-        return self.returncode
-
-    def kill(self):
-        self.chan.close()
 
 def run_remote_command(config, logger, host, command, env, arguments = None, resources = {}):
     """
@@ -80,13 +47,7 @@ def run_remote_command(config, logger, host, command, env, arguments = None, res
 
     logger.info("********************** Remote method is %s" % method)
 
-    if method == "paramiko":
-        try:
-            key_filename = config.get('remote', 'key_filename')
-        except:
-            key_filename = None
-        return run_via_paramiko(logger, host, command, env, arguments, key_filename)
-    elif method == "mpirun":
+    if method == "mpirun":
         return run_via_mpirun(logger, host, command, env, arguments)
     elif method == "local":
         return run_via_local(logger, command, arguments)
@@ -248,22 +209,6 @@ def run_via_custom_cmdline(logger, host, command, environment, arguments, config
     process = spawn_process(full_command_line, logger)
     process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
     return process
-
-def run_via_paramiko(logger, host, command, environment, arguments, key_filename):
-    """
-    Dispatch a remote command via paramiko.
-
-    We return an instance of ParamikoWrapper.
-    """
-    logger.debug("Dispatching command to %s with paramiko" % host)
-    import paramiko
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(host, key_filename = key_filename)
-    commandstring = ["%s=%s" % (key, value) for key, value in environment.items()]
-    commandstring.append(command)
-    commandstring.extend(re.escape(str(arg)) for arg in arguments)
-    return ParamikoWrapper(client, " ".join(commandstring))
 
 class ProcessLimiter(defaultdict):
     """
