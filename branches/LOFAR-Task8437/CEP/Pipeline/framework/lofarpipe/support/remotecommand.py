@@ -196,7 +196,9 @@ def run_via_custom_cmdline(logger, host, command, environment, arguments, config
     with the following strings replaced:
 
       {host}         := host to execute command on
-      {command}      := bash command line to be executed
+      {env}          := "A=B C=D" string, the environment to set
+      {docker_env}   := "-e A=B -e C=D" string, the environment to set
+      {command}      := command to be executed
       {uid}          := uid of the calling user
 
       {slurm_job_id} := the SLURM job id to allocate resources in
@@ -205,9 +207,17 @@ def run_via_custom_cmdline(logger, host, command, environment, arguments, config
       {nr_cores}     := number of cores to allocate for this job
 
     """
-    commandArray = ["%s=%s" % (key, value) for key, value in environment.items()]
-    commandArray.append(command)
-    commandArray.extend(re.escape(str(arg)) for arg in arguments)
+
+    # construct {env}
+    envPairs = ["%s=%s" % (key, value) for key, value in environment.items()]
+    envStr        = " ".join(envPairs)
+
+    # construct {docker-env}
+    dockerEnvPairs = ["-e %s=%s" % (key, value) for key, value in environment.items()]
+    dockerEnvStr   = " ".join(dockerEnvPairs)
+
+    # construct {command}
+    commandArray = [command] + [re.escape(str(arg)) for arg in arguments]
     commandStr = " ".join(commandArray)
 
     # Determine job name
@@ -219,19 +229,19 @@ def run_via_custom_cmdline(logger, host, command, environment, arguments, config
 
       return args[1] if args[0] == "python" else args[0]
 
-    # Construct the full command line, except for {command}, as that itself
-    # can contain spaces which we don't want to split on.
+    # Construct the full command line
     full_command_line = config.get('remote', 'cmdline').format(
       uid          = os.geteuid(),
       slurm_job_id = os.environ.get("SLURM_JOB_ID"),
       host         = host,
-      command      = "{command}",
+
+      env          = envStr,
+      docker_env   = dockerEnvStr,
+
+      command      = commandStr,
       job_name     = jobname(command),
       nr_cores     = resources.get("cores", 1),
     ).split(' ')
-
-    # Fill in {command} somewhere
-    full_command_line = [x.format(command = commandStr) for x in full_command_line]
 
     logger.debug("Dispatching command to %s with custom_cmdline: %s" % (host, full_command_line))
 
