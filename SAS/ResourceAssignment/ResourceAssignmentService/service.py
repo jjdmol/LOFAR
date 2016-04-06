@@ -49,6 +49,7 @@ class RADBHandler(MessageHandlerInterface):
             'DeleteResourceClaim': self._deleteResourceClaim,
             'UpdateResourceClaim': self._updateResourceClaim,
             'UpdateTaskAndResourceClaims': self._updateTaskAndResourceClaims,
+            'GetResourceUsages': self._getResourceUsages,
             'GetResourceGroupTypes': self._getResourceGroupTypes,
             'GetResourceGroups': self._getResourceGroups,
             'GetResourceGroupMemberships': self._getResourceGroupMemberships,
@@ -94,9 +95,11 @@ class RADBHandler(MessageHandlerInterface):
         return {'id':id}
 
     def _getResourceClaims(self, **kwargs):
-        return self.radb.getResourceClaims(lower_bound=kwargs.get('lower_bound'),
+        return self.radb.getResourceClaims(claim_ids=kwargs.get('claim_ids'),
+                                           lower_bound=kwargs.get('lower_bound'),
                                            upper_bound=kwargs.get('upper_bound'),
-                                           task_ids=kwargs.get('task_id'),
+                                           resource_ids=kwargs.get('resource_ids'),
+                                           task_ids=kwargs.get('task_ids'),
                                            status=kwargs.get('status'),
                                            resource_type=kwargs.get('resource_type'),
                                            extended=kwargs.get('extended', False),
@@ -176,6 +179,16 @@ class RADBHandler(MessageHandlerInterface):
                                                         username=kwargs.get('username'),
                                                         user_id=kwargs.get('user_id'))
         return {'task_id': task_id, 'updated': updated}
+
+    def _getResourceUsages(self, **kwargs):
+        usageDict = self.radb.getResourceUsages(lower_bound=kwargs.get('lower_bound'),
+                                                upper_bound=kwargs.get('upper_bound'),
+                                                resource_ids=kwargs.get('resource_ids'),
+                                                task_ids=kwargs.get('task_ids'),
+                                                status=kwargs.get('status'),
+                                                resource_type=kwargs.get('resource_type'))
+        usageDict = convertIntKeysToString(usageDict)
+        return usageDict
 
     def _getResourceGroupTypes(self):
         return self.radb.getResourceGroupTypes()

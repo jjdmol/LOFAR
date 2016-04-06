@@ -127,6 +127,25 @@ def resourceclaims():
     claims = rarpc.getResourceClaims(include_properties=True)
     return jsonify({'resourceclaims': claims})
 
+@app.route('/rest/resourceusages')
+@gzipped
+def resourceUsages():
+    result = rarpc.getResourceUsages()
+    return jsonify({'resourceusages': result})
+
+@app.route('/rest/resources/<int:resource_id>/usages', methods=['GET'])
+@app.route('/rest/resourceusages/<int:resource_id>', methods=['GET'])
+@gzipped
+def resourceUsagesForResource(resource_id):
+    result = rarpc.getResourceUsages(resource_ids=[resource_id])
+    return jsonify({'resourceusages': result})
+
+@app.route('/rest/tasks/<int:task_id>/resourceusages', methods=['GET'])
+@gzipped
+def resourceUsagesForTask(task_id):
+    result = rarpc.getResourceUsages(task_ids=[task_id])
+    return jsonify({'resourceusages': result})
+
 @app.route('/rest/tasks')
 @gzipped
 def getTasks():

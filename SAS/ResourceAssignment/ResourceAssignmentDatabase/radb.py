@@ -1142,6 +1142,40 @@ class RADatabase:
 
         return {'inserted': False, 'specification_id': None, 'task_id': None}
 
+    def getResourceUsages(self, claim_ids=None, lower_bound=None, upper_bound=None, resource_ids=None, task_ids=None, status=None, resource_type=None):
+        claims = self.getResourceClaims(claim_ids=claim_ids, lower_bound=lower_bound, upper_bound=upper_bound, resource_ids=resource_ids, task_ids=task_ids, status=status, resource_type=resource_type)
+
+        #gather start/end events per resource
+        eventsDict = {}
+        for claim in claims:
+            event_start = { 'timestamp': claim['starttime'], 'delta': claim['claim_size'] }
+            event_end = { 'timestamp': claim['endtime'], 'delta': -claim['claim_size'] }
+
+            resource_id = claim['resource_id']
+            if not resource_id in eventsDict:
+                eventsDict[resource_id] = []
+            eventsDict[resource_id].append(event_start)
+            eventsDict[resource_id].append(event_end)
+
+        # sort events per resource by event timestamp ascending
+        # and integrate event delta's into usage
+        usagesDict = {}
+        for resource_id, events in eventsDict.items():
+            events = sorted(events, key=lambda event: event['timestamp'])
+            if events:
+                usage = { 'timestamp': events[0]['timestamp'], 'usage': events[0]['delta'] }
+                prev_usage = usage
+                usages = [usage]
+
+                for event in events[1:]:
+                    usage = { 'timestamp': event['timestamp'], 'usage': prev_usage['usage'] + event['delta'] }
+                    usages.append(usage)
+                    prev_usage = usage
+
+            usagesDict[resource_id] = usages
+
+        return usagesDict
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
@@ -1162,16 +1196,6 @@ if __name__ == '__main__':
         print '\n-- ' + str(method.__name__) + ' --'
         print '\n'.join([str(x) for x in method()])
 
-    print db.getResources()
-    print
-
-    print db.getResources('storage')
-    print
-
-    print db.getResources(['storage', 'processor'], False)
-    print
-
-    exit()
 
     #print db.getResourceClaims(task_id=440)
     #print
@@ -1220,49 +1244,49 @@ if __name__ == '__main__':
 
     resources = db.getResources()
 
-    task_id = db.insertSpecificationAndTask(1234, 5678, 600, 0, datetime.utcnow(), datetime.utcnow() + timedelta(hours=1), "", False)['task_id']
-    task = db.getTask(task_id)
+    #task_id = db.insertSpecificationAndTask(1234, 5678, 600, 0, datetime.utcnow(), datetime.utcnow() + timedelta(hours=1), "", False)['task_id']
+    #task = db.getTask(task_id)
 
-    claim = {'resource_id':resources[0]['id'],
-            'starttime':task['starttime'],
-            'endtime':task['endtime'],
-            'status':'claimed',
-            'claim_size':1}
-    db.insertResourceClaims(task_id, [claim], 1, 'anonymous', -1, False)
+    #claim = {'resource_id':resources[0]['id'],
+            #'starttime':task['starttime'],
+            #'endtime':task['endtime'],
+            #'status':'claimed',
+            #'claim_size':1}
+    #db.insertResourceClaims(task_id, [claim], 1, 'anonymous', -1, False)
 
-    claim = {'resource_id':resources[1]['id'],
-            'starttime':task['starttime'],
-            'endtime':task['endtime'],
-            'status':'claimed',
-            'claim_size':1,
-            'properties':[{'type':'nr_of_is_files', 'value':10},{'type':'nr_of_cs_files', 'value':20}]}
-    db.insertResourceClaims(task_id, [claim], 1, 'anonymous', -1, False)
+    #claim = {'resource_id':resources[1]['id'],
+            #'starttime':task['starttime'],
+            #'endtime':task['endtime'],
+            #'status':'claimed',
+            #'claim_size':1,
+            #'properties':[{'type':'nr_of_is_files', 'value':10},{'type':'nr_of_cs_files', 'value':20}]}
+    #db.insertResourceClaims(task_id, [claim], 1, 'anonymous', -1, False)
 
-    claim = {'resource_id':resources[2]['id'],
-            'starttime':task['starttime'],
-            'endtime':task['endtime'],
-            'status':'claimed',
-            'claim_size':1,
-            'properties':[{'type':'nr_of_is_files', 'value':10, 'sap_nr':0 },
-                          {'type':'nr_of_cs_files', 'value':20, 'sap_nr':0},
-                          {'type':'nr_of_uv_files', 'value':30, 'sap_nr':1},]}
-    db.insertResourceClaims(task_id, [claim], 1, 'anonymous', -1, False)
+    #claim = {'resource_id':resources[2]['id'],
+            #'starttime':task['starttime'],
+            #'endtime':task['endtime'],
+            #'status':'claimed',
+            #'claim_size':1,
+            #'properties':[{'type':'nr_of_is_files', 'value':10, 'sap_nr':0 },
+                          #{'type':'nr_of_cs_files', 'value':20, 'sap_nr':0},
+                          #{'type':'nr_of_uv_files', 'value':30, 'sap_nr':1},]}
+    #db.insertResourceClaims(task_id, [claim], 1, 'anonymous', -1, False)
 
-    claim = {'resource_id':resources[3]['id'],
-            'starttime':task['starttime'],
-            'endtime':task['endtime'],
-            'status':'claimed',
-            'claim_size':1,
-            'properties':[{'type':'nr_of_is_files', 'value':15 },
-                          {'type':'nr_of_cs_files', 'value':25 },
-                          {'type':'nr_of_is_files', 'value':10, 'sap_nr':0 },
-                          {'type':'nr_of_cs_files', 'value':20, 'sap_nr':0},
-                          {'type':'nr_of_uv_files', 'value':30, 'sap_nr':1},]}
-    db.insertResourceClaims(task_id, [claim], 1, 'anonymous', -1, False)
+    #claim = {'resource_id':resources[3]['id'],
+            #'starttime':task['starttime'],
+            #'endtime':task['endtime'],
+            #'status':'claimed',
+            #'claim_size':1,
+            #'properties':[{'type':'nr_of_is_files', 'value':15 },
+                          #{'type':'nr_of_cs_files', 'value':25 },
+                          #{'type':'nr_of_is_files', 'value':10, 'sap_nr':0 },
+                          #{'type':'nr_of_cs_files', 'value':20, 'sap_nr':0},
+                          #{'type':'nr_of_uv_files', 'value':30, 'sap_nr':1},]}
+    #db.insertResourceClaims(task_id, [claim], 1, 'anonymous', -1, False)
 
-    db.commit()
-    import pprint
-    pprint.pprint(db.getResourceClaims(include_properties=True))
+    #db.commit()
+    #import pprint
+    #pprint.pprint(db.getResourceClaims(include_properties=True))
     #print '\n'.join(str(x) for x in db.getResourceClaims(include_properties=True))
 
 
@@ -1279,36 +1303,39 @@ if __name__ == '__main__':
     #for s in db.getSpecifications():
         #db.deleteSpecification(s['id'])
 
-    #from lofar.common.datetimeutils import totalSeconds
-    #begin = datetime.utcnow()
-    #for i in range(50):
-        #stepbegin = datetime.utcnow()
-        #result = db.insertSpecificationAndTask(1234+i, 5678+i, 600, 0, datetime.utcnow() + timedelta(hours=1.25*i*0), datetime.utcnow() + timedelta(hours=1.25*i+1), "", False)
+    from lofar.common.datetimeutils import totalSeconds
+    begin = datetime.utcnow()
+    for i in range(5):
+        stepbegin = datetime.utcnow()
+        result = db.insertSpecificationAndTask(1234+i, 5678+i, 600, 0, datetime.utcnow() + timedelta(hours=1.25*i), datetime.utcnow() + timedelta(hours=1.25*i+1), "", False)
 
-        ##resultPrint(db.getSpecifications)
-        ##resultPrint(db.getTasks)
+        #resultPrint(db.getSpecifications)
+        #resultPrint(db.getTasks)
 
-        #task = db.getTask(result['task_id'])
+        task = db.getTask(result['task_id'])
 
-        #claims = [{'resource_id':r['id'],
-                #'starttime':task['starttime'],
-                #'endtime':task['endtime'],
-                #'status':'claimed',
-                #'claim_size':1} for r in resources[:]]
+        claims = [{'resource_id':r['id'],
+                'starttime':task['starttime'],
+                'endtime':task['endtime'],
+                'status':'claimed',
+                'claim_size':1} for r in resources[:]]
 
-        #for c in claims[:]:
-            #c['properties'] = [{'type':0, 'value':10}, {'type':1, 'value':20}, {'type':2, 'value':30}]
+        for c in claims[:]:
+            c['properties'] = [{'type':0, 'value':10}, {'type':1, 'value':20}, {'type':2, 'value':30}]
 
-        #for i, c in enumerate(claims[:4]):
-            #c['properties'][0]['sap_nr'] = i % 2
+        for i, c in enumerate(claims[:4]):
+            c['properties'][0]['sap_nr'] = i % 2
 
-        #db.insertResourceClaims(task['id'], claims, 1, 'paulus', 1, False)
+        db.insertResourceClaims(task['id'], claims, 1, 'paulus', 1, False)
 
-        ##resultPrint(db.getResourceClaims)
-        ##raw_input()
-        #db.commit()
-        #now = datetime.utcnow()
-        #print totalSeconds(now - begin), totalSeconds(now - stepbegin)
+        #resultPrint(db.getResourceClaims)
+        #raw_input()
+        db.commit()
+        now = datetime.utcnow()
+        print totalSeconds(now - begin), totalSeconds(now - stepbegin)
+
+    import pprint
+    pprint.pprint(db.getResourceUsages(resource_type='storage'))
 
     #resultPrint(db.getResourceClaims)
     #resultPrint(db.getResourceClaimPropertyTypes)
