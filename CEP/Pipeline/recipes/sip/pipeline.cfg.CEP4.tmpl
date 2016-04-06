@@ -67,4 +67,4 @@ globalfs = yes
 #                            /bin/bash -c
 #
 #                            Required because the pipeline framework needs some bash functionality in the commands it starts.
-cmdline = ssh -n -tt -x localhost srun --exclusive --ntasks=1 --cpus-per-task={nr_cores} --jobid={slurm_job_id} --job-name={job_name} docker run --rm -e LUSER={uid} -v /data:/data --net=host lofar-pipeline:${LOFAR_TAG} /bin/bash -c "\"{command}\""
+cmdline = ssh -n -tt -x localhost srun --exclusive --ntasks=1 --cpus-per-task={nr_cores} --jobid={slurm_job_id} --job-name={job_name} docker run --rm -e LUSER={uid} -v /data:/data --net=host lofar-pipeline:${LOFAR_TAG} {docker-env} {command}
