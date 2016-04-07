@@ -208,16 +208,16 @@ class RATaskSpecified(OTDBBusListener):
 
         # Key contains values starting with 'S' = Scheduler, 'L'/'T' = OTDB, 'M' = MoM
         # 'S' we can probably ignore? Might be only internal in the Scheduler?
-        result = set()
+        result = []
         for s in stringlist:
             try: # Made the source a string for readability, but it's not efficient
                 if s.startswith('M'):
-                    result.add({'source': 'mom', 'id': int(s[1:])})
+                    result.append({'source': 'mom', 'id': int(s[1:])})
                 elif s.startswith('L') or s.startswith('T'):
-                    result.add({'source': 'otdb', 'id': int(s[1:])})
+                    result.append({'source': 'otdb', 'id': int(s[1:])})
                 else: # 'S'
                     logger.info("found a predecessor ID I can't handle: %s" % s)
-                    result.add({'source': 'other', 'id': int(s[1:])})
+                    result.append({'source': 'other', 'id': int(s[1:])})
             except ValueError:
                 logger.warning("found a predecessor ID that I can't parse %s" % s)
         return result
