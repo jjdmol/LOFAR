@@ -15,6 +15,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
     self.resourceGroupsDict = {};
     self.resourceGroupMemberships = {};
     self.resourceClaimDict = {};
+    self.resourceUsagesDict = {};
     self.tasktypesDict = {};
 
     self.momProjects = [];
@@ -24,6 +25,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
     self.filteredTasks = [];
     self.filteredTaskDict = {};
+
+    self.selected_resource;
 
     self.initialLoadComplete = false;
 
@@ -75,6 +78,30 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         $http.get('/rest/resources').success(function(result) {
             self.resources = result.resources;
             self.resourceDict = self.toIdBasedDict(self.resources);
+
+            self.selected_resource = self.resources[0];
+
+            defer.resolve();
+        });
+
+        return defer.promise;
+    };
+
+    self.getResourceUsages = function() {
+        var defer = $q.defer();
+        $http.get('/rest/resourceusages').success(function(result) {
+            //convert datetime strings to Date objects
+            for(var i = result.resourceusages.length-1; i >=0; i--) {
+                var resource_usages = result.resourceusages[i].usages;
+
+                for(var status in resource_usages) {
+                    var usages = resource_usages[status];
+                    for(var usage of usages) {
+                        usage.timestamp = new Date(usage.timestamp);
+                    }
+                }
+                self.resourceUsagesDict[result.resourceusages[i].resource_id] = resource_usages;
+            }
 
             defer.resolve();
         });
@@ -224,6 +251,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             self.getResourceGroupMemberships().then(checkInitialLoadCompleteness);
             self.getResourceClaims().then(checkInitialLoadCompleteness);
 
+            self.getResourceUsages();
+
             self.subscribeToUpdates();
         });
     };
@@ -239,6 +268,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                 var changeNumbers = result.changes.map(function(item) { return item.changeNumber; });
                 self.lastUpdateChangeNumber = changeNumbers.reduce(function(a, b, idx, arr) { return a > b ? a : b; }, undefined);
 
+                var anyResourceClaims = false;
                 for(var i = result.changes.length-1; i >=0; i--) {
                     try {
                         var change = result.changes[i];
@@ -273,6 +303,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                                 }
                             }
                         } else if(change.objectType == 'resourceClaim') {
+                            anyResourceClaims = true;
                             var changedClaim = change.value;
                             if(change.changeType == 'update') {
                                 var claim = self.resourceClaimDict[changedClaim.id];
@@ -301,6 +332,9 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                     } catch(err) {
                         console.log(err)
                     }
+                }
+                if(anyResourceClaims) {
+                    self.getResourceUsages();
                 }
             } catch(err) {
                 console.log(err)

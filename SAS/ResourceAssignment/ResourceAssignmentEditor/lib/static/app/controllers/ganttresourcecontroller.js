@@ -23,19 +23,10 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
     $scope.dataService = dataService;
     $scope.ganttData = []
 
-    self.taskStatusColors = {'prepared':'#aaff00',
-                             'approved':'#ffaa00',
-                             'on_hold':'#ff0000',
-                             'conflict':'#ffccaa',
-                             'prescheduled': '#6666ff',
-                             'scheduled': '#ff66ff',
-                             'queued': '#bb6644',
-                             'active': '#77ff77',
-                             'completing': '#776688',
-                             'finished': '#66ff33',
-                             'aborted': '#ff3366',
-                             'error': '#ff4488',
-                             'obsolete': '#555555'}
+    self.resourceClaimStatusColors = {'claimed':'#ffa64d',
+                                      'conflict':'#ff0000',
+                                      'allocated': '#66ff66',
+                                      'mixed': '#bfbfbf'}
 
     $scope.options = {
         mode: 'custom',
@@ -54,8 +45,21 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
             api.core.on.ready($scope, function () {
                     api.tasks.on.moveEnd($scope, moveHandler);
                     api.tasks.on.resizeEnd($scope, moveHandler);
+            });
+
+            api.directives.on.new($scope, function(directiveName, directiveScope, element) {
+                if (directiveName === 'ganttRow') {
+                    element.bind('click', function(event) {
+                        $scope.dataService.selected_resource = directiveScope.row.model.resource;
+                    });
                 }
-            );
+            });
+
+            api.directives.on.destroy($scope, function(directiveName, directiveScope, element) {
+                if (directiveName === 'ganttRow') {
+                    element.unbind('click');
+                }
+            });
         }
     };
 
@@ -177,7 +181,8 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                                     id: resourceGanttRowId,
                                     parent: parentGanttRow.id,
                                     name: resource.name,
-                                    tasks: []
+                                    tasks: [],
+                                    resource: resource
                                 };
 
                                 ganttRowsDict[resourceGanttRowId] = ganttRow;
@@ -242,7 +247,7 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                         name: task.name,
                         from: claim.starttime,
                         to: claim.endtime,
-                        color: self.taskStatusColors[task.status],
+                        color: self.resourceClaimStatusColors[claim.status],
                         raTask: task,
                         movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
                     };
@@ -270,9 +275,16 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                                 if(claim.endtime > aggregatedClaims[taskId].endtime) {
                                     aggregatedClaims[taskId].endtime = claim.endtime;
                                 }
+                                if(claim.status == 'conflict') {
+                                    aggregatedClaims[taskId].status = 'conflict';
+                                } else if(claim.status != aggregatedClaims[taskId].status && aggregatedClaims[taskId].status != 'conflict') {
+                                    aggregatedClaims[taskId].status = 'mixed';
+                                }
                             } else {
                                 aggregatedClaims[taskId] = { starttime: claim.starttime,
-                                                            endtime: claim.endtime };
+                                                             endtime: claim.endtime,
+                                                             status: claim.status
+                                };
                             }
                         }
                     }
@@ -293,9 +305,15 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                             if(subAggregatedClaim.endtime > aggregatedClaims[taskId].endtime) {
                                 aggregatedClaims[taskId].endtime = subAggregatedClaim.endtime;
                             }
+                            if(subAggregatedClaim.status == 'conflict') {
+                                aggregatedClaims[taskId].status = 'conflict';
+                            } else if(subAggregatedClaim.status != aggregatedClaims[taskId].status && aggregatedClaims[taskId].status != 'conflict') {
+                                aggregatedClaims[taskId].status = 'mixed';
+                            }
                         } else {
                             aggregatedClaims[taskId] = { starttime: subAggregatedClaim.starttime,
-                                                          endtime: subAggregatedClaim.endtime };
+                                                         endtime: subAggregatedClaim.endtime,
+                                                         status: subAggregatedClaim.status };
                         }
                     }
                 }
@@ -311,7 +329,7 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                                 name: task.name,
                                 from: aggClaimForTask.starttime,
                                 to: aggClaimForTask.endtime,
-                                color: self.taskStatusColors[task.status],
+                                color: self.resourceClaimStatusColors[aggClaimForTask.status],
                                 raTask: task,
                                 movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
                             };
