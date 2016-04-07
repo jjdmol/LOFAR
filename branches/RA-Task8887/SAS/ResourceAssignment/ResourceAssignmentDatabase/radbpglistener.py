@@ -109,7 +109,7 @@ class RADBPGListener(PostgresListener):
                                 if timestampStr.rfind('.') > -1:
                                     timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S.%f')
                                 else:
-                                    timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S')
+                                    timestamp = datetime.strptime(timestampStr, '%Y-%m-%dT%H:%M:%S')
 
                                 contentDict[state][field] = timestamp
                         except Exception as e:
