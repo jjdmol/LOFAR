@@ -49,12 +49,13 @@ CEPCleanMainWindow::CEPCleanMainWindow(Controller *controller)
 	createStorageNodesTab(25,4);
 
 	// get the current user
-	if (currentUser == "lofarsys") {
+    if (currentUser == "lofarsys" || currentUser == "renting") {
 		itsCreateLog = true;
 		QString dateStr(QDateTime::currentDateTime().toString(Qt::ISODate));
 		QString itsLogDir("log/CEPcleanup/"), logFileName = "CEPcleanLog_" + dateStr;
 		QDir logDir;
-		logDir.mkdir("log");
+        QDir::setCurrent(QDir::homePath());
+        logDir.mkdir("log");
 		logDir.cd("log");
 		logDir.mkdir("CEPcleanup");
 		itsLogFile = new QFile(itsLogDir + logFileName);
@@ -94,16 +95,16 @@ CEPCleanMainWindow::CEPCleanMainWindow(Controller *controller)
 	ui.treeWidgetDataProducts->setHeaderLabels(header);
 	ui.treeWidgetDataProducts->header()->setResizeMode(QHeaderView::Interactive);
 	// connect some signals
-	connect(ui.treeWidgetDataProducts,SIGNAL(itemChanged(QTreeWidgetItem *, int)), this, SLOT(checkItemChange(QTreeWidgetItem *, int)));
-	connect(ui.treeWidgetDataProducts,SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)), this, SLOT(showItemDetails(QTreeWidgetItem *, int)));
-	connect(ui.treeWidgetDataProducts->header(), SIGNAL(sectionClicked(int)), this, SLOT(updateProjectPieView()));
-	connect(ui.actionDelete, SIGNAL(activated()), this, SLOT(doDelete(void)));
-	connect(ui.action_Save, SIGNAL(activated()), this, SLOT(saveToDisk(void)));
-	connect(ui.action_Load, SIGNAL(activated()), this, SLOT(readFromDisk(void)));
-	connect(ui.action_Open_Databases, SIGNAL(activated()), this, SLOT(openDatabase(void)));
-	connect(ui.actionFilter, SIGNAL(activated()), this, SLOT(filterData(void)));
-	connect(ui.action_Quit, SIGNAL(activated()), this, SLOT(done(void)));
-    connect(ui.actionChange_Settings, SIGNAL(activated()), this, SLOT(openSettingsDialog(void)));
+    connect(ui.treeWidgetDataProducts,SIGNAL(itemChanged(QTreeWidgetItem *, int)), this, SLOT(checkItemChange(QTreeWidgetItem *, int)));
+    connect(ui.treeWidgetDataProducts,SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)), this, SLOT(showItemDetails(QTreeWidgetItem *, int)));
+    connect(ui.treeWidgetDataProducts->header(), SIGNAL(sectionClicked(int)), this, SLOT(updateProjectPieView()));
+    connect(ui.actionDelete, SIGNAL(triggered()), this, SLOT(doDelete(void)));
+    connect(ui.action_Save, SIGNAL(triggered()), this, SLOT(saveToDisk(void)));
+    connect(ui.action_Load, SIGNAL(triggered()), this, SLOT(readFromDisk(void)));
+    connect(ui.action_Open_Databases, SIGNAL(triggered()), this, SLOT(openDatabase(void)));
+    connect(ui.actionFilter, SIGNAL(triggered()), this, SLOT(filterData(void)));
+    connect(ui.action_Quit, SIGNAL(triggered()), this, SLOT(done(void)));
+    connect(ui.actionChange_Settings, SIGNAL(triggered()), this, SLOT(openSettingsDialog(void)));
     this->setWindowFlags(Qt::Window);
 }
 
@@ -1564,7 +1565,8 @@ void CEPCleanMainWindow::parseDuResult(int exitCode, QProcess::ExitStatus exitSt
 
 		parseFile.size();
 
-		int nodeID(0), pos(0);
+        int nodeID(0);
+        int pos(0);
 		file f;
         QString nodeName;
 		QStringList strlist;
@@ -1585,9 +1587,15 @@ void CEPCleanMainWindow::parseDuResult(int exitCode, QProcess::ExitStatus exitSt
 			else if (nodeID && line[0].isDigit()) {
 				strlist = line.split(whitespsplit);
 				f.fileSize = strlist.at(0).toLongLong();
-				pos = strlist.at(1).lastIndexOf('/') +1;
-				f.path = strlist.at(1).left(pos);
-				f.fileName = strlist.at(1).mid(pos);
+                if (strlist.size() < 1) {
+                    std::cerr << "problem reading line: "<< line.toStdString() << std::endl;
+                    break;
+                }
+                else {
+                    pos = strlist.at(1).lastIndexOf('/') +1;
+                    f.path = strlist.at(1).left(pos);
+                    f.fileName = strlist.at(1).mid(pos);
+                }
 				// try to guess SAS ID
 				pos = f.path.indexOf(SAS_ID);
 				if (pos != -1) {
