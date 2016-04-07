@@ -181,14 +181,13 @@ class RADBHandler(MessageHandlerInterface):
         return {'task_id': task_id, 'updated': updated}
 
     def _getResourceUsages(self, **kwargs):
-        usageDict = self.radb.getResourceUsages(lower_bound=kwargs.get('lower_bound'),
-                                                upper_bound=kwargs.get('upper_bound'),
-                                                resource_ids=kwargs.get('resource_ids'),
-                                                task_ids=kwargs.get('task_ids'),
-                                                status=kwargs.get('status'),
-                                                resource_type=kwargs.get('resource_type'))
-        usageDict = convertIntKeysToString(usageDict)
-        return usageDict
+        usages = self.radb.getResourceUsages(lower_bound=kwargs.get('lower_bound'),
+                                             upper_bound=kwargs.get('upper_bound'),
+                                             resource_ids=kwargs.get('resource_ids'),
+                                             task_ids=kwargs.get('task_ids'),
+                                             status=kwargs.get('status'),
+                                             resource_type=kwargs.get('resource_type'))
+        return usages
 
     def _getResourceGroupTypes(self):
         return self.radb.getResourceGroupTypes()

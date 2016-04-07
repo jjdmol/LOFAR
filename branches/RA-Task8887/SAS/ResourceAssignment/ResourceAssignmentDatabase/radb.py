@@ -1148,36 +1148,57 @@ class RADatabase:
     def getResourceUsages(self, claim_ids=None, lower_bound=None, upper_bound=None, resource_ids=None, task_ids=None, status=None, resource_type=None):
         claims = self.getResourceClaims(claim_ids=claim_ids, lower_bound=lower_bound, upper_bound=upper_bound, resource_ids=resource_ids, task_ids=task_ids, status=status, resource_type=resource_type)
 
-        #gather start/end events per resource
+        #gather start/end events per resource per claim_status
         eventsDict = {}
         for claim in claims:
             event_start = { 'timestamp': claim['starttime'], 'delta': claim['claim_size'] }
             event_end = { 'timestamp': claim['endtime'], 'delta': -claim['claim_size'] }
 
             resource_id = claim['resource_id']
+            status = claim['status']
             if not resource_id in eventsDict:
-                eventsDict[resource_id] = []
-            eventsDict[resource_id].append(event_start)
-            eventsDict[resource_id].append(event_end)
+                eventsDict[resource_id] = {}
+
+            if not status in eventsDict[resource_id]:
+                eventsDict[resource_id][status] = []
+
+            eventsDict[resource_id][status].append(event_start)
+            eventsDict[resource_id][status].append(event_end)
 
         # sort events per resource by event timestamp ascending
         # and integrate event delta's into usage
-        usagesDict = {}
-        for resource_id, events in eventsDict.items():
-            events = sorted(events, key=lambda event: event['timestamp'])
-            if events:
-                usage = { 'timestamp': events[0]['timestamp'], 'usage': events[0]['delta'] }
-                prev_usage = usage
-                usages = [usage]
+        all_usages = []
+        for resource_id, status_events in eventsDict.items():
+            usages = {}
+            for status, events in status_events.items():
+                if events:
+                    print '----------------'
+                    usages[status] = []
+                    prev_usage = { 'timestamp': datetime(1971, 1, 1), 'value': 0 }
 
-                for event in events[1:]:
-                    usage = { 'timestamp': event['timestamp'], 'usage': prev_usage['usage'] + event['delta'] }
-                    usages.append(usage)
-                    prev_usage = usage
+                    events = sorted(events, key=lambda event: event['timestamp'])
 
-            usagesDict[resource_id] = usages
+                    for event in events:
+                        prev_value = prev_usage['value']
+                        prev_timestamp = prev_usage['timestamp']
+                        new_value = prev_value + event['delta']
+                        usage = { 'timestamp': event['timestamp'], 'value': new_value }
+                        print 'prev_usage: ', prev_value, datetime.strftime(prev_timestamp, "%H:%M:%S"), 'delta:', event['delta'], 'usage: ', new_value, datetime.strftime(usage['timestamp'], "%H:%M:%S")
 
-        return usagesDict
+                        if prev_timestamp == event['timestamp']:
+                            usages[status][-1]['value'] += event['delta']
+                        else:
+                            usages[status].append(usage)
+
+                        print [(x['value'], datetime.strftime(x['timestamp'], "%H:%M:%S")) for x in usages[status]]
+                        print
+
+                        prev_usage = usage
+
+            resource_usages = { 'resource_id': resource_id, 'usages': usages }
+            all_usages.append(resource_usages)
+
+        return all_usages
 
 
 if __name__ == '__main__':
@@ -1192,6 +1213,8 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     dbcreds = dbcredentials.parse_options(options)
+
+    logger.info("Using dbcreds: %s" % dbcreds.stringWithHiddenPassword())
 
     db = RADatabase(dbcreds=dbcreds, log_queries=False)
 
@@ -1240,8 +1263,11 @@ if __name__ == '__main__':
 
     #resultPrint(db.getResourceClaims)
 
+    import pprint
+    pprint.pprint(db.getResourceUsages())
 
     #exit(0)
+
     for s in db.getSpecifications():
         db.deleteSpecification(s['id'])
 
@@ -1310,7 +1336,7 @@ if __name__ == '__main__':
     begin = datetime.utcnow()
     for i in range(5):
         stepbegin = datetime.utcnow()
-        result = db.insertSpecificationAndTask(1234+i, 5678+i, 600, 0, datetime.utcnow() + timedelta(hours=1.25*i), datetime.utcnow() + timedelta(hours=1.25*i+1), "", False)
+        result = db.insertSpecificationAndTask(1234+i, 5678+i, 350, 0, datetime.utcnow() + timedelta(hours=1.25*i), datetime.utcnow() + timedelta(hours=1.25*i+1), "", False)
 
         #resultPrint(db.getSpecifications)
         #resultPrint(db.getTasks)
@@ -1320,8 +1346,8 @@ if __name__ == '__main__':
         claims = [{'resource_id':r['id'],
                 'starttime':task['starttime'],
                 'endtime':task['endtime'],
-                'status':'claimed',
-                'claim_size':1} for r in resources[:]]
+                'status': ['claimed', 'allocated', 'conflict'][i%3],
+                'claim_size':1} for r in resources[:1]]
 
         for c in claims[:]:
             c['properties'] = [{'type':0, 'value':10}, {'type':1, 'value':20}, {'type':2, 'value':30}]

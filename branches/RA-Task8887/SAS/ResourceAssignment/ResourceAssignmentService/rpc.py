@@ -103,18 +103,22 @@ class RARPC(RPCWrapper):
                                                         user_id=user_id)
 
     def getResourceUsages(self, lower_bound=None, upper_bound=None, resource_ids=None, task_ids=None, status=None, resource_type=None):
-        usageDict = self.rpc('GetResourceUsages', lower_bound=lower_bound,
-                                                  upper_bound=upper_bound,
-                                                  resource_ids=resource_ids,
-                                                  task_ids=task_ids,
-                                                  status=status,
-                                                  resource_type=resource_type)
+        all_usages = self.rpc('GetResourceUsages',
+                              lower_bound=lower_bound,
+                              upper_bound=upper_bound,
+                              resource_ids=resource_ids,
+                              task_ids=task_ids,
+                              status=status,
+                              resource_type=resource_type)
 
-        for resource_id, usages in usageDict.items():
-            for usage in usages:
-                usage['timestamp'] = usage['timestamp'].datetime()
+        for resource_usages in all_usages:
+            print 'resource_usages: ', resource_usages
+            for status, usages in resource_usages['usages'].items():
+                print 'status: ', status, ' usages: ', usages
+                for usage in usages:
+                    usage['timestamp'] = usage['timestamp'].datetime()
 
-        return usageDict
+        return all_usages
 
     def getResourceGroupTypes(self):
         return self.rpc('GetResourceGroupTypes')
