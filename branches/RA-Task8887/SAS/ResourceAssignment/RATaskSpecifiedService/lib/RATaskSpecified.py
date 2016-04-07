@@ -262,7 +262,7 @@ class RATaskSpecified(OTDBBusListener):
 
     def onObservationPrescheduled(self, main_id, modificationTime):
         # Construct root node of tree
-        resultTree = get_specification_with_predecessors(main_id, "otdb", "prescheduled", {})
+        resultTree = self.get_specification_with_predecessors(main_id, "otdb", "prescheduled", {})
         logger.info("Sending result: %s" % resultTree)
 
         # Put result on bus
