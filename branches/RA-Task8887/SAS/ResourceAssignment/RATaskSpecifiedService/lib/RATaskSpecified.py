@@ -243,7 +243,7 @@ class RATaskSpecified(OTDBBusListener):
         if otdb_id in found_parsets:
             parset = found_parsets[otdb_id]
         else:
-            parset = self.otdbrpc.taskGetSpecification( OtdbID=otdb_id )['specification']
+            parset = self.otdbrpc.taskGetSpecification( otdb_id=otdb_id )['specification']
             found_parsets[otdb_id] = parset
           
         logger.info("parset [%s]: %s" % (otdb_id, parset))
