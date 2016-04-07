@@ -204,7 +204,7 @@ class RATaskSpecified(OTDBBusListener):
         """ Extract the list of predecessor obs IDs from the given parset. """
 
         key = PARSET_PREFIX + "Observation.Scheduler.predecessors"
-        strlist = PyParameterValue(str(parset[key]), True).getStringVector()
+        stringlist = PyParameterValue(str(parset[key]), True).getStringVector()
 
         # Key contains values starting with 'S' = Scheduler, 'L'/'T' = OTDB, 'M' = MoM
         # 'S' we can probably ignore? Might be only internal in the Scheduler?
