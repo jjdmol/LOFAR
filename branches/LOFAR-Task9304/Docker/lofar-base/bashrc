@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# lofar
+[ -r ${INSTALLDIR}/lofar/lofarinit.sh ] && source ${INSTALLDIR}/lofar/lofarinit.sh
+
+# qpid
+source ${INSTALLDIR}/qpid/.profile
+
+# python-casacore
+export PYTHONPATH=${PYTHONPATH}:${INSTALLDIR}/python-casacore/lib/python2.7/site-packages
+
+# casacore
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${INSTALLDIR}/casacore/lib

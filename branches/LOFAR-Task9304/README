@@ -1,0 +1,57 @@
+LOFAR (LOw Frequency ARray) Software Repository - README
+========================================================
+
+The LOFAR repository contains some of the software packages to operate
+the LOFAR radio telescope and process its measurement output.
+
+LOFAR is operated by ASTRON, the Netherlands Institute for Radio Astronomy.
+For more information, see http://www.astron.nl/ and http://www.lofar.org/
+
+Source code is available at https://svn.astron.nl/LOFAR
+
+Repository web interface: https://svn.astron.nl/viewvc/LOFAR/
+
+
+Top-level LOFAR Project Content (incomplete summary)
+-------------------------------
+
+CEP/			CEntral Processing software
+CEP/Calibration/	Calibration: BBS, antenna and station responses
+CEP/DP3/		Pre-processing: flagging, demixing, averag., calibration
+CEP/Imager/		Imager
+CEP/LAPS/		LOFAR Automated Processing System:
+                          Image processing on the cluster/grid/archive
+CEP/Pipeline/		Self-calibration / imaging pipeline
+CEP/PyBDSM/		Source finder
+CMake/			CMake configuration & build helper scripts
+CMake/variants/		compiler- and hostname-specific build configurations
+CMakeLists.txt		Top-level CMake configuration & build script
+COPYING			License text
+INSTALL			Build and installation instructions
+LCS/			LOFAR Common Software: frequently used LOFAR libraries
+LCS/LofarStMan/		LOFAR Storage Manager for casacore MeasurementSets
+LCU/			Local Controller Unit: station software tools
+LTA/			Long-Term Archive: archive ingest tools
+MAC/			Monitoring and Control software, static metadata
+MAC/Deployment/data/StaticMetaData/ Static metadata: names, positions, delays...
+README			This file
+RTCP/			Real-Time Central Processing: correlator and beamformer
+RTCP/Cobalt/		COrrelator and BeAmformer for the Lofar Telescope
+SAS/			Submission And Scheduling
+SubSystems/		Build targets for deployment and some integration tests
+
+
+Contact Information
+-------------------
+
+For questions about LOFAR software installation, usage, or bug reports, please
+contact the ASTRON Radio Observatory software group via:
+
+	softwaresupport AT astron DOT nl
+
+
+For questions about observing with LOFAR or your data product, please contact
+ASTRON Science Support via:
+
+	sciencesupport AT astron DOT nl
+

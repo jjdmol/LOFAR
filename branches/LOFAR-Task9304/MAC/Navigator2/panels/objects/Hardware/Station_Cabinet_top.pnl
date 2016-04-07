@@ -1,0 +1,216 @@
+V 10
+1
+LANG:1 7 Station
+PANEL,-1 -1 159 69 N "_3DFace" 0
+"main()
+{
+
+  baseDP = g_currentDatapoint+\"_PIC\";
+	
+  string station=sysName;
+  strreplace(station,\":\",\"\");
+  setValue(\"cabinet_txt\", \"text\", station);
+
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+  
+  // connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP);
+}" 0
+ E "main(int x, int y)
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  188 128
+""0  1
+E "#uses \"navPanel.ctl\"
+string baseDP          = \"\";
+bool   bDoubleClicked  = false;
+
+
+// routine for single mouse click
+void click() {
+    // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"LofarStation\",\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"Station_Cabinet_top.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(\"LofarStation-Cabinet\",\"ChangePanel\");
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"LofarStation-Cabinet\",\"EventRightClick\");
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 2190
+"cabinetHighLight"
+""
+1 240 10 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+856 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"CabinetCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void CabinetCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"Station_Cabinet_top.pnl:CabinetCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"Station_Cabinet_top.pnl:CabinetCallback|Found highlight : \" + highlight + \" Cabinet\");
+  bool bHighlight=false;
+  if (dynContains(highlight,\"Cabinet\")) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"Station_Cabinet_top.pnl:CabinetCallback|Highlight request: \"+bHighlight);
+  cabinetHighLight.visible = bHighlight;
+  
+}
+
+" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 10 10 135 55
+6 2188
+"childStateBorder"
+""
+1 14 418 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+855 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 2 1 0 1 E 0.709876543209877 0 0.0886075949367089 -162.469135802469 13.2278481012658 1 E 250 20 412 415
+1 2193 86 "" 1
+0
+2 2192
+"cabinet_txt"
+""
+1 52 23 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+857 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 52 23 98 40
+0 2 2 "0s" 0 0 0 192 0 0  52 23 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 7 station
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 86 "selfState"
+"objects\\lofar_self_state.pnl" 284 264 T 851 1.13333333333333 0 1 -302.866666666667 -245
+0
+0
