@@ -226,7 +226,7 @@ std::vector<storageResult> Storage::addStorageToTask(Task *pTask, dataProductTyp
                 sit = itsStorageNodes.find(it->first);
                 if (sit != itsStorageNodes.end()) {
                     // check size requirements
-                    if (!noCheck) {
+                    if (!noCheck && pTask->getOutputDataproductCluster() != "CEP4") {
                         res = sit->second.checkSpaceAndWriteSpeed(start, end, claimSize, bandWidth, it->second); // check space and bandwidth for every raid array
                     }
                     if (res == CONFLICT_NO_CONFLICT) {

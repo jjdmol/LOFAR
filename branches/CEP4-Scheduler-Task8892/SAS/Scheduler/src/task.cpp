@@ -758,13 +758,6 @@ bool Task::setReason(const std::string &reason) {
 	return false;
 }
 */
-/*
-void Task::addPredecessor(unsigned int pid, AstroTime min, AstroTime max) {
-	std::pair<AstroTime, AstroTime> minMaxTimes (min, max);
-	std::pair<unsigned int, std::pair<AstroTime, AstroTime> > predecessor (pid, minMaxTimes);
-	predecessors.push_back(predecessor);
-}
-*/
 
 QString Task::getPredecessorsString(const QChar &separater) const {
     QStringList predlist;
