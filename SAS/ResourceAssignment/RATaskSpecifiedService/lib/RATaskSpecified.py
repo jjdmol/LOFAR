@@ -223,7 +223,7 @@ class RATaskSpecified(OTDBBusListener):
         return result
 
     def get_specification_with_predecessors(self, id, id_source, state, found_parsets):
-        logger.info("Processing ID %s from %s", (id, id_source))
+        logger.info("Processing ID %s from %s" % (id, id_source))
         if id_source == "other":
             return None
         elif id_source == "mom":
@@ -302,7 +302,7 @@ def main():
     with RATaskSpecified(otdb_notification_busname=options.otdb_notification_bus,
                          otdb_notification_subject=options.otdb_notification_subject,
                          otdb_service_busname=options.otdb_request_bus,
-                         otdb_service_subject=DEFAULT_OTDB_SERVICENAME + '.TaskGetSpecification',
+                         otdb_service_subject=DEFAULT_OTDB_SERVICENAME, ##TODO parse this from command line
                          notification_busname=options.notification_bus,
                          notification_subject=options.notification_subject,
                          broker=options.broker):
