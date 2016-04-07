@@ -3,7 +3,6 @@
 import logging
 import datetime
 from lofar.messaging.RPC import RPC, RPCException, RPCWrapper
-#from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
 from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
 
 ''' Simple RPC client for Service lofarbus.*Z
@@ -23,6 +22,18 @@ class OTDBRPC(RPCWrapper):
                  servicename=DEFAULT_OTDB_SERVICENAME,
                  broker=None):
         super(OTDBRPC, self).__init__(busname, servicename, broker)
+
+    def taskGetIDs(self, otdb_id=None, mom_id=None):
+        if otdb_id:
+            answer = self.rpc('TaskGetIDs', OtdbID=otdb_id, return_tuple=False)
+        elif mom_id:
+            answer = self.rpc('TaskGetIDs', MomID=mom_id, return_tuple=False)
+        else:
+            raise OTDBPRCException("TaskGetIDs was called without OTDB or Mom ID")
+        if not answer:
+            raise OTDBPRCException("TaskGetIDs returned an empty dict")
+        return {"tree_type": answer[0], "otdb_id": answer[1], "mom_id": answer[2]}
+
 
     def taskGetSpecification(self, otdb_id=None, mom_id=None):
         if otdb_id:
