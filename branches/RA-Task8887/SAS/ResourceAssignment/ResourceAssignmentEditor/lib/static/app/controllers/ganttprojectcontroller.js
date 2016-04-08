@@ -41,11 +41,11 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
 
     $scope.options = {
         mode: 'custom',
-        viewScale: '15 minutes',
+        viewScale: '1 hours',
         currentDate: 'line',
         currentDateValue: $scope.dataService.lofarTime,
-        columnMagnetUnit: 'minute',
-        columnMagnetValue: 1,
+        columnMagnet: '1 minutes',
+        timeFramesMagnet: false,
         sideMode: 'Tree',
         columns: ['model.name', 'starttime', 'endtime'],
         treeTableColumns: ['starttime', 'endtime'],
