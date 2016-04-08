@@ -356,9 +356,10 @@ COMMENT ON VIEW resource_monitoring.resource_view
   IS 'view on resource table including availability, monitored values and units';
 
 CREATE OR REPLACE VIEW resource_allocation.resource_claim_conflict_reason_view AS
-  SELECT rccr.id, rccr.resource_claim_id, rccr.conflict_reason_id, cr.reason
+  SELECT rccr.id, rccr.resource_claim_id, rccr.conflict_reason_id, rc.resource_id, rc.task_id, cr.reason
     FROM resource_allocation.resource_claim_conflict_reason rccr
-    JOIN resource_allocation.conflict_reason cr on cr.id = rccr.conflict_reason_id;
+    JOIN resource_allocation.conflict_reason cr on cr.id = rccr.conflict_reason_id
+    JOIN resource_allocation.resource_claim rc on rc.id = rccr.resource_claim_id;
 ALTER VIEW resource_allocation.resource_claim_conflict_reason_view
   OWNER TO resourceassignment;
 COMMENT ON VIEW resource_allocation.resource_claim_conflict_reason_view
