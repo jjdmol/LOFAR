@@ -1,8 +1,15 @@
 #!/bin/bash
 
+# -----------------------------------------
+#   Configuration
+#
+# TODO: Pull from locally deployed config file?
+# -----------------------------------------
+
+# Whether to modify production (true) or test (false)
 PROD=false
 
-# Define systems to use
+# Host names to use
 if $PROD; then
   CCU=ccu001.control.lofar
   MCU=mcu001.control.lofar
@@ -15,9 +22,16 @@ fi
 
 # -----------------------------------------
 #   Queues for processing feedback
+#
+# Queues:
+#    lofar.task.feedback.dataproducts
+#    lofar.task.feedback.processing
+#    lofar.task.feedback.state
+#
+# Route (all queues):
+#    cpuXX.cep4 -> headXX.cep4 -> ccu001
 # -----------------------------------------
 
-# cpuXX.cep4 -> headXX.cep4 -> ccu001
 for tnode in head{01..02}.cep4.control.lofar
 do
   for fnode in cpu{01..50}.cep4.control.lofar
@@ -34,6 +48,17 @@ done
 
 # -----------------------------------------
 #   Exchanges for ResourceAssignment
+#
+# Exchanges:
+#    lofar.ra.command
+#    lofar.ra.notification
+#    lofar.otdb.command
+#    lofar.otdb.notification
+#    lofar.ssdb.command
+#    lofar.ssdb.notification
+#
+# Route (lofar.ra.command):
+#    cpuXX.cep4 -> headXX.cep4 -> ccu001
 # -----------------------------------------
 addtoQPIDDB.py --broker $SCU --exchange lofar.ra.command
 addtoQPIDDB.py --broker $SCU --exchange lofar.ra.notification
@@ -42,7 +67,7 @@ addtoQPIDDB.py --broker $SCU --exchange lofar.otdb.notification
 addtoQPIDDB.py --broker $SCU --exchange lofar.ssdb.command
 addtoQPIDDB.py --broker $SCU --exchange lofar.ssdb.notification
 
-# cpuXX.cep4 -> headXX.cep4 -> scu001
+# TODO: messages will end up at $SCU twice?
 for tnode in head{01..02}.cep4.control.lofar
 do
   for fnode in cpu{01..50}.cep4.control.lofar
