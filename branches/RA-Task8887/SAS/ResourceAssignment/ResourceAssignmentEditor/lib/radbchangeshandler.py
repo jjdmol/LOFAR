@@ -47,10 +47,9 @@ CHANGE_INSERT_TYPE = 'insert'
 CHANGE_DELETE_TYPE = 'delete'
 
 class RADBChangesHandler(RADBBusListener):
-    def __init__(self, busname=DEFAULT_NOTIFICATION_BUSNAME, subject=DEFAULT_NOTIFICATION_SUBJECTS, broker=None, momrpc=None, **kwargs):
+    def __init__(self, busname=DEFAULT_NOTIFICATION_BUSNAME, subjects=DEFAULT_NOTIFICATION_SUBJECTS, broker=None, momrpc=None, **kwargs):
         """
         RADBChangesHandler listens on the lofar notification message bus and keeps track of all the change notifications.
-        :param busname: valid Qpid address (default: lofar.ra.notification)
         :param broker: valid Qpid broker host (default: None, which means localhost)
         additional parameters in kwargs:
             options=   <dict>  Dictionary of options passed to QPID
@@ -58,8 +57,7 @@ class RADBChangesHandler(RADBBusListener):
             numthreads= <int>  Number of parallel threads processing messages (default: 1)
             verbose=   <bool>  Output extra logging over stdout (default: False)
         """
-        address = "%s/%s" % (busname, subject)
-        super(RADBChangesHandler, self).__init__(busname=busname, subject=subject, broker=broker, **kwargs)
+        super(RADBChangesHandler, self).__init__(busname=busname, subjects=subjects, broker=broker, **kwargs)
 
         self._changes = []
         self._lock = Lock()
@@ -125,6 +123,14 @@ class RADBChangesHandler(RADBBusListener):
         '''onResourceClaimDeleted is called upon receiving a ResourceClaimDeleted message.
         :param claim: dictionary with the deleted claim'''
         claim_change = {'changeType':CHANGE_DELETE_TYPE, 'objectType':'resourceClaim', 'value':claim}
+        self._handleChange(claim_change)
+
+    def onResourceAvailabilityUpdated(self, old_availability, new_availability):
+        claim_change = {'changeType':CHANGE_UPDATE_TYPE, 'objectType':'resourceAvailability', 'value':new_availability}
+        self._handleChange(claim_change)
+
+    def onResourceCapacityUpdated(self, old_capacity, new_capacity):
+        claim_change = {'changeType':CHANGE_UPDATE_TYPE, 'objectType':'resourceCapacity', 'value':new_capacity}
         self._handleChange(claim_change)
 
     def getMostRecentChangeNumber(self):
