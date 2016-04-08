@@ -267,9 +267,13 @@ class ResourceAssigner():
                 if db_cep4_resources_for_type:
                     claim = {'resource_id':db_cep4_resources_for_type[0]['id'],
                             'starttime':task['starttime'],
-                            'endtime':task['endtime'] + timedelta(days=31),
+                            'endtime':task['endtime'],
                             'status':'claimed',
                             'claim_size':needed_claim_value}
+
+                    #FIXME: find proper way to extend storage time with a month
+                    if 'storage' in db_cep4_resources_for_type[0]:
+                        claim['endtime'] += timedelta(days=31)
 
                     # if the needed_claim_for_resource_type dict contains more kvp's,
                     # then the subdict contains groups of properties for the claim
