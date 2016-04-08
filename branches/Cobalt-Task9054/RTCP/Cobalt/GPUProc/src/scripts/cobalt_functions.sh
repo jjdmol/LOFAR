@@ -42,7 +42,7 @@ function read_cluster_model {
   # HACK: Search for first cluster, and assume they're all the same. We support only output
   # to a single cluster for now.
   for DP in ${COBALT_DATAPRODUCTS}; do
-    CLUSTER_NAME=$(getkey Observation.DataProducts.Output_${DP}.storageClusterPartition "")
+    CLUSTER_NAME=$(getkey Observation.DataProducts.Output_${DP}.storageClusterName "")
     if [ -n "${CLUSTER_NAME}" ]; then
       break
     fi
