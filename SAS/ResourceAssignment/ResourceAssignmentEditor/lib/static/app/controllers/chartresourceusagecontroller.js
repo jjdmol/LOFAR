@@ -51,6 +51,19 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
         loading: false
     }
 
+    function updateChartLofarTime() {
+        var lofarTime = $scope.dataService.lofarTime;
+
+        $scope.chartConfig.xAxis.plotLines = [{
+            width: 3,
+            color: '#222222',
+            zIndex: 100,
+            value: lofarTime.getTime()
+        }];
+    };
+
+    $scope.$watch('dataService.lofarTime', updateChartLofarTime);
+
     function updateChartData() {
         var resourceUsagesDict = $scope.dataService.resourceUsagesDict;
         var numResources = $scope.dataService.resources.length;
