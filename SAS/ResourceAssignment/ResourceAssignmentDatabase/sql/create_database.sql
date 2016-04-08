@@ -27,6 +27,9 @@ DROP TABLE IF EXISTS resource_monitoring.resource_capacity CASCADE;
 DROP TABLE IF EXISTS resource_allocation.resource_claim_property CASCADE;
 DROP TABLE IF EXISTS resource_allocation.resource_claim_property_type CASCADE;
 DROP TABLE IF EXISTS resource_allocation.sap CASCADE;
+DROP TABLE IF EXISTS resource_allocation.conflict_reason CASCADE;
+DROP TABLE IF EXISTS resource_allocation.resource_claim_conflict_reason CASCADE;
+DROP TABLE IF EXISTS resource_allocation.task_conflict_reason CASCADE;
 DROP TABLE IF EXISTS resource_allocation.resource_claim CASCADE;
 DROP TABLE IF EXISTS resource_allocation.resource_claim_status CASCADE;
 DROP TABLE IF EXISTS resource_allocation.claim_session CASCADE;
@@ -185,6 +188,32 @@ CREATE TABLE resource_allocation.resource_claim (
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_allocation.resource_claim
+  OWNER TO resourceassignment;
+
+CREATE TABLE resource_allocation.conflict_reason (
+  id serial NOT NULL,
+  reason text NOT NULL,
+  PRIMARY KEY (id)
+) WITH (OIDS=FALSE);
+ALTER TABLE resource_allocation.conflict_reason
+  OWNER TO resourceassignment;
+
+CREATE TABLE resource_allocation.resource_claim_conflict_reason (
+  id serial NOT NULL,
+  resource_claim_id integer NOT NULL REFERENCES resource_allocation.resource_claim ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  conflict_reason_id integer NOT NULL REFERENCES resource_allocation.conflict_reason ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  PRIMARY KEY (id)
+) WITH (OIDS=FALSE);
+ALTER TABLE resource_allocation.resource_claim_conflict_reason
+  OWNER TO resourceassignment;
+
+CREATE TABLE resource_allocation.task_conflict_reason (
+  id serial NOT NULL,
+  task_id integer NOT NULL REFERENCES resource_allocation.task ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  conflict_reason_id integer NOT NULL REFERENCES resource_allocation.conflict_reason ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  PRIMARY KEY (id)
+) WITH (OIDS=FALSE);
+ALTER TABLE resource_allocation.task_conflict_reason
   OWNER TO resourceassignment;
 
 CREATE TABLE resource_allocation.sap (
