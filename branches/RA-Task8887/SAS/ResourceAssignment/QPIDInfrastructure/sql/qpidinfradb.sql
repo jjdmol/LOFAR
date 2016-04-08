@@ -45,6 +45,7 @@ CREATE TABLE queueroutes(
     eid  bigint  references exchanges(exchangeid) ON DELETE CASCADE,
     PRIMARY KEY  (qrouteid)
 );
+
 CREATE TABLE exchangeroutes(
     erouteid SERIAL,
     fromhost bigint  references hosts(hostid) ON DELETE CASCADE,
@@ -54,6 +55,7 @@ CREATE TABLE exchangeroutes(
     routingkey varchar(512) default '#',
     PRIMARY KEY  (erouteid)
 );
+
 CREATE TABLE queuelistener(
     qlistenid SERIAL,
     fromhost bigint references hosts(hostid) ON DELETE CASCADE,
@@ -63,41 +65,4 @@ CREATE TABLE queuelistener(
     PRIMARY KEY  (qlistenid)
 );
 
-
-INSERT INTO exchanges (exchangename) VALUES 
-    ('lofar.ra.command'),
-    ('lofar.ra.notification'),
-    ('lofar.otdb.command'),
-    ('lofar.otdb.notification'),
-    ('lofar.sm.command'),
-    ('lofar.sm.notification'),
-    ('lofar.mom.command'),
-    ('lofar.mom.notification');
-
-INSERT INTO queues (queuename) VALUES 
-    ('TreeStatus'),
-    ('TaskSpecified'),
-    ('ResourceAssigner');
-
-INSERT INTO hosts (hostname) VALUES
-    ('scu001.control.lofar'),
-    ('ccu001.control.lofar'),
-    ('head01.control.lofar');
-
-
-INSERT INTO persistentexchanges (eid,hid) VALUES 
-    (1,1),
-    (2,1),
-    (3,1),
-    (4,1),
-    (5,1),
-    (6,1),
-    (7,1),
-    (8,1);
-
-insert INTO persistentqueues (qid,hid) VALUES
-    (1,1),
-    (2,1),
-    (3,1);
-
-commit;
+COMMIT;
