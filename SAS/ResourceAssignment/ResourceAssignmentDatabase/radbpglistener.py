@@ -30,7 +30,7 @@ import time
 import json
 from optparse import OptionParser
 
-from lofar.common.postgres import PostgresListener, makePostgresNotificationQueries
+from lofar.common.postgres import PostgresListener
 from lofar.messaging import EventMessage, ToBus
 from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_BUSNAME, DEFAULT_NOTIFICATION_PREFIX
 from lofar.common import dbcredentials
@@ -60,6 +60,9 @@ class RADBPGListener(PostgresListener):
         self.subscribe('resource_claim_insert_with_resource_claim_view', self.onResourceClaimInserted)
         self.subscribe('resource_claim_delete', self.onResourceClaimDeleted)
 
+        self.subscribe('resource_availability_update', self.onResourceAvailabilityUpdated)
+        self.subscribe('resource_capacity_update', self.onResourceCapacityUpdated)
+
     def onTaskUpdated(self, payload = None):
         self._sendNotification('TaskUpdated', payload, ['starttime', 'endtime'])
 
@@ -82,6 +85,12 @@ class RADBPGListener(PostgresListener):
 
     def onResourceClaimDeleted(self, payload = None):
         self._sendNotification('ResourceClaimDeleted', payload)
+
+    def onResourceAvailabilityUpdated(self, payload = None):
+        self._sendNotification('ResourceAvailabilityUpdated', payload)
+
+    def onResourceCapacityUpdated(self, payload = None):
+        self._sendNotification('ResourceCapacityUpdated', payload)
 
     def __enter__(self):
         super(RADBPGListener, self).__enter__()
@@ -144,7 +153,7 @@ class RADBPGListener(PostgresListener):
 
         try:
             msg = EventMessage(context=self.notification_prefix + subject, content=content)
-            logger.info('Sending notification: ' + str(msg).replace('\n', ' '))
+            logger.info('Sending notification %s: %s' % (subject, str(content).replace('\n', ' ')))
             self.event_bus.send(msg)
         except Exception as e:
             logger.error(str(e))
@@ -172,15 +181,6 @@ def main():
                         dbcreds=dbcreds,
                         broker=options.broker) as listener:
         listener.waitWhileListening()
-
-def make_radb_postgres_notification_queries():
-    print makePostgresNotificationQueries('resource_allocation', 'task', 'INSERT', view_for_row='task_view')
-    print makePostgresNotificationQueries('resource_allocation', 'task', 'UPDATE', view_for_row='task_view')
-    print makePostgresNotificationQueries('resource_allocation', 'task', 'DELETE')
-    print makePostgresNotificationQueries('resource_allocation', 'specification', 'UPDATE', view_for_row='task_view', view_selection_id='specification_id')
-    print makePostgresNotificationQueries('resource_allocation', 'resource_claim', 'INSERT', view_for_row='resource_claim_view')
-    print makePostgresNotificationQueries('resource_allocation', 'resource_claim', 'UPDATE', view_for_row='resource_claim_view')
-    print makePostgresNotificationQueries('resource_allocation', 'resource_claim', 'DELETE')
 
 if __name__ == '__main__':
     main()
