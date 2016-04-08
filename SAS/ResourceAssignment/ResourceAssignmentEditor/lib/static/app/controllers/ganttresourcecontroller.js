@@ -30,11 +30,11 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
 
     $scope.options = {
         mode: 'custom',
-        viewScale: '15 minutes',
+        viewScale: '1 hours',
         currentDate: 'line',
         currentDateValue: $scope.dataService.lofarTime,
-        columnMagnetUnit: 'minute',
-        columnMagnetValue: 1,
+        columnMagnet: '1 minutes',
+        timeFramesMagnet: false,
         sideMode: 'Tree',
         treeHeaderContent: '<i class="fa fa-align-justify"></i> {{getHeader()}}',
         autoExpand: 'both',
