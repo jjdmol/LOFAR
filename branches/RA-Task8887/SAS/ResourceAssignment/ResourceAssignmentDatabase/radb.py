@@ -1145,6 +1145,119 @@ class RADatabase:
 
         return {'inserted': False, 'specification_id': None, 'task_id': None}
 
+    def getTaskConflictReasons(self, task_ids=None):
+        query = '''SELECT * from resource_allocation.task_conflict_reason_view'''
+
+        conditions = []
+        qargs = []
+
+        if task_ids is not None:
+            if isinstance(task_ids, int): # just a single id
+                conditions.append('task_id = %s')
+                qargs.append(task_ids)
+            elif len(task_ids) == 1:  # just a single id from a list
+                conditions.append('task_id = %s')
+                qargs.append(task_ids[0])
+            else: # list of id's
+                conditions.append('task_id in %s')
+                qargs.append(tuple(task_ids))
+
+        if conditions:
+            query += ' WHERE ' + ' AND '.join(conditions)
+
+        conflict_reasons = list(self._executeQuery(query, qargs, fetch=_FETCH_ALL))
+        return conflict_reasons
+
+    def insertTaskConflicts(self, task_id, conflict_reason_ids, commit=True):
+        if not self.cursor:
+            self._connect()
+
+        insert_values = ','.join(self.cursor.mogrify('(%s, %s)', (task_id, cr_id)) for cr_id in conflict_reason_ids)
+
+        query = '''INSERT INTO resource_allocation.task_conflict_reason
+        (task_id, conflict_reason_id)
+        VALUES {values}
+        RETURNING id;'''.format(values=insert_values)
+
+        ids = [x['id'] for x in self._executeQuery(query, fetch=_FETCH_ALL)]
+
+        if [x for x in ids if x < 0]:
+            logger.error("One or more conflict reasons could not be inserted. Rolling back.")
+            self.rollback()
+            return None
+
+        if commit:
+            self.commit()
+        return ids
+
+
+    def getResourceClaimConflictReasons(self, claim_ids=None, resource_ids=None, task_ids=None):
+        query = '''SELECT * from resource_allocation.resource_claim_conflict_reason_view'''
+
+        conditions = []
+        qargs = []
+
+        if claim_ids is not None:
+            if isinstance(claim_ids, int): # just a single id
+                conditions.append('id = %s')
+                qargs.append(claim_ids)
+            elif len(claim_ids) == 1:  # just a single id from a list
+                conditions.append('id = %s')
+                qargs.append(claim_ids[0])
+            else: # list of id's
+                conditions.append('id in %s')
+                qargs.append(tuple(claim_ids))
+
+        if resource_ids is not None:
+            if isinstance(resource_ids, int): # just a single id
+                conditions.append('resource_id = %s')
+                qargs.append(resource_ids)
+            elif len(resource_ids) == 1:  # just a single id from a list
+                conditions.append('resource_id = %s')
+                qargs.append(resource_ids[0])
+            else: # list of id's
+                conditions.append('resource_id in %s')
+                qargs.append(tuple(resource_ids))
+
+        if task_ids is not None:
+            if isinstance(task_ids, int): # just a single id
+                conditions.append('task_id = %s')
+                qargs.append(task_ids)
+            elif len(task_ids) == 1:  # just a single id from a list
+                conditions.append('task_id = %s')
+                qargs.append(task_ids[0])
+            else: # list of id's
+                conditions.append('task_id in %s')
+                qargs.append(tuple(task_ids))
+
+        if conditions:
+            query += ' WHERE ' + ' AND '.join(conditions)
+
+        conflict_reasons = list(self._executeQuery(query, qargs, fetch=_FETCH_ALL))
+        return conflict_reasons
+
+    def insertResourceClaimConflicts(self, claim_id, conflict_reason_ids, commit=True):
+        if not self.cursor:
+            self._connect()
+
+        insert_values = ','.join(self.cursor.mogrify('(%s, %s)', (claim_id, cr_id)) for cr_id in conflict_reason_ids)
+
+        query = '''INSERT INTO resource_allocation.resource_claim_conflict_reason
+        (resource_claim_id, conflict_reason_id)
+        VALUES {values}
+        RETURNING id;'''.format(values=insert_values)
+
+        ids = [x['id'] for x in self._executeQuery(query, fetch=_FETCH_ALL)]
+
+        if [x for x in ids if x < 0]:
+            logger.error("One or more conflict reasons could not be inserted. Rolling back.")
+            self.rollback()
+            return None
+
+        if commit:
+            self.commit()
+        return ids
+
     def getResourceUsages(self, claim_ids=None, lower_bound=None, upper_bound=None, resource_ids=None, task_ids=None, status=None, resource_type=None):
         claims = self.getResourceClaims(claim_ids=claim_ids, lower_bound=lower_bound, upper_bound=upper_bound, resource_ids=resource_ids, task_ids=task_ids, status=status, resource_type=resource_type)
 
@@ -1216,7 +1329,7 @@ if __name__ == '__main__':
 
     logger.info("Using dbcreds: %s" % dbcreds.stringWithHiddenPassword())
 
-    db = RADatabase(dbcreds=dbcreds, log_queries=False)
+    db = RADatabase(dbcreds=dbcreds, log_queries=True)
 
     def resultPrint(method):
         print '\n-- ' + str(method.__name__) + ' --'
@@ -1264,9 +1377,19 @@ if __name__ == '__main__':
     #resultPrint(db.getResourceClaims)
 
     import pprint
-    pprint.pprint(db.getResourceUsages())
+    pprint.pprint(db.getTaskConflictReasons())
+    db.updateTask(21, task_status='conflict')
+    db.insertTaskConflicts(21, [1, 2, 3])
+    pprint.pprint(db.getTaskConflictReasons())
+    db.updateTask(21, task_status='scheduled')
+    pprint.pprint(db.getTaskConflictReasons())
+    db.insertTaskConflicts(21, [1, 2, 3])
+    pprint.pprint(db.getTaskConflictReasons())
 
-    #exit(0)
+    pprint.pprint(db.getResourceClaimConflictReasons(task_ids=22))
+    #pprint.pprint(db.getResourceUsages())
+
+    exit(0)
 
     for s in db.getSpecifications():
         db.deleteSpecification(s['id'])
