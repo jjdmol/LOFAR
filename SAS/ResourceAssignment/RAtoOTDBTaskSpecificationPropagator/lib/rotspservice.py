@@ -59,7 +59,7 @@ class RATaskStatusChangedListener(RADBBusListener):
                 numthreads= <int>    Number of parallel threads processing messages (default: 1)
                 verbose=     <bool>    Output extra logging over stdout (default: False)
         """
-        super(RATaskStatusChangedListener, self).__init__(busname=busname, subject=subject, broker=broker, **kwargs)
+        super(RATaskStatusChangedListener, self).__init__(busname=busname, subjects=subject, broker=broker, **kwargs)
 
         self.propagator = propagator
         if not self.propagator:
