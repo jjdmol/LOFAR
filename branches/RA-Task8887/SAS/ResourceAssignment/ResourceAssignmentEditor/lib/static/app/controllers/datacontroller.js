@@ -268,6 +268,16 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                 var changeNumbers = result.changes.map(function(item) { return item.changeNumber; });
                 self.lastUpdateChangeNumber = changeNumbers.reduce(function(a, b, idx, arr) { return a > b ? a : b; }, undefined);
 
+                function applyChanges(existingObj, changedObj) {
+                    for(var prop in changedObj) {
+                        if(existingObj.hasOwnProperty(prop) &&
+                           changedObj.hasOwnProperty(prop) &&
+                           existingObj[prop] != changedObj[prop]) {
+                            existingObj[prop] = changedObj[prop];
+                        }
+                    }
+                };
+
                 var anyResourceClaims = false;
                 for(var i = result.changes.length-1; i >=0; i--) {
                     try {
@@ -278,14 +288,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                             if(change.changeType == 'update') {
                                 var task = self.taskDict[changedTask.id];
                                 if(task) {
-                                    task.status = changedTask.status;
-                                    task.status_id = changedTask.status_id;
-                                    task.mom_id = changedTask.mom_id;
-                                    task.otdb_id = changedTask.otdb_id;
-                                    task.starttime = new Date(changedTask.starttime);
-                                    task.endtime = new Date(changedTask.endtime);
-                                    task.predecessor_ids = changedTask.predecessor_ids;
-                                    task.successor_ids = changedTask.successor_ids;
+                                    applyChanges(task, changedTask);
                                 }
                             } else if(change.changeType == 'insert') {
                                 var task = self.taskDict[changedTask.id];
@@ -308,10 +311,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                             if(change.changeType == 'update') {
                                 var claim = self.resourceClaimDict[changedClaim.id];
                                 if(claim) {
-                                    claim.status = changedClaim.status;
-                                    claim.status_id = changedClaim.status_id;
-                                    claim.starttime = new Date(changedClaim.starttime);
-                                    claim.endtime = new Date(changedClaim.endtime);
+                                    applyChanges(claim, changedClaim);
                                 }
                             } else if(change.changeType == 'insert') {
                                 var claim = self.resourceClaimDict[changedClaim.id];
@@ -326,6 +326,23 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                                         self.resourceClaims.splice(k, 1);
                                         break;
                                     }
+                                }
+                            }
+                        } else if(change.objectType == 'resourceCapacity') {
+                            if(change.changeType == 'update') {
+                                var changedCapacity = change.value;
+                                var resource = self.resourceDict[changedCapacity.resource_id];
+                                if(resource) {
+                                    resource.available_capacity = changedCapacity.available;
+                                    resource.total_capacity = changedCapacity.total;
+                                }
+                            }
+                        } else if(change.objectType == 'resourceAvailability') {
+                            if(change.changeType == 'update') {
+                                var changedAvailability = change.value;
+                                var resource = self.resourceDict[changedAvailability.resource_id];
+                                if(resource) {
+                                    resource.active = changedAvailability.total;
                                 }
                             }
                         }

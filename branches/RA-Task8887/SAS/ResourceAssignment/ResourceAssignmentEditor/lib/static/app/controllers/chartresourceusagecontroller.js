@@ -26,16 +26,16 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
                 }
             },
             plotOptions: {
-                series: {
+                line: {
+                    stacking: ''
+                },
+                area: {
                     stacking: 'normal',
+                    lineWidth: 1,
                     marker: {
                         symbol: 'diamond'
                     }
                 },
-                 area: {
-                     stacking: 'normal',
-                     lineWidth: 1
-                 },
             }
         },
         xAxis: {
@@ -172,7 +172,7 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
     };
 
     $scope.$watch('dataService.selected_resource', updateChartData);
-    $scope.$watch('dataService.resources', updateChartData);
+    $scope.$watch('dataService.resources', updateChartData, true);
     $scope.$watch('dataService.resourceUsagesDict', updateChartData, true);
 //     $scope.$watch('dataService.lofarTime', function() {$scope.options.currentDateValue= $scope.dataService.lofarTime;});
 }
