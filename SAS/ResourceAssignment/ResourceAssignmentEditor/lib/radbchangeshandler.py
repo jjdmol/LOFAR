@@ -84,7 +84,6 @@ class RADBChangesHandler(RADBBusListener):
         :param task: dictionary with the updated task'''
         new_task['starttime'] = new_task['starttime'].datetime()
         new_task['endtime'] = new_task['endtime'].datetime()
-        updateTaskMomDetails(new_task, self._momrpc)
         task_change = {'changeType':CHANGE_UPDATE_TYPE, 'objectType':'task', 'value':new_task}
         self._handleChange(task_change)
 
