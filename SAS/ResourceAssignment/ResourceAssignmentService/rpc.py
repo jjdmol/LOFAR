@@ -195,10 +195,21 @@ class RARPC(RPCWrapper):
             specification['endtime'] = specification['endtime'].datetime()
         return specification
 
+    def insertSpecificationAndTask(self, mom_id, otdb_id, task_status, task_type, starttime, endtime, content):
+        return self.rpc('InsertSpecificationAndTask',
+                        mom_id=mom_id,
+                        otdb_id=otdb_id,
+                        task_status=task_status,
+                        task_type=task_type,
+                        starttime=starttime,
+                        endtime=endtime,
+                        content=content)
+
     def insertSpecification(self, starttime, endtime, content):
-        return self.rpc('InsertSpecification', starttime=starttime,
-                                           endtime=endtime,
-                                           content=content)
+        return self.rpc('InsertSpecification',
+                        starttime=starttime,
+                        endtime=endtime,
+                        content=content)
 
     def deleteSpecification(self, id):
         return self.rpc('DeleteSpecification', id=id)
