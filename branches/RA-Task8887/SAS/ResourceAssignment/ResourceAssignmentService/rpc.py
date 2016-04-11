@@ -112,9 +112,7 @@ class RARPC(RPCWrapper):
                               resource_type=resource_type)
 
         for resource_usages in all_usages:
-            print 'resource_usages: ', resource_usages
             for status, usages in resource_usages['usages'].items():
-                print 'status: ', status, ' usages: ', usages
                 for usage in usages:
                     usage['timestamp'] = usage['timestamp'].datetime()
 
