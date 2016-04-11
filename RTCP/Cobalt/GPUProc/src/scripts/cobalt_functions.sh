@@ -36,8 +36,17 @@ function setkey {
   echo "$KEY = $VAL" >> "$PARSET"
 }
 
+COBALT_DATAPRODUCTS="Correlated CoherentStokes IncoherentStokes"
+
 function read_cluster_model {
-  CLUSTER_NAME=$(getkey Observation.Cluster.ProcessingCluster.clusterName "")
+  # HACK: Search for first cluster, and assume they're all the same. We support only output
+  # to a single cluster for now.
+  for DP in ${COBALT_DATAPRODUCTS}; do
+    CLUSTER_NAME=$(getkey Observation.DataProducts.Output_${DP}.storageClusterName "")
+    if [ -n "${CLUSTER_NAME}" ]; then
+      break
+    fi
+  done
 
   # Hack to derive required properties (cluster model) from cluster name.
   case "${CLUSTER_NAME}" in
