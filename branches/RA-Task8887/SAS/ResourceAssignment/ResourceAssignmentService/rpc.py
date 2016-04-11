@@ -132,8 +132,8 @@ class RARPC(RPCWrapper):
     def getResourceTypes(self):
         return self.rpc('GetResourceTypes')
 
-    def getResources(self, resource_types=None, include_availability=False):
-        return self.rpc('GetResources', resource_types=resource_types, include_availability=include_availability)
+    def getResources(self, resource_ids=None, resource_types=None, include_availability=False):
+        return self.rpc('GetResources', resource_ids=resource_ids, resource_types=resource_types, include_availability=include_availability)
 
     def updateResourceAvailability(self, resource_id, active=None, available_capacity=None, total_capacity=None):
         return self.rpc('UpdateResourceAvailability',

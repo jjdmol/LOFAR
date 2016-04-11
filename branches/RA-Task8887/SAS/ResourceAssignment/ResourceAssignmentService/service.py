@@ -204,7 +204,8 @@ class RADBHandler(MessageHandlerInterface):
         return self.radb.getResourceTypes()
 
     def _getResources(self, **kwargs):
-        return self.radb.getResources(resource_types=kwargs.get('resource_types'),
+        return self.radb.getResources(resource_ids=kwargs.get('resource_ids'),
+                                      resource_types=kwargs.get('resource_types'),
                                       include_availability=kwargs.get('include_availability', False))
 
     def _updateResourceAvailability(self, **kwargs):
