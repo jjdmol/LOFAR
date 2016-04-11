@@ -49,7 +49,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
         $http.get('/rest/tasks').success(function(result) {
             //convert datetime strings to Date objects
-            for(var i = result.tasks.length-1; i >=0; i--) {
+            for(var i in result.tasks) {
                 var task = result.tasks[i];
                 task.starttime = new Date(task.starttime);
                 task.endtime = new Date(task.endtime);
@@ -91,7 +91,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         var defer = $q.defer();
         $http.get('/rest/resourceusages').success(function(result) {
             //convert datetime strings to Date objects
-            for(var i = result.resourceusages.length-1; i >=0; i--) {
+            for(var i in result.resourceusages) {
                 var resource_usages = result.resourceusages[i].usages;
 
                 for(var status in resource_usages) {
@@ -113,7 +113,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         var defer = $q.defer();
         $http.get('/rest/resourceclaims').success(function(result) {
             //convert datetime strings to Date objects
-            for(var i = result.resourceclaims.length-1; i >=0; i--) {
+            for(var i in result.resourceclaims) {
                 var resourceclaim = result.resourceclaims[i];
                 resourceclaim.starttime = new Date(resourceclaim.starttime);
                 resourceclaim.endtime = new Date(resourceclaim.endtime);
@@ -187,7 +187,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             //convert datetime strings to Date objects
             var dict = {};
             var list = [];
-            for(var i = result.momprojects.length-1; i >=0; i--) {
+            for(var i in result.momprojects) {
                 var momproject = result.momprojects[i];
                 momproject.statustime = new Date(momproject.statustime);
                 dict[momproject.mom_id] = momproject;
@@ -279,7 +279,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                 };
 
                 var anyResourceClaims = false;
-                for(var i = result.changes.length-1; i >=0; i--) {
+                for(var i in result.changes) {
                     try {
                         var change = result.changes[i];
 
