@@ -115,10 +115,11 @@ class RADBPGListener(PostgresListener):
                         try:
                             if contentDict[state] and field in contentDict[state]:
                                 timestampStr = contentDict[state][field]
+                                formatStr = '%Y-%m-%dT%H:%M:%S' if 'T' in timestampStr else '%Y-%m-%d %H:%M:%S'
                                 if timestampStr.rfind('.') > -1:
-                                    timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S.%f')
-                                else:
-                                    timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S')
+                                    formatStr += '.%f'
+
+                                timestamp = datetime.strptime(timestampStr, formatStr)
 
                                 contentDict[state][field] = timestamp
                         except Exception as e:
