@@ -482,7 +482,6 @@ class RADatabase:
             query = '''UPDATE resource_monitoring.resource_availability
             SET (available) = (%s)
             WHERE resource_id = %s;'''
-
             self._executeQuery(query, (active, resource_id))
 
         if available_capacity is not None and total_capacity is not None:
@@ -500,6 +499,11 @@ class RADatabase:
             SET (total) = (%s)
             WHERE resource_id = %s;'''
             self._executeQuery(query, (total_capacity, resource_id))
+
+        if active is not None or available_capacity is not None or total_capacity is not None:
+            affectedClaims = self.getResourceClaims(resource_ids=resource_id)
+            logger.info('updateResourceAvailability: affectedClaims=%s' % affectedClaims)
+            self.validateResourceClaimsStatus(affectedClaims, False)
 
         if commit:
             self.commit()
@@ -1068,6 +1072,7 @@ class RADatabase:
         return self.validateResourceClaimsStatus(claims, commit)
 
     def validateResourceClaimsStatus(self, claims, commit=True):
+        # TODO: this should be a trigger function in the radb itself
         if not claims:
             return
 
@@ -1110,10 +1115,12 @@ class RADatabase:
             resourceOtherClaims = resource2otherClaims[resource_id]
             totalOtherClaimSize = sum(c['claim_size'] for c in resourceOtherClaims)
 
-            logger.info('claimSize=%s totalOtherClaimSize=%s total=%s available_capacity=%s' % (claimSize,
-                                                                                                totalOtherClaimSize,
-                                                                                                totalOtherClaimSize + claimSize,
-                                                                                                resource['available_capacity']))
+            logger.info('resource_id=%s claimSize=%s totalOtherClaimSize=%s total=%s available_capacity=%s' %
+                        (resource_id,
+                         claimSize,
+                         totalOtherClaimSize,
+                         totalOtherClaimSize + claimSize,
+                         resource['available_capacity']))
 
             if totalOtherClaimSize + claimSize >= resource['available_capacity']:
                 newClaimStatuses[conflistStatusId].append(claim_id)
@@ -1129,8 +1136,10 @@ class RADatabase:
         # depending on the task's claims in conflict/other status
         for task_id in task_ids:
             if self.getResourceClaims(task_ids=task_id, status=conflistStatusId):
+                # if any claims in conflict -> task: conflict
                 self.updateTask(task_id=task_id, task_status='conflict', commit=False)
             elif self.getTask(task_id)['status'] == 'conflict':
+                # if no claims in conflict and task was in conflict -> task: prescheduled
                 self.updateTask(task_id=task_id, task_status='prescheduled', commit=False)
 
         if commit:
@@ -1385,6 +1394,10 @@ if __name__ == '__main__':
     #print db.getResourceClaims()
 
     #resultPrint(db.getResourceClaims)
+
+
+    db.updateResourceAvailability(0, available_capacity=2)
+    exit(0)
 
     import pprint
     pprint.pprint(db.getTaskConflictReasons())
