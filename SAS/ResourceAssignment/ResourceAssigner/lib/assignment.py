@@ -114,24 +114,18 @@ class ResourceAssigner():
         startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
         endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
 
-        #check if task already present in radb
-        existingTask = self.radbrpc.getTask(otdb_id=otdb_id)
-
-        if existingTask:
-            #present, delete it, and create a new task
-            taskId = existingTask['id']
-            self.radbrpc.deleteTask(taskId)
-            specificationId = existingTask['specification_id']
-            self.radbrpc.deleteSpecification(specificationId)
-
-        #insert new task and specification in the radb
+        # insert new task and specification in the radb
+        # any existing specification and task with same otdb_id will be deleted automatically
         logger.info('doAssignment: insertSpecification startTime=%s endTime=%s' % (startTime, endTime))
-        specificationId = self.radbrpc.insertSpecification(startTime, endTime, str(mainParset))['id']
-        logger.info('doAssignment: insertSpecification specificationId=%s' % (specificationId,))
+        result = self.radbrpc.insertSpecificationAndTask(momId, otdb_id, status, taskType, startTime, endTime, str(mainParset))
 
-        logger.info('doAssignment: insertTask momId=%s sasId=%s status=%s taskType=%s specificationId=%s' % (momId, otdb_id, status, taskType, specificationId))
-        taskId = self.radbrpc.insertTask(momId, otdb_id, status, taskType, specificationId)['id']
-        logger.info('doAssignment: insertTask taskId=%s' % (taskId,))
+        if not result['inserted']:
+            logger.error('could not insert specification and task')
+            return
+
+        specificationId = result['specification_id']
+        taskId = result['task_id']
+        logger.info('doAssignment: inserted specification (id=%s) and task (id=%s)' % (specificationId,taskId))
 
         needed = self.getNeededResouces(specification_tree)
         logger.info('doAssignment: getNeededResouces=%s' % (needed,))
@@ -144,28 +138,29 @@ class ResourceAssigner():
             logger.error("no task type %s found in estimator results %s" % (taskType, needed[str(otdb_id)]))
             return
 
+        # make sure the availability in the radb is up to date
+        # TODO: this should be updated regularly
         try:
-            #analyze the parset for needed and available resources and claim these in the radb
-            available = self.getAvailableResources('cep4')
-            logger.info('doAssignment: getAvailableResources=%s' % (available,))
+            self.updateAvailableResources('cep4')
         except Exception as e:
-            logger.warning("Exception while getting available resources: %s" % str(e))
-            return
+            logger.warning("Exception while updating available resources: %s" % str(e))
 
+        # claim the resources for this task
+        # during the claim inserts the claims are automatically validated
+        # and if not enough resources are available, then they are put to conflict status
+        # also, if any claim is in conflict state, then the task is put to conflict status as well
         main_needed = needed[str(otdb_id)]
-        if self.checkResources(main_needed, available):
-            task = self.radbrpc.getTask(taskId)
-            claimed, claim_ids = self.claimResources(main_needed, task)
-            if claimed:
-                self.radbrpc.updateTaskAndResourceClaims(taskId, claim_status='allocated')
-                claims = self.radbrpc.getResourceClaims(task_id=taskId)
-                #TODO: does the check for allocated resource claims belong here? Or in the radb service?
-                #if len(claim_ids) == len([x for x in claims if x['status'] == 'allocated']):
-                self.radbrpc.updateTask(taskId, status='scheduled')
-                #else:
-                    #self.radbrpc.updateTask(taskId, status='conflict')
+        task = self.radbrpc.getTask(taskId)
+        claimed, claim_ids = self.claimResources(main_needed, task)
+        if claimed:
+            conflictingClaims = self.radbrpc.getResourceClaims(taskId=taskId, status='conflict')
+
+            if conflictingClaims:
+                logger.warning('doAssignment: %s conflicting claims detected. Task cannot be scheduled. %s' %
+                               (len(conflictingClaims), conflictingClaims))
             else:
-                self.radbrpc.updateTask(taskId, status='conflict')
+                logger.info('doAssignment: all claims for task %s were succesfully claimed. Setting task status to scheduled' % (taskId,))
+                self.radbrpc.updateTaskAndResourceClaims(taskId, task_status='scheduled', claim_status='allocated')
 
         self.processPredecessors(specification_tree)
 
@@ -190,12 +185,9 @@ class ResourceAssigner():
     def getNeededResouces(self, specification_tree):
         replymessage, status = self.rerpc({"specification_tree":specification_tree}, timeout=10)
         logger.info('getNeededResouces: %s' % replymessage)
-        #stations = replymessage['observation']['stations']
-        ##stations = parset.getStringVector('Observation.VirtualInstrument.stationList', '')
-        ##logger.info('Stations: %s' % stations)
         return replymessage
 
-    def getAvailableResources(self, cluster, update_radb=True):
+    def updateAvailableResources(self, cluster):
         # find out which resources are available
         # and what is their capacity
         # For now, only look at CEP4 storage
@@ -208,33 +200,20 @@ class ResourceAssigner():
         # for CEP4 cluster, do hard codes lookup of first and only node
         node_info = self.ssdbrpc.gethostsforgid(cluster_group_id)['nodes'][0]
 
-        if update_radb:
-            storage_resources = self.radbrpc.getResources(resource_types='storage', include_availability=True)
-            cep4_storage_resource = next(x for x in storage_resources if 'cep4' in x['name'])
-            active = node_info['statename'] == 'Active'
-            total_capacity = node_info['totalspace']
-            available_capacity = total_capacity - node_info['usedspace']
+        storage_resources = self.radbrpc.getResources(resource_types='storage', include_availability=True)
+        cep4_storage_resource = next(x for x in storage_resources if 'cep4' in x['name'])
+        active = node_info['statename'] == 'Active'
+        total_capacity = node_info['totalspace']
+        available_capacity = total_capacity - node_info['usedspace']
 
-            logger.info("Updating resource availability of %s (id=%s) to active=%s available_capacity=%s total_capacity=%s" %
-                        (cep4_storage_resource['name'], cep4_storage_resource['id'], active, available_capacity, total_capacity))
+        logger.info("Updating resource availability of %s (id=%s) to active=%s available_capacity=%s total_capacity=%s" %
+                    (cep4_storage_resource['name'], cep4_storage_resource['id'], active, available_capacity, total_capacity))
 
-            self.radbrpc.updateResourceAvailability(cep4_storage_resource['id'],
-                                                    active=active,
-                                                    available_capacity=available_capacity,
-                                                    total_capacity=total_capacity)
+        self.radbrpc.updateResourceAvailability(cep4_storage_resource['id'],
+                                                active=active,
+                                                available_capacity=available_capacity,
+                                                total_capacity=total_capacity)
 
-        return node_info
-
-    def checkResources(self, needed, available):
-        # For now, only check cep4 storage
-        total_needed_storage = sum(x['storage']['total_size'] for x in needed.values() if 'storage' in x)
-        total_available_storage = available['totalspace']
-
-        logger.info("%senough storage resources available: needed=%s, available=%s" %
-                    ('not ' if total_needed_storage >= total_available_storage else '',
-                     humanreadablesize(total_needed_storage),
-                     humanreadablesize(total_available_storage)))
-        return total_needed_storage < total_available_storage
 
     def claimResources(self, needed_resources, task):
         logger.info('claimResources: task %s needed_resources=%s' % (task, needed_resources))
