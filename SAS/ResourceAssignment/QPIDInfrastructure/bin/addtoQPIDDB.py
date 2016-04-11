@@ -2,6 +2,7 @@
 
 import sys
 from lofar.qpidinfrastructure.QPIDDB import qpidinfra
+from lofar.common import dbcredentials
 
 from optparse import OptionParser
 
@@ -13,13 +14,15 @@ if __name__ == '__main__':
     parser.add_option('-q', '--queue', dest='queue', type='string', default=None, help='Name of the queue on the broker')
     parser.add_option('-e', '--exchange', dest='exchange', type='string', default=None, help='Name of the exchange on the broker')
     parser.add_option('-k', '--routingkey', dest='routingkey', type='string', default='#', help='Federation routing key')
+    parser.add_option_group(dbcredentials.options_group(parser))
 
     (options, args) = parser.parse_args()
 
     if (len(sys.argv)<2):
 	 parser.print_help()
 
-    QPIDinfra = qpidinfra()
+    dbcreds = dbcredentials.parse_options(options)
+    QPIDinfra = qpidinfra(dbcreds)
 
     if (options.broker==None):
 	parser.print_help()

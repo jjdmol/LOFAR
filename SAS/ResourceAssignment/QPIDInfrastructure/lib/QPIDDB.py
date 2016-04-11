@@ -5,10 +5,10 @@ from psqlQPIDDB import psqlQPIDDB
 class qpidinfra:
     """ Class to access and edit the QPIDInfra database.
     """
-    def __init__(self):
+    def __init__(self, dbcreds):
 	""" Initialize the database connection.
 	"""
-	self.db=psqlQPIDDB('qpidinfra')
+	self.db=psqlQPIDDB(dbcreds)
 
     def perqueue(self,callback):
 	""" Iterate over all queues defined in the database.
