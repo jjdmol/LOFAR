@@ -27,7 +27,9 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
             },
             plotOptions: {
                 line: {
-                    stacking: ''
+                    stacking: '',
+                    lineWidth: 0,
+                    marker:{enabled:false}
                 },
                 area: {
                     stacking: 'normal',
@@ -67,119 +69,119 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
     function updateChartData() {
         var resourceUsagesDict = $scope.dataService.resourceUsagesDict;
         var numResources = $scope.dataService.resources.length;
+        var resource = $scope.dataService.selected_resource;
 
-        if(numResources > 0) {
-            var resource = $scope.dataService.selected_resource;
-            if(resource) {
+        if(!resource || numResources == 0) {
+            $scope.chartSeries.splice(0, $scope.chartSeries.length);
+            $scope.chartConfig.title.text = "No resource selected";
+            return;
+        }
 
-                //set title to resource name
-                $scope.chartConfig.title.text = resource.name;
+        //set title to resource name
+        $scope.chartConfig.title.text = resource.name;
 
-                var status_usages = resourceUsagesDict[resource.id];
+        var status_usages = resourceUsagesDict[resource.id];
 
-                //first scan of all statuses and timestamps in usages for this resource
-                var statuses = [];
-                var timestamps = [];
-                for(var status in status_usages) {
-                    statuses.push(status);
+        //first scan of all statuses and timestamps in usages for this resource
+        var statuses = [];
+        var timestamps = [];
+        for(var status in status_usages) {
+            statuses.push(status);
 
-                    var usages = status_usages[status];
-                    for(var usage of usages) {
-                        timestamps.push(usage.timestamp);
+            var usages = status_usages[status];
+            for(var usage of usages) {
+                timestamps.push(usage.timestamp);
+            }
+        }
+
+        // the processed statuses are the expected series names, make copy
+        var expectedSeriesNames = statuses.slice(0);
+
+        if(timestamps.length > 0) {
+            // make timestamps unique
+            timestamps = timestamps.filter(function(value, index, arr) { return arr.indexOf(value) == index;})
+
+            //and sort them
+            timestamps.sort(function (ts1, ts2) {
+                if (ts1 > ts2) return 1;
+                if (ts1 < ts2) return -1;
+                return 0;
+                });
+
+            // loop again over the  usages for this resource
+            // loop in predefined status order, so the chart's series are stacked in the correct order
+            for(var status of ['conflict', 'claimed', 'allocated']) {
+                if(!status_usages.hasOwnProperty(status))
+                    continue;
+
+                usage_data = [];
+
+                var usages = status_usages[status];
+                var t_idx = 0, t_length = timestamps.length;
+                var u_idx = 0, u_length = usages.length;
+                var u_min_timestamp = usages[0].timestamp;
+                var u_max_timestamp = usages[u_length-1].timestamp;
+                while(t_idx < t_length) {
+                    var timestamp = timestamps[t_idx];
+                    var value = 0;
+
+                    if(u_idx < u_length-1 && timestamp >= usages[u_idx+1].timestamp) {
+                        u_idx += 1;
                     }
-                }
 
-                // the processed statuses are the expected series names, make copy
-                var expectedSeriesNames = statuses.slice(0);
+                    if(u_idx < u_length) {
+                        var usage = usages[u_idx];
 
-                if(timestamps.length > 0) {
-                    // make timestamps unique
-                    timestamps = timestamps.filter(function(value, index, arr) { return arr.indexOf(value) == index;})
-
-                    //and sort them
-                    timestamps.sort(function (ts1, ts2) {
-                        if (ts1 > ts2) return 1;
-                        if (ts1 < ts2) return -1;
-                        return 0;
-                        });
-
-                    // loop again over the  usages for this resource
-                    // loop in predefined status order, so the chart's series are stacked in the correct order
-                    for(var status of ['conflict', 'claimed', 'allocated']) {
-                        if(!status_usages.hasOwnProperty(status))
-                            continue;
-
-                        usage_data = [];
-
-                        var usages = status_usages[status];
-                        var t_idx = 0, t_length = timestamps.length;
-                        var u_idx = 0, u_length = usages.length;
-                        var u_min_timestamp = usages[0].timestamp;
-                        var u_max_timestamp = usages[u_length-1].timestamp;
-                        while(t_idx < t_length) {
-                            var timestamp = timestamps[t_idx];
-                            var value = 0;
-
-                            if(u_idx < u_length-1 && timestamp >= usages[u_idx+1].timestamp) {
-                                u_idx += 1;
-                            }
-
-                            if(u_idx < u_length) {
-                                var usage = usages[u_idx];
-
-                                if(timestamp >= u_min_timestamp && timestamp < u_max_timestamp) {
-                                    value = usage.value;
-                                }
-                            }
-                            usage_data.push([timestamp.getTime(), value]);
-                            t_idx += 1;
-                        }
-
-                        var series = $scope.chartSeries.find(function(series) {return series.name == status});
-
-                        if(series) {
-                            series.data = usage_data;
-                        }
-                        else {
-                            var color = '#bfbfbf';
-                            switch(status) {
-                                case 'claimed': color = '#ffa64d'; break;
-                                case 'conflict': color = '#ff0000'; break;
-                                case 'allocated': color = '#66ff66'; break;
-                            }
-                            series = {name: status, type: 'area', step: true, color: color, data: usage_data };
-                            $scope.chartSeries.push(series);
+                        if(timestamp >= u_min_timestamp && timestamp < u_max_timestamp) {
+                            value = usage.value;
                         }
                     }
-
-                    //plot horizontal line for resource total capacity
-                    var tot_cap_series = $scope.chartSeries.find(function(series) {return series.name == 'total capacity'});
-                    if(!tot_cap_series) {
-                        tot_cap_series = {name: 'total capacity', type: 'line', color: '#ff0000', lineWidth:3, marker:{enabled:false}};
-                        $scope.chartSeries.push(tot_cap_series);
-                    }
-                    tot_cap_series.data = [[timestamps[0].getTime(), resource.total_capacity],
-                                           [timestamps[timestamps.length-1].getTime(), resource.total_capacity]]
-                    expectedSeriesNames.push('total capacity');
-
-                    //plot horizontal line for resource used capacity
-                    var used_cap_series = $scope.chartSeries.find(function(series) {return series.name == 'used capacity'});
-                    if(!used_cap_series) {
-                        used_cap_series = {name: 'used capacity', type: 'line', color: '#ff9966', lineWidth:3, marker:{enabled:false}};
-                        $scope.chartSeries.push(used_cap_series);
-                    }
-                    var used_capacity = resource.total_capacity - resource.available_capacity;
-                    used_cap_series.data = [[timestamps[0].getTime(), used_capacity],
-                                           [timestamps[timestamps.length-1].getTime(), used_capacity]]
-                    expectedSeriesNames.push('used capacity');
+                    usage_data.push([timestamp.getTime(), value]);
+                    t_idx += 1;
                 }
 
+                var series = $scope.chartSeries.find(function(series) {return series.name == status});
 
-                for(var i = $scope.chartSeries.length-1; i >= 0; i--) {
-                    if(!expectedSeriesNames.find(function(s) { return s == $scope.chartSeries[i].name;})) {
-                        $scope.chartSeries.splice(i, 1);
-                    }
+                if(!series) {
+                    series = {name: status, type: 'area', step: true, lineWidth:0, marker:{enabled:false} };
+                    $scope.chartSeries.push(series);
                 }
+
+                series.data = usage_data;
+
+                switch(status) {
+                    case 'claimed': series.color = '#ffa64d'; break;
+                    case 'conflict': series.color = '#ff0000'; break;
+                    case 'allocated': series.color = '#66ff66'; break;
+                }
+            }
+
+            //plot horizontal line for resource total capacity
+            var tot_cap_series = $scope.chartSeries.find(function(series) {return series.name == 'total capacity'});
+            if(!tot_cap_series) {
+                tot_cap_series = {name: 'total capacity', type: 'line', color: '#ff0000', lineWidth:3, marker:{enabled:false}};
+                $scope.chartSeries.push(tot_cap_series);
+            }
+            tot_cap_series.data = [[timestamps[0].getTime(), resource.total_capacity],
+                                    [timestamps[timestamps.length-1].getTime(), resource.total_capacity]]
+            expectedSeriesNames.push('total capacity');
+
+            //plot horizontal line for resource used capacity
+            var used_cap_series = $scope.chartSeries.find(function(series) {return series.name == 'used capacity'});
+            if(!used_cap_series) {
+                used_cap_series = {name: 'used capacity', type: 'line', color: '#ff9966', lineWidth:3, marker:{enabled:false}, dashStyle:'Dash'};
+                $scope.chartSeries.push(used_cap_series);
+            }
+            var used_capacity = resource.total_capacity - resource.available_capacity;
+            used_cap_series.data = [[timestamps[0].getTime(), used_capacity],
+                                    [timestamps[timestamps.length-1].getTime(), used_capacity]]
+            expectedSeriesNames.push('used capacity');
+        }
+
+
+        for(var i = $scope.chartSeries.length-1; i >= 0; i--) {
+            if(!expectedSeriesNames.find(function(s) { return s == $scope.chartSeries[i].name;})) {
+                $scope.chartSeries.splice(i, 1);
             }
         }
     };
