@@ -436,7 +436,7 @@ class RADatabase:
 
         raise KeyError('No such unit: %s Valid values are: %s' % (unit_name, ', '.join(self.getUnitNames())))
 
-    def getResources(self, resource_types=None, include_availability=False):
+    def getResources(self, resource_ids=None, resource_types=None, include_availability=False):
         if include_availability:
             query = '''SELECT * from resource_monitoring.resource_view'''
         else:
@@ -444,6 +444,17 @@ class RADatabase:
 
         conditions = []
         qargs = []
+
+        if resource_ids is not None:
+            if isinstance(resource_ids, int): # just a single id
+                conditions.append('id = %s')
+                qargs.append(resource_ids)
+            elif len(resource_ids) == 1:  # just a single id from a list
+                conditions.append('id = %s')
+                qargs.append(resource_ids[0])
+            else: # list of id's
+                conditions.append('id in %s')
+                qargs.append(tuple(resource_ids))
 
         if resource_types is not None:
             if isinstance(resource_types, basestring):
@@ -919,10 +930,13 @@ class RADatabase:
             self.commit()
         return self.cursor.rowcount > 0
 
-    def updateResourceClaim(self, resource_claim_id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, username=None, user_id=None, commit=True):
-        return self.updateResourceClaims([resource_claim_id], resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, commit)
+    def updateResourceClaim(self, resource_claim_id, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, username=None, user_id=None, validate=True, commit=True):
+        return self.updateResourceClaims([resource_claim_id], resource_id, task_id, starttime, endtime, status, session_id, claim_size, username, user_id, validate, commit)
 
     def updateResourceClaims(self, resource_claim_ids, resource_id=None, task_id=None, starttime=None, endtime=None, status=None, session_id=None, claim_size=None, username=None, user_id=None, validate=True, commit=True):
+        if not resource_claim_ids:
+            return
+
         logger.info("updateResourceClaims for %d claims" % len(resource_claim_ids))
 
         if validate:
@@ -1018,6 +1032,7 @@ class RADatabase:
                                                  status=claim_status,
                                                  session_id=session_id,
                                                  username=username, user_id=user_id,
+                                                 validate=True,
                                                  commit=False)
 
             # because we moved or changed the status of these claims,
@@ -1031,32 +1046,32 @@ class RADatabase:
         return updated
 
     def validateResourceClaimsStatusForMovedClaims(self, moved_claims, commit=True):
+        if not moved_claims:
+            return
+
+        moved_claim_ids = set([c['id'] for c in moved_claims])
         resource_ids = list(set([c['resource_id'] for c in moved_claims]))
         min_starttime = min(c['starttime'] for c in moved_claims)
         max_endtime = min(c['endtime'] for c in moved_claims)
 
-        otherClaims = self.getResourceClaims(resource_ids=resource_ids,
-                                             lower_bound=min_starttime,
-                                             upper_bound=max_endtime)
+        otherClaims = [c for c in self.getResourceClaims(resource_ids=resource_ids,
+                                                         lower_bound=min_starttime,
+                                                         upper_bound=max_endtime)
+                       if c['id'] not in moved_claim_ids]
 
         if otherClaims:
             logger.info("validating %d claims which may have been freed" % len(otherClaims))
-            self.validateResourceClaimsStatus(otherClaims, commit=False)
-
-        if commit:
-            self.commit()
+            self.validateResourceClaimsStatus(otherClaims, commit=commit)
 
     def validateResourceClaimsStatusForTask(self, task_id, commit=True):
         claims = self.getResourceClaims(task_ids=task_id)
         return self.validateResourceClaimsStatus(claims, commit)
 
     def validateResourceClaimsStatus(self, claims, commit=True):
-        #FIXME
-        return
-
         if not claims:
             return
 
+        claimDict = {c['id']:c for c in claims}
         resource_ids = list(set([c['resource_id'] for c in claims]))
         task_ids = list(set(c['task_id'] for c in claims))
         min_starttime = min(c['starttime'] for c in claims)
@@ -1069,46 +1084,46 @@ class RADatabase:
         conflistStatusId = next(cs['id'] for cs in claimsStatuses if cs['name'] == 'conflict')
         claimedStatusId = next(cs['id'] for cs in claimsStatuses if cs['name'] == 'claimed')
 
+        # 'result' dict for new statuses for claims
+        newClaimStatuses = {conflistStatusId:[], claimedStatusId:[]}
+
+        #get all resources including availability
+        #convert to id->resource dict
+        resources = self.getResources(include_availability=True)
+        resources = {r['id']:r for r in resources}
+
         # get all claims for given resource_ids, within the given timeframe
         otherClaims = self.getResourceClaims(resource_ids=resource_ids,
                                              lower_bound=min_starttime,
                                              upper_bound=max_endtime)
 
-        if otherClaims:
-            # check each claim against the other claims
-            # if there are other claims for the same resource
-            # then put the claim in conflict status
+        #group claims per resource
+        resource2otherClaims = {r_id:[] for r_id in resource_ids}
+        for claim in otherClaims:
+            if claim['id'] not in claimDict:
+                resource2otherClaims[claim['resource_id']].append(claim)
 
-            conflicting_claims = []
-            non_conflicting_claims = []
+        for claim_id, claim in claimDict.items():
+            claimSize = claim['claim_size']
+            resource_id = claim['resource_id']
+            resource = resources[resource_id]
+            resourceOtherClaims = resource2otherClaims[resource_id]
+            totalOtherClaimSize = sum(c['claim_size'] for c in resourceOtherClaims)
 
-            for claim in claims:
-                hasOtherClaimsForResource = False
-                for oc in otherClaims:
-                    if (oc['resource_id'] == claim['resource_id'] and oc['id'] != claim['id'] and
-                        oc['starttime'] <= claim['endtime'] and oc['endtime'] >= claim['starttime']):
-                        hasOtherClaimsForResource = True
-                        break
+            logger.info('claimSize=%s totalOtherClaimSize=%s total=%s available_capacity=%s' % (claimSize,
+                                                                                                totalOtherClaimSize,
+                                                                                                totalOtherClaimSize + claimSize,
+                                                                                                resource['available_capacity']))
 
-                if hasOtherClaimsForResource:
-                    conflicting_claims.append(claim)
-                else:
-                    non_conflicting_claims.append(claim)
+            if totalOtherClaimSize + claimSize >= resource['available_capacity']:
+                newClaimStatuses[conflistStatusId].append(claim_id)
+            else:
+                newClaimStatuses[claimedStatusId].append(claim_id)
 
-            conflicting_claim_ids_to_update = [c['id'] for c in conflicting_claims if c['status_id'] != conflistStatusId]
-            if conflicting_claim_ids_to_update:
-                logger.info("claim(s) %s are in conflict with existing claims" % conflicting_claim_ids_to_update)
-                self.updateResourceClaims(conflicting_claim_ids_to_update, status=conflistStatusId, validate=False, commit=False)
-
-            non_conflicting_claim_ids_to_update = [c['id'] for c in non_conflicting_claims if c['status_id'] == conflistStatusId]
-            if non_conflicting_claim_ids_to_update:
-                logger.info("claims %s are not in conflict (anymore) with existing claims" % non_conflicting_claim_ids_to_update)
-                self.updateResourceClaims(non_conflicting_claim_ids_to_update, status=claimedStatusId, validate=False, commit=False)
-
-            if not conflicting_claim_ids_to_update and not non_conflicting_claim_ids_to_update:
-                logger.info("no claim statuses need to be updated for task_id(s) %s with %d resource claim(s)" % (to_csv_string(task_ids), len(claims)))
-        else:
-            logger.info("no conflicting claims found for %d resource claim(s) for task_id(s) %s" % (len(claims), to_csv_string(task_ids)))
+        if newClaimStatuses:
+            for status_id, claim_ids in newClaimStatuses.items():
+                changed_claim_ids = [c_id for c_id in claim_ids if claimDict[c_id]['status_id'] != status_id]
+                self.updateResourceClaims(resource_claim_ids=changed_claim_ids, status=status_id, validate=False)
 
         # update each task
         # depending on the task's claims in conflict/other status
@@ -1285,7 +1300,6 @@ class RADatabase:
             usages = {}
             for status, events in status_events.items():
                 if events:
-                    print '----------------'
                     usages[status] = []
                     prev_usage = { 'timestamp': datetime(1971, 1, 1), 'value': 0 }
 
@@ -1296,15 +1310,11 @@ class RADatabase:
                         prev_timestamp = prev_usage['timestamp']
                         new_value = prev_value + event['delta']
                         usage = { 'timestamp': event['timestamp'], 'value': new_value }
-                        print 'prev_usage: ', prev_value, datetime.strftime(prev_timestamp, "%H:%M:%S"), 'delta:', event['delta'], 'usage: ', new_value, datetime.strftime(usage['timestamp'], "%H:%M:%S")
 
                         if prev_timestamp == event['timestamp']:
                             usages[status][-1]['value'] += event['delta']
                         else:
                             usages[status].append(usage)
-
-                        print [(x['value'], datetime.strftime(x['timestamp'], "%H:%M:%S")) for x in usages[status]]
-                        print
 
                         prev_usage = usage
 
