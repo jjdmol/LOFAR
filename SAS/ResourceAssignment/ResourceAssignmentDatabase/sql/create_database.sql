@@ -311,13 +311,19 @@ COMMENT ON VIEW resource_allocation.resource_claim_view
 
 
 CREATE OR REPLACE VIEW virtual_instrument.resource_view AS
- SELECT r.id, r.name, r.type_id, rt.name as type_name
-   FROM virtual_instrument.resource r
-   JOIN virtual_instrument.resource_type rt ON rt.id = r.type_id;
+  SELECT r.id,
+      r.name,
+      r.type_id,
+      rt.name AS type_name,
+      u.id as unit_id,
+      u.units as unit
+    FROM virtual_instrument.resource r
+    JOIN virtual_instrument.resource_type rt ON rt.id = r.type_id
+    JOIN virtual_instrument.unit u ON rt.unit_id = u.id;
 ALTER VIEW virtual_instrument.resource_view
   OWNER TO resourceassignment;
 COMMENT ON VIEW virtual_instrument.resource_view
-  IS 'plain view on resource table including task_type.name';
+  IS 'plain view on resource table including task_type.name and units';
 
 
 CREATE OR REPLACE VIEW resource_allocation.resource_claim_extended_view AS
@@ -340,20 +346,18 @@ COMMENT ON VIEW resource_allocation.resource_claim_property_view
   IS 'plain view on resource_claim_property table, including resource_claim_property_type.name';
 
 CREATE OR REPLACE VIEW resource_monitoring.resource_view AS
- SELECT r.id, r.name, r.type_id,
-   rt.name AS type_name,
-   rc.id as resource_capacity_id, rc.available as available_capacity, rc.total as total_capacity,
-   u.units,
-   ra.id as resource_availibility_id, ra.available as active
-   FROM virtual_instrument.resource r
-   JOIN virtual_instrument.resource_type rt ON rt.id = r.type_id
-   JOIN virtual_instrument.unit u ON u.id = rt.unit_id
-   LEFT JOIN resource_monitoring.resource_capacity rc on rc.resource_id = r .id
-   LEFT JOIN resource_monitoring.resource_availability ra on ra.resource_id = r .id;
+  SELECT rv.*,
+    rc.available AS available_capacity,
+    rc.total - rc.available AS used_capacity,
+    rc.total AS total_capacity,
+    ra.available AS active
+  FROM virtual_instrument.resource_view rv
+  LEFT JOIN resource_monitoring.resource_capacity rc ON rc.resource_id = rv.id
+  LEFT JOIN resource_monitoring.resource_availability ra ON ra.resource_id = rv.id;
 ALTER VIEW resource_monitoring.resource_view
   OWNER TO resourceassignment;
 COMMENT ON VIEW resource_monitoring.resource_view
-  IS 'view on resource table including availability, monitored values and units';
+  IS 'view on virtual_instrument.resource_view including availability and capacity';
 
 CREATE OR REPLACE VIEW resource_allocation.resource_claim_conflict_reason_view AS
   SELECT rccr.id, rccr.resource_claim_id, rccr.conflict_reason_id, rc.resource_id, rc.task_id, cr.reason
