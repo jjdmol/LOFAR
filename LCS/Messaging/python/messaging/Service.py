@@ -311,9 +311,9 @@ class Service(AbstractBusListener):
             backtrace = ''.join(rawbacktrace).encode('latin-1').decode('unicode_escape')
             logger.error("exception while handling message: %s\n%s" % (errtxt, backtrace))
             if self.verbose:
-                logger.info("[Service:] Status: %s", str(status))
-                logger.info("[Service:] ERRTXT: %s", str(errtxt))
-                logger.info("[Service:] BackTrace: %s", str( backtrace ))
+                logger.error("[Service:] Status: %s", str(status))
+                logger.error("[Service:] ERRTXT: %s", str(errtxt))
+                logger.error("[Service:] BackTrace: %s", str( backtrace ))
             self._send_reply(None, status, lofar_msg.reply_to, errtxt=errtxt, backtrace=backtrace)
 
     def _onAfterReceiveMessage(self, successful):
