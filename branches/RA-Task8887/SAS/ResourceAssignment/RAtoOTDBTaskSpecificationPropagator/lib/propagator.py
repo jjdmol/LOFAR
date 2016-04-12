@@ -71,10 +71,11 @@ class RAtoOTDBPropagator():
         if broker:
             radb_broker = broker
             otdb_broker = broker
+            mom_broker  = broker
 
         self.radbrpc = RADBRPC(busname=radb_busname, servicename=radb_servicename, broker=radb_broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
         self.otdbrpc = OTDBRPC(busname=otdb_busname, servicename=otdb_servicename, broker=otdb_broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
-        self.momrpc = MoMRPC(busname=mom_busname, servicename=mom_servicename, broker=options.broker)
+        self.momrpc = MoMRPC(busname=mom_busname, servicename=mom_servicename, broker=mom_broker)
         self.translator = RAtoOTDBTranslator()
 
     def __enter__(self):
