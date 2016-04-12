@@ -118,6 +118,7 @@ def resourceIndicatorsFromParset( parsetDict ):
     # Correlator settings
     # =====================================
     add("Observation.DataProducts.Output_Correlated.enabled", bool)
+    add("Observation.DataProducts.Output_Correlated.storageClusterName")
     add("Observation.ObservationControl.OnlineControl.Cobalt.Correlator.integrationTime")
     add("Observation.ObservationControl.OnlineControl.Cobalt.Correlator.nrChannelsPerSubband")
     # TODO: We need a service that computes these 3 values
@@ -130,7 +131,9 @@ def resourceIndicatorsFromParset( parsetDict ):
     # Beamformer settings
     # =====================================
     add("Observation.DataProducts.Output_IncoherentStokes.enabled", bool)
+    add("Observation.DataProducts.Output_IncoherentStokes.storageClusterName")
     add("Observation.DataProducts.Output_CoherentStokes.enabled", bool)
+    add("Observation.DataProducts.Output_CoherentStokes.storageClusterName")
     add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.flysEye", bool)
     #add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband") # only needed to determine Cobalt.blockSize
     add("Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.CoherentStokes.subbandsPerFile")
@@ -153,7 +156,9 @@ def resourceIndicatorsFromParset( parsetDict ):
     # =====================================
     # Calibrator / Averaging pipelines
     add("Observation.DataProducts.Output_Correlated.enabled", bool)
+    add("Observation.DataProducts.Output_Correlated.storageClusterName")
     add("Observation.DataProducts.Output_InstrumentModel.enabled", bool)
+    add("Observation.DataProducts.Output_InstrumentModel.storageClusterName")
     add("Observation.DataProducts.Input_Correlated.enabled", bool)
     add("Observation.DataProducts.Input_Correlated.skip", intvector)
     add("Observation.ObservationControl.PythonControl.DPPP.demixer.demixfreqstep")
@@ -161,6 +166,7 @@ def resourceIndicatorsFromParset( parsetDict ):
 
     # Imaging pipeline
     add("Observation.DataProducts.Output_SkyImage.enabled", bool)
+    add("Observation.DataProducts.Output_SkyImage.storageClusterName")
     add("Observation.ObservationControl.PythonControl.Imaging.slices_per_image")
     add("Observation.ObservationControl.PythonControl.Imaging.subbands_per_image")
 
@@ -170,6 +176,7 @@ def resourceIndicatorsFromParset( parsetDict ):
 
     # Pulsar pipeline
     add("Observation.DataProducts.Output_Pulsar.enabled", bool)
+    add("Observation.DataProducts.Output_Pulsar.storageClusterName")
     add("Observation.DataProducts.Input_CoherentStokes.enabled", bool)
     add("Observation.DataProducts.Input_CoherentStokes.skip", intvector)
     add("Observation.DataProducts.Input_IncoherentStokes.enabled", bool)
