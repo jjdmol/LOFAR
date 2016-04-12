@@ -110,6 +110,10 @@ class ResourceAssigner():
 
         #parse main parset...
         mainParset = parameterset(specification_tree['specification'])
+
+        if not self.checkCluster(mainParset):
+            return
+
         momId = mainParset.getInt('Observation.momID', -1)
         startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
         endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
@@ -181,6 +185,25 @@ class ResourceAssigner():
 
         except Exception as e:
             logger.error(e)
+
+    def checkCluster(self, parset):
+        # check storageClusterName for enabled DataProducts
+        # if any storageClusterName is not CEP4, we do not accept this parset
+        keys = ['Output_Correlated',
+                'Output_IncoherentStokes',
+                'Output_CoherentStokes',
+                'Output_InstrumentModel',
+                'Output_SkyImage',
+                'Output_Pulsar']
+        for key in keys:
+            if parset.getBool('Observation.DataProducts.%s.enabled' % key, False):
+                if parset.getString('Observation.DataProducts.%s.storageClusterName' % key, '') != 'CEP4':
+                    logger.warn("storageClusterName not CEP4, rejecting specification.")
+                    return False
+
+        logger.info("all enabled storageClusterName's are CEP4, accepting specification.")
+        return True
+
 
     def getNeededResouces(self, specification_tree):
         replymessage, status = self.rerpc({"specification_tree":specification_tree}, timeout=10)
