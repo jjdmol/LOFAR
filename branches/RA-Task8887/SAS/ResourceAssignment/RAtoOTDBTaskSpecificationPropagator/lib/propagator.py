@@ -40,6 +40,10 @@ from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc im
 from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
 from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.translator import RAtoOTDBTranslator
 
+from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
+from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
+from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
+
 logger = logging.getLogger(__name__)
 
 
@@ -50,6 +54,8 @@ class RAtoOTDBPropagator():
                  radb_broker=None,
                  otdb_busname=DEFAULT_OTDB_SERVICE_BUSNAME,
                  otdb_servicename=DEFAULT_OTDB_SERVICENAME,
+                 mom_busname=DEFAULT_MOM_BUSNAME,
+                 mom_servicename=DEFAULT_MOM_SERVICENAME,
                  otdb_broker=None,
                  broker=None):
         """
@@ -68,6 +74,7 @@ class RAtoOTDBPropagator():
 
         self.radbrpc = RADBRPC(busname=radb_busname, servicename=radb_servicename, broker=radb_broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
         self.otdbrpc = OTDBRPC(busname=otdb_busname, servicename=otdb_servicename, broker=otdb_broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
+        self.momrpc = MoMRPC(busname=mom_busname, servicename=mom_servicename, broker=options.broker)
         self.translator = RAtoOTDBTranslator()
 
     def __enter__(self):
@@ -83,11 +90,13 @@ class RAtoOTDBPropagator():
         """Open rpc connections to radb service and resource estimator service"""
         self.radbrpc.open()
         self.otdbrpc.open()
+        self.momrpc.open()
 
     def close(self):
         """Close rpc connections to radb service and resource estimator service"""
         self.radbrpc.close()
         self.otdbrpc.close()
+        self.momrpc.close()
 
     def doTaskConflict(self, ra_id, otdb_id, mom_id):
         logger.info('doTaskConflict: otdb_id=%s mom_id=%s' % (otdb_id, mom_id))
@@ -102,7 +111,9 @@ class RAtoOTDBPropagator():
             logger.warning('doTaskScheduled no valid otdb_id: otdb_id=%s' % (otdb_id,))
             return
         ra_info = self.getRAinfo(ra_id)
-        otdb_info = self.translator.CreateParset(otdb_id, ra_info)
+        project = self.momrpc.getProjectDetails(mom_id)
+        project_name = "_".join(project['project_name'].split())
+        otdb_info = self.translator.CreateParset(otdb_id, ra_info, project_name)
         logger.debug("Parset info for OTDB: %s" %otdb_info)
         self.setOTDBinfo(otdb_id, otdb_info, 'scheduled')
 
