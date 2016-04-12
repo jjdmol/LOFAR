@@ -1,7 +1,7 @@
 #ifndef TABLECOLUMNSELECTDIALOG_H
 #define TABLECOLUMNSELECTDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_tablecolumnselectdialog.h"
 
 class tableColumnSelectDialog : public QDialog
