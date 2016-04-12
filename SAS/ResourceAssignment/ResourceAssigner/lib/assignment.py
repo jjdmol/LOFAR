@@ -120,7 +120,8 @@ class ResourceAssigner():
 
         # insert new task and specification in the radb
         # any existing specification and task with same otdb_id will be deleted automatically
-        logger.info('doAssignment: insertSpecification startTime=%s endTime=%s' % (startTime, endTime))
+        logger.info('doAssignment: insertSpecification momId=%s, otdb_id=%s, status=%s, taskType=%s, startTime=%s, endTime=%s' %
+                    (momId, otdb_id, status, taskType, startTime, endTime))
         result = self.radbrpc.insertSpecificationAndTask(momId, otdb_id, status, taskType, startTime, endTime, str(mainParset))
 
         if not result['inserted']:
