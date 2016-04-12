@@ -107,34 +107,34 @@ task_conflict StorageNode::checkBandWidth(const AstroDateTime &start, const Astr
 }
 
 task_conflict StorageNode::checkSpaceAndWriteSpeed(const AstroDateTime &startTime, const AstroDateTime &endTime, const double &claimSize, const double &writeSpeed, int raidID) const {
-	capacityTimeMap::const_iterator cit = itsRemainingSpace.find(raidID);
+    capacityTimeMap::const_iterator cit = itsRemainingSpace.find(raidID);
 //	std::cout << "checking storage node: " << itsName << std::endl << "partition: " << raidID << std::endl << "claim size for this node: "
 //	<< claimSize << std::endl << "writeSpeed for this node: " << writeSpeed << std::endl << "start time: " << startTime.toString() << std::endl
 //	<< "end time: " << endTime.toString() << std::endl;
-	if (cit != itsRemainingSpace.end()) {
+    if (cit != itsRemainingSpace.end()) {
 //		 std::cout << "first free space log: " << cit->second.front().time.toString() << ", space remaining" << cit->second.front().remainingDiskSpacekB << "kB, disk write speed remaining" <<  cit->second.front().remainingDiskWriteBW << "MByte/s";
-		if (startTime > cit->second.front().time) { // start time of observation needs to be after 'now' which is the first time in itsRemainingSpace
-			for (std::vector<capacityLogPoint>::const_iterator sit = cit->second.begin(); sit != cit->second.end(); ++sit) {
+        if (startTime > cit->second.front().time) { // start time of observation needs to be after 'now' which is the first time in itsRemainingSpace
+            for (std::vector<capacityLogPoint>::const_iterator sit = cit->second.begin(); sit != cit->second.end(); ++sit) {
 //				std::cout << sit->time.toString() << ", free space:" << sit->remainingDiskSpacekB << "kB, write speed remaining:" << sit->remainingDiskWriteBW << "MB/s" << std::endl;
-				if (startTime >= sit->time) { // found the last time that is earlier than the requested start time
-					while (sit < cit->second.end()) { // iterate over the following free space log-points to check if space stays sufficient during the task's duration
-						if (claimSize > sit->remainingDiskSpacekB) {
-							return CONFLICT_STORAGE_NODE_SPACE; // insufficient space
-						}
-						else if (writeSpeed > sit->remainingDiskWriteBW) {
+                if (startTime >= sit->time) { // found the last time that is earlier than the requested start time
+                    while (sit < cit->second.end()) { // iterate over the following free space log-points to check if space stays sufficient during the task's duration
+                        if (claimSize > sit->remainingDiskSpacekB) {
+                            return CONFLICT_STORAGE_NODE_SPACE; // insufficient space
+                        }
+                        else if (writeSpeed > sit->remainingDiskWriteBW) {
 //							std::cerr << "conflict write speed: " << "requested: " << writeSpeed << ", " << "node remaining write speed at " << sit->time.toString().c_str() << ": " << sit->remainingDiskWriteBW << std::endl;
-							return CONFLICT_STORAGE_WRITE_SPEED; // requested write speed to high
-						}
-						else if ((sit++)->time > endTime) return CONFLICT_NO_CONFLICT;
-					}
-					return CONFLICT_NO_CONFLICT; // if only the initial entry is logged in itsRemainingSpace we should arrive here.
-				}
-			}
-			return CONFLICT_NO_CONFLICT; // if only the initial entry is logged in itsRemainingSpace we should arrive here.
-		}
-		else return CONFLICT_STORAGE_TIME_TOO_EARLY; // Error: start time of observation before now
-	}
-	else return CONFLICT_RAID_ARRRAY_NOT_FOUND; // Error: partition not found
+                            return CONFLICT_STORAGE_WRITE_SPEED; // requested write speed to high
+                        }
+                        else if ((sit++)->time > endTime) return CONFLICT_NO_CONFLICT;
+                    }
+                    return CONFLICT_NO_CONFLICT; // if only the initial entry is logged in itsRemainingSpace we should arrive here.
+                }
+            }
+            return CONFLICT_NO_CONFLICT; // if only the initial entry is logged in itsRemainingSpace we should arrive here.
+        }
+        else return CONFLICT_STORAGE_TIME_TOO_EARLY; // Error: start time of observation before now
+    }
+    else return CONFLICT_RAID_ARRRAY_NOT_FOUND; // Error: partition not found
 }
 
 // return the ids of the raid arrays that meet the specified bandwidth (kbit/sec) and claimSize within the timespan defined by startTime and endTime

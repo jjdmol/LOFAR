@@ -1,7 +1,7 @@
 #ifndef SASPROGRESSDIALOG_H
 #define SASPROGRESSDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_sasprogressdialog.h"
 
 class SASProgressDialog : public QDialog

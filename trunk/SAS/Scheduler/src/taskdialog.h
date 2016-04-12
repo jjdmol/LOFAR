@@ -14,7 +14,7 @@
 #ifndef TASKDIALOG_H
 #define TASKDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include <vector>
 #include <string>
 #include "lofar_scheduler.h"

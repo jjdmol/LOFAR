@@ -10,7 +10,11 @@ StateHistoryDialog::StateHistoryDialog(QWidget *parent)
 	ui.tableWidgetStateInfo->setHorizontalHeaderLabels(header);
 	ui.tableWidgetStateInfo->setEditTriggers(QAbstractItemView::NoEditTriggers);
 	ui.tableWidgetStateInfo->horizontalHeader()->setStretchLastSection(true);
-	ui.tableWidgetStateInfo->verticalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+#if QT_VERSION >= 0x050000
+    ui.tableWidgetStateInfo->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+#else
+    ui.tableWidgetStateInfo->verticalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+#endif
 	this->setWindowTitle("Task state change history");
 }
 
@@ -34,5 +38,9 @@ void StateHistoryDialog::addStateInfo(const QString &treeID, const QString &momI
 	newItem = new QTableWidgetItem(modtime.toString("yyyy-MM-dd hh:mm:ss"));
 	ui.tableWidgetStateInfo->setItem(row, 4, newItem);
 
-	ui.tableWidgetStateInfo->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+#if QT_VERSION >= 0x050000
+    ui.tableWidgetStateInfo->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+#else
+    ui.tableWidgetStateInfo->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+#endif
 }

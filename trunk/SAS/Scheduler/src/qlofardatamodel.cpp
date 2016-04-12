@@ -47,7 +47,7 @@ QVariant QLofarDataModel::data(const QModelIndex & index, int role) const
 
 	if (role == Qt::BackgroundRole) {
 		if (isErrorIndex(index)) // error
-			return Qt::red;
+            return QColor(Qt::red);
 		else {
 			int task_status = index.model()->data(index.model()->index(index.row(),TASK_STATUS),USERDATA_ROLE).toInt();
 			if (task_status == Task::FINISHED) {
@@ -115,18 +115,18 @@ QVariant QLofarDataModel::data(const QModelIndex & index, int role) const
 //					}
 				}
 				else { // regular tasks
-					return Qt::white;
+                    return QColor(Qt::white);
 				}
 			}
 		}
 	}
 	else if (role == Qt::ForegroundRole ) {
 		if (isErrorIndex(index)) // error
-			return Qt::white;
+            return QColor(Qt::white);
 		else {
 			int task_status = index.model()->data(index.model()->index(index.row(),TASK_STATUS),USERDATA_ROLE).toInt();
 			if ((task_status >= Task::COMPLETING) && (task_status <= Task::ABORTED)) {
-				return Qt::black;
+                return QColor(Qt::black);
 			}
 			else {
 				int task_type = index.model()->data(index.model()->index(index.row(),TASK_TYPE),USERDATA_ROLE).toInt();
@@ -148,10 +148,10 @@ QVariant QLofarDataModel::data(const QModelIndex & index, int role) const
 					case PLANNED_START:
 					case PLANNED_END:
 					case TASK_STATUS:
-						return Qt::black; // for editable cells
+                        return QColor(Qt::black); // for editable cells
 						break;
 					default:
-						return Qt::darkGray; // for non-editable cells
+                        return QColor(Qt::darkGray); // for non-editable cells
 						break;
 					}
 				}
@@ -170,15 +170,15 @@ QVariant QLofarDataModel::data(const QModelIndex & index, int role) const
 					case PLANNED_START:
 					case PLANNED_END:
 					case TASK_STATUS:
-						return Qt::black; // for editable cells
+                        return QColor(Qt::black); // for editable cells
 						break;
 					default:
-						return Qt::darkGray; // for non-editable cells
+                        return QColor(Qt::darkGray); // for non-editable cells
 						break;
 					}
 				}
 				else { // regular tasks
-					return Qt::black;
+                    return QColor(Qt::black);
 				}
 			}
 		}

@@ -14,7 +14,7 @@
 #ifndef REDISTRIBUTETASKSDIALOG_H
 #define REDISTRIBUTETASKSDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_redistributetasksdialog.h"
 
 class redistributeTasksDialog : public QDialog
