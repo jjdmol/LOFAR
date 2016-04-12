@@ -114,7 +114,8 @@ class RAtoOTDBPropagator():
             return
         ra_info = self.getRAinfo(ra_id)
         project = self.momrpc.getProjectDetails(mom_id)
-        project_name = "_".join(project[mom_id]['project_name'].split())
+        logger.info(project)
+        project_name = "_".join(project[str(mom_id)]['project_name'].split())
         otdb_info = self.translator.CreateParset(otdb_id, ra_info, project_name)
         logger.debug("Parset info for OTDB: %s" %otdb_info)
         self.setOTDBinfo(otdb_id, otdb_info, 'scheduled')
