@@ -377,6 +377,16 @@ def TaskPrepareForScheduling(input_dict, db_connection):
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("TaskPrepareForScheduling: {}".format(exc_info))
 
+    # Get list of defines tree states
+    state_names = {}
+    state_nrs   = {}
+    try:
+        for (nr, name) in db_connection.query("select id,name from treestate").getresult():
+            state_names[name] = nr
+            state_nrs[nr]     = name
+    except QUERY_EXCEPTIONS, exc_info:
+        raise FunctionError("Error while getting list of task states for tree {}: {}".format(otdb_id, exc_info))
+
     # If task is of the type VItemplate convert it to a VHtree
     delete_old_task = False
     if task_type == TEMPLATE_TREE:
@@ -395,16 +405,6 @@ def TaskPrepareForScheduling(input_dict, db_connection):
                 db_connection.query("select setTreeState(1,{},{}::INT2,True)".format(task_id, state_names['approved']))
             except QUERY_EXCEPTIONS, exc_info:
                 raise FunctionError("Error while setting task {} to 'approved': {}".format(task_id, exc_info))
-
-    # Get list of defines tree states
-    state_names = {}
-    state_nrs   = {}
-    try:
-        for (nr, name) in db_connection.query("select id,name from treestate").getresult():
-            state_names[name] = nr
-            state_nrs[nr]     = name
-    except QUERY_EXCEPTIONS, exc_info:
-        raise FunctionError("Error while getting list of task states for tree {}: {}".format(otdb_id, exc_info))
 
     if delete_old_task:
         TaskDelete({'OtdbID':otdb_id}, db_connection)
