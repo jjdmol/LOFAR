@@ -100,7 +100,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                         usage.timestamp = new Date(usage.timestamp);
                     }
                 }
-                self.resourceUsagesDict[result.resourceusages[i].resource_id] = resource_usages;
+                self.resourceUsagesDict[result.resourceusages[i].resource_id] = result.resourceusages[i];
             }
 
             defer.resolve();
@@ -273,7 +273,11 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                         if(existingObj.hasOwnProperty(prop) &&
                            changedObj.hasOwnProperty(prop) &&
                            existingObj[prop] != changedObj[prop]) {
-                            existingObj[prop] = changedObj[prop];
+                            if(existingObj[prop] instanceof Date) {
+                                existingObj[prop] = new Date(changedObj[prop]);
+                            } else {
+                                existingObj[prop] = changedObj[prop];
+                            }
                         }
                     }
                 };
