@@ -158,7 +158,7 @@ class ResourceAssigner():
         task = self.radbrpc.getTask(taskId)
         claimed, claim_ids = self.claimResources(main_needed, task)
         if claimed:
-            conflictingClaims = self.radbrpc.getResourceClaims(taskId=taskId, status='conflict')
+            conflictingClaims = self.radbrpc.getResourceClaims(task_id=taskId, status='conflict')
 
             if conflictingClaims:
                 logger.warning('doAssignment: %s conflicting claims detected. Task cannot be scheduled. %s' %
@@ -275,7 +275,7 @@ class ResourceAssigner():
                             'claim_size':needed_claim_value}
 
                     #FIXME: find proper way to extend storage time with a month
-                    if 'storage' in db_cep4_resources_for_type[0]:
+                    if 'storage' in db_cep4_resources_for_type[0]['name']:
                         claim['endtime'] += timedelta(days=31)
 
                     # if the needed_claim_for_resource_type dict contains more kvp's,
