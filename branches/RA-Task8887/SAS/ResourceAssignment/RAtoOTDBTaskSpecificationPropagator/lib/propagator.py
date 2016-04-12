@@ -57,6 +57,7 @@ class RAtoOTDBPropagator():
                  mom_busname=DEFAULT_MOM_BUSNAME,
                  mom_servicename=DEFAULT_MOM_SERVICENAME,
                  otdb_broker=None,
+                 mom_broker=None,
                  broker=None):
         """
         RAtoOTDBPropagator updates tasks in the OTDB after the ResourceAssigner is done with them.
