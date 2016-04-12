@@ -47,18 +47,6 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
         columnMagnet: '1 minutes',
         timeFramesMagnet: false,
         sideMode: 'Tree',
-        columns: ['model.name', 'starttime', 'endtime'],
-        treeTableColumns: ['starttime', 'endtime'],
-        columnsHeaders: {'model.name' : 'Name', 'starttime': 'From', 'endtime': 'To'},
-        columnsClasses: {'model.name' : 'gantt-column-name', 'starttime': 'gantt-column-from', 'endtime': 'gantt-column-to'},
-        columnsFormatters: {
-            'starttime': function(starttime) {
-                return starttime !== undefined ? starttime.format('lll') : undefined;
-            },
-            'endtime': function(endtime) {
-                return endtime !== undefined ? endtime.format('lll') : undefined;
-            }
-        },
         autoExpand: 'both',
         taskOutOfRange: 'truncate',
         dependencies: true,

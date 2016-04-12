@@ -51,14 +51,14 @@
         <div ui-layout class="top-stretch" ui-layout="{flow: 'column'}">
             <header>
                 <uib-tabset margin-top='10px'>
-                    <uib-tab heading="Tasks" index='0' active='false'>
+                    <uib-tab heading="Tasks" index='0' active='true'>
                         <div ng-controller="GridController as gridCtrl">
                             <strong>Tasks:</strong>
                             <div id="grid" ui-grid="gridOptions" ui-grid-edit ui-grid-cellnav ui-grid-resize-columns class="grid">
                             </div>
                         </div>
                     </uib-tab>
-                    <uib-tab heading="Usages" index='1' active='true'>
+                    <uib-tab heading="Usages" index='1' active='false'>
                         <div class="tab-pane active" ng-controller="ChartResourceUsageController as chartResourceUsageCtrl">
                             <highchart id="chart_resource_usage" config="chartConfig" style="width: 95%; height: 40%; margin: 10px;" ></highchart>
                         </div>
@@ -83,7 +83,7 @@
                                     allow-row-switching="false">
                                 </gantt-movable>
                                 <gantt-tooltips></gantt-tooltips>
-                                <gantt-dependencies enabled="options.dependencies"></gantt-dependencies>
+                                <gantt-dependencies enabled="true"></gantt-dependencies>
                             </div>
                         </div>
                     </uib-tab>
