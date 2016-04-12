@@ -182,7 +182,7 @@ class RAtoOTDBTranslator():
 
         if 'storage' in ra_info:
             logging.debug(ra_info['storage'])
-            parset.update(self.CreateStorageKeys(otdb_id, self.parseStorageProperties(ra_info['storage']) project_name))
+            parset.update(self.CreateStorageKeys(otdb_id, self.parseStorageProperties(ra_info['storage']), project_name))
         if 'stations' in ra_info:
             parset[PREFIX+'VirtualInstrument.stationList'] = ra_info["stations"]
         return parset
