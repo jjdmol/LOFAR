@@ -240,7 +240,8 @@ Task::task_status convertSASstatus(SAS_task_status sas_state) {
 
 Task::Task()
 : taskID(0), itsPriority(0.0), itsStatus(DESCRIBED), itsTaskType(UNKNOWN),
-  fixed_day(false), fixed_time(false), itsPenalty(0), penaltyCalculationNeeded(true), itsShiftDirection(SHIFT_RIGHT)
+  fixed_day(false), fixed_time(false), itsPenalty(0), penaltyCalculationNeeded(true), itsShiftDirection(SHIFT_RIGHT),
+  itsOutputDataproductCluster("---")
 {
 	clearAllConflicts();
 	// set the time window equal to the schedule boundaries
@@ -252,7 +253,7 @@ Task::Task()
 Task::Task(unsigned task_id)
 : taskID(task_id), itsPriority(0.0), itsStatus(UNSCHEDULED), itsTaskType(UNKNOWN),
   fixed_day(false), fixed_time(false), itsPenalty(0), penaltyCalculationNeeded(true),
-  itsShiftDirection(SHIFT_RIGHT)
+  itsShiftDirection(SHIFT_RIGHT), itsOutputDataproductCluster("---")
 {
 	clearAllConflicts();
 	// set the time window equal to the schedule boundaries
@@ -265,7 +266,8 @@ Task::Task(unsigned task_id)
 Task::Task(unsigned task_id, const OTDBtree &SAS_tree)
 : itsProjectName(SAS_tree.campaign()), taskID(task_id), itsPriority(0.0),
     fixed_day(false), fixed_time(false), itsPenalty(0), penaltyCalculationNeeded(true),
-    itsShiftDirection(SHIFT_RIGHT), itsSASTree(SAS_tree)
+    itsShiftDirection(SHIFT_RIGHT), itsOutputDataproductCluster("---"), itsSASTree(SAS_tree)
+
 {
 	setType(SAS_tree.processType(), SAS_tree.processSubType(), SAS_tree.strategy());
 
@@ -280,7 +282,8 @@ Task::Task(unsigned task_id, const OTDBtree &SAS_tree)
 
 Task::Task(const QSqlQuery &query, const OTDBtree &SAS_tree)
 : itsProjectName(SAS_tree.campaign()),
-  itsPenalty(0), penaltyCalculationNeeded(true), itsShiftDirection(SHIFT_RIGHT), itsSASTree(SAS_tree)
+  itsPenalty(0), penaltyCalculationNeeded(true), itsShiftDirection(SHIFT_RIGHT), itsOutputDataproductCluster("---"), itsSASTree(SAS_tree)
+
 {
 	setType(SAS_tree.processType(), SAS_tree.processSubType(),SAS_tree.strategy());
 
@@ -300,7 +303,7 @@ Task::Task(const QSqlQuery &query, const OTDBtree &SAS_tree)
 		firstPossibleDay = day;
 	}
 	else { // first possible day not set use the schedule start day or the current date whichever is latest
-		firstPossibleDay = std::max(QDate::currentDate().toJulianDay() - J2000_EPOCH, (int)Controller::theSchedulerSettings.getEarliestSchedulingDay().toJulian());
+        firstPossibleDay = std::max(QDate::currentDate().toJulianDay() - J2000_EPOCH, (qint64)Controller::theSchedulerSettings.getEarliestSchedulingDay().toJulian());
 	}
 	QString time = query.value(query.record().indexOf("windowMaximumTime")).toString();
 	if (!time.isEmpty()) {
@@ -474,6 +477,7 @@ Task & Task::operator=(const Task &other) {
         firstPossibleDay = other.firstPossibleDay;
         lastPossibleDay = other.lastPossibleDay;
         itsSASTree = other.itsSASTree;
+        itsOutputDataproductCluster = other.itsOutputDataproductCluster;
     }
     return *this;
 }
@@ -752,13 +756,6 @@ bool Task::setReason(const std::string &reason) {
 	}
 	debugWarn("siss", "Task:", taskID, " , Error:Unknown unscheduled reason: ", reason.c_str());
 	return false;
-}
-*/
-/*
-void Task::addPredecessor(unsigned int pid, AstroTime min, AstroTime max) {
-	std::pair<AstroTime, AstroTime> minMaxTimes (min, max);
-	std::pair<unsigned int, std::pair<AstroTime, AstroTime> > predecessor (pid, minMaxTimes);
-	predecessors.push_back(predecessor);
 }
 */
 

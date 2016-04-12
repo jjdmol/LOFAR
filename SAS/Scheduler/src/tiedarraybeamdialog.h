@@ -18,7 +18,7 @@ struct tabProps {
 	bool angle1, angle2, dispersion_measure, coherent;
 };
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_tiedarraybeamdialog.h"
 #include "TiedArrayBeam.h"
 #include "taskdialog.h"

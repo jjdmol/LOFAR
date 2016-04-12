@@ -123,60 +123,65 @@ std::vector<storageResult> Storage::addStorageToTask(Task *pTask, const storageM
             }
         }
         itsLastStorageCheckResult.clear();
-        // check if the total bandwidths for the nodes used do not exceed the nodes their available bandwidths
-        for (std::map<int, double>::const_iterator nit = totalBWPerNodeMap.begin(); nit != totalBWPerNodeMap.end(); ++nit) {
-            storageNodesMap::const_iterator nodeit = itsStorageNodes.find(nit->first);
-            if (nodeit != itsStorageNodes.end()) {
-                //			std::cout << "Total bandwidth required for node:" << nodeit->second.name() << " = " << nit->second << " kb/s" << std::endl;
-                res = nodeit->second.checkBandWidth(start, end, nit->second);
-                if (res != CONFLICT_NO_CONFLICT) {
-                    itsLastStorageCheckResult.push_back(storageResult(_END_DATA_PRODUCTS_ENUM_, nit->first, -1, res));
+        if  (pTask->getOutputDataproductCluster() == "CEP4") { //Can we just skip this for CEP4 ? /AR
+            debugWarn("sis","Storage::addStorageToTask: Did not check storage for task:", pTask->getID(), " (CEP4 detected)");
+        }
+        else {
+            // check if the total bandwidths for the nodes used do not exceed the nodes their available bandwidths
+            for (std::map<int, double>::const_iterator nit = totalBWPerNodeMap.begin(); nit != totalBWPerNodeMap.end(); ++nit) {
+                storageNodesMap::const_iterator nodeit = itsStorageNodes.find(nit->first);
+                if (nodeit != itsStorageNodes.end()) {
+                    //			std::cout << "Total bandwidth required for node:" << nodeit->second.name() << " = " << nit->second << " kb/s" << std::endl;
+                    res = nodeit->second.checkBandWidth(start, end, nit->second);
+                    if (res != CONFLICT_NO_CONFLICT) {
+                        itsLastStorageCheckResult.push_back(storageResult(_END_DATA_PRODUCTS_ENUM_, nit->first, -1, res));
+                    }
                 }
             }
-        }
-        if (itsLastStorageCheckResult.empty()) { // if no total bandwidth error for any node then start the rest of the checks
-            for (dataFileMap::const_iterator dfit = dataFiles.begin(); dfit != dataFiles.end(); ++dfit) {
-                storageMap::const_iterator stit = storageLocations.find(dfit->first);
-                if (stit != storageLocations.end()) {
-                    if (!stit->second.empty()) {
-                        claimSize = (double) dfit->second.first * dfit->second.second / stit->second.size(); // size per file * nrFiles / nr of raid arrays assigned
-                        bandWidth = (double) claimSize / 1000 / durationSec; // MByte/sec, the required remaining disk write speed (or bandwidth) for this array
+            if (itsLastStorageCheckResult.empty()) { // if no total bandwidth error for any node then start the rest of the checks
+                for (dataFileMap::const_iterator dfit = dataFiles.begin(); dfit != dataFiles.end(); ++dfit) {
+                    storageMap::const_iterator stit = storageLocations.find(dfit->first);
+                    if (stit != storageLocations.end()) {
+                        if (!stit->second.empty()) {
+                            claimSize = (double) dfit->second.first * dfit->second.second / stit->second.size(); // size per file * nrFiles / nr of raid arrays assigned
+                            bandWidth = (double) claimSize / 1000 / durationSec; // MByte/sec, the required remaining disk write speed (or bandwidth) for this array
 
-                        // check requested resources
-                        for (storageVector::const_iterator it = stit->second.begin(); it != stit->second.end(); ++it) {
-                            sit = itsStorageNodes.find(it->first);
-                            if (sit != itsStorageNodes.end()) {
-                                // check size requirements
-                                res = sit->second.checkSpaceAndWriteSpeed(start, end, claimSize, bandWidth, it->second); // check space and write speed for every raid array
-                                if (res != CONFLICT_NO_CONFLICT) {
-                                    itsLastStorageCheckResult.push_back(storageResult(dfit->first, it->first, it->second, res));
-                                    //								itsLastStorageCheckResult[it->first].push_back(std::pair<int, task_conflict>(it->second, res)); // store the error result
-                                }
-                                else { // add the claim
-                                    sit->second.addClaim(pTask->getID(), start, end, dfit->first, claimSize, bandWidth, it->second);
-                                }
-                            }
-                        }
-                        // if there were conflicts then remove the claim again from the storage nodes
-                        if (!itsLastStorageCheckResult.empty()) {
-                            std::vector<int> snd;
+                            // check requested resources
                             for (storageVector::const_iterator it = stit->second.begin(); it != stit->second.end(); ++it) {
                                 sit = itsStorageNodes.find(it->first);
                                 if (sit != itsStorageNodes.end()) {
-                                    if (std::find(snd.begin(), snd.end(), stit->first) == snd.end()) {
-                                        sit->second.removeClaim(pTask->getID()); // only call removeClaim one time for every storage node (it removes all claims found for the task ID)
-                                        snd.push_back(stit->first);
+                                    // check size requirements
+                                    res = sit->second.checkSpaceAndWriteSpeed(start, end, claimSize, bandWidth, it->second); // check space and write speed for every raid array
+                                    if (res != CONFLICT_NO_CONFLICT) {
+                                        itsLastStorageCheckResult.push_back(storageResult(dfit->first, it->first, it->second, res));
+                                        //								itsLastStorageCheckResult[it->first].push_back(std::pair<int, task_conflict>(it->second, res)); // store the error result
+                                    }
+                                    else { // add the claim
+                                        sit->second.addClaim(pTask->getID(), start, end, dfit->first, claimSize, bandWidth, it->second);
                                     }
                                 }
                             }
+                            // if there were conflicts then remove the claim again from the storage nodes
+                            if (!itsLastStorageCheckResult.empty()) {
+                                std::vector<int> snd;
+                                for (storageVector::const_iterator it = stit->second.begin(); it != stit->second.end(); ++it) {
+                                    sit = itsStorageNodes.find(it->first);
+                                    if (sit != itsStorageNodes.end()) {
+                                        if (std::find(snd.begin(), snd.end(), stit->first) == snd.end()) {
+                                            sit->second.removeClaim(pTask->getID()); // only call removeClaim one time for every storage node (it removes all claims found for the task ID)
+                                            snd.push_back(stit->first);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else { // no storage has been assigned to this data product type
+                            itsLastStorageCheckResult.push_back(storageResult(dfit->first, -1, -1, CONFLICT_NO_STORAGE_ASSIGNED));
                         }
                     }
                     else { // no storage has been assigned to this data product type
                         itsLastStorageCheckResult.push_back(storageResult(dfit->first, -1, -1, CONFLICT_NO_STORAGE_ASSIGNED));
                     }
-                }
-                else { // no storage has been assigned to this data product type
-                    itsLastStorageCheckResult.push_back(storageResult(dfit->first, -1, -1, CONFLICT_NO_STORAGE_ASSIGNED));
                 }
             }
         }
@@ -221,7 +226,7 @@ std::vector<storageResult> Storage::addStorageToTask(Task *pTask, dataProductTyp
                 sit = itsStorageNodes.find(it->first);
                 if (sit != itsStorageNodes.end()) {
                     // check size requirements
-                    if (!noCheck) {
+                    if (!noCheck && pTask->getOutputDataproductCluster() != "CEP4") {
                         res = sit->second.checkSpaceAndWriteSpeed(start, end, claimSize, bandWidth, it->second); // check space and bandwidth for every raid array
                     }
                     if (res == CONFLICT_NO_CONFLICT) {
