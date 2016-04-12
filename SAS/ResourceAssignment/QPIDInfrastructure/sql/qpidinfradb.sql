@@ -1,3 +1,8 @@
+-- Usage:
+--
+--   psql --command="CREATE DATABASE qpidinfra"
+--   psql --dbname=qpidinfra --file=qpidinfradb.sql
+
 DROP TABLE IF EXISTS exchanges CASCADE;
 DROP TABLE IF EXISTS queues CASCADE;
 DROP TABLE IF EXISTS hosts CASCADE;
