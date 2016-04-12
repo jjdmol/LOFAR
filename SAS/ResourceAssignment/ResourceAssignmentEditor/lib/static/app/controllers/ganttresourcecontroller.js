@@ -38,6 +38,7 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
         sideMode: 'Tree',
         treeHeaderContent: '<i class="fa fa-align-justify"></i> {{getHeader()}}',
         autoExpand: 'both',
+        taskOutOfRange: 'truncate',
         api: function(api) {
             // API Object is used to control methods and events from angular-gantt.
             $scope.api = api;
@@ -101,6 +102,20 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
         if(numResourceGroups == 0 || numResources == 0){
             $scope.ganttData = [];
             return;
+        }
+
+        $scope.options.fromDate = $scope.dataService.resourceClaimTimes.minStarttime;
+        $scope.options.toDate = $scope.dataService.resourceClaimTimes.maxEndtime;
+        var fullTimespanInMinutes = $scope.dataService.resourceClaimTimes.fullTimespanInMinutes;
+
+        if(fullTimespanInMinutes > 14*24*60) {
+            $scope.options.viewScale = '1 days';
+        } else if(fullTimespanInMinutes > 7*24*60) {
+            $scope.options.viewScale = '6 hours';
+        } else if(fullTimespanInMinutes > 2*24*60) {
+            $scope.options.viewScale = '3 hours';
+        } else {
+            $scope.options.viewScale = '1 hours';
         }
 
         var editableTaskStatusIds = $scope.dataService.editableTaskStatusIds;

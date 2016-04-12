@@ -60,6 +60,7 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
             }
         },
         autoExpand: 'both',
+        taskOutOfRange: 'truncate',
         dependencies: true,
         api: function(api) {
             // API Object is used to control methods and events from angular-gantt.
@@ -114,6 +115,20 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
         var ganntRowsDict = {};
 
         if(numProjecs > 0 && numTasks > 0 && numTasktypes > 0) {
+            $scope.options.fromDate = $scope.dataService.taskTimes.minStarttime;
+            $scope.options.toDate = $scope.dataService.taskTimes.maxEndtime;
+            var fullTimespanInMinutes = $scope.dataService.taskTimes.fullTimespanInMinutes;
+
+            if(fullTimespanInMinutes > 14*24*60) {
+                $scope.options.viewScale = '1 days';
+            } else if(fullTimespanInMinutes > 7*24*60) {
+                $scope.options.viewScale = '6 hours';
+            } else if(fullTimespanInMinutes > 2*24*60) {
+                $scope.options.viewScale = '3 hours';
+            } else {
+                $scope.options.viewScale = '1 hours';
+            }
+
             for(var i = 0; i < numTasks; i++) {
                 var task = tasks[i];
 
@@ -193,6 +208,7 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
     $scope.$watch('dataService.resourceGroupMemberships', updateGanttData);
     $scope.$watch('dataService.filteredTaskDict', updateGanttData);
     $scope.$watch('dataService.momProjectsDict', updateGanttData, true);
+    $scope.$watch('dataService.taskTimes', updateGanttData, true);
     $scope.$watch('dataService.lofarTime', function() {$scope.options.currentDateValue= $scope.dataService.lofarTime;});
 }
 ]);

@@ -26,6 +26,9 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
     self.filteredTasks = [];
     self.filteredTaskDict = {};
 
+    self.taskTimes = {};
+    self.resourceClaimTimes = {};
+
     self.selected_resource;
 
     self.initialLoadComplete = false;
@@ -61,6 +64,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             self.filteredTasks = self.tasks;
             self.filteredTaskDict = self.taskDict;
 
+            self.computeMinMaxTaskTimes();
+
             defer.resolve();
         });
 
@@ -71,6 +76,21 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         $http.put('/rest/tasks/' + task.id, task).error(function(result) {
             console.log("Error. Could not update task. " + result);
         })
+    };
+
+    self.computeMinMaxTaskTimes = function() {
+        var starttimes = self.filteredTasks.map(function(t) { return t.starttime;});
+        var endtimes = self.filteredTasks.map(function(t) { return t.endtime;});
+
+        var minStarttime = new Date(Math.min.apply(null, starttimes));
+        var maxEndtime = new Date(Math.max.apply(null, endtimes));
+        var fullTimespanInMinutes = (maxEndtime - minStarttime) / (60 * 1000);
+
+        self.taskTimes = {
+            min: minStarttime,
+            max: maxEndtime,
+            fullTimespanInMinutes: fullTimespanInMinutes
+        };
     };
 
     self.getResources = function() {
@@ -122,10 +142,27 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             self.resourceClaims = result.resourceclaims;
             self.resourceClaimDict = self.toIdBasedDict(self.resourceClaims);
 
+            self.computeMinMaxResourceClaimTimes();
+
             defer.resolve();
         });
 
         return defer.promise;
+    };
+
+    self.computeMinMaxResourceClaimTimes = function() {
+        var starttimes = self.resourceClaims.map(function(rc) { return rc.starttime;});
+        var endtimes = self.resourceClaims.map(function(rc) { return rc.endtime;});
+
+        var minStarttime = new Date(Math.min.apply(null, starttimes));
+        var maxEndtime = new Date(Math.max.apply(null, endtimes));
+        var fullTimespanInMinutes = (maxEndtime - minStarttime) / (60 * 1000);
+
+        self.resourceClaimTimes = {
+            min: minStarttime,
+            max: maxEndtime,
+            fullTimespanInMinutes: fullTimespanInMinutes
+        };
     };
 
     self.getResourceGroups = function() {
@@ -309,6 +346,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                                     }
                                 }
                             }
+
+                            self.computeMinMaxTaskTimes();
                         } else if(change.objectType == 'resourceClaim') {
                             anyResourceClaims = true;
                             var changedClaim = change.value;
@@ -332,6 +371,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                                     }
                                 }
                             }
+                            
+                            self.computeMinMaxResourceClaimTimes();
                         } else if(change.objectType == 'resourceCapacity') {
                             if(change.changeType == 'update') {
                                 var changedCapacity = change.value;
@@ -377,7 +418,9 @@ dataControllerMod.controller('DataController',
                             ['$scope', 'dataService',
                             function($scope, dataService) {
     var self = this;
-    self.dataService = dataService;
+    $scope.dataService = dataService;
+
+    $scope.$watch('dataService.filteredTasks', dataService.computeMinMaxTaskTimes);
 
     dataService.initialLoad();
 
