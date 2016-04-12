@@ -87,6 +87,22 @@ class Credentials:
       "dbname": self.database,
     }
 
+  def psycopg2_connect_options(self):
+    """
+      Returns a dict of options to provide to PsycoPG2's psycopg2.connect function. Use:
+
+      conn = psycopg2.connect(**dbcreds.psycopg2_connect_options())
+    """
+    return {
+      "host": self.host,
+      "port": self.port or None,
+
+      "user": self.user,
+      "password": self.password,
+
+      "database": self.database,
+    }
+
 
   def mysql_connect_options(self):
     """
