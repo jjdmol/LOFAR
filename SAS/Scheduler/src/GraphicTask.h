@@ -29,7 +29,7 @@ class QDragMoveEvent;
 class Task;
 class GraphicStationTaskLine;
 
-class GraphicTask : public QObject, public QGraphicsItem {
+class GraphicTask : /*public QObject,*/ public QGraphicsObject {
 
 	Q_OBJECT
 

@@ -13,6 +13,7 @@
 
 #include <QtGui>
 #include <QApplication>
+#include <QDir>
 #include "lofar_scheduler.h"
 #include "Controller.h"
 #include "schedulergui.h"
@@ -57,6 +58,17 @@ int main_function(int argc, char *argv[])
     // TODO: MVC seperation, where is the model? The M should be instantiated as a
     // specific object
     handler = new SignalHandler(&app, &c);
+
+ #ifdef Q_OS_MACX
+    if (QSysInfo::MacintoshVersion > QSysInfo::MV_10_8)
+    {   //OSX 10.9+, we find and set the directory of the .app, otherwise QDir::currentPath can be empty.
+        QDir dir = app.applicationDirPath();
+        dir.cdUp();
+        dir.cdUp();
+        dir.cdUp(); //To get from the executable in the bundle to the .app location
+        QDir::setCurrent(dir.absolutePath());
+    }
+ #endif
 
     // c.start() does not return it does this after closing gui window.
     try {

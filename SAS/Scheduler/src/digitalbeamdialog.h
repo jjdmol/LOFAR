@@ -14,7 +14,7 @@
 #ifndef DIGITALBEAMDIALOG_H
 #define DIGITALBEAMDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_digitalbeamdialog.h"
 #include "task.h"
 #include "Angle.h"

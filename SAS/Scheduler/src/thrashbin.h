@@ -14,7 +14,7 @@
 #ifndef THRASHBIN_H
 #define THRASHBIN_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_thrashbin.h"
 #include <map>
 #include <vector>

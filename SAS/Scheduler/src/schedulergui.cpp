@@ -17,6 +17,7 @@
 #include <QTableView>
 #include <QDesktopWidget>
 #include <QLCDNumber>
+#include <QFileDialog>
 #include <sstream>
 #include <vector>
 #include <algorithm>
@@ -38,9 +39,9 @@ using std::string;
 using std::endl;
 
 const char * DATA_HEADERS[NR_DATA_HEADERS] = { "task ID", "SAS ID", "MoM ID", "group ID", "project ID", "task name", "planned start (UTC)", "planned end (UTC)", "duration",
-        "task type", "task status", "error reason", "task description", "stations", "reservation", "priority", "fix day", "fix time",
+        "task type", "task status" , "cluster", "error reason", "task description", "stations", "reservation", "priority", "fix day", "fix time",
 		"first possible date", "last possible date", "window min time", "window max time", "antenna mode", "clock", "filter", "# subbands",
-		"contact name", "phone", "e-mail", "predecessors", "pred. min time dif", "pred. max time dif", "night wf.", "data size" };
+        "contact name", "phone", "e-mail", "predecessors", "pred. min time dif", "pred. max time dif", "night wf.", "data size"};
 
 extern QString currentUser;
 
@@ -235,7 +236,7 @@ void SchedulerGUI::createMainToolbar(void) {
     itsLCDtimer->setSegmentStyle(QLCDNumber::Flat);
     itsLCDtimer->setFrameStyle(QLCDNumber::Sunken);
     itsLCDtimer->setFrameShape(QLCDNumber::WinPanel);
-    itsLCDtimer->setNumDigits(8);
+    itsLCDtimer->setDigitCount(8);
     itsLCDtimer->setToolTip("current UTC");
     itsLCDtimer->display("00:00:00");
     itsMainToolBar->addWidget(itsLCDtimer);
@@ -361,16 +362,21 @@ void SchedulerGUI::updateGraphicTasks(const scheduledTasksMap &scheduledTasks, c
 
 void SchedulerGUI::createTableDock(void) {
     // create table dock and its layout
-	itsTableDock = new QDockWidget(tr("Table schedule view"), this);
+    itsTableDock = new QDockWidget("Table schedule view", this);
 	itsTableDockWidgetContents = new QWidget();
     itsTableDockMainLayout = new QGridLayout(itsTableDockWidgetContents);
     itsTableDockMainLayout->setMargin(5);
     // create the table view
 	itsTableView = new TableView(itsTableDockWidgetContents);
 	itsTableView->setWordWrap(false);
-	itsTableView->verticalHeader()->setResizeMode(QHeaderView::Fixed);
+#if QT_VERSION >= 0x050000
+    itsTableView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    itsTableView->horizontalHeader()->setSectionsMovable(true);
+#else
+    itsTableView->verticalHeader()->setResizeMode(QHeaderView::Fixed);
+    itsTableView->horizontalHeader()->setMovable(true);
+#endif
 	itsTableView->setDragEnabled(false);
-	itsTableView->horizontalHeader()->setMovable(true);
 	itsTableView->setDropIndicatorShown(true);
 	itsTableView->setAcceptDrops(false);
 	itsTableView->setAlternatingRowColors(true);
@@ -721,7 +727,11 @@ void SchedulerGUI::newTable(SchedulerData const &data) {
 	itsTableView->setModel(itsModel);
 	itsTableView->setItemDelegate(&itsDelegate);
 	itsTableView->horizontalHeader()->setStretchLastSection(true);
-	itsTableView->horizontalHeader()->setClickable(true);
+#if QT_VERSION >= 0x050000
+    itsTableView->horizontalHeader()->setSectionsClickable(true);
+#else
+    itsTableView->horizontalHeader()->setClickable(true);
+#endif
 	itsTableView->horizontalHeader()->setSortIndicatorShown(true);
 	writeTableData(data);
 }
@@ -779,6 +789,7 @@ void SchedulerGUI::setDefaultColumnWidths(void) {
 	itsTableView->setColumnWidth(FIXED_DAY,50);
 	itsTableView->setColumnWidth(FIXED_TIME,50);
 	itsTableView->setColumnWidth(PRIORITY,50);
+    itsTableView->setColumnWidth(CLUSTER_NAME,50);
 }
 
 void SchedulerGUI::writeTableData(SchedulerData const &data) {
@@ -931,6 +942,8 @@ void SchedulerGUI::updateTableTask(const Task *pTask, int row) {
         itsModel->setData(itsModel->index(row, CONTACT_EMAIL), pTask->getContactEmail(), Qt::UserRole); // for sorting
         itsModel->setData(itsModel->index(row, TASK_TYPE), pTask->getTypeStr());
         itsModel->setData(itsModel->index(row, TASK_TYPE), pTask->getTypeStr(), Qt::UserRole); // for sorting
+        itsModel->setData(itsModel->index(row, CLUSTER_NAME), pTask->getOutputDataproductCluster());
+        itsModel->setData(itsModel->index(row, CLUSTER_NAME), pTask->getOutputDataproductCluster(), Qt::UserRole); // for sorting
 
         const StationTask *pStationTask = dynamic_cast<const StationTask *>(pTask);
         if (pStationTask) { // is this a stationTask?
@@ -2101,7 +2114,7 @@ QString SchedulerGUI::fileDialog(const QString &title, const QString &def_suffix
 	QFileDialog dialog;
 	QFileInfo fi;
 	QString path="";
-	dialog.setFilters(filter.split('\n'));
+    dialog.setNameFilters(filter.split('\n'));
 	dialog.setWindowTitle(title);
 
 
