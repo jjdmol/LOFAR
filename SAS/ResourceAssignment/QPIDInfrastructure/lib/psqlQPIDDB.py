@@ -28,7 +28,7 @@ class psqlQPIDDB:
         if self.conn and self.conn.status==1:
 	    return
 
-	self.conn = pg.connect(**self.dbcreds.pg_connect_options())
+	self.conn = pg.connect(**self.dbcreds.psycopg2_connect_options())
 
 	if self.conn and self.conn.status==1:
 	    return

@@ -20,6 +20,7 @@ if __name__ == '__main__':
 
     if (len(sys.argv)<2):
 	 parser.print_help()
+	 sys.exit(0)
 
     dbcreds = dbcredentials.parse_options(options)
     QPIDinfra = qpidinfra(dbcreds)
