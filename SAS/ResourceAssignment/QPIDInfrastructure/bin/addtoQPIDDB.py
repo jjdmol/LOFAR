@@ -14,7 +14,7 @@ if __name__ == '__main__':
     parser.add_option('-q', '--queue', dest='queue', type='string', default=None, help='Name of the queue on the broker')
     parser.add_option('-e', '--exchange', dest='exchange', type='string', default=None, help='Name of the exchange on the broker')
     parser.add_option('-k', '--routingkey', dest='routingkey', type='string', default='#', help='Federation routing key')
-    parser.add_option_group(dbcredentials.options_group(parser))
+    parser.add_option_group(dbcredentials.options_group(parser, "qpidinfra"))
 
     (options, args) = parser.parse_args()
 
@@ -22,7 +22,7 @@ if __name__ == '__main__':
 	 parser.print_help()
 	 sys.exit(0)
 
-    dbcreds = dbcredentials.parse_options(options, "qpidinfra")
+    dbcreds = dbcredentials.parse_options(options)
     QPIDinfra = qpidinfra(dbcreds)
 
     if (options.broker==None):
