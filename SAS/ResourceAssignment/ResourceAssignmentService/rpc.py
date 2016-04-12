@@ -102,7 +102,7 @@ class RARPC(RPCWrapper):
                                                         username=username,
                                                         user_id=user_id)
 
-    def getResourceUsages(self, lower_bound=None, upper_bound=None, resource_ids=None, task_ids=None, status=None, resource_type=None):
+    def getResourceUsages(self, claim_ids=None, lower_bound=None, upper_bound=None, resource_ids=None, task_ids=None, status=None, resource_type=None):
         all_usages = self.rpc('GetResourceUsages',
                               lower_bound=lower_bound,
                               upper_bound=upper_bound,
