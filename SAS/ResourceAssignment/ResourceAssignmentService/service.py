@@ -269,14 +269,14 @@ class RADBHandler(MessageHandlerInterface):
         return specification
 
     def _insertSpecificationAndTask(self, **kwargs):
-        logger.info('InsertSpecificationAndTask: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
-        return self.radb.insertSpecification(kwargs['mom_id'],
-                                             kwargs['otdb_id'],
-                                             kwargs['task_status'],
-                                             kwargs['task_type'],
-                                             kwargs['starttime'].datetime(),
-                                             kwargs['endtime'].datetime(),
-                                             kwargs['content'])
+        logger.info('InsertSpecificationAndTask: %s' % dict({k:v for k,v in kwargs.items() if v != None and k != 'content'}))
+        return self.radb.insertSpecificationAndTask(kwargs['mom_id'],
+                                                    kwargs['otdb_id'],
+                                                    kwargs['task_status'],
+                                                    kwargs['task_type'],
+                                                    kwargs['starttime'].datetime(),
+                                                    kwargs['endtime'].datetime(),
+                                                    kwargs['content'])
 
     def _insertSpecification(self, **kwargs):
         logger.info('InsertSpecification: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
