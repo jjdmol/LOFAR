@@ -16,7 +16,8 @@ if $PROD; then
   SCU=scu001
   SAS=sas001
 
-  LCS=lcs023
+  MOM_USER=lcs023
+  MOM_INGEST=lcs029
 
   COBALT="cbt001 cbt002 cbt003 cbt004 cbt005 cbt006 cbt007 cbt008"
 
@@ -31,7 +32,8 @@ else
   SCU=scu099
   SAS=sas099
 
-  LCS=lcs028
+  MOM_USER=lcs028
+  MOM_INGEST=lcs028
 
   COBALT="cbt009"
 
@@ -78,9 +80,9 @@ done
 #   MessageRouter -> MoM
 # -----------------------------------------
 
-addtoQPIDDB.py --broker $CCU --queue mom.task.feedback.dataproducts --federation $LCS
-addtoQPIDDB.py --broker $CCU --queue mom.task.feedback.processing --federation $LCS
-addtoQPIDDB.py --broker $CCU --queue mom.task.feedback.state --federation $LCS
+addtoQPIDDB.py --broker $CCU --queue mom.task.feedback.dataproducts --federation $MOM_USER
+addtoQPIDDB.py --broker $CCU --queue mom.task.feedback.processing --federation $MOM_USER
+addtoQPIDDB.py --broker $CCU --queue mom.task.feedback.state --federation $MOM_USER
 
 # -----------------------------------------
 #   MessageRouter -> OTDB
@@ -100,15 +102,21 @@ addtoQPIDDB.py --broker $CCU --exchange mac.task.feedback.state
 # -----------------------------------------
 
 addtoQPIDDB.py --broker $MCU --queue lofar.task.specification.system --federation $CCU
-addtoQPIDDB.py --broker $CCU --queue mom.task.specification.system --federation $LCS
+addtoQPIDDB.py --broker $CCU --queue mom.task.specification.system --federation $MOM_USER
 
 # -----------------------------------------
 #   MoM <-> MoM-OTDB-Adapter
 # -----------------------------------------
 
-addtoQPIDDB.py --broker $SAS --queue mom.command --federation $LCS
-addtoQPIDDB.py --broker $SAS --queue mom.importxml --federation $LCS
-addtoQPIDDB.py --broker $LCS --queue mom-otdb-adapter.importxml --federation $SAS
+addtoQPIDDB.py --broker $SAS --queue mom.command --federation $MOM_USER
+addtoQPIDDB.py --broker $SAS --queue mom.importxml --federation $MOM_USER
+addtoQPIDDB.py --broker $MOM_USER --queue mom-otdb-adapter.importxml --federation $SAS
+
+# -----------------------------------------
+#   MoM Services
+# -----------------------------------------
+addtoQPIDDB.py --broker $MOM_USER --exchange lofar.mom.bus
+addtoQPIDDB.py --broker $MOM_INGEST --exchange lofar.mom.bus
 
 # -----------------------------------------
 #   ResourceAssignment
