@@ -36,7 +36,6 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
         columnMagnet: '1 minutes',
         timeFramesMagnet: false,
         sideMode: 'Tree',
-        treeHeaderContent: '<i class="fa fa-align-justify"></i> {{getHeader()}}',
         autoExpand: 'both',
         taskOutOfRange: 'truncate',
         api: function(api) {
