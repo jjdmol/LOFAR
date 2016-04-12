@@ -71,7 +71,7 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
         var numResources = $scope.dataService.resources.length;
         var resource = $scope.dataService.selected_resource;
 
-        if(!resource || numResources == 0) {
+        if(!resource || numResources == 0 || !resourceUsagesDict[resource.id]) {
             $scope.chartSeries.splice(0, $scope.chartSeries.length);
             $scope.chartConfig.title.text = "No resource selected";
             return;
@@ -80,7 +80,7 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
         //set title to resource name
         $scope.chartConfig.title.text = resource.name;
 
-        var status_usages = resourceUsagesDict[resource.id];
+        var status_usages = resourceUsagesDict[resource.id].usages;
 
         //first scan of all statuses and timestamps in usages for this resource
         var statuses = [];
@@ -140,12 +140,13 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
                     t_idx += 1;
                 }
 
-                var series = $scope.chartSeries.find(function(series) {return series.name == status});
-
-                if(!series) {
-                    series = {name: status, type: 'area', step: true, lineWidth:0, marker:{enabled:false} };
-                    $scope.chartSeries.push(series);
+                //make sure the series are in the right order for proper stacking
+                var seriesIdx = $scope.chartSeries.findIndex(function(series) {return series.name == status});
+                if(seriesIdx > -1) {
+                    $scope.chartSeries.splice(seriesIdx, 1);
                 }
+                series = {name: status, type: 'area', step: true, lineWidth:0, marker:{enabled:false}, animation:false };
+                $scope.chartSeries.push(series);
 
                 series.data = usage_data;
 
@@ -154,6 +155,21 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
                     case 'conflict': series.color = '#ff0000'; break;
                     case 'allocated': series.color = '#66ff66'; break;
                 }
+            }
+
+            //plot area for resource misc_used capacity
+            //make sure it is the last of the 'area' series so it is at the bottom of the stacked area charts
+            var misc_used_cap_series_idx = $scope.chartSeries.findIndex(function(series) {return series.name == 'misc used capacity'});
+            if(misc_used_cap_series_idx > -1) {
+                $scope.chartSeries.splice(misc_used_cap_series_idx, 1);
+            }
+
+            var misc_used_capacity = resourceUsagesDict[resource.id].misc_used_capacity;
+            if(misc_used_capacity > 0) {
+                misc_used_cap_series = {name: 'misc used capacity', type: 'area', color: '#aaaaff', lineWidth:1, marker:{enabled:false}, dashStyle:'Dash', animation:false };
+                $scope.chartSeries.push(misc_used_cap_series);
+                misc_used_cap_series.data = timestamps.map(function(t) { return [t.getTime(), misc_used_capacity]; });
+                expectedSeriesNames.push('misc used capacity');
             }
 
             //plot horizontal line for resource total capacity
@@ -172,9 +188,8 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
                 used_cap_series = {name: 'used capacity', type: 'line', color: '#ff9966', lineWidth:3, marker:{enabled:false}, dashStyle:'Dash'};
                 $scope.chartSeries.push(used_cap_series);
             }
-            var used_capacity = resource.total_capacity - resource.available_capacity;
-            used_cap_series.data = [[timestamps[0].getTime(), used_capacity],
-                                    [timestamps[timestamps.length-1].getTime(), used_capacity]]
+            used_cap_series.data = [[timestamps[0].getTime(), resource.used_capacity],
+                                    [timestamps[timestamps.length-1].getTime(), resource.used_capacity]]
             expectedSeriesNames.push('used capacity');
         }
 
