@@ -225,7 +225,7 @@ class qpidinfra:
 	If dynamic is set to True the routing key won't have any effect since teh routing is assumed dynamic.
 	"""
 	if (self.getexchangeroute(exchangeid,routingkey,fromid,toid)==0):
-	    self.db.docommit("insert into exchangeroutes (eid,fromhost,tohost,routingkey,dynamic);" %(exchangeid,fromid,toid,routingkey,dynamic))
+	    self.db.docommit("insert into exchangeroutes (eid,fromhost,tohost,routingkey,dynamic) values (%s, %s, %s, '%s', %s);" %(exchangeid,fromid,toid,routingkey,dynamic))
 
     def delexchangeroute(self,exchangeid,routingkey,fromid,toid,dynamic=False):
 	""" Delete the exchange route for exchangeid,routingkey,fromid,toid and dynamic(bool).

@@ -27,6 +27,7 @@ if __name__ == '__main__':
 
     if (options.broker==None):
 	parser.print_help()
+	sys.exit(1)
 
     else:
 	QPIDinfra.addhost(options.broker)
@@ -49,7 +50,7 @@ if __name__ == '__main__':
 		exchange=options.exchange
 	    
 	    QPIDinfra.bindqueuetohost(options.queue,options.federation)
-	    QPIDinfra.setqueueroute(options.queue,options.broker,options.federation,exchange)
+	    QPIDinfra.setqueueroute(options.queue,options.broker,options.federation,options.exchange)
 	else:
 	    if (options.exchange):
 	        QPIDinfra.addexchange(options.exchange) # should be superfluous
