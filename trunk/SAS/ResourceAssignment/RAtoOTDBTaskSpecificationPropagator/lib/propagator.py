@@ -37,8 +37,7 @@ from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAUL
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
 
 from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import OTDBRPC
-from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import DEFAULT_BUSNAME as OTDB_BUSNAME
-from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import DEFAULT_SERVICENAME as OTDB_SERVICENAME
+from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
 from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.translator import RAtoOTDBTranslator
 
 logger = logging.getLogger(__name__)
@@ -49,8 +48,8 @@ class RAtoOTDBPropagator():
                  radb_busname=RADB_BUSNAME,
                  radb_servicename=RADB_SERVICENAME,
                  radb_broker=None,
-                 otdb_busname=OTDB_BUSNAME,
-                 otdb_servicename=OTDB_SERVICENAME,
+                 otdb_busname=DEFAULT_OTDB_SERVICE_BUSNAME,
+                 otdb_servicename=DEFAULT_OTDB_SERVICENAME,
                  otdb_broker=None,
                  broker=None):
         """
@@ -116,8 +115,8 @@ class RAtoOTDBPropagator():
             logger.debug("Processing claim: %s" % claim)
             if claim['resource_type_name'] == 'storage':
                 info['storage'] = claim
-        info["starttime"] = task["starttime"] + datetime.timedelta(hours=1) #TODO Test code!!! FIXME FIXME before release
-        info["endtime"] = task["endtime"] + datetime.timedelta(hours=1)
+        info["starttime"] = task["starttime"]
+        info["endtime"] = task["endtime"]
         info["status"] = task["status"]
         return info
     

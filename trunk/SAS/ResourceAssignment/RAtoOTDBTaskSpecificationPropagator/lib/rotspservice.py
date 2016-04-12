@@ -59,7 +59,7 @@ class RATaskStatusChangedListener(RADBBusListener):
                 numthreads= <int>    Number of parallel threads processing messages (default: 1)
                 verbose=     <bool>    Output extra logging over stdout (default: False)
         """
-        super(RATaskStatusChangedListener, self).__init__(busname=busname, subject=subject, broker=broker, **kwargs)
+        super(RATaskStatusChangedListener, self).__init__(busname=busname, subjects=subject, broker=broker, **kwargs)
 
         self.propagator = propagator
         if not self.propagator:
@@ -72,7 +72,7 @@ class RATaskStatusChangedListener(RADBBusListener):
             if new_task['status'] == 'scheduled':
                 self.onTaskScheduled(new_task['id'], new_task['otdb_id'], new_task['mom_id'])
             elif new_task['status'] == 'conflict':
-                self.onTaskScheduled(new_task['id'], new_task['otdb_id'], new_task['mom_id'])
+                self.onTaskConflict(new_task['id'], new_task['otdb_id'], new_task['mom_id'])
 
     def onTaskScheduled(self, ra_id, otdb_id, mom_id):
         logger.info('onTaskScheduled: ra_id=%s otdb_id=%s mom_id=%s' % (ra_id, otdb_id, mom_id))
@@ -82,7 +82,7 @@ class RATaskStatusChangedListener(RADBBusListener):
     def onTaskConflict(self, ra_id, otdb_id, mom_id):
         logger.info('onTaskConflict: ra_id=%s otdb_id=%s mom_id=%s' % (ra_id, otdb_id, mom_id))
 
-        self.propagator.doTaskConflict(otdb_id, mom_id)
+        self.propagator.doTaskConflict(ra_id, otdb_id, mom_id)
 
 
 __all__ = ["RATaskStatusChangedListener"]
@@ -94,8 +94,8 @@ def main():
 
     from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME as RADB_BUSNAME
     from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
-    from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import DEFAULT_BUSNAME as OTDB_BUSNAME
-    from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import DEFAULT_SERVICENAME as OTDB_SERVICENAME
+    from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
+
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]",
@@ -105,8 +105,8 @@ def main():
     parser.add_option("--notification_subject", dest="notification_subject", type="string", default=RA_NOTIFICATION_PREFIX+'TaskUpdated', help="Subject of the published messages to listen for, default: %default")
     parser.add_option("--radb_busname", dest="radb_busname", type="string", default=RADB_BUSNAME, help="Name of the bus on which the RADB service listens, default: %default")
     parser.add_option("--radb_servicename", dest="radb_servicename", type="string", default=RADB_SERVICENAME, help="Name of the RADB service, default: %default")
-    parser.add_option("--otdb_busname", dest="otdb_busname", type="string", default=OTDB_BUSNAME, help="Name of the bus on which the OTDB service listens, default: %default")
-    parser.add_option("--otdb_servicename", dest="otdb_servicename", type="string", default=OTDB_SERVICENAME, help="Name of the OTDB service, default: %default")
+    parser.add_option("--otdb_busname", dest="otdb_busname", type="string", default=DEFAULT_OTDB_SERVICE_BUSNAME, help="Name of the bus on which the OTDB service listens, default: %default")
+    parser.add_option("--otdb_servicename", dest="otdb_servicename", type="string", default=DEFAULT_OTDB_SERVICENAME, help="Name of the OTDB service, default: %default")
     parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
     (options, args) = parser.parse_args()
 

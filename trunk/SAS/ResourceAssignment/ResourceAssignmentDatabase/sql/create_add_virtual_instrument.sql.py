@@ -134,7 +134,7 @@ with open("add_virtual_instrument.sql", 'w+') as output:
   for node in cep4numbers + cobaltnumbers:
     resources += "(%i, 'bandwidth', %i), " % (resource_count, bandwidth_index)
     resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, node)
-    resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 50*1024*1024*1024, 50*1024*1024*1024) ##magic numbers FIXME
+    resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 2000000000, 2000000000) ##magic numbers FIXME
     resource_available += "(DEFAULT, %i, TRUE), " % (resource_count,)
     resource_count += 1
     resources += "(%i, 'processor', %i), " % (resource_count, processor_index)
@@ -150,7 +150,7 @@ with open("add_virtual_instrument.sql", 'w+') as output:
   ## CEP4 bandwidth
   resources += "(%i, 'cep4bandwidth', %i), " % (resource_count, bandwidth_index)
   resource_to_resource_group += "(DEFAULT, %i, %i), " % (resource_count, 1) ##magic numbers FIXME
-  resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 80*1024*1024*1024, 80*1024*1024*1024) ##magic numbers FIXME
+  resource_capacity += "(DEFAULT, %i, %i, %i), " % (resource_count, 160000000000, 160000000000) ##magic numbers FIXME
   resource_available += "(DEFAULT, %i, TRUE), " % (resource_count,)
   resource_count += 1
   ## CEP4 storage

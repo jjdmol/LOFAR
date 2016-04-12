@@ -36,8 +36,9 @@ class RARPC(RPCWrapper):
     def insertResourceClaimProperty(self, claim_id, property_type, value):
         return self.rpc('InsertResourceClaimProperty', claim_id=claim_id, property_type=property_type, value=value)
 
-    def getResourceClaims(self, lower_bound=None, upper_bound=None, task_id=None, status=None, resource_type=None, extended=False, include_properties=False):
-        claims = self.rpc('GetResourceClaims', lower_bound=lower_bound,
+    def getResourceClaims(self, claim_ids=None, lower_bound=None, upper_bound=None, task_id=None, status=None, resource_type=None, extended=False, include_properties=False):
+        claims = self.rpc('GetResourceClaims', claim_ids=claim_ids,
+                                               lower_bound=lower_bound,
                                                upper_bound=upper_bound,
                                                task_id=task_id,
                                                status=status,
@@ -101,6 +102,22 @@ class RARPC(RPCWrapper):
                                                         username=username,
                                                         user_id=user_id)
 
+    def getResourceUsages(self, lower_bound=None, upper_bound=None, resource_ids=None, task_ids=None, status=None, resource_type=None):
+        all_usages = self.rpc('GetResourceUsages',
+                              lower_bound=lower_bound,
+                              upper_bound=upper_bound,
+                              resource_ids=resource_ids,
+                              task_ids=task_ids,
+                              status=status,
+                              resource_type=resource_type)
+
+        for resource_usages in all_usages:
+            for status, usages in resource_usages['usages'].items():
+                for usage in usages:
+                    usage['timestamp'] = usage['timestamp'].datetime()
+
+        return all_usages
+
     def getResourceGroupTypes(self):
         return self.rpc('GetResourceGroupTypes')
 
@@ -115,8 +132,15 @@ class RARPC(RPCWrapper):
     def getResourceTypes(self):
         return self.rpc('GetResourceTypes')
 
-    def getResources(self):
-        return self.rpc('GetResources')
+    def getResources(self, resource_ids=None, resource_types=None, include_availability=False):
+        return self.rpc('GetResources', resource_ids=resource_ids, resource_types=resource_types, include_availability=include_availability)
+
+    def updateResourceAvailability(self, resource_id, active=None, available_capacity=None, total_capacity=None):
+        return self.rpc('UpdateResourceAvailability',
+                        resource_id=resource_id,
+                        active=active,
+                        available_capacity=available_capacity,
+                        total_capacity=total_capacity)
 
     def getTask(self, id=None, mom_id=None, otdb_id=None):
         '''get a task for either the given (task)id, or for the given mom_id, or for the given otdb_id'''
@@ -171,10 +195,21 @@ class RARPC(RPCWrapper):
             specification['endtime'] = specification['endtime'].datetime()
         return specification
 
+    def insertSpecificationAndTask(self, mom_id, otdb_id, task_status, task_type, starttime, endtime, content):
+        return self.rpc('InsertSpecificationAndTask',
+                        mom_id=mom_id,
+                        otdb_id=otdb_id,
+                        task_status=task_status,
+                        task_type=task_type,
+                        starttime=starttime,
+                        endtime=endtime,
+                        content=content)
+
     def insertSpecification(self, starttime, endtime, content):
-        return self.rpc('InsertSpecification', starttime=starttime,
-                                           endtime=endtime,
-                                           content=content)
+        return self.rpc('InsertSpecification',
+                        starttime=starttime,
+                        endtime=endtime,
+                        content=content)
 
     def deleteSpecification(self, id):
         return self.rpc('DeleteSpecification', id=id)

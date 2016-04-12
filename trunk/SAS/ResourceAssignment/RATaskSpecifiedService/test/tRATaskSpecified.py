@@ -8,6 +8,7 @@ from RATaskSpecified import *
 from RABusListener import RATaskSpecifiedBusListener
 from lofar.parameterset import PyParameterSet
 from lofar.messaging import EventMessage, Service
+from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICENAME
 
 import unittest
 from glob import glob
@@ -75,7 +76,7 @@ class TestService(unittest.TestCase):
     self.bus.open()
 
     # Define the services we use
-    self.status_service = "%s/TaskStatus" % (self.busname,)
+    self.status_service = "%s/%s.TaskGetSpecification" % (self.busname,DEFAULT_OTDB_SERVICENAME)
 
     # ================================
     # Setup mock parset service
@@ -102,7 +103,7 @@ class TestService(unittest.TestCase):
         PARSET_PREFIX + "Observation.Scheduler.predecessors": predecessors,
       }
 
-    self.parset_service = Service("TaskSpecification", TaskSpecificationService, busname=self.busname)
+    self.parset_service = Service(DEFAULT_OTDB_SERVICENAME+".TaskGetSpecification", TaskSpecificationService, busname=self.busname)
     self.parset_service.start_listening()
 
     # ================================
@@ -147,7 +148,9 @@ class TestService(unittest.TestCase):
 
         3 requires nothing
     """
-    with RATaskSpecified("OTDB.TaskSpecified", otdb_busname=self.busname, my_busname=self.busname) as jts:
+    with RATaskSpecified(otdb_notification_busname=self.busname,
+                         otdb_service_busname=self.busname,
+                         notification_busname=self.busname) as jts:
       # Send fake status update
       with ToBus(self.status_service) as tb:
         msg = EventMessage(content={
@@ -178,7 +181,7 @@ class TestService(unittest.TestCase):
         3 requires nothing
     """
 
-    with RATaskSpecified("OTDB.TaskSpecified", otdb_busname=self.busname, my_busname=self.busname) as jts:
+    with RATaskSpecified(otdb_notification_busname=self.busname, notification_busname=self.busname) as jts:
       # Send fake status update
       with ToBus(self.status_service) as tb:
         msg = EventMessage(content={

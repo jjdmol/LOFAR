@@ -49,11 +49,13 @@ class RADBHandler(MessageHandlerInterface):
             'DeleteResourceClaim': self._deleteResourceClaim,
             'UpdateResourceClaim': self._updateResourceClaim,
             'UpdateTaskAndResourceClaims': self._updateTaskAndResourceClaims,
+            'GetResourceUsages': self._getResourceUsages,
             'GetResourceGroupTypes': self._getResourceGroupTypes,
             'GetResourceGroups': self._getResourceGroups,
             'GetResourceGroupMemberships': self._getResourceGroupMemberships,
             'GetResourceTypes': self._getResourceTypes,
             'GetResources': self._getResources,
+            'UpdateResourceAvailability': self._updateResourceAvailability,
             'GetTasks': self._getTasks,
             'GetTask': self._getTask,
             'InsertTask': self._insertTask,
@@ -65,6 +67,7 @@ class RADBHandler(MessageHandlerInterface):
             'GetTaskTypes': self._getTaskTypes,
             'GetSpecifications': self._getSpecifications,
             'GetSpecification': self._getSpecification,
+            'InsertSpecificationAndTask': self._insertSpecificationAndTask,
             'InsertSpecification': self._insertSpecification,
             'DeleteSpecification': self._deleteSpecification,
             'UpdateSpecification': self._updateSpecification,
@@ -93,9 +96,11 @@ class RADBHandler(MessageHandlerInterface):
         return {'id':id}
 
     def _getResourceClaims(self, **kwargs):
-        return self.radb.getResourceClaims(lower_bound=kwargs.get('lower_bound'),
+        return self.radb.getResourceClaims(claim_ids=kwargs.get('claim_ids'),
+                                           lower_bound=kwargs.get('lower_bound'),
                                            upper_bound=kwargs.get('upper_bound'),
-                                           task_ids=kwargs.get('task_id'),
+                                           resource_ids=kwargs.get('resource_ids'),
+                                           task_ids=kwargs.get('task_ids'),
                                            status=kwargs.get('status'),
                                            resource_type=kwargs.get('resource_type'),
                                            extended=kwargs.get('extended', False),
@@ -176,6 +181,15 @@ class RADBHandler(MessageHandlerInterface):
                                                         user_id=kwargs.get('user_id'))
         return {'task_id': task_id, 'updated': updated}
 
+    def _getResourceUsages(self, **kwargs):
+        usages = self.radb.getResourceUsages(lower_bound=kwargs.get('lower_bound'),
+                                             upper_bound=kwargs.get('upper_bound'),
+                                             resource_ids=kwargs.get('resource_ids'),
+                                             task_ids=kwargs.get('task_ids'),
+                                             status=kwargs.get('status'),
+                                             resource_type=kwargs.get('resource_type'))
+        return usages
+
     def _getResourceGroupTypes(self):
         return self.radb.getResourceGroupTypes()
 
@@ -190,8 +204,16 @@ class RADBHandler(MessageHandlerInterface):
     def _getResourceTypes(self):
         return self.radb.getResourceTypes()
 
-    def _getResources(self):
-        return self.radb.getResources()
+    def _getResources(self, **kwargs):
+        return self.radb.getResources(resource_ids=kwargs.get('resource_ids'),
+                                      resource_types=kwargs.get('resource_types'),
+                                      include_availability=kwargs.get('include_availability', False))
+
+    def _updateResourceAvailability(self, **kwargs):
+        return self.radb.updateResourceAvailability(resource_id=kwargs['resource_id'],
+                                                    active=kwargs.get('active'),
+                                                    available_capacity=kwargs.get('available_capacity'),
+                                                    total_capacity=kwargs.get('total_capacity'))
 
     def _getTasks(self):
         return self.radb.getTasks()
@@ -244,6 +266,16 @@ class RADBHandler(MessageHandlerInterface):
         logger.info('GetSpecification: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
         specification = self.radb.getSpecification(kwargs['id'])
         return specification
+
+    def _insertSpecificationAndTask(self, **kwargs):
+        logger.info('InsertSpecificationAndTask: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
+        return self.radb.insertSpecification(kwargs['mom_id'],
+                                             kwargs['otdb_id'],
+                                             kwargs['task_status'],
+                                             kwargs['task_type'],
+                                             kwargs['starttime'].datetime(),
+                                             kwargs['endtime'].datetime(),
+                                             kwargs['content'])
 
     def _insertSpecification(self, **kwargs):
         logger.info('InsertSpecification: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
@@ -298,6 +330,8 @@ def main():
     setQpidLogLevel(logging.INFO)
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                         level=logging.DEBUG if options.verbose else logging.INFO)
+
+    logger.info("Using dbcreds: %s" % dbcreds.stringWithHiddenPassword())
 
     with createService(busname=options.busname,
                        servicename=options.servicename,

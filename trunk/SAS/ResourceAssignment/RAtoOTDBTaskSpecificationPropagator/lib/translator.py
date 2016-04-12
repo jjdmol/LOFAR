@@ -55,8 +55,8 @@ class RAtoOTDBTranslator():
                     locations.append("CEP4:/data/projects/test/L%d" % otdb_id)
                     filenames.append("L%d_SAP%03d_SB%03d_uv.MS" % (otdb_id, sap['sap_nr'], sb_nr))
                     sb_nr += 1
-        result[PREFIX + 'DataProducts.Output_Correlated.locations'] = to_csv_string(locations)
-        result[PREFIX + 'DataProducts.Output_Correlated.filenames'] = to_csv_string(filenames)
+        result[PREFIX + 'DataProducts.Output_Correlated.locations'] = '[' + to_csv_string(locations) + ']'
+        result[PREFIX + 'DataProducts.Output_Correlated.filenames'] = '[' + to_csv_string(filenames) + ']'
         return result
 
     def CreateCoherentStokes(self, otdb_id, storage_properties):
@@ -75,8 +75,8 @@ class RAtoOTDBTranslator():
                         for part in xrange(nr_parts):
                             locations.append("CEP4:/data/projects/project/L%d" % otdb_id)
                             filenames.append("L%d_SAP%03d_B%03d_S%d_P%03d_bf.h5" % (otdb_id, sap['sap_nr'], tab, stokes, part))
-        result[PREFIX + 'DataProducts.Output_CoherentStokes.locations'] = to_csv_string(locations)
-        result[PREFIX + 'DataProducts.Output_CoherentStokes.filenames'] = to_csv_string(filenames)
+        result[PREFIX + 'DataProducts.Output_CoherentStokes.locations'] = '[' + to_csv_string(locations) + ']'
+        result[PREFIX + 'DataProducts.Output_CoherentStokes.filenames'] = '[' + to_csv_string(filenames) + ']'
         return result
 
     def CreateIncoherentStokes(self, otdb_id, storage_properties):
@@ -95,8 +95,8 @@ class RAtoOTDBTranslator():
                         for part in xrange(nr_parts):
                             locations.append("CEP4:/data/projects/project/L%d" % otdb_id)
                             filenames.append("L%d_SAP%03d_B%03d_S%d_P%03d_bf.h5" % (otdb_id, sap['sap_nr'], tab, stokes, part))
-        result[PREFIX + 'DataProducts.Output_IncoherentStokes.locations'] = to_csv_string(locations)
-        result[PREFIX + 'DataProducts.Output_IncoherentStokes.filenames'] = to_csv_string(filenames)
+        result[PREFIX + 'DataProducts.Output_IncoherentStokes.locations'] = '[' + to_csv_string(locations) + ']'
+        result[PREFIX + 'DataProducts.Output_IncoherentStokes.filenames'] = '[' + to_csv_string(filenames) + ']'
         return result
 
     def CreateCreateInstrumentModel(self, otdb_id, storage_properties):
@@ -109,8 +109,8 @@ class RAtoOTDBTranslator():
                 for _ in range(sap['properties']['nr_of_im_files']):
                     locations.append("CEP4:/data/projects/project/L%d" % otdb_id)
                     filenames.append("L%d_SAP%03d_SB%03d_inst.INST" % (otdb_id, sap['sap_nr'], sb_nr))
-        result[PREFIX + 'DataProducts.Output_InstrumentModel.locations'] = to_csv_string(locations)
-        result[PREFIX + 'DataProducts.Output_InstrumentModel.filenames'] = to_csv_string(filenames)
+        result[PREFIX + 'DataProducts.Output_InstrumentModel.locations'] = '[' + to_csv_string(locations) + ']'
+        result[PREFIX + 'DataProducts.Output_InstrumentModel.filenames'] = '[' + to_csv_string(filenames) + ']'
         return result
 
     def CreateSkyImage(self, otdb_id, storage_properties):
@@ -123,8 +123,8 @@ class RAtoOTDBTranslator():
                 for _ in range(sap['properties']['nr_of_img_files']):
                     locations.append("CEP4:/data/projects/project/L%d" % otdb_id)
                     filenames.append("L%d_SAP%03d_SB%03d_sky.IM" % (otdb_id, sap['sap_nr'], sb_nr))
-        result[PREFIX + 'DataProducts.Output_SkyImage.locations'] = to_csv_string(locations)
-        result[PREFIX + 'DataProducts.Output_SkyImage.filenames'] = to_csv_string(filenames)
+        result[PREFIX + 'DataProducts.Output_SkyImage.locations'] = '[' + to_csv_string(locations) + ']'
+        result[PREFIX + 'DataProducts.Output_SkyImage.filenames'] = '[' + to_csv_string(filenames) + ']'
         return result
 
     def CreatePulsarPipeline(self, otdb_id, storage_properties):
@@ -137,8 +137,8 @@ class RAtoOTDBTranslator():
                 for _ in range(sap['properties']['nr_of_pulp_files']):
                     locations.append("CEP4:/data/projects/project/L%d" % otdb_id)
                     filenames.append("L%d_SAP%03d_SB%03d_bf.h5" % (otdb_id, sap['sap_nr'], sb_nr))
-        result[PREFIX + 'DataProducts.Output_Pulsar.locations'] = to_csv_string(locations)
-        result[PREFIX + 'DataProducts.Output_Pulsar.filenames'] = to_csv_string(filenames)
+        result[PREFIX + 'DataProducts.Output_Pulsar.locations'] = '[' + to_csv_string(locations) + ']'
+        result[PREFIX + 'DataProducts.Output_Pulsar.filenames'] = '[' + to_csv_string(filenames) + ']'
         return result
 
 
@@ -162,11 +162,12 @@ class RAtoOTDBTranslator():
     def parseStorageProperties(self, storage_claim):
         result = {}
         result['saps'] = []
-        for s in storage_claim['saps']:
-            properties = {}
-            for p in s['properties']:
-                properties[p['type_name']] = p['value']
-            result['saps'].append({'sap_nr' : s['sap_nr'], 'properties': properties})
+        if 'saps' in storage_claim:
+            for s in storage_claim['saps']:
+                properties = {}
+                for p in s['properties']:
+                    properties[p['type_name']] = p['value']
+                result['saps'].append({'sap_nr' : s['sap_nr'], 'properties': properties})
         for p in storage_claim['properties']:
             result[p['type_name']] = p['value']
         return result

@@ -51,7 +51,7 @@ HARDWARE_TREE = 10
 TEMPLATE_TREE = 20
 VIC_TREE = 30
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Define our own exceptions
@@ -377,6 +377,16 @@ def TaskPrepareForScheduling(input_dict, db_connection):
     except QUERY_EXCEPTIONS, exc_info:
         raise FunctionError("TaskPrepareForScheduling: {}".format(exc_info))
 
+    # Get list of defines tree states
+    state_names = {}
+    state_nrs   = {}
+    try:
+        for (nr, name) in db_connection.query("select id,name from treestate").getresult():
+            state_names[name] = nr
+            state_nrs[nr]     = name
+    except QUERY_EXCEPTIONS, exc_info:
+        raise FunctionError("Error while getting list of task states for tree {}: {}".format(otdb_id, exc_info))
+
     # If task is of the type VItemplate convert it to a VHtree
     delete_old_task = False
     if task_type == TEMPLATE_TREE:
@@ -389,23 +399,12 @@ def TaskPrepareForScheduling(input_dict, db_connection):
             delete_old_task = True
         except QUERY_EXCEPTIONS, exc_info:
             raise FunctionError("TaskPrepareForScheduling: failed for task {}: {}".format(otdb_id, exc_info))
-
-    # Get list of defines tree states
-    state_names = {}
-    state_nrs   = {}
-    try:
-        for (nr, name) in db_connection.query("select id,name from treestate").getresult():
-            state_names[name] = nr
-            state_nrs[nr]     = name
-    except QUERY_EXCEPTIONS, exc_info:
-        raise FunctionError("Error while getting list of task states for tree {}: {}".format(otdb_id, exc_info))
-
-    # make sure the tree is in the right state
-    if task_state != state_names['approved']:
-        try:
-            db_connection.query("select setTreeState(1,{},{}::INT2,True)".format(task_id, state_names['approved']))
-        except QUERY_EXCEPTIONS, exc_info:
-            raise FunctionError("Error while setting task {} to 'approved': {}".format(task_id, exc_info))
+        # make sure the tree is in the right state
+        if task_state != state_names['approved']:
+            try:
+                db_connection.query("select setTreeState(1,{},{}::INT2,True)".format(task_id, state_names['approved']))
+            except QUERY_EXCEPTIONS, exc_info:
+                raise FunctionError("Error while setting task {} to 'approved': {}".format(task_id, exc_info))
 
     if delete_old_task:
         TaskDelete({'OtdbID':otdb_id}, db_connection)
@@ -623,15 +622,17 @@ if __name__ == "__main__":
     from optparse import OptionParser
     from lofar.common import dbcredentials
     from lofar.common.util import waitForInterrupt
-    from lofar.sas.otdb.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
+    from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
     from lofar.messaging import setQpidLogLevel
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]")
-    parser.add_option("-B", "--busname", dest="busname", type="string", default=DEFAULT_BUSNAME,
-           help="Busname or queue-name on which RPC commands are received, default: %s" % DEFAULT_BUSNAME)
-    parser.add_option("-S", "--servicename", dest="servicename", type="string", default=DEFAULT_SERVICENAME,
-           help="Name for this service, default: %s" % DEFAULT_SERVICENAME)
+    parser.add_option("-B", "--busname", dest="busname", type="string",
+                      default=DEFAULT_OTDB_SERVICE_BUSNAME,
+                      help="Busname or queue-name on which RPC commands are received. [default: %default")
+    parser.add_option("-S", "--servicename", dest="servicename", type="string",
+                      default=DEFAULT_OTDB_SERVICENAME,
+                      help="Name for this service. [default: %default")
     parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
     # Add options of dbcredentials: --database, --host, ...
     parser.add_option_group(dbcredentials.options_group(parser))

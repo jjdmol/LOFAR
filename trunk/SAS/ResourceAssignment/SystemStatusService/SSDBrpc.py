@@ -1,53 +1,79 @@
 #!/usr/bin/python
 
-from lofar.messaging import RPC
+from lofar.messaging.RPC import RPC, RPCException, RPCWrapper
 
 import logging
 import sys
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-SERVICENAME = "GetServerState"
-BUSNAME     = "simpletest"
+from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_BUSNAME
+from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_SERVICENAME
 
-class SSDBrpc:
-
-    def __init__(self,**kwargs):
-        self.servicename = kwargs.pop("servicename", SERVICENAME)
-        self.busname = kwargs.pop("busname",BUSNAME)
-        self.timeout = kwargs.pop("timeout",None)
+class SSDBRPC(RPCWrapper):
+    def __init__(self,
+                 busname=DEFAULT_SSDB_BUSNAME,
+                 servicename=DEFAULT_SSDB_SERVICENAME,
+                 broker=None):
+        super(SSDBRPC, self).__init__(busname, servicename, broker)
 
     def getstatenames(self):
-        servicename="%s.GetStateNames" %(self.servicename)
-        with RPC(servicename,busname=self.busname,timeout=self.timeout) as ssdb:
-            return ssdb()
+        return self.rpc('GetStateNames')
 
     def getactivegroupnames(self):
-        servicename="%s.GetActiveGroupNames" %(self.servicename)
-        with RPC(servicename,busname=self.busname,timeout=self.timeout) as ssdb:
-            return ssdb()
+        return self.rpc('GetActiveGroupNames')
 
     def gethostsforgid(self,gid):
-        servicename="%s.GetHostForGID" %(self.servicename)
-        with RPC(servicename,busname=self.busname,timeout=self.timeout) as ssdb:
-            return ssdb(gid)
+        return self.rpc('GetHostForGID', gid=gid)
 
     def counthostsforgroups(self,groups,states):
-        servicename="%s.CountHostsForGroups" %(self.servicename)
-        with RPC(servicename,busname=self.busname,timeout=self.timeout) as ssdb:
-            return ssdb(groups,states)
+        return self.rpc('CountHostsForGroups', groups=groups, states=states)
 
     def listall(self):
-        servicename="%s.ListAll" %(self.servicename)
-        with RPC(servicename,busname=self.busname,timeout=self.timeout) as ssdb:
-            return ssdb()
+        return self.rpc('ListAll')
 
     def countactivehosts(self):
-        servicename="%s.CountActiveHosts" %(self.servicename)
-        with RPC(servicename,busname=self.busname,timeout=self.timeout) as ssdb:
-            return ssdb()
+        return self.rpc('CountActiveHosts')
 
     def getArchivingStatus(self,*args,**kwargs):
-        servicename="%s.GetArchivingStatus" %(self.servicename)
-        with RPC(servicename,busname=self.busname,timeout=self.timeout) as ssdb:
-            return ssdb(*args,**kwargs)
+        return self.rpc('GetArchivingStatus')
+
+
+# test code for all methods
+if __name__ == '__main__':
+    import pprint
+
+    with SSDBRPC(broker='10.149.96.22') as ssdb:
+        print '\n------------------'
+        print 'getstatenames'
+        states = ssdb.getstatenames()
+        pprint.pprint(states)
+
+
+        print '\n------------------'
+        print 'getactivegroupnames'
+        groups = ssdb.getactivegroupnames()
+        pprint.pprint(ssdb.getactivegroupnames())
+
+        for gid, groupname in groups.items():
+            print '\n------------------'
+            print 'gethostsforgid'
+            pprint.pprint(ssdb.gethostsforgid(gid))
+
+        for gid, groupname in groups.items():
+            for sid, statename in states.items():
+                print '\n------------------'
+                print 'counthostsforgroups'
+                pprint.pprint(ssdb.counthostsforgroups({gid:groupname}, {sid:statename}))
+
+        print '\n------------------'
+        print 'listall'
+        pprint.pprint(ssdb.listall())
+
+        print '\n------------------'
+        print 'countactivehosts'
+        pprint.pprint(ssdb.countactivehosts())
+
+        print '\n------------------'
+        print 'getArchivingStatus'
+        pprint.pprint(ssdb.getArchivingStatus())
+
