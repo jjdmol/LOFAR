@@ -25,18 +25,24 @@ ResourceAssigner inserts/updates tasks and assigns resources to it based on inco
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import collections
 
+from lofar.common.util import humanreadablesize
 from lofar.messaging.RPC import RPC, RPCException
 from lofar.parameterset import parameterset
 
 from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME as RADB_BUSNAME
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
+
 from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_BUSNAME as RE_BUSNAME
 from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_SERVICENAME as RE_SERVICENAME
+
+from lofar.sas.systemstatus.service.SSDBrpc import SSDBRPC
+from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_BUSNAME
+from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_SERVICENAME
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +54,8 @@ class ResourceAssigner():
                  re_busname=RE_BUSNAME,
                  re_servicename=RE_SERVICENAME,
                  re_broker=None,
-                 ssdb_busname='lofar.system',
-                 ssdb_servicename='SSDBService',
+                 ssdb_busname=DEFAULT_SSDB_BUSNAME,
+                 ssdb_servicename=DEFAULT_SSDB_SERVICENAME,
                  ssdb_broker=None,
                  broker=None):
         """
@@ -72,8 +78,7 @@ class ResourceAssigner():
 
         self.radbrpc = RARPC(servicename=radb_servicename, busname=radb_busname, broker=radb_broker)
         self.rerpc = RPC(re_servicename, busname=re_busname, broker=re_broker, ForwardExceptions=True)
-        self.ssdbGetActiveGroupNames = RPC(ssdb_servicename+'.GetActiveGroupNames', busname=ssdb_busname, broker=ssdb_broker, ForwardExceptions=True)
-        self.ssdbGetHostForGID = RPC(ssdb_servicename+'.GetHostForGID', busname=ssdb_busname, broker=ssdb_broker, ForwardExceptions=True)
+        self.ssdbrpc = SSDBRPC(servicename=ssdb_servicename, busname=ssdb_busname, broker=ssdb_broker)
 
     def __enter__(self):
         """Internal use only. (handles scope 'with')"""
@@ -88,15 +93,13 @@ class ResourceAssigner():
         """Open rpc connections to radb service and resource estimator service"""
         self.radbrpc.open()
         self.rerpc.open()
-        self.ssdbGetActiveGroupNames.open()
-        self.ssdbGetHostForGID.open()
+        self.ssdbrpc.open()
 
     def close(self):
         """Close rpc connections to radb service and resource estimator service"""
         self.radbrpc.close()
         self.rerpc.close()
-        self.ssdbGetActiveGroupNames.close()
-        self.ssdbGetHostForGID.close()
+        self.ssdbrpc.close()
 
     def doAssignment(self, specification_tree):
         logger.info('doAssignment: specification_tree=%s' % (specification_tree))
@@ -111,28 +114,18 @@ class ResourceAssigner():
         startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
         endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
 
-        #check if task already present in radb
-        existingTask = self.radbrpc.getTask(otdb_id=otdb_id)
-
-        if existingTask:
-            #present, delete it, and create a new task
-            taskId = existingTask['id']
-            self.radbrpc.deleteTask(taskId)
-            specificationId = existingTask['specification_id']
-            self.radbrpc.deleteSpecification(specificationId)
-
-        #insert new task and specification in the radb
+        # insert new task and specification in the radb
+        # any existing specification and task with same otdb_id will be deleted automatically
         logger.info('doAssignment: insertSpecification startTime=%s endTime=%s' % (startTime, endTime))
-        specificationId = self.radbrpc.insertSpecification(startTime, endTime, str(mainParset))['id']
-        logger.info('doAssignment: insertSpecification specificationId=%s' % (specificationId,))
+        result = self.radbrpc.insertSpecificationAndTask(momId, otdb_id, status, taskType, startTime, endTime, str(mainParset))
 
-        logger.info('doAssignment: insertTask momId=%s sasId=%s status=%s taskType=%s specificationId=%s' % (momId, otdb_id, status, taskType, specificationId))
-        taskId = self.radbrpc.insertTask(momId, otdb_id, status, taskType, specificationId)['id']
-        logger.info('doAssignment: insertTask taskId=%s' % (taskId,))
+        if not result['inserted']:
+            logger.error('could not insert specification and task')
+            return
 
-        #analyze the parset for needed and available resources and claim these in the radb
-        cluster = self.parseSpecification(mainParset)
-        available = self.getAvailableResources(cluster)
+        specificationId = result['specification_id']
+        taskId = result['task_id']
+        logger.info('doAssignment: inserted specification (id=%s) and task (id=%s)' % (specificationId,taskId))
 
         needed = self.getNeededResouces(specification_tree)
         logger.info('doAssignment: getNeededResouces=%s' % (needed,))
@@ -145,15 +138,29 @@ class ResourceAssigner():
             logger.error("no task type %s found in estimator results %s" % (taskType, needed[str(otdb_id)]))
             return
 
+        # make sure the availability in the radb is up to date
+        # TODO: this should be updated regularly
+        try:
+            self.updateAvailableResources('cep4')
+        except Exception as e:
+            logger.warning("Exception while updating available resources: %s" % str(e))
+
+        # claim the resources for this task
+        # during the claim inserts the claims are automatically validated
+        # and if not enough resources are available, then they are put to conflict status
+        # also, if any claim is in conflict state, then the task is put to conflict status as well
         main_needed = needed[str(otdb_id)]
-        if self.checkResources(main_needed, available):
-            task = self.radbrpc.getTask(taskId)
-            claimed, resourceIds = self.claimResources(main_needed, task)
-            if claimed:
-                self.radbrpc.updateTaskAndResourceClaims(taskId, claim_status='allocated')
-                self.radbrpc.updateTask(taskId, status='scheduled')
+        task = self.radbrpc.getTask(taskId)
+        claimed, claim_ids = self.claimResources(main_needed, task)
+        if claimed:
+            conflictingClaims = self.radbrpc.getResourceClaims(taskId=taskId, status='conflict')
+
+            if conflictingClaims:
+                logger.warning('doAssignment: %s conflicting claims detected. Task cannot be scheduled. %s' %
+                               (len(conflictingClaims), conflictingClaims))
             else:
-                self.radbrpc.updateTask(taskId, status='conflict')
+                logger.info('doAssignment: all claims for task %s were succesfully claimed. Setting task status to scheduled' % (taskId,))
+                self.radbrpc.updateTaskAndResourceClaims(taskId, task_status='scheduled', claim_status='allocated')
 
         self.processPredecessors(specification_tree)
 
@@ -175,54 +182,38 @@ class ResourceAssigner():
         except Exception as e:
             logger.error(e)
 
-    def parseSpecification(self, parset):
-        # TODO: cluster is not part of specification yet. For now return CEP4. Add logic later.
-        default = "cep2"
-        cluster ="cep4"
-        return cluster
-
     def getNeededResouces(self, specification_tree):
         replymessage, status = self.rerpc({"specification_tree":specification_tree}, timeout=10)
         logger.info('getNeededResouces: %s' % replymessage)
-        #stations = replymessage['observation']['stations']
-        ##stations = parset.getStringVector('Observation.VirtualInstrument.stationList', '')
-        ##logger.info('Stations: %s' % stations)
         return replymessage
 
-    def getAvailableResources(self, cluster):
-        # Used settings
-        groupnames = {}
-        available    = {}
-        while True:
-            try:
-                replymessage, status = self.ssdbGetActiveGroupNames()
-                if status == 'OK':
-                    groupnames = replymessage
-                    logger.info('SSDBService ActiveGroupNames: %s' % groupnames)
-                else:
-                    logger.error("Could not get active group names from SSDBService: %s" % status)
+    def updateAvailableResources(self, cluster):
+        # find out which resources are available
+        # and what is their capacity
+        # For now, only look at CEP4 storage
+        # Later, also look at stations up/down for short term scheduling
 
-                groupnames = {v:k for k,v in groupnames.items()} #swap key/value for name->id lookup
-                logger.info('groupnames: %s' % groupnames)
-                if cluster in groupnames.keys():
-                    groupId = groupnames[cluster]
-                    replymessage, status = self.ssdbGetHostForGID(groupId)
-                    if status == 'OK':
-                        available = replymessage
-                        logger.info('available: %s' % available)
-                    else:
-                        logger.error("Could not get hosts for group %s (gid=%s) from SSDBService: %s" % (cluster, groupId, status))
-                else:
-                    logger.error("group \'%s\' not known in SSDBService active groups (%s)" % (cluster, ', '.join(groupnames.keys())))
-                return available
-            except KeyboardInterrupt:
-                break
-            except Exception as e:
-                logger.warning("Exception while getting available resources. Trying again... " + str(e))
-                time.sleep(0.25)
+        #get all active groupnames, find id for cluster group
+        groupnames = self.ssdbrpc.getactivegroupnames()
+        cluster_group_id = next(k for k,v in groupnames.items() if v == cluster)
 
-    def checkResources(self, needed, available):
-        return True
+        # for CEP4 cluster, do hard codes lookup of first and only node
+        node_info = self.ssdbrpc.gethostsforgid(cluster_group_id)['nodes'][0]
+
+        storage_resources = self.radbrpc.getResources(resource_types='storage', include_availability=True)
+        cep4_storage_resource = next(x for x in storage_resources if 'cep4' in x['name'])
+        active = node_info['statename'] == 'Active'
+        total_capacity = node_info['totalspace']
+        available_capacity = total_capacity - node_info['usedspace']
+
+        logger.info("Updating resource availability of %s (id=%s) to active=%s available_capacity=%s total_capacity=%s" %
+                    (cep4_storage_resource['name'], cep4_storage_resource['id'], active, available_capacity, total_capacity))
+
+        self.radbrpc.updateResourceAvailability(cep4_storage_resource['id'],
+                                                active=active,
+                                                available_capacity=available_capacity,
+                                                total_capacity=total_capacity)
+
 
     def claimResources(self, needed_resources, task):
         logger.info('claimResources: task %s needed_resources=%s' % (task, needed_resources))
@@ -257,7 +248,11 @@ class ResourceAssigner():
                             'starttime':task['starttime'],
                             'endtime':task['endtime'],
                             'status':'claimed',
-                            'claim_size':1}
+                            'claim_size':needed_claim_value}
+
+                    #FIXME: find proper way to extend storage time with a month
+                    if 'storage' in db_cep4_resources_for_type[0]:
+                        claim['endtime'] += timedelta(days=31)
 
                     # if the needed_claim_for_resource_type dict contains more kvp's,
                     # then the subdict contains groups of properties for the claim

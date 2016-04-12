@@ -3,26 +3,21 @@
 from lofar.messaging import Service, MessageHandlerInterface
 from lofar.common.util import waitForInterrupt
 from lofar.sas.systemstatus.database.ssdb import SSDB
+from optparse import OptionParser
+from lofar.common import dbcredentials
+from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_BUSNAME
+from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_SERVICENAME
 
 import logging
 import sys
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-SERVICENAME = "GetServerState"
-BUSNAME     = "simpletest"
-DATABASE    = "datamonitor"
-USER        = "lofarsys"
-PASSWORD    = "welkom001"
 
 class DataMonitorQueryService(MessageHandlerInterface):
 
     def __init__(self,**kwargs):
         super(DataMonitorQueryService,self).__init__(**kwargs)
 
-        self.username = kwargs.pop("username", USER)
-        self.password = kwargs.pop("password", PASSWORD)
-        self.database = kwargs.pop("database", DATABASE)
+        self.dbcreds = kwargs.pop("dbcreds", None)
 
         self.service2MethodMap = {
             'GetStateNames':self.getstatenames,
@@ -35,7 +30,7 @@ class DataMonitorQueryService(MessageHandlerInterface):
 
 
     def prepare_loop(self):
-        self.ssdb = SSDB(username=self.username,password=self.password,database=self.database)
+        self.ssdb = SSDB(dbcreds=self.dbcreds)
 
     def prepare_receive(self):
         self.ssdb.ensure_connected()
@@ -69,7 +64,8 @@ class DataMonitorQueryService(MessageHandlerInterface):
             for sid,sname in states.iteritems():
                 ret[name][sname]=0
         for row in qres:
-            ret[groups[str(row['groupid'])]][states[str(row['statusid'])]]+=1
+            if str(row['groupid']) in groups and str(row['statusid']) in states:
+                ret[groups[str(row['groupid'])]][states[str(row['statusid'])]] += 1
         return ret
 
     def listall(self):
@@ -99,9 +95,37 @@ class DataMonitorQueryService(MessageHandlerInterface):
         jobinfo  = self.ssdb.getIngestJobs()
         return { "main" : maininfo, "jobs" : jobinfo };
 
-def createService(busname=BUSNAME,servicename=SERVICENAME):
-    return Service(servicename,DataMonitorQueryService,busname=busname,numthreads=4,use_service_methods=True)
+def createService(busname=DEFAULT_SSDB_BUSNAME,servicename=DEFAULT_SSDB_SERVICENAME, dbcreds=None, broker=None):
+    return Service(servicename,
+                   DataMonitorQueryService,
+                   busname=busname,
+                   numthreads=1,
+                   broker=broker,
+                   handler_args={'dbcreds': dbcreds},
+                   use_service_methods=True)
 
-def runservice(busname=BUSNAME,servicename=SERVICENAME):
-    with createService(busname,servicename) as GetServerState:
+def main():
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+
+    # Check the invocation arguments
+    parser = OptionParser("%prog [options]",
+                          description='runs the systemstatus database service')
+    parser.add_option('-q', '--broker', dest='broker', type='string',
+                      default=None,
+                      help='Address of the qpid broker, default: localhost')
+    parser.add_option("-b", "--busname", dest="busname", type="string",
+                      default=DEFAULT_SSDB_BUSNAME,
+                      help="Name of the bus exchange on the qpid broker. [default: %default]")
+    parser.add_option("-s", "--servicename", dest="servicename", type="string",
+                      default=DEFAULT_SSDB_SERVICENAME,
+                      help="Name for this service. [default: %default]")
+    parser.add_option_group(dbcredentials.options_group(parser))
+    parser.set_defaults(dbcredentials="SSDB")
+    (options, args) = parser.parse_args()
+
+    dbcreds = dbcredentials.parse_options(options)
+
+    logger.info("Using dbcreds: %s" % dbcreds.stringWithHiddenPassword())
+
+    with createService(busname=options.busname, servicename=options.servicename, dbcreds=dbcreds, broker=options.broker):
         waitForInterrupt()

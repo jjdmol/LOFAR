@@ -15,6 +15,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
     self.resourceGroupsDict = {};
     self.resourceGroupMemberships = {};
     self.resourceClaimDict = {};
+    self.resourceUsagesDict = {};
     self.tasktypesDict = {};
 
     self.momProjects = [];
@@ -24,6 +25,11 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
     self.filteredTasks = [];
     self.filteredTaskDict = {};
+
+    self.taskTimes = {};
+    self.resourceClaimTimes = {};
+
+    self.selected_resource;
 
     self.initialLoadComplete = false;
 
@@ -46,7 +52,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
         $http.get('/rest/tasks').success(function(result) {
             //convert datetime strings to Date objects
-            for(var i = result.tasks.length-1; i >=0; i--) {
+            for(var i in result.tasks) {
                 var task = result.tasks[i];
                 task.starttime = new Date(task.starttime);
                 task.endtime = new Date(task.endtime);
@@ -57,6 +63,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
             self.filteredTasks = self.tasks;
             self.filteredTaskDict = self.taskDict;
+
+            self.computeMinMaxTaskTimes();
 
             defer.resolve();
         });
@@ -70,11 +78,50 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         })
     };
 
+    self.computeMinMaxTaskTimes = function() {
+        var starttimes = self.filteredTasks.map(function(t) { return t.starttime;});
+        var endtimes = self.filteredTasks.map(function(t) { return t.endtime;});
+
+        var minStarttime = new Date(Math.min.apply(null, starttimes));
+        var maxEndtime = new Date(Math.max.apply(null, endtimes));
+        var fullTimespanInMinutes = (maxEndtime - minStarttime) / (60 * 1000);
+
+        self.taskTimes = {
+            min: minStarttime,
+            max: maxEndtime,
+            fullTimespanInMinutes: fullTimespanInMinutes
+        };
+    };
+
     self.getResources = function() {
         var defer = $q.defer();
         $http.get('/rest/resources').success(function(result) {
             self.resources = result.resources;
             self.resourceDict = self.toIdBasedDict(self.resources);
+
+            self.selected_resource = self.resources[0];
+
+            defer.resolve();
+        });
+
+        return defer.promise;
+    };
+
+    self.getResourceUsages = function() {
+        var defer = $q.defer();
+        $http.get('/rest/resourceusages').success(function(result) {
+            //convert datetime strings to Date objects
+            for(var i in result.resourceusages) {
+                var resource_usages = result.resourceusages[i].usages;
+
+                for(var status in resource_usages) {
+                    var usages = resource_usages[status];
+                    for(var usage of usages) {
+                        usage.timestamp = new Date(usage.timestamp);
+                    }
+                }
+                self.resourceUsagesDict[result.resourceusages[i].resource_id] = result.resourceusages[i];
+            }
 
             defer.resolve();
         });
@@ -86,7 +133,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         var defer = $q.defer();
         $http.get('/rest/resourceclaims').success(function(result) {
             //convert datetime strings to Date objects
-            for(var i = result.resourceclaims.length-1; i >=0; i--) {
+            for(var i in result.resourceclaims) {
                 var resourceclaim = result.resourceclaims[i];
                 resourceclaim.starttime = new Date(resourceclaim.starttime);
                 resourceclaim.endtime = new Date(resourceclaim.endtime);
@@ -95,10 +142,27 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             self.resourceClaims = result.resourceclaims;
             self.resourceClaimDict = self.toIdBasedDict(self.resourceClaims);
 
+            self.computeMinMaxResourceClaimTimes();
+
             defer.resolve();
         });
 
         return defer.promise;
+    };
+
+    self.computeMinMaxResourceClaimTimes = function() {
+        var starttimes = self.resourceClaims.map(function(rc) { return rc.starttime;});
+        var endtimes = self.resourceClaims.map(function(rc) { return rc.endtime;});
+
+        var minStarttime = new Date(Math.min.apply(null, starttimes));
+        var maxEndtime = new Date(Math.max.apply(null, endtimes));
+        var fullTimespanInMinutes = (maxEndtime - minStarttime) / (60 * 1000);
+
+        self.resourceClaimTimes = {
+            min: minStarttime,
+            max: maxEndtime,
+            fullTimespanInMinutes: fullTimespanInMinutes
+        };
     };
 
     self.getResourceGroups = function() {
@@ -160,7 +224,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             //convert datetime strings to Date objects
             var dict = {};
             var list = [];
-            for(var i = result.momprojects.length-1; i >=0; i--) {
+            for(var i in result.momprojects) {
                 var momproject = result.momprojects[i];
                 momproject.statustime = new Date(momproject.statustime);
                 dict[momproject.mom_id] = momproject;
@@ -224,6 +288,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             self.getResourceGroupMemberships().then(checkInitialLoadCompleteness);
             self.getResourceClaims().then(checkInitialLoadCompleteness);
 
+            self.getResourceUsages();
+
             self.subscribeToUpdates();
         });
     };
@@ -239,7 +305,22 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                 var changeNumbers = result.changes.map(function(item) { return item.changeNumber; });
                 self.lastUpdateChangeNumber = changeNumbers.reduce(function(a, b, idx, arr) { return a > b ? a : b; }, undefined);
 
-                for(var i = result.changes.length-1; i >=0; i--) {
+                function applyChanges(existingObj, changedObj) {
+                    for(var prop in changedObj) {
+                        if(existingObj.hasOwnProperty(prop) &&
+                           changedObj.hasOwnProperty(prop) &&
+                           existingObj[prop] != changedObj[prop]) {
+                            if(existingObj[prop] instanceof Date) {
+                                existingObj[prop] = new Date(changedObj[prop]);
+                            } else {
+                                existingObj[prop] = changedObj[prop];
+                            }
+                        }
+                    }
+                };
+
+                var anyResourceClaims = false;
+                for(var i in result.changes) {
                     try {
                         var change = result.changes[i];
 
@@ -248,14 +329,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                             if(change.changeType == 'update') {
                                 var task = self.taskDict[changedTask.id];
                                 if(task) {
-                                    task.status = changedTask.status;
-                                    task.status_id = changedTask.status_id;
-                                    task.mom_id = changedTask.mom_id;
-                                    task.otdb_id = changedTask.otdb_id;
-                                    task.starttime = new Date(changedTask.starttime);
-                                    task.endtime = new Date(changedTask.endtime);
-                                    task.predecessor_ids = changedTask.predecessor_ids;
-                                    task.successor_ids = changedTask.successor_ids;
+                                    applyChanges(task, changedTask);
                                 }
                             } else if(change.changeType == 'insert') {
                                 var task = self.taskDict[changedTask.id];
@@ -272,15 +346,15 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                                     }
                                 }
                             }
+
+                            self.computeMinMaxTaskTimes();
                         } else if(change.objectType == 'resourceClaim') {
+                            anyResourceClaims = true;
                             var changedClaim = change.value;
                             if(change.changeType == 'update') {
                                 var claim = self.resourceClaimDict[changedClaim.id];
                                 if(claim) {
-                                    claim.status = changedClaim.status;
-                                    claim.status_id = changedClaim.status_id;
-                                    claim.starttime = new Date(changedClaim.starttime);
-                                    claim.endtime = new Date(changedClaim.endtime);
+                                    applyChanges(claim, changedClaim);
                                 }
                             } else if(change.changeType == 'insert') {
                                 var claim = self.resourceClaimDict[changedClaim.id];
@@ -297,10 +371,32 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                                     }
                                 }
                             }
+                            
+                            self.computeMinMaxResourceClaimTimes();
+                        } else if(change.objectType == 'resourceCapacity') {
+                            if(change.changeType == 'update') {
+                                var changedCapacity = change.value;
+                                var resource = self.resourceDict[changedCapacity.resource_id];
+                                if(resource) {
+                                    resource.available_capacity = changedCapacity.available;
+                                    resource.total_capacity = changedCapacity.total;
+                                }
+                            }
+                        } else if(change.objectType == 'resourceAvailability') {
+                            if(change.changeType == 'update') {
+                                var changedAvailability = change.value;
+                                var resource = self.resourceDict[changedAvailability.resource_id];
+                                if(resource) {
+                                    resource.active = changedAvailability.total;
+                                }
+                            }
                         }
                     } catch(err) {
                         console.log(err)
                     }
+                }
+                if(anyResourceClaims) {
+                    self.getResourceUsages();
                 }
             } catch(err) {
                 console.log(err)
@@ -322,7 +418,9 @@ dataControllerMod.controller('DataController',
                             ['$scope', 'dataService',
                             function($scope, dataService) {
     var self = this;
-    self.dataService = dataService;
+    $scope.dataService = dataService;
+
+    $scope.$watch('dataService.filteredTasks', dataService.computeMinMaxTaskTimes);
 
     dataService.initialLoad();
 

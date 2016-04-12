@@ -92,9 +92,9 @@ app = Flask('ResourceAssignmentEditor',
 app.config.from_object('lofar.sas.resourceassignment.resourceassignmenteditor.config.default')
 app.json_encoder = CustomJSONEncoder
 
-rarpc = RARPC(busname=DEFAULT_RADB_BUSNAME, servicename=DEFAULT_RADB_SERVICENAME, broker='10.149.96.6')
-momrpc = MoMRPC(busname=DEFAULT_MOM_BUSNAME, servicename=DEFAULT_MOM_SERVICENAME, timeout=2, broker='10.149.96.6')
-radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker='10.149.96.6', momrpc=momrpc)
+rarpc = None
+momrpc = None
+radbchangeshandler = None
 
 @app.route('/')
 @app.route('/index.htm')
@@ -105,8 +105,8 @@ def index():
 
 @app.route('/rest/resources')
 @gzipped
-def resourcesitems():
-    result = rarpc.getResources()
+def resources():
+    result = rarpc.getResources(include_availability=True)
     return jsonify({'resources': result})
 
 @app.route('/rest/resourcegroups')
@@ -126,6 +126,25 @@ def resourcegroupsmemberships():
 def resourceclaims():
     claims = rarpc.getResourceClaims(include_properties=True)
     return jsonify({'resourceclaims': claims})
+
+@app.route('/rest/resourceusages')
+@gzipped
+def resourceUsages():
+    result = rarpc.getResourceUsages()
+    return jsonify({'resourceusages': result})
+
+@app.route('/rest/resources/<int:resource_id>/usages', methods=['GET'])
+@app.route('/rest/resourceusages/<int:resource_id>', methods=['GET'])
+@gzipped
+def resourceUsagesForResource(resource_id):
+    result = rarpc.getResourceUsages(resource_ids=[resource_id])
+    return jsonify({'resourceusages': result})
+
+@app.route('/rest/tasks/<int:task_id>/resourceusages', methods=['GET'])
+@gzipped
+def resourceUsagesForTask(task_id):
+    result = rarpc.getResourceUsages(task_ids=[task_id])
+    return jsonify({'resourceusages': result})
 
 @app.route('/rest/tasks')
 @gzipped
@@ -227,6 +246,8 @@ def getMoMProjects():
     except Exception as e:
         logger.error(e)
         projects.append({'name':'<unknown>', 'mom_id':-99, 'description': 'Container project for tasks for which we could not find a MoM project'})
+        for i in range(5):
+            projects.append({'name':'<unknown>', 'mom_id':1234+i, 'description': 'Container project for tasks for which we could not find a MoM project'})
 
     projects.append({'name':'OTDB Only', 'mom_id':-98, 'description': 'Container project for tasks which exists only in OTDB'})
     return jsonify({'momprojects': projects})
@@ -276,6 +297,13 @@ def main():
 
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                         level=logging.DEBUG if options.verbose else logging.INFO)
+
+    global rarpc
+    rarpc = RARPC(busname=DEFAULT_RADB_BUSNAME, servicename=DEFAULT_RADB_SERVICENAME, broker=options.broker)
+    global momrpc
+    momrpc = MoMRPC(busname=DEFAULT_MOM_BUSNAME, servicename=DEFAULT_MOM_SERVICENAME, timeout=0.05, broker=options.broker)
+    global radbchangeshandler
+    radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker=options.broker, momrpc=momrpc)
 
     with radbchangeshandler, rarpc, momrpc:
         '''Start the webserver'''

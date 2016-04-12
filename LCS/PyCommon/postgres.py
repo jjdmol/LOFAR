@@ -110,7 +110,7 @@ def makePostgresNotificationQueries(schema, table, action, view_for_row=None, vi
                table=table)
 
     sql = drop_sql + '\n' + function_sql + '\n' + trigger_sql
-    sql_lines = '\n'.join([s.strip() for s in sql.split('\n')])
+    sql_lines = '\n'.join([s.strip() for s in sql.split('\n')]) + '\n'
     return sql_lines
 
 class PostgresListener(object):
