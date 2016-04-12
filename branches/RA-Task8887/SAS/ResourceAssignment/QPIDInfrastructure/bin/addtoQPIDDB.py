@@ -44,13 +44,13 @@ if __name__ == '__main__':
 	QPIDinfra.addhost(options.federation)
 	if (options.queue):
 	    QPIDinfra.addqueue(options.queue) # should be superfluous
-	    ecxchange=''
+	    exchange=''
 	    if (options.exchange):
 		QPIDinfra.addexchange(options.exchange)
 		exchange=options.exchange
 	    
 	    QPIDinfra.bindqueuetohost(options.queue,options.federation)
-	    QPIDinfra.setqueueroute(options.queue,options.broker,options.federation,options.exchange)
+	    QPIDinfra.setqueueroute(options.queue,options.broker,options.federation,exchange)
 	else:
 	    if (options.exchange):
 	        QPIDinfra.addexchange(options.exchange) # should be superfluous
