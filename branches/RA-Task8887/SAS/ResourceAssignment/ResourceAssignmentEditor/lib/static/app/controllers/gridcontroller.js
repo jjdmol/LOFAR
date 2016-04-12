@@ -20,35 +20,47 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     $scope.columns = [
     { field: 'name',
         enableCellEdit: false,
-        width: '*'
+        width: '15%'
     },
     { field: 'project_name',
         displayName:'Project',
         enableCellEdit: false,
-        width: '*',
+        cellTemplate:'<a target="_blank" href="https://lofar.astron.nl/mom3/user/project/setUpMom2ObjectDetails.do?view=generalinfo&mom2Id={{row.entity.project_mom_id}}">{{row.entity[col.field]}}</a>',
+        width: '15%',
         filter: {
             type: uiGridConstants.filter.SELECT,
             selectOptions: []
         }
     },
+    { field: 'mom_id',
+        displayName: 'MoM ID',
+        enableCellEdit: false,
+        cellTemplate:'<a target="_blank" href="https://lofar.astron.nl/mom3/user/project/setUpMom2ObjectDetails.do?view=generalinfo&mom2Id={{row.entity[col.field]}}">{{row.entity[col.field]}}</a>',
+        width: '7.5%'
+    },
+    { field: 'otdb_id',
+        displayName: 'SAS ID',
+        enableCellEdit: false,
+        width: '7.5%'
+    },
     { field: 'starttime',
         displayName: 'Start',
-        width: '*',
+        width: '15%',
         enableCellEdit: false,
         enableCellEditOnFocus: false,
-        cellTemplate:'<div style=\'text-align:right\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
+        cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
 //         editableCellTemplate: '<div><form name="inputForm"><div ui-grid-edit-datepicker row-field="MODEL_COL_FIELD" ng-class="\'colt\' + col.uid"></div></form></div>'
     },
     { field: 'endtime',
         displayName: 'End',
-        width: '*',
+        width: '15%',
         enableCellEdit: false,
         enableCellEditOnFocus: false,
-        cellTemplate:'<div style=\'text-align:right\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
+        cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
     },
     { field: 'status',
         enableCellEdit: true,
-        width: '*',
+        width: '12.5%',
         filter: {
             type: uiGridConstants.filter.SELECT,
             selectOptions: []
@@ -58,7 +70,7 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     },
     { field: 'type',
         enableCellEdit: false,
-        width: '*',
+        width: '12.5%',
         filter: {
             type: uiGridConstants.filter.SELECT,
             selectOptions: []
@@ -122,13 +134,13 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
 
     $scope.$watch('dataService.taskstatustypes', function() {
         taskstatustypenames = $scope.dataService.taskstatustypes.map(function(x) { return x.name; });
-        fillColumFilterSelectOptions(taskstatustypenames, $scope.columns[4]);
+        fillColumFilterSelectOptions(taskstatustypenames, $scope.columns[6]);
         $scope.columns[4].editDropdownOptionsArray = $scope.dataService.taskstatustypes.map(function(x) { return {id:x.name, value:x.name}; });
     });
 
     $scope.$watch('dataService.tasktypes', function() {
         tasktypenames = $scope.dataService.tasktypes.map(function(x) { return x.name; });
-        fillColumFilterSelectOptions(tasktypenames, $scope.columns[5]);
+        fillColumFilterSelectOptions(tasktypenames, $scope.columns[7]);
     });
 
     $scope.$watch('dataService.momProjectsDict', function() {
