@@ -282,12 +282,13 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                     if(claims) {
                         for(var claim of claims) {
                             var taskId = claim.task_id;
+                            var task = taskDict[taskId];
                             if(taskId in aggregatedClaims) {
                                 if(claim.starttime < aggregatedClaims[taskId].starttime) {
-                                    aggregatedClaims[taskId].starttime = claim.starttime;
+                                    aggregatedClaims[taskId].starttime = claim.starttime.getTime() > task.starttime.getTime() ? claim.starttime : task.starttime;
                                 }
                                 if(claim.endtime > aggregatedClaims[taskId].endtime) {
-                                    aggregatedClaims[taskId].endtime = claim.endtime;
+                                    aggregatedClaims[taskId].endtime = claim.endtime.getTime() < task.endtime.getTime() ? claim.endtime: task.endtime;
                                 }
                                 if(claim.status == 'conflict') {
                                     aggregatedClaims[taskId].status = 'conflict';
