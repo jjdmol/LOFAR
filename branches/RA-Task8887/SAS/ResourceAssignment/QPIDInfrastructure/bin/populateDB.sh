@@ -11,37 +11,37 @@ PROD=false
 
 # Host names to use
 if $PROD; then
-  CCU=ccu001
-  MCU=mcu001
-  SCU=scu001
-  SAS=sas001
+  CCU=ccu001.control.lofar
+  MCU=mcu001.control.lofar
+  SCU=scu001.control.lofar
+  SAS=sas001.control.lofar
 
-  MOM_USER=lcs023
-  MOM_INGEST=lcs029
+  MOM_USER=lcs023.control.lofar
+  MOM_INGEST=lcs029.control.lofar
 
-  COBALT="cbt001 cbt002 cbt003 cbt004 cbt005 cbt006 cbt007 cbt008"
+  COBALT="`seq -f cbt%03.0f.control.lofar 1 8`"
 
   CEP2="`seq -f locus%03.0f 1 94`"
-  CEP2HEAD=lhn001
+  CEP2HEAD=lhn001.control.lofar
 
-  CEP4="`seq -f cpu%02.0f.cep4 1 50`"
-  CEP4HEAD="head01.cep4 head02.cep4"
+  CEP4="`seq -f cpu%02.0f.cep4.control.lofar 1 50`"
+  CEP4HEAD="head01.cep4.control.lofar head02.cep4.control.lofar"
 else
-  CCU=ccu099
-  MCU=mcu099
-  SCU=scu099
-  SAS=sas099
+  CCU=ccu099.control.lofar
+  MCU=mcu099.control.lofar
+  SCU=scu099.control.lofar
+  SAS=sas099.control.lofar
 
-  MOM_USER=lcs028
-  MOM_INGEST=lcs028
+  MOM_USER=lcs028.control.lofar
+  MOM_INGEST=lcs028.control.lofar
 
-  COBALT="cbt009"
+  COBALT="cbt009.control.lofar"
 
-  CEP2="locus098 locus099"
-  CEP2HEAD=locus102
+  CEP2="locus098.control.lofar locus099.control.lofar"
+  CEP2HEAD=locus102.control.lofar
 
-  CEP4="`seq -f cpu%02.0f.cep4 1 50`"
-  CEP4HEAD="head01.cep4 head02.cep4"
+  CEP4="`seq -f cpu%02.0f.cep4.control.lofar 1 50`"
+  CEP4HEAD="head01.cep4.control.lofar head02.cep4.control.lofar"
 fi
 
 # -----------------------------------------
