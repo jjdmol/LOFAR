@@ -51,7 +51,7 @@ class FromBusInitFailed(unittest.TestCase):
         Connecting to non-existent broker address must raise MessageBusError
         """
         regexp = re.escape(self.error)
-        regexp += '.*' + 'No address associated with hostname'
+        regexp += '.*' + '(No address associated with hostname|Name or service not known)'
         with self.assertRaisesRegexp(MessageBusError, regexp):
             with FromBus(QUEUE, broker="foo.bar", broker_options={'reconnect': False}):
                 pass
@@ -162,7 +162,7 @@ class ToBusInitFailed(unittest.TestCase):
         Connecting to non-existent broker address must raise MessageBusError
         """
         regexp = re.escape(self.error)
-        regexp += '.*' + 'No address associated with hostname'
+        regexp += '.*' + '(No address associated with hostname|Name or service not known)'
         with self.assertRaisesRegexp(MessageBusError, regexp):
             with ToBus(QUEUE, broker="foo.bar",  broker_options={'reconnect': False}):
                 pass

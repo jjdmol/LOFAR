@@ -124,7 +124,7 @@ namespace LOFAR
 
         if (milliseconds) {
           unsigned ms = static_cast<unsigned>(floor((seconds - s) * 1000 + 0.5));
-          return str(format("%s.%3u") % buf % ms);
+          return str(format("%s.%03u") % buf % ms);
         } else {
           return buf;
         }

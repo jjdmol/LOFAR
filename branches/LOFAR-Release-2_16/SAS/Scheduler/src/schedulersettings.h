@@ -219,7 +219,7 @@ private:
 	AstroDate itsEarliestDay, itsLatestDay;
 	scheduleWeekVector itsScheduleWeeks;
 	AstroTime itsMinTimeBetweenTasks;
-	quint16 uniqueStationID, itsMinNrOfStorageNodes;
+    quint16 uniqueStationID; //, itsMinNrOfStorageNodes;
 	preferredDataProductStorageMap itsPreferredDataProductStorage;
 	preferredProjectStorageMap itsPreferredProjectStorage;
 	storageNodeDistribution itsDataDistributionScheme;

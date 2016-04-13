@@ -14,7 +14,7 @@
 #ifndef PUBLISHDIALOG_H
 #define PUBLISHDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include <QFileInfo>
 #include "ui_publishdialog.h"
 #include "schedulersettings.h"

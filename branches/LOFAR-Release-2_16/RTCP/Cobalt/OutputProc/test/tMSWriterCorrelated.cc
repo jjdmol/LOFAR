@@ -40,6 +40,7 @@ int main()
   {
     // Create MeasurementSet
     MSWriterCorrelated writer("", "tMSWriterCorrelated.in_1/SB000.MS", parset, 0);
+    writer.init();
 
     // Write some data
     CorrelatedData data(parset.nrMergedStations(), parset.settings.correlator.nrChannels, parset.settings.correlator.nrSamplesPerIntegration(), heapAllocator, 512);
@@ -64,7 +65,7 @@ int main()
 
     fmd.brokenRCUsAtBegin.push_back(rcu);
 
-    writer.augment(fmd);
+    writer.fini(fmd);
   }
 
   return 0;

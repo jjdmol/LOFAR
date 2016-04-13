@@ -137,3 +137,22 @@ def humanreadablesize(num, suffix='B', base=1000):
     except TypeError:
         return str(num)
 
+def convertIntKeysToString(dct):
+    '''recursively convert all int keys in a dict to string'''
+
+    #python2.7 using dict comprehension
+    #return {str(k): convertIntKeysToString(v) if isinstance(v, dict) else v for k,v in dct.items()}
+
+    #python2.6 using dict constructor and list comprehension
+    return dict((str(k), convertIntKeysToString(v) if isinstance(v, dict) else v) for k,v in dct.items())
+
+def convertStringDigitKeysToInt(dct):
+    '''recursively convert all string keys which are a digit in a dict to int'''
+    #python2.7 using dict comprehension
+    #return {int(k) if isinstance(k, basestring) and k.isdigit() else k : convertStringDigitKeysToInt(v) if isinstance(v, dict) else v for k,v in dct.items()}
+
+    #python2.6 using dict constructor and list comprehension
+    return dict((int(k) if isinstance(k, basestring) and k.isdigit() else k, convertStringDigitKeysToInt(v) if isinstance(v, dict) else v) for k,v in dct.items())
+
+def to_csv_string(values):
+    return ','.join(str(x) for x in values)

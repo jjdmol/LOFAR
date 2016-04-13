@@ -1,7 +1,7 @@
 #ifndef SASSTATUSDIALOG_H
 #define SASSTATUSDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_sasstatusdialog.h"
 
 class SASStatusDialog : public QDialog

@@ -5,6 +5,8 @@
     <meta http-equiv='Content-Type' content='text/html; charset=utf-8'/>
     <title>{{title}}</title>
     <link rel='shortcut icon' href='{{ url_for('static', filename='favicon.ico') }}'>
+    <link href="/static/js/angular-gantt/angular-gantt.min.css" rel="stylesheet" type="text/css">
+    <link href="/static/js/angular-gantt/angular-gantt-plugins.min.css" rel="stylesheet" type="text/css">
     <link href="/static/css/bootstrap.min.css" rel="stylesheet" type="text/css">
     <link href="/static/js/angular-ui-grid/ui-grid.min.css" rel="stylesheet" type="text/css">
     <link href="/static/js/angular-ui-layout/angular-ui-layout.css" rel="stylesheet" type="text/css">
@@ -14,6 +16,8 @@
     <script src="/static/js/moment/moment.js"></script>
     <script src="/static/js/jquery/jquery.min.js"></script>
     <script src="/static/js/utils/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/static/js/highcharts/highcharts.js"></script>
+    <script type="text/javascript" src="/static/js/highcharts/exporting.js"></script>
     <script src="/static/js/angular/angular.js"></script>
     <script src="/static/js/utils/ui-bootstrap-tpls.min.js"></script>
     <script src="/static/js/angular-route/angular-route.min.js"></script>
@@ -23,41 +27,85 @@
     <script src="/static/js/angular-ui-grid/ui-grid.js"></script>
     <script src="/static/js/angular-ui-tree/angular-ui-tree.js"></script>
     <script src="/static/js/angular-ui-layout/angular-ui-layout.min.js"></script>
+    <script src="/static/js/angular-ui-layout/angular-ui-layout.min.js"></script>
+    <script src="/static/js/angular-ui-tabs/angular-ui.bootstrap.tabs.min.js"></script>
     <script src="/static/js/angular-moment/angular-moment.js"></script>
     <script src="/static/js/utils/datetimepicker.js"></script>
-    <link href="/static/js/angular-gantt/angular-gantt.min.css" rel="stylesheet" type="text/css">
-    <link href="/static/js/angular-gantt/angular-gantt-plugins.min.css" rel="stylesheet" type="text/css">
+    <script src="/static/js/jsplumb/jsplumb-2.0.7-min.js"></script>
     <script src="/static/js/angular-gantt/angular-gantt.js"></script>
     <script src="/static/js/angular-gantt/angular-gantt-plugins.js"></script>
+    <script type="text/javascript" src="/static/js/highcharts/highcharts-ng.js"></script>
     <script src="/static/app/app.js"></script>
     <script src="/static/app/controllers/datacontroller.js"></script>
     <script src="/static/app/controllers/gridcontroller.js"></script>
-    <script src="/static/app/controllers/ganttcontroller.js"></script>
+    <script src="/static/app/controllers/ganttresourcecontroller.js"></script>
+    <script src="/static/app/controllers/ganttprojectcontroller.js"></script>
+    <script src="/static/app/controllers/chartresourceusagecontroller.js"></script>
     </head>
     <body>
     {% raw %}
     <div ng-controller="DataController as dataCtrl">
-        <div ui-layout>
+        <div >Lofar Time:
+            <span>{{dataCtrl.dataService.lofarTime | date:'yyyy-MM-dd HH:mm:ss'}}</span>
+        </div>
+        <div ui-layout class="top-stretch" ui-layout="{flow: 'column'}">
             <header>
-                <div ng-controller="GridController as gridCtrl">
-                    <strong>Tasks:</strong>
-                    <div id="grid" ui-grid="gridOptions" ui-grid-edit ui-grid-cellnav ui-grid-resize-columns class="grid">
-                    </div>
-                </div>
+                <uib-tabset margin-top='10px'>
+                    <uib-tab heading="Tasks" index='0' active='true'>
+                        <div ng-controller="GridController as gridCtrl">
+                            <strong>Tasks:</strong>
+                            <div id="grid" ui-grid="gridOptions" ui-grid-edit ui-grid-selection ui-grid-cellnav ui-grid-resize-columns class="grid">
+                            </div>
+                        </div>
+                    </uib-tab>
+                    <uib-tab heading="Usages" index='1' active='false'>
+                        <div class="tab-pane active" ng-controller="ChartResourceUsageController as chartResourceUsageCtrl">
+                            <highchart id="chart_resource_usage" config="chartConfig" style="width: 95%; height: 40%; margin: 10px;" ></highchart>
+                        </div>
+                    </uib-tab>
+                </uib-tabset>
             </header>
             <header>
-                <div ng-controller="GanttController as ganttCtrl">
-                    <div gantt data=ganttData
-                        api=options.api
-                        show-side='true'>
-                        <gantt-tree enabled="true"></gantt-tree>
-                        <gantt-movable enabled="true"
-                        allow-moving="true"
-                        allow-resizing="true"
-                        allow-row-switching="false"></gantt-movable>
-                        <gantt-tooltips></gantt-tooltips>
-                    </div>
-                </div>
+                <uib-tabset margin-top='10px'>
+                    <uib-tab heading="Projects" index='0' active='true'>
+                        <div class="tab-pane active" ng-controller="GanttProjectController as ganttProjectCtrl">
+                            <div gantt data=ganttData
+                                api=options.api
+                                show-side='true'
+                                view-scale="options.viewScale"
+                                current-date="options.currentDate"
+                                current-date-value="options.currentDateValue"
+                                column-magnet="options.columnMagnet">
+                                <gantt-tree enabled="true"></gantt-tree>
+                                <gantt-movable enabled="true"
+                                    allow-moving="false"
+                                    allow-resizing="false"
+                                    allow-row-switching="false">
+                                </gantt-movable>
+                                <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
+                                <gantt-dependencies enabled="true"></gantt-dependencies>
+                            </div>
+                        </div>
+                    </uib-tab>
+                    <uib-tab heading="Resources" index='1' active='false'>
+                        <div class="tab-pane active" ng-controller="GanttResourceController as ganttResourceCtrl">
+                            <div gantt data=ganttData
+                                api=options.api
+                                show-side='true'
+                                view-scale="options.viewScale"
+                                current-date="options.currentDate"
+                                current-date-value="options.currentDateValue"
+                                column-magnet="options.columnMagnet">
+                                <gantt-tree enabled="true"></gantt-tree>
+                                <gantt-movable enabled="true"
+                                    allow-moving="false"
+                                    allow-resizing="false"
+                                    allow-row-switching="false"></gantt-movable>
+                                <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
+                            </div>
+                        </div>
+                    </uib-tab>
+                <uib-tabset>
             <header>
         </div>
     </div>

@@ -14,7 +14,7 @@
 #ifndef DATASLOTDIALOG_H
 #define DATASLOTDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_dataslotdialog.h"
 #include "task.h"
 #include "stationtask.h"
