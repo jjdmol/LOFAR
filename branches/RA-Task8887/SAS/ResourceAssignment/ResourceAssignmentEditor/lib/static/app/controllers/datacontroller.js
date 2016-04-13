@@ -29,7 +29,11 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
     self.taskTimes = {};
     self.resourceClaimTimes = {};
 
-    self.selected_resource;
+    self.selected_resource_id;
+    self.selected_resourceGroup_id;
+    self.selected_task_id;
+    self.selected_project_id;
+    self.selected_resourceClaim_id;
 
     self.initialLoadComplete = false;
 

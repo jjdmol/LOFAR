@@ -2,20 +2,13 @@
 
 var gridControllerMod = angular.module('GridControllerMod', ['ui.grid',
                                                              'ui.grid.edit',
+                                                             'ui.grid.selection',
                                                              'ui.grid.cellNav',
-                                                             'ui.grid.resizeColumns'/*,
-                                                             'ui.grid.datepicker'*/]);
+                                                             'ui.grid.resizeColumns']);
 
 gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGridConstants', function($scope, dataService, uiGridConstants) {
 
     $scope.dataService = dataService;
-
-    $scope.$watch('dataService.tasks', function() {
-        if('tasks' in $scope.dataService && $scope.dataService.tasks.length > 0)
-            $scope.gridOptions.data = $scope.dataService.tasks;
-        else
-            $scope.gridOptions.data = []
-    }, true);
 
     $scope.columns = [
     { field: 'name',
@@ -81,6 +74,11 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         enableSorting: true,
         enableFiltering: true,
         enableColumnResize: true,
+        enableRowSelection: true,
+        enableRowHeaderSelection: true,
+        enableFullRowSelection: false,
+        enableSelectionBatchEvent:false,
+        multiSelect:false,
         gridMenuShowHideColumns: false,
         columnDefs: $scope.columns,
         data: [],
@@ -93,6 +91,12 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
                 var task = $scope.dataService.taskDict[rowEntity.id];
                 var newTask = { id: task.id, status: task.status };
                 $scope.dataService.putTask(newTask);
+            });
+
+            gridApi.selection.on.rowSelectionChanged($scope,function(row){
+                if(row.entity.id && row.isSelected) {
+                    $scope.dataService.selected_task_id = row.entity.id;
+                }
             });
         }
     };
@@ -132,10 +136,17 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         columnDef.filter.selectOptions = columnSelectOptions;
     };
 
+    $scope.$watch('dataService.tasks', function() {
+        if('tasks' in $scope.dataService && $scope.dataService.tasks.length > 0)
+            $scope.gridOptions.data = $scope.dataService.tasks;
+        else
+            $scope.gridOptions.data = []
+    }, true);
+
     $scope.$watch('dataService.taskstatustypes', function() {
         taskstatustypenames = $scope.dataService.taskstatustypes.map(function(x) { return x.name; });
         fillColumFilterSelectOptions(taskstatustypenames, $scope.columns[6]);
-        $scope.columns[4].editDropdownOptionsArray = $scope.dataService.taskstatustypes.map(function(x) { return {id:x.name, value:x.name}; });
+        $scope.columns[6].editDropdownOptionsArray = $scope.dataService.taskstatustypes.map(function(x) { return {id:x.name, value:x.name}; });
     });
 
     $scope.$watch('dataService.tasktypes', function() {
@@ -156,6 +167,14 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         }
         projectNames.sort();
         fillColumFilterSelectOptions(projectNames, $scope.columns[1]);
+    });
+
+    $scope.$watch('dataService.selected_task_id', function() {
+        var taskIdx = $scope.gridOptions.data.findIndex(function(row) {return row.id == dataService.selected_task_id});
+
+        if(taskIdx > -1) {
+            $scope.gridApi.selection.selectRow($scope.gridOptions.data[taskIdx]);
+        }
     });
 }
 ]);

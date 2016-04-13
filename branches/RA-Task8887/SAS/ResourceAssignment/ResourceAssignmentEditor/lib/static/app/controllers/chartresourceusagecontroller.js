@@ -43,6 +43,9 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
         xAxis: {
             type: 'datetime',
         },
+        yAxis: {
+            title: { text: '<unknown>' },
+        },
         series: $scope.chartSeries,
         title: {
             text: 'Resource usage'
@@ -67,20 +70,33 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
     $scope.$watch('dataService.lofarTime', updateChartLofarTime);
 
     function updateChartData() {
+        var selected_resource_id = $scope.dataService.selected_resource_id;
+        if(selected_resource_id === undefined)
+            return;
+
+        var resourceDict = $scope.dataService.resourceDict;
         var resourceUsagesDict = $scope.dataService.resourceUsagesDict;
         var numResources = $scope.dataService.resources.length;
-        var resource = $scope.dataService.selected_resource;
 
-        if(!resource || numResources == 0 || !resourceUsagesDict[resource.id]) {
+        if(numResources == 0) {
             $scope.chartSeries.splice(0, $scope.chartSeries.length);
-            $scope.chartConfig.title.text = "No resource selected";
+            $scope.chartConfig.title.text = "No resource available";
             return;
         }
 
-        //set title to resource name
-        $scope.chartConfig.title.text = resource.name;
+        var resource = resourceDict[selected_resource_id];
 
-        var status_usages = resourceUsagesDict[resource.id].usages;
+        if(!resource || numResources == 0 || !resourceUsagesDict[selected_resource_id]) {
+            $scope.chartSeries.splice(0, $scope.chartSeries.length);
+            $scope.chartConfig.title.text = "No resource (usages) available";
+            return;
+        }
+
+        //set title, axis etc
+        $scope.chartConfig.title.text = resource.name;
+        $scope.chartConfig.yAxis.title.text = resource.units;
+
+        var status_usages = resourceUsagesDict[selected_resource_id].usages;
 
         //first scan of all statuses and timestamps in usages for this resource
         var statuses = [];
@@ -164,7 +180,7 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
                 $scope.chartSeries.splice(misc_used_cap_series_idx, 1);
             }
 
-            var misc_used_capacity = resourceUsagesDict[resource.id].misc_used_capacity;
+            var misc_used_capacity = resourceUsagesDict[selected_resource_id].misc_used_capacity;
             if(misc_used_capacity > 0) {
                 misc_used_cap_series = {name: 'misc used capacity', type: 'area', color: '#aaaaff', lineWidth:1, marker:{enabled:false}, dashStyle:'Dash', animation:false };
                 $scope.chartSeries.push(misc_used_cap_series);
@@ -201,7 +217,7 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
         }
     };
 
-    $scope.$watch('dataService.selected_resource', updateChartData);
+    $scope.$watch('dataService.selected_resource_id', updateChartData);
     $scope.$watch('dataService.resources', updateChartData, true);
     $scope.$watch('dataService.resourceUsagesDict', updateChartData, true);
 //     $scope.$watch('dataService.lofarTime', function() {$scope.options.currentDateValue= $scope.dataService.lofarTime;});
