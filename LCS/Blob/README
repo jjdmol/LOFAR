@@ -1,9 +1,0 @@
-LCS/Blob package
-================
-
-The LCS/Blob package contains classes for serializing and deserializing one or
-more objects into a Binary Large OBject (BLOB).
-
-For detailed information, please refer to the document LOFAR-ASTRON-MAN-006,
-"Binary Large Objects in LCS ((de)serialising objects)".
-
