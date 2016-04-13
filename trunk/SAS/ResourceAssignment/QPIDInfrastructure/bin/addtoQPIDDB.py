@@ -14,18 +14,20 @@ if __name__ == '__main__':
     parser.add_option('-q', '--queue', dest='queue', type='string', default=None, help='Name of the queue on the broker')
     parser.add_option('-e', '--exchange', dest='exchange', type='string', default=None, help='Name of the exchange on the broker')
     parser.add_option('-k', '--routingkey', dest='routingkey', type='string', default='#', help='Federation routing key')
-    parser.add_option_group(dbcredentials.options_group(parser))
+    parser.add_option_group(dbcredentials.options_group(parser, "qpidinfra"))
 
     (options, args) = parser.parse_args()
 
     if (len(sys.argv)<2):
 	 parser.print_help()
+	 sys.exit(0)
 
     dbcreds = dbcredentials.parse_options(options)
     QPIDinfra = qpidinfra(dbcreds)
 
     if (options.broker==None):
 	parser.print_help()
+	sys.exit(1)
 
     else:
 	QPIDinfra.addhost(options.broker)
@@ -42,7 +44,7 @@ if __name__ == '__main__':
 	QPIDinfra.addhost(options.federation)
 	if (options.queue):
 	    QPIDinfra.addqueue(options.queue) # should be superfluous
-	    ecxchange=''
+	    exchange=''
 	    if (options.exchange):
 		QPIDinfra.addexchange(options.exchange)
 		exchange=options.exchange

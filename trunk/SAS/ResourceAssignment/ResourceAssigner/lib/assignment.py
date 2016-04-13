@@ -110,13 +110,18 @@ class ResourceAssigner():
 
         #parse main parset...
         mainParset = parameterset(specification_tree['specification'])
+
+        if not self.checkCluster(mainParset):
+            return
+
         momId = mainParset.getInt('Observation.momID', -1)
         startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
         endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
 
         # insert new task and specification in the radb
         # any existing specification and task with same otdb_id will be deleted automatically
-        logger.info('doAssignment: insertSpecification startTime=%s endTime=%s' % (startTime, endTime))
+        logger.info('doAssignment: insertSpecification momId=%s, otdb_id=%s, status=%s, taskType=%s, startTime=%s, endTime=%s' %
+                    (momId, otdb_id, status, taskType, startTime, endTime))
         result = self.radbrpc.insertSpecificationAndTask(momId, otdb_id, status, taskType, startTime, endTime, str(mainParset))
 
         if not result['inserted']:
@@ -153,7 +158,7 @@ class ResourceAssigner():
         task = self.radbrpc.getTask(taskId)
         claimed, claim_ids = self.claimResources(main_needed, task)
         if claimed:
-            conflictingClaims = self.radbrpc.getResourceClaims(taskId=taskId, status='conflict')
+            conflictingClaims = self.radbrpc.getResourceClaims(task_id=taskId, status='conflict')
 
             if conflictingClaims:
                 logger.warning('doAssignment: %s conflicting claims detected. Task cannot be scheduled. %s' %
@@ -181,6 +186,25 @@ class ResourceAssigner():
 
         except Exception as e:
             logger.error(e)
+
+    def checkCluster(self, parset):
+        # check storageClusterName for enabled DataProducts
+        # if any storageClusterName is not CEP4, we do not accept this parset
+        keys = ['Output_Correlated',
+                'Output_IncoherentStokes',
+                'Output_CoherentStokes',
+                'Output_InstrumentModel',
+                'Output_SkyImage',
+                'Output_Pulsar']
+        for key in keys:
+            if parset.getBool('Observation.DataProducts.%s.enabled' % key, False):
+                if parset.getString('Observation.DataProducts.%s.storageClusterName' % key, '') != 'CEP4':
+                    logger.warn("storageClusterName not CEP4, rejecting specification.")
+                    return False
+
+        logger.info("all enabled storageClusterName's are CEP4, accepting specification.")
+        return True
+
 
     def getNeededResouces(self, specification_tree):
         replymessage, status = self.rerpc({"specification_tree":specification_tree}, timeout=10)
@@ -251,7 +275,7 @@ class ResourceAssigner():
                             'claim_size':needed_claim_value}
 
                     #FIXME: find proper way to extend storage time with a month
-                    if 'storage' in db_cep4_resources_for_type[0]:
+                    if 'storage' in db_cep4_resources_for_type[0]['name']:
                         claim['endtime'] += timedelta(days=31)
 
                     # if the needed_claim_for_resource_type dict contains more kvp's,

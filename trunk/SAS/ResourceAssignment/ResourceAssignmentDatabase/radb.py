@@ -1337,19 +1337,24 @@ class RADatabase:
             resource_id = resource['id']
             resource_usages = all_usages[resource_id]
             # copy resource capacities
-            resource_usages['total_capacity'] = resource['total_capacity']
-            resource_usages['available_capacity'] = resource['available_capacity']
-            resource_usages['used_capacity'] = resource['used_capacity']
-            # and compute unaccounted-for usage,
-            # which is the actual used_capacity minus the currently allocated total claim size
-            utcnow = datetime.utcnow()
-            allocated_usages = resource_usages['usages'].get('allocated', [])
-            past_allocated_usages = sorted([au for au in allocated_usages if au['timestamp'] <= utcnow])
-            if past_allocated_usages:
-                currently_allocated_usage = past_allocated_usages[-1]
-                resource_usages['misc_used_capacity'] = resource['used_capacity'] - currently_allocated_usage['value']
-            else:
-                resource_usages['misc_used_capacity'] = 0
+            for item in ['total_capacity', 'available_capacity', 'used_capacity']:
+                try:
+                    resource_usages[item] = 0
+                    if item in resource:
+                        resource_usages[item] = resource[item]
+                        if item == 'used_capacity':
+                            # and compute unaccounted-for usage,
+                            # which is the actual used_capacity minus the currently allocated total claim size
+                            # defaults to used_capacity if no currently allocated total claim size
+                            resource_usages['misc_used_capacity'] = resource['used_capacity']
+                            utcnow = datetime.utcnow()
+                            allocated_usages = resource_usages['usages'].get('allocated', [])
+                            past_allocated_usages = sorted([au for au in allocated_usages if au['timestamp'] <= utcnow])
+                            if past_allocated_usages:
+                                currently_allocated_usage = past_allocated_usages[-1]
+                                resource_usages['misc_used_capacity'] = resource['used_capacity'] - currently_allocated_usage['value']
+                except Exception as e:
+                    logger.error(e)
 
         all_usages_list = all_usages.values()
         return all_usages_list

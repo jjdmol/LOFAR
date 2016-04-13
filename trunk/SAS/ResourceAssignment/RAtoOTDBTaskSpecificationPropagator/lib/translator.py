@@ -43,7 +43,7 @@ class RAtoOTDBTranslator():
         RAtoOTDBTranslator translates values from the RADB into parset keys to be stored in an OTDB Tree
         """
 
-    def CreateCorrelated(self, otdb_id, storage_properties):
+    def CreateCorrelated(self, otdb_id, storage_properties, project_name):
         sb_nr = 0
         locations = []
         filenames = []
@@ -52,14 +52,14 @@ class RAtoOTDBTranslator():
             logging.debug('processing sap: %s' % sap)
             if "nr_of_uv_files" in sap['properties']:
                 for _ in xrange(sap['properties']['nr_of_uv_files']):
-                    locations.append("CEP4:/data/projects/test/L%d" % otdb_id)
+                    locations.append("CEP4:/data/projects/%s/L%d" % (project_name, otdb_id))
                     filenames.append("L%d_SAP%03d_SB%03d_uv.MS" % (otdb_id, sap['sap_nr'], sb_nr))
                     sb_nr += 1
         result[PREFIX + 'DataProducts.Output_Correlated.locations'] = '[' + to_csv_string(locations) + ']'
         result[PREFIX + 'DataProducts.Output_Correlated.filenames'] = '[' + to_csv_string(filenames) + ']'
         return result
 
-    def CreateCoherentStokes(self, otdb_id, storage_properties):
+    def CreateCoherentStokes(self, otdb_id, storage_properties, project_name):
         SB_nr = 0
         locations = []
         filenames = []
@@ -73,13 +73,13 @@ class RAtoOTDBTranslator():
                 for tab in xrange(nr_tabs):
                     for stokes in xrange(nr_stokes):
                         for part in xrange(nr_parts):
-                            locations.append("CEP4:/data/projects/project/L%d" % otdb_id)
+                            locations.append("CEP4:/data/projects/%s/L%d" % (project_name, otdb_id))
                             filenames.append("L%d_SAP%03d_B%03d_S%d_P%03d_bf.h5" % (otdb_id, sap['sap_nr'], tab, stokes, part))
         result[PREFIX + 'DataProducts.Output_CoherentStokes.locations'] = '[' + to_csv_string(locations) + ']'
         result[PREFIX + 'DataProducts.Output_CoherentStokes.filenames'] = '[' + to_csv_string(filenames) + ']'
         return result
 
-    def CreateIncoherentStokes(self, otdb_id, storage_properties):
+    def CreateIncoherentStokes(self, otdb_id, storage_properties, project_name):
         SB_nr = 0
         locations = []
         filenames = []
@@ -93,13 +93,13 @@ class RAtoOTDBTranslator():
                 for tab in xrange(nr_tabs):
                     for stokes in xrange(nr_stokes):
                         for part in xrange(nr_parts):
-                            locations.append("CEP4:/data/projects/project/L%d" % otdb_id)
+                            locations.append("CEP4:/data/projects/%s/L%d" % (project_name, otdb_id))
                             filenames.append("L%d_SAP%03d_B%03d_S%d_P%03d_bf.h5" % (otdb_id, sap['sap_nr'], tab, stokes, part))
         result[PREFIX + 'DataProducts.Output_IncoherentStokes.locations'] = '[' + to_csv_string(locations) + ']'
         result[PREFIX + 'DataProducts.Output_IncoherentStokes.filenames'] = '[' + to_csv_string(filenames) + ']'
         return result
 
-    def CreateCreateInstrumentModel(self, otdb_id, storage_properties):
+    def CreateCreateInstrumentModel(self, otdb_id, storage_properties, project_name):
         SB_nr = 0
         locations = []
         filenames = []
@@ -107,13 +107,13 @@ class RAtoOTDBTranslator():
         for sap in storage_properties["saps"]: ##We might need to sort saps?
             if "nr_of_im_files" in sap['properties']:
                 for _ in range(sap['properties']['nr_of_im_files']):
-                    locations.append("CEP4:/data/projects/project/L%d" % otdb_id)
+                    locations.append("CEP4:/data/projects/%s/L%d" % (project_name, otdb_id))
                     filenames.append("L%d_SAP%03d_SB%03d_inst.INST" % (otdb_id, sap['sap_nr'], sb_nr))
         result[PREFIX + 'DataProducts.Output_InstrumentModel.locations'] = '[' + to_csv_string(locations) + ']'
         result[PREFIX + 'DataProducts.Output_InstrumentModel.filenames'] = '[' + to_csv_string(filenames) + ']'
         return result
 
-    def CreateSkyImage(self, otdb_id, storage_properties):
+    def CreateSkyImage(self, otdb_id, storage_properties, project_name):
         SB_nr = 0
         locations = []
         filenames = []
@@ -121,13 +121,13 @@ class RAtoOTDBTranslator():
         for sap in storage_properties["saps"]: ##We might need to sort saps?
             if "nr_of_img_files" in sap['properties']:
                 for _ in range(sap['properties']['nr_of_img_files']):
-                    locations.append("CEP4:/data/projects/project/L%d" % otdb_id)
+                    locations.append("CEP4:/data/projects/%s/L%d" % (project_name, otdb_id))
                     filenames.append("L%d_SAP%03d_SB%03d_sky.IM" % (otdb_id, sap['sap_nr'], sb_nr))
         result[PREFIX + 'DataProducts.Output_SkyImage.locations'] = '[' + to_csv_string(locations) + ']'
         result[PREFIX + 'DataProducts.Output_SkyImage.filenames'] = '[' + to_csv_string(filenames) + ']'
         return result
 
-    def CreatePulsarPipeline(self, otdb_id, storage_properties):
+    def CreatePulsarPipeline(self, otdb_id, storage_properties, project_name):
         SB_nr = 0
         locations = []
         filenames = []
@@ -135,28 +135,28 @@ class RAtoOTDBTranslator():
         for sap in storage_properties["saps"]: ##We might need to sort saps?
             if "nr_of_uv_files" in sap['properties']:
                 for _ in range(sap['properties']['nr_of_pulp_files']):
-                    locations.append("CEP4:/data/projects/project/L%d" % otdb_id)
+                    locations.append("CEP4:/data/projects/%s/L%d" % (project_name, otdb_id))
                     filenames.append("L%d_SAP%03d_SB%03d_bf.h5" % (otdb_id, sap['sap_nr'], sb_nr))
         result[PREFIX + 'DataProducts.Output_Pulsar.locations'] = '[' + to_csv_string(locations) + ']'
         result[PREFIX + 'DataProducts.Output_Pulsar.filenames'] = '[' + to_csv_string(filenames) + ']'
         return result
 
 
-    def CreateStorageKeys(self, otdb_id, storage_properties):
+    def CreateStorageKeys(self, otdb_id, storage_properties, project_name):
         logging.debug(otdb_id, storage_properties)
         result = {}
         if 'nr_of_uv_files' in storage_properties:
-            result.update(self.CreateCorrelated(otdb_id, storage_properties))
+            result.update(self.CreateCorrelated(otdb_id, storage_properties, project_name))
         if 'nr_of_cs_files' in storage_properties:
-            result.update(self.CreateCoherentStokes(otdb_id, storage_properties))
+            result.update(self.CreateCoherentStokes(otdb_id, storage_properties, project_name))
         if 'nr_of_is_files' in storage_properties:
-            result.update(self.CreateIncoherentStokes(otdb_id, storage_properties))
+            result.update(self.CreateIncoherentStokes(otdb_id, storage_properties, project_name))
         if 'nr_of_im_files' in storage_properties:
-            result.update(self.CreateInstrumentModel(otdb_id, storage_properties))
+            result.update(self.CreateInstrumentModel(otdb_id, storage_properties, project_name))
         if 'nr_of_img_files' in storage_properties:
-            result.update(self.CreateSkyImage(otdb_id, storage_properties))
+            result.update(self.CreateSkyImage(otdb_id, storage_properties, project_name))
         if 'nr_of_pulp_files' in storage_properties:
-            result.update(self.CreatePulsarPipeline(otdb_id, storage_properties))
+            result.update(self.CreatePulsarPipeline(otdb_id, storage_properties, project_name))
         return result
 
     def parseStorageProperties(self, storage_claim):
@@ -172,7 +172,7 @@ class RAtoOTDBTranslator():
             result[p['type_name']] = p['value']
         return result
 
-    def CreateParset(self, otdb_id, ra_info):
+    def CreateParset(self, otdb_id, ra_info, project_name):
         logger.info('CreateParset: start=%s, end=%s' % (ra_info['starttime'], ra_info['endtime']))
 
         parset = {}
@@ -182,7 +182,7 @@ class RAtoOTDBTranslator():
 
         if 'storage' in ra_info:
             logging.debug(ra_info['storage'])
-            parset.update(self.CreateStorageKeys(otdb_id, self.parseStorageProperties(ra_info['storage'])))
+            parset.update(self.CreateStorageKeys(otdb_id, self.parseStorageProperties(ra_info['storage']), project_name))
         if 'stations' in ra_info:
             parset[PREFIX+'VirtualInstrument.stationList'] = ra_info["stations"]
         return parset

@@ -13,7 +13,7 @@ def qpidroute_add(settings):
     print ("qpid-route -d route add %s %s %s \'%s\' " %(settings['tohost'],settings['fromhost'],settings['exchangename'],settings['routingkey']))
 
 def qpidQroute_add(settings):
-    print ("qpid-route -d queue add %s %s %s '%s'" %(settings['tohost'],settings['fromhost'],settings['queuename'],settings['exchangename']))
+    print ("qpid-route -d queue add %s %s '%s' '%s'" %(settings['tohost'],settings['fromhost'],settings['exchangename'],settings['queuename']))
 
 dbcreds = dbcredentials.DBCredentials().get("qpidinfra")
 QPIDinfra = qpidinfra(dbcreds)
