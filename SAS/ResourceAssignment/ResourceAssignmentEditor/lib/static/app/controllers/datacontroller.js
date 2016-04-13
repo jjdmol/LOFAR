@@ -51,6 +51,20 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         return dict;
     };
 
+    self.applyChanges = function(existingObj, changedObj) {
+        for(var prop in changedObj) {
+            if(existingObj.hasOwnProperty(prop) &&
+            changedObj.hasOwnProperty(prop) &&
+            existingObj[prop] != changedObj[prop]) {
+                if(existingObj[prop] instanceof Date && changedObj[prop] instanceof String) {
+                    existingObj[prop] = new Date(changedObj[prop]);
+                } else {
+                    existingObj[prop] = changedObj[prop];
+                }
+            }
+        }
+    };
+
     self.getTasks = function() {
         var defer = $q.defer();
 
@@ -79,6 +93,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
     self.putTask = function(task) {
         $http.put('/rest/tasks/' + task.id, task).error(function(result) {
             console.log("Error. Could not update task. " + result);
+            //TODO: revert to old state
         })
     };
 
@@ -309,20 +324,6 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                 var changeNumbers = result.changes.map(function(item) { return item.changeNumber; });
                 self.lastUpdateChangeNumber = changeNumbers.reduce(function(a, b, idx, arr) { return a > b ? a : b; }, undefined);
 
-                function applyChanges(existingObj, changedObj) {
-                    for(var prop in changedObj) {
-                        if(existingObj.hasOwnProperty(prop) &&
-                           changedObj.hasOwnProperty(prop) &&
-                           existingObj[prop] != changedObj[prop]) {
-                            if(existingObj[prop] instanceof Date) {
-                                existingObj[prop] = new Date(changedObj[prop]);
-                            } else {
-                                existingObj[prop] = changedObj[prop];
-                            }
-                        }
-                    }
-                };
-
                 var anyResourceClaims = false;
                 for(var i in result.changes) {
                     try {
@@ -333,7 +334,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                             if(change.changeType == 'update') {
                                 var task = self.taskDict[changedTask.id];
                                 if(task) {
-                                    applyChanges(task, changedTask);
+                                    self.applyChanges(task, changedTask);
                                 }
                             } else if(change.changeType == 'insert') {
                                 var task = self.taskDict[changedTask.id];
@@ -358,7 +359,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                             if(change.changeType == 'update') {
                                 var claim = self.resourceClaimDict[changedClaim.id];
                                 if(claim) {
-                                    applyChanges(claim, changedClaim);
+                                    self.applyChanges(claim, changedClaim);
                                 }
                             } else if(change.changeType == 'insert') {
                                 var claim = self.resourceClaimDict[changedClaim.id];

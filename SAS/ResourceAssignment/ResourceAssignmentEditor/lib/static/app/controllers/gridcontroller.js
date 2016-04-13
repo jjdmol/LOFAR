@@ -73,6 +73,7 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         enableGridMenu: false,
         enableSorting: true,
         enableFiltering: true,
+        enableCellEdit: false,
         enableColumnResize: true,
         enableRowSelection: true,
         enableRowHeaderSelection: true,
