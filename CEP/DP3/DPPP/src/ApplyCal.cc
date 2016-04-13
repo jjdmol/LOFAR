@@ -282,18 +282,11 @@ namespace LOFAR {
       double maxFreq (info().chanFreqs()[numFreqs-1]+0.5*freqInterval);
 
       itsLastTime = bufStartTime + itsTimeSlotsPerParmUpdate * itsTimeInterval;
-      uint numTimes = itsTimeSlotsPerParmUpdate;
-
-      double lastMSTime = info().startTime() + info().ntime() * itsTimeInterval;
-      if (itsLastTime > lastMSTime) {
-        itsLastTime = lastMSTime;
-        numTimes = info().ntime() % itsTimeSlotsPerParmUpdate;
-      }
 
       map<string, vector<double> > parmMap;
       map<string, vector<double> >::iterator parmIt;
 
-      uint tfDomainSize=numTimes*numFreqs;
+      uint tfDomainSize=itsTimeSlotsPerParmUpdate*numFreqs;
 
       for (uint parmExprNum = 0; parmExprNum<itsParmExprs.size();++parmExprNum) {
         // parmMap contains parameter values for all antennas
@@ -307,7 +300,6 @@ namespace LOFAR {
 
           if (parmIt != parmMap.end()) {
             parmvalues[parmExprNum][ant].swap(parmIt->second);
-            ASSERT(parmvalues[parmExprNum][ant].size()==tfDomainSize);
           } else {// No value found, try default
             Array<double> defValues;
             double defValue;
@@ -427,8 +419,8 @@ namespace LOFAR {
             if (itsInvert) {
               chi = -chi;
             }
-            double sinv = sin(chi);
-            double cosv = cos(chi);
+            double sinv = sin(parmvalues[0][ant][tf] * chi);
+            double cosv = cos(parmvalues[0][ant][tf] * chi);
             itsParms[0][ant][tf] =  cosv;
             itsParms[1][ant][tf] = -sinv;
             itsParms[2][ant][tf] =  sinv;

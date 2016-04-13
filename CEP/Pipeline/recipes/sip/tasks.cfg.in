@@ -50,7 +50,7 @@ mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/instrument.mapfile
 
 [rficonsole]
 recipe = rficonsole
-executable = %(lofarroot)s/bin/rficonsole
+executable = %(aoflaggerroot)s/bin/aoflagger
 
 [get_metadata]
 recipe = get_metadata
@@ -61,7 +61,7 @@ ndppp_exec = %(lofarroot)s/bin/NDPPP
 asciistat_executable = %(lofarroot)s/bin/asciistats.py
 statplot_executable = %(lofarroot)s/bin/statsplot.py
 msselect_executable = %(casaroot)s/bin/msselect
-rficonsole_executable = %(lofarroot)s/bin/rficonsole
+rficonsole_executable = %(aoflaggerroot)s/bin/aoflagger
 
 [long_baseline]
 recipe = long_baseline
@@ -69,7 +69,7 @@ ndppp_exec = %(lofarroot)s/bin/NDPPP
 asciistat_executable = %(lofarroot)s/bin/asciistats.py
 statplot_executable = %(lofarroot)s/bin/statsplot.py
 msselect_executable = %(casaroot)s/bin/msselect
-rficonsole_executable = %(lofarroot)s/bin/rficonsole
+rficonsole_executable = %(aoflaggerroot)s/bin/aoflagger
 nproc = 1
 
 [imager_awimager]
@@ -175,4 +175,4 @@ outputkey=image
 
 [rficonsole]
 recipe = executable_args
-executable = %(lofarroot)s/bin/rficonsole
+executable = %(aoflaggerroot)s/bin/aoflagger

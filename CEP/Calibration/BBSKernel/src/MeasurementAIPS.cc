@@ -726,13 +726,11 @@ void MeasurementAIPS::initDimensions()
       Vector<Double> upFreq = frequency(Slice(1,frequency.nelements()-1));
       Vector<Double> lowFreq = frequency(Slice(0,frequency.nelements()-1));
       Double freqstep0=upFreq(0)-lowFreq(0);
-      // Check to 1 kHz accuracy
-      ASSERTSTR(allNearAbs(upFreq-lowFreq,freqstep0,1.e3),
+      ASSERTSTR(allEQ(upFreq-lowFreq,freqstep0),
                 "Channels are not evenly spaced. This is not supported.");
     }
 
-    // Check to 1 kHz accuracy
-    ASSERTSTR(allNearAbs(width, width(0),1.e3),
+    ASSERTSTR(allEQ(width, width(0)),
         "Channels width is not the same for all channels. This is not supported"
         " yet.");
 

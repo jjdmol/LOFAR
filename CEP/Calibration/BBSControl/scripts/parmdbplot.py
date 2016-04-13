@@ -771,7 +771,7 @@ class PlotWindow(QFrame):
         else:
             xlabel = ["Time (sample)", "Freq (sample)"][self.axis]
 
-        if self.calType == "CommonRotationAngle" or self.calType == "RotationAngle" or self.calType == "RotationMeasure":
+        if self.calType == "CommonRotationAngle" or self.calType == "RotationAngle":
             phaselabel = "Rotation angle (rad)"
         else:
             phaselabel = "Phase (rad)"
