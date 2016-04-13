@@ -87,6 +87,22 @@ class Credentials:
       "dbname": self.database,
     }
 
+  def psycopg2_connect_options(self):
+    """
+      Returns a dict of options to provide to PsycoPG2's psycopg2.connect function. Use:
+
+      conn = psycopg2.connect(**dbcreds.psycopg2_connect_options())
+    """
+    return {
+      "host": self.host,
+      "port": self.port or None,
+
+      "user": self.user,
+      "password": self.password,
+
+      "database": self.database,
+    }
+
 
   def mysql_connect_options(self):
     """
@@ -208,7 +224,7 @@ class DBCredentials:
     return "database:%s" % (database,)
 
 
-def options_group(parser):
+def options_group(parser, default_credentials=""):
   """
     Return an optparse.OptionGroup containing command-line parameters
     for database connections and authentication.
@@ -224,7 +240,7 @@ def options_group(parser):
                    help="User of the database server")
   group.add_option("-P", "--password", dest="dbPassword", type="string", default="",
                    help="Password of the database server")
-  group.add_option("-C", "--dbcredentials", dest="dbcredentials", type="string", default="",
+  group.add_option("-C", "--dbcredentials", dest="dbcredentials", type="string", default=default_credentials,
                    help="Name of database credential set to use [default=%default]")
 
   return group

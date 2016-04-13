@@ -48,15 +48,28 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
             });
 
             api.directives.on.new($scope, function(directiveName, directiveScope, element) {
-                if (directiveName === 'ganttRow') {
+                if (directiveName === 'ganttRow' || directiveName === 'ganttRowLabel' ) {
                     element.bind('click', function(event) {
-                        $scope.dataService.selected_resource = directiveScope.row.model.resource;
+                        if(directiveScope.row.model.resource) {
+                            $scope.dataService.selected_resource_id = directiveScope.row.model.resource.id;
+                        } else if(directiveScope.row.model.resourceGroup) {
+                            $scope.dataService.selected_resourceGroup_id = directiveScope.row.model.resourceGroup.id;
+                        }
+                    });
+                } else if (directiveName === 'ganttTask') {
+                    element.bind('click', function(event) {
+                        if(directiveScope.task.model.raTask) {
+                            $scope.dataService.selected_task_id = directiveScope.task.model.raTask.id;
+                        }
+                        if(directiveScope.task.model.claim) {
+                            $scope.dataService.selected_resourceClaim_id = directiveScope.task.model.claim.id;
+                        }
                     });
                 }
             });
 
             api.directives.on.destroy($scope, function(directiveName, directiveScope, element) {
-                if (directiveName === 'ganttRow') {
+                if (directiveName === 'ganttRow' || directiveName === 'ganttRowLabel' || directiveName === 'ganttTask') {
                     element.unbind('click');
                 }
             });
@@ -134,10 +147,11 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                 }
 
                 var ganttRow = {
-                    'id': groupRowId,
-                    'parent': parentRow ? parentRow.id : null,
-                    'name': resourceGroup.name,
-                    'tasks': []
+                    id: groupRowId,
+                    parent: parentRow ? parentRow.id : null,
+                    name: resourceGroup.name,
+                    resourceGroup: resourceGroup,
+                    tasks: []
                 };
 
                 ganttRowsDict[groupRowId] = ganttRow;
@@ -263,6 +277,7 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                         to: claim.endtime,
                         color: self.resourceClaimStatusColors[claim.status],
                         raTask: task,
+                        claim: claim,
                         movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
                     };
 
@@ -282,12 +297,13 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                     if(claims) {
                         for(var claim of claims) {
                             var taskId = claim.task_id;
+                            var task = taskDict[taskId];
                             if(taskId in aggregatedClaims) {
                                 if(claim.starttime < aggregatedClaims[taskId].starttime) {
-                                    aggregatedClaims[taskId].starttime = claim.starttime;
+                                    aggregatedClaims[taskId].starttime = claim.starttime.getTime() > task.starttime.getTime() ? claim.starttime : task.starttime;
                                 }
                                 if(claim.endtime > aggregatedClaims[taskId].endtime) {
-                                    aggregatedClaims[taskId].endtime = claim.endtime;
+                                    aggregatedClaims[taskId].endtime = claim.endtime.getTime() < task.endtime.getTime() ? claim.endtime: task.endtime;
                                 }
                                 if(claim.status == 'conflict') {
                                     aggregatedClaims[taskId].status = 'conflict';

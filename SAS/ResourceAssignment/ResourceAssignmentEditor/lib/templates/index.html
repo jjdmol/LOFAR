@@ -54,7 +54,7 @@
                     <uib-tab heading="Tasks" index='0' active='true'>
                         <div ng-controller="GridController as gridCtrl">
                             <strong>Tasks:</strong>
-                            <div id="grid" ui-grid="gridOptions" ui-grid-edit ui-grid-cellnav ui-grid-resize-columns class="grid">
+                            <div id="grid" ui-grid="gridOptions" ui-grid-edit ui-grid-selection ui-grid-cellnav ui-grid-resize-columns class="grid">
                             </div>
                         </div>
                     </uib-tab>
@@ -78,11 +78,11 @@
                                 column-magnet="options.columnMagnet">
                                 <gantt-tree enabled="true"></gantt-tree>
                                 <gantt-movable enabled="true"
-                                    allow-moving="true"
-                                    allow-resizing="true"
+                                    allow-moving="false"
+                                    allow-resizing="false"
                                     allow-row-switching="false">
                                 </gantt-movable>
-                                <gantt-tooltips></gantt-tooltips>
+                                <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
                                 <gantt-dependencies enabled="true"></gantt-dependencies>
                             </div>
                         </div>
@@ -98,10 +98,10 @@
                                 column-magnet="options.columnMagnet">
                                 <gantt-tree enabled="true"></gantt-tree>
                                 <gantt-movable enabled="true"
-                                    allow-moving="true"
-                                    allow-resizing="true"
+                                    allow-moving="false"
+                                    allow-resizing="false"
                                     allow-row-switching="false"></gantt-movable>
-                                <gantt-tooltips></gantt-tooltips>
+                                <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
                             </div>
                         </div>
                     </uib-tab>

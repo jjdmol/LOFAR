@@ -182,7 +182,8 @@ class RADBHandler(MessageHandlerInterface):
         return {'task_id': task_id, 'updated': updated}
 
     def _getResourceUsages(self, **kwargs):
-        usages = self.radb.getResourceUsages(lower_bound=kwargs.get('lower_bound'),
+        usages = self.radb.getResourceUsages(claim_ids=kwargs.get('claim_ids'),
+                                             lower_bound=kwargs.get('lower_bound'),
                                              upper_bound=kwargs.get('upper_bound'),
                                              resource_ids=kwargs.get('resource_ids'),
                                              task_ids=kwargs.get('task_ids'),
@@ -268,14 +269,14 @@ class RADBHandler(MessageHandlerInterface):
         return specification
 
     def _insertSpecificationAndTask(self, **kwargs):
-        logger.info('InsertSpecificationAndTask: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
-        return self.radb.insertSpecification(kwargs['mom_id'],
-                                             kwargs['otdb_id'],
-                                             kwargs['task_status'],
-                                             kwargs['task_type'],
-                                             kwargs['starttime'].datetime(),
-                                             kwargs['endtime'].datetime(),
-                                             kwargs['content'])
+        logger.info('InsertSpecificationAndTask: %s' % dict({k:v for k,v in kwargs.items() if v != None and k != 'content'}))
+        return self.radb.insertSpecificationAndTask(kwargs['mom_id'],
+                                                    kwargs['otdb_id'],
+                                                    kwargs['task_status'],
+                                                    kwargs['task_type'],
+                                                    kwargs['starttime'].datetime(),
+                                                    kwargs['endtime'].datetime(),
+                                                    kwargs['content'])
 
     def _insertSpecification(self, **kwargs):
         logger.info('InsertSpecification: %s' % dict({k:v for k,v in kwargs.items() if v != None}))

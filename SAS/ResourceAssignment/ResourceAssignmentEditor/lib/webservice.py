@@ -176,6 +176,8 @@ def getTask(task_id):
 
 @app.route('/rest/tasks/<int:task_id>', methods=['PUT'])
 def putTask(task_id):
+    abort(403, 'Editing of tasks is by users is not yet approved')
+
     if 'Content-Type' in request.headers and \
             request.headers['Content-Type'].startswith('application/json'):
         updatedTask = json.loads(request.data)

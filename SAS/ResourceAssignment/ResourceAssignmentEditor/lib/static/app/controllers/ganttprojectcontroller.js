@@ -59,6 +59,28 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
                     api.tasks.on.resizeEnd($scope, moveHandler);
                 }
             );
+
+            api.directives.on.new($scope, function(directiveName, directiveScope, element) {
+                if (directiveName === 'ganttRow' || directiveName === 'ganttRowLabel' ) {
+                    element.bind('click', function(event) {
+                        if(directiveScope.row.model.project) {
+                            $scope.dataService.selected_project_id = directiveScope.row.model.project.id;
+                        }
+                    });
+                } else if (directiveName === 'ganttTask') {
+                    element.bind('click', function(event) {
+                        if(directiveScope.task.model.raTask) {
+                            $scope.dataService.selected_task_id = directiveScope.task.model.raTask.id;
+                        }
+                    });
+                }
+            });
+
+            api.directives.on.destroy($scope, function(directiveName, directiveScope, element) {
+                if (directiveName === 'ganttRow' || directiveName === 'ganttRowLabel' || directiveName === 'ganttTask') {
+                    element.unbind('click');
+                }
+            });
         }
     };
 
@@ -128,9 +150,10 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
 
                     if(project) {
                         ganntProjectRow = {
-                            'id': projectRowId,
-                            'name': project.name,
-                            'tasks': []
+                            id: projectRowId,
+                            name: project.name,
+                            project: project,
+                            tasks: []
                         };
 
                         ganntRowsDict[projectRowId] = ganntProjectRow;
@@ -146,10 +169,11 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
 
                         if(tasktype) {
                             ganntTypeRow = {
-                                'id': typeRowId,
-                                'parent': projectRowId,
-                                'name': tasktype,
-                                'tasks': []
+                                id: typeRowId,
+                                parent: projectRowId,
+                                name: tasktype,
+                                project: project,
+                                tasks: []
                             };
 
                             ganntRowsDict[typeRowId] = ganntTypeRow;
@@ -160,10 +184,11 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
                         var rowTask = {
                             id: task.id.toString(),
                             name: task.name,
-                            'from': task.starttime,
-                            'to': task.endtime,
-                            'color': self.taskStatusColors[task.status],
-                            'movable': $.inArray(task.status_id, editableTaskStatusIds) > -1
+                            from: task.starttime,
+                            to: task.endtime,
+                            raTask: task,
+                            color: self.taskStatusColors[task.status],
+                            movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
                         };
 
                         if(task.predecessor_ids && task.predecessor_ids.length > 0) {

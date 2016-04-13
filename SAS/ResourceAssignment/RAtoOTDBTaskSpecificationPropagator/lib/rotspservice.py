@@ -96,6 +96,9 @@ def main():
     from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
     from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
 
+    from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
+    from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
+
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]",
@@ -107,6 +110,8 @@ def main():
     parser.add_option("--radb_servicename", dest="radb_servicename", type="string", default=RADB_SERVICENAME, help="Name of the RADB service, default: %default")
     parser.add_option("--otdb_busname", dest="otdb_busname", type="string", default=DEFAULT_OTDB_SERVICE_BUSNAME, help="Name of the bus on which the OTDB service listens, default: %default")
     parser.add_option("--otdb_servicename", dest="otdb_servicename", type="string", default=DEFAULT_OTDB_SERVICENAME, help="Name of the OTDB service, default: %default")
+    parser.add_option("--mom_busname", dest="mom_busname", type="string", default=DEFAULT_MOM_BUSNAME, help="Name of the bus on which the MoM service listens, default: %default")
+    parser.add_option("--mom_servicename", dest="mom_servicename", type="string", default=DEFAULT_MOM_SERVICENAME, help="Name of the MoM service, default: %default")
     parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
     (options, args) = parser.parse_args()
 
@@ -118,6 +123,8 @@ def main():
                             radb_servicename=options.radb_servicename,
                             otdb_busname=options.otdb_busname,
                             otdb_servicename=options.otdb_servicename,
+                            mom_busname=options.mom_busname,
+                            mom_servicename=options.mom_servicename,
                             broker=options.broker) as propagator:
         with RATaskStatusChangedListener(busname=options.notification_busname,
                                          subject=options.notification_subject,
