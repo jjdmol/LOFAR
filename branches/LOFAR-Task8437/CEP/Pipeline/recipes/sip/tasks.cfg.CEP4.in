@@ -1,6 +1,5 @@
 [ndppp]
 nproc = 0
-nthreads = 8
 
 [setupparmdb]
 nproc = 0

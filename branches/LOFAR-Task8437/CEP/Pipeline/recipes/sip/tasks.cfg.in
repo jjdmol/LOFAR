@@ -86,6 +86,7 @@ makesourcedb_path = %(lofarroot)s/bin/makesourcedb
 [imager_bbs]
 recipe = imager_bbs
 bbs_executable = %(lofarroot)s/bin/bbs-reducer
+nthreads = 8
   
 [imager_source_finding]
 recipe = imager_source_finding
@@ -106,6 +107,7 @@ parset = %(runtime_directory)s/%(job_name)s/parsets/bbs.parset
 instrument_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/instrument.mapfile
 sky_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/sky.mapfile
 data_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/bbs.mapfile
+nthreads = 8
 
 [selfcal_awimager]
 recipe = selfcal_awimager

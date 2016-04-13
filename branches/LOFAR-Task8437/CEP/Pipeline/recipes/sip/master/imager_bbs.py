@@ -36,6 +36,11 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
             '-p', '--parset',
             help="BBS configuration parset"
         ),
+        'nthreads': ingredient.IntField(
+            '--nthreads',
+            default=8,
+            help="Number of threads per process"
+        ),
         'bbs_executable': ingredient.StringField(
             '--bbs-executable',
             help="BBS standalone executable (bbs-reducer)"
@@ -128,7 +133,10 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
             arguments = [self.inputs['bbs_executable'],
                          self.inputs['parset'],
                          ms_list_path, parmdb_list_path, sourcedb_list_path]
-            jobs.append(ComputeJob(host, node_command, arguments))
+            jobs.append(ComputeJob(host, node_command, arguments,
+                    resources={
+                        "cores": self.inputs['nthreads']
+                    }))
 
         # start and wait till all are finished
         self._schedule_jobs(jobs)
