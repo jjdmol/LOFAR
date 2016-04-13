@@ -21,8 +21,8 @@ if $PROD; then
 
   COBALT="`seq -f cbt%03.0f.control.lofar 1 8`"
 
-  CEP2="`seq -f locus%03.0f 1 94`"
-  CEP2HEAD=lhn001.control.lofar
+  CEP2="`seq -f locus%03.0f.cep2.lofar 1 94`"
+  CEP2HEAD=lhn001.cep2.lofar
 
   CEP4="`seq -f cpu%02.0f.cep4.control.lofar 1 50`"
   CEP4HEAD="head01.cep4.control.lofar head02.cep4.control.lofar"
@@ -37,8 +37,8 @@ else
 
   COBALT="cbt009.control.lofar"
 
-  CEP2="locus098.control.lofar locus099.control.lofar"
-  CEP2HEAD=locus102.control.lofar
+  CEP2="locus098.cep2.lofar locus099.cep2.lofar"
+  CEP2HEAD=locus102.cep2.lofar
 
   CEP4="`seq -f cpu%02.0f.cep4.control.lofar 1 50`"
   CEP4HEAD="head01.cep4.control.lofar head02.cep4.control.lofar"
