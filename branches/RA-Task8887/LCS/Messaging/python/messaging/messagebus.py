@@ -531,7 +531,8 @@ class AbstractBusListener(object):
             self._running.clear()
 
             for thread, args in self._threads.items():
-                logger.debug("Thread %2d: STOPPING Listening for messages on %s" % (args['index'], self.address))
+                logger.debug("Thread %2d: STOPPING Listening for messages on %s at broker %s" %
+                             (args['index'], self.address, self.broker if self.broker else 'localhost'))
                 thread.join()
                 logger.info("Thread %2d: STOPPED Listening for messages on %s" % (args['index'], self.address))
                 logger.info("           %d messages received and %d processed OK." % (args['num_received_messages'], args['num_processed_messages']))
@@ -583,7 +584,8 @@ class AbstractBusListener(object):
         currentThread = threading.currentThread()
         args = self._threads[currentThread]
         thread_idx = args['index']
-        logger.info( "Thread %d START Listening for messages on %s" %(thread_idx, self.address))
+        logger.info( "Thread %d START Listening for messages on %s at broker %s" %
+                    (thread_idx, self.address, self.broker if self.broker else 'localhost'))
         try:
             self._onListenLoopBegin()
         except Exception as e:
