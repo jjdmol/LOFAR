@@ -111,22 +111,22 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         ms_map.iterator = parmdb_map.iterator = sourcedb_map.iterator = \
             DataMap.SkipIterator
-        for (ms, parmdb, sourcedb) in zip(ms_map, parmdb_map, sourcedb_map):
+        for (idx, (ms, parmdb, sourcedb)) in enumerate(zip(ms_map, parmdb_map, sourcedb_map)):
             #host is same for each entry (validate_data_maps)
             host, ms_list = ms.host, ms.file
 
             # Write data maps to MultaDataMaps
             ms_list_path = os.path.join(
-                    map_dir, host + "_ms_" + run_id + ".map")
+                    map_dir, "%s-%s_map_%s.map" % (host, idx, run_id))
             MultiDataMap([tuple([host, ms_list, False])]).save(ms_list_path)
 
             parmdb_list_path = os.path.join(
-                    map_dir, host + "_parmdb_" + run_id + ".map")
+                    map_dir, "%s-%s_parmdb_%s.map" % (host, idx, run_id))
             MultiDataMap(
                 [tuple([host, parmdb.file, False])]).save(parmdb_list_path)
 
             sourcedb_list_path = os.path.join(
-                    map_dir, host + "_sky_" + run_id + ".map")
+                    map_dir, "%s-%s_sky_%s.map" % (host, idx, run_id))
             MultiDataMap(
                 [tuple([host, [sourcedb.file], False])]).save(sourcedb_list_path)
 
