@@ -15,7 +15,7 @@
 
   <groupId>nl.astron.lofar.sas.otb</groupId>
   <artifactId>otb-parent</artifactId>
-  <version>2.16.2</version>
+  <version>2.16.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
 
@@ -28,8 +28,8 @@
 
   <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
   <scm>
-    <connection>scm:svn:http://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.sas.otb.otb-parent-2.16.2</connection>
-    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.sas.otb.otb-parent-2.16.2</developerConnection>
+    <connection>scm:svn:http://svn.astron.nl/LOFAR/trunk/SAS/OTB</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/trunk/SAS/OTB</developerConnection>
   </scm>
 
 
@@ -145,7 +145,7 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>OTB-distribution</artifactId>
-        <version>2.16.2</version>
+        <version>2.16.3-SNAPSHOT</version>
       </dependency>
 
       <!-- Import the group 'nl.astron.lofar.lib' -->
