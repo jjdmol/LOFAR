@@ -1,0 +1,91 @@
+################################################################################
+## Parameters for project: LC4_019
+################################################################################
+
+################################################################################
+## RUN 01: 1 targets -- duration:  14400s (  4.00h)
+## PSR B0031-07, 00:34:8.86,-07:21:53.0
+ 
+## PARAMETER FILE SETUP 
+projectName=LC4_019
+mainFolderName=20150513
+mainFolderDescription=HBA Coherent Stokes
+
+BLOCK
+
+split_targets = F                                      # T/F
+calibration = none                                     # internal / external / none
+create_calibrator_observations = F                     # create cal-observations before target (T/F ignored if calibration is none)
+create_target_cal_beam = T                             # create cal-beam in target observation (T/F ignored if calibration is none)
+processing=Pulsar                                      # can be one of Calibration, Preprocessing, Imaging, Pulsar, LongBaseline, none
+imagingPipeline=none                                   # can be one of MSSS, standard, none
+repeat=1                                               # the number of repeats of this block
+
+packageName=B0031-07                                         # name of package folder containing observation/pipelines
+packageDescription=
+packageTag=                                            # optional tag to be prepended before every obs/pipeline name/description (max 8 chars)
+
+antennaMode=HBA Dual
+clock=200 MHz
+instrumentFilter=110-190 MHz
+numberOfBitsPerSample=8 # Change to 16 if requested
+integrationTime=1.0                                  # ignored for raw voltages
+channelsPerSubband=32                               # ignored for raw voltages
+stationList=core
+tbbPiggybackAllowed=T
+aartfaacPiggybackAllowed=T
+
+###### Which data types should be produced: ######
+
+correlatedData=F
+coherentStokesData=T
+incoherentStokesData=F
+flysEye=F
+coherentDedisperseChannels=F
+
+###### Coherent Stokes parameters ######
+subbandsPerFileCS=20
+numberCollapsedChannelsCS=32
+stokesDownsamplingStepsCS=1
+whichCS=XXYY
+###### Coherent Stokes parameters ######
+#subbandsPerFileIS=
+#numberCollapsedChannelsIS=
+#stokesDownsamplingStepsIS=
+#whichIS=
+
+flaggingStrategy=HBAdefault
+calibratorDuration_s=28800                            # duration of calibration observations in seconds
+targetDuration_s=14400		                      # duration of target observations in seconds
+
+
+
+###### Pipeline settings ######
+## GENERAL INFO
+## Processing mode: Calibration
+
+
+# startTimeUTC, the start time of the first observation. format: yyyy-MM-dd hh:mm:ss
+# un-comment the startTimeUTC to have the observation start times generated
+startTimeUTC=2015-05-13 06:00:00
+
+# timeStep's in seconds
+timeStep1=60
+timeStep2=60
+
+
+
+## calibratorBeam=
+targetBeams=                                               
+00:34:8.86;-07:21:53.0;PSR_B0031-07;51..450;400;;;T;28800
+Pulsar:B0031-07;;;"-U minX1";;;;;;;;;;;;;;;;;
+TAB:
+c;00:34:8.86;-07:21:53.0
+
+
+#Demix=NULL;NULL;<TBD>;<TBD>;;
+# BBS: Add parameters if BBS needed
+# Pulsar: Add parameters if pulsar pipeline needed
+
+################################################################################
+ 

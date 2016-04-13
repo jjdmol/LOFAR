@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<exportjob exportID="A_114_114_12600_352399_L6509_SAP000_SB000_uv.MS">
+        <input name="DataProduct">L6509_SAP000_SB000_uv.MS</input>
+        <input name="Project">test-lofar</input>
+        <input name="JobId">A_114_114_12600_352399_L6509_SAP000_SB000_uv.MS</input>
+        <input name="ArchiveId">352399</input>
+        <input name="ObservationId">6509</input>
+        <input name="Subband">0</input>
+        <input name="Location">lexar002:/data2/L6509/L6509_SAP000_SB000_uv.MS</input>
+</exportjob>

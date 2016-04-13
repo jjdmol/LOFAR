@@ -1,0 +1,10 @@
+#!/usr/bin/python
+# $Id: $
+
+'''
+runs the systemstatus database service
+'''
+from lofar.sas.systemstatus.service.SSDBQueryService import main
+
+if __name__ == '__main__':
+    main()

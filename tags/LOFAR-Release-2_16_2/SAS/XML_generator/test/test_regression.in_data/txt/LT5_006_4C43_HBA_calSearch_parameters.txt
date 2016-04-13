@@ -1,0 +1,156 @@
+################################################################################
+## Parameters for project: LT5_006
+################################################################################
+ 
+## PARAMETER FILE SETUP 
+projectName=LT5_006
+mainFolderName=20160105_4C43.15
+mainFolderDescription=HBA Dual Inner, Calibrator Search, 110-190 MHz
+
+BLOCK
+
+split_targets = F # T/F
+calibration = external # internal / external / none
+create_calibrator_observations = T # create cal-observations before target (T/F ignored if calibration is none)
+create_target_cal_beam = F # create cal-beam in target observation (T/F ignored if calibration is none)
+processing=LongBaseline # can be one of Calibration, Preprocessing, Imaging, Pulsar, LongBaseline, none
+imagingPipeline=none # can be one of MSSS, standard, none
+repeat=1 # the number of repeats of this block
+
+packageName=4C43.15 # name of package folder containing observation/pipelines
+packageDescription=4C43.15 Calibrator Search
+packageTag= # optional tag to be prepended before every obs/pipeline name/description (max 8 chars)
+
+antennaMode=HBA Dual Inner
+clock=200 MHz
+instrumentFilter=110-190 MHz
+numberOfBitsPerSample=8 # Change to 16 if requested
+integrationTime=1.0
+channelsPerSubband=64
+stationList=all
+tbbPiggybackAllowed=T
+aartfaacPiggybackAllowed=T
+
+###### Which data types should be produced: ######
+
+correlatedData=T
+coherentStokesData=F
+incoherentStokesData=F
+flysEye=F
+coherentDedisperseChannels=False
+
+###### Coherent Stokes parameters ######
+#subbandsPerFileCS=
+#numberCollapsedChannelsCS=
+#stokesDownsamplingStepsCS=
+#whichCS=
+###### Coherent Stokes parameters ######
+#subbandsPerFileIS=
+#numberCollapsedChannelsIS=
+#stokesDownsamplingStepsIS=
+#whichIS=
+
+flaggingStrategy=HBAdefault
+calibratorDuration_s=300 # duration of calibration observations in seconds
+targetDuration_s=1500 # duration of target observations in seconds
+
+###### Pipeline settings ######
+## GENERAL INFO
+## Processing mode: Pre processing only
+
+
+Global_Demix=4;4;4;4;;;
+Global_Subbands=225..232;8
+
+# startTimeUTC, the start time of the first observation. format: yyyy-MM-dd hh:mm:ss
+# un-comment the startTimeUTC to have the observation start times generated
+startTimeUTC=2016-01-05 23:00:00
+# timeStep's in seconds
+timeStep1=60
+timeStep2=60
+
+calibratorBeam=
+01:37:41.29950;+33:09:35.13382;3C48;;;;;T;2000
+BBS=3C48;;;T
+#Demix=8;2;64;10;[CasA,CygA];;
+#TAB:
+#c;05:34:51.94;+22:00:52.2
+
+# target beams and target pipelines
+# ra ;dec; targetname; subbandList; nrSubbands; nrTABrings; TABringSize; create_pipeline [;pipeline duration seconds]
+# optionally followed by BBS and/or demixing settings
+# BBS: SkyModel;BBS_baselines;BBS_correlations;BBS_beamModelEnable;BBS_solveParms;BBS_solveUVRange;BBS_strategyBaselines;BBS_strategyTimeRange
+# Demix: avg freq step; avg time step; demix freq step; demix time step; demix_always; demix_if_needed; ignore_target
+# Pulsar: pulsar; single-pulse; raw-to-8bit; dspsr-extra-opts; prepdata-extra-opts; 8bit-conversion-sigma; tsubint; norfi; nofold; nopdmp; skip-dspsr; rrats; 2bf2fits-extra-opts; decode-sigma; decode-nblocks; rfifind-extra-opts; prepfold-extra-opts; prepsubband-extra-opts; dynamic-spectrum-time-average; skip-dynamic-spectrum; skip-prepfold
+
+targetBeams=
+07:35:22.45;+43:44:24.8;4C43.15;225;1;;;F;2000
+07:35:21.90;+43:44:22.95;Cal1;;;;;T;1500
+07:34:08.11;+43:29:45.59;Cal2;;;;;T;1500
+07:36:56.96;+43:29:04.92;Cal3;;;;;T;1500
+07:37:15.22;+43:33:49.57;Cal4;;;;;T;1500
+07:36:35.62;+43:23:24.28;Cal5;;;;;T;1500
+07:37:49.31;+43:57:08.16;Cal6;;;;;T;1500
+07:32:44.00;+43:35:40.87;Cal7;;;;;T;1500
+07:32:11.22;+43:57:57.57;Cal8;;;;;T;1500
+07:38:09.40;+43:16:04.98;Cal9;;;;;T;1500
+07:35:21.92;+43:44:20.80;Cal10;;;;;T;1500
+07:35:35.26;+43:42:50.60;Cal11;;;;;T;1500
+07:35:28.83;+43:36:54.50;Cal12;;;;;T;1500
+07:36:11.42;+43:47:59.60;Cal13;;;;;T;1500
+07:34:20.29;+43:42:37.60;Cal14;;;;;T;1500
+07:34:25.31;+43:49:40.20;Cal15;;;;;T;1500
+07:34:30.01;+44:01:20.50;Cal16;;;;;T;1500
+07:33:57.87;+43:32:02.00;Cal17;;;;;T;1500
+07:34:09.12;+43:29:49.20;Cal18;;;;;T;1500
+07:33:52.32;+43:57:57.10;Cal19;;;;;T;1500
+07:33:42.26;+43:58:15.50;Cal20;;;;;T;1500
+07:37:15.63;+43:33:48.00;Cal21;;;;;T;1500
+07:36:58.22;+43:28:56.20;Cal22;;;;;T;1500
+07:36:35.09;+43:23:16.00;Cal23;;;;;T;1500
+07:36:16.71;+44:07:23.70;Cal24;;;;;T;1500
+07:34:12.68;+44:06:54.10;Cal25;;;;;T;1500
+07:37:38.28;+43:58:05.00;Cal26;;;;;T;1500
+07:36:23.47;+43:18:04.20;Cal27;;;;;T;1500
+07:37:49.35;+43:57:10.10;Cal28;;;;;T;1500
+07:32:43.72;+43:35:40.50;Cal29;;;;;T;1500
+07:36:49.12;+43:18:51.50;Cal30;;;;;T;1500
+07:34:03.64;+44:11:19.70;Cal31;;;;;T;1500
+07:32:31.41;+43:49:05.20;Cal32;;;;;T;1500
+07:33:45.99;+43:18:14.60;Cal33;;;;;T;1500
+07:33:57.90;+43:15:14.40;Cal34;;;;;T;1500
+07:35:01.77;+43:11:29.20;Cal35;;;;;T;1500
+07:36:49.36;+43:14:34.60;Cal36;;;;;T;1500
+07:36:46.66;+44:15:05.50;Cal37;;;;;T;1500
+07:33:52.89;+44:16:07.40;Cal38;;;;;T;1500
+07:32:08.27;+43:58:21.10;Cal39;;;;;T;1500
+07:35:40.11;+44:23:22.60;Cal40;;;;;T;1500
+07:38:45.40;+43:30:03.40;Cal41;;;;;T;1500
+07:35:53.05;+44:24:20.80;Cal42;;;;;T;1500
+07:32:29.61;+44:10:55.20;Cal43;;;;;T;1500
+07:31:32.84;+43:44:36.90;Cal44;;;;;T;1500
+07:38:09.43;+43:15:59.60;Cal45;;;;;T;1500
+07:34:33.17;+44:25:15.40;Cal46;;;;;T;1500
+07:34:04.48;+43:04:29.70;Cal47;;;;;T;1500
+07:32:55.76;+43:10:14.10;Cal48;;;;;T;1500
+07:35:57.63;+43:01:34.60;Cal49;;;;;T;1500
+07:31:33.19;+43:27:09.50;Cal50;;;;;T;1500
+07:38:00.69;+44:19:15.20;Cal51;;;;;T;1500
+07:32:28.83;+44:18:31.10;Cal52;;;;;T;1500
+07:38:30.45;+43:12:52.70;Cal53;;;;;T;1500
+07:31:17.33;+44:01:13.40;Cal54;;;;;T;1500
+07:35:43.06;+42:57:10.30;Cal55;;;;;T;1500
+07:38:23.18;+43:09:25.00;Cal56;;;;;T;1500
+07:39:44.72;+43:33:33.80;Cal57;;;;;T;1500
+07:39:02.07;+44:12:46.80;Cal58;;;;;T;1500
+07:35:27.64;+42:54:51.70;Cal59;;;;;T;1500
+07:35:21.91;+43:44:18.34;Cal60;;;;;T;1500
+#Pulsar=B0531+21;;T;;;;;;;;;;;;;;;;;;
+#0.0417300951946;0.00558069028325;Sun;54..297;244;;;T;8100
+#Demix=8;2;64;10;[CasA,CygA];;
+
+subbandsPerSubbandGroup = 8             # the number of subbands that will be concatenated in a subband-group
+subbandGroupsPerMS = 1                  # the number of subband-groups that will be (virually) concatenated in each measurement set
+
+
+BLOCK
