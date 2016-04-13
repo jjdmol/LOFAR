@@ -36,14 +36,24 @@ function setkey {
   echo "$KEY = $VAL" >> "$PARSET"
 }
 
+COBALT_DATAPRODUCTS="Correlated CoherentStokes IncoherentStokes"
+
 function read_cluster_model {
-  CLUSTER_NAME=$(getkey Observation.Cluster.ProcessingCluster.clusterName "")
+  # HACK: Search for first cluster, and assume they're all the same. We support only output
+  # to a single cluster for now.
+  for DP in ${COBALT_DATAPRODUCTS}; do
+    CLUSTER_NAME=$(getkey Observation.DataProducts.Output_${DP}.storageClusterName "")
+    if [ -n "${CLUSTER_NAME}" ]; then
+      break
+    fi
+  done
 
   # Hack to derive required properties (cluster model) from cluster name.
   case "${CLUSTER_NAME}" in
     CEP4)
       HEADNODE=head01.cep4.control.lofar
-      COMPUTENODES="`seq -f "cpu%02.0f.cep4" 1 50`"
+      #COMPUTENODES="`seq -f "cpu%02.0f.cep4" 1 50`"
+      COMPUTENODES="`seq -f "cpu%02.0f.cep4" 1 26` `seq -f "cpu%02.0f.cep4" 30 35` `seq -f "cpu%02.0f.cep4" 37 39`"
       NRCOMPUTENODES=50
 
       GLOBALFS_DIR=/data

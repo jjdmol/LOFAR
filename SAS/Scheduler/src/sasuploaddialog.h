@@ -1,7 +1,7 @@
 #ifndef SASUPLOADDIALOG_H
 #define SASUPLOADDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_sasuploaddialog.h"
 #include "task.h"
 

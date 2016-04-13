@@ -1,5 +1,5 @@
 /*
-Project: angular-gantt v1.2.7 - Gantt chart component for AngularJS
+Project: angular-gantt v1.2.12 - Gantt chart component for AngularJS
 Authors: Marco Schweighauser, Rémi Alvergnat
 License: MIT
 Homepage: https://www.angular-gantt.com
@@ -97,18 +97,20 @@ Github: https://github.com/angular-gantt/angular-gantt.git
             }
         };
 
-        $scope.gantt.api.tasks.on.change($scope, function(task) {
+        $scope.gantt.api.tasks.on.viewChange($scope, function(task) {
             if ($scope.taskGroup !== undefined) {
                 if ($scope.taskGroup.tasks.indexOf(task) > -1) {
-                    $scope.$evalAsync(function() {
-                        updateTaskGroup();
-                    });
+                    updateTaskGroup();
+                    if(!$scope.$$phase && !$scope.$root.$$phase) {
+                        $scope.$digest();
+                    }
                 } else {
                     var descendants = $scope.pluginScope.hierarchy.descendants($scope.row);
                     if (descendants.indexOf(task.row) > -1) {
-                        $scope.$evalAsync(function() {
-                            updateTaskGroup();
-                        });
+                        updateTaskGroup();
+                        if(!$scope.$$phase && !$scope.$root.$$phase) {
+                            $scope.$digest();
+                        }
                     }
                 }
             }
@@ -134,11 +136,11 @@ Github: https://github.com/angular-gantt/angular-gantt.git
 }());
 
 
-(function(){
+(function() {
     'use strict';
 
     angular.module('gantt').factory('GanttTaskGroup', ['ganttUtils', 'GanttTask', function(utils, Task) {
-        var TaskGroup = function (row, pluginScope) {
+        var TaskGroup = function(row, pluginScope) {
             var self = this;
 
             self.row = row;
@@ -175,8 +177,12 @@ Github: https://github.com/angular-gantt/angular-gantt.git
                 }
             };
 
-            angular.forEach(self.descendants, function(descendant) {
-                angular.forEach(descendant.tasks, function(task) {
+            for (var i = 0; i < self.descendants.length; i++) {
+                var tasks = self.descendants[i].tasks;
+
+                for (var j = 0; j < tasks.length; j++) {
+                    var task = tasks[j];
+
                     var taskDisplay = getTaskDisplay(task);
                     if (taskDisplay !== undefined) {
                         self.tasks.push(task);
@@ -184,28 +190,38 @@ Github: https://github.com/angular-gantt/angular-gantt.git
 
                         if (taskDisplay === 'overview') {
                             self.overviewTasks.push(clone);
-                        } else if(taskDisplay === 'promote'){
+                        } else if (taskDisplay === 'promote') {
                             self.promotedTasks.push(clone);
                         } else {
                             self.showGrouping = true;
                         }
                     }
-                });
-            });
+                }
+            }
 
             self.from = undefined;
-            angular.forEach(self.tasks, function (task) {
-                if (self.from === undefined || task.model.from < self.from) {
-                    self.from = task.model.from;
+            if (groupRowGroups) {
+                self.from = groupRowGroups.from;
+            }
+            if (self.from === undefined) {
+                for (i=0; i<self.tasks.length; i++) {
+                    if (self.from === undefined || self.tasks[i].model.from < self.from) {
+                        self.from = self.tasks[i].model.from;
+                    }
                 }
-            });
+            }
 
             self.to = undefined;
-            angular.forEach(self.tasks, function (task) {
-                if (self.to === undefined || task.model.to > self.to) {
-                    self.to = task.model.to;
+            if (groupRowGroups) {
+                self.to = groupRowGroups.to;
+            }
+            if (self.to === undefined) {
+                for (i=0; i<self.tasks.length; i++) {
+                    if (self.to === undefined || self.tasks[i].model.to > self.to) {
+                        self.to = self.tasks[i].model.to;
+                    }
                 }
-            });
+            }
 
             if (self.showGrouping) {
                 self.left = row.rowsManager.gantt.getPositionByDate(self.from);

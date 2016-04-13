@@ -22,3 +22,27 @@
 .datepicker-wrapper ul {
 /*     visibility: hidden; */
 }
+
+.ui-layout-row > .ui-splitbar {
+    height: 8px;
+    background-color: #888888;
+}
+
+.ui-layout-column > .ui-splitbar {
+    width: 8px;
+    background-color: #888888;
+}
+
+.gantt-current-date-line {
+    border: 3px solid #222222;
+    opacity: 0.7;
+    z-index: 100000;
+}
+
+.gantt-side {
+    width: 150px;
+}
+
+.top-stretch {
+    top: 20px;
+}

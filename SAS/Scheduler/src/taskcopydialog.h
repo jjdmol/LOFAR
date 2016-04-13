@@ -1,7 +1,7 @@
 #ifndef TASKCOPYDIALOG_H
 #define TASKCOPYDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_taskcopydialog.h"
 #include "astrodatetime.h"
 #include "astrotime.h"

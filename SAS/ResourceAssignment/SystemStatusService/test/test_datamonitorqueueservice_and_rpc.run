@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Run the unit test
+source python-coverage.sh
+python_coverage_test "*service*,*rpc*" test_datamonitorqueueservice_and_rpc.py

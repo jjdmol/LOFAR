@@ -15,7 +15,7 @@
 #ifndef PARSETTREEVIEWER_H
 #define PARSETTREEVIEWER_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "ui_parsettreeviewer.h"
 #include "OTDBtree.h"
 
