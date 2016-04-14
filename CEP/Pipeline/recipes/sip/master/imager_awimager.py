@@ -134,7 +134,8 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.environment,
                          self.inputs['parset'],
                          self.inputs['working_directory'],
-                         "%s-%s" % (self.inputs['output_image'], idx),
+                         # put in unique dir, as node script wants to put private .par files next to it
+                         "%s_%s/image" % (self.inputs['output_image'], idx), 
                          measurement_path,
                          sourcedb_path,
                          self.inputs['mask_patch_size'],
