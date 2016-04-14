@@ -26,7 +26,7 @@ PARSET=
 PIPELINE_CONFIG=$LOFARROOT/share/pipeline/pipeline.cfg
 
 # Queue on which to post status changes
-SETSTATUS_BUS=lofar.otdb.setStatus
+SETSTATUS_BUS=lofar.otdb.command
 
 # ======= Parse command-line parameters
 
