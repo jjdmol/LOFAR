@@ -9,11 +9,16 @@
 --       CONNECTION LIMIT = -1;
 
 -- psql resourceassignment -U resourceassignment -f create_database.sql -W
+
+BEGIN;
+
+DROP SCHEMA IF EXISTS virtual_instrument CASCADE;
+DROP SCHEMA IF EXISTS resource_monitoring CASCADE;
+DROP SCHEMA IF EXISTS resource_allocation CASCADE;
+
 CREATE SCHEMA virtual_instrument;
 CREATE SCHEMA resource_monitoring;
 CREATE SCHEMA resource_allocation;
-
-BEGIN;
 
 -- This is insanity, but works, order needs to be the reverse of the CREATE TABLE statements
 DROP VIEW IF EXISTS virtual_instrument.resource_view CASCADE;
@@ -165,6 +170,9 @@ CREATE TABLE resource_allocation.claim_session (
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_allocation.claim_session
   OWNER TO resourceassignment;
+
+--until we use user management, insert one default session_id
+INSERT INTO resource_allocation.claim_session(id, username, user_id, starttime, token) VALUES (1, 'anonymous', -1, '2015-04-14', 'foo');
 
 CREATE TABLE resource_allocation.resource_claim_status (
   id serial NOT NULL,
