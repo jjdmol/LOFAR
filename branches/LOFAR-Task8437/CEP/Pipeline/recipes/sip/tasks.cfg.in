@@ -77,6 +77,7 @@ nthreads = 8
 [imager_awimager]
 recipe = imager_awimager
 executable = %(lofarroot)s/bin/awimager
+nthreads = 8
 
 [imager_create_dbs]
 recipe = imager_create_dbs

@@ -38,6 +38,11 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             '-p', '--parset',
             help = "The full path to a awimager configuration parset."
         ),
+        'nthreads': ingredient.IntField(
+            '--nthreads',
+            default=8,
+            help="Number of threads per process"
+        ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
             help = "Working directory used on output nodes. Results location"
@@ -144,7 +149,10 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['fov'],
                          ]
 
-            jobs.append(ComputeJob(host, node_command, arguments))
+            jobs.append(ComputeJob(host, node_command, arguments,
+                    resources={
+                        "cores": self.inputs['nthreads']
+                    }))
         self._schedule_jobs(jobs)
 
         # *********************************************************************
