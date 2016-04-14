@@ -82,7 +82,7 @@ class CustomJSONEncoder(JSONEncoder):
 __root_path = os.path.dirname(os.path.realpath(__file__))
 
 '''The flask webservice app'''
-app = Flask('ResourceAssignmentEditor',
+app = Flask('Scheduler',
             instance_path=__root_path,
             template_folder=os.path.join(__root_path, 'templates'),
             static_folder=os.path.join(__root_path, 'static'),
@@ -101,7 +101,7 @@ radbchangeshandler = None
 @app.route('/index.html')
 def index():
     '''Serves the ResourceAssignmentEditor's index page'''
-    return render_template('index.html', title='Resource Assignment Editor')
+    return render_template('index.html', title='Scheduler')
 
 @app.route('/rest/resources')
 @gzipped
@@ -248,8 +248,6 @@ def getMoMProjects():
     except Exception as e:
         logger.error(e)
         projects.append({'name':'<unknown>', 'mom_id':-99, 'description': 'Container project for tasks for which we could not find a MoM project'})
-        for i in range(5):
-            projects.append({'name':'<unknown>', 'mom_id':1234+i, 'description': 'Container project for tasks for which we could not find a MoM project'})
 
     projects.append({'name':'OTDB Only', 'mom_id':-98, 'description': 'Container project for tasks which exists only in OTDB'})
     return jsonify({'momprojects': projects})
@@ -303,7 +301,7 @@ def main():
     global rarpc
     rarpc = RARPC(busname=DEFAULT_RADB_BUSNAME, servicename=DEFAULT_RADB_SERVICENAME, broker=options.broker)
     global momrpc
-    momrpc = MoMRPC(busname=DEFAULT_MOM_BUSNAME, servicename=DEFAULT_MOM_SERVICENAME, timeout=0.05, broker=options.broker)
+    momrpc = MoMRPC(busname=DEFAULT_MOM_BUSNAME, servicename=DEFAULT_MOM_SERVICENAME, timeout=2.5, broker=options.broker)
     global radbchangeshandler
     radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker=options.broker, momrpc=momrpc)
 

@@ -142,6 +142,8 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
             $scope.gridOptions.data = $scope.dataService.tasks;
         else
             $scope.gridOptions.data = []
+
+        fillProjectsColumFilterSelectOptions();
     }, true);
 
     $scope.$watch('dataService.taskstatustypes', function() {
@@ -155,12 +157,17 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         fillColumFilterSelectOptions(tasktypenames, $scope.columns[7]);
     });
 
-    $scope.$watch('dataService.momProjectsDict', function() {
+    function fillProjectsColumFilterSelectOptions() {
         var projectNames = [];
         var momProjectsDict = $scope.dataService.momProjectsDict;
-        for(var key in momProjectsDict) {
-            if(momProjectsDict.hasOwnProperty(key)) {
-                var projectName = momProjectsDict[key].name;
+        var tasks = $scope.dataService.tasks;
+        //get unique projectIds from tasks
+        var task_project_ids = tasks.map(function(t) { return t.project_mom_id; });
+        task_project_ids = task_project_ids.filter(function(value, index, arr) { return arr.indexOf(value) == index;})
+
+        for(var project_id of task_project_ids) {
+            if(momProjectsDict.hasOwnProperty(project_id)) {
+                var projectName = momProjectsDict[project_id].name;
                 if(!(projectName in projectNames)) {
                     projectNames.push(projectName);
                 }
@@ -168,7 +175,9 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         }
         projectNames.sort();
         fillColumFilterSelectOptions(projectNames, $scope.columns[1]);
-    });
+    };
+
+    $scope.$watch('dataService.momProjectsDict', fillProjectsColumFilterSelectOptions);
 
     $scope.$watch('dataService.selected_task_id', function() {
         var taskIdx = $scope.gridOptions.data.findIndex(function(row) {return row.id == dataService.selected_task_id});
