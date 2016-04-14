@@ -91,15 +91,15 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
         input_map.iterator = DataMap.SkipIterator
-        for item in input_map:
+        for idx, item in enumerate(input_map):
             arguments = [item.file,
                          self.inputs["bdsm_parset_file_run1"],
                          self.inputs["bdsm_parset_file_run2x"],
-                         catalog_output_path,
+                         "%s-%s" % (catalog_output_path, idx),
                          os.path.join(
                              self.inputs["working_directory"],
-                             "bdsm_output.img"),
-                         self.inputs['sourcedb_target_path'],
+                             "bdsm_output-%s.img" % (idx, )),
+                         "%s-%s" % (self.inputs['sourcedb_target_path'], idx),
                          self.environment,
                          self.inputs['working_directory'],
                          self.inputs['makesourcedb_path']

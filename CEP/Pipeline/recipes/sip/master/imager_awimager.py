@@ -120,7 +120,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         sourcedb_map.iterator = input_map.iterator = output_map.iterator = \
             DataMap.SkipIterator
 
-        for measurement_item, source_item in zip(input_map, sourcedb_map):
+        for idx, (measurement_item, source_item) in enumerate(zip(input_map, sourcedb_map)):
             if measurement_item.skip or source_item.skip:
                 jobs.append(None)
                 continue
@@ -134,7 +134,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.environment,
                          self.inputs['parset'],
                          self.inputs['working_directory'],
-                         self.inputs['output_image'],
+                         "%s-%s" % (self.inputs['output_image'], idx),
                          measurement_path,
                          sourcedb_path,
                          self.inputs['mask_patch_size'],
