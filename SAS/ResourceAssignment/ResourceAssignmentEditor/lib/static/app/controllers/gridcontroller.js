@@ -18,7 +18,7 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     { field: 'project_name',
         displayName:'Project',
         enableCellEdit: false,
-        cellTemplate:'<a target="_blank" href="https://lofar.astron.nl/mom3/user/project/setUpMom2ObjectDetails.do?view=generalinfo&mom2Id={{row.entity.project_mom_id}}">{{row.entity[col.field]}}</a>',
+        cellTemplate:'<a target="_blank" href="https://lofar.astron.nl/mom3/user/project/setUpMom2ObjectDetails.do?view=generalinfo&mom2Id={{row.entity.project_mom2object_id}}">{{row.entity[col.field]}}</a>',
         width: '15%',
         filter: {
             type: uiGridConstants.filter.SELECT,
@@ -28,7 +28,7 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     { field: 'mom_id',
         displayName: 'MoM ID',
         enableCellEdit: false,
-        cellTemplate:'<a target="_blank" href="https://lofar.astron.nl/mom3/user/project/setUpMom2ObjectDetails.do?view=generalinfo&mom2ObjectId={{{{row.entity.mom2object_id}}}}">{{row.entity[col.field]}}</a>',
+        cellTemplate:'<a target="_blank" href="https://lofar.astron.nl/mom3/user/project/setUpMom2ObjectDetails.do?view=generalinfo&mom2ObjectId={{row.entity.mom2object_id}}">{{row.entity[col.field]}}</a>',
         width: '7.5%'
     },
     { field: 'otdb_id',
