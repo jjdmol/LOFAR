@@ -55,16 +55,14 @@ export LOFAR_BRANCH_NAME=`echo "$VERSION_INFO" | perl -ne 'print "$1" if /branch
 
 export LOFAR_BRANCH_URL="https://svn.astron.nl/LOFAR/${LOFAR_BRANCH_NAME}"
 
-# ----- LOFAR_TAG = 1234 -----
+# ----- LOFAR_TAG = LOFAR-Task1234 -----
 # ----- LOFAR_TAG = trunk -----
-# ----- LOFAR_TAG = 2_15_1 -----
+# ----- LOFAR_TAG = LOFAR-Release-2_15_1 -----
 
 case "${LOFAR_BRANCH_NAME}" in
   trunk)      export LOFAR_TAG=trunk ;;
-  */LOFAR-Release-*)
-              # support releases in both tags/ and branches/
-              export LOFAR_TAG=${LOFAR_BRANCH_NAME##*/LOFAR-Release-} ;;
-  branches/*) export LOFAR_TAG=${LOFAR_BRANCH_NAME##branches/*Task} ;;
+  branches/*) export LOFAR_TAG=${LOFAR_BRANCH_NAME##branches/} ;;
+  tags/*)     export LOFAR_TAG=${LOFAR_BRANCH_NAME##tags/} ;;
   *)          export LOFAR_TAG=latest ;;
 esac
 
