@@ -77,7 +77,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             if(existingObj.hasOwnProperty(prop) &&
             changedObj.hasOwnProperty(prop) &&
             existingObj[prop] != changedObj[prop]) {
-                if(existingObj[prop] instanceof Date && changedObj[prop] instanceof String) {
+                if(existingObj[prop] instanceof Date && typeof changedObj[prop] === "string") {
                     existingObj[prop] = new Date(changedObj[prop]);
                 } else {
                     existingObj[prop] = changedObj[prop];
@@ -360,6 +360,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                             } else if(change.changeType == 'insert') {
                                 var task = self.taskDict[changedTask.id];
                                 if(!task) {
+                                    changedTask.starttime = new Date(changedTask.starttime);
+                                    changedTask.endtime = new Date(changedTask.endtime);
                                     self.tasks.push(changedTask);
                                     self.taskDict[changedTask.id] = changedTask;
                                 }
@@ -385,6 +387,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                             } else if(change.changeType == 'insert') {
                                 var claim = self.resourceClaimDict[changedClaim.id];
                                 if(!claim) {
+                                    changedClaim.starttime = new Date(changedClaim.starttime);
+                                    changedClaim.endtime = new Date(changedClaim.endtime);
                                     self.resourceClaims.push(changedClaim);
                                     self.resourceClaimDict[changedClaim.id] = changedClaim;
                                 }
