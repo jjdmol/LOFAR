@@ -80,8 +80,11 @@ class MoMDatabaseWrapper:
             # try a simple select
             # if it fails, reconnect
             cursor = self.conn.cursor()
-            cursor.execute('''SELECT * FROM project;''')
-            cursor.fetchall()
+            cursor.execute('''SELECT id FROM project;''')
+            if len(cursor.fetchall()) == 0:
+                logger.warning('unexpected answer while checking connection. reconnecting in 1 sec...')
+                time.sleep(1)
+                self._connect()
         except (OperationalError, AttributeError) as e:
             if isinstance(e, OperationalError):
                 logger.error(str(e))
