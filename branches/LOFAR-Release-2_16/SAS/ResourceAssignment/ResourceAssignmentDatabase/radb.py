@@ -685,7 +685,7 @@ class RADatabase:
         (resource_claim_id, type_id, value, sap_id)
         VALUES {values}
         RETURNING id;'''.format(values=insert_values)
-        
+
         ids = [x['id'] for x in self._executeQuery(query, fetch=_FETCH_ALL)]
 
         if [x for x in ids if x < 0]:
@@ -1088,6 +1088,7 @@ class RADatabase:
         claimsStatuses = self.getResourceClaimStatuses()
         conflistStatusId = next(cs['id'] for cs in claimsStatuses if cs['name'] == 'conflict')
         claimedStatusId = next(cs['id'] for cs in claimsStatuses if cs['name'] == 'claimed')
+        allocatedStatusId = next(cs['id'] for cs in claimsStatuses if cs['name'] == 'allocated')
 
         # 'result' dict for new statuses for claims
         newClaimStatuses = {conflistStatusId:[], claimedStatusId:[]}
@@ -1124,7 +1125,7 @@ class RADatabase:
 
             if totalOtherClaimSize + claimSize >= resource['available_capacity']:
                 newClaimStatuses[conflistStatusId].append(claim_id)
-            else:
+            elif claim['status_id'] != allocatedStatusId:
                 newClaimStatuses[claimedStatusId].append(claim_id)
 
         if newClaimStatuses:

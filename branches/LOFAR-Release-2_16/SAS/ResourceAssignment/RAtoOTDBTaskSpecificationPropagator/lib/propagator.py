@@ -108,17 +108,21 @@ class RAtoOTDBPropagator():
         self.otdbrpc.taskSetStatus(otdb_id, 'conflict')
 
     def doTaskScheduled(self, ra_id, otdb_id, mom_id):
-        logger.info('doTaskScheduled: otdb_id=%s mom_id=%s' % (otdb_id, mom_id))
-        if not otdb_id:
-            logger.warning('doTaskScheduled no valid otdb_id: otdb_id=%s' % (otdb_id,))
-            return
-        ra_info = self.getRAinfo(ra_id)
-        project = self.momrpc.getProjectDetails(mom_id)
-        logger.info(project)
-        project_name = "_".join(project[str(mom_id)]['project_name'].split())
-        otdb_info = self.translator.CreateParset(otdb_id, ra_info, project_name)
-        logger.debug("Parset info for OTDB: %s" %otdb_info)
-        self.setOTDBinfo(otdb_id, otdb_info, 'scheduled')
+        try:
+            logger.info('doTaskScheduled: otdb_id=%s mom_id=%s' % (otdb_id, mom_id))
+            if not otdb_id:
+                logger.warning('doTaskScheduled no valid otdb_id: otdb_id=%s' % (otdb_id,))
+                return
+            ra_info = self.getRAinfo(ra_id)
+            project = self.momrpc.getProjectDetails(mom_id)
+            logger.info(project)
+            project_name = "_".join(project[str(mom_id)]['project_name'].split())
+            otdb_info = self.translator.CreateParset(otdb_id, ra_info, project_name)
+            logger.debug("Parset info for OTDB: %s" %otdb_info)
+            self.setOTDBinfo(otdb_id, otdb_info, 'scheduled')
+        except Exception as e:
+            logger.error(e)
+            self.doTaskConflict(ra_id, otdb_id, mom_id)
 
     def getRAinfo(self, ra_id):
         info = {}
