@@ -2,7 +2,7 @@
 
 # XML generator prototype
 
-VERSION = "2.15.0"
+VERSION = "2.16.0"
     
 import sys, getopt, time
 from xml.sax.saxutils import escape as XMLescape
@@ -672,6 +672,7 @@ def writeXMLLongBaselinePipe(ofile, topo, pred_topo, name, descr, defaulttemplat
             uvintopo, uvouttopo, uvouttopo, stor_cluster)  
 
 def writeDataProducts(dataTopo, correlatedData, coherentStokesData, incoherentStokesData, storageCluster):
+  print "Test: %s %s" % (dataTopo,storageCluster)
   strVal = r""
   if correlatedData:
     dataTopoStr = dataTopo + '.uv.dps'
@@ -1060,16 +1061,25 @@ def readImagingBBS(value):
     imagingBBS[2] = toBool(imagingBBS[2])
   return imagingBBS
 
+def checkDemixMultiples(avg_freq_step, avg_time_step, demix_freq_step, demix_time_step, name):
+  try:
+    if avg_freq_step and demix_freq_step:
+      if int(demix_freq_step) % int(avg_freq_step) <> 0:
+        raise GenException("demixFreqStep (%s) should be integer multiple of averagingFreqStep (%s) for %s" % (demix_freq_step, avg_freq_step, name))
+    if avg_time_step and demix_time_step:
+      if int(demix_time_step) % int(avg_time_step) <> 0:
+        raise GenException("demixTimeStep (%s) should be integer multiple of averagingTimeStep (%s) for %s" % (demix_time_step, avg_time_step, name))
+  except:
+    raise GenException("I can't read the Demix values for %s" % name)
+
 def readGlobalDemix(value):
   globalDemix = ['','','','','','','']
   if value:
     valList = value.split(';')
     for i in range(0,len(valList)):
       globalDemix[i] = valList[i]
-    if (globalDemix[0] != '') and (globalDemix[2] != ''):
-      if int(globalDemix[2]) % int(globalDemix[0]) <> 0: #TODO try ?
-        raise GenException("demixFreqStep (" + globalDemix[2] + ") should be integer multiple of averagingFreqStep (" + globalDemix[0] + ") for globalDemix")
-      globalDemix[6] = toBool(globalDemix[6]) # convert ignoreTarget to bool
+    checkDemixMultiples(globalDemix[0], globalDemix[1], globalDemix[2], globalDemix[3], "globalDemix")
+    globalDemix[6] = toBool(globalDemix[6]) # convert ignoreTarget to bool
   return globalDemix
 
 def readGlobalPulsar(value):
@@ -1216,9 +1226,7 @@ def readCalibratorBeam(startLine, lines, globalSubbands, globalTABrings, globalB
           if len(calDemix) > 0:
             for i in range(0,len(calDemix)):
               calibratorDemix[-1][i] = calDemix[i]
-            if (calibratorDemix[-1][0] != '') and (calibratorDemix[-1][2] != ''):
-              if int(calibratorDemix[-1][2]) % int(calibratorDemix[-1][0]) <> 0:
-                raise GenException("demixFreqStep (" + calibratorDemix[-1][2] + ") should be integer multiple of averagingFreqStep (" + calibratorDemix[-1][0] + ") for calibrator beam pipeline")
+            checkDemixMultiples(calibratorDemix[-1][0], calibratorDemix[-1][1], calibratorDemix[-1][2], calibratorDemix[-1][3], "calibratorDemix")
             calibratorDemix[-1][6] = toBool(calibratorDemix[-1][6])
           elif globalDemix != []:
               printInfo('Using global demix settings for Calibrator beam pipeline')
@@ -1337,8 +1345,7 @@ def readTargetBeams(startLine, lines, globalSubbands, globalBBS, globalDemix, gl
             if len(tarDemix) >= 4:
               for i in range(0,len(tarDemix)):
                 targetDemix[nr_beams][-1][i] = tarDemix[i]
-              if int(targetDemix[nr_beams][-1][2]) % int(targetDemix[nr_beams][-1][0]) <> 0:
-                raise GenException("demixFreqStep (" + targetDemix[nr_beams][-1][2] + ") should be integer multiple of averagingFreqStep (" + targetDemix[nr_beams][-1][0] + "), target beam pipeline:" + str(nr_beams))
+              checkDemixMultiples(targetDemix[nr_beams][-1][0], targetDemix[nr_beams][-1][1], targetDemix[nr_beams][-1][2], targetDemix[nr_beams][-1][3], "targetDemix[%i]" % nr_beams)
               targetDemix[nr_beams][-1][6] = toBool(targetDemix[nr_beams][-1][6]) # convert ignoreTarget to bool
             elif len(tarDemix) > 0:
               raise GenException("Demixing parameters should at least have the first four averaging/demixing steps (block %s, targetBeam %s)" % (blockNr, nr_beams))
