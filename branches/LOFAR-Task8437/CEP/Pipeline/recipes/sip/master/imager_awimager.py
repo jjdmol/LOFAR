@@ -134,11 +134,14 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             host , measurement_path = measurement_item.host, measurement_item.file
             host2 , sourcedb_path = source_item.host, source_item.file
 
+            # use unique working directories per job, to prevent interference between jobs on a global fs
+            working_dir = os.path.join(self.inputs['working_directory'], "imager_awimager_{0}".format(idx))
+
             # construct and save the output name
             arguments = [self.inputs['executable'],
                          self.environment,
                          self.inputs['parset'],
-                         self.inputs['working_directory'],
+                         working_dir,
                          # put in unique dir, as node script wants to put private .par files next to it
                          "%s_%s/image" % (self.inputs['output_image'], idx), 
                          measurement_path,
