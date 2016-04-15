@@ -14,7 +14,7 @@
 #ifndef STATIONTREEWIDGET_H
 #define STATIONTREEWIDGET_H
 
-#include <QtGui/QTreeWidget>
+#include <QTreeWidget>
 #include "ui_stationtreewidget.h"
 
 // class used as tree of used stations

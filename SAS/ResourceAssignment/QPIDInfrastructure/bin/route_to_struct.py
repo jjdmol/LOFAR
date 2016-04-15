@@ -2,9 +2,10 @@
 
 import sys
 from lofar.qpidinfrastructure.QPIDDB import qpidinfra
+from lofar.common import dbcredentials
 
-
-todb=qpidinfra()
+dbcreds = dbcredentials.DBCredentials().get("qpidinfra")
+todb=qpidinfra(dbcreds)
 
 tosearch = sys.stdin.readlines()
 

@@ -10,7 +10,6 @@ set(_py_files
   config.py
   rpc.py
   service.py
-  radbbuslistener.py
 )
 
 python_install(${_py_files} DESTINATION lofar/sas/resourceassignment/resourceassignmentservice)

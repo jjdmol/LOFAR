@@ -28,6 +28,7 @@ Typical usage is to derive your own subclass from OTDBBusListener and implement 
 """
 
 from lofar.messaging.messagebus import AbstractBusListener
+from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_BUSNAME, DEFAULT_OTDB_NOTIFICATION_SUBJECT
 
 import qpid.messaging
 import logging
@@ -37,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 class OTDBBusListener(AbstractBusListener):
-    def __init__(self, busname='lofar.otdb.notification', subject='otdb.treestatus', broker=None, **kwargs):
+    def __init__(self, busname=DEFAULT_OTDB_NOTIFICATION_BUSNAME, subject=DEFAULT_OTDB_NOTIFICATION_SUBJECT, broker=None, **kwargs):
         """
         OTDBBusListener listens on the lofar otdb message bus and calls (empty) on<SomeMessage> methods when such a message is received.
         Typical usage is to derive your own subclass from OTDBBusListener and implement the specific on<SomeMessage> methods that you are interested in.
@@ -65,6 +66,8 @@ class OTDBBusListener(AbstractBusListener):
                     modificationTime = datetime.strptime(msg.content['time_of_change'], '%Y-%m-%dT%H:%M:%S')
             except:
                 pass
+
+        logger.info("otdb task status changed: otdb_id=%s status=%s" % (treeId, msg.content['state']))
 
         if msg.content['state'] == 'described':
             self.onObservationDescribed(treeId, modificationTime)

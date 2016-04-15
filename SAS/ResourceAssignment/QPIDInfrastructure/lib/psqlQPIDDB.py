@@ -1,4 +1,5 @@
 #!/usr/bin/python
+
 import psycopg2 as pg
 import psycopg2.extras as pgdefs
 
@@ -8,26 +9,31 @@ class psqlQPIDDB:
     postgres database that holds the QPID infra configuration.
 
     """
-    def __init__(self,dbname):
+    def __init__(self, dbcreds=None):
 	""" Init the class with the name of the database
-	example: db = psqlQPIDDB('qpidinfra')
+	example: db = psqlQPIDDB(dbcreds)
+        where `dbcreds' is an lofar.common.dbcredentials.Credentials object.
 	"""
-	self.dbname = dbname
-	self.conn = pg.connect("dbname='%s'" %(self.dbname))
+	self.dbcreds = dbcreds
+	self.conn = None
 
+	self.ensure_connect()
 
     def ensure_connect(self):
 	""" ensure that the database is still connected.
 	raises an exception "ERROR: Failed to connect to database XXX"
 	if the reconnect failed.
 	"""
-        if (self.conn and self.conn.status==1):
+
+        if self.conn and self.conn.status==1:
 	    return
-	self.conn=pg.connect("dbname='%s'" %(self.dbname))
-	if (self.conn and self.conn.status==1):
+
+	self.conn = pg.connect(**self.dbcreds.psycopg2_connect_options())
+
+	if self.conn and self.conn.status==1:
 	    return
 	else:
-	    raise Exception( "ERROR: Failed to reconnect to database %s" %(self.dbname))
+	    raise Exception("ERROR: Failed to reconnect to database %s" % (self.dbcreds,))
 
     def doquery(self,query):
 	""" execute a query on the database and return reult as a list of dicts.
@@ -35,6 +41,7 @@ class psqlQPIDDB:
 	useful for fetching infromation from the database.
 	usage: ret=doquery("select * from table;")
 	"""
+
 	self.ensure_connect()
 	cur = self.conn.cursor(cursor_factory = pgdefs.RealDictCursor)
         cur.execute(query)

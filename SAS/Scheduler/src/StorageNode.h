@@ -89,7 +89,7 @@ public:
 	// check bandwidth requirements don't exceed the nodes bandwidth in the specified (start,end) period
 	task_conflict checkBandWidth(const AstroDateTime &start, const AstroDateTime &end, const double &totalBW_kbs) const;
 	// check if space is available to add the requested task to the claims of this storage node using the specified raid array (claimSize units: kByte, bandWidth units kbit/sec)
-	task_conflict checkSpaceAndWriteSpeed(const AstroDateTime &start, const AstroDateTime &end, const double &claimSize, const double &writeSpeed, int raidID) const;
+    task_conflict checkSpaceAndWriteSpeed(const AstroDateTime &start, const AstroDateTime &end, const double &claimSize, const double &writeSpeed, int raidID) const;
 	// return the ids of the raid arrays that meet the specified bandwidth (kbit/sec) and fileSize (kByte) within the timespan defined by startTime and endTime
 	nodeStorageOptions getPossibleRaidArrays(const AstroDateTime &startTime, const AstroDateTime &endTime,
 			const double &fileSize, const double &bandWidth, unsigned minNrFiles, std::vector<std::pair<int, task_conflict> > &result) const;

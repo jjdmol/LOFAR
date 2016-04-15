@@ -9,20 +9,32 @@
 --       CONNECTION LIMIT = -1;
 
 -- psql resourceassignment -U resourceassignment -f create_database.sql -W
+
+BEGIN;
+
+DROP SCHEMA IF EXISTS virtual_instrument CASCADE;
+DROP SCHEMA IF EXISTS resource_monitoring CASCADE;
+DROP SCHEMA IF EXISTS resource_allocation CASCADE;
+
 CREATE SCHEMA virtual_instrument;
 CREATE SCHEMA resource_monitoring;
 CREATE SCHEMA resource_allocation;
-
-BEGIN;
 
 -- This is insanity, but works, order needs to be the reverse of the CREATE TABLE statements
 DROP VIEW IF EXISTS virtual_instrument.resource_view CASCADE;
 DROP VIEW IF EXISTS resource_allocation.task_view CASCADE;
 DROP VIEW IF EXISTS resource_allocation.resource_claim_view CASCADE;
+DROP VIEW IF EXISTS resource_monitoring.resource_view CASCADE;
 DROP TABLE IF EXISTS resource_allocation.config CASCADE;
 DROP TABLE IF EXISTS resource_monitoring.resource_group_availability CASCADE;
 DROP TABLE IF EXISTS resource_monitoring.resource_availability CASCADE;
 DROP TABLE IF EXISTS resource_monitoring.resource_capacity CASCADE;
+DROP TABLE IF EXISTS resource_allocation.resource_claim_property CASCADE;
+DROP TABLE IF EXISTS resource_allocation.resource_claim_property_type CASCADE;
+DROP TABLE IF EXISTS resource_allocation.sap CASCADE;
+DROP TABLE IF EXISTS resource_allocation.conflict_reason CASCADE;
+DROP TABLE IF EXISTS resource_allocation.resource_claim_conflict_reason CASCADE;
+DROP TABLE IF EXISTS resource_allocation.task_conflict_reason CASCADE;
 DROP TABLE IF EXISTS resource_allocation.resource_claim CASCADE;
 DROP TABLE IF EXISTS resource_allocation.resource_claim_status CASCADE;
 DROP TABLE IF EXISTS resource_allocation.claim_session CASCADE;
@@ -159,6 +171,9 @@ CREATE TABLE resource_allocation.claim_session (
 ALTER TABLE resource_allocation.claim_session
   OWNER TO resourceassignment;
 
+--until we use user management, insert one default session_id
+INSERT INTO resource_allocation.claim_session(id, username, user_id, starttime, token) VALUES (1, 'anonymous', -1, '2015-04-14', 'foo');
+
 CREATE TABLE resource_allocation.resource_claim_status (
   id serial NOT NULL,
   name text NOT NULL,
@@ -183,6 +198,41 @@ CREATE TABLE resource_allocation.resource_claim (
 ALTER TABLE resource_allocation.resource_claim
   OWNER TO resourceassignment;
 
+CREATE TABLE resource_allocation.conflict_reason (
+  id serial NOT NULL,
+  reason text NOT NULL,
+  PRIMARY KEY (id)
+) WITH (OIDS=FALSE);
+ALTER TABLE resource_allocation.conflict_reason
+  OWNER TO resourceassignment;
+
+CREATE TABLE resource_allocation.resource_claim_conflict_reason (
+  id serial NOT NULL,
+  resource_claim_id integer NOT NULL REFERENCES resource_allocation.resource_claim ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  conflict_reason_id integer NOT NULL REFERENCES resource_allocation.conflict_reason ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  PRIMARY KEY (id)
+) WITH (OIDS=FALSE);
+ALTER TABLE resource_allocation.resource_claim_conflict_reason
+  OWNER TO resourceassignment;
+
+CREATE TABLE resource_allocation.task_conflict_reason (
+  id serial NOT NULL,
+  task_id integer NOT NULL REFERENCES resource_allocation.task ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  conflict_reason_id integer NOT NULL REFERENCES resource_allocation.conflict_reason ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  PRIMARY KEY (id)
+) WITH (OIDS=FALSE);
+ALTER TABLE resource_allocation.task_conflict_reason
+  OWNER TO resourceassignment;
+
+CREATE TABLE resource_allocation.sap (
+  id serial NOT NULL,
+  resource_claim_id integer NOT NULL REFERENCES resource_allocation.resource_claim ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  number int NOT NULL,
+  PRIMARY KEY (id)
+) WITH (OIDS=FALSE);
+ALTER TABLE resource_allocation.sap
+  OWNER TO resourceassignment;
+
 CREATE TABLE resource_allocation.resource_claim_property_type (
   id serial NOT NULL,
   name text NOT NULL,
@@ -194,8 +244,9 @@ ALTER TABLE resource_allocation.resource_claim_property_type
 CREATE TABLE resource_allocation.resource_claim_property (
   id serial NOT NULL,
   resource_claim_id integer NOT NULL REFERENCES resource_allocation.resource_claim ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
+  sap_id integer REFERENCES resource_allocation.sap ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
   type_id integer NOT NULL REFERENCES resource_allocation.resource_claim_property_type DEFERRABLE INITIALLY IMMEDIATE,
-  value int NOT NULL DEFAULT 1,
+  value bigint NOT NULL DEFAULT 1,
   PRIMARY KEY (id)
 ) WITH (OIDS=FALSE);
 ALTER TABLE resource_allocation.resource_claim_property
@@ -249,7 +300,7 @@ CREATE OR REPLACE VIEW resource_allocation.task_view AS
    JOIN resource_allocation.task_status ts ON ts.id = t.status_id
    JOIN resource_allocation.task_type tt ON tt.id = t.type_id
    JOIN resource_allocation.specification s ON s.id = t.specification_id;
-ALTER TABLE resource_allocation.task_view
+ALTER VIEW resource_allocation.task_view
   OWNER TO resourceassignment;
 COMMENT ON VIEW resource_allocation.task_view
   IS 'plain view on task table including task_status.name task_type.name specification.starttime and specification.endtime and the task predecessor- and successor ids';
@@ -261,43 +312,78 @@ CREATE OR REPLACE VIEW resource_allocation.resource_claim_view AS
     rcs.name AS status
    FROM resource_allocation.resource_claim rc
    JOIN resource_allocation.resource_claim_status rcs ON rcs.id = rc.status_id;
-ALTER TABLE resource_allocation.resource_claim_view
+ALTER VIEW resource_allocation.resource_claim_view
   OWNER TO resourceassignment;
 COMMENT ON VIEW resource_allocation.resource_claim_view
   IS 'plain view on resource_claim table, including resource_claim_status.name';
 
 
 CREATE OR REPLACE VIEW virtual_instrument.resource_view AS
- SELECT r.id, r.name, r.type_id, rt.name as type_name
-   FROM virtual_instrument.resource r
-   JOIN virtual_instrument.resource_type rt ON rt.id = r.type_id;
-ALTER TABLE virtual_instrument.resource_view
+  SELECT r.id,
+      r.name,
+      r.type_id,
+      rt.name AS type_name,
+      u.id as unit_id,
+      u.units as unit
+    FROM virtual_instrument.resource r
+    JOIN virtual_instrument.resource_type rt ON rt.id = r.type_id
+    JOIN virtual_instrument.unit u ON rt.unit_id = u.id;
+ALTER VIEW virtual_instrument.resource_view
   OWNER TO resourceassignment;
 COMMENT ON VIEW virtual_instrument.resource_view
-  IS 'plain view on resource table including task_type.name';
+  IS 'plain view on resource table including task_type.name and units';
 
 
 CREATE OR REPLACE VIEW resource_allocation.resource_claim_extended_view AS
- SELECT rcv.*, rv.name as resource_name, rv.type_id as resource_type_id, rv.name as resource_type_name
+ SELECT rcv.*, rv.name as resource_name, rv.type_id as resource_type_id, rv.type_name as resource_type_name
    FROM resource_allocation.resource_claim_view rcv
    JOIN virtual_instrument.resource_view rv ON rcv.resource_id = rv.id;
-ALTER TABLE resource_allocation.resource_claim_extended_view
+ALTER VIEW resource_allocation.resource_claim_extended_view
   OWNER TO resourceassignment;
 COMMENT ON VIEW resource_allocation.resource_claim_extended_view
   IS 'extended view on resource_claim table, including resource_claim_status.name and the resource itself';
 
-
 CREATE OR REPLACE VIEW resource_allocation.resource_claim_property_view AS
-  SELECT rcv.*, rcp.type_id as property_type_id, rcpt.name as property_type, rcp.value as property_value
-   FROM resource_allocation.resource_claim_view rcv
-   JOIN resource_allocation.resource_claim_property rcp ON rcv.id = rcp.resource_claim_id
+ SELECT rcp.id, rcp.resource_claim_id, rcp.value, rcp.type_id,
+    rcpt.name AS type_name, rcp.sap_id
+   FROM resource_allocation.resource_claim_property rcp
    JOIN resource_allocation.resource_claim_property_type rcpt ON rcpt.id = rcp.type_id;
-ALTER TABLE resource_allocation.resource_claim_property_view
+ALTER VIEW resource_allocation.resource_claim_property_view
   OWNER TO resourceassignment;
 COMMENT ON VIEW resource_allocation.resource_claim_property_view
-  IS 'view including resource_claim_properties on resource_claim table for resource_claims with on or more properties';
+  IS 'plain view on resource_claim_property table, including resource_claim_property_type.name';
 
+CREATE OR REPLACE VIEW resource_monitoring.resource_view AS
+  SELECT rv.*,
+    rc.available AS available_capacity,
+    rc.total - rc.available AS used_capacity,
+    rc.total AS total_capacity,
+    ra.available AS active
+  FROM virtual_instrument.resource_view rv
+  LEFT JOIN resource_monitoring.resource_capacity rc ON rc.resource_id = rv.id
+  LEFT JOIN resource_monitoring.resource_availability ra ON ra.resource_id = rv.id;
+ALTER VIEW resource_monitoring.resource_view
+  OWNER TO resourceassignment;
+COMMENT ON VIEW resource_monitoring.resource_view
+  IS 'view on virtual_instrument.resource_view including availability and capacity';
 
+CREATE OR REPLACE VIEW resource_allocation.resource_claim_conflict_reason_view AS
+  SELECT rccr.id, rccr.resource_claim_id, rccr.conflict_reason_id, rc.resource_id, rc.task_id, cr.reason
+    FROM resource_allocation.resource_claim_conflict_reason rccr
+    JOIN resource_allocation.conflict_reason cr on cr.id = rccr.conflict_reason_id
+    JOIN resource_allocation.resource_claim rc on rc.id = rccr.resource_claim_id;
+ALTER VIEW resource_allocation.resource_claim_conflict_reason_view
+  OWNER TO resourceassignment;
+COMMENT ON VIEW resource_allocation.resource_claim_conflict_reason_view
+  IS 'plain view on resource_claim_conflict_reason table including conflict_reason.reason';
 
+CREATE OR REPLACE VIEW resource_allocation.task_conflict_reason_view AS
+  SELECT rccr.id, rccr.task_id, rccr.conflict_reason_id, cr.reason
+    FROM resource_allocation.task_conflict_reason rccr
+    JOIN resource_allocation.conflict_reason cr on cr.id = rccr.conflict_reason_id;
+ALTER VIEW resource_allocation.task_conflict_reason_view
+  OWNER TO resourceassignment;
+COMMENT ON VIEW resource_allocation.task_conflict_reason_view
+  IS 'plain view on task_conflict_reason table including conflict_reason.reason';
 
 COMMIT;

@@ -22,3 +22,44 @@
 .datepicker-wrapper ul {
 /*     visibility: hidden; */
 }
+
+.ui-layout-row > .ui-splitbar {
+    height: 8px;
+    background-color: #888888;
+}
+
+.ui-layout-column > .ui-splitbar {
+    width: 8px;
+    background-color: #888888;
+}
+
+.gantt-current-date-line {
+    border: 3px solid #222222;
+    opacity: 0.7;
+    z-index: 100000;
+}
+
+.gantt-side {
+    width: 150px;
+}
+
+.top-stretch {
+    top: 20px;
+}
+
+.gantt-task.claim-status-claimed {
+  border-bottom: 4px solid #ffa64d;
+}
+
+.gantt-task.claim-status-conflict {
+  border-bottom: 4px solid #ff0000;
+}
+
+.gantt-task.claim-status-allocated {
+  border-bottom: 4px solid #66ff66;
+}
+
+.gantt-task.claim-status-mixed {
+  border-bottom: 4px solid #bfbfbf;
+}
+

@@ -9,6 +9,7 @@ set(_py_files
   __init__.py
   SSDBQueryService.py
   SSDBrpc.py
+  config.py
 )
 
 python_install(${_py_files} DESTINATION lofar/sas/systemstatus/service)

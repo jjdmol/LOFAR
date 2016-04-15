@@ -44,3 +44,12 @@ def monthRanges(min_date, max_date):
             month_start = datetime(month_start.year+1, month_start.month-11, 1, tzinfo=min_date.tzinfo)
 
     return ranges
+
+def totalSeconds(td_value):
+    '''Return the total number of fractional seconds contained in the duration.
+    For Python < 2.7 compute it, else use total_seconds() method.
+    '''
+    if hasattr(td_value,"total_seconds"):
+        return td_value.total_seconds()
+
+    return (td_value.microseconds + (td_value.seconds + td_value.days * 86400) * 1000000) / 1000000.0
