@@ -56,6 +56,7 @@ class imager_prepare(LOFARnodeTCP):
             #******************************************************************
             # 1. Create the directories used in this recipe
             create_directory(processed_ms_dir)
+            create_directory(os.path.dirname(output_measurement_set))
 
             # time slice dir_to_remove: assure empty directory: Stale data
             # is problematic for dppp
