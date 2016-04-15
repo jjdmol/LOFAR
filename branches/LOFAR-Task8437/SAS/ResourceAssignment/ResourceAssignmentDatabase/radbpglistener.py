@@ -28,52 +28,69 @@ import psycopg2.extras
 from datetime import datetime
 import time
 import json
+from optparse import OptionParser
 
 from lofar.common.postgres import PostgresListener
 from lofar.messaging import EventMessage, ToBus
-from lofar.sas.resourceassignment.database.config import radb_password, DEFAULT_BUSNAME
+from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_BUSNAME, DEFAULT_NOTIFICATION_PREFIX
+from lofar.common import dbcredentials
 
 logger = logging.getLogger(__name__)
 
 class RADBPGListener(PostgresListener):
     def __init__(self,
-                 host='10.149.96.6', #mcu005.control.lofar
-                 database='resourceassignment',
-                 username='resourceassignment',
-                 password=radb_password,
-                 busname=DEFAULT_BUSNAME,
+                 busname=DEFAULT_NOTIFICATION_BUSNAME,
+                 notification_prefix=DEFAULT_NOTIFICATION_PREFIX,
+                 dbcreds=None,
                  broker=None):
-        super(RADBPGListener, self).__init__(host, database, username, password)
+        super(RADBPGListener, self).__init__(dbcreds.host, dbcreds.database, dbcreds.user, dbcreds.password)
 
+        self.notification_prefix = notification_prefix
         self.event_bus = ToBus(busname, broker=broker)
 
-        self.setupPostgresNotifications('resource_allocation', 'task', view_for_row='task_view')
-        self.subscribe('task_update', self.onTaskUpdated)
-        self.subscribe('task_insert', self.onTaskInserted)
+        self.subscribe('task_update_with_task_view', self.onTaskUpdated)
+        self.subscribe('task_insert_with_task_view', self.onTaskInserted)
         self.subscribe('task_delete', self.onTaskDeleted)
 
-        self.setupPostgresNotifications('resource_allocation', 'resource_claim', view_for_row='resource_claim_view')
-        self.subscribe('resource_claim_update', self.onResourceClaimUpdated)
-        self.subscribe('resource_claim_insert', self.onResourceClaimInserted)
+        # when the specification starttime and endtime are updated, then that effects the task as well
+        # so subscribe to specification_update, and use task_view as view_for_row
+        self.subscribe('specification_update_with_task_view', self.onSpecificationUpdated)
+
+        self.subscribe('resource_claim_update_with_resource_claim_view', self.onResourceClaimUpdated)
+        self.subscribe('resource_claim_insert_with_resource_claim_view', self.onResourceClaimInserted)
         self.subscribe('resource_claim_delete', self.onResourceClaimDeleted)
 
+        self.subscribe('resource_availability_update', self.onResourceAvailabilityUpdated)
+        self.subscribe('resource_capacity_update', self.onResourceCapacityUpdated)
+
     def onTaskUpdated(self, payload = None):
-        self._sendNotification('RADB.TaskUpdated', payload, ['starttime', 'endtime'])
+        self._sendNotification('TaskUpdated', payload, ['starttime', 'endtime'])
 
     def onTaskInserted(self, payload = None):
-        self._sendNotification('RADB.TaskInserted', payload, ['starttime', 'endtime'])
+        self._sendNotification('TaskInserted', payload, ['starttime', 'endtime'])
 
     def onTaskDeleted(self, payload = None):
-        self._sendNotification('RADB.TaskDeleted', payload)
+        self._sendNotification('TaskDeleted', payload)
+
+    def onSpecificationUpdated(self, payload = None):
+        # when the specification starttime and endtime are updated, then that effects the task as well
+        # so send a TaskUpdated notification
+        self._sendNotification('TaskUpdated', payload, ['starttime', 'endtime'])
 
     def onResourceClaimUpdated(self, payload = None):
-        self._sendNotification('RADB.ResourceClaimUpdated', payload, ['starttime', 'endtime'])
+        self._sendNotification('ResourceClaimUpdated', payload, ['starttime', 'endtime'])
 
     def onResourceClaimInserted(self, payload = None):
-        self._sendNotification('RADB.ResourceClaimInserted', payload, ['starttime', 'endtime'])
+        self._sendNotification('ResourceClaimInserted', payload, ['starttime', 'endtime'])
 
     def onResourceClaimDeleted(self, payload = None):
-        self._sendNotification('RADB.ResourceClaimDeleted', payload)
+        self._sendNotification('ResourceClaimDeleted', payload)
+
+    def onResourceAvailabilityUpdated(self, payload = None):
+        self._sendNotification('ResourceAvailabilityUpdated', payload)
+
+    def onResourceCapacityUpdated(self, payload = None):
+        self._sendNotification('ResourceCapacityUpdated', payload)
 
     def __enter__(self):
         super(RADBPGListener, self).__enter__()
@@ -92,17 +109,21 @@ class RADBPGListener(PostgresListener):
         So, parse the requested fields, and return them as datetime.
         '''
         try:
-            for field in fields:
-                try:
-                    timestampStr = contentDict[field]
-                    if timestampStr.rfind('.') > -1:
-                        timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S.%f')
-                    else:
-                        timestamp = datetime.strptime(timestampStr, '%Y-%m-%d %H:%M:%S')
+            for state in ('old', 'new'):
+                if state in contentDict:
+                    for field in fields:
+                        try:
+                            if contentDict[state] and field in contentDict[state]:
+                                timestampStr = contentDict[state][field]
+                                formatStr = '%Y-%m-%dT%H:%M:%S' if 'T' in timestampStr else '%Y-%m-%d %H:%M:%S'
+                                if timestampStr.rfind('.') > -1:
+                                    formatStr += '.%f'
 
-                    contentDict[field] = timestamp
-                except Exception as e:
-                    logger.error('Could not convert field \'%s\' to datetime: %s' % (field, e))
+                                timestamp = datetime.strptime(timestampStr, formatStr)
+
+                                contentDict[state][field] = timestamp
+                        except Exception as e:
+                            logger.error('Could not convert field \'%s\' to datetime: %s' % (field, e))
 
             return contentDict
         except Exception as e:
@@ -112,6 +133,19 @@ class RADBPGListener(PostgresListener):
     def _sendNotification(self, subject, payload, timestampFields = None):
         try:
             content = json.loads(payload)
+
+            if 'new' in content and content['new'] and 'old' in content and content['old']:
+                # check if new and old are equal.
+                # however, new and old can be based on different views,
+                # so, only check the values for the keys they have in common
+                new_keys = set(content['new'].keys())
+                old_keys = set(content['old'].keys())
+                common_keys = new_keys & old_keys
+                equal_valued_keys = [k for k in common_keys if content['new'][k] == content['old'][k]]
+                if len(equal_valued_keys) == len(common_keys):
+                    logger.info('new and old values are equal, not sending notification. %s' % (content['new']))
+                    return
+
             if timestampFields:
                 content = self._formatTimestampsAsIso(timestampFields, content)
         except Exception as e:
@@ -119,20 +153,35 @@ class RADBPGListener(PostgresListener):
             content=None
 
         try:
-            msg = EventMessage(context=subject, content=content)
-            logger.info('Sending notification: ' + str(msg).replace('\n', ' '))
+            msg = EventMessage(context=self.notification_prefix + subject, content=content)
+            logger.info('Sending notification %s: %s' % (subject, str(content).replace('\n', ' ')))
             self.event_bus.send(msg)
         except Exception as e:
             logger.error(str(e))
 
-def main(busname=DEFAULT_BUSNAME):
-    with RADBPGListener(busname=busname, password=radb_password) as listener:
+def main():
+    # Check the invocation arguments
+    parser = OptionParser("%prog [options]",
+                          description='runs the radb postgres listener which listens to changes on some tables in the radb and publishes the changes as notifications on the bus.')
+    parser.add_option('-q', '--broker', dest='broker', type='string', default=None, help='Address of the qpid broker, default: localhost')
+    parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_NOTIFICATION_BUSNAME, help="Name of the publication bus on the qpid broker, [default: %default]")
+    parser.add_option("-n", "--notification_prefix", dest="notification_prefix", type="string", default=DEFAULT_NOTIFICATION_PREFIX, help="The prefix for all notifications of this publisher, [default: %default]")
+    parser.add_option_group(dbcredentials.options_group(parser))
+    parser.set_defaults(dbcredentials="RADB")
+    (options, args) = parser.parse_args()
+
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                        level=logging.INFO)
+
+    dbcreds = dbcredentials.parse_options(options)
+
+    logger.info("Using dbcreds: %s" % dbcreds.stringWithHiddenPassword())
+
+    with RADBPGListener(busname=options.busname,
+                        notification_prefix=options.notification_prefix,
+                        dbcreds=dbcreds,
+                        broker=options.broker) as listener:
         listener.waitWhileListening()
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                        level=logging.INFO)
-    main(busname=DEFAULT_BUSNAME)
-
-
-
+    main()

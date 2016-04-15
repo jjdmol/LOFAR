@@ -2,11 +2,14 @@
 
 var app = angular.module('raeApp',
                          ['DataControllerMod',
-                         'GanttControllerMod',
+                         'GanttResourceControllerMod',
+                         'GanttProjectControllerMod',
+                         'ChartResourceUsageControllerMod',
                          'GridControllerMod',
                          'ui.layout',
-                         'ui.bootstrap.datetimepicker'
-                        ]);
+                         'ui.bootstrap.datetimepicker',
+                         'ui.bootstrap.tabs',
+                         'highcharts-ng']);
 
 app.config(['$compileProvider', function ($compileProvider) {
     $compileProvider.debugInfoEnabled(false);

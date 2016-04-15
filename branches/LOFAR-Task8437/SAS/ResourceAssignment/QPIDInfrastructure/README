@@ -3,7 +3,7 @@ QPIDinfra Database
 bin:
    addtoQPIDDB.py		Tool to add information in the database
    configQPIDfromDB.py		Tool to create a buildscript from the database
-   cep4_config.sh		Script to insert CEP4 config into database
+   populateDB.sh		Script to insert LOFAR config into database
    compareQPIDwithDB.py		WIP: Tool to read database and compare with QPID brokers
    gatherfrombrokers.sh		WIP: Tool to retrieve info from brokers and insert in database
    route_to_struct.py		

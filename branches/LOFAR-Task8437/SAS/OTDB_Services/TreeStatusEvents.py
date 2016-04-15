@@ -29,11 +29,12 @@ import os.path
 import sys, time, pg, datetime
 import logging
 from lofar.messaging import EventMessage, ToBus
+from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_BUSNAME, DEFAULT_OTDB_NOTIFICATION_SUBJECT
 
 QUERY_EXCEPTIONS = (TypeError, ValueError, MemoryError, pg.ProgrammingError, pg.InternalError)
 alive = False
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Define our own exceptions
@@ -84,17 +85,12 @@ if __name__ == "__main__":
 
     # Check the invocation arguments
     parser = OptionParser("%prog [options]")
-    parser.add_option("-B", "--busname", dest="busname", type="string", default="",
-                      help="Busname or queue-name the status changes are published on")
+    parser.add_option("-B", "--busname", dest="busname", type="string", default=DEFAULT_OTDB_NOTIFICATION_BUSNAME,
+                      help="Busname or queue-name the status changes are published on. [default: %default]")
     parser.add_option_group(dbcredentials.options_group(parser))
     (options, args) = parser.parse_args()
 
     dbcreds = dbcredentials.parse_options(options)
-
-    if not options.busname:
-        print "Missing busname"
-        parser.print_help()
-        sys.exit(1)
 
     # Set signalhandler to stop the program in a neat way.
     signal.signal(signal.SIGINT, signal_handler)
@@ -154,7 +150,7 @@ if __name__ == "__main__":
                     for (treeid, state, modtime, creation) in record_list:
                         content = { "treeID" : treeid, "state" : allowed_states.get(state, "unknown_state"),
                                     "time_of_change" : modtime }
-                        msg = EventMessage(context="otdb.treestatus", content=content)
+                        msg = EventMessage(context=DEFAULT_OTDB_NOTIFICATION_SUBJECT, content=content)
                         logger.info("sending message treeid %s state %s modtime %s" % (treeid, allowed_states.get(state, "unknown_state"), modtime))
                         send_bus.send(msg)
 

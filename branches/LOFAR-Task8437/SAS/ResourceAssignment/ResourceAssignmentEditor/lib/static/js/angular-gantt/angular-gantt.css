@@ -2,25 +2,6 @@
     line-height: normal;
 }
 
-.gantt-side-content,
-.gantt-body {
-    pointer-events: none;
-}
-
-.gantt-side-background,
-.gantt-body-background,
-.gantt-row {
-    pointer-events: auto;
-}
-
-.gantt a,
-.gantt input,
-.gantt *[ng-click],
-.gantt *[data-ng-click],
-.gantt *[x-ng-click] {
-    pointer-events: auto;
-}
-
 .gantt-scrollable {
     overflow-x: auto;
     border-left: 1px solid #dddddd;
@@ -37,6 +18,7 @@
 .gantt-side,
 .gantt-task {
     cursor: default;
+    z-index: 10; /* Tasks are displayed over everything else */
 }
 
 .gantt-header {
@@ -61,7 +43,6 @@
     position: relative;
     top: 50%;
     -webkit-transform: translateY(-50%);
-    -ms-transform: translateY(-50%);
     transform: translateY(-50%);
 }
 
@@ -172,6 +153,7 @@
 
 .gantt-body-rows {
     overflow-x: hidden;
+    overflow-y: hidden;
 }
 
 .gantt-body-background {
@@ -271,11 +253,8 @@
     margin: auto;
     top: 0;
     bottom: 0;
-    width: 0.6em !important;
+    min-width: 0.6em;
     height: 80%;
-
-    background-color: grey;
-    border-radius: 0.3em;
 }
 
 .gantt-task-background {

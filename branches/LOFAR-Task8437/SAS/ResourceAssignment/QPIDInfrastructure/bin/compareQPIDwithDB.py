@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from lofar.qpidinfrastructure.QPIDDB import qpidinfra
+from lofar.common import dbcredentials
 
 S_INDB = 1
 S_ONQPID = 2
@@ -81,7 +82,8 @@ def qpidQroute_add(settings):
     Host(settings['fromhost']).tagqueueroute(settings['tohost'],settings['queuename'],DEFINED)
 
 
-QPIDinfra = qpidinfra()
+dbcreds = dbcredentials.DBCredentials().get("qpidinfra")
+QPIDinfra = qpidinfra(dbcreds)
 
 
 QPIDinfra.perqueue(qpidconfig_add_queue)

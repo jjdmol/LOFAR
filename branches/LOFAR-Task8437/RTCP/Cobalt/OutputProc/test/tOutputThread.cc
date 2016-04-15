@@ -67,20 +67,26 @@ TEST(testCorrelatorOutputThreadThrowsStorageException)
   Pool<StreamableData> outputPool("testCorrelatorOutputThreadThrowsStorageException::outputPool", true);
   MACIO::RTmetadata rtmd(12345, "", "");
 
+  bool caught = false;
+
   try
   {
     SubbandOutputThread SubbandOutputThread(par, 
                 (unsigned) 0, outputPool, rtmd, "rtmd key prefix", "Log prefix", "./");
 
     SubbandOutputThread.createMS();
+    SubbandOutputThread.init();
   }
   catch (StorageException &ex)  // Catch the correct exception
   {
     cout << "Got the correct exception. " << endl;
     cout << ex.what() << endl;
 
+    caught = true;
+
   }
-  //else  Let the exception fall tru
+
+  ASSERT(caught);
   
   cout << "Success" << endl;
 }
@@ -150,9 +156,7 @@ TEST(testCorrelatorOutputThreadRealtimeThrowsNoException)
       (unsigned)0, outputPool, rtmd, "rtmd key prefix", "Log prefix", "./");
 
   SubbandOutputThread.createMS();
-
-  // ensure null writer
-  ASSERT( (dynamic_cast<MSWriterNull*> (SubbandOutputThread.getMSWriter()) != 0));
+  SubbandOutputThread.init();
 
   cout << "Success" << endl;
 }
@@ -194,19 +198,25 @@ TEST(testBeamformerOutputThreadThrowsStorageException)
   Pool<StreamableData> outputPool("testBeamformerOutputThreadThrowsStorageException::outputPool", true);
   MACIO::RTmetadata rtmd(12345, "", "");
 
+  bool caught = false;
+
   try
   {
     SubbandOutputThread SubbandOutputThread(par,
       (unsigned)0, outputPool, rtmd, "rtmd key prefix", "Log prefix", "./");
 
     SubbandOutputThread.createMS();
+    SubbandOutputThread.init();
   }
   catch (StorageException &ex)  // Catch the correct exception
   {
     cout << "Got the correct exception. " << endl;
     cout << ex.what() << endl;
+
+    caught = true;
   }
-  //else  Let the exception fall tru
+
+  ASSERT(caught);
 
   cout << "Success" << endl;
 }
@@ -280,9 +290,7 @@ TEST(testBeamformerOutputThreadRealtimeThrowsNoException)
     (unsigned)0, outputPool, rtmd, "rtmd key prefix", "Log prefix", "/NonExisting");
 
   BeamOutputThread.createMS();
-
-  //// ensure null writer
-  ASSERT((dynamic_cast<MSWriterNull*> (BeamOutputThread.getMSWriter()) != 0));
+  BeamOutputThread.init();
   
   cout << "Success" << endl;
 }
