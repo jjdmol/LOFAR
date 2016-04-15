@@ -23,10 +23,8 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
     $scope.dataService = dataService;
     $scope.ganttData = []
 
-    self.resourceClaimStatusColors = {'claimed':'#ffa64d',
-                                      'conflict':'#ff0000',
-                                      'allocated': '#66ff66',
-                                      'mixed': '#bfbfbf'}
+    self.taskStatusColors = dataService.taskStatusColors;
+    self.resourceClaimStatusColors = dataService.resourceClaimStatusColors;
 
     $scope.options = {
         mode: 'custom',
@@ -275,7 +273,8 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                         name: task.name,
                         from: claim.starttime,
                         to: claim.endtime,
-                        color: self.resourceClaimStatusColors[claim.status],
+                        color: self.taskStatusColors[task.status],
+                        classes: 'claim-status-' + claim.status,
                         raTask: task,
                         claim: claim,
                         movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
@@ -359,7 +358,8 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                                 name: task.name,
                                 from: aggClaimForTask.starttime,
                                 to: aggClaimForTask.endtime,
-                                color: self.resourceClaimStatusColors[aggClaimForTask.status],
+                                color: self.taskStatusColors[task.status],
+                                classes: 'claim-status-' + aggClaimForTask.status,
                                 raTask: task,
                                 movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
                             };
@@ -405,7 +405,7 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
     $scope.$watch('dataService.resourceClaims', updateGanttData, true);
     $scope.$watch('dataService.resourceGroups', updateGanttData);
     $scope.$watch('dataService.resourceGroupMemberships', updateGanttData);
-    $scope.$watch('dataService.filteredTaskDict', updateGanttData);
+    $scope.$watch('dataService.filteredTaskDict', updateGanttData, true);
     $scope.$watch('dataService.lofarTime', function() {$scope.options.currentDateValue= $scope.dataService.lofarTime;});
 }
 ]);

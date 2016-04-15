@@ -45,15 +45,12 @@
     <body>
     {% raw %}
     <div ng-controller="DataController as dataCtrl">
-        <div >Lofar Time:
-            <span>{{dataCtrl.dataService.lofarTime | date:'yyyy-MM-dd HH:mm:ss'}}</span>
-        </div>
+        <div >Time (local): <span>{{dataService.lofarTime | date:'yyyy-MM-dd HH:mm:ss' }}</span></div>
         <div ui-layout class="top-stretch" ui-layout="{flow: 'column'}">
             <header>
                 <uib-tabset margin-top='10px'>
                     <uib-tab heading="Tasks" index='0' active='true'>
                         <div ng-controller="GridController as gridCtrl">
-                            <strong>Tasks:</strong>
                             <div id="grid" ui-grid="gridOptions" ui-grid-edit ui-grid-selection ui-grid-cellnav ui-grid-resize-columns class="grid">
                             </div>
                         </div>
