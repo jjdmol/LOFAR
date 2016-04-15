@@ -115,6 +115,7 @@ def main():
     parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
     (options, args) = parser.parse_args()
 
+    logging.getLogger('lofar.sas.resourceassignment.database.radbbuslistener').level = logging.WARN
     setQpidLogLevel(logging.INFO)
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                         level=logging.DEBUG if options.verbose else logging.INFO)
