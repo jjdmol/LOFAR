@@ -179,7 +179,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             # Save the mapfile
             inputs_for_image_mapfile_path = os.path.join(
                job_directory, "mapfiles",
-               "ms_per_image_{0}".format(idx_sb_group))
+               "ms_per_image_{0}.map".format(idx_sb_group))
 
             self._store_data_map(inputs_for_image_mapfile_path,
                                 inputs_for_image_map, "inputmap for location")
