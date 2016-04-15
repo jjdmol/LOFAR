@@ -131,7 +131,7 @@ class MoMDatabaseWrapper:
                     ('\'s' if len(ids) > 1 else '', ids_str))
 
         # TODO: make a view for this query in momdb!
-        query = '''SELECT project.mom2id as project_mom2id, project.name as project_name, project.description as project_description,
+        query = '''SELECT project.mom2id as project_mom2id, project.id as project_mom2objectid, project.name as project_name, project.description as project_description,
         object.mom2id as object_mom2id, object.id as object_mom2objectid, object.name as object_name, object.description as object_description, object.mom2objecttype as object_type, object.group_id as object_group_id
         FROM mom2object as object
         left join mom2object as project on project.id = object.ownerprojectid
