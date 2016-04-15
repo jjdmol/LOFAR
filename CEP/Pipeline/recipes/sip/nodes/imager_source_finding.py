@@ -8,6 +8,7 @@ from lofarpipe.support.lofarnode import LOFARnodeTCP
 
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.utilities import catch_segfaults
+from lofarpipe.support.utilities import create_directory
 
 
 class imager_source_finding(LOFARnodeTCP):
@@ -52,6 +53,10 @@ class imager_source_finding(LOFARnodeTCP):
         :rtype: self.outputs['source_db'] sourcedb_target_path
         
         """
+
+        #******************************************************************
+        # 0. Create the directories used in this recipe
+        create_directory(working_directory)
 
         import lofar.bdsm as bdsm#@UnresolvedImport
         self.logger.info("Starting imager_source_finding")

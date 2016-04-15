@@ -57,6 +57,7 @@ class long_baseline(LOFARnodeTCP):
             #******************************************************************
             # I. Create the directories used in this recipe
             create_directory(processed_ms_dir)
+            create_directory(working_dir)
 
             # time slice dir_to_remove: assure empty directory: Stale data
             # is problematic for dppp
