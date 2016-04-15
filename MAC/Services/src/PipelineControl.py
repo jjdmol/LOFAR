@@ -123,8 +123,9 @@ class Parset(dict):
     return self[PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName"] or "CEP2"
 
   def dockerTag(self):
-    # For now, return OUR tag
-    return runCommand("docker-template", "${LOFAR_TAG}")
+    # Return the version set in the parset, and fall back to our own version.
+    return (self[PARSET_PREFIX + "Observation.ObservationControl.PythonControl.softwareVersion"] or
+            runCommand("docker-template", "${LOFAR_TAG}"))
 
   def slurmJobName(self):
     return str(self.treeId())
