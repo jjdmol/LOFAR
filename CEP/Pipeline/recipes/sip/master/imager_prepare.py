@@ -197,7 +197,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                 tuple([item.host, inputs_for_image_mapfile_path, False]))
 
             # use unique working directories per job, to prevent interference between jobs on a global fs
-            working_dir = os.path.join(self.inputs['working_directory'], "ms_per_image_{0}".format(idx_sb_group))
+            working_dir = os.path.join(self.inputs['working_directory'], "imager_prepare_{0}".format(idx_sb_group))
 
             arguments = [self.environment,
                          self.inputs['parset'],

@@ -198,7 +198,7 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
                 tuple([output_item.host, inputs_for_image_mapfile_path, False]))
 
             # use a unique working directory per job, to prevent interference between jobs on a global fs
-            working_dir = os.path.join(self.inputs['working_directory'], "ms_per_image_{0}".format(idx_sb_group))
+            working_dir = os.path.join(self.inputs['working_directory'], "long_baseline_{0}".format(idx_sb_group))
 
             arguments = [self.environment,
                          self.inputs['parset'],
