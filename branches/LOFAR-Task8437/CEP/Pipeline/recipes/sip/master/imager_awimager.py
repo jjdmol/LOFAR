@@ -5,6 +5,7 @@
 #                                                      swinbank@transientskp.org
 # ------------------------------------------------------------------------------
 import sys
+import os
 import copy
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
