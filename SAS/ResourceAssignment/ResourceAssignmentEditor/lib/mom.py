@@ -61,6 +61,7 @@ def updateTaskMomDetails(task, momrpc):
                 t['name'] = m['object_name']
                 t['project_name'] = m['project_name']
                 t['project_mom_id'] = m['project_mom2id']
+                t['project_mom2object_id'] = m['project_mom2objectid']
                 t['mom2object_id'] = m['object_mom2objectid']
                 t['mom_object_group_id'] = m['object_group_id']
             else:
