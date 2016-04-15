@@ -46,3 +46,20 @@
 .top-stretch {
     top: 20px;
 }
+
+.gantt-task.claim-status-claimed {
+  border-bottom: 4px solid #ffa64d;
+}
+
+.gantt-task.claim-status-conflict {
+  border-bottom: 4px solid #ff0000;
+}
+
+.gantt-task.claim-status-allocated {
+  border-bottom: 4px solid #66ff66;
+}
+
+.gantt-task.claim-status-mixed {
+  border-bottom: 4px solid #bfbfbf;
+}
+

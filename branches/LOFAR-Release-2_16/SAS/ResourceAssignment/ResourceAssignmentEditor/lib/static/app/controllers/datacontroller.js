@@ -37,6 +37,27 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
     self.initialLoadComplete = false;
 
+    self.resourceClaimStatusColors = {'claimed':'#ffa64d',
+                                      'conflict':'#ff0000',
+                                      'allocated': '#66ff66',
+                                      'mixed': '#bfbfbf'}
+
+    self.taskStatusColors = {'prepared':'#cccccc',
+                             'approved':'#8cb3d9',
+                             'on_hold':'#b34700',
+                             'conflict':'#ff0000',
+                             'prescheduled': '#6666ff',
+                             'scheduled': '#0000ff',
+                             'queued': '#6666ff',
+                             'active': '#ffff00',
+                             'completing': '#99ff33',
+                             'finished': '#00ff00',
+                             'aborted': '#cc0000',
+                             'error': '#990033',
+                             'obsolete': '#555555'};
+
+
+
     //start with local client time
     //lofarTime will be synced with server,
     //because local machine might have incorrect clock
