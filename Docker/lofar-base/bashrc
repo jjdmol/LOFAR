@@ -11,4 +11,5 @@ source ${INSTALLDIR}/qpid/.profile
 export PYTHONPATH=${PYTHONPATH}:${INSTALLDIR}/python-casacore/lib/python2.7/site-packages
 
 # casacore
+export PATH=${PATH}:${INSTALLDIR}/casacore/bin
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${INSTALLDIR}/casacore/lib
