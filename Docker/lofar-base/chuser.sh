@@ -16,9 +16,6 @@ if [ -n "${LUSER}" ]; then
 
   # Set ownership of home dir to new user
   chown --from=${OLDID} -R ${LUSER}:${LGROUP} ${HOME}
-
-  # Set ownership of installed software to new user
-  chown --from=${OLDID} -R ${LUSER}:${LGROUP} /opt
 fi
 
 # Update environment for updated user
