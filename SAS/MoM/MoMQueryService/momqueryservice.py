@@ -62,53 +62,32 @@ class MoMDatabaseWrapper:
         self.conn = None
 
     def _connect(self):
+        if self.conn:
+            self.conn.close()
+
         connect_options = self.dbcreds.mysql_connect_options()
         connect_options['connection_timeout'] = 5
         try:
             logger.info("Connecting to %s" % self.dbcreds.stringWithHiddenPassword())
             self.conn = connector.connect(**connect_options)
-            logger.info("Connected to %s" % self.dbcreds.stringWithHiddenPassword())
+            logger.debug("Connected to %s" % self.dbcreds.stringWithHiddenPassword())
         except Exception as e:
             logger.error(str(e))
             self.conn = None
 
-    def ensureConnection(self):
-        if not self.conn:
-            self._connect()
-
-        try:
-            # try a simple select
-            # if it fails, reconnect
-            cursor = self.conn.cursor()
-            cursor.execute('''SELECT id FROM project;''')
-            if len(cursor.fetchall()) == 0:
-                logger.warning('unexpected answer while checking connection. reconnecting in 1 sec...')
-                time.sleep(1)
-                self._connect()
-        except (OperationalError, AttributeError) as e:
-            if isinstance(e, OperationalError):
-                logger.error(str(e))
-            for i in range(5):
-                logger.info("retrying to connect to mom database")
-                self._connect()
-                if self.conn:
-                    logger.info("connected to mom database")
-                    break
-                time.sleep(i*i)
-
     def _executeQuery(self, query):
-        def doQuery(connection):
-            cursor = connection.cursor(dictionary=True)
-            cursor.execute(query)
-            return cursor.fetchall()
-
-        try:
-            return doQuery(self.conn)
-        except (OperationalError, AttributeError) as e:
-            if isinstance(e, OperationalError):
+        # try to execute query on flaky lofar mysql connection
+        # max of 3 tries, on succes return result
+        # use new connection for every query,
+        # because on the flaky lofar network a connection may appear functional but returns improper results.
+        for i in range(3):
+            try:
+                self._connect()
+                cursor = self.conn.cursor(dictionary=True)
+                cursor.execute(query)
+                return cursor.fetchall()
+            except (OperationalError, AttributeError) as e:
                 logger.error(str(e))
-            self.ensureConnection()
-            return doQuery(self.conn)
 
     def getProjectDetails(self, mom_ids):
         ''' get the project details (project_mom2id, project_name,
