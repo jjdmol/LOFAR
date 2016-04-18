@@ -100,29 +100,40 @@ class RAtoOTDBPropagator():
         self.otdbrpc.close()
         self.momrpc.close()
 
-    def doTaskConflict(self, ra_id, otdb_id, mom_id):
-        logger.info('doTaskConflict: otdb_id=%s mom_id=%s' % (otdb_id, mom_id))
+    def doTaskConflict(self, otdb_id):
+        logger.info('doTaskConflict: otdb_id=%s' % (otdb_id,))
         if not otdb_id:
             logger.warning('doTaskConflict no valid otdb_id: otdb_id=%s' % (otdb_id,))
             return
-        self.otdbrpc.taskSetStatus(otdb_id, 'conflict')
+        try:
+            self.otdbrpc.taskSetStatus(otdb_id, 'conflict')
+        except Exception as e:
+            logger.error(e)
 
     def doTaskScheduled(self, ra_id, otdb_id, mom_id):
         try:
-            logger.info('doTaskScheduled: otdb_id=%s mom_id=%s' % (otdb_id, mom_id))
+            logger.info('doTaskScheduled: ra_id=%s otdb_id=%s mom_id=%s' % (ra_id, otdb_id, mom_id))
             if not otdb_id:
                 logger.warning('doTaskScheduled no valid otdb_id: otdb_id=%s' % (otdb_id,))
                 return
             ra_info = self.getRAinfo(ra_id)
-            project = self.momrpc.getProjectDetails(mom_id)
-            logger.info(project)
-            project_name = "_".join(project[str(mom_id)]['project_name'].split())
+
+            #get mom project name
+            try:
+                project = self.momrpc.getProjectDetails(mom_id)
+                logger.info(project)
+                project_name = "_".join(project[str(mom_id)]['project_name'].split())
+            except (RPCException, KeyError) as e:
+                logger.error('Could not get project name from MoM for mom_id %s: %s' % (mom_id, str(e)))
+                logger.info('Using \'unknown\' as project name.')
+                project_name = 'unknown'
+
             otdb_info = self.translator.CreateParset(otdb_id, ra_info, project_name)
             logger.debug("Parset info for OTDB: %s" %otdb_info)
             self.setOTDBinfo(otdb_id, otdb_info, 'scheduled')
         except Exception as e:
             logger.error(e)
-            self.doTaskConflict(ra_id, otdb_id, mom_id)
+            self.doTaskConflict(otdb_id)
 
     def getRAinfo(self, ra_id):
         info = {}
@@ -139,6 +150,11 @@ class RAtoOTDBPropagator():
         return info
     
     def setOTDBinfo(self, otdb_id, otdb_info, otdb_status):
-        self.otdbrpc.taskSetSpecification(otdb_id, otdb_info)
-        self.otdbrpc.taskPrepareForScheduling(otdb_id, otdb_info["LOFAR.ObsSW.Observation.startTime"], otdb_info["LOFAR.ObsSW.Observation.stopTime"])
-        self.otdbrpc.taskSetStatus(otdb_id, otdb_status)
+        logger.info('Setting specticication and status (%s) for otdb_id %s' % (otdb_status, otdb_id))
+        try:
+            self.otdbrpc.taskSetSpecification(otdb_id, otdb_info)
+            self.otdbrpc.taskPrepareForScheduling(otdb_id, otdb_info["LOFAR.ObsSW.Observation.startTime"], otdb_info["LOFAR.ObsSW.Observation.stopTime"])
+            self.otdbrpc.taskSetStatus(otdb_id, otdb_status)
+        except Exception as e:
+            logger.error(e)
+            self.doTaskConflict(otdb_id)
