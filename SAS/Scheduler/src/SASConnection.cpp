@@ -2556,16 +2556,17 @@ bool SASConnection::saveStationSettings(int treeID, const StationTask &task, con
 		}
 		// nr of dataslots per RSP board (called 'nrSlotsInFrame' in SAS)
 //		bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.nrSlotsInFrame", QString::number(task.getNrOfDataslotsPerRSPboard()));
+        //This is nonsense code as diff = NULL here, it somehow works under certain compilers because the dynamic_cast fails (obs=NULL)
 		// TBB piggyback allowed?
-        const Observation *obs = dynamic_cast<const Observation *>(&task);
-        if (obs) {
-            if (diff->TBBPiggybackAllowed)
-                bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.ObservationControl.StationControl.tbbPiggybackAllowed",
-                                        (obs->getTBBPiggybackAllowed() ? "true" : "false"));
-            if (diff->AartfaacPiggybackAllowed)
-                 bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.ObservationControl.StationControl.aartfaacPiggybackAllowed",
-                                         (obs->getAartfaacPiggybackAllowed() ? "true" : "false"));
-        }
+        //const Observation *obs = dynamic_cast<const Observation *>(&task);
+        //if (obs) {
+        //    if (diff->TBBPiggybackAllowed)
+        //        bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.ObservationControl.StationControl.tbbPiggybackAllowed",
+        //                                (obs->getTBBPiggybackAllowed() ? "true" : "false"));
+        //    if (diff->AartfaacPiggybackAllowed)
+        //         bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.ObservationControl.StationControl.aartfaacPiggybackAllowed",
+        //                                 (obs->getAartfaacPiggybackAllowed() ? "true" : "false"));
+        //}
     }
 
 	return bResult;
