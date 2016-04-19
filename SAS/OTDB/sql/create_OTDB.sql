@@ -7,7 +7,6 @@
 \i create_types.sql
 
 \i create_log_system.sql
-
 \i security_func.sql
 \i misc_func.sql
 
@@ -15,6 +14,7 @@
 \i setTreeState_func.sql
 \i addTreeState_func.sql
 \i getStateList_func.sql
+\i getStateChanges_func.sql
 
 -- OTDBConnection
 \i getTreeList_func.sql
@@ -33,6 +33,7 @@
 \i getPICitemList_func.sql
 \i searchPICinPeriod_func.sql
 \i getBrokenHardware_func.sql
+\i getStations_func.sql
 
 -- Events and Actions
 \i create_event_action.sql

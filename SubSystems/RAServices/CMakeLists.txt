@@ -1,12 +1,17 @@
 # $Id: CMakeLists.txt 20934 2012-05-15 09:26:48Z schoenmakers $
 
 lofar_package(RAServices
-                DEPENDS OTDB_Services
-                        MoMQueryService
+                DEPENDS MoMQueryService
+                        OTDBtoRATaskStatusPropagator
+                        RATaskSpecifiedService
+                        RAtoOTDBTaskSpecificationPropagator
+                        ResourceAssigner
                         ResourceAssignmentDatabase
-                        ResourceAssignmentServices
                         ResourceAssignmentEditor
-                        ResourceAssignmentService)
+                        ResourceAssignmentEstimator
+                        ResourceAssignmentService
+                        SystemStatusDatabase
+                        SystemStatusService)
 
 # supervisord config files
 install(FILES

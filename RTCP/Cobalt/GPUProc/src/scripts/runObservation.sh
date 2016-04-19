@@ -39,45 +39,6 @@ function usage {
   exit 1
 }
 
-# command_retry expects a string it will execute as a subprocess
-# It wait on the processes finish (using the PID) with a
-# succesfull return value
-# - On signals kill the child process
-# - On ssh and bash errors it will retry
-#   with increasingly larger wait periods between tries
-function command_retry {
-  COMMAND="$1"   
-  SLEEP_DURATION=1                          # Increasing wait duration
-  while :
-  do 
-    $COMMAND &                              # Run the command
-    SSH_PID=$!                              # get the PID
-
-    # Trap 'all' signals and forward to ssh process
-    TRAP_COMMAND="kill $SSH_PID; break"
-    trap "$TRAP_COMMAND" SIGTERM SIGINT SIGQUIT SIGHUP 2> /dev/null
-
-    # wait for ssh to finish
-    wait $SSH_PID
-
-    # Return codes:
-    #     255: SSH fails
-    #     127: BASH 'command not found'
-    #     126: BASH 'command not executable'
-    # smaller: outputProc fails
-    #       0: success
-
-    # Break the loop if the command was started -- there is no need
-    # to keep starting it if the command itself returned an error.
-    if [ "$?" -lt 126 ]; then
-      break
-    fi
-
-    sleep $SLEEP_DURATION                  # Sleep if ssh failed
-    SLEEP_DURATION=$((SLEEP_DURATION + 1)) # Increase duration   
-  done
-}
-
 # Send the result state back to LOFAR (MAC, MoM)
 #
 # to report success:
@@ -277,38 +238,6 @@ then
   echo -e "$EXTRA_PARSET_KEYS" >> $PARSET
 fi
 
-# ******************************
-# Run the observation
-# ******************************
-
-# Determine node list to run on
-HOSTS=`mpi_node_list -n "$PARSET"`
-
-if [ -z "$HOSTS" ]; then
-  HOSTS=localhost
-fi
-
-echo "[cobalt] Hosts = $HOSTS"
-
-# Copy parset to all hosts
-cksumline=`md5sum $PARSET`
-for h in `echo $HOSTS | tr ',' ' '`
-do
-  # Ignore empty hostnames
-  [ -z "$h" ] && continue;
-
-  # Ignore hostnames that point to us
-  [ "$h" == "localhost" ] && continue;
-  [ "$h" == "`hostname`" ] && continue;
-
-  # Ignore hosts that already have the same parset (for example, through NFS).
-  timeout $KILLOPT 5s ssh -qn $h "[ -f $PARSET ] && echo \"$cksumline\" | md5sum -c --status" && continue
-
-  # Copy parset to remote node
-  echo "Copying parset to $h:$PARSET"
-  timeout $KILLOPT 30s scp -Bq $PARSET $h:$PARSET || error "[parset] Could not scp parset to $h"
-done
-
 # ************************************
 # Start outputProcs on receiving nodes
 # ***********************************
@@ -411,9 +340,9 @@ OUTPUTPROC_CMDLINE="$OUTPUTPROC_VARS $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID"
 
 # Wrap command line with Docker if required
 if $DOCKER; then
-  TAG="`echo ${LOFAR_TAG} | docker-template`"
+  TAG="`echo '${LOFAR_TAG}' | docker-template`"
 
-  OUTPUTPROC_CMDLINE="docker run -it -e LUSER=`id -u $SSH_USER_NAME` --net=host -v $GLOBALFS_DIR:$GLOBALFS_DIR lofar-outputproc:$TAG bash -c \"$OUTPUTPROC_CMDLINE\""
+  OUTPUTPROC_CMDLINE="docker run --rm --privileged -e LUSER=`id -u $SSH_USER_NAME` --net=host -v $GLOBALFS_DIR:$GLOBALFS_DIR lofar-outputproc:$TAG bash -c \"$OUTPUTPROC_CMDLINE\""
 fi
 
 echo "[outputProc] command line = $OUTPUTPROC_CMDLINE"
@@ -421,7 +350,7 @@ echo "[outputProc] command line = $OUTPUTPROC_CMDLINE"
 if ! $DUMMY_RUN; then
   if $SLURM; then
     # The nodes we need (and can use) are part of this job
-    COMMAND="srun -N $SLURM_JOB_NUM_NODES $OUTPUTPROC_CMDLINE"
+    COMMAND="srun -N $SLURM_JOB_NUM_NODES -J $OBSID.outputproc $OUTPUTPROC_CMDLINE"
     echo "[outputProc] Starting $COMMAND"
 
     $COMMAND &
@@ -434,13 +363,45 @@ if ! $DUMMY_RUN; then
       COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $OUTPUTPROC_CMDLINE"
       echo "[outputProc] Starting $COMMAND"
       
-      command_retry "$COMMAND" &  # Start retrying function in the background
-      PID=$!                      # get the pid 
+      $COMMAND &
+      PID=$!
       
       echo -n "$PID " >> $PID_LIST_FILE  # Save the pid for cleanup
     done
   fi
 fi
+
+# ******************************
+# Distribute parset to cbtXXX
+# ******************************
+
+# Determine node list to run on
+HOSTS=`mpi_node_list -n "$PARSET"`
+
+if [ -z "$HOSTS" ]; then
+  HOSTS=localhost
+fi
+
+echo "[cobalt] Hosts = $HOSTS"
+
+# Copy parset to all hosts
+cksumline=`md5sum $PARSET`
+for h in `echo $HOSTS | tr ',' ' '`
+do
+  # Ignore empty hostnames
+  [ -z "$h" ] && continue;
+
+  # Ignore hostnames that point to us
+  [ "$h" == "localhost" ] && continue;
+  [ "$h" == "`hostname`" ] && continue;
+
+  # Ignore hosts that already have the same parset (for example, through NFS).
+  timeout $KILLOPT 5s ssh -qn $h "[ -f $PARSET ] && echo \"$cksumline\" | md5sum -c --status" && continue
+
+  # Copy parset to remote node
+  echo "Copying parset to $h:$PARSET"
+  timeout $KILLOPT 30s scp -Bq $PARSET $h:$PARSET || error "[parset] Could not scp parset to $h"
+done
 
 # ************************************
 # Start rtcp 

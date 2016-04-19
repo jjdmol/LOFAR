@@ -23,17 +23,11 @@
 
 #include "OutputThread.h"
 
-#include <cerrno>
-#include <ctime>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <iomanip>
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
-#include <boost/algorithm/string.hpp>
 
-#include <Common/StringUtil.h>
 #include <Common/SystemCallException.h>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Cancellation.h>
@@ -57,52 +51,10 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    static Mutex makeDirMutex;
     static Mutex casacoreMutex;
 
     using namespace std;
     using boost::lexical_cast;
-
-    static void makeDir(const string &dirname, const string &logPrefix)
-    {
-      ScopedLock scopedLock(makeDirMutex);
-      struct stat s;
-
-      if (stat(dirname.c_str(), &s) == 0) {
-        // path already exists
-        if ((s.st_mode & S_IFMT) != S_IFDIR) {
-          LOG_WARN_STR(logPrefix << "Not a directory: " << dirname);
-        }
-      } else if (errno == ENOENT) {
-        // create directory
-        LOG_DEBUG_STR(logPrefix << "Creating directory " << dirname);
-
-        if (mkdir(dirname.c_str(), 0777) != 0 && errno != EEXIST) {
-          THROW_SYSCALL(string("mkdir ") + dirname);
-        }
-      } else {
-        // something else went wrong
-        THROW_SYSCALL(string("stat ") + dirname);
-      }
-    }
-
-
-    /* create a directory as well as all its parent directories */
-    static void recursiveMakeDir(const string &dirname, const string &logPrefix)
-    {
-      using namespace boost;
-
-      string curdir;
-      vector<string> splitName;
-
-      boost::split(splitName, dirname, boost::is_any_of("/"));
-
-      for (unsigned i = 0; i < splitName.size(); i++) {
-        curdir += splitName[i] + '/';
-        makeDir(curdir, logPrefix);
-      }
-    }
-
 
     template<typename T> OutputThread<T>::OutputThread(const Parset &parset,
           unsigned streamNr, Pool<T> &outputPool,
@@ -209,15 +161,33 @@ namespace LOFAR
     }
 
 
-    template<typename T> void OutputThread<T>::augment( const FinalMetaData &finalMetaData )
+    template<typename T> void OutputThread<T>::init()
     {
       try {
-        // augment the data product
         ASSERT(itsWriter.get());
 
-        itsWriter->augment(finalMetaData);
+        itsWriter->init();
+      } catch (Exception &ex) {
+        LOG_ERROR_STR(itsLogPrefix << "Could not create meta data: " << ex);
+
+        if (!itsParset.settings.realTime)   
+          THROW(StorageException, ex); 
+      }
+    }
+
+
+    template<typename T> void OutputThread<T>::fini( const FinalMetaData &finalMetaData )
+    {
+      try {
+        // fini the data product
+        ASSERT(itsWriter.get());
+
+        itsWriter->fini(finalMetaData);
       } catch (Exception &ex) {
         LOG_ERROR_STR(itsLogPrefix << "Could not add final meta data: " << ex);
+
+        if (!itsParset.settings.realTime)   
+          THROW(StorageException, ex); 
       }
     }
 
@@ -241,8 +211,18 @@ namespace LOFAR
       LOG_DEBUG_STR(itsLogPrefix << "process() entered");
 
       createMS();
-      doWork();
-      cleanUp();
+
+#     pragma omp parallel sections num_threads(2)
+      {
+#       pragma omp section
+        {
+          doWork();
+          cleanUp();
+        }
+
+#       pragma omp section
+        init();
+      }
     }
 
     // Make required instantiations
@@ -282,7 +262,6 @@ namespace LOFAR
 
       try
       {
-        recursiveMakeDir(directoryName, itsLogPrefix);
         LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
         itsWriter = new MSWriterCorrelated(itsLogPrefix, path, itsParset, itsStreamNr);
@@ -292,7 +271,7 @@ namespace LOFAR
       catch (Exception &ex) 
       {
         LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
-        if ( !itsParset.settings.realTime)   
+        if (!itsParset.settings.realTime)
           THROW(StorageException, ex); 
 
         itsWriter = new MSWriterNull(itsParset);
@@ -347,7 +326,6 @@ namespace LOFAR
 
       try
       {
-        recursiveMakeDir(directoryName, itsLogPrefix);
         LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
 #ifdef HAVE_DAL

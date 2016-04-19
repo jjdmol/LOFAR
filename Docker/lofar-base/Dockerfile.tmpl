@@ -63,7 +63,7 @@ USER ${USER}
 #   Casacore
 # *******************
 #
-RUN sudo apt-get install -y wget git cmake g++ gfortran flex bison libblas-dev liblapacke-dev libfftw3-dev libhdf5-dev libboost-python-dev libcfitsio3-dev wcslib-dev && \
+RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y wget git cmake g++ gfortran flex bison libblas-dev liblapacke-dev libfftw3-dev libhdf5-dev libboost-python-dev libcfitsio3-dev wcslib-dev && \
     mkdir -p ${INSTALLDIR}/casacore/build && \
     mkdir -p ${INSTALLDIR}/casacore/data && \
     cd ${INSTALLDIR}/casacore && git clone https://github.com/casacore/casacore.git src && \
@@ -83,7 +83,7 @@ RUN sudo apt-get install -y wget git cmake g++ gfortran flex bison libblas-dev l
 #   Casarest
 # *******************
 #
-RUN sudo apt-get install -y git cmake g++ gfortran libboost-system-dev libboost-thread-dev libhdf5-dev libcfitsio3-dev wcslib-dev && \
+RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y git cmake g++ gfortran libboost-system-dev libboost-thread-dev libhdf5-dev libcfitsio3-dev wcslib-dev && \
     mkdir -p ${INSTALLDIR}/casarest/build && \
     cd ${INSTALLDIR}/casarest && git clone https://github.com/casacore/casarest.git src && \
     if [ "${CASAREST_VERSION}" != "latest" ]; then cd ${INSTALLDIR}/casarest/src && git checkout tags/v${CASAREST_VERSION}; fi && \
@@ -100,7 +100,7 @@ RUN sudo apt-get install -y git cmake g++ gfortran libboost-system-dev libboost-
 #   Pyrap
 # *******************
 #
-RUN sudo apt-get install -y git make g++ python-setuptools libboost-python-dev libcfitsio3-dev wcslib-dev && \
+RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y git make g++ python-setuptools libboost-python-dev libcfitsio3-dev wcslib-dev && \
     mkdir ${INSTALLDIR}/python-casacore && \
     cd ${INSTALLDIR}/python-casacore && git clone https://github.com/casacore/python-casacore && \
     if [ "$PYTHON_CASACORE_VERSION" != "latest" ]; then cd ${INSTALLDIR}/python-casacore/python-casacore && git checkout tags/v${PYTHON_CASACORE_VERSION}; fi && \
@@ -119,17 +119,24 @@ RUN sudo apt-get install -y git make g++ python-setuptools libboost-python-dev l
 # *******************
 #
 
-# Allow auto-checkout from lofar repo
+# Allow auto-checkout from lofar repo. We create ~/.subversion/servers in-line to prevent Docker cache invalidation
 RUN mkdir /home/${USER}/.subversion
-COPY subversion_servers /home/${USER}/.subversion/servers
+RUN echo '\
+[groups] \n\
+astron = svn.astron.nl \n\
+\n\
+[astron] \n\
+store-passwords = yes \n\
+store-plaintext-passwords = yes \n\
+' > /home/${USER}/.subversion/servers
 
 # Run-time dependencies
 # QPID daemon legacy store would require: libaio1 libdb5.1++
-RUN sudo apt-get install -y sasl2-bin libuuid1 libnss3 libnspr4 xqilla libboost-program-options${BOOST_VERSION}.0 libboost-filesystem${BOOST_VERSION}.0
+RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y sasl2-bin libuuid1 libnss3 libnspr4 xqilla libboost-program-options${BOOST_VERSION}.0 libboost-filesystem${BOOST_VERSION}.0
 
 # Install
 # QPID daemon legacy store would require: libaio-dev libdb5.1++-dev
-RUN sudo apt-get install -y subversion swig ruby ruby-dev python-dev libsasl2-dev pkg-config cmake libtool uuid-dev libxerces-c-dev libnss3-dev libnspr4-dev help2man fakeroot build-essential debhelper libsslcommon2-dev libxqilla-dev python-setuptools libboost-program-options${BOOST_VERSION}-dev libboost-filesystem${BOOST_VERSION}-dev && \
+RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y subversion swig ruby ruby-dev python-dev libsasl2-dev pkg-config cmake libtool uuid-dev libxerces-c-dev libnss3-dev libnspr4-dev help2man fakeroot build-essential debhelper libsslcommon2-dev libxqilla-dev python-setuptools libboost-program-options${BOOST_VERSION}-dev libboost-filesystem${BOOST_VERSION}-dev && \
     mkdir /opt/qpid && \
     svn --non-interactive -q --username lofar-guest --password lofar-guest co ${LOFAR_BRANCH_URL}/LCS/MessageBus/qpid/ /opt/qpid; \
     /opt/qpid/local/sbin/build_qpid && \
@@ -142,7 +149,7 @@ RUN sudo apt-get install -y subversion swig ruby ruby-dev python-dev libsasl2-de
 #   DAL
 # *******************
 #
-RUN sudo apt-get install -y git cmake g++ swig python-dev libhdf5-dev && \
+RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y git cmake g++ swig python-dev libhdf5-dev && \
     mkdir ${INSTALLDIR}/DAL && \
     cd ${INSTALLDIR}/DAL && git clone https://github.com/nextgen-astrodata/DAL.git src && \
     mkdir ${INSTALLDIR}/DAL/build && cd ${INSTALLDIR}/DAL/build && cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}/DAL ../src && \

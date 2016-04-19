@@ -1,6 +1,7 @@
 V 11
 1
 LANG:1 8 URIbard
+
 PANEL,-1 -1 717 319 N "_3DFace" 0
 "main()
 {
@@ -9,7 +10,7 @@ PANEL,-1 -1 717 319 N "_3DFace" 0
   
   dyn_string dpAr= strsplit(dpSubStr(baseDP,DPSUB_DP),\"_\");
   for (int i = 1; i <= dynlen(dpAr);i++ ) {
-    if (strpos(dpAr[i],\"URIboard\") > -1) {
+    if (strpos(dpAr[i],\"URIBoard\") > -1) {
       uNr = substr(dpAr[i],8,strlen(dpAr[i]));
       break;
     }
@@ -91,7 +92,7 @@ void click() {
   // set delay in case double click was meant
   delay(0, 100); 
   if (!bDoubleClicked) {
-    navPanel_setEvent(\"URIboard\"+uNr,\"EventClick\");
+    navPanel_setEvent(\"URIBoard\"+uNr,\"EventClick\");
   }
 }
 
@@ -103,7 +104,7 @@ void dblClick() {
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"AARTFAAC-URIBoard:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
-    navPanel_setEvent(\"URIboard\"+uNr,\"ChangePanel\"); 
+    navPanel_setEvent(\"URIBoard\"+uNr,\"ChangePanel\"); 
   }
   
   // set delay to avoid click event will be triggered
@@ -113,7 +114,7 @@ void dblClick() {
 
 // routine for right mouse click
 void rClick() {
-  navPanel_setEvent(\"URIboard\"+uNr,\"EventRightClick\");
+  navPanel_setEvent(\"URIBoard\"+uNr,\"EventRightClick\");
 }
 
 " 0
@@ -154,9 +155,9 @@ LANG:1 0
 void URIBoardCallback(string dp1, bool aTrig) {
   
   LOG_DEBUG(\"AARTFAAC_URIBoard.pnl:URIBoardCallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
-  LOG_DEBUG(\"AARTFAAC_URIBoard.pnl:URIBoardCallback|Found highlight : \" + highlight + \" Looking for: URIboard\" + uNr);
+  LOG_DEBUG(\"AARTFAAC_URIBoard.pnl:URIBoardCallback|Found highlight : \" + highlight + \" Looking for: URIBoard\" + uNr);
   bool bHighlight=false;
-  if (dynContains(highlight,\"URIboard\"+uNr)) {
+  if (dynContains(highlight,\"URIBoard\"+uNr)) {
     bHighlight=true;
   }
   LOG_DEBUG(\"AARTFAAC_URIBoard.pnl:URIBoardCallback|Highlight request: \"+bHighlight);
