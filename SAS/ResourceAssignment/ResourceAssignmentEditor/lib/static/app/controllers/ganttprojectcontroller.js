@@ -80,8 +80,8 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
             var task = $scope.dataService.taskDict[task_id];
             var updatedTask = {
                 id: task.id,
-                starttime: item.model.from._d.toISOString(),
-                endtime: item.model.to._d.toISOString()
+                starttime: item.model.from._d,
+                endtime: item.model.to._d
             };
             $scope.dataService.putTask(updatedTask);
         }
@@ -179,6 +179,10 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
                             movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
                         };
 
+                        if(task.id == dataService.selected_task_id) {
+                            rowTask.classes = 'task-selected-task';
+                        }
+
                         if(task.predecessor_ids && task.predecessor_ids.length > 0) {
                             rowTask['dependencies'] = [];
                             for(var predId of task.predecessor_ids) {
@@ -202,6 +206,7 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
     };
 
     $scope.$watch('dataService.initialLoadComplete', updateGanttData);
+    $scope.$watch('dataService.selected_task_id', updateGanttData);
     $scope.$watch('dataService.tasks', updateGanttData, true);
     $scope.$watch('dataService.resources', updateGanttData);
     $scope.$watch('dataService.resourceClaims', updateGanttData, true);
