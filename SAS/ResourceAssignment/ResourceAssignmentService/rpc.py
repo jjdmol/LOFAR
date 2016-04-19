@@ -18,6 +18,9 @@ class RARPCException(Exception):
     def __str__(self):
         return "RARPCException: " + str(self.message)
 
+def utcfromtimestamp(timestamp):
+    return datetime.datetime.utcfromtimestamp(timestamp)
+
 class RARPC(RPCWrapper):
     def __init__(self, busname=DEFAULT_BUSNAME,
                  servicename=DEFAULT_SERVICENAME,
@@ -46,15 +49,15 @@ class RARPC(RPCWrapper):
                                                extended=extended,
                                                include_properties=include_properties)
         for claim in claims:
-            claim['starttime'] = claim['starttime'].datetime()
-            claim['endtime'] = claim['endtime'].datetime()
+            claim['starttime'] = utcfromtimestamp(claim['starttime'])
+            claim['endtime'] = utcfromtimestamp(claim['endtime'])
         return claims
 
     def getResourceClaim(self, id):
         resource_claim = self.rpc('GetResourceClaim', id=id)
         if resource_claim:
-            resource_claim['starttime'] = resource_claim['starttime'].datetime()
-            resource_claim['endtime'] = resource_claim['endtime'].datetime()
+            resource_claim['starttime'] = utcfromtimestamp(resource_claim['starttime'])
+            resource_claim['endtime'] = utcfromtimestamp(resource_claim['endtime'])
         return resource_claim
 
 
@@ -114,7 +117,7 @@ class RARPC(RPCWrapper):
         for resource_usages in all_usages:
             for status, usages in resource_usages['usages'].items():
                 for usage in usages:
-                    usage['timestamp'] = usage['timestamp'].datetime()
+                    usage['timestamp'] = utcfromtimestamp(usage['timestamp'])
 
         return all_usages
 
@@ -146,8 +149,8 @@ class RARPC(RPCWrapper):
         '''get a task for either the given (task)id, or for the given mom_id, or for the given otdb_id'''
         task = self.rpc('GetTask', id=id, mom_id=mom_id, otdb_id=otdb_id)
         if task:
-            task['starttime'] = task['starttime'].datetime()
-            task['endtime'] = task['endtime'].datetime()
+            task['starttime'] = utcfromtimestamp(task['starttime'])
+            task['endtime'] = utcfromtimestamp(task['endtime'])
         return task
 
     def insertTask(self, mom_id, otdb_id, status, task_type, specification_id):
@@ -172,8 +175,8 @@ class RARPC(RPCWrapper):
     def getTasks(self):
         tasks = self.rpc('GetTasks')
         for task in tasks:
-            task['starttime'] = task['starttime'].datetime()
-            task['endtime'] = task['endtime'].datetime()
+            task['starttime'] = utcfromtimestamp(task['starttime'])
+            task['endtime'] = utcfromtimestamp(task['endtime'])
         return tasks
 
     def insertTaskPredecessor(self, task_id, predecessor_id):
@@ -191,8 +194,8 @@ class RARPC(RPCWrapper):
     def getSpecification(self, id):
         specification = self.rpc('GetSpecification', id=id)
         if specification:
-            specification['starttime'] = specification['starttime'].datetime()
-            specification['endtime'] = specification['endtime'].datetime()
+            specification['starttime'] = utcfromtimestamp(specification['starttime'])
+            specification['endtime'] = utcfromtimestamp(specification['endtime'])
         return specification
 
     def insertSpecificationAndTask(self, mom_id, otdb_id, task_status, task_type, starttime, endtime, content):
@@ -224,8 +227,8 @@ class RARPC(RPCWrapper):
     def getSpecifications(self):
         specifications = self.rpc('GetSpecifications')
         for specification in specifications:
-            specification['starttime'] = specification['starttime'].datetime()
-            specification['endtime'] = specification['endtime'].datetime()
+            specification['starttime'] = utcfromtimestamp(specification['starttime'])
+            specification['endtime'] = utcfromtimestamp(specification['endtime'])
         return specifications
 
     def getUnits(self):

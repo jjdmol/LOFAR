@@ -58,10 +58,34 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
 
 
-    //start with local client time
-    //lofarTime will be synced with server,
-    //because local machine might have incorrect clock
-    self.lofarTime = new Date(Date.now());
+    //-- IMPORTANT REMARKS ABOUT UTC/LOCAL DATE --
+    //Dates (datetimes) across javascript/angularjs/3rd party modules are a mess!
+    //every module uses their own parsing and displaying
+    //some care about utc/local date, others don't
+    //So, to be consistent in this schedular client app, we chose the following conventions:
+    //1) All received/sent timestamps are strings in iso format 'yyyy-MM-ddTHH:mm:ssZ'
+    //2) All displayed timestamps should display the time in UTC, regardless of the timezone of the client.
+    //All javascript/angularjs/3rd party modules display local times correct and the same...
+    //So, to make 1&2 happen, we convert all received timestamps to 'local-with-utc-diff-correction', and then treat them as local.
+    //And if we send them to the web server, we convert them back to real utc.
+    //It's a stupid solution, but it works.
+    //-- IMPORTANT REMARKS ABOUT UTC/LOCAL DATE --
+
+    convertDatestringToLocalUTCDate = function(dateString) {
+        //first convert the dateString to proper Date
+        var date = new Date(dateString)
+        //then do our trick to offset the timestamp with the utcOffset, see explanation above.
+        return new Date(date.getTime() - self.utcOffset)
+    };
+
+    convertLocalUTCDateToISOString = function(local_utc_date) {
+        //reverse trick to offset the timestamp with the utcOffset, see explanation above.
+        var real_utc = new Date(local_utc_date.getTime() + self.utcOffset)
+        return real_utc.toISOString();
+    };
+
+    //local client time offset to utc in milliseconds
+    self.utcOffset = moment().utcOffset()*60000;
 
     self.toIdBasedDict = function(list) {
         var dict = {}
@@ -78,7 +102,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             changedObj.hasOwnProperty(prop) &&
             existingObj[prop] != changedObj[prop]) {
                 if(existingObj[prop] instanceof Date && typeof changedObj[prop] === "string") {
-                    existingObj[prop] = new Date(changedObj[prop]);
+                    existingObj[prop] = convertDatestringToLocalUTCDate(changedObj[prop]);
                 } else {
                     existingObj[prop] = changedObj[prop];
                 }
@@ -93,8 +117,9 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             //convert datetime strings to Date objects
             for(var i in result.tasks) {
                 var task = result.tasks[i];
-                task.starttime = new Date(task.starttime);
-                task.endtime = new Date(task.endtime);
+                task.starttime = convertDatestringToLocalUTCDate(task.starttime);
+                task.endtime = convertDatestringToLocalUTCDate(task.endtime);
+
             }
 
             self.tasks = result.tasks;
@@ -112,6 +137,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
     };
 
     self.putTask = function(task) {
+        task.starttime = convertLocalUTCDateToISOString(task.starttime);
+        task.endtime = convertLocalUTCDateToISOString(task.endtime);
         $http.put('/rest/tasks/' + task.id, task).error(function(result) {
             console.log("Error. Could not update task. " + result);
             //TODO: revert to old state
@@ -157,7 +184,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                 for(var status in resource_usages) {
                     var usages = resource_usages[status];
                     for(var usage of usages) {
-                        usage.timestamp = new Date(usage.timestamp);
+                        usage.timestamp = convertDatestringToLocalUTCDate(usage.timestamp);
                     }
                 }
                 self.resourceUsagesDict[result.resourceusages[i].resource_id] = result.resourceusages[i];
@@ -175,8 +202,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             //convert datetime strings to Date objects
             for(var i in result.resourceclaims) {
                 var resourceclaim = result.resourceclaims[i];
-                resourceclaim.starttime = new Date(resourceclaim.starttime);
-                resourceclaim.endtime = new Date(resourceclaim.endtime);
+                resourceclaim.starttime = convertDatestringToLocalUTCDate(resourceclaim.starttime);
+                resourceclaim.endtime = convertDatestringToLocalUTCDate(resourceclaim.endtime);
             }
 
             self.resourceClaims = result.resourceclaims;
@@ -292,9 +319,18 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         });
     };
 
+    //start with local client time
+    //lofarTime will be synced with server,
+    //because local machine might have incorrect clock
+    //take utcOffset into account, see explanation above.
+    self.lofarTime = new Date(Date.now() - self.utcOffset);
+
     self._syncLofarTimeWithServer = function() {
         $http.get('/rest/lofarTime', {timeout:1000}).success(function(result) {
-            self.lofarTime = new Date(result.lofarTime);
+            self.lofarTime = convertDatestringToLocalUTCDate(result.lofarTime);
+
+            //check if local to utc offset has changed
+            self.utcOffset = moment().utcOffset()*60000;
         });
 
         setTimeout(self._syncLofarTimeWithServer, 60000);
@@ -463,10 +499,42 @@ dataControllerMod.controller('DataController',
         var elapsed = tick - self._prevTick;
         self._prevTick = tick;
         //evalAsync, so lofarTime will be seen by watches
-        $scope.$evalAsync(function() { dataService.lofarTime = new Date(dataService.lofarTime.getTime() + elapsed); });
+        $scope.$evalAsync(function() {
+            dataService.lofarTime = new Date(dataService.lofarTime.getTime() + elapsed);
+        });
 
         setTimeout(self._doTimeTick, 1000);
     };
     self._doTimeTick();
 }
 ]);
+
+//extend the default dateFilter so that it always displays dates as 'yyyy-MM-dd HH:mm:ss'
+//without any extra timezone string.
+//see also comments above why we do tricks with local and utc dates
+angular.module('raeApp').config(['$provide', function($provide) {
+    $provide.decorator('dateFilter', ['$delegate', function($delegate) {
+        var srcFilter = $delegate;
+
+        function zeroPaddedString(num) {
+            var numstr = num.toString();
+            if(numstr.length < 2) {
+                return '0' + numstr;
+            }
+            return numstr;
+        };
+
+        var extendsFilter = function() {
+            if(arguments[0] instanceof Date) {
+                var date = arguments[0];
+                var dateString =  date.getFullYear() + '-' + zeroPaddedString(date.getMonth()+1) + '-' + zeroPaddedString(date.getDate()) + ' ' +
+                                  zeroPaddedString(date.getHours()) + ':' + zeroPaddedString(date.getMinutes()) + ':' + zeroPaddedString(date.getSeconds());
+
+                return dateString;
+            }
+            return srcFilter.apply(this, arguments);
+        }
+
+        return extendsFilter;
+    }])
+}])
