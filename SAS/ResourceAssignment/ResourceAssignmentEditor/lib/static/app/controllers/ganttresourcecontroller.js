@@ -280,6 +280,13 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                         movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
                     };
 
+
+                    if(claim.id == dataService.selected_resourceClaim_id) {
+                        claimTask.classes += ' claim-selected-claim';
+                    } else if(task.id == dataService.selected_task_id) {
+                        claimTask.classes += ' claim-selected-task';
+                    }
+
                     ganttRow.tasks.push(claimTask);
                 }
             }
@@ -364,6 +371,10 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                                 movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
                             };
 
+                            if(task.id == dataService.selected_task_id) {
+                                claimTask.classes += ' claim-selected-task';
+                            }
+
                             ganttRow.tasks.push(claimTask);
                         }
                     }
@@ -401,11 +412,13 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
     };
 
     $scope.$watch('dataService.initialLoadComplete', updateGanttData);
+    $scope.$watch('dataService.selected_task_id', updateGanttData);
+    $scope.$watch('dataService.tasks', updateGanttData, true);
     $scope.$watch('dataService.resources', updateGanttData);
     $scope.$watch('dataService.resourceClaims', updateGanttData, true);
     $scope.$watch('dataService.resourceGroups', updateGanttData);
     $scope.$watch('dataService.resourceGroupMemberships', updateGanttData);
-    $scope.$watch('dataService.filteredTaskDict', updateGanttData, true);
+    $scope.$watch('dataService.filteredTaskDict', updateGanttData);
     $scope.$watch('dataService.lofarTime', function() {$scope.options.currentDateValue= $scope.dataService.lofarTime;});
 }
 ]);
