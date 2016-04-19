@@ -2,15 +2,22 @@
 
 # -----------------------------------------
 #   Configuration
-#
-# TODO: Pull from locally deployed config file?
 # -----------------------------------------
 
 # Whether to modify production (true) or test (false)
-PROD=false
+if [ "$LOFARENV" == "prod" ]; then
+  PROD=true
+else
+  PROD=false
+fi
+
 
 # Host names to use
 if $PROD; then
+  echo "----------------------------------------------"
+  echo "Populating database for PRODUCTION environment"
+  echo "----------------------------------------------"
+
   CCU=ccu001.control.lofar
   MCU=mcu001.control.lofar
   SCU=scu001.control.lofar
