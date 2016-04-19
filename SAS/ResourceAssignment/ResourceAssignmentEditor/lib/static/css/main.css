@@ -48,18 +48,18 @@
 }
 
 .gantt-task.claim-status-claimed {
-  border-bottom: 4px solid #ffa64d;
+  border-bottom: 5px solid #ffa64d;
 }
 
 .gantt-task.claim-status-conflict {
-  border-bottom: 4px solid #ff0000;
+  border-bottom: 5px solid #ff0000;
 }
 
 .gantt-task.claim-status-allocated {
-  border-bottom: 4px solid #66ff66;
+  border-bottom: 5px solid #66ff66;
 }
 
 .gantt-task.claim-status-mixed {
-  border-bottom: 4px solid #bfbfbf;
+  border-bottom: 5px solid #bfbfbf;
 }
 
