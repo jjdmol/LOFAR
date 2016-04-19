@@ -185,7 +185,7 @@ class preprocessing_pipeline(control):
 
         # Run the Default Pre-Processing Pipeline (DPPP);
         with duration(self, "ndppp"):
-            self.run_task("ndppp",
+            output_data_mapfile = self.run_task("ndppp",
                 (input_data_mapfile, output_data_mapfile),
                 data_start_time=vdsinfo['start_time'],
                 data_end_time=vdsinfo['end_time'],
@@ -196,7 +196,7 @@ class preprocessing_pipeline(control):
                 parset=ndppp_parset,
                 parmdb_mapfile=parmdb_mapfile,
                 sourcedb_mapfile=sourcedb_mapfile
-            )
+            )['mapfile']
 
         # *********************************************************************
         # 6. Create feedback file for further processing by the LOFAR framework
