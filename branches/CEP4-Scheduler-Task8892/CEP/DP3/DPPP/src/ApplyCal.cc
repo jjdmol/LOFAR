@@ -175,6 +175,8 @@ namespace LOFAR {
         itsParmExprs.push_back("CommonRotationAngle");
       } else if (itsCorrectType == "commonscalarphase") {
         itsParmExprs.push_back("CommonScalarPhase");
+      } else if (itsCorrectType == "rotationmeasure") {
+        itsParmExprs.push_back("RotationMeasure");
       }
       else {
         THROW (Exception, "Correction type " + itsCorrectType +
@@ -280,11 +282,18 @@ namespace LOFAR {
       double maxFreq (info().chanFreqs()[numFreqs-1]+0.5*freqInterval);
 
       itsLastTime = bufStartTime + itsTimeSlotsPerParmUpdate * itsTimeInterval;
+      uint numTimes = itsTimeSlotsPerParmUpdate;
+
+      double lastMSTime = info().startTime() + info().ntime() * itsTimeInterval;
+      if (itsLastTime > lastMSTime) {
+        itsLastTime = lastMSTime;
+        numTimes = info().ntime() % itsTimeSlotsPerParmUpdate;
+      }
 
       map<string, vector<double> > parmMap;
       map<string, vector<double> >::iterator parmIt;
 
-      uint tfDomainSize=itsTimeSlotsPerParmUpdate*numFreqs;
+      uint tfDomainSize=numTimes*numFreqs;
 
       for (uint parmExprNum = 0; parmExprNum<itsParmExprs.size();++parmExprNum) {
         // parmMap contains parameter values for all antennas
@@ -298,6 +307,7 @@ namespace LOFAR {
 
           if (parmIt != parmMap.end()) {
             parmvalues[parmExprNum][ant].swap(parmIt->second);
+            ASSERT(parmvalues[parmExprNum][ant].size()==tfDomainSize);
           } else {// No value found, try default
             Array<double> defValues;
             double defValue;
@@ -399,10 +409,30 @@ namespace LOFAR {
             }
           }
           else if (itsCorrectType=="commonrotationangle") {
-            itsParms[0][ant][tf] =  cos(parmvalues[0][ant][tf]);
-            itsParms[1][ant][tf] = -sin(parmvalues[0][ant][tf]);
-            itsParms[2][ant][tf] =  sin(parmvalues[0][ant][tf]);
-            itsParms[3][ant][tf] =  cos(parmvalues[0][ant][tf]);
+            double phi=parmvalues[0][ant][tf];
+            if (itsInvert) {
+              phi = -phi;
+            }
+            double sinv=sin(phi);
+            double cosv=cos(phi);
+            itsParms[0][ant][tf] =  cosv;
+            itsParms[1][ant][tf] = -sinv;
+            itsParms[2][ant][tf] =  sinv;
+            itsParms[3][ant][tf] =  cosv;
+          }
+          else if (itsCorrectType=="rotationmeasure") {
+            double lambda2 = casa::C::c / freq;
+            lambda2 *= lambda2;
+            double chi = parmvalues[0][ant][tf] * lambda2;
+            if (itsInvert) {
+              chi = -chi;
+            }
+            double sinv = sin(chi);
+            double cosv = cos(chi);
+            itsParms[0][ant][tf] =  cosv;
+            itsParms[1][ant][tf] = -sinv;
+            itsParms[2][ant][tf] =  sinv;
+            itsParms[3][ant][tf] =  cosv;
           }
           else if (itsCorrectType=="commonscalarphase") {
             itsParms[0][ant][tf] = polar(1., parmvalues[0][ant][tf]);
@@ -410,6 +440,7 @@ namespace LOFAR {
           }
 
           // Invert diagonal corrections (not fulljones and commonrotationangle)
+          // For fulljones it will be handled in applyFull
           if (itsInvert && itsParms.size()==2) {
             itsParms[0][ant][tf] = 1./itsParms[0][ant][tf];
             itsParms[1][ant][tf] = 1./itsParms[1][ant][tf];
@@ -423,7 +454,9 @@ namespace LOFAR {
       uint tfDomainSize=itsTimeSlotsPerParmUpdate*info().chanFreqs().size();
 
       uint numParms;
-      if (itsCorrectType=="fulljones" || itsCorrectType=="commonrotationangle") {
+      if (itsCorrectType=="fulljones" || 
+          itsCorrectType=="commonrotationangle" || 
+          itsCorrectType=="rotationmeasure") {
         numParms = 4;
       }
       else {
@@ -494,7 +527,7 @@ namespace LOFAR {
       gainB[3] = itsParms[3][antB][timeFreqOffset];
 
       DComplex gainAxvis[4];
-      if (itsInvert) {
+      if (itsInvert && itsCorrectType=="fulljones") {
         invert(gainA,itsSigmaMMSE);
         invert(gainB,itsSigmaMMSE);
       }

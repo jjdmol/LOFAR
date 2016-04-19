@@ -153,14 +153,14 @@ template<typename T> uint32 MSH_size(const std::vector<T> &tVar)
 		iter++;
 	}
     return (sizevar);
-} 
-	
+}
+
 template<typename T> uint32 MSH_pack(char *bufPtr, uint32	offset, const std::vector<T> &tVar)
 {
 	int32	nrElem = tVar.size();
 	memcpy((char*)bufPtr + offset, &nrElem, sizeof(int32));
 	offset += sizeof(int32);
-	
+
 	typename std::vector<T>::const_iterator	iter = tVar.begin();
 	typename std::vector<T>::const_iterator	end  = tVar.end();
 	while (iter != end) {
@@ -182,7 +182,7 @@ template<typename T> uint32 MSH_unpack(const char* bufPtr, uint32 offset, std::v
 		tVar.push_back(elem1);
 	}
 	return (offset);
-} 
+}
 
 // basics for std::map<std::string,T*>
 template<typename T> uint32 MSH_size(const std::map<std::string,T*> &tVar)
@@ -191,18 +191,18 @@ template<typename T> uint32 MSH_size(const std::map<std::string,T*> &tVar)
 	typename std::map<std::string,T*>::const_iterator	iter = tVar.begin();
 	typename std::map<std::string,T*>::const_iterator	end  = tVar.end();
 	while (iter != end) {
-		sizevar += MSH_size(iter->first) + iter->second->getSize();
+		sizevar += (MSH_size(iter->first) + iter->second->getSize());
 		iter++;
 	}
     return (sizevar);
-} 
-	
+}
+
 template<typename T> uint32 MSH_pack(char *bufPtr, uint32	offset, const std::map<std::string,T*> &tVar)
 {
 	int32	nrElem = tVar.size();
 	memcpy((char*)bufPtr + offset, &nrElem, sizeof(int32));
 	offset += sizeof(int32);
-	
+
 	typename std::map<std::string,T*>::const_iterator	iter = tVar.begin();
 	typename std::map<std::string,T*>::const_iterator	end  = tVar.end();
 	while (iter != end) {
@@ -226,7 +226,7 @@ template<typename T> uint32 MSH_unpack(const char* bufPtr, uint32 offset, std::m
 		offset += tVar[elem1]->unpack(bufPtr + offset);
 	}
 	return (offset);
-} 
+}
 
 // basics for std::map<std::string,T>
 template<typename T> uint32 MSH_size(const std::map<std::string,T> &tVar)
@@ -235,18 +235,18 @@ template<typename T> uint32 MSH_size(const std::map<std::string,T> &tVar)
 	typename std::map<std::string,T>::const_iterator	iter = tVar.begin();
 	typename std::map<std::string,T>::const_iterator	end  = tVar.end();
 	while (iter != end) {
-		sizevar += MSH_size(iter->first) + iter->second.getSize();
+		sizevar += (MSH_size(iter->first) + iter->second.getSize());
 		iter++;
 	}
     return (sizevar);
-} 
-	
+}
+
 template<typename T> uint32 MSH_pack(char *bufPtr, uint32	offset, const std::map<std::string,T> &tVar)
 {
 	int32	nrElem = tVar.size();
 	memcpy((char*)bufPtr + offset, &nrElem, sizeof(int32));
 	offset += sizeof(int32);
-	
+
 	typename std::map<std::string,T>::const_iterator	iter = tVar.begin();
 	typename std::map<std::string,T>::const_iterator	end  = tVar.end();
 	while (iter != end) {
@@ -269,6 +269,6 @@ template<typename T> uint32 MSH_unpack(const char* bufPtr, uint32 offset, std::m
 		offset += tVar[elem1].unpack(bufPtr + offset);
 	}
 	return (offset);
-} 
+}
 
 #endif /* MACIO_MARSHALLING_TCC_ */

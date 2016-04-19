@@ -37,8 +37,9 @@ fi
 # Use only the basename of the the lib
 lfr_libdir=`basename $lfr_libdir`
 
-# Get directory for Python extensions
-lfr_pylibdir=`python -c "from distutils.sysconfig import get_python_lib; from os.path import join; print join(get_python_lib(plat_specific=True, standard_lib=True, prefix=''), 'site-packages')"`
+# Get directory for Python modules relative to install prefix.
+lfr_pylibdir=@PYTHON_INSTALL_DIR@
+lfr_pylibdir=${lfr_pylibdir#@CMAKE_INSTALL_PREFIX@/}
 
 
 # First strip the current LOFARROOT from PATH, LD_LIBRARY_PATH, and PYTHONPATH.
@@ -54,9 +55,11 @@ if [ "$LOFARROOT" != "" ]; then
     lfr_lib="$lfr_path/$lfr_libdir"
     LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e "s%:$lfr_lib:%:%g" -e "s%^$lfr_lib:%%"  -e "s%:$lfr_lib$%%" -e "s%^$lfr_lib$%%"`
     export LD_LIBRARY_PATH
-    lfr_pyt="$lfr_path/$lfr_pylibdir"
-    PYTHONPATH=`echo $PYTHONPATH | sed -e "s%:$lfr_pyt:%:%g" -e "s%^$lfr_pyt:%%"  -e "s%:$lfr_pyt$%%" -e "s%^$lfr_pyt$%%"`
-    export PYTHONPATH
+    if [ "$lfr_pylibdir" != "" ]; then
+      lfr_pyt="$lfr_path/$lfr_pylibdir"
+      PYTHONPATH=`echo $PYTHONPATH | sed -e "s%:$lfr_pyt:%:%g" -e "s%^$lfr_pyt:%%"  -e "s%:$lfr_pyt$%%" -e "s%^$lfr_pyt$%%"`
+      export PYTHONPATH
+    fi
 fi
 
 # Now define the new LOFARROOT (if possible)
@@ -79,9 +82,11 @@ else
     lfr_lib="$lfr_path/$lfr_libdir"
     LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e "s%:$lfr_lib:%:%g" -e "s%^$lfr_lib:%%"  -e "s%:$lfr_lib$%%" -e "s%^$lfr_lib$%%"`
     export LD_LIBRARY_PATH
-    lfr_pyt="$lfr_path/$lfr_pylibdir"
-    PYTHONPATH=`echo $PYTHONPATH | sed -e "s%:$lfr_pyt:%:%g" -e "s%^$lfr_pyt:%%"  -e "s%:$lfr_pyt$%%" -e "s%^$lfr_pyt$%%"`
-    export PYTHONPATH
+    if [ "$lfr_pylibdir" != "" ]; then
+      lfr_pyt="$lfr_path/$lfr_pylibdir"
+      PYTHONPATH=`echo $PYTHONPATH | sed -e "s%:$lfr_pyt:%:%g" -e "s%^$lfr_pyt:%%"  -e "s%:$lfr_pyt$%%" -e "s%^$lfr_pyt$%%"`
+      export PYTHONPATH
+    fi
 fi
 
 # Add to the paths
@@ -101,13 +106,15 @@ else
         LD_LIBRARY_PATH=$LOFARROOT/$lfr_libdir:$LD_LIBRARY_PATH
     fi
     export LD_LIBRARY_PATH
-    lfr_pyt="$LOFARROOT/$lfr_pylibdir"
-    if [ "$PYTHONPATH" = "" ]; then
+    if [ "$lfr_pylibdir" != "" ]; then
+      lfr_pyt="$LOFARROOT/$lfr_pylibdir"
+      if [ "$PYTHONPATH" = "" ]; then
         PYTHONPATH=$lfr_pyt
-    else
+      else
         PYTHONPATH=$lfr_pyt:$PYTHONPATH
+      fi
+      export PYTHONPATH
     fi
-    export PYTHONPATH
 fi
 
 # Now define the new LOFARDATAROOT (if possible).

@@ -111,7 +111,7 @@ class FromBus(object):
         if (self.opened==0):
           try:
             self.connection.open()
-            logger.info("[FromBus] Connected to broker: %s", self.broker)
+            logger.debug("[FromBus] Connected to broker: %s", self.broker)
             self.session = self.connection.session()
             logger.debug("[FromBus] Created session: %s", self.session.name)
             self.add_queue(self.address, self.options)
@@ -147,7 +147,7 @@ class FromBus(object):
                             self.broker)
           finally:
             self.session = None
-          logger.info("[FromBus] Disconnected from broker: %s", self.broker)
+          logger.debug("[FromBus] Disconnected from broker: %s", self.broker)
         self.opened-=1
        
 
@@ -185,7 +185,7 @@ class FromBus(object):
         except qpid.messaging.MessagingError:
             raise_exception(MessageBusError,
                             "[FromBus] Failed to create %s" % (what,))
-        logger.info("[FromBus] Created %s", what)
+        logger.debug("[FromBus] Created %s", what)
 
     def receive(self, timeout=DEFAULT_TIMEOUT, logDebugMessages=True):
         """
@@ -207,7 +207,7 @@ class FromBus(object):
             raise_exception(MessageBusError,
                             "[FromBus] Failed to fetch message from: "
                             "%s" % self.address) 
-        logger.info("[FromBus] Message received on: %s subject: %s" % (self.address, msg.subject))
+        logger.debug("[FromBus] Message received on: %s subject: %s" % (self.address, msg.subject))
         if logDebugMessages:
             logger.debug("[FromBus] %s" % msg)
         try:
@@ -297,18 +297,19 @@ class ToBus(object):
 
     def open(self):
         if (self.opened==0):
-           try:
-             self.connection.open()
-             logger.info("[ToBus] Connected to broker: %s", self.broker)
-             self.session = self.connection.session()
-             logger.debug("[ToBus] Created session: %s", self.session.name)
-             self._add_queue(self.address, self.options)
-           except qpid.messaging.MessagingError:
-             self.__exit__(*sys.exc_info())
-             raise_exception(MessageBusError, "[ToBus] Initialization failed")
-           except MessageBusError:
-             self.__exit__(*sys.exc_info())
-             raise
+            try:
+                logger.debug("[ToBus] Connecting to broker: %s", self.broker)
+                self.connection.open()
+                logger.debug("[ToBus] Connected to broker: %s", self.broker)
+                self.session = self.connection.session()
+                logger.debug("[ToBus] Created session: %s", self.session.name)
+                self._add_queue(self.address, self.options)
+            except qpid.messaging.MessagingError:
+                self.__exit__(*sys.exc_info())
+                raise_exception(MessageBusError, "[ToBus] Initialization failed")
+            except MessageBusError:
+                self.__exit__(*sys.exc_info())
+                raise
         self.opened+=1
 
 
@@ -325,7 +326,7 @@ class ToBus(object):
         """
         try:
             self.connection.open()
-            logger.info("[ToBus] Connected to broker: %s", self.broker)
+            logger.debug("[ToBus] Connected to broker: %s", self.broker)
             self.session = self.connection.session()
             logger.debug("[ToBus] Created session: %s", self.session.name)
             self._add_queue(self.address, self.options)
@@ -371,7 +372,7 @@ class ToBus(object):
                             self.broker)
         finally:
             self.session = None
-        logger.info("[ToBus] Disconnected from broker: %s", self.broker)
+        logger.debug("[ToBus] Disconnected from broker: %s", self.broker)
 
     def _check_session(self):
         """
@@ -417,7 +418,7 @@ class ToBus(object):
         except qpid.messaging.MessagingError:
             raise_exception(MessageBusError,
                             "[ToBus] Failed to create %s" % (what,))
-        logger.info("[ToBus] Created %s", what)
+        logger.debug("[ToBus] Created %s", what)
 
     def send(self, message, timeout=DEFAULT_TIMEOUT):
         """
@@ -435,7 +436,7 @@ class ToBus(object):
             raise_exception(MessageBusError,
                             "[ToBus] Failed to send message to: %s" %
                             sender.target)
-        logger.info("[ToBus] Message sent to: %s subject: %s" % (self.address, message.subject))
+        logger.debug("[ToBus] Message sent to: %s subject: %s" % (self.address, message.subject))
 
 
 class AbstractBusListener(object):
@@ -530,7 +531,8 @@ class AbstractBusListener(object):
             self._running.clear()
 
             for thread, args in self._threads.items():
-                logger.debug("Thread %2d: STOPPING Listening for messages on %s" % (args['index'], self.address))
+                logger.debug("Thread %2d: STOPPING Listening for messages on %s at broker %s" %
+                             (args['index'], self.address, self.broker if self.broker else 'localhost'))
                 thread.join()
                 logger.info("Thread %2d: STOPPED Listening for messages on %s" % (args['index'], self.address))
                 logger.info("           %d messages received and %d processed OK." % (args['num_received_messages'], args['num_processed_messages']))
@@ -582,7 +584,8 @@ class AbstractBusListener(object):
         currentThread = threading.currentThread()
         args = self._threads[currentThread]
         thread_idx = args['index']
-        logger.info( "Thread %d START Listening for messages on %s" %(thread_idx, self.address))
+        logger.info( "Thread %d START Listening for messages on %s at broker %s" %
+                    (thread_idx, self.address, self.broker if self.broker else 'localhost'))
         try:
             self._onListenLoopBegin()
         except Exception as e:

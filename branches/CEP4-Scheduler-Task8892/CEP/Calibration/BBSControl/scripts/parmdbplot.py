@@ -265,8 +265,8 @@ class Parm:
             self.mod = lambda Clock: 2. * numpy.pi * Clock * self._freq
         elif self._calType == 'TEC':
             self.mod = lambda TEC: -8.44797245e9 * TEC / self._freq
-        elif self._calType == 'RM':
-            self.mod = lambda RM: RM / (299792458.*self._freq*299792458.*self._freq)
+        elif self._calType == 'RotationMeasure':
+            self.mod = lambda RM: RM * (299792458.**2) / (self._freq)**2
         else:
             # everything else is plain
             self.mod = lambda ph: ph
@@ -288,7 +288,7 @@ class Parm:
         if self._calType == 'TEC': return QColor('#bfffda')
         if self._calType == 'CommonScalarPhase': return QColor('#ffbfbf')
         if self._calType == 'ScalarPhase': return QColor('#ffbf00')
-        if self._calType == 'RM': return QColor('#84f0aa')
+        if self._calType == 'RotationMeasure': return QColor('#84f0aa')
         return QColor('#000000')
 
     def valueAmp(self, domain=None, resolution=None, asPolar=True):
@@ -771,7 +771,7 @@ class PlotWindow(QFrame):
         else:
             xlabel = ["Time (sample)", "Freq (sample)"][self.axis]
 
-        if self.calType == "CommonRotationAngle" or self.calType == "RotationAngle":
+        if self.calType == "CommonRotationAngle" or self.calType == "RotationAngle" or self.calType == "RotationMeasure":
             phaselabel = "Rotation angle (rad)"
         else:
             phaselabel = "Phase (rad)"

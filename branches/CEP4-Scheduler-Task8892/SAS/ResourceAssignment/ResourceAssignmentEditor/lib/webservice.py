@@ -42,12 +42,16 @@ from flask.json import JSONEncoder
 from lofar.sas.resourceassignment.resourceassignmenteditor.utils import gzipped
 from lofar.sas.resourceassignment.resourceassignmenteditor.fakedata import *
 from lofar.sas.resourceassignment.resourceassignmenteditor.radbchangeshandler import RADBChangesHandler, CHANGE_DELETE_TYPE
-from lofar.sas.resourceassignment.database.config import DEFAULT_BUSNAME as DEFAULT_RADB_CHANGES_BUSNAME
+from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_BUSNAME as DEFAULT_RADB_CHANGES_BUSNAME
+from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_SUBJECTS as DEFAULT_RADB_CHANGES_SUBJECTS
 from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC
-from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
+from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME as DEFAULT_RADB_BUSNAME
+from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as DEFAULT_RADB_SERVICENAME
 from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
 from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
 from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
+from lofar.sas.resourceassignment.resourceassignmenteditor.mom import updateTaskMomDetails
+#from lofar.sas.resourceassignment.resourceassigner. import updateTaskMomDetails
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +82,7 @@ class CustomJSONEncoder(JSONEncoder):
 __root_path = os.path.dirname(os.path.realpath(__file__))
 
 '''The flask webservice app'''
-app = Flask('ResourceAssignmentEditor',
+app = Flask('Scheduler',
             instance_path=__root_path,
             template_folder=os.path.join(__root_path, 'templates'),
             static_folder=os.path.join(__root_path, 'static'),
@@ -88,22 +92,22 @@ app = Flask('ResourceAssignmentEditor',
 app.config.from_object('lofar.sas.resourceassignment.resourceassignmenteditor.config.default')
 app.json_encoder = CustomJSONEncoder
 
-rarpc = RARPC(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker=None)
-radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker=None)
-momrpc = MoMRPC(busname=DEFAULT_MOM_BUSNAME, servicename=DEFAULT_MOM_SERVICENAME, broker=None)
+rarpc = None
+momrpc = None
+radbchangeshandler = None
 
 @app.route('/')
 @app.route('/index.htm')
 @app.route('/index.html')
 def index():
     '''Serves the ResourceAssignmentEditor's index page'''
-    return render_template('index.html', title='Resource Assignment Editor')
+    return render_template('index.html', title='Scheduler')
 
-@app.route('/rest/resourceitems')
+@app.route('/rest/resources')
 @gzipped
-def resourcesitems():
-    result = rarpc.getResources()
-    return jsonify({'resourceitems': result})
+def resources():
+    result = rarpc.getResources(include_availability=True)
+    return jsonify({'resources': result})
 
 @app.route('/rest/resourcegroups')
 @gzipped
@@ -111,17 +115,36 @@ def resourcegroups():
     result = rarpc.getResourceGroups()
     return jsonify({'resourcegroups': result})
 
+@app.route('/rest/resourcegroupmemberships')
+@gzipped
+def resourcegroupsmemberships():
+    result = rarpc.getResourceGroupMemberships()
+    return jsonify({'resourcegroupmemberships': result})
+
 @app.route('/rest/resourceclaims')
 @gzipped
 def resourceclaims():
-    claims = rarpc.getResourceClaims()
+    claims = rarpc.getResourceClaims(include_properties=True)
     return jsonify({'resourceclaims': claims})
 
-@app.route('/rest/resourcegroupclaims')
+@app.route('/rest/resourceusages')
 @gzipped
-def resourcegroupclaims():
-    abort(500)
+def resourceUsages():
+    result = rarpc.getResourceUsages()
+    return jsonify({'resourceusages': result})
 
+@app.route('/rest/resources/<int:resource_id>/usages', methods=['GET'])
+@app.route('/rest/resourceusages/<int:resource_id>', methods=['GET'])
+@gzipped
+def resourceUsagesForResource(resource_id):
+    result = rarpc.getResourceUsages(resource_ids=[resource_id])
+    return jsonify({'resourceusages': result})
+
+@app.route('/rest/tasks/<int:task_id>/resourceusages', methods=['GET'])
+@gzipped
+def resourceUsagesForTask(task_id):
+    result = rarpc.getResourceUsages(task_ids=[task_id])
+    return jsonify({'resourceusages': result})
 
 @app.route('/rest/tasks')
 @gzipped
@@ -131,8 +154,7 @@ def getTasks():
     # there are no task names in the database yet.
     # will they come from spec/MoM?
     # add Task <id> as name for now
-    for task in tasks:
-        task['name'] = 'Task %d' % task['id']
+    updateTaskMomDetails(tasks, momrpc)
 
     return jsonify({'tasks': tasks})
 
@@ -145,6 +167,7 @@ def getTask(task_id):
             abort(404)
 
         task['name'] = 'Task %d' % task['id']
+        updateTaskMomDetails(task, momrpc)
         return jsonify({'task': task})
     except Exception as e:
         abort(404)
@@ -153,6 +176,8 @@ def getTask(task_id):
 
 @app.route('/rest/tasks/<int:task_id>', methods=['PUT'])
 def putTask(task_id):
+    abort(403, 'Editing of tasks is by users is not yet approved')
+
     if 'Content-Type' in request.headers and \
             request.headers['Content-Type'].startswith('application/json'):
         updatedTask = json.loads(request.data)
@@ -174,10 +199,10 @@ def putTask(task_id):
                     abort(400, 'timestamp not in iso format: ' + updatedTask['endtime'])
 
             logger.info('putTask: ' + str(updatedTask))
-            rarpc.updateResourceClaimsForTask(task_id,
-                                            starttime=updatedTask.get('starttime', None),
-                                            endtime=updatedTask.get('endtime', None),
-                                            status=updatedTask.get('status', None))
+            rarpc.updateTaskAndResourceClaims(task_id,
+                                              starttime=updatedTask.get('starttime', None),
+                                              endtime=updatedTask.get('endtime', None),
+                                              task_status=updatedTask.get('status', None))
 
             return "", 204
         except KeyError:
@@ -191,53 +216,94 @@ def taskResourceClaims(task_id):
 @app.route('/rest/tasktypes')
 def tasktypes():
     result = rarpc.getTaskTypes()
-    result = [x['name'] for x in result]
+    result = sorted(result, key=lambda q: q['id'])
     return jsonify({'tasktypes': result})
 
 @app.route('/rest/taskstatustypes')
 def getTaskStatusTypes():
     result = rarpc.getTaskStatuses()
     result = sorted(result, key=lambda q: q['id'])
-    result = [x['name'] for x in result]
     return jsonify({'taskstatustypes': result})
+
+@app.route('/rest/resourcetypes')
+def resourcetypes():
+    result = rarpc.getResourceTypes()
+    result = sorted(result, key=lambda q: q['id'])
+    return jsonify({'resourcetypes': result})
+
+@app.route('/rest/resourceclaimpropertytypes')
+def resourceclaimpropertytypes():
+    result = rarpc.getResourceClaimPropertyTypes()
+    result = sorted(result, key=lambda q: q['id'])
+    return jsonify({'resourceclaimpropertytypes': result})
 
 @app.route('/rest/momprojects')
 def getMoMProjects():
-    projects = momrpc.getProjects()
-    projects = [x for x in projects if x['status_id'] in [1, 7]]
+    projects = []
+    try:
+        projects = momrpc.getProjects()
+        projects = [x for x in projects if x['status_id'] in [1, 7]]
+        for project in projects:
+            project['mom_id'] = project.pop('mom2id')
+    except Exception as e:
+        logger.error(e)
+        projects.append({'name':'<unknown>', 'mom_id':-99, 'description': 'Container project for tasks for which we could not find a MoM project'})
 
+    projects.append({'name':'OTDB Only', 'mom_id':-98, 'description': 'Container project for tasks which exists only in OTDB'})
     return jsonify({'momprojects': projects})
 
 @app.route('/rest/momobjectdetails/<int:mom2id>')
 def getMoMObjectDetails(mom2id):
     details = momrpc.getProjectDetails(mom2id)
-    return jsonify({'momobjectdetails': details.values()[0] if details else None})
+    details = details.values()[0] if details else None
+    if details:
+        details['project_mom_id'] = details.pop('project_mom2id')
+        details['object_mom_id'] = details.pop('object_mom2id')
+
+    return jsonify({'momobjectdetails': details})
 
 @app.route('/rest/updates/<int:sinceChangeNumber>')
 def getUpdateEventsSince(sinceChangeNumber):
     changesSince = radbchangeshandler.getChangesSince(sinceChangeNumber)
     return jsonify({'changes': changesSince})
 
+@app.route('/rest/mostRecentChangeNumber')
+def getMostRecentChangeNumber():
+    mrcn = radbchangeshandler.getMostRecentChangeNumber()
+    return jsonify({'mostRecentChangeNumber': mrcn})
+
 @app.route('/rest/updates')
 def getUpdateEvents():
     return getUpdateEventsSince(-1L)
+
+@app.route('/rest/lofarTime')
+def getLofarTime():
+    return jsonify({'lofarTime': asIsoFormat(datetime.utcnow())})
 
 def main():
     # Check the invocation arguments
     parser = OptionParser('%prog [options]',
                           description='run the resource assignment editor web service')
-    parser.add_option('-p', '--port', dest='port', type='int', default=5000, help='port number on which to host the webservice, default: 5000')
+    parser.add_option('-p', '--port', dest='port', type='int', default=5000, help='port number on which to host the webservice, default: %default')
     parser.add_option('-q', '--broker', dest='broker', type='string', default=None, help='Address of the qpid broker, default: localhost')
-    parser.add_option('--radb_busname', dest='radb_busname', type='string', default=DEFAULT_BUSNAME, help='Name of the bus exchange on the qpid broker on which the radbservice listens, default: %s' % DEFAULT_BUSNAME)
-    parser.add_option('--radb_servicename', dest='radb_servicename', type='string', default=DEFAULT_SERVICENAME, help='Name of the radbservice, default: %s' % DEFAULT_SERVICENAME)
-    parser.add_option('--radb_notifications_busname', dest='radb_notifications_busname', type='string', default=DEFAULT_RADB_CHANGES_BUSNAME, help='Name of the notification bus exchange on the qpid broker on which the radb notifications are published, default: %s' % DEFAULT_RADB_CHANGES_BUSNAME)
-    parser.add_option('--mom_busname', dest='mom_busname', type='string', default=DEFAULT_MOM_BUSNAME, help='Name of the bus exchange on the qpid broker on which the momservice listens, default: %s' % DEFAULT_MOM_BUSNAME)
-    parser.add_option('--mom_servicename', dest='mom_servicename', type='string', default=DEFAULT_MOM_SERVICENAME, help='Name of the momservice, default: %s' % DEFAULT_MOM_SERVICENAME)
+    parser.add_option('--radb_busname', dest='radb_busname', type='string', default=DEFAULT_RADB_BUSNAME, help='Name of the bus exchange on the qpid broker on which the radbservice listens, default: %default')
+    parser.add_option('--radb_servicename', dest='radb_servicename', type='string', default=DEFAULT_RADB_SERVICENAME, help='Name of the radbservice, default: %default')
+    parser.add_option('--radb_notification_busname', dest='radb_notification_busname', type='string', default=DEFAULT_RADB_CHANGES_BUSNAME, help='Name of the notification bus exchange on the qpid broker on which the radb notifications are published, default: %default')
+    parser.add_option('--radb_notification_subjects', dest='radb_notification_subjects', type='string', default=DEFAULT_RADB_CHANGES_SUBJECTS, help='Subject(s) to listen for on the radb notification bus exchange on the qpid broker, default: %default')
+    parser.add_option('--mom_busname', dest='mom_busname', type='string', default=DEFAULT_MOM_BUSNAME, help='Name of the bus exchange on the qpid broker on which the momservice listens, default: %default')
+    parser.add_option('--mom_servicename', dest='mom_servicename', type='string', default=DEFAULT_MOM_SERVICENAME, help='Name of the momservice, default: %default')
     parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
     (options, args) = parser.parse_args()
 
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                         level=logging.DEBUG if options.verbose else logging.INFO)
+
+    global rarpc
+    rarpc = RARPC(busname=DEFAULT_RADB_BUSNAME, servicename=DEFAULT_RADB_SERVICENAME, broker=options.broker)
+    global momrpc
+    momrpc = MoMRPC(busname=DEFAULT_MOM_BUSNAME, servicename=DEFAULT_MOM_SERVICENAME, timeout=2.5, broker=options.broker)
+    global radbchangeshandler
+    radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker=options.broker, momrpc=momrpc)
 
     with radbchangeshandler, rarpc, momrpc:
         '''Start the webserver'''

@@ -24,7 +24,6 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/LofarConstants.h>
-#include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
 #include <ApplCommon/StationInfo.h>
 #include "StatCal.h"
@@ -40,18 +39,20 @@ namespace LOFAR {
 //
 // StatCal()
 //
-StatCal::StatCal(uint mode, uint nrRSPBoards):
-    itsNantennas(nrRSPBoards*NR_ANTENNAS_PER_RSPBOARD), 
-	itsNpols	(2), 
-	itsNsubbands(512), 
-	itsMode		(mode), 
+StatCal::StatCal(const string& antennaSet, const string& band, uint nrRSPBoards):
+    itsNantennas(nrRSPBoards*NR_ANTENNAS_PER_RSPBOARD),
+	itsNpols	(2),
+	itsNsubbands(512),
+	itsAntennaSet(antennaSet),
+	itsBand(band),
 	itsIsValid	(false)
 {
-	LOG_DEBUG(formatString("StatCal(mode=%d,#Ant=%d,#Pol=%d,#Sub=%d)",mode, itsNantennas, itsNpols, itsNsubbands));
+	LOG_DEBUG(formatString("StatCal(antset=%s,band=%s,#Ant=%d,#Pol=%d,#Sub=%d)",
+                            antennaSet.c_str(), band.c_str(), itsNantennas, itsNpols, itsNsubbands));
 
     itsStaticCalibration.resize(itsNantennas, itsNpols, itsNsubbands);
     itsStaticCalibration = complex<double>(0.0,0.0);
-    itsIsValid = _readData(mode);
+    itsIsValid = _readData(antennaSet, band);
 }
 
 //
@@ -64,12 +65,17 @@ StatCal::~StatCal()
 //
 // _readData(mode)
 //
-bool StatCal::_readData(uint mode)
+bool StatCal::_readData(const string& antennaSet, const string& band)
 {
 	ConfigLocator	CL;
 	char			baseName[256];
-    snprintf(baseName, sizeof baseName, "CalTable_mode%d.dat", mode);
+    snprintf(baseName, sizeof baseName, "CalTable-%s-%s.dat", antennaSet.c_str(), band.c_str());
 	itsFileName = CL.locate(baseName);
+
+    if (itsFileName.empty()) {
+        LOG_INFO_STR("Static CalibrationTable '" << baseName << "' NOT available, use default.");
+        return (false);
+    }
 
 	// try to open the file
     FILE 			*file;
@@ -79,7 +85,7 @@ bool StatCal::_readData(uint mode)
 	}
 
 	// read and check the headerinformation
-	if (!_readHeaderInfo(file) || !_checkHeaderInfo(mode)) {
+	if (!_readHeaderInfo(file) || !_checkHeaderInfo(antennaSet, band)) {
 		return (false);
 	}
 
@@ -87,9 +93,9 @@ bool StatCal::_readData(uint mode)
     complex<double> value;
 	for (uint sb = 0; sb < itsNsubbands; sb++) {
 		for (uint ant = 0; ant < itsNantennas; ant++) {
-			for (uint pol = 0; pol < itsNpols; pol++) {    
+			for (uint pol = 0; pol < itsNpols; pol++) {
 				if (fread(&value, sizeof(complex<double>), 1, file) != 1) {
-					LOG_ERROR_STR("Error while loading calibrationtable " << itsFileName << " at element " << 
+					LOG_ERROR_STR("Error while loading calibrationtable " << itsFileName << " at element " <<
 								(sb*itsNantennas+ant)*itsNpols+pol);
 					fclose(file);
 					return(false);
@@ -99,7 +105,7 @@ bool StatCal::_readData(uint mode)
 		}
 	}
 	fclose(file);
-	LOG_INFO_STR("Static CalibrationTable loaded for mode " << mode << ", first value = " << itsStaticCalibration(0,0,0));
+	LOG_INFO_STR("Static CalibrationTable loaded for antennaSet " << antennaSet << ", band " << band << ", first value = " << itsStaticCalibration(0,0,0));
 	return (true);
 }
 
@@ -115,7 +121,7 @@ bool StatCal::_readHeaderInfo(FILE*	file)
 		return (true);
 	}
 
-	while (fgets(line, 1024,file)) {
+	while (fgets(line, 1024, file)) {
 		if (line[strlen(line)-1] == '\n') {	// cut trailing newline character if any
 			line[strlen(line)-1] = '\0';
 		}
@@ -125,8 +131,10 @@ bool StatCal::_readHeaderInfo(FILE*	file)
 		}
 		if (strstr(line, "CalTableHeader.Observation.Station"))
 			itsHI.station = ltrim(value);
-		else if (strstr(line, "CalTableHeader.Observation.Mode"))
-			itsHI.mode = atoi(value);
+		else if (strstr(line, "CalTableHeader.Observation.AntennaSet"))
+			itsHI.antennaSet = ltrim(value);
+        else if (strstr(line, "CalTableHeader.Observation.Band"))
+			itsHI.band = ltrim(value);
 		else if (strstr(line, "CalTableHeader.Observation.Source"))
 			itsHI.source = ltrim(value);
 		else if (strstr(line, "CalTableHeader.Observation.Date"))
@@ -152,19 +160,32 @@ bool StatCal::_readHeaderInfo(FILE*	file)
 //
 // _checkHeaderInfo(mode)
 //
-bool StatCal::_checkHeaderInfo(uint	mode) const
+bool StatCal::_checkHeaderInfo(const string& antennaSet, const string& band) const
 {
-	if (itsHI.mode == -1) {	// file without header?
+	if (itsHI.antennaSet == "") {	// file without header?
 		return (true);
 	}
 
-	if ((uint)itsHI.mode != mode) {
-		LOG_ERROR_STR("CALTABLE FOR MODE " << mode << " CONTAINS WEIGHTS FOR MODE " << itsHI.mode);
-		return (false);
-	}
+	if (antennaSet.find("HBA") != string::npos) {
+        if (itsHI.antennaSet.find("HBA") == string::npos) {
+            LOG_ERROR_STR("CALTABLE FOR ANTENNASET " << antennaSet << " CONTAINS WEIGHTS FOR ANTENNASET " << itsHI.antennaSet);
+            return (false);
+        }
+        if (itsHI.band != band) {
+            LOG_ERROR_STR("CALTABLE FOR BAND " << band << " CONTAINS WEIGHTS FOR BAND " << itsHI.band);
+            return (false);
+        }
+    }
+
+    else if (antennaSet.find("LBA") != string::npos) {
+        if (itsHI.antennaSet.find("LBA") == string::npos) {
+            LOG_ERROR_STR("CALTABLE FOR ANTENNASET " << antennaSet << " CONTAINS WEIGHTS FOR ANTENNASET " << itsHI.antennaSet);
+            return (false);
+        }
+    }
 
 	if (itsHI.station != PVSSDatabaseName()) {
-		LOG_ERROR_STR("CALTABLE FOR MODE " << mode << " IS MENT FOR STATION " << itsHI.station);
+		LOG_ERROR_STR("CALTABLE NOT FOR THIS STATION " << itsHI.station);
 		return (false);
 	}
 
@@ -178,7 +199,8 @@ ostream& StatCal::print(ostream& os)const
 {
 	os << "Filename   : " << itsFileName << endl;
 	os << "Station    : " << itsHI.station << endl;
-	os << "Mode       : " << itsHI.mode << endl;
+	os << "AntennaSet : " << itsHI.antennaSet << endl;
+	os << "Band       : " << itsHI.band << endl;
 	os << "Source     : " << itsHI.source << endl;
 	os << "Date       : " << itsHI.date << endl;
 	os << "CalVersion : " << itsHI.calVersion << endl;
@@ -200,7 +222,7 @@ complex<double> StatCal::calFactor(uint	rcuNr, uint subbandNr) const
 
 	return (itsStaticCalibration((int)rcuNr/2, (int)rcuNr%2, (int)subbandNr));
 }
-	
+
 
   } // namespace BS
 } // namespace LOFAR

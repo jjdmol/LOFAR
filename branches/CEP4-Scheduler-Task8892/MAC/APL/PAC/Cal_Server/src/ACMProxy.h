@@ -24,7 +24,7 @@
 #ifndef ACMPROXY_H_
 #define ACMPROXY_H_
 
-#include <APL/CAL_Protocol/ACC.h>
+#include "ACC.h"
 #include <APL/RSP_Protocol/XCStatistics.h>
 #include <APL/RTCCommon/Timestamp.h>
 
@@ -90,5 +90,5 @@ namespace LOFAR {
 
   }; // namespace CAL
 }; // namespace LOFAR
-     
+
 #endif /* ACMPROXY_H_ */
