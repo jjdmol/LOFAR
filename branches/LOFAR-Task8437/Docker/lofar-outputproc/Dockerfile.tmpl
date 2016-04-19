@@ -27,7 +27,7 @@ RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y su
     cd ${INSTALLDIR}/lofar/build/gnu_opt && make -j ${J} && \
     cd ${INSTALLDIR}/lofar/build/gnu_opt && make install && \
     bash -c "mkdir -p /home/${USER}/lofar/var/{log,run}" && \
-    bash -c "ln -sfT ${INSTALLDIR}/lofar/var /home/${USER}/lofar/var" && \
+    bash -c "ln -sfT /home/${USER}/lofar/var ${INSTALLDIR}/lofar/var" && \
     bash -c "strip ${INSTALLDIR}/lofar/{bin,sbin,lib64}/* || true" && \
     bash -c "rm -rf ${INSTALLDIR}/lofar/{build,src}" && \
     sudo setcap cap_sys_nice,cap_ipc_lock=ep ${INSTALLDIR}/lofar/bin/outputProc && \
