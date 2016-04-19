@@ -2501,23 +2501,15 @@ bool SASConnection::saveStationSettings(int treeID, const StationTask &task, con
             if (task.getStationClock() == clock_160Mhz) {
 				//clock mode
                 if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.clockMode","<<Clock160")) return false;
-				// channelWidth
-				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.channelWidth", STR_CLOCK160_CHANNELWIDTH)) return false;
 				// samplesPerSecond
 				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.samplesPerSecond", STR_CLOCK160_SAMPLESPERSECOND)) return false;
-				// subbandWidth
-				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.subbandWidth", STR_CLOCK160_SUBBANDWIDTH)) return false;
 				// systemClock
 				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.sampleClock", STR_CLOCK160_SAMPLECLOCK)) return false;
 			}
 			else {
                 if (!setNodeValue(treeID,"LOFAR.ObsSW.Observation.clockMode","<<Clock200")) return false;
-				// channelWidth
-				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.channelWidth", STR_CLOCK200_CHANNELWIDTH)) return false;
 				// samplesPerSecond
 				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.samplesPerSecond", STR_CLOCK200_SAMPLESPERSECOND)) return false;
-				// subbandWidth
-				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.subbandWidth", STR_CLOCK200_SUBBANDWIDTH)) return false;
 				// systemClock
 				if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.sampleClock", STR_CLOCK200_SAMPLECLOCK)) return false;
 			}
@@ -2558,38 +2550,31 @@ bool SASConnection::saveStationSettings(int treeID, const StationTask &task, con
         if (task.getStationClock() == clock_160Mhz) {
 			//clock mode
             if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.clockMode","<<Clock160")) return false;
-			// channelWidth
-			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.channelWidth", STR_CLOCK160_CHANNELWIDTH)) return false;
 			// samplesPerSecond
 			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.samplesPerSecond", STR_CLOCK160_SAMPLESPERSECOND)) return false;
-			// subbandWidth
-			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.subbandWidth", STR_CLOCK160_SUBBANDWIDTH)) return false;
 			// systemClock
 			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.sampleClock", STR_CLOCK160_SAMPLECLOCK)) return false;
 		}
 		else {
             if (!setNodeValue(treeID,"LOFAR.ObsSW.Observation.clockMode","<<Clock200")) return false;
-			// channelWidth
-			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.channelWidth", STR_CLOCK200_CHANNELWIDTH)) return false;
 			// samplesPerSecond
 			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.samplesPerSecond", STR_CLOCK200_SAMPLESPERSECOND)) return false;
-			// subbandWidth
-			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.subbandWidth", STR_CLOCK200_SUBBANDWIDTH)) return false;
 			// systemClock
 			if (!setNodeValue(treeID, "LOFAR.ObsSW.Observation.sampleClock", STR_CLOCK200_SAMPLECLOCK)) return false;
 		}
 		// nr of dataslots per RSP board (called 'nrSlotsInFrame' in SAS)
 //		bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.nrSlotsInFrame", QString::number(task.getNrOfDataslotsPerRSPboard()));
+        //This is nonsense code as diff = NULL here, it somehow works under certain compilers because the dynamic_cast fails (obs=NULL)
 		// TBB piggyback allowed?
-        const Observation *obs = dynamic_cast<const Observation *>(&task);
-        if (obs) {
-            if (diff->TBBPiggybackAllowed)
-                bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.ObservationControl.StationControl.tbbPiggybackAllowed",
-                                        (obs->getTBBPiggybackAllowed() ? "true" : "false"));
-            if (diff->AartfaacPiggybackAllowed)
-                 bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.ObservationControl.StationControl.aartfaacPiggybackAllowed",
-                                         (obs->getAartfaacPiggybackAllowed() ? "true" : "false"));
-        }
+        //const Observation *obs = dynamic_cast<const Observation *>(&task);
+        //if (obs) {
+        //    if (diff->TBBPiggybackAllowed)
+        //        bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.ObservationControl.StationControl.tbbPiggybackAllowed",
+        //                                (obs->getTBBPiggybackAllowed() ? "true" : "false"));
+        //    if (diff->AartfaacPiggybackAllowed)
+        //         bResult &= setNodeValue(treeID, "LOFAR.ObsSW.Observation.ObservationControl.StationControl.aartfaacPiggybackAllowed",
+        //                                 (obs->getAartfaacPiggybackAllowed() ? "true" : "false"));
+        //}
     }
 
 	return bResult;
