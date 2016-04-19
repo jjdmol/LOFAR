@@ -80,8 +80,8 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
             var task = $scope.dataService.taskDict[task_id];
             var updatedTask = {
                 id: task.id,
-                starttime: item.model.from._d.toISOString(),
-                endtime: item.model.to._d.toISOString()
+                starttime: item.model.from._d,
+                endtime: item.model.to._d
             };
             $scope.dataService.putTask(updatedTask);
         }

@@ -79,8 +79,8 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
         var task = item.model.raTask;
         var updatedTask = {
             id: task.id,
-            starttime: item.model.from._d.toISOString(),
-            endtime: item.model.to._d.toISOString()
+            starttime: item.model.from._d,
+            endtime: item.model.to._d
         };
         $scope.dataService.putTask(updatedTask);
     };
