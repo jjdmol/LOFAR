@@ -38,5 +38,8 @@ def setQpidLogLevel(qpidLogLevel):
             logger.setLevel(qpidLogLevel)
 
 def adaptNameToEnvironment(name):
-    if os.environ.get('LOFARENV', 'test') != 'PRODUCTION':
-        return 'test.%s' % name
+    if os.environ.get('LOFARENV', '') == 'PRODUCTION':
+        return name #return original name only for PRODUCTION LOFARENV
+
+    # in all other cases prefix queue/bus name with 'test.'
+    return 'test.%s' % name
