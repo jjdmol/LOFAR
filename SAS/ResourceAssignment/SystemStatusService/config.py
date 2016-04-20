@@ -1,5 +1,7 @@
 #!/usr/bin/python
 # $Id$
 
-DEFAULT_SSDB_BUSNAME = 'lofar.ssdb.command'
+from lofar.messaging import adaptNameToEnvironment
+
+DEFAULT_SSDB_BUSNAME = adaptNameToEnvironment('lofar.ssdb.command')
 DEFAULT_SSDB_SERVICENAME = 'SSDBService'

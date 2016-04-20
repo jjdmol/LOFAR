@@ -30,8 +30,13 @@ from messagebus import *
 from RPC import *
 from Service import *
 import logging
+import os
 
 def setQpidLogLevel(qpidLogLevel):
     for name, logger in logging.Logger.manager.loggerDict.items():
         if name.startswith('qpid.') and isinstance(logger, logging.Logger):
             logger.setLevel(qpidLogLevel)
+
+def adaptNameToEnvironment(name):
+    if os.environ.get('LOFARENV', 'test') != 'PRODUCTION':
+        return 'test.%s' % name
