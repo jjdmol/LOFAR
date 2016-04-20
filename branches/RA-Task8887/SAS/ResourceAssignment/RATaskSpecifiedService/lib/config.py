@@ -1,5 +1,7 @@
 #!/usr/bin/python
 # $Id$
 
-DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_BUSNAME='lofar.ra.notification'
+from lofar.messaging import adaptNameToEnvironment
+
+DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_BUSNAME=adaptNameToEnvironment('lofar.ra.notification')
 DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_SUBJECT='RA.TaskSpecified'
