@@ -176,11 +176,12 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
                             to: task.endtime,
                             raTask: task,
                             color: self.taskStatusColors[task.status],
+                            classes: 'task-status-' + task.status,
                             movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
                         };
 
                         if(task.id == dataService.selected_task_id) {
-                            rowTask.classes = 'task-selected-task';
+                            rowTask.classes += ' task-selected-task';
                         }
 
                         if(task.predecessor_ids && task.predecessor_ids.length > 0) {

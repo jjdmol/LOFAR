@@ -273,8 +273,8 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                         name: task.name,
                         from: claim.starttime,
                         to: claim.endtime,
-                        color: self.taskStatusColors[task.status],
-                        classes: 'claim-status-' + claim.status,
+                        color: self.resourceClaimStatusColors[claim.status],
+                        classes: 'claim-task-status-' + task.status,
                         raTask: task,
                         claim: claim,
                         movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
@@ -365,8 +365,8 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                                 name: task.name,
                                 from: aggClaimForTask.starttime,
                                 to: aggClaimForTask.endtime,
-                                color: self.taskStatusColors[task.status],
-                                classes: 'claim-status-' + aggClaimForTask.status,
+                                color: self.resourceClaimStatusColors[aggClaimForTask.status],
+                                classes: 'claim-task-status-' + task.status,
                                 raTask: task,
                                 movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
                             };
