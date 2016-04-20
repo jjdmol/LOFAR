@@ -5,7 +5,7 @@
 # -----------------------------------------
 
 # Whether to modify production (true) or test (false)
-if [ "$LOFARENV" == "prod" ]; then
+if [ "$LOFARENV" == "PRODUCTION" ]; then
   PROD=true
 else
   PROD=false
@@ -16,7 +16,12 @@ fi
 if $PROD; then
   echo "----------------------------------------------"
   echo "Populating database for PRODUCTION environment"
+  echo ""
+  echo "Press ENTER to continue, or ^C to abort"
   echo "----------------------------------------------"
+  read
+
+  PREFIX=
 
   CCU=ccu001.control.lofar
   MCU=mcu001.control.lofar
@@ -34,6 +39,8 @@ if $PROD; then
   CEP4="`seq -f cpu%02.0f.cep4.control.lofar 1 50`"
   CEP4HEAD="head01.cep4.control.lofar head02.cep4.control.lofar"
 else
+  PREFIX=test.
+
   CCU=ccu099.control.lofar
   MCU=mcu099.control.lofar
   SCU=scu099.control.lofar
@@ -59,28 +66,28 @@ for tnode in $CEP4HEAD
 do
   for fnode in $CEP4
   do
-    addtoQPIDDB.py --broker $fnode --queue lofar.task.feedback.dataproducts --federation $tnode
-    addtoQPIDDB.py --broker $fnode --queue lofar.task.feedback.processing --federation $tnode
-    addtoQPIDDB.py --broker $fnode --queue lofar.task.feedback.state --federation $tnode
+    addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.dataproducts --federation $tnode
+    addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.processing --federation $tnode
+    addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.state --federation $tnode
   done
 
-  addtoQPIDDB.py --broker $tnode --queue lofar.task.feedback.dataproducts --federation $CCU
-  addtoQPIDDB.py --broker $tnode --queue lofar.task.feedback.processing --federation $CCU
-  addtoQPIDDB.py --broker $tnode --queue lofar.task.feedback.state --federation $CCU
+  addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.dataproducts --federation $CCU
+  addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.processing --federation $CCU
+  addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.state --federation $CCU
 done
 
 for tnode in $CEP2HEAD
 do
   for fnode in $CEP2
   do
-    addtoQPIDDB.py --broker $fnode --queue lofar.task.feedback.dataproducts --federation $tnode
-    addtoQPIDDB.py --broker $fnode --queue lofar.task.feedback.processing --federation $tnode
-    addtoQPIDDB.py --broker $fnode --queue lofar.task.feedback.state --federation $tnode
+    addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.dataproducts --federation $tnode
+    addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.processing --federation $tnode
+    addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.state --federation $tnode
   done
 
-  addtoQPIDDB.py --broker $tnode --queue lofar.task.feedback.dataproducts --federation $CCU
-  addtoQPIDDB.py --broker $tnode --queue lofar.task.feedback.processing --federation $CCU
-  addtoQPIDDB.py --broker $tnode --queue lofar.task.feedback.state --federation $CCU
+  addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.dataproducts --federation $CCU
+  addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.processing --federation $CCU
+  addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.state --federation $CCU
 done
 
 # -----------------------------------------
@@ -95,20 +102,20 @@ addtoQPIDDB.py --broker $CCU --queue mom.task.feedback.state --federation $MOM_U
 #   MessageRouter -> OTDB
 # -----------------------------------------
 
-addtoQPIDDB.py --broker $CCU --queue otdb.task.feedback.dataproducts --federation $MCU
-addtoQPIDDB.py --broker $CCU --queue otdb.task.feedback.processing --federation $MCU
+addtoQPIDDB.py --broker $CCU --queue ${PREFIX}otdb.task.feedback.dataproducts --federation $MCU
+addtoQPIDDB.py --broker $CCU --queue ${PREFIX}otdb.task.feedback.processing --federation $MCU
 
 # -----------------------------------------
 #   MessageRouter -> MAC
 # -----------------------------------------
 
-addtoQPIDDB.py --broker $CCU --exchange mac.task.feedback.state
+addtoQPIDDB.py --broker $CCU --exchange ${PREFIX}mac.task.feedback.state
 
 # -----------------------------------------
 #   MACScheduler -> MessageRouter -> MoM
 # -----------------------------------------
 
-addtoQPIDDB.py --broker $MCU --queue lofar.task.specification.system --federation $CCU
+addtoQPIDDB.py --broker $MCU --queue ${PREFIX}lofar.task.specification.system --federation $CCU
 addtoQPIDDB.py --broker $CCU --queue mom.task.specification.system --federation $MOM_USER
 
 # -----------------------------------------
@@ -129,21 +136,21 @@ addtoQPIDDB.py --broker $MOM_INGEST --exchange lofar.mom.bus
 #   ResourceAssignment
 # -----------------------------------------
 
-addtoQPIDDB.py --broker $SCU --exchange lofar.ra.command
-addtoQPIDDB.py --broker $SCU --exchange lofar.ra.notification
-addtoQPIDDB.py --broker $SCU --exchange lofar.otdb.command
-addtoQPIDDB.py --broker $SCU --exchange lofar.otdb.notification
-addtoQPIDDB.py --broker $SCU --exchange lofar.ssdb.command
-addtoQPIDDB.py --broker $SCU --exchange lofar.ssdb.notification
+addtoQPIDDB.py --broker $SCU --exchange ${PREFIX}lofar.ra.command
+addtoQPIDDB.py --broker $SCU --exchange ${PREFIX}lofar.ra.notification
+addtoQPIDDB.py --broker $SCU --exchange ${PREFIX}lofar.otdb.command
+addtoQPIDDB.py --broker $SCU --exchange ${PREFIX}lofar.otdb.notification
+addtoQPIDDB.py --broker $SCU --exchange ${PREFIX}lofar.ssdb.command
+addtoQPIDDB.py --broker $SCU --exchange ${PREFIX}lofar.ssdb.notification
 
 # TODO: messages will end up at $SCU twice?
 for tnode in head{01..02}.cep4
 do
   for fnode in cpu{01..50}.cep4
   do
-    addtoQPIDDB.py --broker $fnode --exchange lofar.otdb.command --federation $tnode
+    addtoQPIDDB.py --broker $fnode --exchange ${PREFIX}lofar.otdb.command --federation $tnode
   done
 
-  addtoQPIDDB.py --broker $tnode --exchange lofar.otdb.command --federation $SCU
+  addtoQPIDDB.py --broker $tnode --exchange ${PREFIX}lofar.otdb.command --federation $SCU
 done
 
