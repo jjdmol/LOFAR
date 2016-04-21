@@ -449,10 +449,7 @@ class RADatabase:
             if isinstance(resource_ids, int): # just a single id
                 conditions.append('id = %s')
                 qargs.append(resource_ids)
-            elif len(resource_ids) == 1:  # just a single id from a list
-                conditions.append('id = %s')
-                qargs.append(resource_ids[0])
-            else: # list of id's
+            elif len(resource_ids) > 0: # a list of id's
                 conditions.append('id in %s')
                 qargs.append(tuple(resource_ids))
 
@@ -617,12 +614,7 @@ class RADatabase:
             if isinstance(claim_ids, int): # just a single id
                 conditions.append('rcpv.resource_claim_id = %s')
                 qargs.append(claim_ids)
-            elif len(claim_ids) == 0:  # empty list
-                return []
-            elif len(claim_ids) == 1:  # just a single id from a list
-                conditions.append('rcpv.resource_claim_id = %s')
-                qargs.append(claim_ids[0])
-            else: # list of id's
+            elif len(claim_ids) > 0: # list of id's
                 conditions.append('rcpv.resource_claim_id in %s')
                 qargs.append(tuple(claim_ids))
 
@@ -747,10 +739,7 @@ class RADatabase:
             if isinstance(claim_ids, int): # just a single id
                 conditions.append('id = %s')
                 qargs.append(claim_ids)
-            elif len(claim_ids) == 1:  # just a single id from a list
-                conditions.append('id = %s')
-                qargs.append(claim_ids[0])
-            else: # list of id's
+            elif len(claim_ids) > 0: # list of id's
                 conditions.append('id in %s')
                 qargs.append(tuple(claim_ids))
 
@@ -766,10 +755,7 @@ class RADatabase:
             if isinstance(resource_ids, int): # just a single id
                 conditions.append('resource_id = %s')
                 qargs.append(resource_ids)
-            elif len(resource_ids) == 1:  # just a single id from a list
-                conditions.append('resource_id = %s')
-                qargs.append(resource_ids[0])
-            else: # list of id's
+            elif len(resource_ids) > 0: # list of id's
                 conditions.append('resource_id in %s')
                 qargs.append(tuple(resource_ids))
 
@@ -1180,10 +1166,7 @@ class RADatabase:
             if isinstance(task_ids, int): # just a single id
                 conditions.append('task_id = %s')
                 qargs.append(task_ids)
-            elif len(task_ids) == 1:  # just a single id from a list
-                conditions.append('task_id = %s')
-                qargs.append(task_ids[0])
-            else: # list of id's
+            elif len(task_ids) > 0: # list of id's
                 conditions.append('task_id in %s')
                 qargs.append(tuple(task_ids))
 
@@ -1226,10 +1209,7 @@ class RADatabase:
             if isinstance(claim_ids, int): # just a single id
                 conditions.append('id = %s')
                 qargs.append(claim_ids)
-            elif len(claim_ids) == 1:  # just a single id from a list
-                conditions.append('id = %s')
-                qargs.append(claim_ids[0])
-            else: # list of id's
+            elif len(claim_ids) > 0: # list of id's
                 conditions.append('id in %s')
                 qargs.append(tuple(claim_ids))
 
@@ -1237,10 +1217,7 @@ class RADatabase:
             if isinstance(resource_ids, int): # just a single id
                 conditions.append('resource_id = %s')
                 qargs.append(resource_ids)
-            elif len(resource_ids) == 1:  # just a single id from a list
-                conditions.append('resource_id = %s')
-                qargs.append(resource_ids[0])
-            else: # list of id's
+            elif len(resource_ids) > 0: # list of id's
                 conditions.append('resource_id in %s')
                 qargs.append(tuple(resource_ids))
 
@@ -1248,10 +1225,7 @@ class RADatabase:
             if isinstance(task_ids, int): # just a single id
                 conditions.append('task_id = %s')
                 qargs.append(task_ids)
-            elif len(task_ids) == 1:  # just a single id from a list
-                conditions.append('task_id = %s')
-                qargs.append(task_ids[0])
-            else: # list of id's
+            elif len(task_ids) > 0: # list of id's
                 conditions.append('task_id in %s')
                 qargs.append(tuple(task_ids))
 

@@ -7,7 +7,7 @@ var app = angular.module('raeApp',
                          'ChartResourceUsageControllerMod',
                          'GridControllerMod',
                          'ui.layout',
-                         'ui.bootstrap.datetimepicker',
+                         'ui.bootstrap',
                          'ui.bootstrap.tabs',
                          'highcharts-ng']);
 

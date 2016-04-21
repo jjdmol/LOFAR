@@ -281,6 +281,10 @@ def getLofarTime():
     return jsonify({'lofarTime': asIsoFormat(datetime.utcnow())})
 
 def main():
+    # make sure we run in UTC timezone
+    import os
+    os.environ['TZ'] = 'UTC'
+
     # Check the invocation arguments
     parser = OptionParser('%prog [options]',
                           description='run the resource assignment editor web service')
