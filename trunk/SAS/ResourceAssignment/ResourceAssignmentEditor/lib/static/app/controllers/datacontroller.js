@@ -37,6 +37,20 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
     self.initialLoadComplete = false;
 
+    self.viewTimeSpan = {from: new Date(), to: new Date() };
+
+    self.floorDate = function(date, hourMod=1, minMod=1) {
+        var min = date.getMinutes();
+        min = date.getMinutes()/minMod;
+        min = Math.floor(date.getMinutes()/minMod);
+        min = minMod*Math.floor(date.getMinutes()/minMod);
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hourMod*Math.floor(date.getHours()/hourMod), minMod*Math.floor(date.getMinutes()/minMod));
+    };
+
+    self.ceilDate = function(date, hourMod=1, minMod=1) {
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hourMod*Math.ceil(date.getHours()/hourMod), minMod*Math.ceil(date.getMinutes()/minMod));
+    };
+
     self.resourceClaimStatusColors = {'claimed':'#ffa64d',
                                       'conflict':'#ff0000',
                                       'allocated': '#66ff66',
@@ -151,12 +165,10 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
         var minStarttime = new Date(Math.min.apply(null, starttimes));
         var maxEndtime = new Date(Math.max.apply(null, endtimes));
-        var fullTimespanInMinutes = (maxEndtime - minStarttime) / (60 * 1000);
 
         self.taskTimes = {
             min: minStarttime,
-            max: maxEndtime,
-            fullTimespanInMinutes: fullTimespanInMinutes
+            max: maxEndtime
         };
     };
 
@@ -223,12 +235,10 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
         var minStarttime = new Date(Math.min.apply(null, starttimes));
         var maxEndtime = new Date(Math.max.apply(null, endtimes));
-        var fullTimespanInMinutes = (maxEndtime - minStarttime) / (60 * 1000);
 
         self.resourceClaimTimes = {
             min: minStarttime,
-            max: maxEndtime,
-            fullTimespanInMinutes: fullTimespanInMinutes
+            max: maxEndtime
         };
     };
 
@@ -336,7 +346,6 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         setTimeout(self._syncLofarTimeWithServer, 60000);
     };
     self._syncLofarTimeWithServer();
-
 
     self.lastUpdateChangeNumber = undefined;
 
@@ -486,6 +495,91 @@ dataControllerMod.controller('DataController',
     var self = this;
     $scope.dataService = dataService;
 
+    $scope.dateOptions = {
+        formatYear: 'yyyy',
+        startingDay: 1
+    };
+
+    $scope.viewFromDatePopupOpened = false;
+    $scope.viewToDatePopupOpened = false;
+
+    $scope.openViewFromDatePopup = function() { $scope.viewFromDatePopupOpened = true; };
+    $scope.openViewToDatePopup = function() { $scope.viewToDatePopupOpened = true; };
+    $scope.jumpTimespanWidths = [{value:60, name:'1 Hour'}, {value:3*60, name:'3 Hours'}, {value:6*60, name:'6 Hours'}, {value:12*60, name:'12 Hours'}, {value:24*60, name:'1 Day'}, {value:2*24*60, name:'2 Days'}, {value:5*24*60, name:'5 Days'}, {value:7*24*60, name:'1 Week'}, {value:14*24*60, name:'2 Weeks'}, {value:28*24*60, name:'4 Weeks'}];
+    $scope.jumpTimespanWidth = $scope.jumpTimespanWidths[7];
+    $scope.jumpToNow = function() {
+        var floorLofarTime = dataService.floorDate(dataService.lofarTime, 1, 5);
+        dataService.viewTimeSpan = {
+            from: dataService.floorDate(new Date(floorLofarTime.getTime() - 0.33*$scope.jumpTimespanWidth.value*60*1000), 1, 5),
+            to: dataService.ceilDate(new Date(floorLofarTime.getTime() + 0.67*$scope.jumpTimespanWidth.value*60*1000), 1, 5)
+        };
+
+        //automatically select current task
+        var currentTasks = dataService.tasks.filter(function(t) { return t.starttime <= dataService.viewTimeSpan.to && t.endime >= dataService.viewTimeSpan.from; });
+        if(currentTasks.lenght > 0) {
+            dataService.selected_task_id = currentTasks[0].id;
+        }
+    };
+
+    //initialize are now
+    $scope.jumpToNow();
+
+    $scope.jumpToSelectedTasks = function() {
+        if(dataService.selected_task_id == undefined)
+            return;
+
+        var task = dataService.taskDict[dataService.selected_task_id];
+
+        if(task == undefined)
+            return;
+
+        var taskDurationInmsec = task.endtime.getTime() - task.starttime.getTime();
+        var taskDurationInMinutes = taskDurationInmsec/60000;
+        var viewSpanInMinutes = taskDurationInMinutes;
+
+        var fittingSpans = $scope.jumpTimespanWidths.filter(function(w) { return w.value >= taskDurationInMinutes; });
+        if(fittingSpans.length > 0) {
+            $scope.jumpTimespanWidth = fittingSpans[0];
+            viewSpanInMinutes = $scope.jumpTimespanWidth.value;
+        }
+
+        var focusTime = new Date(task.starttime.getTime() + 0.5*taskDurationInmsec);
+
+        dataService.viewTimeSpan = {
+            from: dataService.floorDate(new Date(focusTime.getTime() - 0.33*viewSpanInMinutes*60*1000), 1, 5),
+            to: dataService.ceilDate(new Date(focusTime.getTime() + 0.67*viewSpanInMinutes*60*1000), 1, 5)
+        };
+    };
+
+    $scope.onJumpTimespanWidthChanged = function(span) {
+        var focusTime = dataService.floorDate(dataService.lofarTime, 1, 5);
+
+        if(dataService.selected_task_id != undefined) {
+            var task = dataService.taskDict[dataService.selected_task_id];
+
+            if(task) {
+                focusTime = dataService.floorDate(task.starttime, 1, 5);
+            }
+        }
+
+        dataService.viewTimeSpan = {
+            from: dataService.floorDate(new Date(focusTime.getTime() - 0.33*$scope.jumpTimespanWidth.value*60*1000)),
+            to: dataService.ceilDate(new Date(focusTime.getTime() + 0.67*$scope.jumpTimespanWidth.value*60*1000))
+        };
+    };
+
+    $scope.$watch('dataService.viewTimeSpan.from', function() {
+        if(dataService.viewTimeSpan.from >= dataService.viewTimeSpan.to) {
+            dataService.viewTimeSpan.to = dataService.ceilDate(new Date(dataService.viewTimeSpan.from.getTime() + 60*60*1000), 1, 5);
+        }
+    });
+
+    $scope.$watch('dataService.viewTimeSpan.to', function() {
+        if(dataService.viewTimeSpan.to <= dataService.viewTimeSpan.from) {
+            dataService.viewTimeSpan.from = dataService.floorDate(new Date(dataService.viewTimeSpan.to.getTime() - 60*60*1000), 1, 5);
+        }
+    });
+
     $scope.$watch('dataService.filteredTasks', dataService.computeMinMaxTaskTimes);
 
     dataService.initialLoad();
@@ -525,7 +619,7 @@ angular.module('raeApp').config(['$provide', function($provide) {
         };
 
         var extendsFilter = function() {
-            if(arguments[0] instanceof Date) {
+            if(arguments[0] instanceof Date && arguments.length == 1) {
                 var date = arguments[0];
                 var dateString =  date.getFullYear() + '-' + zeroPaddedString(date.getMonth()+1) + '-' + zeroPaddedString(date.getDate()) + ' ' +
                                   zeroPaddedString(date.getHours()) + ':' + zeroPaddedString(date.getMinutes()) + ':' + zeroPaddedString(date.getSeconds());

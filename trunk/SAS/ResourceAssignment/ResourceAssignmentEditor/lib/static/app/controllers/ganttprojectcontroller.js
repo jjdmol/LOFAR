@@ -61,12 +61,21 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
                             $scope.dataService.selected_task_id = directiveScope.task.model.raTask.id;
                         }
                     });
+                    element.bind('dblclick', function(event) {
+                        if(directiveScope.task.model.raTask) {
+                            $scope.dataService.selected_task_id = directiveScope.task.model.raTask.id;
+                            $scope.jumpToSelectedTasks();
+                        }
+                    });
                 }
             });
 
             api.directives.on.destroy($scope, function(directiveName, directiveScope, element) {
                 if (directiveName === 'ganttRow' || directiveName === 'ganttRowLabel' || directiveName === 'ganttTask') {
                     element.unbind('click');
+                }
+                if (directiveName === 'ganttTask') {
+                    element.unbind('dblclick');
                 }
             });
         }
@@ -113,18 +122,22 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
         var ganntRowsDict = {};
 
         if(numProjecs > 0 && numTasks > 0 && numTasktypes > 0) {
-            $scope.options.fromDate = $scope.dataService.taskTimes.minStarttime;
-            $scope.options.toDate = $scope.dataService.taskTimes.maxEndtime;
-            var fullTimespanInMinutes = $scope.dataService.taskTimes.fullTimespanInMinutes;
+            $scope.options.fromDate = $scope.dataService.viewTimeSpan.from;
+            $scope.options.toDate = $scope.dataService.viewTimeSpan.to;
+            var fullTimespanInMinutes = ($scope.options.toDate - $scope.options.fromDate) / (60 * 1000);
 
             if(fullTimespanInMinutes > 14*24*60) {
-                $scope.options.viewScale = '1 days';
+                $scope.options.viewScale = '1 day';
             } else if(fullTimespanInMinutes > 7*24*60) {
                 $scope.options.viewScale = '6 hours';
             } else if(fullTimespanInMinutes > 2*24*60) {
                 $scope.options.viewScale = '3 hours';
-            } else {
+            } else if(fullTimespanInMinutes > 12*60) {
                 $scope.options.viewScale = '1 hours';
+            } else if(fullTimespanInMinutes > 3*60) {
+                $scope.options.viewScale = '30 minutes';
+            } else {
+                $scope.options.viewScale = '15 minutes';
             }
 
             for(var i = 0; i < numTasks; i++) {
@@ -176,11 +189,12 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
                             to: task.endtime,
                             raTask: task,
                             color: self.taskStatusColors[task.status],
+                            classes: 'task-status-' + task.status,
                             movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
                         };
 
                         if(task.id == dataService.selected_task_id) {
-                            rowTask.classes = 'task-selected-task';
+                            rowTask.classes += ' task-selected-task';
                         }
 
                         if(task.predecessor_ids && task.predecessor_ids.length > 0) {
@@ -214,7 +228,7 @@ ganttProjectControllerMod.controller('GanttProjectController', ['$scope', 'dataS
     $scope.$watch('dataService.resourceGroupMemberships', updateGanttData);
     $scope.$watch('dataService.filteredTaskDict', updateGanttData);
     $scope.$watch('dataService.momProjectsDict', updateGanttData, true);
-    $scope.$watch('dataService.taskTimes', updateGanttData, true);
+    $scope.$watch('dataService.viewTimeSpan', updateGanttData, true);
     $scope.$watch('dataService.lofarTime', function() {$scope.options.currentDateValue= $scope.dataService.lofarTime;});
 }
 ]);

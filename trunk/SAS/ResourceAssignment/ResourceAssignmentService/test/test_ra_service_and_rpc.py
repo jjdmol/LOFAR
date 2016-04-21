@@ -25,11 +25,6 @@ except ImportError:
     print 'Please install MagicMock: pip install mock'
     exit(3)
 
-
-#TODO: FIX utc issues
-print 'Test does not work due to datetime utc issues.'
-exit(3)
-
 connection = None
 broker = None
 
