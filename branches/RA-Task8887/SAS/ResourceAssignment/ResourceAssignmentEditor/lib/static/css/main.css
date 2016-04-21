@@ -33,6 +33,15 @@
     background-color: #888888;
 }
 
+ul.uib-datepicker-popup.dropdown-menu button.btn.btn-sm.btn-danger.uib-clear {
+    visibility: hidden;
+}
+
+table.uib-timepicker td.uib-time {
+    max-width: 50px;
+}
+
+
 .gantt-current-date-line {
     border: 2px solid #000000;
     z-index: 0;
@@ -43,7 +52,7 @@
 }
 
 .top-stretch {
-    top: 20px;
+    top: 60px;
 }
 
 .gantt-task-content {
