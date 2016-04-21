@@ -1,0 +1,84 @@
+/* $Id: app.js 32724 2015-10-28 13:24:49Z schaap $ */
+
+.grid {
+    min-height: 400px;
+    min-width: 500px;
+    height: auto;
+    width: auto;
+}
+
+.gantt {
+    min-height: 100px;
+}
+
+.dropdown-menu {
+    z-index: 10000;
+}
+
+.ui-grid-cell {
+    overflow: visible;
+}
+
+.datepicker-wrapper ul {
+/*     visibility: hidden; */
+}
+
+.ui-layout-row > .ui-splitbar {
+    height: 8px;
+    background-color: #888888;
+}
+
+.ui-layout-column > .ui-splitbar {
+    width: 8px;
+    background-color: #888888;
+}
+
+.gantt-current-date-line {
+    border: 2px solid #000000;
+    z-index: 0;
+}
+
+.gantt-side {
+    width: 150px;
+}
+
+.top-stretch {
+    top: 20px;
+}
+
+.gantt-task.selected-task {
+  border: 1px solid #000000;
+  border-radius: 2px;
+}
+
+.gantt-task.claim-selected-task {
+  border: 1px solid #555555;
+  border-radius: 2px;
+}
+
+.gantt-task.claim-selected-claim {
+  border: 2px solid #000000;
+  border-radius: 2px;
+}
+
+.gantt-task.claim-status-claimed {
+  border-bottom: 5px solid #ffa64d;
+  border-radius: 2px;
+}
+
+.gantt-task.claim-status-conflict {
+  border-bottom: 5px solid #ff0000;
+  border-radius: 2px;
+}
+
+.gantt-task.claim-status-allocated {
+  border-bottom: 5px solid #66ff66;
+  border-radius: 2px;
+}
+
+.gantt-task.claim-status-mixed {
+  border-bottom: 5px solid #bfbfbf;
+  border-radius: 2px;
+}
+
+

@@ -1,0 +1,15 @@
+#!/usr/bin/python
+# $Id: radbservice 33373 2016-01-22 11:01:15Z schaap $
+
+'''
+runs the resourceassignment postgres database listener and sends EventMessages to the lofar bus
+'''
+import logging
+
+logger = logging.getLogger(__name__)
+
+from lofar.sas.resourceassignment.database.radbpglistener import main
+
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+    main()

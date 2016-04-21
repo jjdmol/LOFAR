@@ -1,0 +1,10 @@
+#!/usr/bin/python
+# $Id: radbservice 33373 2016-01-22 11:01:15Z schaap $
+
+'''
+runs the otb to radb taskstatus propagator service
+'''
+from lofar.sas.resourceassignment.otdbtorataskstatuspropagator.propagator import main
+
+if __name__ == '__main__':
+    main()

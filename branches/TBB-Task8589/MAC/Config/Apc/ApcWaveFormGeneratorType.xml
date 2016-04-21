@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<WaveFormGeneratorType>
+  <mode>
+    <MACType>MACUnsigned</MACType>
+  </mode>
+  <amplitude>
+    <MACType>MACUnsigned</MACType>
+  </amplitude>
+  <frequency>
+    <MACType>MACUnsigned</MACType>
+  </frequency>
+</WaveFormGeneratorType>

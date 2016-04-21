@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+
+# Run a program to talk to
+DummyStorage 12345 &                  # Run the command
+PID_ID=$!                              # get the PID
+
+source MessageFuncs.sh
+
+# Empty queues (if any)
+create_queue lofar.task.feedback.dataproducts
+
+# Start the test
+tStorageProcesses || exit 1
+wait $PID_ID
+
+# Validate queues
+if have_qpid; then
+  recv_msg lofar.task.feedback.dataproducts > tStorageProcesses.queue
+
+  compare_msg $srcdir/tStorageProcesses.queue tStorageProcesses.queue || exit 1
+fi
+
+# Signal success to parent
+exit 0
+

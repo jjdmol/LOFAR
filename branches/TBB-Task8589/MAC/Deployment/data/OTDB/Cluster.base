@@ -1,0 +1,22 @@
+# -- Cluster
+#
+# $Id: DataProducts.base 25528 2013-07-02 09:23:01Z loose $
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  Cluster     4.0.2  development 'node constraint'  "Place holder for all processing clusters"
+
+#
+# name				name of the parameter
+# direction			I: input only; O: changes will be logged during runtime; IO: both
+# type				parametertype: should exist in param_type table of OTDB (= ParamTypeConv)
+# unit				name of unit of parameter (should exist in unit table (= UnitConv)
+# pruninglevel		when parameter values are thrown away from the database. (NOT YET USED)
+# validationMoment	moment the parameter values is validated (NOT YET USED)
+# value				value(range) of the parameter.
+# constraint		script to run to check its value
+# description		what the parameter manages.
+#--------------------------------------------------------------------------------------------------------
+#    name                         dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+uses  @cluster@            4.0.2  development 'node constraint'  "Cluster descriptions"
