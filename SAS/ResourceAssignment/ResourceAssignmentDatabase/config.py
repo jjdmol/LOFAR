@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # $Id$
 
-DEFAULT_NOTIFICATION_BUSNAME = 'lofar.ra.notification'
+from lofar.messaging import adaptNameToEnvironment
+
+DEFAULT_NOTIFICATION_BUSNAME = adaptNameToEnvironment('lofar.ra.notification')
 DEFAULT_NOTIFICATION_PREFIX = 'RADB.'
 DEFAULT_NOTIFICATION_SUBJECTS=DEFAULT_NOTIFICATION_PREFIX+'*'
