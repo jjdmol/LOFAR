@@ -60,6 +60,7 @@ install(DIRECTORY
   lofar-base
   lofar-pipeline
   lofar-outputproc
+  lofar-tbbwriter
   DESTINATION share/docker
   USE_SOURCE_PERMISSIONS
   PATTERN Dockerfile.tmpl EXCLUDE)

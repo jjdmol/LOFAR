@@ -11,5 +11,6 @@ cd ${LOFARROOT}/share/docker
 
 build lofar-base && \
 build lofar-pipeline && \
-build lofar-outputproc
+build lofar-outputproc && \
+build lofar-tbb
 
