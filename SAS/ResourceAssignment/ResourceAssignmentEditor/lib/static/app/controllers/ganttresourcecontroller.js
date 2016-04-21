@@ -114,9 +114,9 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
             return;
         }
 
-        $scope.options.fromDate = $scope.dataService.resourceClaimTimes.minStarttime;
-        $scope.options.toDate = $scope.dataService.resourceClaimTimes.maxEndtime;
-        var fullTimespanInMinutes = $scope.dataService.resourceClaimTimes.fullTimespanInMinutes;
+        $scope.options.fromDate = $scope.dataService.viewTimeSpan.from;
+        $scope.options.toDate = $scope.dataService.viewTimeSpan.to;
+        var fullTimespanInMinutes = ($scope.options.toDate - $scope.options.fromDate) / (60 * 1000);
 
         if(fullTimespanInMinutes > 14*24*60) {
             $scope.options.viewScale = '1 days';
@@ -124,8 +124,10 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
             $scope.options.viewScale = '6 hours';
         } else if(fullTimespanInMinutes > 2*24*60) {
             $scope.options.viewScale = '3 hours';
-        } else {
+        } else if(fullTimespanInMinutes > 12*60) {
             $scope.options.viewScale = '1 hours';
+        } else {
+            $scope.options.viewScale = '10 minutes';
         }
 
         var editableTaskStatusIds = $scope.dataService.editableTaskStatusIds;
@@ -273,8 +275,8 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                         name: task.name,
                         from: claim.starttime,
                         to: claim.endtime,
-                        color: self.taskStatusColors[task.status],
-                        classes: 'claim-status-' + claim.status,
+                        color: self.resourceClaimStatusColors[claim.status],
+                        classes: 'claim-task-status-' + task.status,
                         raTask: task,
                         claim: claim,
                         movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
@@ -365,8 +367,8 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                                 name: task.name,
                                 from: aggClaimForTask.starttime,
                                 to: aggClaimForTask.endtime,
-                                color: self.taskStatusColors[task.status],
-                                classes: 'claim-status-' + aggClaimForTask.status,
+                                color: self.resourceClaimStatusColors[aggClaimForTask.status],
+                                classes: 'claim-task-status-' + task.status,
                                 raTask: task,
                                 movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
                             };
@@ -419,6 +421,7 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
     $scope.$watch('dataService.resourceGroups', updateGanttData);
     $scope.$watch('dataService.resourceGroupMemberships', updateGanttData);
     $scope.$watch('dataService.filteredTaskDict', updateGanttData);
+    $scope.$watch('dataService.viewTimeSpan', updateGanttData, true);
     $scope.$watch('dataService.lofarTime', function() {$scope.options.currentDateValue= $scope.dataService.lofarTime;});
 }
 ]);
