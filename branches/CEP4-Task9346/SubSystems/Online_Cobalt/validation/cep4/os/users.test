@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Restrict the users allowed on the CPU nodes
+[[ `hostname` =~ "cpu" ]] || exit 0
+
+# lofarsys should exist
+id lofarsys || exit 1
+
+# mol should not exist
+id mol && exit 1
+
