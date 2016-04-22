@@ -1,0 +1,3 @@
+#!/bin/bash
+
+sudo -u lofarsys ssh localhost /bin/true || exit 1

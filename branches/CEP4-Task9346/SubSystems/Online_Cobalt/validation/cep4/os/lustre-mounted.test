@@ -1,0 +1,3 @@
+#!/bin/bash
+
+mount -t lustre | fgrep -q "/data" || exit 1

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Requirements to do a Jenkins build. Only relevant for head0X
+[[ `hostname` =~ "head" ]] || exit 0
+
+yum -C list installed | grep "^java-" || exit 1
+yum -C list installed subversion || exit 1
+yum -C list installed cmake || exit 1
+yum -C list installed gcc-c++ || exit 1

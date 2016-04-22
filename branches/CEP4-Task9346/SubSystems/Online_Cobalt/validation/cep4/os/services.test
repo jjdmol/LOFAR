@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# No services should have failed, except for network.service
+systemctl | fgrep -v "network.service" | grep failed

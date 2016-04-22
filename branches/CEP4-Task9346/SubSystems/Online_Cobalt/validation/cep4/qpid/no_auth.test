@@ -1,0 +1,3 @@
+#!/bin/bash
+
+grep "auth=no" /etc/qpid/qpidd.conf || exit 1
