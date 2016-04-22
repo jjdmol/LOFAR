@@ -1,0 +1,143 @@
+#!/bin/bash
+
+swlevel_1='Currently set level is 1
+
+Status of all software level:
+1 : PVSS00pmon                20884
+1 : LogProcessor              20930
+1 : ServiceBroker             20959
+1 : SASGateway                20981
+---
+2 : RSPDriver                 DOWN
+2 : TBBDriver                 DOWN
+---
+3 : AMCServer                 DOWN
+3 : CalServer                 DOWN
+3 : BeamServer                DOWN
+---
+4 : SoftwareMonitor           DOWN
+4 : HardwareMonitor           DOWN
+---
+5 : SHMInfoServer             DOWN
+---
+6 : CTStartDaemon             DOWN
+6 : StationControl            DOWN
+6 : ClockControl              DOWN
+6 : CalibrationControl        DOWN
+6 : BeamControl               DOWN
+6 : TBBControl                DOWN
+---
+'
+
+swlevel_2='Currently set level is 2
+
+Status of all software level:
+1 : PVSS00pmon                20884
+1 : LogProcessor              20930
+1 : ServiceBroker             20959
+1 : SASGateway                20981
+---
+2 : RSPDriver                 18372
+2 : TBBDriver                 18391
+---
+3 : AMCServer                 DOWN
+3 : CalServer                 DOWN
+3 : BeamServer                DOWN
+---
+4 : SoftwareMonitor           DOWN
+4 : HardwareMonitor           DOWN
+---
+5 : SHMInfoServer             DOWN
+---
+6 : CTStartDaemon             DOWN
+6 : StationControl            DOWN
+6 : ClockControl              DOWN
+6 : CalibrationControl        DOWN
+6 : BeamControl               DOWN
+6 : TBBControl                DOWN
+---
+'
+
+swlevel_3='Currently set level is 3
+
+Status of all software level:
+1 : PVSS00pmon                20884
+1 : LogProcessor              20930
+1 : ServiceBroker             20959
+1 : SASGateway                20981
+---
+2 : RSPDriver                 18372
+2 : TBBDriver                 18391
+---
+3 : AMCServer                 18413
+3 : CalServer                 18416
+3 : BeamServer                18419
+---
+4 : SoftwareMonitor           DOWN
+4 : HardwareMonitor           DOWN
+---
+5 : SHMInfoServer             DOWN
+---
+6 : CTStartDaemon             DOWN
+6 : StationControl            DOWN
+6 : ClockControl              DOWN
+6 : CalibrationControl        DOWN
+6 : BeamControl               DOWN
+6 : TBBControl                DOWN
+---
+'
+
+
+swlevel_6_obs='Currently set level is 6
+
+Status of all software level:
+1 : PVSS00pmon                20884
+1 : LogProcessor              20930
+1 : ServiceBroker             20959
+1 : SASGateway                20981
+---
+2 : RSPDriver                 18372
+2 : TBBDriver                 18391
+---
+3 : AMCServer                 18413
+3 : CalServer                 18416
+3 : BeamServer                18419
+---
+4 : SoftwareMonitor           18890
+4 : HardwareMonitor           19038
+---
+5 : SHMInfoServer             19226
+---
+6 : CTStartDaemon             19251
+6 : StationControl            19281
+6 : ClockControl              19768
+6 : CalibrationControl        23318 [ObsID: 53525]
+6 : BeamControl               23320 [ObsID: 53525]
+6 : TBBControl                DOWN
+---
+'
+
+swlevel_6_broken='Going to level 6
+Starting RSPDriver
+Loading image 1 on RSPboard 0 ...
+Loading image 1 on RSPboard 1 ...
+Loading image 1 on RSPboard 2 ...
+Loading image 1 on RSPboard 3 ...
+No RSP board 4 found
+No RSP board 5 found
+No RSP board 6 found
+Loading image 1 on RSPboard 7 ...
+Loading image 1 on RSPboard 8 ...
+Loading image 1 on RSPboard 9 ...
+Loading image 1 on RSPboard 10 ...
+Loading image 1 on RSPboard 11 ...
+'
+
+case $1 in
+    1) echo "$swlevel_1"     ; exit 1;;
+    2) echo "$swlevel_2"     ; exit 2;;
+    3) echo "$swlevel_3"     ; exit 3;;
+    6) echo "$swlevel_6_obs" ; exit 6;;
+    6-broken-rsp) echo "$swlevel_6_broken"; exit 6;;
+    *) echo "$swlevel_6_obs" ; exit 6;;
+esac

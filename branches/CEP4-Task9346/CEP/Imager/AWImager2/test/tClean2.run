@@ -1,0 +1,14 @@
+#!/bin/sh
+
+if test ! -f ${srcdir}/tAWImager2.in_MS.tgz; then
+  return 3   # untested
+fi
+
+mkdir -p tClean2_tmp
+tar zxf ${srcdir}/tAWImager2.in_MS.tgz -C tClean2_tmp
+
+trap 'rm -rf TempLattice*; exit $STATUS' 0 1 2 3 15
+
+../src/awimager2 data.ms=tClean2_tmp/tAWImager2.MS numthreads=4 operation=clean output.imagename=tClean2_tmp image.cellsize=40arcsec image.npix=128 weight.type=robust weight.robust=0 clean.threshold=1Jy clean.niter=2
+
+STATUS=$?
