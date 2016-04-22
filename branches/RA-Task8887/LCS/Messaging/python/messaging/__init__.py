@@ -41,5 +41,8 @@ def adaptNameToEnvironment(name):
     if os.environ.get('LOFARENV', '') == 'PRODUCTION':
         return name #return original name only for PRODUCTION LOFARENV
 
-    # in all other cases prefix queue/bus name with 'test.'
-    return 'test.%s' % name
+    if os.environ.get('LOFARENV', '') == 'TEST':
+        return 'test.%s' % name #return 'test.' prefixed name only for TEST LOFARENV
+
+    # in all other cases prefix queue/bus name with 'devel.'
+    return 'devel.%s' % name
