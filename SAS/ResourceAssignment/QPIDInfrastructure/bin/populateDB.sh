@@ -10,10 +10,10 @@ if [ "$LOFARENV" == "PRODUCTION" ]; then
   PREFIX=
 elif [ "$LOFARENV" == "TEST" ]; then
   PROD=false
-  PREFIX=".test"
+  PREFIX="test."
 else
   PROD=false
-  PREFIX=".devel"
+  PREFIX="devel."
 fi
 
 
