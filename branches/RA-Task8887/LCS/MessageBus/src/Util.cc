@@ -6,6 +6,14 @@
 #include <stdlib.h>
 
 using namespace qpid::messaging;
+using namespace std;
+
+namespace {
+  string getenv_str(const char *env) {
+    char *val = getenv(env);
+    return string(val ? val : "");
+  }
+}
 
 namespace LOFAR {
   Duration TimeOutDuration(double secs)
@@ -18,12 +26,17 @@ namespace LOFAR {
 
   std::string queue_prefix()
   {
-    char *prefix = getenv("QUEUE_PREFIX");
+    string lofarenv = getenv_str("LOFARENV");
+    string queueprefix = getenv_str("QUEUE_PREFIX");
 
-    if (!prefix)
-      return "";
+    if (lofarenv == "PRODUCTION") {
+    } else if (lofarenv == "TEST") {
+      queueprefix += "test.";
+    } else {
+      queueprefix += "devel.";
+    }
 
-    return prefix;
+    return queueprefix;
   }
 } // namespace LOFAR
 
