@@ -65,6 +65,7 @@ fi
 
 for tnode in $CEP4HEAD
 do
+  # CEP4 -> CEP4HEAD
   for fnode in $CEP4
   do
     addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.dataproducts --federation $tnode
@@ -72,6 +73,7 @@ do
     addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.state --federation $tnode
   done
 
+  # CEP4HEAD -> CCU
   addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.dataproducts --federation $CCU
   addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.processing --federation $CCU
   addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.state --federation $CCU
@@ -79,6 +81,7 @@ done
 
 for tnode in $CEP2HEAD
 do
+  # CEP2 -> CEP2HEAD
   for fnode in $CEP2
   do
     addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.dataproducts --federation $tnode
@@ -86,6 +89,7 @@ do
     addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.state --federation $tnode
   done
 
+  # CEP2HEAD -> CCU
   addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.dataproducts --federation $CCU
   addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.processing --federation $CCU
   addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.state --federation $CCU
