@@ -169,6 +169,11 @@ class RARPC(RPCWrapper):
                          task_type=task_type,
                          specification_id=specification_id)
 
+    def updateTaskStatusForOtdbId(self, otdb_id, status):
+        return self.rpc('UpdateTaskStatusForOtdbId',
+                         otdb_id=otdb_id,
+                         status=status)
+
     def getTasks(self):
         tasks = self.rpc('GetTasks')
         for task in tasks:
