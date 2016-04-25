@@ -61,6 +61,7 @@ class RADBHandler(MessageHandlerInterface):
             'InsertTask': self._insertTask,
             'DeleteTask': self._deleteTask,
             'UpdateTask': self._updateTask,
+            'UpdateTaskStatusForOtdbId': self._updateTaskStatusForOtdbId,
             'InsertTaskPredecessor': self._insertTaskPredecessor,
             'insertTaskPredecessors': self._insertTaskPredecessors,
             'GetTaskStatuses': self._getTaskStatuses,
@@ -238,6 +239,13 @@ class RADBHandler(MessageHandlerInterface):
         id = kwargs['id']
         deleted = self.radb.deleteTask(id)
         return {'id': id, 'deleted': deleted}
+
+    def _updateTaskStatusForOtdbId(self, **kwargs):
+        logger.info('UpdateTaskStatusForOtdbId: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
+        otdb_id=kwargs.get('otdb_id')
+        updated = self.radb.updateTaskStatusForOtdbId(otdb_id=otdb_id,
+                                                      task_status=kwargs.get('status_id', kwargs.get('status')))
+        return {'otdb_id': otdb_id, 'updated': updated}
 
     def _updateTask(self, **kwargs):
         logger.info('UpdateTask: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
