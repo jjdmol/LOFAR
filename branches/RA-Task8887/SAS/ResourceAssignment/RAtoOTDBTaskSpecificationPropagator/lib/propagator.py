@@ -118,6 +118,12 @@ class RAtoOTDBPropagator():
                 return
             ra_info = self.getRAinfo(ra_id)
 
+            # check if this is a CEP4 task, or an old CEP2 task
+            # at this moment the most simple check is to see if RA claimed (CEP4) storage
+            # TODO: do proper check on cluster/storage/etc
+            if not ra_info['storage']:
+                logger.info("No (CEP4) storage claimed for ra_id=%s otdb_id=%s, skipping otdb specification update." % (ra_id, otdb_id))
+
             #get mom project name
             try:
                 project = self.momrpc.getProjectDetails(mom_id)
@@ -148,7 +154,7 @@ class RAtoOTDBPropagator():
         info["endtime"] = task["endtime"]
         info["status"] = task["status"]
         return info
-    
+
     def setOTDBinfo(self, otdb_id, otdb_info, otdb_status):
         logger.info('Setting specticication and status (%s) for otdb_id %s' % (otdb_status, otdb_id))
         try:
