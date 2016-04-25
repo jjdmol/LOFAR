@@ -123,7 +123,7 @@ class MoMDatabaseWrapper:
         rows = self._executeQuery(query)
 
         logger.info("Found %d results for mom id%s: %s" %
-                    (len(rows), '\'s' if len(ids) > 1 else '', ids_str))
+                    (len(rows), '\'s' if len(rows) > 1 else '', ids_str))
 
         result = {}
         for row in rows:
