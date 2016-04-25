@@ -7,5 +7,5 @@ DOCKER_VERSION=`docker --version | awk '{ print $3; }'`
 [ "$DOCKER_VERSION" == "1.9.1," ] || exit 0
 
 # Docker startup line must contain "--exec-opt=native.cgroupdriver=cgroupfs"
-fgrep -q "ExecStart" /usr/lib/systemd/system/docker.service | fgrep -q "--exec-opt=native.cgroupdriver=cgroupfs" || exit 1
+fgrep "ExecStart" /usr/lib/systemd/system/docker.service | fgrep -- "--exec-opt=native.cgroupdriver=cgroupfs" || exit 1
 
