@@ -138,9 +138,25 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     };
 
     $scope.$watch('dataService.tasks', function() {
-        if('tasks' in $scope.dataService && $scope.dataService.tasks.length > 0)
-            $scope.gridOptions.data = $scope.dataService.tasks;
-        else
+        if('tasks' in $scope.dataService && $scope.dataService.tasks.length > 0) {
+            var tasks = [];
+            for(var task of $scope.dataService.tasks) {
+                var gridTask = {
+                    id: task.id,
+                    name: task.name,
+                    project_name: task.project_name,
+                    mom_id: task.mom_id,
+                    otdb_id: task.otdb_id,
+                    starttime: task.starttime,
+                    endtime: task.endtime,
+                    status: task.status,
+                    type: task.type
+                };
+                tasks.push(gridTask);
+            }
+
+            $scope.gridOptions.data = tasks;
+        } else
             $scope.gridOptions.data = []
 
         fillProjectsColumFilterSelectOptions();
