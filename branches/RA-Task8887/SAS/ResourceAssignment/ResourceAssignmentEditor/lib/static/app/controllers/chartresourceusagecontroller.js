@@ -61,12 +61,14 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
     function updateChartLofarTime() {
         var lofarTime = $scope.dataService.lofarTime;
 
-        $scope.chartConfig.xAxis.plotLines = [{
-            width: 3,
-            color: '#222222',
-            zIndex: 100,
-            value: lofarTime.getTime()
-        }];
+        if(lofarTime.getSeconds() % 5 == 0) {
+            $scope.chartConfig.xAxis.plotLines = [{
+                width: 3,
+                color: '#222222',
+                zIndex: 100,
+                value: lofarTime.getTime()
+            }];
+        }
     };
 
     $scope.$watch('dataService.lofarTime', updateChartLofarTime);
@@ -239,6 +241,5 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
     $scope.$watch('dataService.resources', updateChartData, true);
     $scope.$watch('dataService.resourceUsagesDict', updateChartData, true);
     $scope.$watch('dataService.viewTimeSpan', updateChartData, true);
-//     $scope.$watch('dataService.lofarTime', function() {$scope.options.currentDateValue= $scope.dataService.lofarTime;});
 }
 ]);
