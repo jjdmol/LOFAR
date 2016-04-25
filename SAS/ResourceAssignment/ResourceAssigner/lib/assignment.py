@@ -111,9 +111,6 @@ class ResourceAssigner():
         #parse main parset...
         mainParset = parameterset(specification_tree['specification'])
 
-        if not self.checkCluster(mainParset):
-            return
-
         momId = mainParset.getInt('Observation.momID', -1)
         startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
         endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
@@ -131,6 +128,10 @@ class ResourceAssigner():
         specificationId = result['specification_id']
         taskId = result['task_id']
         logger.info('doAssignment: inserted specification (id=%s) and task (id=%s)' % (specificationId,taskId))
+
+        # do not assign resources to task for other clusters than cep4
+        if not self.checkClusterIsCEP4(mainParset):
+            return
 
         needed = self.getNeededResouces(specification_tree)
         logger.info('doAssignment: getNeededResouces=%s' % (needed,))
@@ -187,7 +188,7 @@ class ResourceAssigner():
         except Exception as e:
             logger.error(e)
 
-    def checkCluster(self, parset):
+    def checkClusterIsCEP4(self, parset):
         # check storageClusterName for enabled DataProducts
         # if any storageClusterName is not CEP4, we do not accept this parset
         keys = ['Output_Correlated',
