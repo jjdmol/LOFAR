@@ -39,6 +39,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
     self.taskChangeCntr = 0;
     self.claimChangeCntr = 0;
 
+    self.loadedHours = {};
+
     self.viewTimeSpan = {from: new Date(), to: new Date() };
 
     self.floorDate = function(date, hourMod=1, minMod=1) {
@@ -126,10 +128,91 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         }
     };
 
-    self.getTasks = function() {
-        var defer = $q.defer();
+    self.getTasksAndClaimsForViewSpan = function() {
+        var from = self.floorDate(self.viewTimeSpan.from, 1, 60);
+        var until = self.ceilDate(self.viewTimeSpan.to, 1, 60);
+        var lowerTS = from.getTime();
+        var upperTS = until.getTime();
 
-        $http.get('/rest/tasks').success(function(result) {
+        for (var timestamp = lowerTS; timestamp < upperTS; ) {
+            if(self.loadedHours.hasOwnProperty(timestamp)) {
+                timestamp += 3600000;
+            }
+            else {
+                var chuckUpperLimit = Math.min(upperTS, timestamp + 24*3600000);
+                for (var chunkTimestamp = timestamp; chunkTimestamp < chuckUpperLimit; chunkTimestamp += 3600000) {
+                    if(self.loadedHours.hasOwnProperty(chunkTimestamp))
+                        break;
+
+                    self.loadedHours[chunkTimestamp] = null;
+                }
+
+                var hourLower = new Date(timestamp);
+                var hourUpper = new Date(chunkTimestamp);
+                if(hourUpper > hourLower) {
+                    self.getTasks(hourLower, hourUpper);
+                    self.getResourceClaims(hourLower, hourUpper);
+                }
+                timestamp = chunkTimestamp;
+            }
+        }
+    };
+
+    self.clearTasksAndClaimsOutsideViewSpan = function() {
+        var from = self.floorDate(self.viewTimeSpan.from, 1, 60);
+        var until = self.ceilDate(self.viewTimeSpan.to, 1, 60);
+
+        var numTasks = self.tasks.length;
+        var visibleTasks = [];
+        for(var i = 0; i < numTasks; i++) {
+            var task = self.tasks[i];
+            if(task.endtime >= from && task.starttime <= until)
+                visibleTasks.push(task);
+        }
+
+        self.tasks = visibleTasks;
+        self.taskDict = self.toIdBasedDict(self.tasks);
+        self.filteredTasks = self.tasks;
+        self.filteredTaskDict = self.taskDict;
+
+        self.computeMinMaxTaskTimes();
+
+
+        var numClaims = self.resourceClaims.length;
+        var visibleClaims = [];
+        for(var i = 0; i < numClaims; i++) {
+            var claim = self.resourceClaims[i];
+            if(claim.endtime >= from && claim.starttime <= until)
+                visibleClaims.push(claim);
+        }
+
+        self.resourceClaims = visibleClaims;
+        self.resourceClaimDict = self.toIdBasedDict(self.resourceClaims);
+
+        self.computeMinMaxResourceClaimTimes();
+
+        var newLoadedHours = {};
+        var fromTS = from.getTime();
+        var untilTS = until.getTime();
+        for(var hourTS in self.loadedHours) {
+            if(hourTS >= fromTS && hourTS <= untilTS)
+                newLoadedHours[hourTS] = null;
+        }
+        self.loadedHours = newLoadedHours;
+    };
+
+    self.getTasks = function(from, until) {
+        var defer = $q.defer();
+        var url = '/rest/tasks';
+        if(from) {
+            url += '/' + convertLocalUTCDateToISOString(from);
+
+            if(until) {
+                url += '/' + convertLocalUTCDateToISOString(until);
+            }
+        }
+
+        $http.get(url).success(function(result) {
             //convert datetime strings to Date objects
             for(var i in result.tasks) {
                 var task = result.tasks[i];
@@ -138,8 +221,17 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
             }
 
-            self.tasks = result.tasks;
-            self.taskDict = self.toIdBasedDict(self.tasks);
+            var newTaskDict = self.toIdBasedDict(result.tasks);
+            var newTaskIds = Object.keys(newTaskDict);
+
+            for(var i = newTaskIds.length-1; i >= 0; i--) {
+                var task_id = newTaskIds[i];
+                if(!self.taskDict.hasOwnProperty(task_id)) {
+                    var task = newTaskDict[task_id];
+                    self.tasks.push(task);
+                    self.taskDict[task_id] = task;
+                }
+            }
 
             self.filteredTasks = self.tasks;
             self.filteredTaskDict = self.taskDict;
@@ -211,9 +303,18 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         return defer.promise;
     };
 
-    self.getResourceClaims = function() {
+    self.getResourceClaims = function(from, until) {
         var defer = $q.defer();
-        $http.get('/rest/resourceclaims').success(function(result) {
+        var url = '/rest/resourceclaims';
+        if(from) {
+            url += '/' + convertLocalUTCDateToISOString(from);
+
+            if(until) {
+                url += '/' + convertLocalUTCDateToISOString(until);
+            }
+        }
+
+        $http.get(url).success(function(result) {
             //convert datetime strings to Date objects
             for(var i in result.resourceclaims) {
                 var resourceclaim = result.resourceclaims[i];
@@ -221,8 +322,17 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                 resourceclaim.endtime = convertDatestringToLocalUTCDate(resourceclaim.endtime);
             }
 
-            self.resourceClaims = result.resourceclaims;
-            self.resourceClaimDict = self.toIdBasedDict(self.resourceClaims);
+            var newClaimDict = self.toIdBasedDict(result.resourceclaims);
+            var newClaimIds = Object.keys(newClaimDict);
+
+            for(var i = newClaimIds.length-1; i >= 0; i--) {
+                var claim_id = newClaimIds[i];
+                if(!self.resourceClaimDict.hasOwnProperty(claim_id)) {
+                    var claim = newClaimDict[claim_id];
+                    self.resourceClaims.push(claim);
+                    self.resourceClaimDict[claim_id] = claim;
+                }
+            }
 
             self.computeMinMaxResourceClaimTimes();
 
@@ -358,7 +468,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                 self.lastUpdateChangeNumber = result.mostRecentChangeNumber;
             }
 
-            var nrOfItemsToLoad = 8;
+            var nrOfItemsToLoad = 6;
             var nrOfItemsLoaded = 0;
             var checkInitialLoadCompleteness = function() {
                 nrOfItemsLoaded += 1;
@@ -370,11 +480,11 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             self.getMoMProjects().then(checkInitialLoadCompleteness);
             self.getTaskTypes().then(checkInitialLoadCompleteness);
             self.getTaskStatusTypes().then(checkInitialLoadCompleteness);
-            self.getTasks().then(checkInitialLoadCompleteness);
             self.getResourceGroups().then(checkInitialLoadCompleteness);
             self.getResources().then(checkInitialLoadCompleteness);
             self.getResourceGroupMemberships().then(checkInitialLoadCompleteness);
-            self.getResourceClaims().then(checkInitialLoadCompleteness);
+
+            self.getTasksAndClaimsForViewSpan();
 
             self.getResourceUsages();
 
@@ -584,6 +694,11 @@ dataControllerMod.controller('DataController',
             dataService.viewTimeSpan.from = dataService.floorDate(new Date(dataService.viewTimeSpan.to.getTime() - 60*60*1000), 1, 5);
         }
     });
+
+    $scope.$watch('dataService.viewTimeSpan', function() {
+        dataService.clearTasksAndClaimsOutsideViewSpan();
+        dataService.getTasksAndClaimsForViewSpan();
+    }, true);
 
     $scope.$watch('dataService.filteredTasks', dataService.computeMinMaxTaskTimes);
 
