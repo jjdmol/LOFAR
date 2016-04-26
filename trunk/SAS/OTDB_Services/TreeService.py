@@ -222,6 +222,15 @@ def TaskCreate(input_dict, db_connection):
     # When we are here we always have a task, so do the key updates
     return TaskSetSpecification({'OtdbID':otdb_id, 'Specification':input_dict['Specification']}, db_connection)
 
+# Task Get State
+def TaskGetStatus(otdb_id, db_connection):
+    result = db_connection.query("""select treestate.id, treestate.name from otdbtree
+                                                   inner join treestate on treestate.id = otdbtree.state
+                                                   where otdbtree.treeid = %s""" % (otdb_id,)).getresult()
+    if result:
+        return {'OtdbID':otdb_id, 'status_id': result[0][0], 'status': result[0][1]}
+
+    return {'OtdbID':otdb_id, 'status_id': -1, 'status': 'unknown'}
 
 # Task Set State
 def TaskSetStatus(input_dict, db_connection):
@@ -552,6 +561,7 @@ class PostgressMessageHandler(MessageHandlerInterface):
         self.service2MethodMap = {
             "TaskGetSpecification":     self._TaskGetSpecification,
             "TaskCreate":               self._TaskCreate,
+            "TaskGetStatus":            self._TaskGetStatus,
             "TaskSetStatus":            self._TaskSetStatus,
             "TaskSetSpecification":     self._TaskSetSpecification,
             "TaskPrepareForScheduling": self._TaskPrepareForScheduling,
@@ -584,6 +594,10 @@ class PostgressMessageHandler(MessageHandlerInterface):
     def _TaskCreate(self, **kwargs):
         logger.info("_TaskCreate({})".format(kwargs))
         return TaskCreate(kwargs, self.connection)
+
+    def _TaskGetStatus(self, **kwargs):
+        logger.info("_TaskGetStatus({})".format(kwargs))
+        return TaskGetStatus(kwargs.get('otdb_id'), self.connection)
 
     def _TaskSetStatus(self, **kwargs):
         logger.info("_TaskSetStatus({})".format(kwargs))

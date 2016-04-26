@@ -267,9 +267,15 @@ class RATaskSpecified(OTDBBusListener):
                 result["predecessors"].append(predecessor_result)
         return result
 
+    def onObservationApproved(self, main_id, modificationTime):
+        self.createAndSendSpecifiedTask(main_id, 'approved')
+
     def onObservationPrescheduled(self, main_id, modificationTime):
+        self.createAndSendSpecifiedTask(main_id, 'prescheduled')
+
+    def createAndSendSpecifiedTask(self, main_id, status):
         # Construct root node of tree
-        resultTree = self.get_specification_with_predecessors(main_id, "otdb", "prescheduled", {})
+        resultTree = self.get_specification_with_predecessors(main_id, "otdb", status, {})
         logger.info("Sending result: %s" % resultTree)
 
         # Put result on bus

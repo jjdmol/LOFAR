@@ -122,9 +122,23 @@ def resourcegroupsmemberships():
     return jsonify({'resourcegroupmemberships': result})
 
 @app.route('/rest/resourceclaims')
-@gzipped
 def resourceclaims():
-    claims = rarpc.getResourceClaims(include_properties=True)
+    return resourceclaimsFromUntil(None, None)
+
+@app.route('/rest/resourceclaims/<string:fromTimestamp>')
+def resourceclaimsFrom(fromTimestamp=None):
+    return resourceclaimsFromUntil(fromTimestamp, None)
+
+@app.route('/rest/resourceclaims/<string:fromTimestamp>/<string:untilTimestamp>')
+@gzipped
+def resourceclaimsFromUntil(fromTimestamp=None, untilTimestamp=None):
+    if fromTimestamp and isinstance(fromTimestamp, basestring):
+        fromTimestamp = asDatetime(fromTimestamp)
+
+    if untilTimestamp and isinstance(untilTimestamp, basestring):
+        untilTimestamp = asDatetime(untilTimestamp)
+
+    claims = rarpc.getResourceClaims(lower_bound=fromTimestamp, upper_bound=untilTimestamp, include_properties=True)
     return jsonify({'resourceclaims': claims})
 
 @app.route('/rest/resourceusages')
@@ -147,9 +161,23 @@ def resourceUsagesForTask(task_id):
     return jsonify({'resourceusages': result})
 
 @app.route('/rest/tasks')
-@gzipped
 def getTasks():
-    tasks = rarpc.getTasks()
+    return getTasksFromUntil(None, None)
+
+@app.route('/rest/tasks/<string:fromTimestamp>')
+def getTasksFrom(fromTimestamp):
+    return getTasksFromUntil(fromTimestamp, None)
+
+@app.route('/rest/tasks/<string:fromTimestamp>/<string:untilTimestamp>')
+@gzipped
+def getTasksFromUntil(fromTimestamp=None, untilTimestamp=None):
+    if fromTimestamp and isinstance(fromTimestamp, basestring):
+        fromTimestamp = asDatetime(fromTimestamp)
+
+    if untilTimestamp and isinstance(untilTimestamp, basestring):
+        untilTimestamp = asDatetime(untilTimestamp)
+
+    tasks = rarpc.getTasks(fromTimestamp, untilTimestamp)
 
     # there are no task names in the database yet.
     # will they come from spec/MoM?
@@ -211,7 +239,7 @@ def putTask(task_id):
 
 @app.route('/rest/tasks/<int:task_id>/resourceclaims')
 def taskResourceClaims(task_id):
-    return jsonify({'taskResourceClaims': [x for x in resourceClaims if x['taskId'] == task_id]})
+    return jsonify({'taskResourceClaims': rarpc.getResourceClaims(task_id=task_id, include_properties=True)})
 
 @app.route('/rest/tasktypes')
 def tasktypes():
