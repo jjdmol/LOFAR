@@ -57,12 +57,15 @@ class OTDBRPC(RPCWrapper):
             raise OTDBPRCException("TaskCreate failed for MoM ID %i" % (mom_id,))
         return {"mom_id": answer["MomID"], "otdb_id": answer["OtdbID"]}
 
+    def taskGetStatus(self, otdb_id):
+        return self.rpc('TaskGetStatus', otdb_id=otdb_id)['status']
+
     def taskSetStatus(self, otdb_id=None, new_status="", update_timestamps=True):
         answer = self.rpc('TaskSetStatus', OtdbID=otdb_id, NewStatus=new_status, UpdateTimestamps=update_timestamps)
         if not answer["Success"]:
             raise OTDBPRCException("TaskSetStatus failed for %i" % (otdb_id,))
         return {"mom_id": answer["MomID"], "otdb_id": answer["OtdbID"]}
-    
+
     def taskSetSpecification(self, otdb_id=None, specification={}):
         answer = self.rpc('TaskSetSpecification', OtdbID=otdb_id, Specification=specification)
         if "Errors" in answer:
@@ -103,44 +106,8 @@ class OTDBRPC(RPCWrapper):
 
 
 def do_tests(busname=DEFAULT_OTDB_SERVICE_BUSNAME, servicename=DEFAULT_OTDB_SERVICENAME):
-    with OTDBPRC(busname=busname, servicename=servicename) as rpc:
-        #for i in range(0, 10):
-            #taskId = rpc.insertTask(1234, 5678, 'active', 'OBSERVATION', 1)['id']
-            #rcId = rpc.insertResourceClaim(1, taskId, datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1)['id']
-            #print rpc.getResourceClaim(rcId)
-            #rpc.updateResourceClaim(rcId, starttime=datetime.datetime.utcnow(), endtime=datetime.datetime.utcnow() + datetime.timedelta(hours=2), status='ALLOCATED')
-            #print rpc.getResourceClaim(rcId)
-            #print
-
-        #tasks = rpc.getTasks()
-        #for t in tasks:
-            #print rpc.getTask(t['id'])
-            #for i in range(4,9):
-                #rcId = rpc.insertResourceClaim(i, t['id'], datetime.datetime.utcnow(), datetime.datetime.utcnow() + datetime.timedelta(hours=1), 'CLAIMED', 1, 10, 'einstein', -1)['id']
-            ##print rpc.deleteTask(t['id'])
-            ##print rpc.getTasks()
-            ##print rpc.getResourceClaims()
-
-        #print
-        #taskId = tasks[0]['id']
-        #print 'taskId=', taskId
-        #print rpc.getResourceClaimsForTask(taskId)
-        #print rpc.updateResourceClaimsForTask(taskId, starttime=datetime.datetime.utcnow(), endtime=datetime.datetime.utcnow() + datetime.timedelta(hours=3))
-        #print rpc.getResourceClaimsForTask(taskId)
-
-        #print rpc.getTasks()
-        #print rpc.getResourceClaims()
-        #print rpc.getResources()
-        #print rpc.getResourceGroups()
-        #print rpc.getResourceGroupMemberships()
-
-        #rpc.deleteTask(taskId)
-
-        #print rpc.getTasks()
-        #print rpc.getResourceClaims()
-        pass
-
-
+    with OTDBRPC(busname=busname, servicename=servicename, broker='10.149.96.6') as rpc:
+        print rpc.taskGetStatus(452728)
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
