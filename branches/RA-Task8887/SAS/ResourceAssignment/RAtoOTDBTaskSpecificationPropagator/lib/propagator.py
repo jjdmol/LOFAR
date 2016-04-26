@@ -123,6 +123,7 @@ class RAtoOTDBPropagator():
             # TODO: do proper check on cluster/storage/etc
             if not ra_info['storage']:
                 logger.info("No (CEP4) storage claimed for ra_id=%s otdb_id=%s, skipping otdb specification update." % (ra_id, otdb_id))
+                return
 
             #get mom project name
             try:
@@ -145,7 +146,7 @@ class RAtoOTDBPropagator():
         info = {}
         info["storage"] = {}
         task = self.radbrpc.getTask(ra_id)
-        claims = self.radbrpc.getResourceClaims(task_id=ra_id, extended=True, include_properties=True)
+        claims = self.radbrpc.getResourceClaims(task_ids=ra_id, extended=True, include_properties=True)
         for claim in claims:
             logger.debug("Processing claim: %s" % claim)
             if claim['resource_type_name'] == 'storage':
