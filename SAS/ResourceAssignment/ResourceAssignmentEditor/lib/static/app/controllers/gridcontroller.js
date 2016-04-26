@@ -39,6 +39,7 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     { field: 'starttime',
         displayName: 'Start',
         width: '15%',
+        type: 'date',
         enableCellEdit: false,
         enableCellEditOnFocus: false,
         cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
@@ -47,6 +48,7 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     { field: 'endtime',
         displayName: 'End',
         width: '15%',
+        type: 'date',
         enableCellEdit: false,
         enableCellEditOnFocus: false,
         cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
