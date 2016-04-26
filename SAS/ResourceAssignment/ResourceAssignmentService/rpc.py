@@ -174,8 +174,8 @@ class RARPC(RPCWrapper):
                          otdb_id=otdb_id,
                          status=status)
 
-    def getTasks(self):
-        tasks = self.rpc('GetTasks')
+    def getTasks(self, lower_bound=None, upper_bound=None):
+        tasks = self.rpc('GetTasks', lower_bound=lower_bound, upper_bound=upper_bound)
         for task in tasks:
             task['starttime'] = task['starttime'].datetime()
             task['endtime'] = task['endtime'].datetime()
