@@ -42,6 +42,9 @@ def updateTaskMomDetails(task, momrpc):
 
     tasklist = task if isinstance(task, list) else [task]
 
+    if len(tasklist) == 0:
+        return
+
     for t in tasklist:
         applyDefaults(t)
 
@@ -50,9 +53,7 @@ def updateTaskMomDetails(task, momrpc):
 
     try:
         momIds = ','.join([str(t['mom_id']) for t in tasklist])
-        logger.info('momrpc.getProjectDetails(momIds)')
         details = momrpc.getProjectDetails(momIds)
-        logger.info('details=' + str(details))
 
         for t in tasklist:
             mom_id = str(t['mom_id'])

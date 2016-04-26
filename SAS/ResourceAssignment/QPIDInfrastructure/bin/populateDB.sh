@@ -7,8 +7,13 @@
 # Whether to modify production (true) or test (false)
 if [ "$LOFARENV" == "PRODUCTION" ]; then
   PROD=true
+  PREFIX=
+elif [ "$LOFARENV" == "TEST" ]; then
+  PROD=false
+  PREFIX="test."
 else
   PROD=false
+  PREFIX="devel."
 fi
 
 
@@ -20,8 +25,6 @@ if $PROD; then
   echo "Press ENTER to continue, or ^C to abort"
   echo "----------------------------------------------"
   read
-
-  PREFIX=
 
   CCU=ccu001.control.lofar
   MCU=mcu001.control.lofar
@@ -39,8 +42,6 @@ if $PROD; then
   CEP4="`seq -f cpu%02.0f.cep4.control.lofar 1 50`"
   CEP4HEAD="head01.cep4.control.lofar head02.cep4.control.lofar"
 else
-  PREFIX=test.
-
   CCU=ccu099.control.lofar
   MCU=mcu099.control.lofar
   SCU=scu099.control.lofar
@@ -64,6 +65,7 @@ fi
 
 for tnode in $CEP4HEAD
 do
+  # CEP4 -> CEP4HEAD
   for fnode in $CEP4
   do
     addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.dataproducts --federation $tnode
@@ -71,6 +73,7 @@ do
     addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.state --federation $tnode
   done
 
+  # CEP4HEAD -> CCU
   addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.dataproducts --federation $CCU
   addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.processing --federation $CCU
   addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.state --federation $CCU
@@ -78,6 +81,7 @@ done
 
 for tnode in $CEP2HEAD
 do
+  # CEP2 -> CEP2HEAD
   for fnode in $CEP2
   do
     addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.dataproducts --federation $tnode
@@ -85,6 +89,7 @@ do
     addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.state --federation $tnode
   done
 
+  # CEP2HEAD -> CCU
   addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.dataproducts --federation $CCU
   addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.processing --federation $CCU
   addtoQPIDDB.py --broker $tnode --queue ${PREFIX}lofar.task.feedback.state --federation $CCU

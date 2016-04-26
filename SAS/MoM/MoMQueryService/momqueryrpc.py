@@ -22,8 +22,10 @@ class MoMRPC(RPCWrapper):
         ids = [str(x) for x in ids]
         ids_string = ', '.join(ids)
 
-        logger.info("Requesting details for: %s" % (str(ids_string)))
-        return self.rpc('GetProjectDetails', mom_ids=ids_string)
+        logger.info("Requesting details for mom objects: %s" % (str(ids_string)))
+        result = self.rpc('GetProjectDetails', mom_ids=ids_string)
+        logger.info("Received details for %s mom objects" % (len(result)))
+        return result
 
     def getProjects(self):
         '''get all projects
@@ -33,6 +35,7 @@ class MoMRPC(RPCWrapper):
         for project in projects:
             project['statustime'] = project['statustime'].datetime()
 
+        logger.info("Received %s projects" % (len(projects)))
         return projects
 
 
