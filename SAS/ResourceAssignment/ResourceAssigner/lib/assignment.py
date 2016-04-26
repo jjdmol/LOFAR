@@ -103,14 +103,20 @@ class ResourceAssigner():
 
         otdb_id = specification_tree['otdb_id']
         taskType = specification_tree.get('task_type', '').lower()
-        status = specification_tree.get('state', 'prescheduled').lower()
+        status = specification_tree.get('state', '').lower()
+
+        if status not in ['approved', 'prescheduled']: # cep2 accepts both, cep4 only prescheduled, see below
+            logger.info('skipping specification for otdb_id=%s because status=%s', (otdb_id, status))
 
         #parse main parset...
         mainParset = parameterset(specification_tree['specification'])
 
         momId = mainParset.getInt('Observation.momID', -1)
-        startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
-        endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
+        try:
+            startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
+            endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            logger.warning('cannot parse for start/end time from specification for otdb_id=%s', (otdb_id, ))
 
         # insert new task and specification in the radb
         # any existing specification and task with same otdb_id will be deleted automatically
@@ -128,12 +134,10 @@ class ResourceAssigner():
 
         # do not assign resources to task for other clusters than cep4
         if not self.checkClusterIsCEP4(mainParset):
-            try:
-                #apply the most recent otdb status to this radb task
-                otdb_status = self.otdbrpc.taskGetStatus(otdb_id)
-                self.radbrpc.updateTaskStatusForOtdbId(otdb_id, otdb_status)
-            except Exception as e:
-                logger.error(e)
+            return
+
+        if status != 'prescheduled':
+            logger.info('skipping resource assignment for CEP4 task otdb_id=%s because status=%s', (otdb_id, status))
             return
 
         needed = self.getNeededResouces(specification_tree)
