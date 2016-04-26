@@ -71,7 +71,7 @@ class ResourceAssigner():
         :param broker: Valid Qpid broker host (default: None, which means localhost)
         """
         self.radbrpc = RARPC(servicename=radb_servicename, busname=radb_busname, broker=broker)
-        self.rerpc = RPC(re_servicename, busname=re_busname, broker=re_broker, ForwardExceptions=True)
+        self.rerpc = RPC(re_servicename, busname=re_busname, broker=broker, ForwardExceptions=True)
         self.ssdbrpc = SSDBRPC(servicename=ssdb_servicename, busname=ssdb_busname, broker=broker)
         self.otdbrpc = OTDBRPC(busname=otdb_busname, servicename=otdb_servicename, broker=broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
 
