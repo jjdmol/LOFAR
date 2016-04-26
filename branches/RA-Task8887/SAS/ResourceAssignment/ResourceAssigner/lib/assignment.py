@@ -40,6 +40,9 @@ from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAUL
 from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_BUSNAME as RE_BUSNAME
 from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_SERVICENAME as RE_SERVICENAME
 
+from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import OTDBRPC
+from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
+
 from lofar.sas.systemstatus.service.SSDBrpc import SSDBRPC
 from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_BUSNAME
 from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_SERVICENAME
@@ -50,35 +53,27 @@ class ResourceAssigner():
     def __init__(self,
                  radb_busname=RADB_BUSNAME,
                  radb_servicename=RADB_SERVICENAME,
-                 radb_broker=None,
                  re_busname=RE_BUSNAME,
                  re_servicename=RE_SERVICENAME,
-                 re_broker=None,
                  ssdb_busname=DEFAULT_SSDB_BUSNAME,
                  ssdb_servicename=DEFAULT_SSDB_SERVICENAME,
-                 ssdb_broker=None,
+                 otdb_busname=DEFAULT_OTDB_SERVICE_BUSNAME,
+                 otdb_servicename=DEFAULT_OTDB_SERVICENAME,
                  broker=None):
         """
         ResourceAssigner inserts/updates tasks in the radb and assigns resources to it based on incoming parset.
         :param radb_busname: busname on which the radb service listens (default: lofar.ra.command)
         :param radb_servicename: servicename of the radb service (default: RADBService)
-        :param radb_broker: valid Qpid broker host (default: None, which means localhost)
         :param re_busname: busname on which the resource estimator service listens (default: lofar.ra.command)
         :param re_servicename: servicename of the resource estimator service (default: ResourceEstimation)
-        :param re_broker: valid Qpid broker host (default: None, which means localhost)
         :param ssdb_busname: busname on which the ssdb service listens (default: lofar.system)
         :param ssdb_servicename: servicename of the radb service (default: SSDBService)
-        :param ssdb_broker: valid Qpid broker host (default: None, which means localhost)
-        :param broker: if specified, overrules radb_broker, re_broker and ssdb_broker. Valid Qpid broker host (default: None, which means localhost)
+        :param broker: Valid Qpid broker host (default: None, which means localhost)
         """
-        if broker:
-            radb_broker = broker
-            re_broker = broker
-            ssdb_broker = broker
-
-        self.radbrpc = RARPC(servicename=radb_servicename, busname=radb_busname, broker=radb_broker)
+        self.radbrpc = RARPC(servicename=radb_servicename, busname=radb_busname, broker=broker)
         self.rerpc = RPC(re_servicename, busname=re_busname, broker=re_broker, ForwardExceptions=True)
-        self.ssdbrpc = SSDBRPC(servicename=ssdb_servicename, busname=ssdb_busname, broker=ssdb_broker)
+        self.ssdbrpc = SSDBRPC(servicename=ssdb_servicename, busname=ssdb_busname, broker=broker)
+        self.otdbrpc = OTDBRPC(busname=otdb_busname, servicename=otdb_servicename, broker=broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
 
     def __enter__(self):
         """Internal use only. (handles scope 'with')"""
@@ -93,12 +88,14 @@ class ResourceAssigner():
         """Open rpc connections to radb service and resource estimator service"""
         self.radbrpc.open()
         self.rerpc.open()
+        self.otdbrpc.open()
         self.ssdbrpc.open()
 
     def close(self):
         """Close rpc connections to radb service and resource estimator service"""
         self.radbrpc.close()
         self.rerpc.close()
+        self.otdbrpc.close()
         self.ssdbrpc.close()
 
     def doAssignment(self, specification_tree):
@@ -131,6 +128,12 @@ class ResourceAssigner():
 
         # do not assign resources to task for other clusters than cep4
         if not self.checkClusterIsCEP4(mainParset):
+            try:
+                #apply the most recent otdb status to this radb task
+                otdb_status = self.otdbrpc.taskGetStatus(otdb_id)
+                self.radbrpc.updateTaskStatusForOtdbId(otdb_id, otdb_status)
+            except Exception as e:
+                logger.error(e)
             return
 
         needed = self.getNeededResouces(specification_tree)
