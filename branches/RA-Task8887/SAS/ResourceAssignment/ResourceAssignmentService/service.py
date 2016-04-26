@@ -98,8 +98,8 @@ class RADBHandler(MessageHandlerInterface):
 
     def _getResourceClaims(self, **kwargs):
         return self.radb.getResourceClaims(claim_ids=kwargs.get('claim_ids'),
-                                           lower_bound=kwargs.get('lower_bound'),
-                                           upper_bound=kwargs.get('upper_bound'),
+                                           lower_bound=kwargs.get('lower_bound').datetime() if kwargs.get('lower_bound') else None,
+                                           upper_bound=kwargs.get('upper_bound').datetime() if kwargs.get('upper_bound') else None,
                                            resource_ids=kwargs.get('resource_ids'),
                                            task_ids=kwargs.get('task_ids'),
                                            status=kwargs.get('status'),
@@ -184,8 +184,8 @@ class RADBHandler(MessageHandlerInterface):
 
     def _getResourceUsages(self, **kwargs):
         usages = self.radb.getResourceUsages(claim_ids=kwargs.get('claim_ids'),
-                                             lower_bound=kwargs.get('lower_bound'),
-                                             upper_bound=kwargs.get('upper_bound'),
+                                             lower_bound=kwargs.get('lower_bound').datetime() if kwargs.get('lower_bound') else None,
+                                             upper_bound=kwargs.get('upper_bound').datetime() if kwargs.get('upper_bound') else None,
                                              resource_ids=kwargs.get('resource_ids'),
                                              task_ids=kwargs.get('task_ids'),
                                              status=kwargs.get('status'),
@@ -217,8 +217,10 @@ class RADBHandler(MessageHandlerInterface):
                                                     available_capacity=kwargs.get('available_capacity'),
                                                     total_capacity=kwargs.get('total_capacity'))
 
-    def _getTasks(self):
-        return self.radb.getTasks()
+    def _getTasks(self, **kwargs):
+        logger.info('GetTasks: %s' % dict({k:v for k,v in kwargs.items() if v != None}))
+        return self.radb.getTasks(lower_bound=kwargs.get('lower_bound').datetime() if kwargs.get('lower_bound') else None,
+                                  upper_bound=kwargs.get('upper_bound').datetime() if kwargs.get('upper_bound') else None)
 
     def _getTask(self, **kwargs):
         logger.info('GetTask: %s' % dict({k:v for k,v in kwargs.items() if v != None}))

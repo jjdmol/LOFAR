@@ -154,9 +154,24 @@ class RADatabase:
 
         raise KeyError('No such status: %s. Valid values are: %s' % (status_name, ', '.join(self.getResourceClaimStatusNames())))
 
-    def getTasks(self):
-        query = '''SELECT * from resource_allocation.task_view;'''
-        tasks = list(self._executeQuery(query, fetch=_FETCH_ALL))
+    def getTasks(self, lower_bound=None, upper_bound=None):
+        query = '''SELECT * from resource_allocation.task_view'''
+
+        conditions = []
+        qargs = []
+
+        if lower_bound is not None:
+            conditions.append('endtime >= %s')
+            qargs.append(lower_bound)
+
+        if upper_bound is not None:
+            conditions.append('starttime <= %s')
+            qargs.append(upper_bound)
+
+        if conditions:
+            query += ' WHERE ' + ' AND '.join(conditions)
+
+        tasks = list(self._executeQuery(query, qargs, fetch=_FETCH_ALL))
         predIds = self.getTaskPredecessorIds()
         succIds = self.getTaskSuccessorIds()
 
