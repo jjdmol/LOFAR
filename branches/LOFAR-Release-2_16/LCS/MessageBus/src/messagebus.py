@@ -97,7 +97,17 @@ class Session:
         return "%s%s; {%s}" % (self._queue_prefix(), queue, options)
 
     def _queue_prefix(self):
-      return os.environ.get("QUEUE_PREFIX", "")
+        lofarenv = os.environ.get("LOFARENV", "")
+        queueprefix = os.environ.get("QUEUE_PREFIX", "")
+
+        if lofarenv == "PRODUCTION":
+            pass
+        elif lofarenv == "TEST":
+            queueprefix += "test."
+        else:
+            queueprefix += "devel."
+
+        return queueprefix
 
 class ToBus(Session):
     def __init__(self, queue, options=options, broker=broker):

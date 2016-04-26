@@ -415,13 +415,16 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
 
     $scope.$watch('dataService.initialLoadComplete', updateGanttData);
     $scope.$watch('dataService.selected_task_id', updateGanttData);
-    $scope.$watch('dataService.tasks', updateGanttData, true);
+    $scope.$watch('dataService.tasks', updateGanttData);
     $scope.$watch('dataService.resources', updateGanttData);
-    $scope.$watch('dataService.resourceClaims', updateGanttData, true);
+    $scope.$watch('dataService.resourceClaims', updateGanttData);
     $scope.$watch('dataService.resourceGroups', updateGanttData);
     $scope.$watch('dataService.resourceGroupMemberships', updateGanttData);
     $scope.$watch('dataService.filteredTaskDict', updateGanttData);
     $scope.$watch('dataService.viewTimeSpan', updateGanttData, true);
-    $scope.$watch('dataService.lofarTime', function() {$scope.options.currentDateValue= $scope.dataService.lofarTime;});
+    $scope.$watch('dataService.claimChangeCntr', updateGanttData);
+    $scope.$watch('dataService.lofarTime', function() {
+        if($scope.dataService.lofarTime.getSeconds() % 5 == 0) {
+            $scope.options.currentDateValue= $scope.dataService.lofarTime;}});
 }
 ]);
