@@ -29,6 +29,8 @@ import logging
 from lofar.common.util import to_csv_string
 from math import ceil, floor
 
+from lofar.common import isProductionEnvironment, isTestEnvironment
+
 #from lofar.parameterset import parameterset
 
 logger = logging.getLogger(__name__)
@@ -43,6 +45,20 @@ class RAtoOTDBTranslator():
         RAtoOTDBTranslator translates values from the RADB into parset keys to be stored in an OTDB Tree
         """
 
+    def cep4DataPath(self):
+        '''returns the path to the data dir on CEP4, depending on environment'''
+        if isProductionEnvironment():
+            return "CEP4:/data/projects"
+
+        if isTestEnvironment():
+            return "CEP4:/data/test-projects"
+
+        return "CEP4:/data/dev-projects"
+
+    def locationPath(self, project_name, otdb_id):
+        '''returns the full path to the data dir on CEP4 for give project and otdb_id, depending on environment'''
+        return "%s/%s/L%d" % (self.cep4DataPath(), project_name, otdb_id)
+
     def CreateCorrelated(self, otdb_id, storage_properties, project_name):
         sb_nr = 0
         locations = []
@@ -52,7 +68,7 @@ class RAtoOTDBTranslator():
             logging.debug('processing sap: %s' % sap)
             if "nr_of_uv_files" in sap['properties']:
                 for _ in xrange(sap['properties']['nr_of_uv_files']):
-                    locations.append("CEP4:/data/projects/%s/L%d" % (project_name, otdb_id))
+                    locations.append(self.locationPath(project_name, otdb_id))
                     filenames.append("L%d_SAP%03d_SB%03d_uv.MS" % (otdb_id, sap['sap_nr'], sb_nr))
                     sb_nr += 1
         result[PREFIX + 'DataProducts.Output_Correlated.locations'] = '[' + to_csv_string(locations) + ']'
@@ -73,7 +89,7 @@ class RAtoOTDBTranslator():
                 for tab in xrange(nr_tabs):
                     for stokes in xrange(nr_stokes):
                         for part in xrange(nr_parts):
-                            locations.append("CEP4:/data/projects/%s/L%d" % (project_name, otdb_id))
+                            locations.append(self.locationPath(project_name, otdb_id))
                             filenames.append("L%d_SAP%03d_B%03d_S%d_P%03d_bf.h5" % (otdb_id, sap['sap_nr'], tab, stokes, part))
         result[PREFIX + 'DataProducts.Output_CoherentStokes.locations'] = '[' + to_csv_string(locations) + ']'
         result[PREFIX + 'DataProducts.Output_CoherentStokes.filenames'] = '[' + to_csv_string(filenames) + ']'
@@ -93,7 +109,7 @@ class RAtoOTDBTranslator():
                 for tab in xrange(nr_tabs):
                     for stokes in xrange(nr_stokes):
                         for part in xrange(nr_parts):
-                            locations.append("CEP4:/data/projects/%s/L%d" % (project_name, otdb_id))
+                            locations.append(self.locationPath(project_name, otdb_id))
                             filenames.append("L%d_SAP%03d_B%03d_S%d_P%03d_bf.h5" % (otdb_id, sap['sap_nr'], tab, stokes, part))
         result[PREFIX + 'DataProducts.Output_IncoherentStokes.locations'] = '[' + to_csv_string(locations) + ']'
         result[PREFIX + 'DataProducts.Output_IncoherentStokes.filenames'] = '[' + to_csv_string(filenames) + ']'
@@ -107,7 +123,7 @@ class RAtoOTDBTranslator():
         for sap in storage_properties["saps"]: ##We might need to sort saps?
             if "nr_of_im_files" in sap['properties']:
                 for _ in range(sap['properties']['nr_of_im_files']):
-                    locations.append("CEP4:/data/projects/%s/L%d" % (project_name, otdb_id))
+                    locations.append(self.locationPath(project_name, otdb_id))
                     filenames.append("L%d_SAP%03d_SB%03d_inst.INST" % (otdb_id, sap['sap_nr'], sb_nr))
         result[PREFIX + 'DataProducts.Output_InstrumentModel.locations'] = '[' + to_csv_string(locations) + ']'
         result[PREFIX + 'DataProducts.Output_InstrumentModel.filenames'] = '[' + to_csv_string(filenames) + ']'
@@ -121,7 +137,7 @@ class RAtoOTDBTranslator():
         for sap in storage_properties["saps"]: ##We might need to sort saps?
             if "nr_of_img_files" in sap['properties']:
                 for _ in range(sap['properties']['nr_of_img_files']):
-                    locations.append("CEP4:/data/projects/%s/L%d" % (project_name, otdb_id))
+                    locations.append(self.locationPath(project_name, otdb_id))
                     filenames.append("L%d_SAP%03d_SB%03d_sky.IM" % (otdb_id, sap['sap_nr'], sb_nr))
         result[PREFIX + 'DataProducts.Output_SkyImage.locations'] = '[' + to_csv_string(locations) + ']'
         result[PREFIX + 'DataProducts.Output_SkyImage.filenames'] = '[' + to_csv_string(filenames) + ']'
@@ -135,7 +151,7 @@ class RAtoOTDBTranslator():
         for sap in storage_properties["saps"]: ##We might need to sort saps?
             if "nr_of_uv_files" in sap['properties']:
                 for _ in range(sap['properties']['nr_of_pulp_files']):
-                    locations.append("CEP4:/data/projects/%s/L%d" % (project_name, otdb_id))
+                    locations.append(self.locationPath(project_name, otdb_id))
                     filenames.append("L%d_SAP%03d_SB%03d_bf.h5" % (otdb_id, sap['sap_nr'], sb_nr))
         result[PREFIX + 'DataProducts.Output_Pulsar.locations'] = '[' + to_csv_string(locations) + ']'
         result[PREFIX + 'DataProducts.Output_Pulsar.filenames'] = '[' + to_csv_string(filenames) + ']'
