@@ -118,6 +118,8 @@ class RAtoOTDBPropagator():
                 return
             ra_info = self.getRAinfo(ra_id)
 
+            logger.info('RA info for ra_id=%s otdb_id=%s: %s' % (ra_id, otdb_id, ra_info))
+
             # check if this is a CEP4 task, or an old CEP2 task
             # at this moment the most simple check is to see if RA claimed (CEP4) storage
             # TODO: do proper check on cluster/storage/etc
@@ -157,10 +159,11 @@ class RAtoOTDBPropagator():
         return info
 
     def setOTDBinfo(self, otdb_id, otdb_info, otdb_status):
-        logger.info('Setting specticication and status (%s) for otdb_id %s' % (otdb_status, otdb_id))
         try:
+            logger.info('Setting specticication for otdb_id %s: %s' % (otdb_id, otdb_info))
             self.otdbrpc.taskSetSpecification(otdb_id, otdb_info)
             self.otdbrpc.taskPrepareForScheduling(otdb_id, otdb_info["LOFAR.ObsSW.Observation.startTime"], otdb_info["LOFAR.ObsSW.Observation.stopTime"])
+            logger.info('Setting status (%s) for otdb_id %s' % (otdb_status, otdb_id))
             self.otdbrpc.taskSetStatus(otdb_id, otdb_status)
         except Exception as e:
             logger.error(e)
