@@ -27,40 +27,73 @@ from lofar.parameterset import parameterset
 
 logger = logging.getLogger(__name__)
 
-class ImagePipelineResourceEstimator(BaseResourceEstimator):
-    """ ImagePipelineResourceEstimator
+DATAPRODUCTS = "Observation.DataProducts."
+PIPELINE = "Observation.ObservationControl.PythonControl."
 
+#Observation.DataProducts.Output_Correlated.storageClusterName=
+#Observation.ObservationControl.PythonControl.AWimager
+
+class ImagePipelineResourceEstimator(BaseResourceEstimator):
+    """ ResourceEstimator for Imaging Pipelines
     """
     def __init__(self, kwargs, input_files):
-        BaseResourceEstimator.__init__(self, name='image_pipeline')
-        self.parset = ParameterSet(kwargs).make_subset('dp.output')
-        self.duration = int(kwargs.get('observation.duration', 1))
-        self.input_files = input_files
-        self.required_keys = ('skyimage.enabled', 'skyimage.slices_per_image', 'skyimage.subbands_per_image')
-        if self.checkParsetForRequiredKeys():
-            self.estimate()
-        return
+        logger.info("init ImagePipelineResourceEstimator")
+        BaseResourceEstimator.__init__(self, name='imaging_pipeline')
+        self.required_keys = ('Observation.startTime',
+                              'Observation.stopTime',
+                              DATAPRODUCTS + 'Input_Correlated.enabled',
+                              DATAPRODUCTS + 'Output_SkyImage.enabled',
+                              PIPELINE + 'Imaging.slices_per_image',
+                              PIPELINE + 'Imaging.subbands_per_image')
 
-    def estimate(self):
-        """ Estimate for image pipeline
+    def _calculate(self, parset, input_files):
+        """ Estimate for Imaging Pipeline. Also gets used for MSSS Imaging Pipeline
         calculates: datasize (number of files, file size), bandwidth
+        input_files should look something like:
+        'input_files': 
+        {'uv': {'nr_of_uv_files': 481, 'uv_file_size': 1482951104}, ...}
+        
+        reply is something along the lines of:
+        {'bandwidth': {'total_size': 19021319494},
+        'storage': {'total_size': 713299481024,
+        'output_files': 
+          {'img': {'nr_of_img_files': 481, 'img_file_size': 148295}
+        }}
         """
         logger.debug("start estimate '{}'".format(self.name))
-        if 'dp_correlated_uv' in self.input_files:
-            if self.parset['skyimage']['enabled'] == 'true':
-                logger.debug("calculate skyimage data size")
-                slices_per_image = int(self.parset['skyimage']['slices_per_image'])
-                subbands_per_image = int(self.parset['skyimage']['subbands_per_image'])
-                if slices_per_image and subbands_per_image:
-                    nr_input_subbands = int(self.input_files['dp_correlated_uv']['nr_files'])
-                    if (nr_input_subbands % (subbands_per_image * slices_per_image)) == 0:
-                        nr_images = nr_input_subbands / (subbands_per_image * slices_per_image)
-                        self.output_files['dp_sky_image'] = {'nr_files': nr_images, 'file_size': 1000}
-                        logger.debug("dp_sky_image: {} files {} bytes each".format(nr_images, 1000))
+        logger.info('parset: %s ' % parset)
+        result = {'errors': []}
+        duration = self._getDuration(parset.getString('Observation.startTime'), parset.getString('Observation.stopTime'))
+        slices_per_image = parset.getInt(PIPELINE + 'Imaging.slices_per_image', 0) #TODO, should these have defaults?
+        subbands_per_image = parset.getInt(PIPELINE + 'Imaging.subbands_per_image', 0)
 
-            # count total data size
-            for values in self.output_files.itervalues():
-                self.total_data_size += values['nr_files'] * values['file_size']
-            self.total_bandwidth = ceil((self.total_data_size * 8) / self.duration)  # bits/second
-        return
+        if not parset.getBool(DATAPRODUCTS + 'Output_SkyImage.enabled'):
+            logger.warning('Output_SkyImage is not enabled')
+            result['errors'].append('Output_SkyImage is not enabled')
+        if not 'uv' in input_files:
+            logger.warning('Missing UV Dataproducts in input_files')
+            result['errors'].append('Missing UV Dataproducts in input_files')
+        else:
+            nr_input_subbands = input_files['uv']['nr_of_uv_files']
+        if not slices_per_image or not subbands_per_image:
+            logger.warning('slices_per_image or subbands_per_image are not valid')
+            result['errors'].append('Missing UV Dataproducts in input_files')
+        if nr_input_subbands % (subbands_per_image * slices_per_image) > 0:
+            logger.warning('slices_per_image and subbands_per_image not a multiple of number of inputs')
+            result['errors'].append('slices_per_image and subbands_per_image not a multiple of number of inputs')
+        if result['errors']:
+            return result
+
+        logger.debug("calculate sky image data size")
+        result['output_files'] = {}
+        nr_images = nr_input_subbands / (subbands_per_image * slices_per_image)
+        result['output_files']['img'] = {'nr_of_img_files': nr_images, 'img_file_size': 1000} # 1 kB was hardcoded in the Scheduler 
+        logger.debug("sky_images: {} files {} bytes each".format(result['output_files']['img']['nr_of_img_files'], result['output_files']['img']['img_file_size']))
+
+        # count total data size
+        total_data_size = result['output_files']['img']['nr_of_img_files'] * result['output_files']['img']['img_file_size'] # bytes
+        total_bandwidth = int(ceil((total_data_size * 8) / duration))  # bits/second
+        result['storage'] = {'total_size': total_data_size}
+        result['bandwidth'] = {'total_size': total_bandwidth}
+        return result
 
