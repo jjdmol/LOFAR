@@ -12,7 +12,7 @@ from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAM
 logger = logging.getLogger(__file__)
 
 
-class MoMRPC(RPCWrapper):
+class MoMQueryRPC(RPCWrapper):
     def getProjectDetails(self, ids):
         '''get the project details for one or more mom ids
         :param ids single or list of mom ids
@@ -57,7 +57,7 @@ def main():
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                         level=logging.INFO if options.verbose else logging.WARN)
 
-    with MoMRPC(busname=options.busname, servicename=options.servicename, broker=options.broker) as rpc:
+    with MoMQueryRPC(busname=options.busname, servicename=options.servicename, broker=options.broker) as rpc:
         if options.projects:
             projects = rpc.getProjects()
             for project in projects:
