@@ -1,0 +1,14 @@
+#!/bin/bash
+
+FQDN=`hostname --fqdn`
+
+# FQDN hostname must give full-length name
+case $FQDN in
+  *.cep4.control.lofar)
+    exit 0
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+
