@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
   <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
-  <version>2.15.0</version>
-  <template version="2.15.0" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
-  <description>XML Template generator version 2.15.0</description>
+  <version>2.16.1</version>
+  <template version="2.16.1" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
+  <description>XML Template generator version 2.16.1</description>
   </template>
   <name>test_lofar</name>
   <children>
@@ -103,7 +103,7 @@
                     <status>no_data</status>
                     <storageCluster>
                       <name>CEP4</name>
-                      <partition>/data</partition>
+                      <partition>/data/projects/</partition>
                     </storageCluster>
                     </lofar:uvDataProduct>
                   </item>
@@ -114,7 +114,7 @@
                     <status>no_data</status>
                     <storageCluster>
                       <name>CEP4</name>
-                      <partition>/data</partition>
+                      <partition>/data/projects/</partition>
                     </storageCluster>
                     </lofar:bfDataProduct>
                   </item>
@@ -132,7 +132,7 @@
                 <description>Crab test/1.0/PP (Pulsar Pipeline)</description>
   <processingCluster>
                     <name>CEP4</name>
-                    <partition>/data</partition>
+                    <partition>/data/projects/</partition>
                     <numberOfTasks>244</numberOfTasks>
                     <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
                     <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
@@ -180,7 +180,7 @@
                       <status>no_data</status>
                       <storageCluster>
                       <name>CEP4</name>
-                      <partition>/data</partition>
+                      <partition>/data/projects/</partition>
                     </storageCluster>
                     </lofar:pulsarDataProduct>
                   </item>
@@ -278,7 +278,7 @@
                     <status>no_data</status>
                     <storageCluster>
                       <name>CEP4</name>
-                      <partition>/data</partition>
+                      <partition>/data/projects/</partition>
                     </storageCluster>
                     </lofar:uvDataProduct>
                   </item>
@@ -289,7 +289,7 @@
                     <status>no_data</status>
                     <storageCluster>
                       <name>CEP4</name>
-                      <partition>/data</partition>
+                      <partition>/data/projects/</partition>
                     </storageCluster>
                     </lofar:bfDataProduct>
                   </item>
@@ -307,7 +307,7 @@
                 <description>Crab test/2.0/PP (Pulsar Pipeline)</description>
   <processingCluster>
                     <name>CEP4</name>
-                    <partition>/data</partition>
+                    <partition>/data/projects/</partition>
                     <numberOfTasks>244</numberOfTasks>
                     <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
                     <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
@@ -355,7 +355,7 @@
                       <status>no_data</status>
                       <storageCluster>
                       <name>CEP4</name>
-                      <partition>/data</partition>
+                      <partition>/data/projects/</partition>
                     </storageCluster>
                     </lofar:pulsarDataProduct>
                   </item>
