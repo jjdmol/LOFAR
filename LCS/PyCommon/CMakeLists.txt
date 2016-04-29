@@ -8,6 +8,7 @@ include(PythonInstall)
 add_subdirectory(test)
 
 set(_py_files
+  __init__.py
   dbcredentials.py
   factory.py
   util.py

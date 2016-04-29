@@ -55,14 +55,15 @@ class BaseResourceEstimator(object):
         startTime = self._getDateTime(start)
         endTime = self._getDateTime(end)
         if startTime >= endTime:
+            logger.warning("startTime is after endTime")
             return 1 ##TODO To prevent divide by zero later
         return totalSeconds(endTime - startTime)
         #TODO check if this makes duration = int(parset.get('duration', 0)) as a key reduntant?
 
     def _calculate(self, parset, input_files={}):
-        raise NotImplementedError('estimate() in base class is called. Please implement estimate() in your subclass')
+        raise NotImplementedError('calculate() in base class is called. Please implement calculate() in your subclass')
 
-    def estimate(self, parset, input_files={}):
+    def verify_and_estimate(self, parset, input_files={}):
         """ Create estimates for a single process based on its parset and input files"""
         if self._checkParsetForRequiredKeys(parset):
             estimates = self._calculate(parameterset(parset), input_files)

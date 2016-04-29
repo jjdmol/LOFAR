@@ -821,6 +821,9 @@ class RADatabase:
 
         claims = list(self._executeQuery(query, qargs, fetch=_FETCH_ALL))
 
+        if self.log_queries:
+            logger.info("found %s claims" % len(claims))
+
         if include_properties and claims:
             claimDict = {c['id']:c for c in claims}
             claim_ids = claimDict.keys()
