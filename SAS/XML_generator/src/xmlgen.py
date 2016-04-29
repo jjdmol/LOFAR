@@ -259,7 +259,7 @@ def processingCluster(cluster, number_of_tasks=244):
 
   CEP4 = r"""  <processingCluster>
                     <name>CEP4</name>
-                    <partition>/data</partition>
+                    <partition>/data/projects/</partition>
                     <numberOfTasks>%i</numberOfTasks>
                     <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
                     <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
@@ -281,7 +281,7 @@ def dataProductCluster(cluster):
                     </storageCluster>"""
   CEP4 = r"""<storageCluster>
                       <name>CEP4</name>
-                      <partition>/data</partition>
+                      <partition>/data/projects/</partition>
                     </storageCluster>"""
 
   if cluster == "CEP4":
@@ -672,7 +672,6 @@ def writeXMLLongBaselinePipe(ofile, topo, pred_topo, name, descr, defaulttemplat
             uvintopo, uvouttopo, uvouttopo, stor_cluster)  
 
 def writeDataProducts(dataTopo, correlatedData, coherentStokesData, incoherentStokesData, storageCluster):
-  print "Test: %s %s" % (dataTopo,storageCluster)
   strVal = r""
   if correlatedData:
     dataTopoStr = dataTopo + '.uv.dps'
@@ -1209,7 +1208,7 @@ def readCalibratorBeam(startLine, lines, globalSubbands, globalTABrings, globalB
       calibratorDemix = []
       for pipeline in pipelines:
         if pipeline.startswith("BBS"):
-          calibratorBBS.append(BBSDefault)
+          calibratorBBS.append(BBSDefault[:]) # [:] is needed to make a deep copy
           calBBS = readExtraParms("BBS", [pipeline])
           if len(calBBS) > 0:
             for i in range(0,len(calBBS)):
@@ -1221,7 +1220,7 @@ def readCalibratorBeam(startLine, lines, globalSubbands, globalTABrings, globalB
               calibratorBBS[-1][i] = globalBBS[i]
       
         if pipeline.startswith("Demix"):
-          calibratorDemix.append(DemixDefault)
+          calibratorDemix.append(DemixDefault[:]) # [:] is needed to make a deep copy
           calDemix = readExtraParms("Demix", [pipeline])
           if len(calDemix) > 0:
             for i in range(0,len(calDemix)):
@@ -1333,14 +1332,14 @@ def readTargetBeams(startLine, lines, globalSubbands, globalBBS, globalDemix, gl
       if targetBeams[nr_beams][7]: # pipeline created?
         for pipeline in pipelines:
           if pipeline.startswith("BBS"):
-            targetBBS[nr_beams].append(BBSDefault)
+            targetBBS[nr_beams].append(BBSDefault[:]) # [:] is needed to make a deep copy
             tarBBS = readExtraParms("BBS", [pipeline])
             for i in range(0, len(tarBBS)):
               targetBBS[nr_beams][-1][i] = tarBBS[i]
             targetBBS[nr_beams][-1][3] = toBool(targetBBS[nr_beams][-1][3])
           
           if pipeline.startswith("Demix"):
-            targetDemix[nr_beams].append(DemixDefault)
+            targetDemix[nr_beams].append(DemixDefault[:]) # [:] is needed to make a deep copy
             tarDemix = readExtraParms("Demix", [pipeline])
             if len(tarDemix) >= 4:
               for i in range(0,len(tarDemix)):
@@ -1351,7 +1350,7 @@ def readTargetBeams(startLine, lines, globalSubbands, globalBBS, globalDemix, gl
               raise GenException("Demixing parameters should at least have the first four averaging/demixing steps (block %s, targetBeam %s)" % (blockNr, nr_beams))
       
           if pipeline.startswith("Pulsar"):
-            targetPulsar[nr_beams].append(PulsarDefault)
+            targetPulsar[nr_beams].append(PulsarDefault[:]) # [:] is needed to make a deep copy
             tarPulsar = readExtraParms("Pulsar", [pipeline])
             if len(tarPulsar) > 0:
               for i in range(0,len(tarPulsar)):
