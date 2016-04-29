@@ -9,6 +9,7 @@ set(_py_files
   config.py
   momqueryservice.py
   momqueryrpc.py
+  momrpc.py
 )
 
 python_install(${_py_files} DESTINATION lofar/mom/momqueryservice)
