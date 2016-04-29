@@ -40,7 +40,7 @@ from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc im
 from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
 from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.translator import RAtoOTDBTranslator
 
-from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
+from lofar.mom.momqueryservice.momqueryrpc import MoMQueryRPC
 from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
 from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
 
@@ -76,7 +76,7 @@ class RAtoOTDBPropagator():
 
         self.radbrpc = RADBRPC(busname=radb_busname, servicename=radb_servicename, broker=radb_broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
         self.otdbrpc = OTDBRPC(busname=otdb_busname, servicename=otdb_servicename, broker=otdb_broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
-        self.momrpc = MoMRPC(busname=mom_busname, servicename=mom_servicename, broker=mom_broker)
+        self.momrpc = MoMQueryRPC(busname=mom_busname, servicename=mom_servicename, broker=mom_broker)
         self.translator = RAtoOTDBTranslator()
 
     def __enter__(self):
