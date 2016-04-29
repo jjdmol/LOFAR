@@ -282,11 +282,13 @@ class RPCWrapper(object):
     def __init__(self, busname=None,
                  servicename=None,
                  broker=None,
-                 timeout=10):
+                 timeout=10,
+                 verbose=False):
         self.busname = busname
         self.servicename = servicename
         self.broker = broker
         self.timeout = timeout
+        self.verbose = verbose
 
         self._serviceRPCs = {} #cache of rpc's for each service
 
@@ -313,7 +315,8 @@ class RPCWrapper(object):
         '''execute the rpc call on the <bus>/<service>.<method> and return the result'''
         try:
             if self.timeout:
-                rpckwargs = {'timeout': self.timeout}
+                rpckwargs = {'timeout': self.timeout,
+                             'Verbose': self.verbose}
 
             service_method = (self.servicename + '.' + method) if self.servicename and method \
                                 else self.servicename if self.servicename else method
