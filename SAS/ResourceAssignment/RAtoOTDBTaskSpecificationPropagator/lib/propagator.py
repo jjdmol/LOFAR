@@ -41,8 +41,7 @@ from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SER
 from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.translator import RAtoOTDBTranslator
 
 from lofar.mom.momqueryservice.momqueryrpc import MoMQueryRPC
-from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
-from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
+from lofar.mom.momqueryservice.config import DEFAULT_MOMQUERY_BUSNAME, DEFAULT_MOMQUERY_SERVICENAME
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +53,8 @@ class RAtoOTDBPropagator():
                  radb_broker=None,
                  otdb_busname=DEFAULT_OTDB_SERVICE_BUSNAME,
                  otdb_servicename=DEFAULT_OTDB_SERVICENAME,
-                 mom_busname=DEFAULT_MOM_BUSNAME,
-                 mom_servicename=DEFAULT_MOM_SERVICENAME,
+                 mom_busname=DEFAULT_MOMQUERY_BUSNAME,
+                 mom_servicename=DEFAULT_MOMQUERY_SERVICENAME,
                  otdb_broker=None,
                  mom_broker=None,
                  broker=None):

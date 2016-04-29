@@ -30,9 +30,6 @@ Typical usage is to derive your own subclass from RADBChangesHandler and impleme
 from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_BUSNAME, DEFAULT_NOTIFICATION_SUBJECTS
 from lofar.sas.resourceassignment.database.radbbuslistener import RADBBusListener
 from lofar.common.util import waitForInterrupt
-from lofar.mom.momqueryservice.momqueryrpc import MoMQueryRPC
-from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
-from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
 from lofar.sas.resourceassignment.resourceassignmenteditor.mom import updateTaskMomDetails
 
 import qpid.messaging

@@ -28,7 +28,7 @@ from mysql.connector.errors import OperationalError
 from lofar.messaging import Service
 from lofar.messaging.Service import MessageHandlerInterface
 from lofar.common.util import waitForInterrupt
-from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
+from lofar.mom.momqueryservice.config import DEFAULT_MOMQUERY_BUSNAME, DEFAULT_MOMQUERY_SERVICENAME
 from lofar.common import dbcredentials
 
 logger=logging.getLogger(__file__)
@@ -185,8 +185,8 @@ class ProjectDetailsQueryHandler(MessageHandlerInterface):
     def getProjects(self):
         return self.momdb.getProjects()
 
-def createService(busname=DEFAULT_BUSNAME,
-                  servicename=DEFAULT_SERVICENAME,
+def createService(busname=DEFAULT_MOMQUERY_BUSNAME,
+                  servicename=DEFAULT_MOMQUERY_SERVICENAME,
                   dbcreds=None,
                   handler=None,
                   broker=None):
@@ -217,8 +217,8 @@ def main():
     parser = OptionParser("%prog [options]",
                           description='runs the momqueryservice')
     parser.add_option('-q', '--broker', dest='broker', type='string', default=None, help='Address of the qpid broker, default: localhost')
-    parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_BUSNAME, help="Name of the bus exchange on the qpid broker, [default: %default]")
-    parser.add_option("-s", "--servicename", dest="servicename", type="string", default=DEFAULT_SERVICENAME, help="Name for this service, [default: %default]")
+    parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_MOMQUERY_BUSNAME, help="Name of the bus exchange on the qpid broker, [default: %default]")
+    parser.add_option("-s", "--servicename", dest="servicename", type="string", default=DEFAULT_MOMQUERY_SERVICENAME, help="Name for this service, [default: %default]")
     parser.add_option_group(dbcredentials.options_group(parser))
     parser.set_defaults(dbcredentials="MoM")
     (options, args) = parser.parse_args()

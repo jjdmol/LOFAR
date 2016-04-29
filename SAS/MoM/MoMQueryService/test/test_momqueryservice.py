@@ -25,7 +25,7 @@ import logging
 from lofar.mom.momqueryservice.momqueryservice import createService
 from lofar.mom.momqueryservice.momqueryservice import ProjectDetailsQueryHandler
 from lofar.mom.momqueryservice.momqueryrpc import MoMQueryRPC
-from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME
+from lofar.mom.momqueryservice.config import DEFAULT_MOMQUERY_SERVICENAME
 from qpid.messaging import Connection
 from qpidtoollibs import BrokerAgent
 
@@ -56,7 +56,7 @@ try:
 
     # inject the mock into the service
     with createService(busname, handler=MockProjectDetailsQueryHandler), \
-         MoMQueryRPC(busname, DEFAULT_SERVICENAME) as momrpc:
+         MoMQueryRPC(busname, DEFAULT_MOMQUERY_SERVICENAME) as momrpc:
 
         class TestLTAStorageDb(unittest.TestCase):
             def testProjectDetailsQuery(self):
