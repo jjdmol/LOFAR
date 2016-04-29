@@ -1,0 +1,6 @@
+#!/bin/bash -v
+
+# Run only on cpu nodes
+[[ `hostname` =~ "cpu" ]] || exit 0
+
+/usr/sbin/nhc || exit 1
