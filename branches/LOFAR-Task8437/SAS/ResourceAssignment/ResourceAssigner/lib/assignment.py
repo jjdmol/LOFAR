@@ -40,6 +40,9 @@ from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAUL
 from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_BUSNAME as RE_BUSNAME
 from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_SERVICENAME as RE_SERVICENAME
 
+from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import OTDBRPC
+from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
+
 from lofar.sas.systemstatus.service.SSDBrpc import SSDBRPC
 from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_BUSNAME
 from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_SERVICENAME
@@ -50,35 +53,27 @@ class ResourceAssigner():
     def __init__(self,
                  radb_busname=RADB_BUSNAME,
                  radb_servicename=RADB_SERVICENAME,
-                 radb_broker=None,
                  re_busname=RE_BUSNAME,
                  re_servicename=RE_SERVICENAME,
-                 re_broker=None,
                  ssdb_busname=DEFAULT_SSDB_BUSNAME,
                  ssdb_servicename=DEFAULT_SSDB_SERVICENAME,
-                 ssdb_broker=None,
+                 otdb_busname=DEFAULT_OTDB_SERVICE_BUSNAME,
+                 otdb_servicename=DEFAULT_OTDB_SERVICENAME,
                  broker=None):
         """
         ResourceAssigner inserts/updates tasks in the radb and assigns resources to it based on incoming parset.
         :param radb_busname: busname on which the radb service listens (default: lofar.ra.command)
         :param radb_servicename: servicename of the radb service (default: RADBService)
-        :param radb_broker: valid Qpid broker host (default: None, which means localhost)
         :param re_busname: busname on which the resource estimator service listens (default: lofar.ra.command)
         :param re_servicename: servicename of the resource estimator service (default: ResourceEstimation)
-        :param re_broker: valid Qpid broker host (default: None, which means localhost)
         :param ssdb_busname: busname on which the ssdb service listens (default: lofar.system)
         :param ssdb_servicename: servicename of the radb service (default: SSDBService)
-        :param ssdb_broker: valid Qpid broker host (default: None, which means localhost)
-        :param broker: if specified, overrules radb_broker, re_broker and ssdb_broker. Valid Qpid broker host (default: None, which means localhost)
+        :param broker: Valid Qpid broker host (default: None, which means localhost)
         """
-        if broker:
-            radb_broker = broker
-            re_broker = broker
-            ssdb_broker = broker
-
-        self.radbrpc = RARPC(servicename=radb_servicename, busname=radb_busname, broker=radb_broker)
-        self.rerpc = RPC(re_servicename, busname=re_busname, broker=re_broker, ForwardExceptions=True)
-        self.ssdbrpc = SSDBRPC(servicename=ssdb_servicename, busname=ssdb_busname, broker=ssdb_broker)
+        self.radbrpc = RARPC(servicename=radb_servicename, busname=radb_busname, broker=broker)
+        self.rerpc = RPC(re_servicename, busname=re_busname, broker=broker, ForwardExceptions=True)
+        self.ssdbrpc = SSDBRPC(servicename=ssdb_servicename, busname=ssdb_busname, broker=broker)
+        self.otdbrpc = OTDBRPC(busname=otdb_busname, servicename=otdb_servicename, broker=broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
 
     def __enter__(self):
         """Internal use only. (handles scope 'with')"""
@@ -93,12 +88,14 @@ class ResourceAssigner():
         """Open rpc connections to radb service and resource estimator service"""
         self.radbrpc.open()
         self.rerpc.open()
+        self.otdbrpc.open()
         self.ssdbrpc.open()
 
     def close(self):
         """Close rpc connections to radb service and resource estimator service"""
         self.radbrpc.close()
         self.rerpc.close()
+        self.otdbrpc.close()
         self.ssdbrpc.close()
 
     def doAssignment(self, specification_tree):
@@ -106,17 +103,20 @@ class ResourceAssigner():
 
         otdb_id = specification_tree['otdb_id']
         taskType = specification_tree.get('task_type', '').lower()
-        status = specification_tree.get('state', 'prescheduled').lower()
+        status = specification_tree.get('state', '').lower()
+
+        if status not in ['approved', 'prescheduled']: # cep2 accepts both, cep4 only prescheduled, see below
+            logger.info('skipping specification for otdb_id=%s because status=%s', (otdb_id, status))
 
         #parse main parset...
         mainParset = parameterset(specification_tree['specification'])
 
-        if not self.checkCluster(mainParset):
-            return
-
         momId = mainParset.getInt('Observation.momID', -1)
-        startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
-        endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
+        try:
+            startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
+            endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            logger.warning('cannot parse for start/end time from specification for otdb_id=%s', (otdb_id, ))
 
         # insert new task and specification in the radb
         # any existing specification and task with same otdb_id will be deleted automatically
@@ -131,6 +131,14 @@ class ResourceAssigner():
         specificationId = result['specification_id']
         taskId = result['task_id']
         logger.info('doAssignment: inserted specification (id=%s) and task (id=%s)' % (specificationId,taskId))
+
+        # do not assign resources to task for other clusters than cep4
+        if not self.checkClusterIsCEP4(mainParset):
+            return
+
+        if status != 'prescheduled':
+            logger.info('skipping resource assignment for CEP4 task otdb_id=%s because status=%s', (otdb_id, status))
+            return
 
         needed = self.getNeededResouces(specification_tree)
         logger.info('doAssignment: getNeededResouces=%s' % (needed,))
@@ -187,7 +195,7 @@ class ResourceAssigner():
         except Exception as e:
             logger.error(e)
 
-    def checkCluster(self, parset):
+    def checkClusterIsCEP4(self, parset):
         # check storageClusterName for enabled DataProducts
         # if any storageClusterName is not CEP4, we do not accept this parset
         keys = ['Output_Correlated',

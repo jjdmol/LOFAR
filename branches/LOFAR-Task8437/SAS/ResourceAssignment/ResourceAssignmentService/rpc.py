@@ -36,15 +36,18 @@ class RARPC(RPCWrapper):
     def insertResourceClaimProperty(self, claim_id, property_type, value):
         return self.rpc('InsertResourceClaimProperty', claim_id=claim_id, property_type=property_type, value=value)
 
-    def getResourceClaims(self, claim_ids=None, lower_bound=None, upper_bound=None, task_id=None, status=None, resource_type=None, extended=False, include_properties=False):
+    def getResourceClaims(self, claim_ids=None, lower_bound=None, upper_bound=None, task_ids=None, status=None, resource_type=None, extended=False, include_properties=False):
         claims = self.rpc('GetResourceClaims', claim_ids=claim_ids,
                                                lower_bound=lower_bound,
                                                upper_bound=upper_bound,
-                                               task_id=task_id,
+                                               task_ids=task_ids,
                                                status=status,
                                                resource_type=resource_type,
                                                extended=extended,
                                                include_properties=include_properties)
+
+        logger.info("found %s claims" % len(claims))
+
         for claim in claims:
             claim['starttime'] = claim['starttime'].datetime()
             claim['endtime'] = claim['endtime'].datetime()
@@ -169,8 +172,13 @@ class RARPC(RPCWrapper):
                          task_type=task_type,
                          specification_id=specification_id)
 
-    def getTasks(self):
-        tasks = self.rpc('GetTasks')
+    def updateTaskStatusForOtdbId(self, otdb_id, status):
+        return self.rpc('UpdateTaskStatusForOtdbId',
+                         otdb_id=otdb_id,
+                         status=status)
+
+    def getTasks(self, lower_bound=None, upper_bound=None):
+        tasks = self.rpc('GetTasks', lower_bound=lower_bound, upper_bound=upper_bound)
         for task in tasks:
             task['starttime'] = task['starttime'].datetime()
             task['endtime'] = task['endtime'].datetime()

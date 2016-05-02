@@ -40,9 +40,8 @@ from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc im
 from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
 from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.translator import RAtoOTDBTranslator
 
-from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
-from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
-from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
+from lofar.mom.momqueryservice.momqueryrpc import MoMQueryRPC
+from lofar.mom.momqueryservice.config import DEFAULT_MOMQUERY_BUSNAME, DEFAULT_MOMQUERY_SERVICENAME
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +53,8 @@ class RAtoOTDBPropagator():
                  radb_broker=None,
                  otdb_busname=DEFAULT_OTDB_SERVICE_BUSNAME,
                  otdb_servicename=DEFAULT_OTDB_SERVICENAME,
-                 mom_busname=DEFAULT_MOM_BUSNAME,
-                 mom_servicename=DEFAULT_MOM_SERVICENAME,
+                 mom_busname=DEFAULT_MOMQUERY_BUSNAME,
+                 mom_servicename=DEFAULT_MOMQUERY_SERVICENAME,
                  otdb_broker=None,
                  mom_broker=None,
                  broker=None):
@@ -76,7 +75,7 @@ class RAtoOTDBPropagator():
 
         self.radbrpc = RADBRPC(busname=radb_busname, servicename=radb_servicename, broker=radb_broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
         self.otdbrpc = OTDBRPC(busname=otdb_busname, servicename=otdb_servicename, broker=otdb_broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
-        self.momrpc = MoMRPC(busname=mom_busname, servicename=mom_servicename, broker=mom_broker)
+        self.momrpc = MoMQueryRPC(busname=mom_busname, servicename=mom_servicename, broker=mom_broker)
         self.translator = RAtoOTDBTranslator()
 
     def __enter__(self):
@@ -100,35 +99,55 @@ class RAtoOTDBPropagator():
         self.otdbrpc.close()
         self.momrpc.close()
 
-    def doTaskConflict(self, ra_id, otdb_id, mom_id):
-        logger.info('doTaskConflict: otdb_id=%s mom_id=%s' % (otdb_id, mom_id))
+    def doTaskConflict(self, otdb_id):
+        logger.info('doTaskConflict: otdb_id=%s' % (otdb_id,))
         if not otdb_id:
             logger.warning('doTaskConflict no valid otdb_id: otdb_id=%s' % (otdb_id,))
             return
-        self.otdbrpc.taskSetStatus(otdb_id, 'conflict')
+        try:
+            self.otdbrpc.taskSetStatus(otdb_id, 'conflict')
+        except Exception as e:
+            logger.error(e)
 
     def doTaskScheduled(self, ra_id, otdb_id, mom_id):
         try:
-            logger.info('doTaskScheduled: otdb_id=%s mom_id=%s' % (otdb_id, mom_id))
+            logger.info('doTaskScheduled: ra_id=%s otdb_id=%s mom_id=%s' % (ra_id, otdb_id, mom_id))
             if not otdb_id:
                 logger.warning('doTaskScheduled no valid otdb_id: otdb_id=%s' % (otdb_id,))
                 return
             ra_info = self.getRAinfo(ra_id)
-            project = self.momrpc.getProjectDetails(mom_id)
-            logger.info(project)
-            project_name = "_".join(project[str(mom_id)]['project_name'].split())
+
+            logger.info('RA info for ra_id=%s otdb_id=%s: %s' % (ra_id, otdb_id, ra_info))
+
+            # check if this is a CEP4 task, or an old CEP2 task
+            # at this moment the most simple check is to see if RA claimed (CEP4) storage
+            # TODO: do proper check on cluster/storage/etc
+            if not ra_info['storage']:
+                logger.info("No (CEP4) storage claimed for ra_id=%s otdb_id=%s, skipping otdb specification update." % (ra_id, otdb_id))
+                return
+
+            #get mom project name
+            try:
+                project = self.momrpc.getProjectDetails(mom_id)
+                logger.info(project)
+                project_name = "_".join(project[str(mom_id)]['project_name'].split())
+            except (RPCException, KeyError) as e:
+                logger.error('Could not get project name from MoM for mom_id %s: %s' % (mom_id, str(e)))
+                logger.info('Using \'unknown\' as project name.')
+                project_name = 'unknown'
+
             otdb_info = self.translator.CreateParset(otdb_id, ra_info, project_name)
             logger.debug("Parset info for OTDB: %s" %otdb_info)
             self.setOTDBinfo(otdb_id, otdb_info, 'scheduled')
         except Exception as e:
             logger.error(e)
-            self.doTaskConflict(ra_id, otdb_id, mom_id)
+            self.doTaskConflict(otdb_id)
 
     def getRAinfo(self, ra_id):
         info = {}
         info["storage"] = {}
         task = self.radbrpc.getTask(ra_id)
-        claims = self.radbrpc.getResourceClaims(task_id=ra_id, extended=True, include_properties=True)
+        claims = self.radbrpc.getResourceClaims(task_ids=ra_id, extended=True, include_properties=True)
         for claim in claims:
             logger.debug("Processing claim: %s" % claim)
             if claim['resource_type_name'] == 'storage':
@@ -137,8 +156,14 @@ class RAtoOTDBPropagator():
         info["endtime"] = task["endtime"]
         info["status"] = task["status"]
         return info
-    
+
     def setOTDBinfo(self, otdb_id, otdb_info, otdb_status):
-        self.otdbrpc.taskSetSpecification(otdb_id, otdb_info)
-        self.otdbrpc.taskPrepareForScheduling(otdb_id, otdb_info["LOFAR.ObsSW.Observation.startTime"], otdb_info["LOFAR.ObsSW.Observation.stopTime"])
-        self.otdbrpc.taskSetStatus(otdb_id, otdb_status)
+        try:
+            logger.info('Setting specticication for otdb_id %s: %s' % (otdb_id, otdb_info))
+            self.otdbrpc.taskSetSpecification(otdb_id, otdb_info)
+            self.otdbrpc.taskPrepareForScheduling(otdb_id, otdb_info["LOFAR.ObsSW.Observation.startTime"], otdb_info["LOFAR.ObsSW.Observation.stopTime"])
+            logger.info('Setting status (%s) for otdb_id %s' % (otdb_status, otdb_id))
+            self.otdbrpc.taskSetStatus(otdb_id, otdb_status)
+        except Exception as e:
+            logger.error(e)
+            self.doTaskConflict(otdb_id)

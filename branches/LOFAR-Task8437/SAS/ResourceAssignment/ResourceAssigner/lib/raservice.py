@@ -81,6 +81,7 @@ def main():
     from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
     from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_BUSNAME as RE_BUSNAME
     from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_SERVICENAME as RE_SERVICENAME
+    from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
     from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_BUSNAME
     from lofar.sas.systemstatus.service.config import DEFAULT_SSDB_SERVICENAME
 
@@ -108,6 +109,8 @@ def main():
     parser.add_option("--re_servicename", dest="re_servicename", type="string",
                       default=RE_SERVICENAME,
                       help="Name of the resource estimator service. [default: %default]")
+    parser.add_option("--otdb_busname", dest="otdb_busname", type="string", default=DEFAULT_OTDB_SERVICE_BUSNAME, help="Name of the bus on which the OTDB service listens, default: %default")
+    parser.add_option("--otdb_servicename", dest="otdb_servicename", type="string", default=DEFAULT_OTDB_SERVICENAME, help="Name of the OTDB service, default: %default")
     parser.add_option("--ssdb_busname", dest="ssdb_busname", type="string",
                       default=DEFAULT_SSDB_BUSNAME,
                       help="Name of the bus on which the ssdb service listens. [default: %default]")
@@ -126,6 +129,8 @@ def main():
                           radb_servicename=options.radb_servicename,
                           re_busname=options.re_busname,
                           re_servicename=options.re_servicename,
+                          otdb_busname=options.otdb_busname,
+                          otdb_servicename=options.otdb_servicename,
                           ssdb_busname=options.ssdb_busname,
                           ssdb_servicename=options.ssdb_servicename,
                           broker=options.broker) as assigner:

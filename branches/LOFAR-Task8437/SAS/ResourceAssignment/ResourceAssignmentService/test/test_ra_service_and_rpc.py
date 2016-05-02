@@ -85,10 +85,10 @@ try:
                     rpc.rpc('foo', timeout=1)
                     self.assertEqual(cm.exception.message, "{'backtrace': '', 'state': 'TIMEOUT', 'errmsg': 'RPC Timed out'}")
 
-                # test method with wrong args
-                with self.assertRaises(TypeError) as cm:
-                    rpc.rpc('GetTasks', timeout=1, fooarg='bar')
-                    self.assertTrue('got an unexpected keyword argument \'fooarg\'' in cm.exception.message)
+                ## test method with wrong args
+                #with self.assertRaises(TypeError) as cm:
+                    #rpc.rpc('GetTasks', timeout=1, fooarg='bar')
+                    #self.assertTrue('got an unexpected keyword argument \'fooarg\'' in cm.exception.message)
 
         # create and run the service
         with createService(busname=busname):

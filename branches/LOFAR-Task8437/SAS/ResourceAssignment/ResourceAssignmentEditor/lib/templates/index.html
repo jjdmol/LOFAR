@@ -23,7 +23,7 @@
     <script src="/static/js/angular-route/angular-route.min.js"></script>
     <script src="/static/js/angular-touch/angular-touch.js"></script>
     <script src="/static/js/angular-resource/angular-resource.min.js"></script>
-    <script src="/static/js/utils/ui-grid-edit-datepicker.js"></script>
+<!--    <script src="/static/js/utils/ui-grid-edit-datepicker.js"></script>-->
     <script src="/static/js/angular-ui-grid/ui-grid.js"></script>
     <script src="/static/js/angular-ui-tree/angular-ui-tree.js"></script>
     <script src="/static/js/angular-ui-layout/angular-ui-layout.min.js"></script>
@@ -44,8 +44,49 @@
     </head>
     <body>
     {% raw %}
-    <div ng-controller="DataController as dataCtrl">
-        <div >Time (local): <span>{{dataService.lofarTime | date:'yyyy-MM-dd HH:mm:ss' }}</span></div>
+    <div ng-controller="DataController as dataCtrl" class="container-fluid">
+        <div class="row">
+            <div class="col-md-2">
+                <label>Time (UTC):</label>
+                <p>
+                    <strong style="font-size:16px">{{dataService.lofarTime | date }}</strong>
+                </p>
+            </div>
+            <div class="col-md-3">
+                <label>From:</label>
+                <p class="input-group">
+                    <input type="text" class="form-control" style="min-width:100px" uib-datepicker-popup="yyyy-MM-dd" ng-model="dataService.viewTimeSpan.from" is-open="viewFromDatePopupOpened" datepicker-options="dateOptions" ng-required="true" close-text="Close" close-on-date-selection="false"/>
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="openViewFromDatePopup()"><i class="glyphicon glyphicon-calendar"></i></button>
+                    </span>
+                    <uib-timepicker ng-model="dataService.viewTimeSpan.from" hour-step="1" minute-step="5" show-meridian="false" show-spinners="false"></uib-timepicker>
+                </p>
+            </div>
+            <div class="col-md-3">
+                <label>To:</label>
+                <p class="input-group">
+                    <input type="text" class="form-control" style="min-width:100px" uib-datepicker-popup="yyyy-MM-dd" ng-model="dataService.viewTimeSpan.to" is-open="viewToDatePopupOpened" datepicker-options="dateOptions" ng-required="true" close-text="Close" close-on-date-selection="false"/>
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="openViewToDatePopup()"><i class="glyphicon glyphicon-calendar"></i></button>
+                    </span>
+                    <uib-timepicker ng-model="dataService.viewTimeSpan.to" hour-step="1" minute-step="5" show-meridian="false" show-spinners="false"></uib-timepicker>
+                </p>
+            </div>
+            <div class="col-md-3">
+                <label>Jump:</label>
+                <p class="input-group">
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="jumpToSelectedTasks()" title="Jump to selected Task(s)">Task</button>
+                    </span>
+                    <span class="input-group-btn" style="width:10px;"></span>
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="jumpToNow()" title="Jump to Now">Now</button>
+                    </span>
+                    <select class="form-control" ng-model=jumpTimespanWidth ng-options="option.name for option in jumpTimespanWidths track by option.value" ng-change="onJumpTimespanWidthChanged(span)">
+                    </select>
+                </p>
+            </div>
+        </div>
         <div ui-layout class="top-stretch" ui-layout="{flow: 'column'}">
             <header>
                 <uib-tabset margin-top='10px'>
@@ -70,13 +111,15 @@
                                 api=options.api
                                 show-side='true'
                                 view-scale="options.viewScale"
+                                from-date="options.fromDate"
+                                to-date="options.toDate"
                                 current-date="options.currentDate"
                                 current-date-value="options.currentDateValue"
                                 column-magnet="options.columnMagnet">
                                 <gantt-tree enabled="true"></gantt-tree>
                                 <gantt-movable enabled="true"
-                                    allow-moving="false"
-                                    allow-resizing="false"
+                                    allow-moving="true"
+                                    allow-resizing="true"
                                     allow-row-switching="false">
                                 </gantt-movable>
                                 <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
@@ -90,13 +133,15 @@
                                 api=options.api
                                 show-side='true'
                                 view-scale="options.viewScale"
+                                from-date="options.fromDate"
+                                to-date="options.toDate"
                                 current-date="options.currentDate"
                                 current-date-value="options.currentDateValue"
                                 column-magnet="options.columnMagnet">
                                 <gantt-tree enabled="true"></gantt-tree>
                                 <gantt-movable enabled="true"
-                                    allow-moving="false"
-                                    allow-resizing="false"
+                                    allow-moving="true"
+                                    allow-resizing="true"
                                     allow-row-switching="false"></gantt-movable>
                                 <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
                             </div>

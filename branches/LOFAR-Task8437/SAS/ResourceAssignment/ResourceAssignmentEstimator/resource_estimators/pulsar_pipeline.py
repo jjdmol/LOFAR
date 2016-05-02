@@ -23,49 +23,74 @@
 import logging
 from math import ceil
 from base_resource_estimator import BaseResourceEstimator
-from lofar.parameterset import parameterset
 
 logger = logging.getLogger(__name__)
 
-class PulsarPipelineResourceEstimator(BaseResourceEstimator):
-    """ PulsarPipelineResourceEstimator
+DATAPRODUCTS = "Observation.DataProducts."
+PIPELINE = "Observation.ObservationControl.PythonControl."
 
+#Observation.DataProducts.Output_Correlated.storageClusterName=
+
+class PulsarPipelineResourceEstimator(BaseResourceEstimator):
+    """ ResourceEstimator for Pulsar Pipelines
     """
     def __init__(self, kwargs, input_files):
+        logger.info("init PulsarPipelineResourceEstimator")
         BaseResourceEstimator.__init__(self, name='pulsar_pipeline')
-        self.parset = ParameterSet(kwargs).make_subset('dp.output')
-        self.duration = int(kwargs.get('observation.duration', 1))
-        self.coherent_stokes_type = kwargs.get('observation.coherent_stokes.type')
-        self.input_files = input_files
-        self.required_keys = ('pulsar.enabled',)
-        if self.checkParsetForRequiredKeys():
-            self.estimate()
-        return
+        self.required_keys = ('Observation.startTime',
+                              'Observation.stopTime',
+                              DATAPRODUCTS + 'Input_CoherentStokes.enabled',
+                              DATAPRODUCTS + 'Input_IncoherentStokes.enabled',
+                              DATAPRODUCTS + 'Output_Pulsar.enabled')
 
-    def estimate(self):
-        """ Estimate for pulsar pipeline
+    def _calculate(self, parset, input_files):
+        """ Estimate for Pulsar Pipeline
         calculates: datasize (number of files, file size), bandwidth
+        input_files should look something like:
+        'input_files': 
+        {'cs': {'nr_of_cs_files': 48, 'nr_of_cs_stokes': 4, 'cs_file_size': 1482104}, ...}
+        
+        reply is something along the lines of:
+        {'bandwidth': {'total_size': 19021319494},
+        'storage': {'total_size': 713299481024,
+        'output_files': 
+          {'pulp': {'nr_of_pulp_files': 48, 'pulp_file_size': 185104}
+        }}
         """
         logger.debug("start estimate '{}'".format(self.name))
-        if self.parset['pulsar']['enabled'] == 'true':
-            logger.debug("calculate pulsar data size")
-            nr_output_files = 0
-            if 'dp_coherent_stokes' in self.input_files:
-                nr_input_files = int(self.input_files['dp_coherent_stokes']['nr_files'])
-                if self.coherent_stokes_type == 'DATA_TYPE_XXYY':
-                    nr_output_files += nr_input_files / 4
-                else:
-                    nr_output_files += nr_input_files
+        logger.info('parset: %s ' % parset)
+        result = {'errors': []}
+        duration = self._getDuration(parset.getString('Observation.startTime'), parset.getString('Observation.stopTime'))
 
-            if 'dp_incoherent_stokes' in self.input_files:
-                nr_input_files = int(self.input_files['dp_incoherent_stokes']['nr_files'])
+        if not parset.getBool(DATAPRODUCTS + 'Output_Pulsar.enabled'):
+            logger.warning('Output_Pulsar is not enabled')
+            result['errors'].append('Output_Pulsar is not enabled')
+        if not 'cs' in input_files and not 'is' in input_files:
+            logger.warning('Missing Both CS and IS Dataproducts in input_files')
+            result['errors'].append('Missing Both CS and IS Dataproducts in input_files')
+        if result['errors']:
+            return result
+
+        logger.debug("calculate pulp data size")
+        result['output_files'] = {}
+        nr_output_files = 0
+        if 'cs' in input_files:
+            nr_input_files = input_files['cs']['nr_of_cs_files']
+            if input_files['cs']['nr_of_cs_stokes'] == 4: ##TODO Check if this is the same as coherent_stokes_type == 'XXYY'
+                nr_output_files += nr_input_files / 4     ## Then nr_output_files = nr_input_files / input_files['cs']['nr_of_cs_stokes']
+            else:
                 nr_output_files += nr_input_files
 
-            self.output_files['dp_pulsar'] = {'nr_files': nr_output_files, 'file_size': 1000}
-            logger.debug("dp_pulsar: {} files {} bytes each".format(nr_output_files, 1000))
+        if 'is' in input_files:
+            nr_input_files = input_files['is']['nr_of_is_files']
+            nr_output_files += nr_input_files
 
-            # count total data size
-            for values in self.output_files.itervalues():
-                self.total_data_size += values['nr_files'] * values['file_size']
-            self.total_bandwidth = ceil((self.total_data_size * 8) / self.duration)  # bits/second
-        return
+        result['output_files']['pulp'] = {'nr_of_pulp_files': nr_output_files, 'pulp_file_size': 1000} # 1 kB was hardcoded in the Scheduler 
+        logger.debug("correlated_uv: {} files {} bytes each".format(result['output_files']['pulp']['nr_of_pulp_files'], result['output_files']['pulp']['pulp_file_size']))
+
+        # count total data size
+        total_data_size = result['output_files']['pulp']['nr_of_pulp_files'] * result['output_files']['pulp']['pulp_file_size'] # bytes
+        total_bandwidth = int(ceil((total_data_size * 8) / duration))  # bits/second
+        result['storage'] = {'total_size': total_data_size}
+        result['bandwidth'] = {'total_size': total_bandwidth}
+        return result
