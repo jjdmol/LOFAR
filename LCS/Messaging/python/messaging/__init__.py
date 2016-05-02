@@ -30,7 +30,7 @@ from messagebus import *
 from RPC import *
 from Service import *
 import logging
-import os
+from lofar.common import isProductionEnvironment, isTestEnvironment
 
 def setQpidLogLevel(qpidLogLevel):
     for name, logger in logging.Logger.manager.loggerDict.items():
@@ -38,10 +38,10 @@ def setQpidLogLevel(qpidLogLevel):
             logger.setLevel(qpidLogLevel)
 
 def adaptNameToEnvironment(name):
-    if os.environ.get('LOFARENV', '') == 'PRODUCTION':
+    if isProductionEnvironment():
         return name #return original name only for PRODUCTION LOFARENV
 
-    if os.environ.get('LOFARENV', '') == 'TEST':
+    if isTestEnvironment():
         return 'test.%s' % name #return 'test.' prefixed name only for TEST LOFARENV
 
     # in all other cases prefix queue/bus name with 'devel.'
