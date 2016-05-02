@@ -50,6 +50,7 @@ from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAUL
 from lofar.mom.momqueryservice.momqueryrpc import MoMQueryRPC
 from lofar.mom.momqueryservice.config import DEFAULT_MOMQUERY_BUSNAME, DEFAULT_MOMQUERY_SERVICENAME
 from lofar.sas.resourceassignment.resourceassignmenteditor.mom import updateTaskMomDetails
+from lofar.common import isProductionEnvironment, isTestEnvironment
 #from lofar.sas.resourceassignment.resourceassigner. import updateTaskMomDetails
 
 logger = logging.getLogger(__name__)
@@ -203,7 +204,8 @@ def getTask(task_id):
 
 @app.route('/rest/tasks/<int:task_id>', methods=['PUT'])
 def putTask(task_id):
-    abort(403, 'Editing of tasks is by users is not yet approved')
+    if isProductionEnvironment():
+        abort(403, 'Editing of tasks is by users is not yet approved')
 
     if 'Content-Type' in request.headers and \
             request.headers['Content-Type'].startswith('application/json'):
