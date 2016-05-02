@@ -36,15 +36,18 @@ class RARPC(RPCWrapper):
     def insertResourceClaimProperty(self, claim_id, property_type, value):
         return self.rpc('InsertResourceClaimProperty', claim_id=claim_id, property_type=property_type, value=value)
 
-    def getResourceClaims(self, claim_ids=None, lower_bound=None, upper_bound=None, task_id=None, status=None, resource_type=None, extended=False, include_properties=False):
+    def getResourceClaims(self, claim_ids=None, lower_bound=None, upper_bound=None, task_ids=None, status=None, resource_type=None, extended=False, include_properties=False):
         claims = self.rpc('GetResourceClaims', claim_ids=claim_ids,
                                                lower_bound=lower_bound,
                                                upper_bound=upper_bound,
-                                               task_id=task_id,
+                                               task_ids=task_ids,
                                                status=status,
                                                resource_type=resource_type,
                                                extended=extended,
                                                include_properties=include_properties)
+
+        logger.info("found %s claims" % len(claims))
+
         for claim in claims:
             claim['starttime'] = claim['starttime'].datetime()
             claim['endtime'] = claim['endtime'].datetime()
