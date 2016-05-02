@@ -2,6 +2,7 @@
 
 python_install(
     __init__.py
+    cobaltblocksize.py
     raservice.py
     assignment.py
     config.py
