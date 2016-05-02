@@ -118,6 +118,15 @@ class BlockConstraints(object):
         return samples / (self.clockMHz * 1e6 / 1024)
 
 class BlockSize(object):
+    """ Derive Cobalt specifications given BlockConstraints. Output:
+
+        BlockSize member | Cobalt parset key
+        ---------------------------------------
+        blockSize        | Cobalt.blockSize
+        nrSubblocks      | Cobalt.Correlator.nrIntegrationsPerBlock
+        nrBlocks         | Cobalt.Correlator.nrBlocksPerIntegration
+        integrationTime  | Cobalt.Correlator.integrationTime
+    """
     def __init__(self, constraints):
         self.constraints = constraints
         self.nrSubblocks = constraints.nrSubblocks()
@@ -128,6 +137,8 @@ class BlockSize(object):
             self.integrationSamples = self.blockSize / self.nrSubblocks
         else:
             self.integrationSamples = self.blockSize * self.nrBlocks
+
+        self.integrationTime = constraints._samples2time(self.integrationSamples)
 
     def _nrBlocks(self, integrationSamples, blockSize):
         return max(1, int(round(integrationSamples / blockSize)))
@@ -167,25 +178,3 @@ class BlockSize(object):
                 bestError     = error
 
         return bestBlockSize
-
-if __name__ == "__main__":
-    def inttime_generator():
-        i = 0.05
-        while i < 10.0:
-            yield i
-            i += 0.05
-        while i < 30.0:
-            yield i
-            i += 0.5
-
-    for i in inttime_generator():
-        correlator = CorrelatorSettings()
-        correlator.nrChannelsPerSubband = 64
-        correlator.integrationTime = i
-
-        c = BlockConstraints( correlator, None, None )
-        bs = BlockSize(c)
-
-        print "A request of",i," s becomes",c._samples2time(bs.integrationSamples),"s (block size",bs.blockSize,", nr blocks",bs.nrBlocks,", nr subblocks",bs.nrSubblocks,"factor",c.factor(),")"
-
-

@@ -90,7 +90,7 @@ class TestBlockSize(unittest.TestCase):
             c = BlockConstraints( correlator, None, None )
             bs = BlockSize(c)
 
-            self.assertAlmostEquals(c._samples2time(bs.integrationSamples), integrationTime, delta = integrationTime * 0.05)
+            self.assertAlmostEquals(bs.integrationTime, integrationTime, delta = integrationTime * 0.05)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
