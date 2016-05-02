@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<SYNCStatusType>
+  <clockCount>
+    <MACType>MACUnsigned</MACType>
+  </clockCount>
+  <count>
+    <MACType>MACUnsigned</MACType>
+  </count>
+  <errors>
+    <MACType>MACUnsigned</MACType>
+  </errors>
+</SYNCStatusType>

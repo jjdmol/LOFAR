@@ -1,0 +1,137 @@
+/* $Id: app.js 32724 2015-10-28 13:24:49Z schaap $ */
+
+.grid {
+    min-height: 400px;
+    min-width: 500px;
+    height: auto;
+    width: auto;
+}
+
+.gantt {
+    min-height: 100px;
+}
+
+.dropdown-menu {
+    z-index: 10000;
+}
+
+.ui-grid-cell {
+    overflow: visible;
+}
+
+.datepicker-wrapper ul {
+/*     visibility: hidden; */
+}
+
+.ui-layout-row > .ui-splitbar {
+    height: 8px;
+    background-color: #888888;
+}
+
+.ui-layout-column > .ui-splitbar {
+    width: 8px;
+    background-color: #888888;
+}
+
+ul.uib-datepicker-popup.dropdown-menu button.btn.btn-sm.btn-danger.uib-clear {
+    visibility: hidden;
+}
+
+table.uib-timepicker td.uib-time {
+    max-width: 50px;
+}
+
+
+.gantt-current-date-line {
+    border: 2px solid #000000;
+    z-index: 0;
+}
+
+.gantt-side {
+    width: 150px;
+}
+
+.top-stretch {
+    top: 60px;
+}
+
+.gantt-task-content {
+  margin-top: 2.2px;
+}
+
+.gantt-task.task-selected-task {
+  border: 1.5px solid #000000;
+  border-radius: 2px;
+}
+
+.gantt-task.claim-selected-task {
+  border: 1.5px solid #777777;
+  border-radius: 2px;
+}
+
+.gantt-task.claim-selected-claim {
+  border: 1.5px solid #000000;
+  border-radius: 2px;
+}
+
+div.gantt-task span {
+  padding: 0px 10px;
+}
+
+div.gantt-task.task-status-on_hold span, div.gantt-task.task-status-prescheduled span, div.gantt-task.task-status-scheduled span, div.gantt-task.task-status-queued span, div.gantt-task.task-status-aborted span, div.gantt-task.task-status-error span {
+  color: #ffffff;
+}
+
+div.gantt-task.claim-task-status-on_hold span, div.gantt-task.claim-task-status-prescheduled span, div.gantt-task.claim-task-status-scheduled span, div.gantt-task.claim-task-status-queued span, div.gantt-task.claim-task-status-aborted span, div.gantt-task.claim-task-status-error span {
+  color: #ffffff;
+}
+
+
+div.gantt-task.claim-task-status-prepared span {
+  background: #cccccc;
+}
+
+div.gantt-task.claim-task-status-approved span {
+  background: #8cb3d9;
+}
+
+div.gantt-task.claim-task-status-on_hold span {
+  background: #b34700;
+}
+
+div.gantt-task.claim-task-status-conflict span {
+  background: #ff0000;
+}
+
+div.gantt-task.claim-task-status-prescheduled span {
+  background: #6666ff;
+}
+
+div.gantt-task.claim-task-status-scheduled span {
+  background: #0000ff;
+}
+
+div.gantt-task.claim-task-status-queued span {
+  background: #6666ff;
+}
+
+div.gantt-task.claim-task-status-active span {
+  background: #ffff00;
+}
+
+div.gantt-task.claim-task-status-completing span {
+  background: #99ff33;
+}
+
+div.gantt-task.claim-task-status-finished span {
+  background: #00ff00;
+}
+
+div.gantt-task.claim-task-status-aborted span {
+  background: #cc0000;
+}
+
+div.gantt-task.claim-task-status-error span {
+  background: #990033;
+}
+
