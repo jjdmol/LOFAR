@@ -49,6 +49,8 @@ from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAUL
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as DEFAULT_RADB_SERVICENAME
 from lofar.mom.momqueryservice.momqueryrpc import MoMQueryRPC
 from lofar.mom.momqueryservice.config import DEFAULT_MOMQUERY_BUSNAME, DEFAULT_MOMQUERY_SERVICENAME
+from lofar.mom.momqueryservice.momrpc import MoMRPC
+from lofar.mom.momqueryservice.config import DEFAULT_MOM_BUSNAME, DEFAULT_MOM_SERVICENAME
 from lofar.sas.resourceassignment.resourceassignmenteditor.mom import updateTaskMomDetails
 from lofar.common import isProductionEnvironment, isTestEnvironment
 #from lofar.sas.resourceassignment.resourceassigner. import updateTaskMomDetails
@@ -94,6 +96,7 @@ app.json_encoder = CustomJSONEncoder
 
 rarpc = None
 momrpc = None
+momqueryrpc = None
 radbchangeshandler = None
 
 @app.route('/')
@@ -182,7 +185,7 @@ def getTasksFromUntil(fromTimestamp=None, untilTimestamp=None):
     # there are no task names in the database yet.
     # will they come from spec/MoM?
     # add Task <id> as name for now
-    updateTaskMomDetails(tasks, momrpc)
+    updateTaskMomDetails(tasks, momqueryrpc)
 
     return jsonify({'tasks': tasks})
 
@@ -195,7 +198,7 @@ def getTask(task_id):
             abort(404)
 
         task['name'] = 'Task %d' % task['id']
-        updateTaskMomDetails(task, momrpc)
+        updateTaskMomDetails(task, momqueryrpc)
         return jsonify({'task': task})
     except Exception as e:
         abort(404)
@@ -238,6 +241,27 @@ def putTask(task_id):
             abort(404)
     abort(406)
 
+@app.route('/rest/tasks/<int:task_id>/copy', methods=['PUT'])
+def copyTask(task_id):
+    if isProductionEnvironment():
+        abort(403, 'Copying of tasks is by users is not yet approved')
+
+    try:
+        task = rarpc.getTask(task_id)
+
+        if not task:
+            logger.error('Could not find task %s' % task_id)
+            abort(404, 'Could not find task %s' % task_id)
+
+        mom2id = task['mom_id']
+        new_task_mom2id = momrpc.copyTask(mom2id=mom2id)
+        return jsonify({'copied':True, 'new_task_mom2id':new_task_mom2id, 'old_task_mom2id':mom2id})
+    except Exception as e:
+        logger.error(e)
+        abort(404, str(e))
+
+        return jsonify({'copied':False})
+
 @app.route('/rest/tasks/<int:task_id>/resourceclaims')
 def taskResourceClaims(task_id):
     return jsonify({'taskResourceClaims': rarpc.getResourceClaims(task_id=task_id, include_properties=True)})
@@ -270,7 +294,7 @@ def resourceclaimpropertytypes():
 def getMoMProjects():
     projects = []
     try:
-        projects = momrpc.getProjects()
+        projects = momqueryrpc.getProjects()
         projects = [x for x in projects if x['status_id'] in [1, 7]]
         for project in projects:
             project['mom_id'] = project.pop('mom2id')
@@ -283,7 +307,7 @@ def getMoMProjects():
 
 @app.route('/rest/momobjectdetails/<int:mom2id>')
 def getMoMObjectDetails(mom2id):
-    details = momrpc.getProjectDetails(mom2id)
+    details = momqueryrpc.getProjectDetails(mom2id)
     details = details.values()[0] if details else None
     if details:
         details['project_mom_id'] = details.pop('project_mom2id')
@@ -323,8 +347,11 @@ def main():
     parser.add_option('--radb_servicename', dest='radb_servicename', type='string', default=DEFAULT_RADB_SERVICENAME, help='Name of the radbservice, default: %default')
     parser.add_option('--radb_notification_busname', dest='radb_notification_busname', type='string', default=DEFAULT_RADB_CHANGES_BUSNAME, help='Name of the notification bus exchange on the qpid broker on which the radb notifications are published, default: %default')
     parser.add_option('--radb_notification_subjects', dest='radb_notification_subjects', type='string', default=DEFAULT_RADB_CHANGES_SUBJECTS, help='Subject(s) to listen for on the radb notification bus exchange on the qpid broker, default: %default')
-    parser.add_option('--mom_busname', dest='mom_busname', type='string', default=DEFAULT_MOMQUERY_BUSNAME, help='Name of the bus exchange on the qpid broker on which the momservice listens, default: %default')
-    parser.add_option('--mom_servicename', dest='mom_servicename', type='string', default=DEFAULT_MOMQUERY_SERVICENAME, help='Name of the momservice, default: %default')
+    parser.add_option('--mom_busname', dest='mom_busname', type='string', default=DEFAULT_MOM_BUSNAME, help='Name of the bus exchange on the qpid broker on which the momservice listens, default: %default')
+    parser.add_option('--mom_servicename', dest='mom_servicename', type='string', default=DEFAULT_MOM_SERVICENAME, help='Name of the momservice, default: %default')
+    parser.add_option('--mom_broker', dest='mom_broker', type='string', default=None, help='Address of the qpid broker for the mom service, default: localhost')
+    parser.add_option('--mom_query_busname', dest='mom_query_busname', type='string', default=DEFAULT_MOMQUERY_BUSNAME, help='Name of the bus exchange on the qpid broker on which the momqueryservice listens, default: %default')
+    parser.add_option('--mom_query_servicename', dest='mom_query_servicename', type='string', default=DEFAULT_MOMQUERY_SERVICENAME, help='Name of the momqueryservice, default: %default')
     parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
     (options, args) = parser.parse_args()
 
@@ -332,13 +359,15 @@ def main():
                         level=logging.DEBUG if options.verbose else logging.INFO)
 
     global rarpc
-    rarpc = RARPC(busname=DEFAULT_RADB_BUSNAME, servicename=DEFAULT_RADB_SERVICENAME, broker=options.broker)
+    rarpc = RARPC(busname=options.radb_busname, servicename=options.radb_servicename, broker=options.broker)
     global momrpc
-    momrpc = MoMQueryRPC(busname=DEFAULT_MOMQUERY_BUSNAME, servicename=DEFAULT_MOMQUERY_SERVICENAME, timeout=2.5, broker=options.broker)
+    momrpc = MoMRPC(busname=options.mom_busname, servicename=options.mom_servicename, broker=options.mom_broker)
+    global momqueryrpc
+    momqueryrpc = MoMQueryRPC(busname=options.mom_query_busname, servicename=options.mom_query_servicename, timeout=2.5, broker=options.broker)
     global radbchangeshandler
-    radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker=options.broker, momrpc=momrpc)
+    radbchangeshandler = RADBChangesHandler(options.radb_notification_busname, subjects=options.radb_notification_subjects, broker=options.broker, momqueryrpc=momqueryrpc)
 
-    with radbchangeshandler, rarpc, momrpc:
+    with radbchangeshandler, rarpc, momrpc, momqueryrpc:
         '''Start the webserver'''
         app.run(debug=options.verbose, threaded=True, host='0.0.0.0', port=options.port)
 

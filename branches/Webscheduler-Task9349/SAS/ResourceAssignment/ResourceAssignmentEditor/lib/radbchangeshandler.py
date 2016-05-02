@@ -44,7 +44,7 @@ CHANGE_INSERT_TYPE = 'insert'
 CHANGE_DELETE_TYPE = 'delete'
 
 class RADBChangesHandler(RADBBusListener):
-    def __init__(self, busname=DEFAULT_NOTIFICATION_BUSNAME, subjects=DEFAULT_NOTIFICATION_SUBJECTS, broker=None, momrpc=None, **kwargs):
+    def __init__(self, busname=DEFAULT_NOTIFICATION_BUSNAME, subjects=DEFAULT_NOTIFICATION_SUBJECTS, broker=None, momqueryrpc=None, **kwargs):
         """
         RADBChangesHandler listens on the lofar notification message bus and keeps track of all the change notifications.
         :param broker: valid Qpid broker host (default: None, which means localhost)
@@ -60,7 +60,7 @@ class RADBChangesHandler(RADBBusListener):
         self._lock = Lock()
         self._changedCondition = Condition()
         self._changeNumber = 0L
-        self._momrpc = momrpc
+        self._momqueryrpc = momqueryrpc
 
     def _handleChange(self, change):
         '''_handleChange appends a change in the changes list and calls the onChangedCallback.
@@ -89,7 +89,7 @@ class RADBChangesHandler(RADBBusListener):
         :param task: dictionary with the inserted task'''
         task['starttime'] = task['starttime'].datetime()
         task['endtime'] = task['endtime'].datetime()
-        updateTaskMomDetails(task, self._momrpc)
+        updateTaskMomDetails(task, self._momqueryrpc)
         task_change = {'changeType':CHANGE_INSERT_TYPE, 'objectType':'task', 'value':task}
         self._handleChange(task_change)
 
