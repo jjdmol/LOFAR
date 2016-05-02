@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # $Id$
 
-DEFAULT_BUSNAME = 'lofar.ra.command'
+from lofar.messaging import adaptNameToEnvironment
+
+DEFAULT_BUSNAME = adaptNameToEnvironment('lofar.ra.command')
 DEFAULT_SERVICENAME = 'ResourceEstimation'
 

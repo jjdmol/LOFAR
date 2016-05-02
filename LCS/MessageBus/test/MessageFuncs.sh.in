@@ -25,6 +25,14 @@ function _generate_prefix() {
 export QUEUE_PREFIX=`_generate_prefix`
 echo "MessageBus: QUEUE_PREFIX=$QUEUE_PREFIX" >&2
 
+if [ "$LOFARENV" == "PRODUCTION" ]; then
+  FULL_QUEUE_PREFIX="${QUEUE_PREFIX}"
+elif [ "$LOFARENV" == "TEST" ]; then
+  FULL_QUEUE_PREFIX="${QUEUE_PREFIX}test."
+else
+  FULL_QUEUE_PREFIX="${QUEUE_PREFIX}devel."
+fi
+
 function have_qpid() {
   [ "@HAVE_QPID@" == "TRUE" ]
 }
@@ -69,7 +77,7 @@ function _qpid_receive() {
   if have_qpid; then
     @QPID_RECEIVE_EXECUTABLE@ \
         -b "$HOST" \
-        -a "$QUEUE_PREFIX$QUEUE$OPTIONS" "$@"
+        -a "$FULL_QUEUE_PREFIX$QUEUE$OPTIONS" "$@"
   fi
 }
 
@@ -88,7 +96,7 @@ function _qpid_send() {
   if have_qpid; then
     @QPID_SEND_EXECUTABLE@ \
         -b "$HOST" \
-        -a "$QUEUE_PREFIX$QUEUE$OPTIONS" "$@"
+        -a "$FULL_QUEUE_PREFIX$QUEUE$OPTIONS" "$@"
   fi
 }
 
@@ -100,7 +108,7 @@ function create_queue() {
   #   create_queue [host:]queue
   HOSTQUEUE="$1"
 
-  echo "MessageBus: Creating queue $QUEUE_PREFIX$HOSTQUEUE" >&2
+  echo "MessageBus: Creating queue $FULL_QUEUE_PREFIX$HOSTQUEUE" >&2
 
   _qpid_receive "$HOSTQUEUE" "; { create: always }" --print-content no --ignore-reply-to
 
@@ -117,7 +125,7 @@ function delete_queue() {
   # Will not remove used queues
   HOSTQUEUE="$1"
 
-  echo "MessageBus: Deleting queue $QUEUE_PREFIX$HOSTQUEUE" >&2
+  echo "MessageBus: Deleting queue $FULL_QUEUE_PREFIX$HOSTQUEUE" >&2
 
   _qpid_receive "$HOSTQUEUE" "; { delete: always }" --print-content no --ignore-reply-to
 }

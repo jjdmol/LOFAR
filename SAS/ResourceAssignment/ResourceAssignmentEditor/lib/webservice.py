@@ -47,9 +47,8 @@ from lofar.sas.resourceassignment.database.config import DEFAULT_NOTIFICATION_SU
 from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME as DEFAULT_RADB_BUSNAME
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as DEFAULT_RADB_SERVICENAME
-from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
-from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
-from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
+from lofar.mom.momqueryservice.momqueryrpc import MoMQueryRPC
+from lofar.mom.momqueryservice.config import DEFAULT_MOMQUERY_BUSNAME, DEFAULT_MOMQUERY_SERVICENAME
 from lofar.sas.resourceassignment.resourceassignmenteditor.mom import updateTaskMomDetails
 #from lofar.sas.resourceassignment.resourceassigner. import updateTaskMomDetails
 
@@ -122,9 +121,23 @@ def resourcegroupsmemberships():
     return jsonify({'resourcegroupmemberships': result})
 
 @app.route('/rest/resourceclaims')
-@gzipped
 def resourceclaims():
-    claims = rarpc.getResourceClaims(include_properties=True)
+    return resourceclaimsFromUntil(None, None)
+
+@app.route('/rest/resourceclaims/<string:fromTimestamp>')
+def resourceclaimsFrom(fromTimestamp=None):
+    return resourceclaimsFromUntil(fromTimestamp, None)
+
+@app.route('/rest/resourceclaims/<string:fromTimestamp>/<string:untilTimestamp>')
+@gzipped
+def resourceclaimsFromUntil(fromTimestamp=None, untilTimestamp=None):
+    if fromTimestamp and isinstance(fromTimestamp, basestring):
+        fromTimestamp = asDatetime(fromTimestamp)
+
+    if untilTimestamp and isinstance(untilTimestamp, basestring):
+        untilTimestamp = asDatetime(untilTimestamp)
+
+    claims = rarpc.getResourceClaims(lower_bound=fromTimestamp, upper_bound=untilTimestamp, include_properties=True)
     return jsonify({'resourceclaims': claims})
 
 @app.route('/rest/resourceusages')
@@ -147,9 +160,23 @@ def resourceUsagesForTask(task_id):
     return jsonify({'resourceusages': result})
 
 @app.route('/rest/tasks')
-@gzipped
 def getTasks():
-    tasks = rarpc.getTasks()
+    return getTasksFromUntil(None, None)
+
+@app.route('/rest/tasks/<string:fromTimestamp>')
+def getTasksFrom(fromTimestamp):
+    return getTasksFromUntil(fromTimestamp, None)
+
+@app.route('/rest/tasks/<string:fromTimestamp>/<string:untilTimestamp>')
+@gzipped
+def getTasksFromUntil(fromTimestamp=None, untilTimestamp=None):
+    if fromTimestamp and isinstance(fromTimestamp, basestring):
+        fromTimestamp = asDatetime(fromTimestamp)
+
+    if untilTimestamp and isinstance(untilTimestamp, basestring):
+        untilTimestamp = asDatetime(untilTimestamp)
+
+    tasks = rarpc.getTasks(fromTimestamp, untilTimestamp)
 
     # there are no task names in the database yet.
     # will they come from spec/MoM?
@@ -211,7 +238,7 @@ def putTask(task_id):
 
 @app.route('/rest/tasks/<int:task_id>/resourceclaims')
 def taskResourceClaims(task_id):
-    return jsonify({'taskResourceClaims': [x for x in resourceClaims if x['taskId'] == task_id]})
+    return jsonify({'taskResourceClaims': rarpc.getResourceClaims(task_id=task_id, include_properties=True)})
 
 @app.route('/rest/tasktypes')
 def tasktypes():
@@ -281,6 +308,10 @@ def getLofarTime():
     return jsonify({'lofarTime': asIsoFormat(datetime.utcnow())})
 
 def main():
+    # make sure we run in UTC timezone
+    import os
+    os.environ['TZ'] = 'UTC'
+
     # Check the invocation arguments
     parser = OptionParser('%prog [options]',
                           description='run the resource assignment editor web service')
@@ -290,8 +321,8 @@ def main():
     parser.add_option('--radb_servicename', dest='radb_servicename', type='string', default=DEFAULT_RADB_SERVICENAME, help='Name of the radbservice, default: %default')
     parser.add_option('--radb_notification_busname', dest='radb_notification_busname', type='string', default=DEFAULT_RADB_CHANGES_BUSNAME, help='Name of the notification bus exchange on the qpid broker on which the radb notifications are published, default: %default')
     parser.add_option('--radb_notification_subjects', dest='radb_notification_subjects', type='string', default=DEFAULT_RADB_CHANGES_SUBJECTS, help='Subject(s) to listen for on the radb notification bus exchange on the qpid broker, default: %default')
-    parser.add_option('--mom_busname', dest='mom_busname', type='string', default=DEFAULT_MOM_BUSNAME, help='Name of the bus exchange on the qpid broker on which the momservice listens, default: %default')
-    parser.add_option('--mom_servicename', dest='mom_servicename', type='string', default=DEFAULT_MOM_SERVICENAME, help='Name of the momservice, default: %default')
+    parser.add_option('--mom_busname', dest='mom_busname', type='string', default=DEFAULT_MOMQUERY_BUSNAME, help='Name of the bus exchange on the qpid broker on which the momservice listens, default: %default')
+    parser.add_option('--mom_servicename', dest='mom_servicename', type='string', default=DEFAULT_MOMQUERY_SERVICENAME, help='Name of the momservice, default: %default')
     parser.add_option('-V', '--verbose', dest='verbose', action='store_true', help='verbose logging')
     (options, args) = parser.parse_args()
 
@@ -301,7 +332,7 @@ def main():
     global rarpc
     rarpc = RARPC(busname=DEFAULT_RADB_BUSNAME, servicename=DEFAULT_RADB_SERVICENAME, broker=options.broker)
     global momrpc
-    momrpc = MoMRPC(busname=DEFAULT_MOM_BUSNAME, servicename=DEFAULT_MOM_SERVICENAME, timeout=2.5, broker=options.broker)
+    momrpc = MoMQueryRPC(busname=DEFAULT_MOMQUERY_BUSNAME, servicename=DEFAULT_MOMQUERY_SERVICENAME, timeout=2.5, broker=options.broker)
     global radbchangeshandler
     radbchangeshandler = RADBChangesHandler(DEFAULT_RADB_CHANGES_BUSNAME, broker=options.broker, momrpc=momrpc)
 

@@ -28,7 +28,7 @@ from mysql.connector.errors import OperationalError
 from lofar.messaging import Service
 from lofar.messaging.Service import MessageHandlerInterface
 from lofar.common.util import waitForInterrupt
-from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME, DEFAULT_SERVICENAME
+from lofar.mom.momqueryservice.config import DEFAULT_MOMQUERY_BUSNAME, DEFAULT_MOMQUERY_SERVICENAME
 from lofar.common import dbcredentials
 
 logger=logging.getLogger(__file__)
@@ -62,53 +62,32 @@ class MoMDatabaseWrapper:
         self.conn = None
 
     def _connect(self):
+        if self.conn:
+            self.conn.close()
+
         connect_options = self.dbcreds.mysql_connect_options()
         connect_options['connection_timeout'] = 5
         try:
             logger.info("Connecting to %s" % self.dbcreds.stringWithHiddenPassword())
             self.conn = connector.connect(**connect_options)
-            logger.info("Connected to %s" % self.dbcreds.stringWithHiddenPassword())
+            logger.debug("Connected to %s" % self.dbcreds.stringWithHiddenPassword())
         except Exception as e:
             logger.error(str(e))
             self.conn = None
 
-    def ensureConnection(self):
-        if not self.conn:
-            self._connect()
-
-        try:
-            # try a simple select
-            # if it fails, reconnect
-            cursor = self.conn.cursor()
-            cursor.execute('''SELECT id FROM project;''')
-            if len(cursor.fetchall()) == 0:
-                logger.warning('unexpected answer while checking connection. reconnecting in 1 sec...')
-                time.sleep(1)
-                self._connect()
-        except (OperationalError, AttributeError) as e:
-            if isinstance(e, OperationalError):
-                logger.error(str(e))
-            for i in range(5):
-                logger.info("retrying to connect to mom database")
-                self._connect()
-                if self.conn:
-                    logger.info("connected to mom database")
-                    break
-                time.sleep(i*i)
-
     def _executeQuery(self, query):
-        def doQuery(connection):
-            cursor = connection.cursor(dictionary=True)
-            cursor.execute(query)
-            return cursor.fetchall()
-
-        try:
-            return doQuery(self.conn)
-        except (OperationalError, AttributeError) as e:
-            if isinstance(e, OperationalError):
+        # try to execute query on flaky lofar mysql connection
+        # max of 3 tries, on succes return result
+        # use new connection for every query,
+        # because on the flaky lofar network a connection may appear functional but returns improper results.
+        for i in range(3):
+            try:
+                self._connect()
+                cursor = self.conn.cursor(dictionary=True)
+                cursor.execute(query)
+                return cursor.fetchall()
+            except (OperationalError, AttributeError) as e:
                 logger.error(str(e))
-            self.ensureConnection()
-            return doQuery(self.conn)
 
     def getProjectDetails(self, mom_ids):
         ''' get the project details (project_mom2id, project_name,
@@ -143,8 +122,8 @@ class MoMDatabaseWrapper:
         ''' % (ids_str,)
         rows = self._executeQuery(query)
 
-        logger.info("Found %d results for mom id%s: %s" %
-                    (len(rows), '\'s' if len(ids) > 1 else '', ids_str))
+        logger.info("Found %d results for mom id(s): %s" %
+                    (len(rows), ids_str))
 
         result = {}
         for row in rows:
@@ -171,7 +150,11 @@ class MoMDatabaseWrapper:
         where project.mom2objecttype='PROJECT'
         order by mom2id;
         '''
-        return self._executeQuery(query)
+        result = self._executeQuery(query)
+
+        logger.info("Found %d projects" % (len(result), ))
+
+        return result
 
 
 class ProjectDetailsQueryHandler(MessageHandlerInterface):
@@ -202,8 +185,8 @@ class ProjectDetailsQueryHandler(MessageHandlerInterface):
     def getProjects(self):
         return self.momdb.getProjects()
 
-def createService(busname=DEFAULT_BUSNAME,
-                  servicename=DEFAULT_SERVICENAME,
+def createService(busname=DEFAULT_MOMQUERY_BUSNAME,
+                  servicename=DEFAULT_MOMQUERY_SERVICENAME,
                   dbcreds=None,
                   handler=None,
                   broker=None):
@@ -234,8 +217,8 @@ def main():
     parser = OptionParser("%prog [options]",
                           description='runs the momqueryservice')
     parser.add_option('-q', '--broker', dest='broker', type='string', default=None, help='Address of the qpid broker, default: localhost')
-    parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_BUSNAME, help="Name of the bus exchange on the qpid broker, [default: %default]")
-    parser.add_option("-s", "--servicename", dest="servicename", type="string", default=DEFAULT_SERVICENAME, help="Name for this service, [default: %default]")
+    parser.add_option("-b", "--busname", dest="busname", type="string", default=DEFAULT_MOMQUERY_BUSNAME, help="Name of the bus exchange on the qpid broker, [default: %default]")
+    parser.add_option("-s", "--servicename", dest="servicename", type="string", default=DEFAULT_MOMQUERY_SERVICENAME, help="Name for this service, [default: %default]")
     parser.add_option_group(dbcredentials.options_group(parser))
     parser.set_defaults(dbcredentials="MoM")
     (options, args) = parser.parse_args()

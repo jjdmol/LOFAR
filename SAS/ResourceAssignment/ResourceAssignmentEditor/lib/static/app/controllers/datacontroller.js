@@ -36,6 +36,24 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
     self.selected_resourceClaim_id;
 
     self.initialLoadComplete = false;
+    self.taskChangeCntr = 0;
+    self.claimChangeCntr = 0;
+
+    self.loadedHours = {};
+
+    self.viewTimeSpan = {from: new Date(), to: new Date() };
+
+    self.floorDate = function(date, hourMod=1, minMod=1) {
+        var min = date.getMinutes();
+        min = date.getMinutes()/minMod;
+        min = Math.floor(date.getMinutes()/minMod);
+        min = minMod*Math.floor(date.getMinutes()/minMod);
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hourMod*Math.floor(date.getHours()/hourMod), minMod*Math.floor(date.getMinutes()/minMod));
+    };
+
+    self.ceilDate = function(date, hourMod=1, minMod=1) {
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hourMod*Math.ceil(date.getHours()/hourMod), minMod*Math.ceil(date.getMinutes()/minMod));
+    };
 
     self.resourceClaimStatusColors = {'claimed':'#ffa64d',
                                       'conflict':'#ff0000',
@@ -58,10 +76,34 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
 
 
-    //start with local client time
-    //lofarTime will be synced with server,
-    //because local machine might have incorrect clock
-    self.lofarTime = new Date(Date.now());
+    //-- IMPORTANT REMARKS ABOUT UTC/LOCAL DATE --
+    //Dates (datetimes) across javascript/angularjs/3rd party modules are a mess!
+    //every module uses their own parsing and displaying
+    //some care about utc/local date, others don't
+    //So, to be consistent in this schedular client app, we chose the following conventions:
+    //1) All received/sent timestamps are strings in iso format 'yyyy-MM-ddTHH:mm:ssZ'
+    //2) All displayed timestamps should display the time in UTC, regardless of the timezone of the client.
+    //All javascript/angularjs/3rd party modules display local times correct and the same...
+    //So, to make 1&2 happen, we convert all received timestamps to 'local-with-utc-diff-correction', and then treat them as local.
+    //And if we send them to the web server, we convert them back to real utc.
+    //It's a stupid solution, but it works.
+    //-- IMPORTANT REMARKS ABOUT UTC/LOCAL DATE --
+
+    convertDatestringToLocalUTCDate = function(dateString) {
+        //first convert the dateString to proper Date
+        var date = new Date(dateString)
+        //then do our trick to offset the timestamp with the utcOffset, see explanation above.
+        return new Date(date.getTime() - self.utcOffset)
+    };
+
+    convertLocalUTCDateToISOString = function(local_utc_date) {
+        //reverse trick to offset the timestamp with the utcOffset, see explanation above.
+        var real_utc = new Date(local_utc_date.getTime() + self.utcOffset)
+        return real_utc.toISOString();
+    };
+
+    //local client time offset to utc in milliseconds
+    self.utcOffset = moment().utcOffset()*60000;
 
     self.toIdBasedDict = function(list) {
         var dict = {}
@@ -77,8 +119,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             if(existingObj.hasOwnProperty(prop) &&
             changedObj.hasOwnProperty(prop) &&
             existingObj[prop] != changedObj[prop]) {
-                if(existingObj[prop] instanceof Date && changedObj[prop] instanceof String) {
-                    existingObj[prop] = new Date(changedObj[prop]);
+                if(existingObj[prop] instanceof Date && typeof changedObj[prop] === "string") {
+                    existingObj[prop] = convertDatestringToLocalUTCDate(changedObj[prop]);
                 } else {
                     existingObj[prop] = changedObj[prop];
                 }
@@ -86,22 +128,114 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         }
     };
 
-    self.getTasks = function() {
-        var defer = $q.defer();
+    self.getTasksAndClaimsForViewSpan = function() {
+        var from = self.floorDate(self.viewTimeSpan.from, 1, 60);
+        var until = self.ceilDate(self.viewTimeSpan.to, 1, 60);
+        var lowerTS = from.getTime();
+        var upperTS = until.getTime();
 
-        $http.get('/rest/tasks').success(function(result) {
+        for (var timestamp = lowerTS; timestamp < upperTS; ) {
+            if(self.loadedHours.hasOwnProperty(timestamp)) {
+                timestamp += 3600000;
+            }
+            else {
+                var chuckUpperLimit = Math.min(upperTS, timestamp + 24*3600000);
+                for (var chunkTimestamp = timestamp; chunkTimestamp < chuckUpperLimit; chunkTimestamp += 3600000) {
+                    if(self.loadedHours.hasOwnProperty(chunkTimestamp))
+                        break;
+
+                    self.loadedHours[chunkTimestamp] = null;
+                }
+
+                var hourLower = new Date(timestamp);
+                var hourUpper = new Date(chunkTimestamp);
+                if(hourUpper > hourLower) {
+                    self.getTasks(hourLower, hourUpper);
+                    self.getResourceClaims(hourLower, hourUpper);
+                }
+                timestamp = chunkTimestamp;
+            }
+        }
+    };
+
+    self.clearTasksAndClaimsOutsideViewSpan = function() {
+        var from = self.floorDate(self.viewTimeSpan.from, 1, 60);
+        var until = self.ceilDate(self.viewTimeSpan.to, 1, 60);
+
+        var numTasks = self.tasks.length;
+        var visibleTasks = [];
+        for(var i = 0; i < numTasks; i++) {
+            var task = self.tasks[i];
+            if(task.endtime >= from && task.starttime <= until)
+                visibleTasks.push(task);
+        }
+
+        self.tasks = visibleTasks;
+        self.taskDict = self.toIdBasedDict(self.tasks);
+        self.filteredTasks = self.tasks;
+        self.filteredTaskDict = self.taskDict;
+
+        self.computeMinMaxTaskTimes();
+
+
+        var numClaims = self.resourceClaims.length;
+        var visibleClaims = [];
+        for(var i = 0; i < numClaims; i++) {
+            var claim = self.resourceClaims[i];
+            if(claim.endtime >= from && claim.starttime <= until)
+                visibleClaims.push(claim);
+        }
+
+        self.resourceClaims = visibleClaims;
+        self.resourceClaimDict = self.toIdBasedDict(self.resourceClaims);
+
+        self.computeMinMaxResourceClaimTimes();
+
+        var newLoadedHours = {};
+        var fromTS = from.getTime();
+        var untilTS = until.getTime();
+        for(var hourTS in self.loadedHours) {
+            if(hourTS >= fromTS && hourTS <= untilTS)
+                newLoadedHours[hourTS] = null;
+        }
+        self.loadedHours = newLoadedHours;
+    };
+
+    self.getTasks = function(from, until) {
+        var defer = $q.defer();
+        var url = '/rest/tasks';
+        if(from) {
+            url += '/' + convertLocalUTCDateToISOString(from);
+
+            if(until) {
+                url += '/' + convertLocalUTCDateToISOString(until);
+            }
+        }
+
+        $http.get(url).success(function(result) {
             //convert datetime strings to Date objects
             for(var i in result.tasks) {
                 var task = result.tasks[i];
-                task.starttime = new Date(task.starttime);
-                task.endtime = new Date(task.endtime);
+                task.starttime = convertDatestringToLocalUTCDate(task.starttime);
+                task.endtime = convertDatestringToLocalUTCDate(task.endtime);
+
             }
 
-            self.tasks = result.tasks;
-            self.taskDict = self.toIdBasedDict(self.tasks);
+            var newTaskDict = self.toIdBasedDict(result.tasks);
+            var newTaskIds = Object.keys(newTaskDict);
+
+            for(var i = newTaskIds.length-1; i >= 0; i--) {
+                var task_id = newTaskIds[i];
+                if(!self.taskDict.hasOwnProperty(task_id)) {
+                    var task = newTaskDict[task_id];
+                    self.tasks.push(task);
+                    self.taskDict[task_id] = task;
+                }
+            }
 
             self.filteredTasks = self.tasks;
             self.filteredTaskDict = self.taskDict;
+            self.taskChangeCntr++;
 
             self.computeMinMaxTaskTimes();
 
@@ -112,6 +246,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
     };
 
     self.putTask = function(task) {
+        task.starttime = convertLocalUTCDateToISOString(task.starttime);
+        task.endtime = convertLocalUTCDateToISOString(task.endtime);
         $http.put('/rest/tasks/' + task.id, task).error(function(result) {
             console.log("Error. Could not update task. " + result);
             //TODO: revert to old state
@@ -124,12 +260,10 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
         var minStarttime = new Date(Math.min.apply(null, starttimes));
         var maxEndtime = new Date(Math.max.apply(null, endtimes));
-        var fullTimespanInMinutes = (maxEndtime - minStarttime) / (60 * 1000);
 
         self.taskTimes = {
             min: minStarttime,
-            max: maxEndtime,
-            fullTimespanInMinutes: fullTimespanInMinutes
+            max: maxEndtime
         };
     };
 
@@ -157,7 +291,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                 for(var status in resource_usages) {
                     var usages = resource_usages[status];
                     for(var usage of usages) {
-                        usage.timestamp = new Date(usage.timestamp);
+                        usage.timestamp = convertDatestringToLocalUTCDate(usage.timestamp);
                     }
                 }
                 self.resourceUsagesDict[result.resourceusages[i].resource_id] = result.resourceusages[i];
@@ -169,18 +303,36 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         return defer.promise;
     };
 
-    self.getResourceClaims = function() {
+    self.getResourceClaims = function(from, until) {
         var defer = $q.defer();
-        $http.get('/rest/resourceclaims').success(function(result) {
+        var url = '/rest/resourceclaims';
+        if(from) {
+            url += '/' + convertLocalUTCDateToISOString(from);
+
+            if(until) {
+                url += '/' + convertLocalUTCDateToISOString(until);
+            }
+        }
+
+        $http.get(url).success(function(result) {
             //convert datetime strings to Date objects
             for(var i in result.resourceclaims) {
                 var resourceclaim = result.resourceclaims[i];
-                resourceclaim.starttime = new Date(resourceclaim.starttime);
-                resourceclaim.endtime = new Date(resourceclaim.endtime);
+                resourceclaim.starttime = convertDatestringToLocalUTCDate(resourceclaim.starttime);
+                resourceclaim.endtime = convertDatestringToLocalUTCDate(resourceclaim.endtime);
             }
 
-            self.resourceClaims = result.resourceclaims;
-            self.resourceClaimDict = self.toIdBasedDict(self.resourceClaims);
+            var newClaimDict = self.toIdBasedDict(result.resourceclaims);
+            var newClaimIds = Object.keys(newClaimDict);
+
+            for(var i = newClaimIds.length-1; i >= 0; i--) {
+                var claim_id = newClaimIds[i];
+                if(!self.resourceClaimDict.hasOwnProperty(claim_id)) {
+                    var claim = newClaimDict[claim_id];
+                    self.resourceClaims.push(claim);
+                    self.resourceClaimDict[claim_id] = claim;
+                }
+            }
 
             self.computeMinMaxResourceClaimTimes();
 
@@ -196,12 +348,10 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
         var minStarttime = new Date(Math.min.apply(null, starttimes));
         var maxEndtime = new Date(Math.max.apply(null, endtimes));
-        var fullTimespanInMinutes = (maxEndtime - minStarttime) / (60 * 1000);
 
         self.resourceClaimTimes = {
             min: minStarttime,
-            max: maxEndtime,
-            fullTimespanInMinutes: fullTimespanInMinutes
+            max: maxEndtime
         };
     };
 
@@ -292,15 +442,23 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         });
     };
 
+    //start with local client time
+    //lofarTime will be synced with server,
+    //because local machine might have incorrect clock
+    //take utcOffset into account, see explanation above.
+    self.lofarTime = new Date(Date.now() - self.utcOffset);
+
     self._syncLofarTimeWithServer = function() {
         $http.get('/rest/lofarTime', {timeout:1000}).success(function(result) {
-            self.lofarTime = new Date(result.lofarTime);
+            self.lofarTime = convertDatestringToLocalUTCDate(result.lofarTime);
+
+            //check if local to utc offset has changed
+            self.utcOffset = moment().utcOffset()*60000;
         });
 
         setTimeout(self._syncLofarTimeWithServer, 60000);
     };
     self._syncLofarTimeWithServer();
-
 
     self.lastUpdateChangeNumber = undefined;
 
@@ -310,7 +468,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                 self.lastUpdateChangeNumber = result.mostRecentChangeNumber;
             }
 
-            var nrOfItemsToLoad = 8;
+            var nrOfItemsToLoad = 6;
             var nrOfItemsLoaded = 0;
             var checkInitialLoadCompleteness = function() {
                 nrOfItemsLoaded += 1;
@@ -322,11 +480,11 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             self.getMoMProjects().then(checkInitialLoadCompleteness);
             self.getTaskTypes().then(checkInitialLoadCompleteness);
             self.getTaskStatusTypes().then(checkInitialLoadCompleteness);
-            self.getTasks().then(checkInitialLoadCompleteness);
             self.getResourceGroups().then(checkInitialLoadCompleteness);
             self.getResources().then(checkInitialLoadCompleteness);
             self.getResourceGroupMemberships().then(checkInitialLoadCompleteness);
-            self.getResourceClaims().then(checkInitialLoadCompleteness);
+
+            self.getTasksAndClaimsForViewSpan();
 
             self.getResourceUsages();
 
@@ -360,6 +518,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                             } else if(change.changeType == 'insert') {
                                 var task = self.taskDict[changedTask.id];
                                 if(!task) {
+                                    changedTask.starttime = new Date(changedTask.starttime);
+                                    changedTask.endtime = new Date(changedTask.endtime);
                                     self.tasks.push(changedTask);
                                     self.taskDict[changedTask.id] = changedTask;
                                 }
@@ -373,6 +533,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                                 }
                             }
 
+                            self.taskChangeCntr++;
                             self.computeMinMaxTaskTimes();
                         } else if(change.objectType == 'resourceClaim') {
                             anyResourceClaims = true;
@@ -385,6 +546,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                             } else if(change.changeType == 'insert') {
                                 var claim = self.resourceClaimDict[changedClaim.id];
                                 if(!claim) {
+                                    changedClaim.starttime = new Date(changedClaim.starttime);
+                                    changedClaim.endtime = new Date(changedClaim.endtime);
                                     self.resourceClaims.push(changedClaim);
                                     self.resourceClaimDict[changedClaim.id] = changedClaim;
                                 }
@@ -398,6 +561,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                                 }
                             }
                             
+                            self.claimChangeCntr++;
                             self.computeMinMaxResourceClaimTimes();
                         } else if(change.objectType == 'resourceCapacity') {
                             if(change.changeType == 'update') {
@@ -446,6 +610,96 @@ dataControllerMod.controller('DataController',
     var self = this;
     $scope.dataService = dataService;
 
+    $scope.dateOptions = {
+        formatYear: 'yyyy',
+        startingDay: 1
+    };
+
+    $scope.viewFromDatePopupOpened = false;
+    $scope.viewToDatePopupOpened = false;
+
+    $scope.openViewFromDatePopup = function() { $scope.viewFromDatePopupOpened = true; };
+    $scope.openViewToDatePopup = function() { $scope.viewToDatePopupOpened = true; };
+    $scope.jumpTimespanWidths = [{value:30, name:'30 Minutes'}, {value:60, name:'1 Hour'}, {value:3*60, name:'3 Hours'}, {value:6*60, name:'6 Hours'}, {value:12*60, name:'12 Hours'}, {value:24*60, name:'1 Day'}, {value:2*24*60, name:'2 Days'}, {value:5*24*60, name:'5 Days'}, {value:7*24*60, name:'1 Week'}, {value:14*24*60, name:'2 Weeks'}, {value:28*24*60, name:'4 Weeks'}];
+    $scope.jumpTimespanWidth = $scope.jumpTimespanWidths[8];
+    $scope.jumpToNow = function() {
+        var floorLofarTime = dataService.floorDate(dataService.lofarTime, 1, 5);
+        dataService.viewTimeSpan = {
+            from: dataService.floorDate(new Date(floorLofarTime.getTime() - 0.33*$scope.jumpTimespanWidth.value*60*1000), 1, 5),
+            to: dataService.ceilDate(new Date(floorLofarTime.getTime() + 0.67*$scope.jumpTimespanWidth.value*60*1000), 1, 5)
+        };
+
+        //automatically select current task
+        var currentTasks = dataService.tasks.filter(function(t) { return t.starttime <= dataService.viewTimeSpan.to && t.endime >= dataService.viewTimeSpan.from; });
+        if(currentTasks.lenght > 0) {
+            dataService.selected_task_id = currentTasks[0].id;
+        }
+    };
+
+    //initialize are now
+    $scope.jumpToNow();
+
+    $scope.jumpToSelectedTasks = function() {
+        if(dataService.selected_task_id == undefined)
+            return;
+
+        var task = dataService.taskDict[dataService.selected_task_id];
+
+        if(task == undefined)
+            return;
+
+        var taskDurationInmsec = task.endtime.getTime() - task.starttime.getTime();
+        var taskDurationInMinutes = taskDurationInmsec/60000;
+        var viewSpanInMinutes = taskDurationInMinutes;
+
+        var fittingSpans = $scope.jumpTimespanWidths.filter(function(w) { return w.value >= taskDurationInMinutes; });
+        if(fittingSpans.length > 0) {
+            $scope.jumpTimespanWidth = fittingSpans[0];
+            viewSpanInMinutes = $scope.jumpTimespanWidth.value;
+        }
+
+        var focusTime = new Date(task.starttime.getTime() + 0.5*taskDurationInmsec);
+
+        dataService.viewTimeSpan = {
+            from: dataService.floorDate(new Date(focusTime.getTime() - 0.33*viewSpanInMinutes*60*1000), 1, 5),
+            to: dataService.ceilDate(new Date(focusTime.getTime() + 0.67*viewSpanInMinutes*60*1000), 1, 5)
+        };
+    };
+
+    $scope.onJumpTimespanWidthChanged = function(span) {
+        var focusTime = dataService.floorDate(dataService.lofarTime, 1, 5);
+
+        if(dataService.selected_task_id != undefined) {
+            var task = dataService.taskDict[dataService.selected_task_id];
+
+            if(task) {
+                focusTime = dataService.floorDate(task.starttime, 1, 5);
+            }
+        }
+
+        dataService.viewTimeSpan = {
+            from: dataService.floorDate(new Date(focusTime.getTime() - 0.33*$scope.jumpTimespanWidth.value*60*1000)),
+            to: dataService.ceilDate(new Date(focusTime.getTime() + 0.67*$scope.jumpTimespanWidth.value*60*1000))
+        };
+    };
+
+    $scope.$watch('dataService.viewTimeSpan.from', function() {
+        if(dataService.viewTimeSpan.from >= dataService.viewTimeSpan.to) {
+            dataService.viewTimeSpan.to = dataService.ceilDate(new Date(dataService.viewTimeSpan.from.getTime() + 60*60*1000), 1, 5);
+        }
+    });
+
+    $scope.$watch('dataService.viewTimeSpan.to', function() {
+        if(dataService.viewTimeSpan.to <= dataService.viewTimeSpan.from) {
+            dataService.viewTimeSpan.from = dataService.floorDate(new Date(dataService.viewTimeSpan.to.getTime() - 60*60*1000), 1, 5);
+        }
+    });
+
+    $scope.$watch('dataService.viewTimeSpan', function() {
+        dataService.clearTasksAndClaimsOutsideViewSpan();
+        dataService.getTasksAndClaimsForViewSpan();
+    }, true);
+
     $scope.$watch('dataService.filteredTasks', dataService.computeMinMaxTaskTimes);
 
     dataService.initialLoad();
@@ -459,10 +713,42 @@ dataControllerMod.controller('DataController',
         var elapsed = tick - self._prevTick;
         self._prevTick = tick;
         //evalAsync, so lofarTime will be seen by watches
-        $scope.$evalAsync(function() { dataService.lofarTime = new Date(dataService.lofarTime.getTime() + elapsed); });
+        $scope.$evalAsync(function() {
+            dataService.lofarTime = new Date(dataService.lofarTime.getTime() + elapsed);
+        });
 
         setTimeout(self._doTimeTick, 1000);
     };
     self._doTimeTick();
 }
 ]);
+
+//extend the default dateFilter so that it always displays dates as 'yyyy-MM-dd HH:mm:ss'
+//without any extra timezone string.
+//see also comments above why we do tricks with local and utc dates
+angular.module('raeApp').config(['$provide', function($provide) {
+    $provide.decorator('dateFilter', ['$delegate', function($delegate) {
+        var srcFilter = $delegate;
+
+        function zeroPaddedString(num) {
+            var numstr = num.toString();
+            if(numstr.length < 2) {
+                return '0' + numstr;
+            }
+            return numstr;
+        };
+
+        var extendsFilter = function() {
+            if(arguments[0] instanceof Date && arguments.length == 1) {
+                var date = arguments[0];
+                var dateString =  date.getFullYear() + '-' + zeroPaddedString(date.getMonth()+1) + '-' + zeroPaddedString(date.getDate()) + ' ' +
+                                  zeroPaddedString(date.getHours()) + ':' + zeroPaddedString(date.getMinutes()) + ':' + zeroPaddedString(date.getSeconds());
+
+                return dateString;
+            }
+            return srcFilter.apply(this, arguments);
+        }
+
+        return extendsFilter;
+    }])
+}])
