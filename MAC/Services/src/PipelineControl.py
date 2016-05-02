@@ -342,6 +342,7 @@ class PipelineControl(OTDBBusListener):
         " --net=host"
         " -v /data:/data"
         " -e LUSER=$UID"
+        " -e LOFARENV=$LOFARENV"
         " -v $HOME/.ssh:/home/lofar/.ssh:ro"
         " -e SLURM_JOB_ID=$SLURM_JOB_ID"
         " lofar-pipeline:{tag}"
@@ -364,6 +365,7 @@ class PipelineControl(OTDBBusListener):
       "docker run --rm"
         " --net=host"
         " -e LUSER=$UID"
+        " -e LOFARENV=$LOFARENV"
         " lofar-pipeline:{tag}"
         " pipelineAborted.sh -o {obsid} -B {status_bus}"
       .format(
