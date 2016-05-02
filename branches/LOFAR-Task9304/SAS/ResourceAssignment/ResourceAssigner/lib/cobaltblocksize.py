@@ -1,3 +1,23 @@
+"""
+  Code to derive the following parset input parameters for Cobalt:
+
+    Cobalt.blockSize
+
+        The number of samples in each unit of work. Needs to be a multiple of the working size
+        of each individual step, for example, an 64-channel FFT requires blockSize to be a multiple
+        of 64.
+
+    Cobalt.Correlator.nrBlocksPerIntegration
+
+        The number of correlator integration periods that fit in one block.
+
+    Cobalt.Correlator.nrIntegrationsPerBlock
+
+        The number of blocks that together form one integration period.
+
+  Note that either nrBlocksPerIntegration or nrIntegrationsPerBlock has to be equal to 1.
+"""
+
 from fractions import gcd
 from math import ceil
 
@@ -5,68 +25,104 @@ def lcm(a, b):
     """ Return the Least Common Multiple of a and b. """
     return abs(a * b) / gcd(a,b) if a and b else 0
 
-def time2samples(t, clockMHz):
-    return int(round(t * clockMHz * 1e6 / 1024))
+class CorrelatorSettings(object):
+    """ Settings for the Correlator. """
 
-def samples2time(s, clockMHz):
-    return s / (clockMHz * 1e6 / 1024)
+    def __init__(self):
+        self.nrChannelsPerSubband = 64
+        self.integrationTime      = 1.0
 
-# Block size below which the overhead per block becomes unwieldy
-MINBLOCKSIZE = int(round(time2samples(0.6, 200)))
+class StokesSettings(object):
+    """ Settings for the Beamformer. """
 
-# Block size above which the data does not fit on the GPU
-MAXBLOCKSIZE = int(round(time2samples(1.3, 200)))
+    def __init__(self):
+        self.nrChannelsPerSubband  = 1
+        self.timeIntegrationFactor = 1
 
-def nrSubblocks(integrationSamples):
-    if integrationSamples < MINBLOCKSIZE:
-        return max(1, int(round((MAXBLOCKSIZE + MINBLOCKSIZE) / 2.0 / integrationSamples)))
+class BlockConstraints(object):
+    """ Provide the constraints for the block size, as derived
+        from the correlator and beamformer settings. """
 
-    return 1
+    def __init__(self, correlatorSettings=None, coherentStokesSettings=None, incoherentStokesSettings=None, clockMHz=200):
+        self.correlator       = correlatorSettings
+        self.coherentStokes   = coherentStokesSettings
+        self.incoherentStokes = incoherentStokesSettings
 
-def factor(correlator, coherentStokes, incoherentStokes):
-    """
-      Determine common factors needed for the block Size.
+        self.clockMHz = clockMHz
 
-      The Cobalt GPU kernels require the Cobalt.blockSize to be a multiple
-      of several values in order to:
-         1) divide the work evenly over threads and blocks.
-         2) prevent integration of samples from crossing blockSize boundaries.
-    """
+    def minBlockSize(self):
+        """ Block size below which the overhead per block becomes unwieldy. """
+        return int(round(self._time2samples(0.6)))
 
-    factor = 1
+    def maxBlockSize(self):
+        """ Block size above which the data does not fit on the GPU. """
+        return int(round(self._time2samples(1.3)))
 
-    # Process correlator settings
-    if correlator:
-        # FIR_Filter.cu (16 = nr of PPF taps)
-        factor = lcm(factor, 16 * correlator["nrChannelsPerSubband"])
+    def nrSubblocks(self):
+        if self.correlator:
+            integrationSamples = self._time2samples(self.correlator.integrationTime)
+            if integrationSamples < self.minBlockSize():
+                return max(1, int(round((self.maxBlockSize() + self.minBlockSize()) / 2.0 / integrationSamples)))
 
-        # Correlator.cu (minimum of 16 samples per channel)
-        factor = lcm(factor, 16 * correlator["nrChannelsPerSubband"] * nrSubblocks(time2samples(correlator["integrationTime"], 200)))
+        return 1
 
-    if coherentStokes:
-        # DelayAndBandPass.cu
-        factor = lcm(factor, 16 * 64)
+    def idealBlockSize(self):
+        integrationTime = self.correlator.integrationTime if self.correlator else 1.0
+        return self.nrSubblocks() * self._time2samples(integrationTime)
 
-        # CoherentStokesKernel.cc (1024 = maxNrThreadsPerBlock)
-        factor = lcm(factor, 1024 * coherentStokes["timeIntegrationFactor"])
+    def factor(self):
+        """
+          Determine common factors needed for the block Size.
 
-        # CoherentStokes.cu (integration should fit)
-        factor = lcm(factor, 1024 * coherentStokes["timeIntegrationFactor"] * coherentStokes["nrChannelsPerSubband"])
+          The Cobalt GPU kernels require the Cobalt.blockSize to be a multiple
+          of several values in order to:
+             1) divide the work evenly over threads and blocks.
+             2) prevent integration of samples from crossing blockSize boundaries.
+        """
 
-    if incoherentStokes:
-        # DelayAndBandPass.cu
-        factor = lcm(factor, 16 * 64)
+        factor = 1
 
-        # IncoherentStokes.cu (integration should fit)
-        factor = lcm(factor, 1024 * incoherentStokes["timeIntegrationFactor"] * incoherentStokes["nrChannelsPerSubband"])
+        # Process correlator settings
+        if self.correlator:
+            # FIR_Filter.cu (16 = nr of PPF taps)
+            factor = lcm(factor, 16 * self.correlator.nrChannelsPerSubband)
 
-    return factor
+            # Correlator.cu (minimum of 16 samples per channel)
+            factor = lcm(factor, 16 * self.correlator.nrChannelsPerSubband * self.nrSubblocks())
+
+        if self.coherentStokes:
+            # DelayAndBandPass.cu
+            factor = lcm(factor, 16 * 64)
+
+            # CoherentStokesKernel.cc (1024 = maxNrThreadsPerBlock)
+            factor = lcm(factor, 1024 * self.coherentStokes.timeIntegrationFactor)
+
+            # CoherentStokes.cu (integration should fit)
+            factor = lcm(factor, 1024 * self.coherentStokes.timeIntegrationFactor * self.coherentStokes.nrChannelsPerSubband)
+
+        if self.incoherentStokes:
+            # DelayAndBandPass.cu
+            factor = lcm(factor, 16 * 64)
+
+            # IncoherentStokes.cu (integration should fit)
+            factor = lcm(factor, 1024 * self.incoherentStokes.timeIntegrationFactor * self.incoherentStokes.nrChannelsPerSubband)
+
+        return factor
+
+    def _time2samples(self, t):
+        """ Convert a time `t' (seconds) into a number of station samples. """
+        return int(round(t * self.clockMHz * 1e6 / 1024))
+
+    def _samples2time(self, samples):
+        """ Return the duration of a number of station samples. """
+        return samples / (self.clockMHz * 1e6 / 1024)
 
 class BlockSize(object):
-    def __init__(self, factor, integrationSamples):
-        self.nrSubblocks = nrSubblocks(integrationSamples)
-        self.blockSize   = self._blockSize(self.nrSubblocks * integrationSamples, factor)
-        self.nrBlocks    = self._nrBlocks(integrationSamples, self.blockSize)
+    def __init__(self, constraints):
+        self.constraints = constraints
+        self.nrSubblocks = constraints.nrSubblocks()
+        self.blockSize   = self._blockSize(constraints.idealBlockSize(), constraints.factor())
+        self.nrBlocks    = self._nrBlocks(constraints.idealBlockSize(), self.blockSize)
 
         if self.nrSubblocks > 1:
             self.integrationSamples = self.blockSize / self.nrSubblocks
@@ -82,16 +138,16 @@ class BlockSize(object):
         bestError = None
 
         # Create a comfortable range to search in for possible fits.
-	maxFactorPerBlock = int(ceil(integrationSamples / factor)) * 2
+        maxFactorPerBlock = int(ceil(integrationSamples / factor)) * 2
 
         for factorsPerBlock in xrange(1, maxFactorPerBlock):
             blockSize = factorsPerBlock * factor;
 
             # Discard invalid block sizes
-            if blockSize < MINBLOCKSIZE:
+            if blockSize < self.constraints.minBlockSize():
                 continue
 
-            if blockSize > MAXBLOCKSIZE:
+            if blockSize > self.constraints.maxBlockSize():
                 continue
 
             # Calculate the number of blocks we'd use
@@ -123,11 +179,13 @@ if __name__ == "__main__":
             i += 0.5
 
     for i in inttime_generator():
-        correlator = { "nrChannelsPerSubband": 64, "integrationTime": i }
-        f = factor( correlator, None, None )
+        correlator = CorrelatorSettings()
+        correlator.nrChannelsPerSubband = 64
+        correlator.integrationTime = i
 
-        bs = BlockSize(f, time2samples(i, 200))
+        c = BlockConstraints( correlator, None, None )
+        bs = BlockSize(c)
 
-        print "A request of",i," s becomes",samples2time(bs.integrationSamples, 200),"s (block size",bs.blockSize,", nr blocks",bs.nrBlocks,", nr subblocks",bs.nrSubblocks,"factor",f,")"
+        print "A request of",i," s becomes",c._samples2time(bs.integrationSamples),"s (block size",bs.blockSize,", nr blocks",bs.nrBlocks,", nr subblocks",bs.nrSubblocks,"factor",c.factor(),")"
 
 
