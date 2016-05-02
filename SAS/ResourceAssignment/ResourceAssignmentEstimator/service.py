@@ -32,39 +32,39 @@ class ResourceEstimatorHandler(MessageHandlerInterface):
         parset = specification_tree['specification']
         if specification_tree['task_type'] == 'observation':
             return {str(otdb_id): self.observation.verify_and_estimate(parset)}
-        elif specification_tree['task_type'] == 'pipeline':
-            branch_estimates = {}
-            for branch in specification_tree['predecessors']:
-                branch_estimates.update(get_subtree_estimate(branch))
+        #elif specification_tree['task_type'] == 'pipeline':
+            #branch_estimates = {}
+            #for branch in specification_tree['predecessors']:
+                #branch_estimates.update(get_subtree_estimate(branch))
                 
-            if specification_tree['task_subtype'] in ['averaging pipeline', 'calibration pipeline']:
-                for id, estimate in branch_estimates:
-                    if not 'im' in estimate['output_files'] and 'uv' in estimate['output_files']: # Not a calibrator pipeline
-                        logger.info('found %d as the target of pipeline %d' % (id, otdb_id))
-                        input_files = estimate['output_files'] # Need sap here as well
-                return {str(otdb_id): self.calibration_pipeline.verify_and_estimate(parset, input_files)}
+            #if specification_tree['task_subtype'] in ['averaging pipeline', 'calibration pipeline']:
+                #for id, estimate in branch_estimates:
+                    #if not 'im' in estimate['output_files'] and 'uv' in estimate['output_files']: # Not a calibrator pipeline
+                        #logger.info('found %d as the target of pipeline %d' % (id, otdb_id))
+                        #input_files = estimate['output_files'] # Need sap here as well
+                #return {str(otdb_id): self.calibration_pipeline.verify_and_estimate(parset, input_files)}
                 
-            if specification_tree['task_subtype'] in ['imaging pipeline', 'imaging pipeline msss']:
-                if len(branch_estimates) > 1:
-                    logger.error('Imaging pipeline %d should not have multiple predecessors: %s' % (otdb_id, branch_estimates.keys() ) )
-                input_files = branch_estimates.items()[0][1]['ouput_files']
-                return {str(otdb_id): self.calibration_pipeline.verify_and_estimate(parset, input_files)}
+            #if specification_tree['task_subtype'] in ['imaging pipeline', 'imaging pipeline msss']:
+                #if len(branch_estimates) > 1:
+                    #logger.error('Imaging pipeline %d should not have multiple predecessors: %s' % (otdb_id, branch_estimates.keys() ) )
+                #input_files = branch_estimates.items()[0][1]['ouput_files']
+                #return {str(otdb_id): self.calibration_pipeline.verify_and_estimate(parset, input_files)}
                 
-            if specification_tree['task_subtype'] in ['long baseline pipeline']:
-                if len(branch_estimates) > 1:
-                    logger.error('Long baseline pipeline %d should not have multiple predecessors: %s' % (otdb_id, branch_estimates.keys() ) )
-                input_files = branch_estimates.items()[0][1]['ouput_files']
-                return {str(otdb_id): self.longbaseline_pipeline.verify_and_estimate(parset, input_files)}
+            #if specification_tree['task_subtype'] in ['long baseline pipeline']:
+                #if len(branch_estimates) > 1:
+                    #logger.error('Long baseline pipeline %d should not have multiple predecessors: %s' % (otdb_id, branch_estimates.keys() ) )
+                #input_files = branch_estimates.items()[0][1]['ouput_files']
+                #return {str(otdb_id): self.longbaseline_pipeline.verify_and_estimate(parset, input_files)}
 
-            if specification_tree['task_subtype'] in ['pulsar pipeline']:
-                if len(branch_estimates) > 1:
-                    logger.error('Pulsar pipeline %d should not have multiple predecessors: %s' % (otdb_id, branch_estimates.keys() ) )
-                input_files = branch_estimates.items()[0][1]['ouput_files']
-                return {str(otdb_id): self.pulsar_pipeline.verify_and_estimate(parset, input_files)}
+            #if specification_tree['task_subtype'] in ['pulsar pipeline']:
+                #if len(branch_estimates) > 1:
+                    #logger.error('Pulsar pipeline %d should not have multiple predecessors: %s' % (otdb_id, branch_estimates.keys() ) )
+                #input_files = branch_estimates.items()[0][1]['ouput_files']
+                #return {str(otdb_id): self.pulsar_pipeline.verify_and_estimate(parset, input_files)}
             
-        else: # reservation, maintenance, system tasks?
-            logger.info("It's not a pipeline or observation: %s" % otdb_id)
-            return {str(otdb_id): {}}
+        #else: # reservation, maintenance, system tasks?
+            #logger.info("It's not a pipeline or observation: %s" % otdb_id)
+            #return {str(otdb_id): {}}
 
     def _get_estimated_resources(self, specification_tree):
         """ Input is like:
@@ -85,7 +85,7 @@ class ResourceEstimatorHandler(MessageHandlerInterface):
             ]}}}}}
         """
         logger.info('get_estimated_resources on: %s' % specification_tree)
-        return self.get_subtree_estimate(specification_tree):
+        return self.get_subtree_estimate(specification_tree)
 
 def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker=None):
     return Service(servicename=servicename,
