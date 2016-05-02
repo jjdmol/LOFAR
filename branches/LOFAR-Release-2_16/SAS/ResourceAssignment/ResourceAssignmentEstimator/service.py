@@ -18,10 +18,10 @@ class ResourceEstimatorHandler(MessageHandlerInterface):
     def __init__(self, **kwargs):
         super(ResourceEstimatorHandler, self).__init__(**kwargs)
         self.observation = ObservationResourceEstimator()
-        self.longbaseline_pipeline = LongBaselinePipelineResourceEstimator()
-        self.calibration_pipeline = CalibrationPipelineResourceEstimator()
-        self.pulsar_pipeline = PulsarPipelineResourceEstimator()
-        self.imaging_pipeline = ImagePipelineResourceEstimator()
+        #self.longbaseline_pipeline = LongBaselinePipelineResourceEstimator()
+        #self.calibration_pipeline = CalibrationPipelineResourceEstimator()
+        #self.pulsar_pipeline = PulsarPipelineResourceEstimator()
+        #self.imaging_pipeline = ImagePipelineResourceEstimator()
 
     def handle_message(self, content):
         specification_tree = content["specification_tree"]
