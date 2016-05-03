@@ -373,6 +373,7 @@ namespace LOFAR
       struct AnaBeam anaBeam;
 
       struct FileLocation {
+        string cluster;
         string host;
         string directory;
         string filename;

@@ -1015,13 +1015,19 @@ namespace LOFAR
         ObservationSettings::FileLocation &location = result[i];
         const vector<string> host_dir = StringUtil::split(locations[i], ':');
 
-        if (host_dir.size() != 2) {
-          THROW(CoInterfaceException, "Location must adhere to 'host:directory' in " << prefix << ".locations: " << locations[i]);
+        location.filename  = filenames[i];
+        if (host_dir.size() == 2) {
+          location.cluster   = "";
+          location.host      = host_dir[0];
+          location.directory = host_dir[1];
+        } else if (host_dir.size() == 3) {
+          location.cluster   = host_dir[0];
+          location.host      = host_dir[1];
+          location.directory = host_dir[2];
+        } else {
+          THROW(CoInterfaceException, "Location must adhere to '[cluster:]host:directory' in " << prefix << ".locations: " << locations[i]);
         }
 
-        location.filename  = filenames[i];
-        location.host      = host_dir[0];
-        location.directory = host_dir[1];
       }
 
       return result;

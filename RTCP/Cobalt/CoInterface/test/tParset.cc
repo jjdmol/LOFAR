@@ -886,6 +886,25 @@ SUITE(correlator) {
       CHECK_EQUAL("SB000.MS", ps.settings.correlator.files[0].location.filename);
       CHECK_EQUAL("host",     ps.settings.correlator.files[0].location.host);
       CHECK_EQUAL("/dir",     ps.settings.correlator.files[0].location.directory);
+      CHECK_EQUAL("",         ps.settings.correlator.files[0].location.cluster);
+    }
+
+    TEST(cluster) {
+      Parset ps = makeDefaultTestParset();
+
+      // set
+      ps.replace("Observation.DataProducts.Output_Correlated.enabled", "true");
+      ps.replace("Observation.nrBeams", "1");
+      ps.replace("Observation.Beam[0].subbandList", "[0]");
+      ps.replace("Observation.DataProducts.Output_Correlated.filenames", "[SB000.MS]");
+      ps.replace("Observation.DataProducts.Output_Correlated.locations", "[CEP4:host:/dir]");
+      ps.updateSettings();
+
+      // verify settings
+      CHECK_EQUAL("SB000.MS", ps.settings.correlator.files[0].location.filename);
+      CHECK_EQUAL("host",     ps.settings.correlator.files[0].location.host);
+      CHECK_EQUAL("/dir",     ps.settings.correlator.files[0].location.directory);
+      CHECK_EQUAL("CEP4",     ps.settings.correlator.files[0].location.cluster);
     }
   }
 }
