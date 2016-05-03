@@ -13,7 +13,7 @@ from lofar.parameterset import PyParameterSet
 class ReplaceHost(unittest.TestCase):
   def test_replace(self):
     # Replace the host
-    self.assertEqual(ggl.replace_host("CEP4:/foo/bar", "CEP4", ["host"]), "host:/foo/bar")
+    self.assertEqual(ggl.replace_host("CEP4:/foo/bar", "CEP4", ["host"]), "CEP4:host:/foo/bar")
 
     # Don't replace the host
     self.assertEqual(ggl.replace_host("locus001:/foo/bar", "CEP4", ["host"]), "locus001:/foo/bar")
@@ -22,11 +22,11 @@ class ReplaceHost(unittest.TestCase):
     # See if host array rotates
     hosts = ["foo", "bar", "baz"]
 
-    self.assertEqual(ggl.replace_host("CEP4:/foo/bar", "CEP4", hosts), "foo:/foo/bar")
+    self.assertEqual(ggl.replace_host("CEP4:/foo/bar", "CEP4", hosts), "CEP4:foo:/foo/bar")
     self.assertEqual(hosts, ["bar","baz","foo"])
 
-    self.assertEqual(ggl.replace_host("CEP4:/foo/bar", "CEP4", hosts), "bar:/foo/bar")
-    self.assertEqual(ggl.replace_host("CEP4:/foo/bar", "CEP4", hosts), "baz:/foo/bar")
+    self.assertEqual(ggl.replace_host("CEP4:/foo/bar", "CEP4", hosts), "CEP4:bar:/foo/bar")
+    self.assertEqual(ggl.replace_host("CEP4:/foo/bar", "CEP4", hosts), "CEP4:baz:/foo/bar")
 
 class ProcessParset(unittest.TestCase):
   def test(self):
@@ -42,7 +42,7 @@ class ProcessParset(unittest.TestCase):
     # check if hosts are replaced
     locations = parset._getStringVector1("Observation.DataProducts.Output_CoherentStokes.locations", True)
     for l in locations:
-      self.assertTrue(l.startswith("foo:") or l.startswith("bar:"))
+      self.assertTrue(l.startswith("CEP4:foo:") or l.startswith("CEP4:bar:"))
 
 def main(argv):
   unittest.main(verbosity=2)

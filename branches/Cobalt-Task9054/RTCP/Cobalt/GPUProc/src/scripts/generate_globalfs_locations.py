@@ -4,7 +4,7 @@ def replace_host(location, cluster_name, hosts):
   """
     Returns location, with its hostname replaced by one
     of `hosts', but only if the host matches `cluster_name':
-      cluster_name:... -> hosts[0]:...
+      cluster_name:... -> cluster_name:hosts[0]:...
       other:... -> other:...
 
     The hosts array is rotated to obtain a round-robin allocation
@@ -16,8 +16,9 @@ def replace_host(location, cluster_name, hosts):
   if host == cluster_name:
     host = hosts.pop(0)
     hosts.append(host)
-   
-  return "%s:%s" % (host,dir)
+    return "%s:%s:%s" % (cluster_name, host, dir)
+
+  return location
 
 def process_parset(parset, cluster_name, hosts):
   data_products = [ "Correlated", "CoherentStokes", "IncoherentStokes" ]

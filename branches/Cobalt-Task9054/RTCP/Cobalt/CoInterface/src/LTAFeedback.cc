@@ -56,11 +56,12 @@ namespace LOFAR
       const ObservationSettings::Correlator::File &f = settings.correlator.files[fileno];
 
       const string prefix = correlatedPrefix(fileno);
+      const string locationHost = f.location.cluster != "" ? f.location.cluster : f.location.host;
 
       ps.add(prefix + "fileFormat",           "AIPS++/CASA");
       ps.add(prefix + "filename",             f.location.filename);
       ps.add(prefix + "size",                 "0");
-      ps.add(prefix + "location",             f.location.host + ":" + f.location.directory);
+      ps.add(prefix + "location",             locationHost + ":" + f.location.directory);
 
       ps.add(prefix + "percentageWritten",    "0");
       ps.add(prefix + "startTime",            TimeDouble::toString(settings.startTime, false));
