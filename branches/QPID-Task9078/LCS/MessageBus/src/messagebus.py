@@ -29,6 +29,7 @@ import os
 import logging
 import lofar.messagebus.message as message
 import atexit
+from lofar.common import isTestEnvironment, isProductionEnvironment
 
 # Candidate for a config file
 broker="127.0.0.1" 
@@ -97,12 +98,11 @@ class Session:
         return "%s%s; {%s}" % (self._queue_prefix(), queue, options)
 
     def _queue_prefix(self):
-        lofarenv = os.environ.get("LOFARENV", "")
         queueprefix = os.environ.get("QUEUE_PREFIX", "")
 
-        if lofarenv == "PRODUCTION":
+        if isProductionEnvironment():
             pass
-        elif lofarenv == "TEST":
+        elif isTestEnvironment():
             queueprefix += "test."
         else:
             queueprefix += "devel."

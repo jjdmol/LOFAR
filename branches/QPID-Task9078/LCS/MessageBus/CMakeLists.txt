@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(MessageBus 1.0 DEPENDS Common pyparameterset)
+lofar_package(MessageBus 1.0 DEPENDS Common pyparameterset PyCommon)
 
 include(LofarFindPackage)
 lofar_find_package(QPID)
