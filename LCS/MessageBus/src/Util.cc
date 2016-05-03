@@ -26,7 +26,8 @@ namespace LOFAR {
 
   std::string queue_prefix()
   {
-    string lofarenv = getenv_str("LOFARENV");
+    // disable LOFARENV for 2.16 release
+    string lofarenv = "PRODUCTION"; //getenv_str("LOFARENV");
     string queueprefix = getenv_str("QUEUE_PREFIX");
 
     if (lofarenv == "PRODUCTION") {
