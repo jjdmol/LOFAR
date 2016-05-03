@@ -197,6 +197,15 @@ namespace LOFAR
 
         if (!itsParset.settings.realTime)   
           THROW(StorageException, ex); 
+#if defined HAVE_AIPSPP
+      } 
+      catch (casa::AipsError &ex)
+      {
+        LOG_ERROR_STR(itsLogPrefix << "Could not add final meta data (AipsError): " << ex.what());
+
+        if (!itsParset.settings.realTime)    
+          THROW(StorageException, ex.what()); 
+#endif
       }
     }
 
