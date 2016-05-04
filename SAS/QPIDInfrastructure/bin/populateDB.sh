@@ -34,7 +34,7 @@ if $PROD; then
   MOM_USER=lcs023.control.lofar
   MOM_INGEST=lcs029.control.lofar
 
-  COBALT="`seq -f cbt%03.0f.control.lofar 1 8`"
+  COBALT="`seq -f cbm%03.0f.control.lofar 1 8`"
 
   CEP2="`seq -f locus%03.0f.cep2.lofar 1 94`"
   CEP2HEAD=lhn001.cep2.lofar
@@ -50,7 +50,7 @@ else
   MOM_USER=lcs028.control.lofar
   MOM_INGEST=lcs028.control.lofar
 
-  COBALT="cbt009.control.lofar"
+  COBALT="cbm009.control.lofar"
 
   CEP2="locus098.cep2.lofar locus099.cep2.lofar"
   CEP2HEAD=locus102.cep2.lofar
