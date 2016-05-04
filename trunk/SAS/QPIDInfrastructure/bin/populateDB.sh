@@ -99,9 +99,9 @@ done
 #   MessageRouter -> MoM
 # -----------------------------------------
 
-addtoQPIDDB.py --broker $CCU --queue mom.task.feedback.dataproducts --federation $MOM_USER
-addtoQPIDDB.py --broker $CCU --queue mom.task.feedback.processing --federation $MOM_USER
-addtoQPIDDB.py --broker $CCU --queue mom.task.feedback.state --federation $MOM_USER
+addtoQPIDDB.py --broker $CCU --queue ${PREFIX}mom.task.feedback.dataproducts --federation $MOM_USER
+addtoQPIDDB.py --broker $CCU --queue ${PREFIX}mom.task.feedback.processing --federation $MOM_USER
+addtoQPIDDB.py --broker $CCU --queue ${PREFIX}mom.task.feedback.state --federation $MOM_USER
 
 # -----------------------------------------
 #   MessageRouter -> OTDB
@@ -121,7 +121,7 @@ addtoQPIDDB.py --broker $CCU --exchange ${PREFIX}mac.task.feedback.state
 # -----------------------------------------
 
 addtoQPIDDB.py --broker $MCU --queue ${PREFIX}lofar.task.specification.system --federation $CCU
-addtoQPIDDB.py --broker $CCU --queue mom.task.specification.system --federation $MOM_USER
+addtoQPIDDB.py --broker $CCU --queue ${PREFIX}mom.task.specification.system --federation $MOM_USER
 
 # -----------------------------------------
 #   MoM <-> MoM-OTDB-Adapter
