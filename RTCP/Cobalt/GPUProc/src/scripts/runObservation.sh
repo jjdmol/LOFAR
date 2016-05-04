@@ -420,6 +420,7 @@ if $DUMMY_RUN; then
 else
   mpirun.sh -x LOFARROOT="$LOFARROOT" \
             -x QUEUE_PREFIX="$QUEUE_PREFIX" \
+            -x LOFARENV="$LOFARENV" \
             -H "$HOSTS" \
             $MPIRUN_PARAMS \
             $CHECK_TOOL \
