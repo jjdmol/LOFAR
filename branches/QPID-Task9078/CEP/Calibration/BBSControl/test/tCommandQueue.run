@@ -1,0 +1,6 @@
+#!/bin/sh
+\cp $srcdir/tBBSControl.parset .
+$LOFAR_CHECKTOOL ./tCommandQueue
+STATUS=$?
+\rm -f tBBSControl.parset
+exit $STATUS

@@ -1,0 +1,7 @@
+# This is test input for tsetupsourcedb
+ #
+
+#(name,  type,    Ra,   Dec, I, Q, U, V, Spectralindex, Major, Minor, Phi) format
+
+3c343,  point, -10deg,20deg,10, 0, 0, 0
+cygnus, point, 23deg, 45deg, 2, 0, 0, 0

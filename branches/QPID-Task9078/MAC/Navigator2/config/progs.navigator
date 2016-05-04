@@ -1,0 +1,6 @@
+version 1
+
+auth "" ""
+#Manager         | Start  | SecKill | Restart# | ResetMin | Options
+PVSS00pmon       | manual |      30 |        3 |        1 |
+PVSS00ui         |   once |      30 |        3 |        1 |-p vision/login.pnl
