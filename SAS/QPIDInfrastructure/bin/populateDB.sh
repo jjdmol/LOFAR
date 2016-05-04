@@ -60,7 +60,19 @@ else
 fi
 
 # -----------------------------------------
-#   Cobalt & Pipelines -> MessageRouter
+#   Cobalt GPUProc -> MessageRouter
+# -----------------------------------------
+
+for fnode in $COBALT
+do
+    addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.dataproducts --federation $CCU
+    addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.processing --federation $CCU
+    addtoQPIDDB.py --broker $fnode --queue ${PREFIX}lofar.task.feedback.state --federation $CCU
+done
+
+
+# -----------------------------------------
+#   Cobalt OutputProc & Pipelines -> MessageRouter
 # -----------------------------------------
 
 for tnode in $CEP4HEAD
