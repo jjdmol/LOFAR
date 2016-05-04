@@ -1,7 +1,0 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<exportjob exportID="A_10_10_87">
-        <input name="DataProduct">L1_B0_SB0.MS</input>
-        <input name="Project">test-lofar</input>
-        <input name="JobId">A_10_10_87</input>
-        <input name="ArchiveId">466</input>
-</exportjob>
