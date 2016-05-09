@@ -34,7 +34,6 @@
 
 const string CWD_DP = "__gcf_cwd";
 global mapping g_connections;
-global dyn_string involved_systems;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -77,6 +76,7 @@ main() {
 void distSystemChanged(string dp, dyn_int newDistSysList) {
 	LOG_DEBUG("gcf_cwd.ctl:distSystemChanged|distSystemChanged: ", dp, newDistSysList);	
        
+  dyn_string involved_systems= makeDynString();
   int  iPos;
 	// check all current systems and update mapping
  	for (int i = 1; i <= dynlen(newDistSysList); i++) {
@@ -92,11 +92,11 @@ void distSystemChanged(string dp, dyn_int newDistSysList) {
     
     // now store the values
     g_connections[ "NAME" ][iPos]     = getSystemName(newDistSysList[i]);
-    if (new) {
+    if (new && dynContains(involved_systems,g_connections[ "NAME" ][iPos]) < 1 ) {
       // if new we need to know that this system is involved in a distchange 
       dynAppend(involved_systems,g_connections[ "NAME" ][iPos]); 
     }
-    if (g_connections[ "UP" ] [iPos] == false && !new) {
+    if ( dynContains(involved_systems,g_connections[ "NAME" ][iPos]) < 1 && g_connections[ "UP" ] [iPos] == false && !new) {
       // if this system was  Down before it is also involved
       dynAppend(involved_systems,g_connections[ "NAME" ][iPos]); 
     }
@@ -104,14 +104,16 @@ void distSystemChanged(string dp, dyn_int newDistSysList) {
     g_connections[ "UPTIME" ][iPos]   = getCurrentTime();
  	}
         
-    // now we also have to check if there were systems available b4 that are not included in the triggerlist anymore
+  // now we also have to check if there were systems available b4 that are not included in the triggerlist anymore
   // because that indicates that a system did go offline
 
   for (int i = 1; i <= dynlen(g_connections[ "SYSTEM"]);i++) {
     if (dynContains(newDistSysList,g_connections[ "SYSTEM" ][i]) < 1) {
       g_connections[ "UP" ][i]     = false;
       g_connections[ "DOWNTIME" ][i] = getCurrentTime();
-      dynAppend(involved_systems,g_connections[ "NAME" ][i]); 
+      if (!dynContains(involved_systems,g_connections[ "NAME" ]) < 1) {
+        dynAppend(involved_systems,g_connections[ "NAME" ][i]); 
+      }
     }
   }
 

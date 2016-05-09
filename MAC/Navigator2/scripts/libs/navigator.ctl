@@ -66,6 +66,7 @@ global dyn_string g_observationsList;  // holds active observations
 global dyn_string g_pipelinesList;     // holds active pipelines
 global dyn_string g_processesList;     // holds active software
 global mapping    g_observations;      //
+global dyn_string g_involved_stations; // holds stations that were involved in a distchange
 
 global dyn_string g_stationList;       // holds valid stations for choices in the viewBox
 // Station based globals
