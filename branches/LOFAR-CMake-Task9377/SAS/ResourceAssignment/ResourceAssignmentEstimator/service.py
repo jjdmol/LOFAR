@@ -85,7 +85,7 @@ class ResourceEstimatorHandler(MessageHandlerInterface):
             ]}}}}}
         """
         logger.info('get_estimated_resources on: %s' % specification_tree)
-        return self.get_subtree_estimate(specification_tree):
+        return self.get_subtree_estimate(specification_tree)
 
 def createService(busname=DEFAULT_BUSNAME, servicename=DEFAULT_SERVICENAME, broker=None):
     return Service(servicename=servicename,
