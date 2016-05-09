@@ -1,9 +1,0 @@
-# lines starting with # are ignored.
-# characters follwing a # on a line are ignored
-
-# Only the output needs to be flexible
-TObservation12345                    # New name of the run
-/data/scratch/username/	             # Output location of the data products
-['locus101']  						 # The locus nodes the pipeline should run
-
-6									  # number of major cycles
