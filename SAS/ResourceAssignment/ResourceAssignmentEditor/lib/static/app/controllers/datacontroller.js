@@ -254,6 +254,13 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         })
     };
 
+    self.copyTask = function(task) {
+        $http.put('/rest/tasks/' + task.id + '/copy').error(function(result) {
+            console.log("Error. Could not copy task. " + result);
+            alert("Error: Could not copy task with mom id " + task.mom_id);
+        })
+    };
+
     self.computeMinMaxTaskTimes = function() {
         var starttimes = self.filteredTasks.map(function(t) { return t.starttime;});
         var endtimes = self.filteredTasks.map(function(t) { return t.endtime;});

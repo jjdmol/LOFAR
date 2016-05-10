@@ -11,7 +11,8 @@ var ganttResourceControllerMod = angular.module('GanttResourceControllerMod', [
                                         'gantt.tree',
                                         'gantt.groups',
                                         'gantt.overlap',
-                                        'gantt.resizeSensor']).config(['$compileProvider', function($compileProvider) {
+                                        'gantt.resizeSensor',
+                                        'gantt.contextmenu']).config(['$compileProvider', function($compileProvider) {
     $compileProvider.debugInfoEnabled(false); // Remove debug info (angularJS >= 1.3)
 }]);
 
@@ -45,9 +46,9 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                     api.tasks.on.resizeEnd($scope, moveHandler);
             });
 
-            api.directives.on.new($scope, function(directiveName, directiveScope, element) {
+            api.directives.on.new($scope, function(directiveName, directiveScope, directiveElement) {
                 if (directiveName === 'ganttRow' || directiveName === 'ganttRowLabel' ) {
-                    element.bind('click', function(event) {
+                    directiveElement.bind('click', function(event) {
                         if(directiveScope.row.model.resource) {
                             $scope.dataService.selected_resource_id = directiveScope.row.model.resource.id;
                         } else if(directiveScope.row.model.resourceGroup) {
@@ -55,7 +56,7 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                         }
                     });
                 } else if (directiveName === 'ganttTask') {
-                    element.bind('click', function(event) {
+                    directiveElement.bind('click', function(event) {
                         if(directiveScope.task.model.raTask) {
                             $scope.dataService.selected_task_id = directiveScope.task.model.raTask.id;
                         }
@@ -63,12 +64,51 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                             $scope.dataService.selected_resourceClaim_id = directiveScope.task.model.claim.id;
                         }
                     });
+                    directiveElement.bind('contextmenu', function(event) {
+                        if(directiveScope.task.model.raTask) {
+                            $scope.dataService.selected_task_id = directiveScope.task.model.raTask.id;
+                        }
+
+                        //search for already existing contextmenu element
+                        if(directiveElement.find('#gantt-resource-context-menu').length) {
+                            //found, remove it, so we can create a fresh one
+                            directiveElement.find('#gantt-resource-context-menu')[0].remove();
+                        }
+
+                        //create contextmenu element
+                        //with list of menu items,
+                        //each with it's own action
+                        var contextmenuElement = angular.element('<div id="gantt-resource-context-menu"></div>');
+                        ulElement = angular.element('<ul style="z-index:10000; position:fixed; top:initial; left:initial; display:block;" role="menu" class="dropdown-menu"></ul>');
+                        contextmenuElement.append(ulElement);
+                        liElement = angular.element('<li><a href="#">Copy Task</a></li>');
+                        ulElement.append(liElement);
+                        liElement.on('click', function() {
+                            $scope.dataService.copyTask(directiveScope.task.model.raTask);
+                            closeContextMenu();
+                        });
+
+                        var closeContextMenu = function() {
+                            contextmenuElement.remove();
+                            angular.element(document).unbind('click', closeContextMenu);
+                        };
+
+                        //click anywhere to remove the contextmenu
+                        angular.element(document).bind('click', closeContextMenu);
+
+                        //add contextmenu to clicked element
+                        directiveElement.append(contextmenuElement);
+
+                        //prevent bubbling event upwards
+                        return false;
+                    });
                 }
             });
 
-            api.directives.on.destroy($scope, function(directiveName, directiveScope, element) {
+            api.directives.on.destroy($scope, function(directiveName, directiveScope, directiveElement) {
                 if (directiveName === 'ganttRow' || directiveName === 'ganttRowLabel' || directiveName === 'ganttTask') {
-                    element.unbind('click');
+                    directiveElement.unbind('click');
+                    directiveElement.unbind('contextmenu');
                 }
             });
         }
