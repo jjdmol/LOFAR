@@ -248,12 +248,12 @@ LANG:1 0
 "$name""PermSW_CTStartDaemon"
 "$station""$station"
 3 12 "PANEL_REF12" -1
-"objects\\Processes\\SWControler_small.pnl" 290 0 T 29 1 0 1 -4 0
+"objects\\Processes\\SWControlerTempObs_small.pnl" 290 0 T 29 1 0 1 -4 0
 2
 "$name""OnlineControl"
 "$station""$station"
 3 13 "PANEL_REF13" -1
-"objects\\Processes\\SWControler_small.pnl" 300 0 T 30 1 0 1 2 0
+"objects\\Processes\\SWControlerTempObs_small.pnl" 300 0 T 30 1 0 1 2 0
 2
 "$name""PythonControl"
 "$station""$station"
