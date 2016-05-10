@@ -111,7 +111,6 @@ void GCFCWD_connectWD(string dp1, dyn_int systemID,
   LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|upTime: ",upTime);	
   LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|downTime: ",downTime);
   LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|involved: ",involved);
-  DebugN(	"involved: ",involved);
        
   int  iPos;
   // check all current systems and update mapping
