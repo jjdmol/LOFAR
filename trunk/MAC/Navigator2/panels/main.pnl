@@ -130,7 +130,6 @@ void redraw(int status) {
 
 void addBackLines(int status) {
   
-  DebugN(\"redraw triggered. Involved stations: \", g_involved_stations); 
   int xPos_AddSymbol = 0; 
   int yPos_AddSymbol = 28; 
   string barColor=\"\";
