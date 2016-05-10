@@ -148,6 +148,15 @@ addtoQPIDDB.py --broker $MOM_USER --queue mom-otdb-adapter.importxml --federatio
 # -----------------------------------------
 addtoQPIDDB.py --broker $MOM_USER --exchange lofar.mom.bus
 addtoQPIDDB.py --broker $MOM_INGEST --exchange lofar.mom.bus
+addtoQPIDDB.py --broker $MOM_USER --exchange ${PREFIX}lofar.mom.command
+addtoQPIDDB.py --broker $MOM_USER --exchange ${PREFIX}lofar.mom.notification
+
+# -----------------------------------------
+#   MoM Services <-> ResourceAssignment
+# -----------------------------------------
+
+addtoQPIDDB.py --broker $SCU --exchange ${PREFIX}lofar.mom.command --federation $MOM_USER
+addtoQPIDDB.py --broker $MOM_USER --exchange ${PREFIX}lofar.mom.notification --federation $SCU
 
 # -----------------------------------------
 #   ResourceAssignment
@@ -160,14 +169,16 @@ addtoQPIDDB.py --broker $SCU --exchange ${PREFIX}lofar.otdb.notification
 addtoQPIDDB.py --broker $SCU --exchange ${PREFIX}lofar.ssdb.command
 addtoQPIDDB.py --broker $SCU --exchange ${PREFIX}lofar.ssdb.notification
 
-# TODO: messages will end up at $SCU twice?
-for tnode in head{01..02}.cep4
+# TODO: messages will be duplicated?
+for head in head{01..02}.cep4
 do
-  for fnode in cpu{01..50}.cep4
+  for cpu in cpu{01..50}.cep4
   do
-    addtoQPIDDB.py --broker $fnode --exchange ${PREFIX}lofar.otdb.command --federation $tnode
+    addtoQPIDDB.py --broker $cpu --exchange ${PREFIX}lofar.otdb.command --federation $head
+    addtoQPIDDB.py --broker $head --exchange ${PREFIX}lofar.otdb.notification --federation $cpu
   done
 
-  addtoQPIDDB.py --broker $tnode --exchange ${PREFIX}lofar.otdb.command --federation $SCU
+  addtoQPIDDB.py --broker $head --exchange ${PREFIX}lofar.otdb.command --federation $SCU
+  addtoQPIDDB.py --broker $SCU --exchange ${PREFIX}lofar.otdb.notification --federation $head
 done
 
