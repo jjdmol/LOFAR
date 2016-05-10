@@ -40,6 +40,7 @@
     <script src="/static/app/controllers/gridcontroller.js"></script>
     <script src="/static/app/controllers/ganttresourcecontroller.js"></script>
     <script src="/static/app/controllers/ganttprojectcontroller.js"></script>
+    <script src="/static/app/gantt-plugins/angular-gantt-contextmenu-plugin.js"></script>
     <script src="/static/app/controllers/chartresourceusagecontroller.js"></script>
     </head>
     <body>
@@ -124,6 +125,7 @@
                                 </gantt-movable>
                                 <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
                                 <gantt-dependencies enabled="true"></gantt-dependencies>
+                                <gantt-contextmenu enabled="true"></gantt-contextmenu>
                             </div>
                         </div>
                     </uib-tab>
@@ -144,6 +146,7 @@
                                     allow-resizing="true"
                                     allow-row-switching="false"></gantt-movable>
                                 <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
+                                <gantt-contextmenu enabled="true"></gantt-contextmenu>
                             </div>
                         </div>
                     </uib-tab>

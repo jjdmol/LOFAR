@@ -35,6 +35,7 @@ set(app_files
     static/app/controllers/ganttresourcecontroller.js
     static/app/controllers/chartresourceusagecontroller.js
     static/app/controllers/ganttprojectcontroller.js
+    static/app/gantt-plugins/angular-gantt-contextmenu-plugin.js
     static/css/main.css
     templates/index.html)
 
