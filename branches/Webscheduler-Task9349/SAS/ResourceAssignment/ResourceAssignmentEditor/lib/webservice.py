@@ -106,6 +106,18 @@ def index():
     '''Serves the ResourceAssignmentEditor's index page'''
     return render_template('index.html', title='Scheduler')
 
+@app.route('/rest/config')
+@gzipped
+def config():
+    config = {'mom_base_url':''}
+
+    if isProductionEnvironment():
+        config['mom_base_url'] = 'https://lofar.astron.nl/mom3'
+    elif isTestEnvironment():
+        config['mom_base_url'] = 'http://lofartest.control.lofar:8080/mom3'
+
+    return jsonify({'config': config})
+
 @app.route('/rest/resources')
 @gzipped
 def resources():
