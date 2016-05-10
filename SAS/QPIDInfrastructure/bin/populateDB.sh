@@ -146,8 +146,8 @@ addtoQPIDDB.py --broker $MOM_USER --queue mom-otdb-adapter.importxml --federatio
 # -----------------------------------------
 #   MoM Services
 # -----------------------------------------
-addtoQPIDDB.py --broker $MOM_USER --exchange lofar.mom.bus
-addtoQPIDDB.py --broker $MOM_INGEST --exchange lofar.mom.bus
+addtoQPIDDB.py --broker $MOM_USER --exchange ${PREFIX}lofar.mom.bus
+addtoQPIDDB.py --broker $MOM_INGEST --exchange ${PREFIX}lofar.mom.bus
 addtoQPIDDB.py --broker $MOM_USER --exchange ${PREFIX}lofar.mom.command
 addtoQPIDDB.py --broker $MOM_USER --exchange ${PREFIX}lofar.mom.notification
 
@@ -155,6 +155,7 @@ addtoQPIDDB.py --broker $MOM_USER --exchange ${PREFIX}lofar.mom.notification
 #   MoM Services <-> ResourceAssignment
 # -----------------------------------------
 
+addtoQPIDDB.py --broker $SCU --exchange ${PREFIX}lofar.mom.bus --federation $MOM_USER
 addtoQPIDDB.py --broker $SCU --exchange ${PREFIX}lofar.mom.command --federation $MOM_USER
 addtoQPIDDB.py --broker $MOM_USER --exchange ${PREFIX}lofar.mom.notification --federation $SCU
 
