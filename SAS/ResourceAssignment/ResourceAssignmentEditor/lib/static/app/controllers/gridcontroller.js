@@ -18,7 +18,7 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     { field: 'project_name',
         displayName:'Project',
         enableCellEdit: false,
-        cellTemplate:'<a target="_blank" href="https://lofar.astron.nl/mom3/user/project/setUpMom2ObjectDetails.do?view=generalinfo&mom2ObjectId={{row.entity.project_mom2object_id}}">{{row.entity[col.field]}}</a>',
+        cellTemplate:'<a target="_blank" href="{{row.grid.appScope.dataService.config.mom_base_url}}/user/project/setUpMom2ObjectDetails.do?view=generalinfo&mom2ObjectId={{row.entity.project_mom2object_id}}">{{row.entity[col.field]}}</a>',
         width: '15%',
         filter: {
             type: uiGridConstants.filter.SELECT,
@@ -28,7 +28,7 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     { field: 'mom_id',
         displayName: 'MoM ID',
         enableCellEdit: false,
-        cellTemplate:'<a target="_blank" href="https://lofar.astron.nl/mom3/user/project/setUpMom2ObjectDetails.do?view=generalinfo&mom2ObjectId={{row.entity.mom2object_id}}">{{row.entity[col.field]}}</a>',
+        cellTemplate:'<a target="_blank" href="{{row.grid.appScope.dataService.config.mom_base_url}}/user/project/setUpMom2ObjectDetails.do?view=generalinfo&mom2ObjectId={{row.entity.mom2object_id}}">{{row.entity[col.field]}}</a>',
         width: '7.5%'
     },
     { field: 'otdb_id',
@@ -152,7 +152,9 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
                     starttime: task.starttime,
                     endtime: task.endtime,
                     status: task.status,
-                    type: task.type
+                    type: task.type,
+                    project_mom2object_id: task.project_mom2object_id,
+                    mom2object_id: task.mom2object_id
                 };
                 tasks.push(gridTask);
             }

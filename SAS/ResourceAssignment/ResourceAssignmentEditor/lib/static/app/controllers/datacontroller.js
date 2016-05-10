@@ -29,6 +29,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
     self.taskTimes = {};
     self.resourceClaimTimes = {};
 
+    self.config = {};
+
     self.selected_resource_id;
     self.selected_resourceGroup_id;
     self.selected_task_id;
@@ -449,6 +451,17 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
         });
     };
 
+    self.getConfig = function() {
+        var defer = $q.defer();
+        $http.get('/rest/config').success(function(result) {
+            self.config = result.config;
+            defer.resolve();
+        });
+
+        return defer.promise;
+    };
+
+
     //start with local client time
     //lofarTime will be synced with server,
     //because local machine might have incorrect clock
@@ -475,7 +488,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                 self.lastUpdateChangeNumber = result.mostRecentChangeNumber;
             }
 
-            var nrOfItemsToLoad = 6;
+            var nrOfItemsToLoad = 7;
             var nrOfItemsLoaded = 0;
             var checkInitialLoadCompleteness = function() {
                 nrOfItemsLoaded += 1;
@@ -484,6 +497,7 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                 }
             };
 
+            self.getConfig().then(checkInitialLoadCompleteness);
             self.getMoMProjects().then(checkInitialLoadCompleteness);
             self.getTaskTypes().then(checkInitialLoadCompleteness);
             self.getTaskStatusTypes().then(checkInitialLoadCompleteness);
