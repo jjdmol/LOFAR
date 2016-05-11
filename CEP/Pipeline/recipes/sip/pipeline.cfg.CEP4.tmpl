@@ -47,7 +47,7 @@ globalfs = yes
 # (SLURM config files, Munge keys, correct Munge user ID, munged).
 #
 # Throughout this path, we maintain:
-#   * userid, which is set to the user that started the master script container (-e LUSER=`id -u`)
+#   * userid, which is set to the user that started the master script container (-u `id -u`)
 #   * environment (sudo -p, docker -e K=V, etc)
 #   * pseudo-tty to prevent buffering logs (ssh -tt, docker -t)
 
@@ -60,11 +60,11 @@ globalfs = yes
 #                            Starts the container on the worker node, with pretty much the same parameters as the master container:
 #
 #                            --rm: don't linger resources when the container exits
-#                            -e LUSER=(uid): set the user to run as (the calling user)
+#                            -u (uid): set the user to run as (the calling user)
 #                            -h {host}: set container hostname (for easier debugging) (doesnt work yet, using --net=host instead)
 #                            -v /data:/data:  map CEP4's global fs. This includes %(working_directory)s and %(runtime_directory)s so those do not have to be mapped as well.
 #
 #                            /bin/bash -c
 #
 #                            Required because the pipeline framework needs some bash functionality in the commands it starts.
-cmdline = ssh -n -tt -x localhost srun --exclusive --ntasks=1 --cpus-per-task={nr_cores} --jobid={slurm_job_id} --job-name={job_name} docker run --rm -e LUSER={uid} -v /data:/data --net=host {docker_env} lofar-pipeline:${LOFAR_TAG} {command}
+cmdline = ssh -n -tt -x localhost srun --exclusive --ntasks=1 --cpus-per-task={nr_cores} --jobid={slurm_job_id} --job-name={job_name} docker run --rm -u {uid} -v /data:/data --net=host {docker_env} lofar-pipeline:${LOFAR_TAG} {command}
