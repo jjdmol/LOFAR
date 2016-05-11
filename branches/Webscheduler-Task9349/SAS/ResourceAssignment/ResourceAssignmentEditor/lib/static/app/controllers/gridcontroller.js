@@ -204,6 +204,7 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
 
         if(taskIdx > -1) {
             $scope.gridApi.selection.selectRow($scope.gridOptions.data[taskIdx]);
+            $scope.gridApi.core.scrollTo($scope.gridOptions.data[taskIdx], null);
         }
     });
 }
