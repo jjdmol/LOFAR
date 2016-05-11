@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
 # Configrue user
-export USER=${UID}
+if [ -z "${USER}" ]; then
+  export USER=${UID}
+fi
+
+# Create home directory
 export HOME=/home/${USER}
 mkdir -p $HOME && cd $HOME
 
