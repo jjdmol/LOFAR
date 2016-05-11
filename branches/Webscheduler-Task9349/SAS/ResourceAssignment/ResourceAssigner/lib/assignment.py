@@ -137,7 +137,7 @@ class ResourceAssigner():
             return
 
         if status != 'prescheduled':
-            logger.info('skipping resource assignment for CEP4 task otdb_id=%s because status=%s', (otdb_id, status))
+            logger.info('skipping resource assignment for CEP4 task otdb_id=%s because status=%s' % (otdb_id, status))
             return
 
         needed = self.getNeededResouces(specification_tree)
