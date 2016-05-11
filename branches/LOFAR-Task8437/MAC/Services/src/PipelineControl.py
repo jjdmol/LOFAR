@@ -101,6 +101,39 @@ def runCommand(cmdline, input=None):
 """ Prefix that is common to all parset keys, depending on the exact source. """
 PARSET_PREFIX="ObsSW."
 
+class ProcessingClusterTask(object):
+  def __init__(self):
+    self.name = ""
+    self.partition = ""
+
+    self.maxDuration = 0 # seconds
+
+    self.nrCoresPerTask = 1
+    self.nrTasks = 1
+    self.minMemPerTask = 1024 # MB
+
+class CEP2Task(ProcessingClusterTask):
+  def __init__(self):
+    super(CEP2Task).__init__(self)
+
+    self.name = "CEP2"
+
+class CEP4Task(ProcessingClusterTask):
+  def __init__(self):
+    super(CEP4Task).__init__(self)
+
+    self.name = "CEP4"
+    self.partition = "cpu"
+
+    self.nrCoresPerTask = 8
+    self.minMemPerTask = self.nrCoresPerTask * 10 * 1024 # ~240 GB free for 24 cores -> ~10GB/core
+
+clusterTaskFactory = {
+  "":     CEP2Task,
+  "CEP2": CEP2Task,
+  "CEP4": CEP4Task,
+}
+
 class Parset(dict):
   def predecessors(self):
     """ Extract the list of predecessor obs IDs from the given parset. """
@@ -120,7 +153,15 @@ class Parset(dict):
     return not self.isObservation()
 
   def processingCluster(self):
-    return self[PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName"] or "CEP2"
+    clusterName = self[PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName"] or "CEP2"
+    task = clusterTaskFactory[clusterName]()
+
+    # override defaults if provided by parset
+    task.partition = self[PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterPartition"] or task.partition
+    try:
+      task.nrCoresPerTask = int(self[PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.numberOfCoresPerTask"] or task.nrCoresPerTask
+    except ValueError:
+      pass
 
   def dockerTag(self):
     # Return the version set in the parset, and fall back to our own version.
@@ -341,7 +382,7 @@ class PipelineControl(OTDBBusListener):
       "docker run --rm"
         " --net=host"
         " -v /data:/data"
-        " -e LUSER=$UID"
+        " -u $UID"
         " -e LOFARENV={lofarenv}"
         " -v $HOME/.ssh:/home/lofar/.ssh:ro"
         " -e SLURM_JOB_ID=$SLURM_JOB_ID"
@@ -365,7 +406,7 @@ class PipelineControl(OTDBBusListener):
 
       "docker run --rm"
         " --net=host"
-        " -e LUSER=$UID"
+        " -u $UID"
         " -e LOFARENV={lofarenv}"
         " lofar-pipeline:{tag}"
         " pipelineAborted.sh -o {obsid} -B {status_bus}"

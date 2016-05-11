@@ -37,19 +37,15 @@ ENV J=6
 # Base and runtime dependencies
 #
 #RUN sed -i 's/archive.ubuntu.com/osmirror.rug.nl/' /etc/apt/sources.list 
-RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y sudo python2.7 libpython2.7 && \
+RUN apt-get update && \
+    apt-get install -y sudo python2.7 libpython2.7 && \
     apt-get install -y libblas3 liblapacke python-numpy libcfitsio3 libwcs4 libfftw3-bin libhdf5-7 libboost-python${BOOST_VERSION}.0 && \
     apt-get install -y nano
 
 #
 # setup-account
 #
-RUN (getent group sudo &>/dev/null || groupadd sudo) && \
-    echo "useradd -m ${USERADD_FLAGS} ${USER}" && \
-    useradd -m -u ${UID} ${USER} && \
-    usermod -a -G sudo ${USER} && \
-    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+RUN echo 'ALL ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
     sed -i 's/requiretty/!requiretty/g' /etc/sudoers
 
 #
@@ -64,7 +60,7 @@ USER ${USER}
 #   Casacore
 # *******************
 #
-RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y wget git cmake g++ gfortran flex bison libblas-dev liblapacke-dev libfftw3-dev libhdf5-dev libboost-python-dev libcfitsio3-dev wcslib-dev && \
+RUN sudo apt-get update && sudo apt-get install -y wget git cmake g++ gfortran flex bison libblas-dev liblapacke-dev libfftw3-dev libhdf5-dev libboost-python-dev libcfitsio3-dev wcslib-dev && \
     mkdir -p ${INSTALLDIR}/casacore/build && \
     mkdir -p ${INSTALLDIR}/casacore/data && \
     cd ${INSTALLDIR}/casacore && git clone https://github.com/casacore/casacore.git src && \
@@ -84,7 +80,7 @@ RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y wg
 #   Casarest
 # *******************
 #
-RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y git cmake g++ gfortran libboost-system-dev libboost-thread-dev libhdf5-dev libcfitsio3-dev wcslib-dev && \
+RUN sudo apt-get update && sudo apt-get install -y git cmake g++ gfortran libboost-system-dev libboost-thread-dev libhdf5-dev libcfitsio3-dev wcslib-dev && \
     mkdir -p ${INSTALLDIR}/casarest/build && \
     cd ${INSTALLDIR}/casarest && git clone https://github.com/casacore/casarest.git src && \
     if [ "${CASAREST_VERSION}" != "latest" ]; then cd ${INSTALLDIR}/casarest/src && git checkout tags/v${CASAREST_VERSION}; fi && \
@@ -101,7 +97,7 @@ RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y gi
 #   Pyrap
 # *******************
 #
-RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y git make g++ python-setuptools libboost-python-dev libcfitsio3-dev wcslib-dev && \
+RUN sudo apt-get update && sudo apt-get install -y git make g++ python-setuptools libboost-python-dev libcfitsio3-dev wcslib-dev && \
     mkdir ${INSTALLDIR}/python-casacore && \
     cd ${INSTALLDIR}/python-casacore && git clone https://github.com/casacore/python-casacore && \
     if [ "$PYTHON_CASACORE_VERSION" != "latest" ]; then cd ${INSTALLDIR}/python-casacore/python-casacore && git checkout tags/v${PYTHON_CASACORE_VERSION}; fi && \
@@ -133,11 +129,11 @@ store-plaintext-passwords = yes \n\
 
 # Run-time dependencies
 # QPID daemon legacy store would require: libaio1 libdb5.1++
-RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y sasl2-bin libuuid1 libnss3 libnspr4 xqilla libboost-program-options${BOOST_VERSION}.0 libboost-filesystem${BOOST_VERSION}.0
+RUN sudo apt-get update && sudo apt-get install -y sasl2-bin libuuid1 libnss3 libnspr4 xqilla libboost-program-options${BOOST_VERSION}.0 libboost-filesystem${BOOST_VERSION}.0
 
 # Install
 # QPID daemon legacy store would require: libaio-dev libdb5.1++-dev
-RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y subversion swig ruby ruby-dev python-dev libsasl2-dev pkg-config cmake libtool uuid-dev libxerces-c-dev libnss3-dev libnspr4-dev help2man fakeroot build-essential debhelper libsslcommon2-dev libxqilla-dev python-setuptools libboost-program-options${BOOST_VERSION}-dev libboost-filesystem${BOOST_VERSION}-dev && \
+RUN sudo apt-get update && sudo apt-get install -y subversion swig ruby ruby-dev python-dev libsasl2-dev pkg-config cmake libtool uuid-dev libxerces-c-dev libnss3-dev libnspr4-dev help2man fakeroot build-essential debhelper libsslcommon2-dev libxqilla-dev python-setuptools libboost-program-options${BOOST_VERSION}-dev libboost-filesystem${BOOST_VERSION}-dev && \
     mkdir /opt/qpid && \
     svn --non-interactive -q --username lofar-guest --password lofar-guest co ${LOFAR_BRANCH_URL}/LCS/MessageBus/qpid/ /opt/qpid; \
     /opt/qpid/local/sbin/build_qpid && \
@@ -150,7 +146,7 @@ RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y su
 #   DAL
 # *******************
 #
-RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y git cmake g++ swig python-dev libhdf5-dev && \
+RUN sudo apt-get update && sudo apt-get install -y git cmake g++ swig python-dev libhdf5-dev && \
     mkdir ${INSTALLDIR}/DAL && \
     cd ${INSTALLDIR}/DAL && git clone https://github.com/nextgen-astrodata/DAL.git src && \
     mkdir ${INSTALLDIR}/DAL/build && cd ${INSTALLDIR}/DAL/build && cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}/DAL ../src && \
@@ -162,14 +158,8 @@ RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y gi
     sudo apt-get autoremove -y
 
 #
-# config
-#
-COPY bashrc /opt/bashrc
-
-#
 # entry
 #
-COPY chuser.sh /usr/local/bin/chuser.sh
-WORKDIR /home/${USER}
-ENTRYPOINT ["sudo","-E","/usr/local/bin/chuser.sh"]
+COPY ["bashrc", "bashrc.d", "${INSTALLDIR}/"]
+ENTRYPOINT ["/usr/local/bin/chuser.sh"]
 
