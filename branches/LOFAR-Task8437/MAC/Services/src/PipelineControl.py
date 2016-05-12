@@ -82,6 +82,7 @@ def runCommand(cmdline, input=None):
     cmdline,
     stdin=subprocess.PIPE if input else file("/dev/null"),
     stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
     shell=True,
     universal_newlines=True
     )
