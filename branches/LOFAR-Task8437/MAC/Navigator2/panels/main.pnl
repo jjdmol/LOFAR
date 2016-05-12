@@ -22,7 +22,7 @@ PANEL,-1 -1 1200 843 N "_3DFace" 0
   dynAppend(stationList,ccu);                      
   dynAppend(stationList,mcu); 
  
-  redraw();
+  redraw(0);
   redrawObservations();
 }
 
@@ -46,7 +46,7 @@ void doAction(string aDP, string anAction) {
     redrawObservations();
     return;
   } else if (actionString[1] == \"DistChanged\") {
-    redraw();
+    redraw(1);
     return;
   }
 }
@@ -57,7 +57,6 @@ E "#uses \"navPanel.ctl\"
 
 dyn_string stationList;
 dyn_string observationsList;
-dyn_string backLinesRefNames;
 dyn_string observationRefNames;
 string observationFlowRefName = \"MainObservationFlowRefName1\";
 
@@ -71,14 +70,6 @@ void prepareHardwareList() {
 
   g_stationList = stationList;
 }  
-
-void clearBackLinesRefNames() {
-  // remove all symbols because new ones will be added
-  for (int i=1; i <= dynlen(backLinesRefNames); i++) {
-    removeSymbol(strModuleName,\"\",backLinesRefNames[i]);
-  }
-  dynClear(backLinesRefNames);
-}
 
 void clearObservationRefNames() {
   // remove all symbols because new ones will be added
@@ -102,7 +93,7 @@ void redrawObservations() {
     if (!navFunct_isObservation(obslist[i])) continue;
     dynAppend(observationsList,obslist[i]);
   }
-
+  
   addObservations();
   addObservationFlow();
   
@@ -116,7 +107,7 @@ void redrawObservations() {
 
 }
 
-void redraw() {
+void redraw(int status) {
   dynClear(station_result);
   dynClear(station_procList);
     
@@ -125,12 +116,7 @@ void redraw() {
   // set the hardware selectable items for this screen
   prepareHardwareList();
     
-  if (dynlen(backLinesRefNames) > 0) {
-    clearBackLinesRefNames();
-  }
-       
-
-  addBackLines();
+  addBackLines(status);
   
  
   // trigger that the panel values are calculated and ready
@@ -142,7 +128,8 @@ void redraw() {
   navPanel_setEvent(\"main.pnl:redraw\",\"Update\");
 }
 
-void addBackLines() {
+void addBackLines(int status) {
+  
   int xPos_AddSymbol = 0; 
   int yPos_AddSymbol = 28; 
   string barColor=\"\";
@@ -155,26 +142,32 @@ void addBackLines() {
     } else {
       barColor = \"_3DFace\";
     }
-    backLinesRefNames[ref]=\"stationSW\"+(ref);
-      
-    if (  addSymbol(  strModuleName,                   // Stay in this modul
-                      \"\",                              // Name of this panel
-                      addPanelName,                    // Panel to add
-                      backLinesRefNames[ref],          // Ref of the addedPanel
-                      makeDynString( \"$station:\" + stationList[i],
-                                     \"$barColor:\" + barColor,
-                                     \"$xPos:\" + xPos_AddSymbol,
-                                     \"$yPos:\" + yPos_AddSymbol) ,     // Define all $values
-                      xPos_AddSymbol,                  // Xpos of the AddedSymbol
-                      yPos_AddSymbol,                  // Ypos of the AddedSymbol
-                      0,                               // angle
-                      1    ,1                          // zoomX , zoomY
-        ) < 0 ) {
-	  LOG_ERROR(\"swlevel.pnl:addBackLines|Error Appending backLine for: \" + stationList[i] + \" in this panel.\");
-          }
+    string refname=\"mainBL\"+stationList[i];
+
+    if (dynContains(g_involved_stations,stationList[i]+\":\") || status == 0) {
+
+//      if (i == 1 || stationList[i] == \"MCU001\" || stationList[i] == \"CCU001\") {
+        if (status == 1) {
+          removeSymbol(strModuleName,\"\",refname);
+        }
+        if (  addSymbol(  strModuleName,                   // Stay in this modul
+                          \"\",                              // Name of this panel
+                          addPanelName,                    // Panel to add
+                          refname,                         // Ref of the addedPanel
+                          makeDynString( \"$station:\" + stationList[i],
+                                         \"$barColor:\" + barColor,
+                                         \"$xPos:\" + xPos_AddSymbol,
+                                         \"$yPos:\" + yPos_AddSymbol) ,     // Define all $values
+                          xPos_AddSymbol,                  // Xpos of the AddedSymbol
+                          yPos_AddSymbol,                  // Ypos of the AddedSymbol
+                          0,                               // angle
+                          1    ,1                          // zoomX , zoomY
+            ) < 0 ) {
+    	    LOG_ERROR(\"swlevel.pnl:addBackLines|Error Appending backLine for: \" + stationList[i] + \" in this panel.\");
+        }
+//      }
+    }
     yPos_AddSymbol += 12;
-    ref++;
-//    addProcesses(stationList[i]+\":\");
   }
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",station_result);
 }

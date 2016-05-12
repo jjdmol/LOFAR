@@ -302,17 +302,17 @@ LANG:1 0
 "$name""PermSW_ClockControl"
 "$station""$station"
 3 14 "PANEL_REF14" -1
-"objects\\Processes\\SWControler_small.pnl" 350 0 T 31 1 0 1 -32 0
+"objects\\Processes\\SWControlerTempObs_small.pnl" 350 0 T 31 1 0 1 -32 0
 2
 "$name""CalibrationControl"
 "$station""$station"
 3 15 "PANEL_REF15" -1
-"objects\\Processes\\SWControler_small.pnl" 340 0 T 32 1 0 1 -6 0
+"objects\\Processes\\SWControlerTempObs_small.pnl" 340 0 T 32 1 0 1 -6 0
 2
 "$name""BeamControl"
 "$station""$station"
 3 16 "PANEL_REF16" -1
-"objects\\Processes\\SWControler_small.pnl" 360 0 T 33 1 0 1 -10 0
+"objects\\Processes\\SWControlerTempObs_small.pnl" 360 0 T 33 1 0 1 -10 0
 2
 "$name""TBBControl"
 "$station""$station"

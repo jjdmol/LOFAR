@@ -266,6 +266,7 @@ class ComputeJob(object):
                     "PYTHONPATH": os.environ.get('PYTHONPATH'),
                     "LD_LIBRARY_PATH": os.environ.get('LD_LIBRARY_PATH'),
                     "LOFARROOT" : os.environ.get('LOFARROOT'),
+                    "LOFARENV" : os.environ.get('LOFARENV',''),
                     "QUEUE_PREFIX" : os.environ.get('QUEUE_PREFIX','')
                 },
                 arguments = [id, jobhost, jobport],
