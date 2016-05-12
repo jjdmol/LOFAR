@@ -152,7 +152,9 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
                     starttime: task.starttime,
                     endtime: task.endtime,
                     status: task.status,
-                    type: task.type
+                    type: task.type,
+                    project_mom2object_id: task.project_mom2object_id,
+                    mom2object_id: task.mom2object_id
                 };
                 tasks.push(gridTask);
             }
