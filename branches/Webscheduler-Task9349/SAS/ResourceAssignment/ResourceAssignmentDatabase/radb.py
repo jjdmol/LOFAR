@@ -1050,14 +1050,15 @@ class RADatabase:
             # update the claims as well
             # updateResourceClaims also validates the updated claims
             claim_ids = [c['id'] for c in claimsBeforeUpdate]
-            updated &= self.updateResourceClaims(claim_ids,
-                                                 starttime=starttime,
-                                                 endtime=endtime,
-                                                 status=claim_status,
-                                                 session_id=session_id,
-                                                 username=username, user_id=user_id,
-                                                 validate=True,
-                                                 commit=False)
+            if claim_ids:
+                updated &= self.updateResourceClaims(claim_ids,
+                                                     starttime=starttime,
+                                                     endtime=endtime,
+                                                     status=claim_status,
+                                                     session_id=session_id,
+                                                     username=username, user_id=user_id,
+                                                     validate=True,
+                                                     commit=False)
 
             # because we moved or changed the status of these claims,
             # validate the claims 'underneath' which may have been in conflict
