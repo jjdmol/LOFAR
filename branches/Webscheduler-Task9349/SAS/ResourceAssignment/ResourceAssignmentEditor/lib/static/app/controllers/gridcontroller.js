@@ -85,6 +85,8 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         gridMenuShowHideColumns: false,
         columnDefs: $scope.columns,
         data: [],
+//         rowTemplate: "<div ng-repeat=\"(colRenderIndex, col) in colContainer.renderedColumns track by col.uid\" ui-grid-one-bind-id-grid=\"rowRenderIndex + '-' + col.uid + '-cell'\" class=\"ui-grid-cell\" ng-class=\"{ 'ui-grid-row-header-cell': col.isRowHeader }\" role=\"{{col.isRowHeader ? 'rowheader' : 'gridcell'}}\" ui-grid-cell></div>"
+        rowTemplate: "<div ng-repeat=\"(colRenderIndex, col) in colContainer.renderedColumns track by col.uid\" ui-grid-one-bind-id-grid=\"rowRenderIndex + '-' + col.uid + '-cell'\" class=\"ui-grid-cell\" ng-class=\"{ 'ui-grid-row-header-cell': col.isRowHeader }\" role=\"{{col.isRowHeader ? 'rowheader' : 'gridcell'}}\" ui-grid-cell context-menu>",
         onRegisterApi: function(gridApi){
             $scope.gridApi = gridApi;
 
@@ -209,3 +211,73 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     });
 }
 ]);
+
+gridControllerMod.directive('contextMenu', ['$document', function($document) {
+    return {
+      restrict: 'A',
+      scope: {
+      },
+      link: function($scope, $element, $attrs) {
+        function handleContextMenuEvent(event) {
+            //pragmatic 'hard-coded' way of getting the dataService and the rowEntity via scope tree.
+            var dataService = $scope.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.dataService;
+            var rowEntity = $scope.$parent.$parent.$parent.row.entity;
+
+            if(!dataService || !rowEntity)
+                return true;
+
+            var taskId = rowEntity.id;
+            var task = dataService.taskDict[taskId];
+            dataService.selected_task_id = taskId;
+
+            //search for already existing contextmenu element
+            while($document.find('#grid-context-menu').length) {
+                //found, remove it, so we can create a fresh one
+                $document.find('#grid-context-menu')[0].remove();
+
+                //unbind document close event handlers
+                angular.element($document).unbind('click', closeContextMenu);
+                angular.element($document).unbind('contextmenu', closeContextMenu);
+            }
+
+            //create contextmenu element
+            //with list of menu items,
+            //each with it's own action
+            var contextmenuElement = angular.element('<div id="grid-context-menu"></div>');
+            var ulElement = angular.element('<ul style="z-index:10000; position:absolute; top:initial; left:initial; display:block;" role="menu" class="dropdown-menu"></ul>');
+            contextmenuElement.append(ulElement);
+            var liElement = angular.element('<li><a href="#">Copy Task</a></li>');
+            ulElement.append(liElement);
+            liElement.on('click', function() {
+                dataService.copyTask(task);
+                closeContextMenu();
+            });
+
+            var closeContextMenu = function(cme) {
+                contextmenuElement.remove();
+
+                //unbind document close event handlers
+                angular.element($document).unbind('click', closeContextMenu);
+                angular.element($document).unbind('contextmenu', closeContextMenu);
+            };
+
+            //click anywhere to remove the contextmenu
+            angular.element($document).bind('click', closeContextMenu);
+            angular.element($document).bind('contextmenu', closeContextMenu);
+
+            //add contextmenu to clicked element
+            $element.append(contextmenuElement);
+
+            //prevent bubbling event upwards
+            return false;
+        }
+
+        $element.bind('contextmenu', handleContextMenuEvent);
+
+        $scope.$on('$destroy', function() {
+            console.log('destroy');
+            $element.unbind('contextmenu', handleContextMenuEvent);
+        });
+      }
+    };
+  }]);
