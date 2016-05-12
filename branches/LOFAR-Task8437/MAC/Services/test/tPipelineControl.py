@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-# Be able to find service python file
 import sys
 
 from lofar.mac.PipelineControl import *
@@ -211,7 +210,7 @@ class TestPipelineControl(unittest.TestCase):
       self.assertTrue(self.trigger.wait())
 
       # Verify message
-      self.assertEqual(self.trigger.args[0], 3) # treeId
+      self.assertEqual(self.trigger.args[0], 3) # otdbId
 
       # Check if job was scheduled
       self.assertIn("3", ps.slurm.scheduled_jobs)
@@ -233,7 +232,7 @@ class TestPipelineControl(unittest.TestCase):
       self.assertTrue(self.trigger.wait())
 
       # Verify message
-      self.assertEqual(self.trigger.args[0], 1) # treeId
+      self.assertEqual(self.trigger.args[0], 1) # otdbId
 
       # Check if job was scheduled
       self.assertIn("1", ps.slurm.scheduled_jobs)
