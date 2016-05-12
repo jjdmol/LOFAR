@@ -63,6 +63,7 @@ def convert_surl_to_turl(surl):
     turl = turl.replace("srm://lofar-srm.fz-juelich.de", "gsiftp://dcachepool%d.fz-juelich.de:2811" % (random.randint(9, 16),), 1)
     turl = turl.replace("srm://srm.target.rug.nl:8444","gsiftp://gridftp02.target.rug.nl/target/gpfs2/lofar/home/srm",1)
     turl = turl.replace("srm://srm.target.rug.nl","gsiftp://gridftp02.target.rug.nl/target/gpfs2/lofar/home/srm",1)
+    turl = turl.replace("srm://lta-head.lofar.psnc.pl:8443", "gsiftp://door0%d.lofar.psnc.pl:2811" % (random.randint(1, 2),), 1)
     return turl
 
 def createNetCatCmd(user, host):
@@ -274,15 +275,21 @@ class LtaCp:
                 # wait and poll for progress while all processes are runnning
                 while len([p for p in self.started_procs.keys() if p.poll() is not None]) == 0:
                     try:
+                        current_progress_time = datetime.utcnow()
+                        elapsed_secs_since_prev = timedelta_total_seconds(current_progress_time - prev_progress_time)
+
+                        if elapsed_secs_since_prev > 120:
+                            logger.error('ltacp %s: transfer stalled. cancelling...' % self.logId)
+                            self.cleanup()
+                            break
+
                         # read and process md5a32bc stdout lines to create progress messages
                         nextline = p_md5a32bc.stdout.readline().strip()
 
                         if len(nextline) > 0:
                             total_bytes_transfered = int(nextline.split()[0].strip())
                             percentage_done = (100.0*float(total_bytes_transfered))/float(estimated_tar_size)
-                            current_progress_time = datetime.utcnow()
                             elapsed_secs_since_start = timedelta_total_seconds(current_progress_time - transfer_start_time)
-                            elapsed_secs_since_prev = timedelta_total_seconds(current_progress_time - prev_progress_time)
                             if percentage_done > 0 and elapsed_secs_since_start > 0 and elapsed_secs_since_prev > 0:
                                 avg_speed = total_bytes_transfered / elapsed_secs_since_start
                                 current_bytes_transfered = total_bytes_transfered - prev_bytes_transfered
@@ -306,6 +313,12 @@ class LtaCp:
                         self.cleanup()
                     except Exception as e:
                         logger.error('ltacp %s: %s' % (self.logId, str(e)))
+
+                logger.info('ltacp %s: waiting for transfer via globus-url-copy to LTA to finish...' % self.logId)
+                output_data_out = p_data_out.communicate()
+                if p_data_out.returncode != 0:
+                    raise LtacpException('ltacp %s: transfer via globus-url-copy to LTA failed: %s' % (self.logId, output_data_out[1]))
+                logger.info('ltacp %s: data transfer via globus-url-copy to LTA complete.' % self.logId)
 
                 logger.info('ltacp %s: waiting for remote data transfer to finish...' % self.logId)
                 output_remote_data = p_remote_data.communicate()
@@ -348,12 +361,6 @@ class LtaCp:
                 if(md5_checksum_remote != md5_checksum_local):
                     raise LtacpException('md5 checksum reported by client (%s) does not match local checksum of incoming data stream (%s)' % (self.logId, md5_checksum_remote, md5_checksum_local))
                 logger.info('ltacp %s: remote and local md5 checksums are equal: %s' % (self.logId, md5_checksum_local,))
-
-                logger.info('ltacp %s: waiting for transfer via globus-url-copy to LTA to finish...' % self.logId)
-                output_data_out = p_data_out.communicate()
-                if p_data_out.returncode != 0:
-                    raise LtacpException('ltacp %s: transfer via globus-url-copy to LTA failed: %s' % (self.logId, output_data_out[1]))
-                logger.info('ltacp %s: data transfer via globus-url-copy to LTA complete.' % self.logId)
 
             logger.info('ltacp %s: fetching adler32 checksum from LTA...' % self.logId)
             srm_ok, srm_file_size, srm_a32_checksum = get_srm_size_and_a32_checksum(self.dst_surl)
