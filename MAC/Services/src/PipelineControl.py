@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-#coding: iso-8859-15
 #
-# Copyright (C) 2015
+# Copyright (C) 2016
 # ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 #
@@ -169,9 +168,9 @@ class Parset(dict):
             runCommand("docker-template", "${LOFAR_TAG}"))
 
   def slurmJobName(self):
-    return str(self.treeId())
+    return str(self.otdbId())
 
-  def treeId(self):
+  def otdbId(self):
     return int(self[PARSET_PREFIX + "Observation.otdbID"])
 
 class Slurm(object):
@@ -277,21 +276,21 @@ class PipelineControl(OTDBBusListener):
   def _slurmJobIds(self, parsets):
     return [self.slurm.jobid(p.slurmJobName()) for p in parsets]
 
-  def _getParset(self, treeId):
-    return Parset(self.parset_rpc( OtdbID=treeId, timeout=10 )[0])
+  def _getParset(self, otdbId):
+    return Parset(self.parset_rpc( OtdbID=otdbId, timeout=10 )[0])
 
   def _getPredecessorParsets(self, parset):
-    treeIds = parset.predecessors()
+    otdbIds = parset.predecessors()
 
-    logger.info("Obtaining predecessor parsets %s", treeIds)
+    logger.info("Obtaining predecessor parsets %s", otdbIds)
 
-    return [self._getParset(treeId) for treeId in treeIds]
+    return [self._getParset(otdbId) for otdbId in otdbIds]
 
-  def onObservationAborted(self, treeId, modificationTime):
-    logger.info("***** STOP Tree ID %s *****", treeId)
+  def onObservationAborted(self, otdbId, modificationTime):
+    logger.info("***** STOP Otdb ID %s *****", otdbId)
 
     # Request the parset
-    parset = self._getParset(treeId)
+    parset = self._getParset(otdbId)
 
     if not self._shouldHandle(parset):
       return
@@ -323,11 +322,11 @@ class PipelineControl(OTDBBusListener):
 
     return result
 
-  def onObservationScheduled(self, treeId, modificationTime):
-    logger.info("***** QUEUE Tree ID %s *****", treeId)
+  def onObservationScheduled(self, otdbId, modificationTime):
+    logger.info("***** QUEUE Otdb ID %s *****", otdbId)
 
     # Request the parset
-    parset = self._getParset(treeId)
+    parset = self._getParset(otdbId)
 
     if not self._shouldHandle(parset):
       return
@@ -363,8 +362,8 @@ class PipelineControl(OTDBBusListener):
                      "--nodes=50",
                     
                      # Define better places to write the output
-                     os.path.expandvars("--error=$LOFARROOT/var/log/docker-startPython-%s.stderr" % (treeId,)),
-                     os.path.expandvars("--output=$LOFARROOT/var/log/docker-startPython-%s.log" % (treeId,)),
+                     os.path.expandvars("--error=$LOFARROOT/var/log/docker-startPython-%s.stderr" % (otdbId,)),
+                     os.path.expandvars("--output=$LOFARROOT/var/log/docker-startPython-%s.log" % (otdbId,)),
                      ]
 
     min_starttime = self._minStartTime([x for x in preparsets if x.isObservation()])
@@ -390,7 +389,7 @@ class PipelineControl(OTDBBusListener):
         " runPipeline.sh -o {obsid} -c /opt/lofar/share/pipeline/pipeline.cfg.{cluster} -B {status_bus}"
       .format(
         lofarenv = os.environ.get("LOFARENV", ""),
-        obsid = treeId,
+        obsid = otdbId,
         tag = parset.dockerTag(),
         cluster = parset.processingCluster(),
         status_bus = self.setStatus_busname,
@@ -412,7 +411,7 @@ class PipelineControl(OTDBBusListener):
         " pipelineAborted.sh -o {obsid} -B {status_bus}"
       .format(
         lofarenv = os.environ.get("LOFARENV", ""),
-        obsid = treeId,
+        obsid = otdbId,
         tag = parset.dockerTag(),
         status_bus = self.setStatus_busname,
       ),
@@ -436,7 +435,7 @@ class PipelineControl(OTDBBusListener):
     # TODO: How to avoid race condition with runPipeline.sh setting the status to STARTED
     #       when the SLURM job starts running?
     logger.info("Setting status to QUEUED")
-    self._setStatus(treeId, "queued")
+    self._setStatus(otdbId, "queued")
 
     logger.info("Pipeline processed.")
 
