@@ -34,7 +34,7 @@ PIPELINE = "Observation.ObservationControl.PythonControl."
 class PulsarPipelineResourceEstimator(BaseResourceEstimator):
     """ ResourceEstimator for Pulsar Pipelines
     """
-    def __init__(self, kwargs, input_files):
+    def __init__(self):
         logger.info("init PulsarPipelineResourceEstimator")
         BaseResourceEstimator.__init__(self, name='pulsar_pipeline')
         self.required_keys = ('Observation.startTime',

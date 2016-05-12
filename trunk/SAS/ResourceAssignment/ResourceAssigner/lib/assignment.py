@@ -137,7 +137,7 @@ class ResourceAssigner():
             return
 
         if status != 'prescheduled':
-            logger.info('skipping resource assignment for CEP4 task otdb_id=%s because status=%s', (otdb_id, status))
+            logger.info('skipping resource assignment for CEP4 task otdb_id=%s because status=%s' % (otdb_id, status))
             return
 
         needed = self.getNeededResouces(specification_tree)
@@ -166,7 +166,7 @@ class ResourceAssigner():
         task = self.radbrpc.getTask(taskId)
         claimed, claim_ids = self.claimResources(main_needed, task)
         if claimed:
-            conflictingClaims = self.radbrpc.getResourceClaims(task_id=taskId, status='conflict')
+            conflictingClaims = self.radbrpc.getResourceClaims(task_ids=taskId, status='conflict')
 
             if conflictingClaims:
                 logger.warning('doAssignment: %s conflicting claims detected. Task cannot be scheduled. %s' %
