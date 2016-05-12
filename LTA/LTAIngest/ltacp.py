@@ -279,9 +279,7 @@ class LtaCp:
                         elapsed_secs_since_prev = timedelta_total_seconds(current_progress_time - prev_progress_time)
 
                         if elapsed_secs_since_prev > 120:
-                            logger.error('ltacp %s: transfer stalled. cancelling...' % self.logId)
-                            self.cleanup()
-                            break
+                            raise LtacpException('ltacp %s: transfer stalled.' % (self.logId))
 
                         # read and process md5a32bc stdout lines to create progress messages
                         nextline = p_md5a32bc.stdout.readline().strip()
