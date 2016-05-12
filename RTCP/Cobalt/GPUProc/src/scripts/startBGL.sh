@@ -36,6 +36,7 @@ echo "---------------"
 echo "called as: $0 $@"
 echo "pwd:       $PWD"
 echo "LOFARROOT: $LOFARROOT"
+echo "LOFARENV:  $LOFARENV"
 echo "obs id:    $OBSID"
 echo "parset:    $PARSET"
 echo "log file:  $LOGFILE"
@@ -60,7 +61,7 @@ ln -sfT $TBB_PARSET /globalhome/lofarsystem/log/latest || true
 mkfifo -m 0660 "$COMMANDPIPE" || true
 
 # Construct command line
-COMMAND="runObservation.sh -P $PIDFILE -o Cobalt.commandStream=file:$COMMANDPIPE $PARSET"
+COMMAND="LOFARENV=$LOFARENV runObservation.sh -P $PIDFILE -o Cobalt.commandStream=file:$COMMANDPIPE $PARSET"
 
 # Process cluster requirements
 read_cluster_model
