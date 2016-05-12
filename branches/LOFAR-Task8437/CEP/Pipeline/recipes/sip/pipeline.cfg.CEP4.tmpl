@@ -33,7 +33,7 @@ xml_stat_file = %(runtime_directory)s/%(job_name)s/logs/%(start_time)s/statistic
 # Valid options:
 #    messagebus    Send feedback and status using LCS/MessageBus
 #    none          Do NOT send feedback and status
-method = none
+method = messagebus
 
 [remote]
 method = custom_cmdline
