@@ -33,9 +33,13 @@
                             }
 
                             //search for already existing contextmenu element
-                            if(dElement.find('#gantt-context-menu').length) {
+                            while($document.find('#gantt-context-menu').length) {
                                 //found, remove it, so we can create a fresh one
-                                dElement.find('#gantt-context-menu')[0].remove();
+                                $document.find('#gantt-context-menu')[0].remove();
+
+                                //unbind document close event handlers
+                                angular.element($document).unbind('click', closeContextMenu);
+                                angular.element($document).unbind('contextmenu', closeContextMenu);
                             }
 
                             //create contextmenu element
@@ -54,11 +58,15 @@
 
                             var closeContextMenu = function() {
                                 contextmenuElement.remove();
-                                angular.element(document).unbind('click', closeContextMenu);
+
+                                //unbind document close event handlers
+                                angular.element($document).unbind('click', closeContextMenu);
+                                angular.element($document).unbind('contextmenu', closeContextMenu);
                             };
 
                             //click anywhere to remove the contextmenu
-                            angular.element(document).bind('click', closeContextMenu);
+                            angular.element($document).bind('click', closeContextMenu);
+                            angular.element($document).bind('contextmenu', closeContextMenu);
 
                             //add contextmenu to clicked element
                             dElement.append(contextmenuElement);
