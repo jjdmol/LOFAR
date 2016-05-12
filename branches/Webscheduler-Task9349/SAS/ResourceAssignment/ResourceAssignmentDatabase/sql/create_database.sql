@@ -141,8 +141,8 @@ ALTER TABLE resource_allocation.specification
 
 CREATE TABLE resource_allocation.task (
   id serial NOT NULL,
-  mom_id integer,
-  otdb_id integer,
+  mom_id integer UNIQUE,
+  otdb_id integer UNIQUE,
   status_id integer NOT NULL REFERENCES resource_allocation.task_status DEFERRABLE INITIALLY IMMEDIATE,
   type_id integer NOT NULL REFERENCES resource_allocation.task_type DEFERRABLE INITIALLY IMMEDIATE,
   specification_id integer NOT NULL REFERENCES resource_allocation.specification  ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE,
