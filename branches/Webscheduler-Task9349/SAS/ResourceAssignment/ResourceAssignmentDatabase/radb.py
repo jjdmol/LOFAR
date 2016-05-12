@@ -1170,9 +1170,16 @@ class RADatabase:
         '''
         Insert a new specification and task in one transaction.
         Removes existing task with same otdb_id if present in the same transaction.
+        Removes existing task with same mom_id if present in the same transaction.
         '''
         try:
             task = self.getTask(otdb_id=otdb_id)
+
+            if task:
+                # delete old specification, task, and resource claims using cascaded delete
+                self.deleteSpecification(task['specification_id'], False)
+
+            task = self.getTask(mom_id=mom_id)
 
             if task:
                 # delete old specification, task, and resource claims using cascaded delete
