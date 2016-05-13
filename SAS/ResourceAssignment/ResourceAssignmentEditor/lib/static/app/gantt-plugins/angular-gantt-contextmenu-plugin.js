@@ -46,7 +46,7 @@
                             //with list of menu items,
                             //each with it's own action
                             var contextmenuElement = angular.element('<div id="gantt-context-menu"></div>');
-                            var ulElement = angular.element('<ul style="z-index:10000; position:fixed; top:initial; left:initial; display:block;" role="menu" class="dropdown-menu"></ul>');
+                            var ulElement = angular.element('<ul style="z-index:10000; position:absolute; top:initial; left:initial; display:block;" role="menu" class="dropdown-menu"></ul>');
                             contextmenuElement.append(ulElement);
                             var liElement = angular.element('<li><a href="#">Copy Task</a></li>');
                             ulElement.append(liElement);
