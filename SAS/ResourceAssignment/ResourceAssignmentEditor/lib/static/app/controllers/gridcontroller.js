@@ -32,8 +32,8 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         type: 'date',
         enableCellEdit: false,
         enableCellEditOnFocus: false,
-        cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm:ss\'}}</div>'
-//         editableCellTemplate: '<div><form name="inputForm"><div ui-grid-edit-datepicker row-field="MODEL_COL_FIELD" ng-class="\'colt\' + col.uid"></div></form></div>'
+        cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm:ss\'}}</div>',
+        sort: { direction: uiGridConstants.ASC }
     },
     { field: 'endtime',
         displayName: 'End',
