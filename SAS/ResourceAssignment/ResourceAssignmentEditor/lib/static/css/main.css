@@ -117,7 +117,7 @@ div.gantt-task.claim-task-status-scheduled span {
 }
 
 div.gantt-task.claim-task-status-queued span {
-  background: #6666ff;
+  background: #ccffff;
 }
 
 div.gantt-task.claim-task-status-active span {
@@ -125,7 +125,7 @@ div.gantt-task.claim-task-status-active span {
 }
 
 div.gantt-task.claim-task-status-completing span {
-  background: #99ff33;
+  background: #ffdd99;
 }
 
 div.gantt-task.claim-task-status-finished span {
