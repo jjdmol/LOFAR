@@ -273,7 +273,14 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             self.resources = result.resources;
             self.resourceDict = self.toIdBasedDict(self.resources);
 
-            self.selected_resource = self.resources[0];
+            //try to select first storage resource as default selected_resource_id
+            var storageResources = self.resources.filter(function(r) { return r.type_name == 'storage'; });
+            if(storageResources.length > 0) {
+                self.selected_resource_id = storageResources[0].id;
+            } else {
+                //else, just the first resource
+                self.selected_resource_id = self.resources[0].id;
+            }
 
             defer.resolve();
         });
