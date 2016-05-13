@@ -4,7 +4,8 @@ var gridControllerMod = angular.module('GridControllerMod', ['ui.grid',
                                                              'ui.grid.edit',
                                                              'ui.grid.selection',
                                                              'ui.grid.cellNav',
-                                                             'ui.grid.resizeColumns']);
+                                                             'ui.grid.resizeColumns',
+                                                             'ui.grid.autoResize']);
 
 gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGridConstants', function($scope, dataService, uiGridConstants) {
 
@@ -77,6 +78,7 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         enableFiltering: true,
         enableCellEdit: false,
         enableColumnResize: true,
+        enableHorizontalScrollbar: uiGridConstants.scrollbars.NEVER,
         enableRowSelection: true,
         enableRowHeaderSelection: true,
         enableFullRowSelection: false,
@@ -103,7 +105,6 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
             });
         }
     };
-
 
     function filterTasks() {
         var taskDict = $scope.dataService.taskDict;
