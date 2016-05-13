@@ -148,25 +148,31 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         columnDef.filter.selectOptions = columnSelectOptions;
     };
 
-    $scope.$watch('dataService.tasks', function() {
+    function populateList() {
         if('tasks' in $scope.dataService && $scope.dataService.tasks.length > 0) {
+            var viewFrom = $scope.dataService.viewTimeSpan.from;
+            var viewTo = $scope.dataService.viewTimeSpan.to;
+
             var tasks = [];
+
             for(var task of $scope.dataService.tasks) {
-                var gridTask = {
-                    id: task.id,
-                    name: task.name,
-                    project_name: task.project_name,
-                    mom_id: task.mom_id,
-                    otdb_id: task.otdb_id,
-                    starttime: task.starttime,
-                    endtime: task.endtime,
-                    duration: task.duration,
-                    status: task.status,
-                    type: task.type,
-                    project_mom2object_id: task.project_mom2object_id,
-                    mom2object_id: task.mom2object_id
-                };
-                tasks.push(gridTask);
+                if(task.endtime >= viewFrom && task.starttime <= viewTo) {
+                    var gridTask = {
+                        id: task.id,
+                        name: task.name,
+                        project_name: task.project_name,
+                        mom_id: task.mom_id,
+                        otdb_id: task.otdb_id,
+                        starttime: task.starttime,
+                        endtime: task.endtime,
+                        duration: task.duration,
+                        status: task.status,
+                        type: task.type,
+                        project_mom2object_id: task.project_mom2object_id,
+                        mom2object_id: task.mom2object_id
+                    };
+                    tasks.push(gridTask);
+                }
             }
 
             $scope.gridOptions.data = tasks;
@@ -174,6 +180,21 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
             $scope.gridOptions.data = []
 
         fillProjectsColumFilterSelectOptions();
+    };
+
+    function jumpToSelectedTaskRow() {
+        var taskIdx = $scope.gridOptions.data.findIndex(function(row) {return row.id == dataService.selected_task_id});
+
+        if(taskIdx > -1) {
+            $scope.gridApi.selection.selectRow($scope.gridOptions.data[taskIdx]);
+            $scope.gridApi.core.scrollTo($scope.gridOptions.data[taskIdx], null);
+        }
+    };
+
+    $scope.$watch('dataService.taskChangeCntr', populateList);
+    $scope.$watch('dataService.viewTimeSpan', function() {
+        populateList();
+        setTimeout(jumpToSelectedTaskRow, 250);
     }, true);
 
     $scope.$watch('dataService.taskstatustypes', function() {
@@ -208,13 +229,6 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     };
 
     $scope.$watch('dataService.momProjectsDict', fillProjectsColumFilterSelectOptions);
-
-    $scope.$watch('dataService.selected_task_id', function() {
-        var taskIdx = $scope.gridOptions.data.findIndex(function(row) {return row.id == dataService.selected_task_id});
-
-        if(taskIdx > -1) {
-            $scope.gridApi.selection.selectRow($scope.gridOptions.data[taskIdx]);
-        }
-    });
+    $scope.$watch('dataService.selected_task_id', jumpToSelectedTaskRow);
 }
 ]);
