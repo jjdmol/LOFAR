@@ -209,7 +209,7 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
                 series.events = { legendItemClick: function() { self.seriesVisibilityCache[this.name] = !this.visible; }};
                 $scope.chartSeries.push(series);
             }
-            series.visible = self.seriesVisibilityCache.hasOwnProperty(series.name) ? self.seriesVisibilityCache[series.name] : true;
+            series.visible = self.seriesVisibilityCache.hasOwnProperty(series.name) ? self.seriesVisibilityCache[series.name] : false;
             series.data = [[timestamps[0].getTime(), resource.total_capacity],
                            [timestamps[timestamps.length-1].getTime(), resource.total_capacity]]
             expectedSeriesNames.push('total capacity');
