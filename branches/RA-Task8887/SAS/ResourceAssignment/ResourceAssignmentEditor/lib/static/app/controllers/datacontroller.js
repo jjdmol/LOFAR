@@ -221,6 +221,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
             }
 
+            var initialTaskLoad = self.tasks.length == 0;
+
             var newTaskDict = self.toIdBasedDict(result.tasks);
             var newTaskIds = Object.keys(newTaskDict);
 
@@ -238,6 +240,33 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             self.taskChangeCntr++;
 
             self.computeMinMaxTaskTimes();
+
+            if(initialTaskLoad && self.tasks.length > 0) {
+                setTimeout(function() {
+                    //try to select current task
+                    var currentTasks = self.tasks.filter(function(t) { return t.starttime <= self.lofarTime && t.endtime >= self.lofarTime; });
+
+                    if(currentTasks.length > 0) {
+                        self.selected_task_id = currentTasks[0].id;
+                    } else {
+                        //try to select next task
+                        var nextTasks = self.tasks.filter(function(t) { return t.starttime >= self.lofarTime; }).sort();
+
+                        if(nextTasks.length > 0) {
+                            self.selected_task_id = nextTasks[0].id;
+                        } else {
+                            //try to select most recent task
+                            var prevTasks = self.tasks.filter(function(t) { return t.endtime <= self.lofarTime; }).sort();
+
+                            if(prevTasks.length > 0) {
+                                self.selected_task_id = prevTasks[prevTasks.length-1].id;
+                            } else {
+                                self.selected_task_id = self.tasks[0].id;
+                            }
+                        }
+                    }
+                }, 1000);
+            }
 
             defer.resolve();
         });
