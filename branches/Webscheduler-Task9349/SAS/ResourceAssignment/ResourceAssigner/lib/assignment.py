@@ -116,7 +116,8 @@ class ResourceAssigner():
             startTime = datetime.strptime(mainParset.getString('Observation.startTime'), '%Y-%m-%d %H:%M:%S')
             endTime = datetime.strptime(mainParset.getString('Observation.stopTime'), '%Y-%m-%d %H:%M:%S')
         except ValueError:
-            logger.warning('cannot parse for start/end time from specification for otdb_id=%s', (otdb_id, ))
+            logger.warning('cannot parse for start/end time from specification for otdb_id=%s. skipping specification.', (otdb_id, ))
+            return
 
         # insert new task and specification in the radb
         # any existing specification and task with same otdb_id will be deleted automatically
