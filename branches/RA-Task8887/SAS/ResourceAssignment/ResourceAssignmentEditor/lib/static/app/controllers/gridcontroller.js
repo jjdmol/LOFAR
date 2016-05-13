@@ -26,37 +26,34 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
             selectOptions: []
         }
     },
-    { field: 'mom_id',
-        displayName: 'MoM ID',
-        enableCellEdit: false,
-        cellTemplate:'<a target="_blank" href="https://lofar.astron.nl/mom3/user/project/setUpMom2ObjectDetails.do?view=generalinfo&mom2ObjectId={{row.entity.mom2object_id}}">{{row.entity[col.field]}}</a>',
-        width: '7.5%'
-    },
-    { field: 'otdb_id',
-        displayName: 'SAS ID',
-        enableCellEdit: false,
-        width: '7.5%'
-    },
     { field: 'starttime',
         displayName: 'Start',
-        width: '15%',
+        width: '14%',
         type: 'date',
         enableCellEdit: false,
         enableCellEditOnFocus: false,
-        cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
+        cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm:ss\'}}</div>'
 //         editableCellTemplate: '<div><form name="inputForm"><div ui-grid-edit-datepicker row-field="MODEL_COL_FIELD" ng-class="\'colt\' + col.uid"></div></form></div>'
     },
     { field: 'endtime',
         displayName: 'End',
-        width: '15%',
+        width: '14%',
         type: 'date',
         enableCellEdit: false,
         enableCellEditOnFocus: false,
-        cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
+        cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm:ss\'}}</div>'
+    },
+    { field: 'duration',
+        displayName: 'Duration',
+        width: '8%',
+        enableFiltering: false,
+        enableCellEdit: false,
+        enableCellEditOnFocus: false,
+        cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | secondsToHHmmss}}</div>'
     },
     { field: 'status',
         enableCellEdit: true,
-        width: '12.5%',
+        width: '8%',
         filter: {
             type: uiGridConstants.filter.SELECT,
             selectOptions: []
@@ -66,11 +63,22 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     },
     { field: 'type',
         enableCellEdit: false,
-        width: '12.5%',
+        width: '8%',
         filter: {
             type: uiGridConstants.filter.SELECT,
             selectOptions: []
         }
+    },
+    { field: 'mom_id',
+        displayName: 'MoM ID',
+        enableCellEdit: false,
+        cellTemplate:'<a target="_blank" href="https://lofar.astron.nl/mom3/user/project/setUpMom2ObjectDetails.do?view=generalinfo&mom2ObjectId={{row.entity.mom2object_id}}">{{row.entity[col.field]}}</a>',
+        width: '8%'
+    },
+    { field: 'otdb_id',
+        displayName: 'SAS ID',
+        enableCellEdit: false,
+        width: '8%'
     }];
     $scope.gridOptions = {
         enableGridMenu: false,
@@ -152,6 +160,7 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
                     otdb_id: task.otdb_id,
                     starttime: task.starttime,
                     endtime: task.endtime,
+                    duration: task.duration,
                     status: task.status,
                     type: task.type,
                     project_mom2object_id: task.project_mom2object_id,
@@ -169,13 +178,13 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
 
     $scope.$watch('dataService.taskstatustypes', function() {
         taskstatustypenames = $scope.dataService.taskstatustypes.map(function(x) { return x.name; });
-        fillColumFilterSelectOptions(taskstatustypenames, $scope.columns[6]);
+        fillColumFilterSelectOptions(taskstatustypenames, $scope.columns[5]);
         $scope.columns[6].editDropdownOptionsArray = $scope.dataService.taskstatustypes.map(function(x) { return {id:x.name, value:x.name}; });
     });
 
     $scope.$watch('dataService.tasktypes', function() {
         tasktypenames = $scope.dataService.tasktypes.map(function(x) { return x.name; });
-        fillColumFilterSelectOptions(tasktypenames, $scope.columns[7]);
+        fillColumFilterSelectOptions(tasktypenames, $scope.columns[6]);
     });
 
     function fillProjectsColumFilterSelectOptions() {
