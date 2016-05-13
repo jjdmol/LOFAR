@@ -66,9 +66,9 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
                              'conflict':'#ff0000',
                              'prescheduled': '#6666ff',
                              'scheduled': '#0000ff',
-                             'queued': '#6666ff',
+                             'queued': '#ccffff',
                              'active': '#ffff00',
-                             'completing': '#99ff33',
+                             'completing': '#ffdd99',
                              'finished': '#00ff00',
                              'aborted': '#cc0000',
                              'error': '#990033',
@@ -221,6 +221,8 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
 
             }
 
+            var initialTaskLoad = self.tasks.length == 0;
+
             var newTaskDict = self.toIdBasedDict(result.tasks);
             var newTaskIds = Object.keys(newTaskDict);
 
@@ -238,6 +240,33 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             self.taskChangeCntr++;
 
             self.computeMinMaxTaskTimes();
+
+            if(initialTaskLoad && self.tasks.length > 0) {
+                setTimeout(function() {
+                    //try to select current task
+                    var currentTasks = self.tasks.filter(function(t) { return t.starttime <= self.lofarTime && t.endtime >= self.lofarTime; });
+
+                    if(currentTasks.length > 0) {
+                        self.selected_task_id = currentTasks[0].id;
+                    } else {
+                        //try to select next task
+                        var nextTasks = self.tasks.filter(function(t) { return t.starttime >= self.lofarTime; }).sort();
+
+                        if(nextTasks.length > 0) {
+                            self.selected_task_id = nextTasks[0].id;
+                        } else {
+                            //try to select most recent task
+                            var prevTasks = self.tasks.filter(function(t) { return t.endtime <= self.lofarTime; }).sort();
+
+                            if(prevTasks.length > 0) {
+                                self.selected_task_id = prevTasks[prevTasks.length-1].id;
+                            } else {
+                                self.selected_task_id = self.tasks[0].id;
+                            }
+                        }
+                    }
+                }, 1000);
+            }
 
             defer.resolve();
         });
@@ -273,7 +302,14 @@ angular.module('raeApp').factory("dataService", ['$http', '$q', function($http, 
             self.resources = result.resources;
             self.resourceDict = self.toIdBasedDict(self.resources);
 
-            self.selected_resource = self.resources[0];
+            //try to select first storage resource as default selected_resource_id
+            var storageResources = self.resources.filter(function(r) { return r.type_name == 'storage'; });
+            if(storageResources.length > 0) {
+                self.selected_resource_id = storageResources[0].id;
+            } else {
+                //else, just the first resource
+                self.selected_resource_id = self.resources[0].id;
+            }
 
             defer.resolve();
         });
@@ -620,8 +656,8 @@ dataControllerMod.controller('DataController',
 
     $scope.openViewFromDatePopup = function() { $scope.viewFromDatePopupOpened = true; };
     $scope.openViewToDatePopup = function() { $scope.viewToDatePopupOpened = true; };
-    $scope.jumpTimespanWidths = [{value:30, name:'30 Minutes'}, {value:60, name:'1 Hour'}, {value:3*60, name:'3 Hours'}, {value:6*60, name:'6 Hours'}, {value:12*60, name:'12 Hours'}, {value:24*60, name:'1 Day'}, {value:2*24*60, name:'2 Days'}, {value:5*24*60, name:'5 Days'}, {value:7*24*60, name:'1 Week'}, {value:14*24*60, name:'2 Weeks'}, {value:28*24*60, name:'4 Weeks'}];
-    $scope.jumpTimespanWidth = $scope.jumpTimespanWidths[8];
+    $scope.jumpTimespanWidths = [{value:30, name:'30 Minutes'}, {value:60, name:'1 Hour'}, {value:3*60, name:'3 Hours'}, {value:6*60, name:'6 Hours'}, {value:12*60, name:'12 Hours'}, {value:24*60, name:'1 Day'}, {value:2*24*60, name:'2 Days'}, {value:3*24*60, name:'3 Days'}, {value:5*24*60, name:'5 Days'}, {value:7*24*60, name:'1 Week'}, {value:14*24*60, name:'2 Weeks'}, {value:28*24*60, name:'4 Weeks'}];
+    $scope.jumpTimespanWidth = $scope.jumpTimespanWidths[7];
     $scope.jumpToNow = function() {
         var floorLofarTime = dataService.floorDate(dataService.lofarTime, 1, 5);
         dataService.viewTimeSpan = {
