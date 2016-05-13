@@ -221,6 +221,12 @@ class RADatabase:
         return task_status, task_type
 
     def insertTask(self, mom_id, otdb_id, task_status, task_type, specification_id, commit=True):
+        if isinstance(mom_id, int) and mom_id <= 0:
+            mom_id = None
+
+        if isinstance(otdb_id, int) and otdb_id <= 0:
+            otdb_id = None
+
         logger.info('insertTask mom_id=%s, otdb_id=%s, task_status=%s, task_type=%s, specification_id=%s' %
                     (mom_id, otdb_id, task_status, task_type, specification_id))
         task_status, task_type = self._convertTaskTypeAndStatusToIds(task_status, task_type)
@@ -1410,6 +1416,10 @@ if __name__ == '__main__':
 
     for t in db.getTasks():
         print db.getTask(t['id'])
+
+    print db.getTask(db.insertTask(12340, 56780, 600, 0, t['specification_id']))
+    print db.getTask(db.insertTask(0, 567801, 600, 0, t['specification_id']))
+    print db.getTask(db.insertTask(123401, 0, 600, 0, t['specification_id']))
 
     exit()
 
