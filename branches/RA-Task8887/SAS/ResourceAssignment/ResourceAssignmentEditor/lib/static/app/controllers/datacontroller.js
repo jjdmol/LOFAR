@@ -656,8 +656,8 @@ dataControllerMod.controller('DataController',
 
     $scope.openViewFromDatePopup = function() { $scope.viewFromDatePopupOpened = true; };
     $scope.openViewToDatePopup = function() { $scope.viewToDatePopupOpened = true; };
-    $scope.jumpTimespanWidths = [{value:30, name:'30 Minutes'}, {value:60, name:'1 Hour'}, {value:3*60, name:'3 Hours'}, {value:6*60, name:'6 Hours'}, {value:12*60, name:'12 Hours'}, {value:24*60, name:'1 Day'}, {value:2*24*60, name:'2 Days'}, {value:5*24*60, name:'5 Days'}, {value:7*24*60, name:'1 Week'}, {value:14*24*60, name:'2 Weeks'}, {value:28*24*60, name:'4 Weeks'}];
-    $scope.jumpTimespanWidth = $scope.jumpTimespanWidths[8];
+    $scope.jumpTimespanWidths = [{value:30, name:'30 Minutes'}, {value:60, name:'1 Hour'}, {value:3*60, name:'3 Hours'}, {value:6*60, name:'6 Hours'}, {value:12*60, name:'12 Hours'}, {value:24*60, name:'1 Day'}, {value:2*24*60, name:'2 Days'}, {value:3*24*60, name:'3 Days'}, {value:5*24*60, name:'5 Days'}, {value:7*24*60, name:'1 Week'}, {value:14*24*60, name:'2 Weeks'}, {value:28*24*60, name:'4 Weeks'}];
+    $scope.jumpTimespanWidth = $scope.jumpTimespanWidths[7];
     $scope.jumpToNow = function() {
         var floorLofarTime = dataService.floorDate(dataService.lofarTime, 1, 5);
         dataService.viewTimeSpan = {
