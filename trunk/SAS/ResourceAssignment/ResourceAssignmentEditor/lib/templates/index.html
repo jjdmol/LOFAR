@@ -42,7 +42,7 @@
     <script src="/static/app/controllers/ganttprojectcontroller.js"></script>
     <script src="/static/app/controllers/chartresourceusagecontroller.js"></script>
     </head>
-    <body>
+    <body style="overflow:hidden;">
     {% raw %}
     <div ng-controller="DataController as dataCtrl" class="container-fluid">
         <div class="row">
@@ -87,68 +87,61 @@
                 </p>
             </div>
         </div>
-        <div ui-layout class="top-stretch" ui-layout="{flow: 'column'}">
-            <header>
-                <uib-tabset margin-top='10px'>
-                    <uib-tab heading="Tasks" index='0' active='true'>
-                        <div ng-controller="GridController as gridCtrl">
-                            <div id="grid" ui-grid="gridOptions" ui-grid-edit ui-grid-selection ui-grid-cellnav ui-grid-resize-columns class="grid">
-                            </div>
-                        </div>
-                    </uib-tab>
-                    <uib-tab heading="Usages" index='1' active='false'>
-                        <div class="tab-pane active" ng-controller="ChartResourceUsageController as chartResourceUsageCtrl">
-                            <highchart id="chart_resource_usage" config="chartConfig" style="width: 95%; height: 40%; margin: 10px;" ></highchart>
-                        </div>
-                    </uib-tab>
-                </uib-tabset>
-            </header>
-            <header>
-                <uib-tabset margin-top='10px'>
-                    <uib-tab heading="Projects" index='0' active='true'>
-                        <div class="tab-pane active" ng-controller="GanttProjectController as ganttProjectCtrl">
-                            <div gantt data=ganttData
-                                api=options.api
-                                show-side='true'
-                                view-scale="options.viewScale"
-                                from-date="options.fromDate"
-                                to-date="options.toDate"
-                                current-date="options.currentDate"
-                                current-date-value="options.currentDateValue"
-                                column-magnet="options.columnMagnet">
-                                <gantt-tree enabled="true"></gantt-tree>
-                                <gantt-movable enabled="true"
-                                    allow-moving="true"
-                                    allow-resizing="true"
-                                    allow-row-switching="false">
-                                </gantt-movable>
-                                <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
-                                <gantt-dependencies enabled="true"></gantt-dependencies>
-                            </div>
-                        </div>
-                    </uib-tab>
-                    <uib-tab heading="Resources" index='1' active='false'>
-                        <div class="tab-pane active" ng-controller="GanttResourceController as ganttResourceCtrl">
-                            <div gantt data=ganttData
-                                api=options.api
-                                show-side='true'
-                                view-scale="options.viewScale"
-                                from-date="options.fromDate"
-                                to-date="options.toDate"
-                                current-date="options.currentDate"
-                                current-date-value="options.currentDateValue"
-                                column-magnet="options.columnMagnet">
-                                <gantt-tree enabled="true"></gantt-tree>
-                                <gantt-movable enabled="true"
-                                    allow-moving="true"
-                                    allow-resizing="true"
-                                    allow-row-switching="false"></gantt-movable>
-                                <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
-                            </div>
-                        </div>
-                    </uib-tab>
-                <uib-tabset>
-            <header>
+
+
+        <div class="top-stretch" ui-layout options="{flow: 'column'}">
+            <div ng-controller="GridController as gridCtrl" style="margin-right: 4px;" >
+                <div id="grid"
+                ui-grid="gridOptions"
+                ui-grid-edit ui-grid-selection ui-grid-cellNav ui-grid-resize-columns ui-grid-auto-resize
+                class="grid"></div>
+            </div>
+            <div ui-layout options="{flow: 'row'}">
+                <div ng-controller="GanttProjectController as ganttProjectCtrl" style="overflow:auto; margin-left:12px; margin-bottom:4px; ">
+                    <div gantt data=ganttData
+                        api=options.api
+                        show-side='true'
+                        view-scale="options.viewScale"
+                        from-date="options.fromDate"
+                        to-date="options.toDate"
+                        current-date="options.currentDate"
+                        current-date-value="options.currentDateValue"
+                        column-magnet="options.columnMagnet">
+                        <gantt-tree enabled="true"></gantt-tree>
+                        <gantt-movable enabled="true"
+                            allow-moving="true"
+                            allow-resizing="true"
+                            allow-row-switching="false">
+                        </gantt-movable>
+                        <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
+                        <gantt-dependencies enabled="true"></gantt-dependencies>
+                    </div>
+                </div>
+
+                <div ng-controller="ChartResourceUsageController as chartResourceUsageCtrl">
+                    <highchart id="chart_resource_usage" config="chartConfig" style="width: 96%; height: 100%; margin: 12px;" ></highchart>
+                </div>
+
+                <div ng-controller="GanttResourceController as ganttResourceCtrl" style="overflow:auto; margin-left:12px; margin-top:12px">
+                    <div gantt data=ganttData
+                        api=options.api
+                        show-side='true'
+                        view-scale="options.viewScale"
+                        from-date="options.fromDate"
+                        to-date="options.toDate"
+                        current-date="options.currentDate"
+                        current-date-value="options.currentDateValue"
+                        column-magnet="options.columnMagnet">
+                        <gantt-tree enabled="true"></gantt-tree>
+                        <gantt-movable enabled="true"
+                            allow-moving="true"
+                            allow-resizing="true"
+                            allow-row-switching="false"></gantt-movable>
+                        <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
     {% endraw %}
