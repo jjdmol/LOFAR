@@ -31,6 +31,7 @@ import collections
 from optparse import OptionParser
 from lofar.common import dbcredentials
 from lofar.common.util import to_csv_string
+from lofar.common.datetimeutils import totalSeconds
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +179,7 @@ class RADatabase:
         for task in tasks:
             task['predecessor_ids'] = predIds.get(task['id'], [])
             task['successor_ids'] = succIds.get(task['id'], [])
+            task['duration'] = totalSeconds(task['endtime'] - task['starttime'])
 
         return tasks
 
@@ -199,7 +201,12 @@ class RADatabase:
             query += '''where tv.otdb_id = (%s);'''
         result = self._executeQuery(query, validIds, fetch=_FETCH_ONE)
 
-        return dict(result) if result else None
+        task = dict(result) if result else None
+
+        if task:
+            task['duration'] = totalSeconds(task['endtime'] - task['starttime'])
+
+        return task
 
     def _convertTaskTypeAndStatusToIds(self, task_status, task_type):
         '''converts task_status and task_type to id's in case one and/or the other are strings'''
@@ -1391,6 +1398,12 @@ if __name__ == '__main__':
         print '\n-- ' + str(method.__name__) + ' --'
         print '\n'.join([str(x) for x in method()])
 
+    resultPrint(db.getTasks)
+
+    for t in db.getTasks():
+        print db.getTask(t['id'])
+
+    exit()
 
     #print db.getResourceClaims(task_id=440)
     #print
