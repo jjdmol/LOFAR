@@ -98,7 +98,7 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
 
         //set title, axis etc
         $scope.chartConfig.title.text = resource.name;
-        $scope.chartConfig.yAxis.title.text = resource.units;
+        $scope.chartConfig.yAxis.title.text = resource.unit;
 
         $scope.chartConfig.xAxis.min = $scope.dataService.viewTimeSpan.from.getTime();
         $scope.chartConfig.xAxis.max = $scope.dataService.viewTimeSpan.to.getTime();
