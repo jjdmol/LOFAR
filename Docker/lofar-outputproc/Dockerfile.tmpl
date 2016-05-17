@@ -20,7 +20,7 @@ ENV LOFAR_BRANCH=${LOFAR_BRANCH_NAME} \
 RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y subversion cmake g++ gfortran bison flex autogen liblog4cplus-dev libhdf5-dev libblitz0-dev libboost-dev libboost-python${BOOST_VERSION}-dev libxml2-dev pkg-config libpng12-dev libfftw3-dev libunittest++-dev libxml++2.6-dev libboost-filesystem${BOOST_VERSION}-dev libboost-date-time${BOOST_VERSION}-dev libboost-thread${BOOST_VERSION}-dev libboost-regex${BOOST_VERSION} binutils-dev && \
     mkdir -p ${INSTALLDIR}/lofar/build/gnu_opt libcfitsio3-dev wcslib-dev && \
     cd ${INSTALLDIR}/lofar && \
-    svn --non-interactive -q --username lofar-guest --password lofar-guest co -r ${LOFAR_REVISION} -N ${LOFAR_BRANCH_URL} src; \
+    svn --non-interactive -q co -r ${LOFAR_REVISION} -N ${LOFAR_BRANCH_URL} src; \
     svn --non-interactive -q up src/CMake && \
     cd ${INSTALLDIR}/lofar/build/gnu_opt && cmake -DBUILD_PACKAGES=Online_OutputProc -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}/lofar/ -DCASACORE_ROOT_DIR=${INSTALLDIR}/casacore/ -DLOG4CPLUS_ROOT_DIR=${INSTALLDIR}/log4cplus/ -DQPID_ROOT_DIR=/opt/qpid/ -DDAL_ROOT_DIR=${INSTALLDIR}/DAL -DUSE_OPENMP=True ${INSTALLDIR}/lofar/src/ && \
     cd ${INSTALLDIR}/lofar/build/gnu_opt && sed -i '29,31d' include/ApplCommon/PosixTime.h && \
