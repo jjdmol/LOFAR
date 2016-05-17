@@ -192,7 +192,7 @@ class TestPipelineControl(unittest.TestCase):
     with PipelineControl(otdb_busname=self.busname, setStatus_busname=self.busname) as ps:
       ps._setStatus(12345, "queued")
 
-      # Wait for the staatus to propagate
+      # Wait for the status to propagate
       self.assertTrue(self.trigger.wait())
       self.assertEqual(self.trigger.args[0], 12345)
 
