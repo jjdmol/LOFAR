@@ -189,8 +189,8 @@ class TestPipelineControl(unittest.TestCase):
     self.trigger = MethodTrigger(listener, "onObservationQueued")
 
   def test_setStatus(self):
-    with PipelineControl(otdb_busname=self.busname, setStatus_busname=self.busname) as ps:
-      ps._setStatus(12345, "queued")
+    with PipelineControl(otdb_busname=self.busname, setStatus_busname=self.busname) as pipelineControl:
+      pipelineControl._setStatus(12345, "queued")
 
       # Wait for the status to propagate
       self.assertTrue(self.trigger.wait())
@@ -202,9 +202,9 @@ class TestPipelineControl(unittest.TestCase):
 
         3 requires nothing
     """
-    with PipelineControl(otdb_busname=self.busname, setStatus_busname=self.busname) as ps:
+    with PipelineControl(otdb_busname=self.busname, setStatus_busname=self.busname) as pipelineControl:
       # Send fake status update
-      ps._setStatus(3, "scheduled")
+      pipelineControl._setStatus(3, "scheduled")
 
       # Wait for message to arrive
       self.assertTrue(self.trigger.wait())
@@ -213,8 +213,8 @@ class TestPipelineControl(unittest.TestCase):
       self.assertEqual(self.trigger.args[0], 3) # otdbId
 
       # Check if job was scheduled
-      self.assertIn("3", ps.slurm.scheduled_jobs)
-      self.assertIn("3-aborted", ps.slurm.scheduled_jobs)
+      self.assertIn("3", pipelineControl.slurm.scheduled_jobs)
+      self.assertIn("3-aborted", pipelineControl.slurm.scheduled_jobs)
 
   def testPredecessors(self):
     """
@@ -224,9 +224,9 @@ class TestPipelineControl(unittest.TestCase):
         2 requires 3
         4 is an observation
     """
-    with PipelineControl(otdb_busname=self.busname, setStatus_busname=self.busname) as ps:
+    with PipelineControl(otdb_busname=self.busname, setStatus_busname=self.busname) as pipelineControl:
       # Send fake status update
-      ps._setStatus(1, "scheduled")
+      pipelineControl._setStatus(1, "scheduled")
 
       # Wait for message to arrive
       self.assertTrue(self.trigger.wait())
@@ -235,11 +235,11 @@ class TestPipelineControl(unittest.TestCase):
       self.assertEqual(self.trigger.args[0], 1) # otdbId
 
       # Check if job was scheduled
-      self.assertIn("1", ps.slurm.scheduled_jobs)
-      self.assertIn("1-aborted", ps.slurm.scheduled_jobs)
+      self.assertIn("1", pipelineControl.slurm.scheduled_jobs)
+      self.assertIn("1-aborted", pipelineControl.slurm.scheduled_jobs)
 
       # Earliest start of this job > stop time of observation
-      for p in ps.slurm.scheduled_jobs["1"][1]["sbatch_params"]:
+      for p in pipelineControl.slurm.scheduled_jobs["1"][1]["sbatch_params"]:
         if p.startswith("--begin="):
           begin = datetime.datetime.strptime(p, "--begin=%Y-%m-%dT%H:%M:%S")
           self.assertGreater(begin, datetime.datetime(2016, 1, 1, 1, 0, 0))
