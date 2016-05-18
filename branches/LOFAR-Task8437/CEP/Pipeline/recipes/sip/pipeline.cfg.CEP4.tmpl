@@ -35,6 +35,9 @@ xml_stat_file = %(runtime_directory)s/%(job_name)s/logs/%(start_time)s/statistic
 #    none          Do NOT send feedback and status
 method = messagebus
 
+# Report final state on the message bus? (yes for CEP2 using "startPython.sh", no for CEP4 using "runPipeline.sh")
+send_status = no
+
 [remote]
 method = custom_cmdline
 globalfs = yes

@@ -93,7 +93,7 @@ class control(StatefulRecipe):
         indicates failure.
         """
 
-        if self.feedback_method == "messagebus":
+        if self.feedback_method == "messagebus" and self.feedback_send_status:
           bus = messagebus.ToBus("lofar.task.feedback.state")
           msg = TaskFeedbackState(
             "lofarpipe.support.control",
@@ -133,6 +133,11 @@ class control(StatefulRecipe):
           self.feedback_method = self.config.get('feedback', 'method')
         except:
           self.feedback_method = "messagebus"
+
+        try:
+          self.feedbacK_send_status = self.config.getboolean('feedback', 'send_status')
+        except:
+          self.feedback_send_status = True
 
         if self.feedback_method == "messagebus" and not messagebus.MESSAGING_ENABLED:
           self.logger.error("Feedback over messagebus requested, but messagebus support is not enabled or functional")
