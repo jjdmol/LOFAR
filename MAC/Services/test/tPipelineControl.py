@@ -4,8 +4,8 @@ import sys
 
 from lofar.mac.PipelineControl import *
 from lofar.sas.otdb.OTDBBusListener import OTDBBusListener
-from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_SUBJECT
-from lofar.messaging import ToBus, Service, EventMessage
+from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_SUBJECT, DEFAULT_OTDB_SERVICENAME
+from lofar.messaging import ToBus, Service, EventMessage, MessageHandlerInterface
 
 from lofar.common.methodtrigger import MethodTrigger
 
@@ -15,7 +15,7 @@ import uuid
 import datetime
 
 import logging
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 try:
   from mock import patch
@@ -126,55 +126,67 @@ class TestPipelineControl(unittest.TestCase):
     self.addCleanup(patcher.stop)
 
     # ================================
-    # Setup mock parset service
+    # Setup mock otdb service
     # ================================
 
-    def TaskGetSpecification( OtdbID ):
-      print "***** TaskGetSpecification(%s) *****" % (OtdbID,)
+    class MockOTDBService(MessageHandlerInterface):
+      def __init__(self, notification_bus):
+        """
+          notification_bus: bus to send state changes to
+        """
+        super(MockOTDBService, self).__init__()
 
-      if OtdbID == 1:
-        predecessors = "[2,3,4]"
-      elif OtdbID == 2:
-        predecessors = "[3]"
-      elif OtdbID == 3:
-        predecessors = "[]"
-      elif OtdbID == 4:
-        return {
-          "Version.number":                                                           "1",
-          PARSET_PREFIX + "Observation.ObsID":                                 str(OtdbID),
-          PARSET_PREFIX + "Observation.Scheduler.predecessors":                "[]",
-          PARSET_PREFIX + "Observation.processType":                           "Observation",
-          PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName": "CEP4",
-          PARSET_PREFIX + "Observation.stopTime":                              "2016-01-01 01:00:00",
+        self.service2MethodMap = {
+          "TaskGetSpecification": self.TaskGetSpecification,
+          "TaskSetStatus": self.TaskSetStatus,
         }
-      else:
-        raise Exception("Invalid OtdbID: %s" % OtdbID)
 
-      return {
-        "Version.number":                                                           "1",
-        PARSET_PREFIX + "Observation.ObsID":                                 str(OtdbID),
-        PARSET_PREFIX + "Observation.Scheduler.predecessors":                predecessors,
-        PARSET_PREFIX + "Observation.processType":                           "Pipeline",
-        PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName": "CEP4",
-      }
+        self.notification_bus = notification_bus
 
-    service = Service("TaskGetSpecification", TaskGetSpecification, busname=self.busname)
-    service.start_listening()
-    self.addCleanup(service.stop_listening)
+      def TaskGetSpecification(self, OtdbID):
+        print "***** TaskGetSpecification(%s) *****" % (OtdbID,)
 
-    # ================================
-    # Setup mock status update service
-    # ================================
+        if OtdbID == 1:
+          predecessors = "[2,3,4]"
+        elif OtdbID == 2:
+          predecessors = "[3]"
+        elif OtdbID == 3:
+          predecessors = "[]"
+        elif OtdbID == 4:
+          return { "TaskSpecification": {
+            "Version.number":                                                           "1",
+            PARSET_PREFIX + "Observation.otdbID":                                str(OtdbID),
+            PARSET_PREFIX + "Observation.Scheduler.predecessors":                "[]",
+            PARSET_PREFIX + "Observation.processType":                           "Observation",
+            PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName": "CEP4",
+            PARSET_PREFIX + "Observation.stopTime":                              "2016-01-01 01:00:00",
+          } }
+        else:
+          raise Exception("Invalid OtdbID: %s" % OtdbID)
 
-    def TaskSetStatus( OtdbID, NewStatus ):
-      print "***** TaskSetStatus(%s,%s) *****" % (OtdbID, NewStatus)
+        return { "TaskSpecification": {
+          "Version.number":                                                           "1",
+          PARSET_PREFIX + "Observation.otdbID":                                str(OtdbID),
+          PARSET_PREFIX + "Observation.Scheduler.predecessors":                predecessors,
+          PARSET_PREFIX + "Observation.processType":                           "Pipeline",
+          PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName": "CEP4",
+        } }
 
-      # Broadcast the state change
-      content = { "treeID" : OtdbID, "state" : NewStatus, "time_of_change" : datetime.datetime.utcnow() }
-      msg = EventMessage(context=DEFAULT_OTDB_NOTIFICATION_SUBJECT, content=content)
-      self.bus.send(msg)
+      def TaskSetStatus(self, OtdbID, NewStatus, UpdateTimestamps):
+        print "***** TaskSetStatus(%s,%s) *****" % (OtdbID, NewStatus)
 
-    service = Service("TaskSetStatus", TaskSetStatus, busname=self.busname)
+        # Broadcast the state change
+        content = { "treeID" : OtdbID, "state" : NewStatus, "time_of_change" : datetime.datetime.utcnow() }
+        msg = EventMessage(context=DEFAULT_OTDB_NOTIFICATION_SUBJECT, content=content)
+        self.notification_bus.send(msg)
+
+        return {'OtdbID':OtdbID, 'MomID':None, 'Success':True}
+
+    service = Service(DEFAULT_OTDB_SERVICENAME,
+                      MockOTDBService,
+                      busname=self.busname,
+                      use_service_methods=True,
+                      handler_args={ "notification_bus": self.bus })
     service.start_listening()
     self.addCleanup(service.stop_listening)
 
