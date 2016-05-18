@@ -19,29 +19,26 @@
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
 # $Id: JobsToSchedule.py 33364 2016-01-21 21:21:12Z mol $
-"""
-Daemon that listens to OTDB status changes to PRESCHEDULED, requests
-the parset of such jobs (+ their predecessors), and posts them on the bus.
-"""
 
-from lofar.mac.PipelineStarter import PipelineStarter
+from lofar.mac.PipelineControl import PipelineControl
+from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_BUSNAME, DEFAULT_OTDB_SERVICE_BUSNAME
 
 if __name__ == "__main__":
     import sys
     from optparse import OptionParser
 
     # Check the invocation arguments
-    parser = OptionParser("%prog -O otdb_bus -S setStatus_bus [options]")
-    parser.add_option("-O", "--otdb_bus", dest="otdb_busname", type="string", default="",
-                      help="Bus or queue OTDB operates on")
-    parser.add_option("-S", "--setStatus_bus", dest="setStatus_busname", type="string", default="",
-                      help="Bus or queue we publish state changes on")
+    parser = OptionParser("%prog [options]")
+    parser.add_option("-N", "--otdb_notification_bus", dest="otdb_notification_busname", type="string", default=DEFAULT_OTDB_NOTIFICATION_BUSNAME,
+                      help="Bus or queue on which OTDB notifications are received")
+    parser.add_option("-S", "--otdb_service_bus", dest="otdb_service_busname", type="string", default=DEFAULT_OTDB_SERVICE_BUSNAME,
+                      help="Bus or queue to send OTDB requests to")
     (options, args) = parser.parse_args()
 
     if not options.otdb_busname:
         parser.print_help()
         sys.exit(1)
 
-    with PipelineStarter(otdb_busname=options.otdb_busname, setStatus_busname=options.setStatus_busname) as ps:
+    with PipelineControl(otdb_busname=options.otdb_busname, setStatus_busname=options.setStatus_busname) as pipelineControl:
         waitForInterrupt()
 
