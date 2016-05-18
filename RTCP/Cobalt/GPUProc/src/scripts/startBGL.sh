@@ -61,7 +61,7 @@ ln -sfT $TBB_PARSET /globalhome/lofarsystem/log/latest || true
 mkfifo -m 0660 "$COMMANDPIPE" || true
 
 # Construct command line
-COMMAND="LOFARENV=$LOFARENV runObservation.sh -P $PIDFILE -o Cobalt.commandStream=file:$COMMANDPIPE $PARSET"
+COMMAND="env LOFARENV=$LOFARENV runObservation.sh -P $PIDFILE -o Cobalt.commandStream=file:$COMMANDPIPE $PARSET"
 
 # Process cluster requirements
 read_cluster_model
