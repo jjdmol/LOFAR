@@ -44,7 +44,7 @@ The execution chains are as follows:
 (runPipeline.sh)     -> Calls
                           - state <- [ACTIVE]
                           - getParset
-                          - (run pipeline) (which, for CEP2 compatibility, still calls state <- [FINISHED/ABORTED])
+                          - (run pipeline)
                           - state <- [COMPLETING]
                           - (wrap up)
                           - state <- [FINISHED]
