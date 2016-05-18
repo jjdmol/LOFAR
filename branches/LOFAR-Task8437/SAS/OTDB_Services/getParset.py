@@ -25,9 +25,10 @@
 """
 
 from lofar.messaging.RPC import RPC
+from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME
 
-def getParset(obsid, status, otdb_busname="lofar.otdb.command"):
-    with RPC("TaskSpecification", busname=otdb_busname, timeout=10) as parset_rpc:
+def getParset(obsid, status, otdb_busname=DEFAULT_OTDB_SERVICE_BUSNAME):
+    with RPC("TaskGetSpecification", busname=otdb_busname, timeout=10) as parset_rpc:
         result, _ = parset_rpc(OtdbID=obsid)
 
     return result
@@ -42,7 +43,7 @@ if __name__ == "__main__":
 
     # Check the invocation arguments
     parser = OptionParser("%prog -o obsid [options]")
-    parser.add_option("-B", "--busname", dest="busname", type="string", default="lofar.otdb.command",
+    parser.add_option("-B", "--busname", dest="busname", type="string", default=DEFAULT_OTDB_SERVICE_BUSNAME,
                       help="Busname on which OTDB commands are sent")
     parser.add_option("-o", "--obsid", dest="obsid", type="int", default=0,
                       help="Observation/tree ID to get parset of")

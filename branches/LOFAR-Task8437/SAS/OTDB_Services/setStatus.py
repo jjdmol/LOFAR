@@ -25,9 +25,10 @@
 """
 
 from lofar.messaging.RPC import RPC
+from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME
 
-def setStatus(obsid, status, otdb_busname="lofar.otdb.command"):
-    with RPC("StatusUpdateCmd", busname=otdb_busname, timeout=10) as status_rpc:
+def setStatus(obsid, status, otdb_busname=DEFAULT_OTDB_SERVICE_BUSNAME):
+    with RPC("TaskSetStatus", busname=otdb_busname, timeout=10) as status_rpc:
         result, _ = status_rpc(OtdbID=obsid, NewStatus=status)
 
 if __name__ == "__main__":
@@ -40,7 +41,7 @@ if __name__ == "__main__":
 
     # Check the invocation arguments
     parser = OptionParser("%prog -o obsid -s status [options]")
-    parser.add_option("-B", "--busname", dest="busname", type="string", default="lofar.otdb.command",
+    parser.add_option("-B", "--busname", dest="busname", type="string", default=DEFAULT_OTDB_SERVICE_BUSNAME,
                       help="Busname on which OTDB commands are sent")
     parser.add_option("-o", "--obsid", dest="obsid", type="int", default=0,
                       help="Observation/tree ID to set status for")
