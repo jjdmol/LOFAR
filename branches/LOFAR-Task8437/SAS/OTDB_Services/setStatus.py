@@ -26,10 +26,7 @@
 
 from lofar.messaging.RPC import RPC
 from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME
-
-def setStatus(obsid, status, otdb_busname=DEFAULT_OTDB_SERVICE_BUSNAME):
-    with RPC("TaskSetStatus", busname=otdb_busname, timeout=10) as status_rpc:
-        result, _ = status_rpc(OtdbID=obsid, NewStatus=status)
+from lofar.sas.otdb.otdbrpc import OTDBRPC
 
 if __name__ == "__main__":
     from optparse import OptionParser
@@ -53,4 +50,6 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
 
-    setStatus(options.obsid, options.status, otdb_busname=options.busname)
+    with OTDBRPC(busname=options.busname) as otdbrpc:
+        otdbrpc.taskSetStatus(otdb_id=options.obsid, new_status=options.status)
+

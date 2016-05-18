@@ -26,12 +26,7 @@
 
 from lofar.messaging.RPC import RPC
 from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME
-
-def getParset(obsid, status, otdb_busname=DEFAULT_OTDB_SERVICE_BUSNAME):
-    with RPC("TaskGetSpecification", busname=otdb_busname, timeout=10) as parset_rpc:
-        result, _ = parset_rpc(OtdbID=obsid)
-
-    return result
+from lofar.sas.otdb.otdbrpc import OTDBRPC
 
 if __name__ == "__main__":
     from optparse import OptionParser
@@ -53,7 +48,8 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
 
-    parset = getParset(options.obsid, otdb_busname=options.busname)
+    with OTDBRPC(busname=options.busname) as otdbrpc:
+        parset = otdbrpc.taskGetSpecification(otdb_id=options.obsid)["specification"]
 
     for k,v in parset.iteritems():
         print "%s = %s" % (k,v)

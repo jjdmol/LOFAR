@@ -64,8 +64,9 @@ from lofar.messaging import FromBus, ToBus, RPC, EventMessage
 from lofar.parameterset import PyParameterValue
 from lofar.sas.otdb.OTDBBusListener import OTDBBusListener
 from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_BUSNAME, DEFAULT_OTDB_SERVICE_BUSNAME
+from lofar.sas.otdb.otdbrpc import OTDBRPC
 from lofar.common.util import waitForInterrupt
-from lofar.messaging.RPC import RPC, RPCTimeoutException
+from lofar.messaging.RPC import RPCTimeoutException
 
 import subprocess
 import datetime
@@ -102,39 +103,6 @@ def runCommand(cmdline, input=None):
 """ Prefix that is common to all parset keys, depending on the exact source. """
 PARSET_PREFIX="ObsSW."
 
-class ProcessingClusterTask(object):
-  def __init__(self):
-    self.name = ""
-    self.partition = ""
-
-    self.maxDuration = 0 # seconds
-
-    self.nrCoresPerTask = 1
-    self.nrTasks = 1
-    self.minMemPerTask = 1024 # MB
-
-class CEP2Task(ProcessingClusterTask):
-  def __init__(self):
-    super(CEP2Task).__init__(self)
-
-    self.name = "CEP2"
-
-class CEP4Task(ProcessingClusterTask):
-  def __init__(self):
-    super(CEP4Task).__init__(self)
-
-    self.name = "CEP4"
-    self.partition = "cpu"
-
-    self.nrCoresPerTask = 8
-    self.minMemPerTask = self.nrCoresPerTask * 10 * 1024 # ~240 GB free for 24 cores -> ~10GB/core
-
-clusterTaskFactory = {
-  "":     CEP2Task,
-  "CEP2": CEP2Task,
-  "CEP4": CEP4Task,
-}
-
 class Parset(dict):
   def predecessors(self):
     """ Extract the list of predecessor obs IDs from the given parset. """
@@ -154,15 +122,7 @@ class Parset(dict):
     return not self.isObservation()
 
   def processingCluster(self):
-    clusterName = self[PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName"] or "CEP2"
-    task = clusterTaskFactory[clusterName]()
-
-    # override defaults if provided by parset
-    task.partition = self[PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterPartition"] or task.partition
-    try:
-      task.nrCoresPerTask = int(self[PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.numberOfCoresPerTask"] or task.nrCoresPerTask
-    except ValueError:
-      pass
+    return self[PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName"] or "CEP2"
 
   def dockerTag(self):
     # Return the version set in the parset, and fall back to our own version.
@@ -240,28 +200,26 @@ class PipelineControl(OTDBBusListener):
   def __init__(self, otdb_notification_busname=DEFAULT_OTDB_NOTIFICATION_BUSNAME, otdb_service_busname=DEFAULT_OTDB_SERVICE_BUSNAME, **kwargs):
     super(PipelineControl, self).__init__(busname=otdb_notification_busname, **kwargs)
 
-    self.parset_rpc = RPC(service="TaskGetSpecification", busname=otdb_service_busname, ForwardExceptions=True)
     self.otdb_service_busname = otdb_service_busname
-
+    self.otdbrpc = OTDBRPC(busname=otdb_service_busname)
     self.slurm = Slurm()
 
   def _setStatus(self, obsid, status):
     try:
-        with RPC("TaskSetStatus", busname=self.otdb_service_busname, timeout=10, ForwardExceptions=True) as status_rpc:
-            result, _ = status_rpc(OtdbID=obsid, NewStatus=status)
+        self.otdbrpc.taskSetStatus(otdb_id=obsid, new_status=status)
     except RPCTimeoutException, e:
         # We use a queue, so delivery is guaranteed. We don't care about the answer.
         pass
 
   def start_listening(self, **kwargs):
-    self.parset_rpc.open()
+    self.otdbrpc.open()
 
     super(PipelineControl, self).start_listening(**kwargs)
 
   def stop_listening(self, **kwargs):
     super(PipelineControl, self).stop_listening(**kwargs)
 
-    self.parset_rpc.close()
+    self.otdbrpc.close()
 
   @staticmethod
   def _shouldHandle(parset):
@@ -279,7 +237,7 @@ class PipelineControl(OTDBBusListener):
     return [self.slurm.jobid(p.slurmJobName()) for p in parsets]
 
   def _getParset(self, otdbId):
-    return Parset(self.parset_rpc( OtdbID=otdbId, timeout=10 )[0])
+    return Parset(self.otdbrpc.taskGetSpecification(otdb_id=otdbId)["specification"])
 
   def _getPredecessorParsets(self, parset):
     otdbIds = parset.predecessors()
