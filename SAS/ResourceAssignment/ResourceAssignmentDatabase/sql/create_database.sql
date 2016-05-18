@@ -293,7 +293,7 @@ ALTER TABLE resource_allocation.config
 
 CREATE OR REPLACE VIEW resource_allocation.task_view AS
  SELECT t.id, t.mom_id, t.otdb_id, t.status_id, t.type_id, t.specification_id,
-    ts.name AS status, tt.name AS type, s.starttime, s.endtime,
+    ts.name AS status, tt.name AS type, s.starttime, s.endtime, extract(epoch from age(s.endtime, s.starttime)) as duration,
     (SELECT array_agg(tp.predecessor_id) FROM resource_allocation.task_predecessor tp where tp.task_id=t.id) as predecessor_ids,
     (SELECT array_agg(tp.task_id) FROM resource_allocation.task_predecessor tp where tp.predecessor_id=t.id) as successor_ids
    FROM resource_allocation.task t
@@ -303,7 +303,7 @@ CREATE OR REPLACE VIEW resource_allocation.task_view AS
 ALTER VIEW resource_allocation.task_view
   OWNER TO resourceassignment;
 COMMENT ON VIEW resource_allocation.task_view
-  IS 'plain view on task table including task_status.name task_type.name specification.starttime and specification.endtime and the task predecessor- and successor ids';
+  IS 'plain view on task table including task_status.name task_type.name specification.starttime and specification.endtime, duration in seconds, and the task predecessor- and successor ids';
 
 
 CREATE OR REPLACE VIEW resource_allocation.resource_claim_view AS
