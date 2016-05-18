@@ -14,6 +14,7 @@ lofar_add_bin_scripts(
 
 set(_py_files
   config.py
+  otdbrpc.py
   OTDBBusListener.py
 )
 
