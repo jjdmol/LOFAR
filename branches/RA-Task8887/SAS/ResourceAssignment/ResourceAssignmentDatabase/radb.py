@@ -179,7 +179,6 @@ class RADatabase:
         for task in tasks:
             task['predecessor_ids'] = predIds.get(task['id'], [])
             task['successor_ids'] = succIds.get(task['id'], [])
-            task['duration'] = totalSeconds(task['endtime'] - task['starttime'])
 
         return tasks
 
@@ -202,9 +201,6 @@ class RADatabase:
         result = self._executeQuery(query, validIds, fetch=_FETCH_ONE)
 
         task = dict(result) if result else None
-
-        if task:
-            task['duration'] = totalSeconds(task['endtime'] - task['starttime'])
 
         return task
 
