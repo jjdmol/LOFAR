@@ -40,7 +40,7 @@ from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAUL
 from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_BUSNAME as RE_BUSNAME
 from lofar.sas.resourceassignment.resourceassignmentestimator.config import DEFAULT_SERVICENAME as RE_SERVICENAME
 
-from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import OTDBRPC
+from lofar.sas.otdb.otdbrpc import OTDBRPC
 from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
 
 from lofar.sas.systemstatus.service.SSDBrpc import SSDBRPC

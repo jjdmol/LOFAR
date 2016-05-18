@@ -6,6 +6,5 @@ python_install(
     translator.py
     config.py
     propagator.py
-    otdbrpc.py
     DESTINATION lofar/sas/resourceassignment/ratootdbtaskspecificationpropagator)
 
