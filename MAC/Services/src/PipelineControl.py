@@ -63,6 +63,7 @@ The execution chains are as follows:
 from lofar.messaging import FromBus, ToBus, RPC, EventMessage
 from lofar.parameterset import PyParameterValue
 from lofar.sas.otdb.OTDBBusListener import OTDBBusListener
+from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_BUSNAME, DEFAULT_OTDB_SERVICE_BUSNAME
 from lofar.common.util import waitForInterrupt
 from lofar.messaging.RPC import RPC, RPCTimeoutException
 
@@ -236,17 +237,17 @@ class Slurm(object):
     return lines[-1]
 
 class PipelineControl(OTDBBusListener):
-  def __init__(self, otdb_busname=None, setStatus_busname=None, **kwargs):
-    super(PipelineControl, self).__init__(busname=otdb_busname, **kwargs)
+  def __init__(self, otdb_notification_busname=DEFAULT_OTDB_NOTIFICATION_BUSNAME, otdb_service_busname=DEFAULT_OTDB_SERVICE_BUSNAME, **kwargs):
+    super(PipelineControl, self).__init__(busname=otdb_notification_busname, **kwargs)
 
-    self.parset_rpc = RPC(service="TaskSpecification", busname=otdb_busname, ForwardExceptions=True)
-    self.setStatus_busname = setStatus_busname if setStatus_busname else otdb_busname
+    self.parset_rpc = RPC(service="TaskGetSpecification", busname=otdb_service_busname, ForwardExceptions=True)
+    self.otdb_service_busname = otdb_service_busname
 
     self.slurm = Slurm()
 
   def _setStatus(self, obsid, status):
     try:
-        with RPC("StatusUpdateCmd", busname=self.setStatus_busname, timeout=10, ForwardExceptions=True) as status_rpc:
+        with RPC("TaskSetStatus", busname=self.otdb_service_busname, timeout=10, ForwardExceptions=True) as status_rpc:
             result, _ = status_rpc(OtdbID=obsid, NewStatus=status)
     except RPCTimeoutException, e:
         # We use a queue, so delivery is guaranteed. We don't care about the answer.
@@ -393,7 +394,7 @@ class PipelineControl(OTDBBusListener):
         obsid = otdbId,
         tag = parset.dockerTag(),
         cluster = parset.processingCluster(),
-        status_bus = self.setStatus_busname,
+        status_bus = self.otdb_service_busname,
       ),
 
       sbatch_params=sbatch_params
@@ -414,7 +415,7 @@ class PipelineControl(OTDBBusListener):
         lofarenv = os.environ.get("LOFARENV", ""),
         obsid = otdbId,
         tag = parset.dockerTag(),
-        status_bus = self.setStatus_busname,
+        status_bus = self.otdb_service_busname,
       ),
 
       sbatch_params=[

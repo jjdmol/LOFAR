@@ -4,6 +4,7 @@ import sys
 
 from lofar.mac.PipelineControl import *
 from lofar.sas.otdb.OTDBBusListener import OTDBBusListener
+from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_SUBJECT
 from lofar.messaging import ToBus, Service, EventMessage
 
 from lofar.common.methodtrigger import MethodTrigger
@@ -128,8 +129,8 @@ class TestPipelineControl(unittest.TestCase):
     # Setup mock parset service
     # ================================
 
-    def TaskSpecificationService( OtdbID ):
-      print "***** TaskSpecificationService(%s) *****" % (OtdbID,)
+    def TaskGetSpecification( OtdbID ):
+      print "***** TaskGetSpecification(%s) *****" % (OtdbID,)
 
       if OtdbID == 1:
         predecessors = "[2,3,4]"
@@ -157,7 +158,7 @@ class TestPipelineControl(unittest.TestCase):
         PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName": "CEP4",
       }
 
-    service = Service("TaskSpecification", TaskSpecificationService, busname=self.busname)
+    service = Service("TaskGetSpecification", TaskGetSpecification, busname=self.busname)
     service.start_listening()
     self.addCleanup(service.stop_listening)
 
@@ -165,15 +166,15 @@ class TestPipelineControl(unittest.TestCase):
     # Setup mock status update service
     # ================================
 
-    def StatusUpdateCmd( OtdbID, NewStatus ):
-      print "***** StatusUpdateCmd(%s,%s) *****" % (OtdbID, NewStatus)
+    def TaskSetStatus( OtdbID, NewStatus ):
+      print "***** TaskSetStatus(%s,%s) *****" % (OtdbID, NewStatus)
 
       # Broadcast the state change
       content = { "treeID" : OtdbID, "state" : NewStatus, "time_of_change" : datetime.datetime.utcnow() }
-      msg = EventMessage(context="otdb.treestatus", content=content)
+      msg = EventMessage(context=DEFAULT_OTDB_NOTIFICATION_SUBJECT, content=content)
       self.bus.send(msg)
 
-    service = Service("StatusUpdateCmd", StatusUpdateCmd, busname=self.busname)
+    service = Service("TaskSetStatus", TaskSetStatus, busname=self.busname)
     service.start_listening()
     self.addCleanup(service.stop_listening)
 
@@ -189,7 +190,7 @@ class TestPipelineControl(unittest.TestCase):
     self.trigger = MethodTrigger(listener, "onObservationQueued")
 
   def test_setStatus(self):
-    with PipelineControl(otdb_busname=self.busname, setStatus_busname=self.busname) as pipelineControl:
+    with PipelineControl(otdb_notification_busname=self.busname, otdb_service_busname=self.busname) as pipelineControl:
       pipelineControl._setStatus(12345, "queued")
 
       # Wait for the status to propagate
@@ -202,7 +203,7 @@ class TestPipelineControl(unittest.TestCase):
 
         3 requires nothing
     """
-    with PipelineControl(otdb_busname=self.busname, setStatus_busname=self.busname) as pipelineControl:
+    with PipelineControl(otdb_notification_busname=self.busname, otdb_service_busname=self.busname) as pipelineControl:
       # Send fake status update
       pipelineControl._setStatus(3, "scheduled")
 
@@ -224,7 +225,7 @@ class TestPipelineControl(unittest.TestCase):
         2 requires 3
         4 is an observation
     """
-    with PipelineControl(otdb_busname=self.busname, setStatus_busname=self.busname) as pipelineControl:
+    with PipelineControl(otdb_notification_busname=self.busname, otdb_service_busname=self.busname) as pipelineControl:
       # Send fake status update
       pipelineControl._setStatus(1, "scheduled")
 
