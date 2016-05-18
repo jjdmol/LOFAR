@@ -263,8 +263,8 @@ class PipelineControl(OTDBBusListener):
 
     self.parset_rpc.close()
 
-  @classmethod
-  def _shouldHandle(self, parset):
+  @staticmethod
+  def _shouldHandle(parset):
     if not parset.isPipeline():
       logger.info("Not processing tree: is not a pipeline")
       return False
