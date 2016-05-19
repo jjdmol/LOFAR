@@ -34,7 +34,7 @@ PIPELINE = "Observation.ObservationControl.PythonControl."
 class CalibrationPipelineResourceEstimator(BaseResourceEstimator):
     """ ResourceEstimator for Calibration Pipelines
     """
-    def __init__(self, kwargs, input_files):
+    def __init__(self):
         logger.info("init CalibrationPipelineResourceEstimator")
         BaseResourceEstimator.__init__(self, name='calibration_pipeline')
         self.required_keys = ('Observation.startTime',
