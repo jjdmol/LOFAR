@@ -3,8 +3,13 @@
 .grid {
     min-height: 400px;
     min-width: 500px;
-    height: auto;
-    width: auto;
+    height: 100%;
+    width: 100%;
+
+}
+
+.stretch {
+    overflow: initial;
 }
 
 .gantt {
@@ -24,13 +29,13 @@
 }
 
 .ui-layout-row > .ui-splitbar {
-    height: 8px;
-    background-color: #888888;
+    height: 6px;
+    background-color: #CCCCCC;
 }
 
 .ui-layout-column > .ui-splitbar {
-    width: 8px;
-    background-color: #888888;
+    width: 6px;
+    background-color: #CCCCCC;
 }
 
 ul.uib-datepicker-popup.dropdown-menu button.btn.btn-sm.btn-danger.uib-clear {
@@ -52,7 +57,7 @@ table.uib-timepicker td.uib-time {
 }
 
 .top-stretch {
-    top: 60px;
+    top: 65px;
 }
 
 .gantt-task-content {
@@ -112,7 +117,7 @@ div.gantt-task.claim-task-status-scheduled span {
 }
 
 div.gantt-task.claim-task-status-queued span {
-  background: #6666ff;
+  background: #ccffff;
 }
 
 div.gantt-task.claim-task-status-active span {
@@ -120,7 +125,7 @@ div.gantt-task.claim-task-status-active span {
 }
 
 div.gantt-task.claim-task-status-completing span {
-  background: #99ff33;
+  background: #ffdd99;
 }
 
 div.gantt-task.claim-task-status-finished span {

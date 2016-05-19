@@ -4,7 +4,8 @@ var gridControllerMod = angular.module('GridControllerMod', ['ui.grid',
                                                              'ui.grid.edit',
                                                              'ui.grid.selection',
                                                              'ui.grid.cellNav',
-                                                             'ui.grid.resizeColumns']);
+                                                             'ui.grid.resizeColumns',
+                                                             'ui.grid.autoResize']);
 
 gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGridConstants', function($scope, dataService, uiGridConstants) {
 
@@ -25,37 +26,34 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
             selectOptions: []
         }
     },
-    { field: 'mom_id',
-        displayName: 'MoM ID',
-        enableCellEdit: false,
-        cellTemplate:'<a target="_blank" href="https://lofar.astron.nl/mom3/user/project/setUpMom2ObjectDetails.do?view=generalinfo&mom2ObjectId={{row.entity.mom2object_id}}">{{row.entity[col.field]}}</a>',
-        width: '7.5%'
-    },
-    { field: 'otdb_id',
-        displayName: 'SAS ID',
-        enableCellEdit: false,
-        width: '7.5%'
-    },
     { field: 'starttime',
         displayName: 'Start',
-        width: '15%',
+        width: '14%',
         type: 'date',
         enableCellEdit: false,
         enableCellEditOnFocus: false,
-        cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
-//         editableCellTemplate: '<div><form name="inputForm"><div ui-grid-edit-datepicker row-field="MODEL_COL_FIELD" ng-class="\'colt\' + col.uid"></div></form></div>'
+        cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm:ss\'}}</div>',
+        sort: { direction: uiGridConstants.ASC }
     },
     { field: 'endtime',
         displayName: 'End',
-        width: '15%',
+        width: '14%',
         type: 'date',
         enableCellEdit: false,
         enableCellEditOnFocus: false,
-        cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm\'}}</div>'
+        cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | date:\'yyyy-MM-dd HH:mm:ss\'}}</div>'
+    },
+    { field: 'duration',
+        displayName: 'Duration',
+        width: '8%',
+        enableFiltering: false,
+        enableCellEdit: false,
+        enableCellEditOnFocus: false,
+        cellTemplate:'<div style=\'text-align:left\'>{{row.entity[col.field] | secondsToHHmmss}}</div>'
     },
     { field: 'status',
         enableCellEdit: true,
-        width: '12.5%',
+        width: '8%',
         filter: {
             type: uiGridConstants.filter.SELECT,
             selectOptions: []
@@ -65,11 +63,22 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     },
     { field: 'type',
         enableCellEdit: false,
-        width: '12.5%',
+        width: '8%',
         filter: {
             type: uiGridConstants.filter.SELECT,
             selectOptions: []
         }
+    },
+    { field: 'mom_id',
+        displayName: 'MoM ID',
+        enableCellEdit: false,
+        cellTemplate:'<a target="_blank" href="https://lofar.astron.nl/mom3/user/project/setUpMom2ObjectDetails.do?view=generalinfo&mom2ObjectId={{row.entity.mom2object_id}}">{{row.entity[col.field]}}</a>',
+        width: '8%'
+    },
+    { field: 'otdb_id',
+        displayName: 'SAS ID',
+        enableCellEdit: false,
+        width: '8%'
     }];
     $scope.gridOptions = {
         enableGridMenu: false,
@@ -77,6 +86,7 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         enableFiltering: true,
         enableCellEdit: false,
         enableColumnResize: true,
+        enableHorizontalScrollbar: uiGridConstants.scrollbars.NEVER,
         enableRowSelection: true,
         enableRowHeaderSelection: true,
         enableFullRowSelection: false,
@@ -103,7 +113,6 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
             });
         }
     };
-
 
     function filterTasks() {
         var taskDict = $scope.dataService.taskDict;
@@ -139,22 +148,31 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
         columnDef.filter.selectOptions = columnSelectOptions;
     };
 
-    $scope.$watch('dataService.tasks', function() {
+    function populateList() {
         if('tasks' in $scope.dataService && $scope.dataService.tasks.length > 0) {
+            var viewFrom = $scope.dataService.viewTimeSpan.from;
+            var viewTo = $scope.dataService.viewTimeSpan.to;
+
             var tasks = [];
+
             for(var task of $scope.dataService.tasks) {
-                var gridTask = {
-                    id: task.id,
-                    name: task.name,
-                    project_name: task.project_name,
-                    mom_id: task.mom_id,
-                    otdb_id: task.otdb_id,
-                    starttime: task.starttime,
-                    endtime: task.endtime,
-                    status: task.status,
-                    type: task.type
-                };
-                tasks.push(gridTask);
+                if(task.endtime >= viewFrom && task.starttime <= viewTo) {
+                    var gridTask = {
+                        id: task.id,
+                        name: task.name,
+                        project_name: task.project_name,
+                        mom_id: task.mom_id,
+                        otdb_id: task.otdb_id,
+                        starttime: task.starttime,
+                        endtime: task.endtime,
+                        duration: task.duration,
+                        status: task.status,
+                        type: task.type,
+                        project_mom2object_id: task.project_mom2object_id,
+                        mom2object_id: task.mom2object_id
+                    };
+                    tasks.push(gridTask);
+                }
             }
 
             $scope.gridOptions.data = tasks;
@@ -162,17 +180,32 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
             $scope.gridOptions.data = []
 
         fillProjectsColumFilterSelectOptions();
+    };
+
+    function jumpToSelectedTaskRow() {
+        var taskIdx = $scope.gridOptions.data.findIndex(function(row) {return row.id == dataService.selected_task_id});
+
+        if(taskIdx > -1) {
+            $scope.gridApi.selection.selectRow($scope.gridOptions.data[taskIdx]);
+            $scope.gridApi.core.scrollTo($scope.gridOptions.data[taskIdx], null);
+        }
+    };
+
+    $scope.$watch('dataService.taskChangeCntr', populateList);
+    $scope.$watch('dataService.viewTimeSpan', function() {
+        populateList();
+        setTimeout(jumpToSelectedTaskRow, 250);
     }, true);
 
     $scope.$watch('dataService.taskstatustypes', function() {
         taskstatustypenames = $scope.dataService.taskstatustypes.map(function(x) { return x.name; });
-        fillColumFilterSelectOptions(taskstatustypenames, $scope.columns[6]);
+        fillColumFilterSelectOptions(taskstatustypenames, $scope.columns[5]);
         $scope.columns[6].editDropdownOptionsArray = $scope.dataService.taskstatustypes.map(function(x) { return {id:x.name, value:x.name}; });
     });
 
     $scope.$watch('dataService.tasktypes', function() {
         tasktypenames = $scope.dataService.tasktypes.map(function(x) { return x.name; });
-        fillColumFilterSelectOptions(tasktypenames, $scope.columns[7]);
+        fillColumFilterSelectOptions(tasktypenames, $scope.columns[6]);
     });
 
     function fillProjectsColumFilterSelectOptions() {
@@ -196,13 +229,6 @@ gridControllerMod.controller('GridController', ['$scope', 'dataService', 'uiGrid
     };
 
     $scope.$watch('dataService.momProjectsDict', fillProjectsColumFilterSelectOptions);
-
-    $scope.$watch('dataService.selected_task_id', function() {
-        var taskIdx = $scope.gridOptions.data.findIndex(function(row) {return row.id == dataService.selected_task_id});
-
-        if(taskIdx > -1) {
-            $scope.gridApi.selection.selectRow($scope.gridOptions.data[taskIdx]);
-        }
-    });
+    $scope.$watch('dataService.selected_task_id', jumpToSelectedTaskRow);
 }
 ]);
