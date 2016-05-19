@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# Run the unit test
-source python-coverage.sh
-python_coverage_test "resourceassigner*" t_resourceassigner.py
-
