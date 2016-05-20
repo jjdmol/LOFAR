@@ -1,0 +1,89 @@
+# This pipeline.cfg was used on the CEP4 test system to show how Docker and SLURM
+# can be used to distribute and run jobs.
+#
+# Is called as follows (inside a SLURM job allocation, f.e. "salloc -N 2"). Replace directory names
+# where needed:
+#
+# # Create this on every node
+# CONFIGDIR=/globalhome/mol/regression_test
+# HOSTS=(`scontrol show hostnames $SLURM_JOB_NODELIST`)
+#
+# # $CONFIGDIR is local, and ocntains both the working_dir (for input/output data) and the config files
+# # /share is a shared disk for the vds files, map files, logs.
+#
+# docker run --rm -e SLURM_JOB_ID=${SLURM_JOB_ID} -e LUSER=${UID} -v $HOME/.ssh:/home/lofar/.ssh:ro -v $CONFIGDIR:$CONFIGDIR -v /shared:/shared --net=host lofar-patched /bin/bash -c "\"$EXTRA_CMDS;python $CONFIGDIR/regression_test_runner.py preprocessing_pipeline --pipelinecfg $CONFIGDIR/pipeline.cfg --testdata $CONFIGDIR/data --computehost1 ${HOSTS[0]} --computehost2 ${HOSTS[1]} --workdir $CONFIGDIR/working_dir --rundir $CONFIGDIR/rundir\""
+
+
+[DEFAULT]
+lofarroot = /opt/lofar
+casaroot = /opt/casacore
+pyraproot = /opt/python-casacore/pyrap
+hdf5root = 
+wcsroot = /opt/wcslib
+pythonpath = /opt/lofar/lib/python2.7/site-packages
+# runtime dir is a global FS (nfs, lustre) to exchange small files (parsets, vds, map files, etc)
+runtime_directory = /shared/mol/regression_test/rundir
+recipe_directories = [%(pythonpath)s/lofarpipe/recipes]
+# working dir is the local dir in which input/output dataproducts reside
+working_directory = /globalhome/mol/regression_test/working_dir
+task_files = [%(lofarroot)s/share/pipeline/tasks.cfg]
+
+[layout]
+job_directory = %(runtime_directory)s/%(job_name)s
+
+[cluster]
+clusterdesc = %(lofarroot)s/share/local.clusterdesc
+
+[deploy]
+engine_ppath = %(pythonpath)s:%(pyraproot)s/lib:/opt/cep/pythonlibs/lib/python/site-packages
+engine_lpath = %(lofarroot)s/lib:%(casaroot)s/lib:%(pyraproot)s/lib:%(hdf5root)s/lib:%(wcsroot)s/lib
+
+[logging]
+log_file = %(runtime_directory)s/%(job_name)s/logs/%(start_time)s/pipeline.log
+xml_stat_file = %(runtime_directory)s/%(job_name)s/logs/%(start_time)s/statistics.xml
+
+[feedback]
+# Method of providing feedback to LOFAR.
+# Valid options:
+#    messagebus    Send feedback and status using LCS/MessageBus
+#    none          Do NOT send feedback and status
+method = none
+
+[docker]
+image = lofar-patched
+
+[remote]
+#method = slurm_srun_cep3 
+#method = ssh_docker
+method = custom_cmdline
+max_per_node = 1 
+
+# We take the following path to start a remote container:
+#
+#  [container] --SSH--> [host] --SRUN--> [worker node] --DOCKER--> [container]
+#
+# This path is needed because running SRUN from within the container needs a lot of cluster-specific infra
+# (SLURM config files, Munge keys, correct Munge user ID, munged).
+#
+# Throughout this path, we maintain:
+#   * userid, which is set to the user that started the master script container (-e LUSER=`id -u`)
+#   * environment (sudo -p, docker -e K=V, etc)
+#   * pseudo-tty to prevent buffering logs (ssh -tt, docker -t)
+
+#
+# host -> worker node:       srun -w {host} -N 1 -n 1 --jobid={slurm_job_id}
+#                            Needs the specific host, because the test system does not have a global file system.
+#
+# worker node -> container:  docker run -t --rm -e LUSER={uid} -w g -v /home/mol/.ssh:/home/lofar/.ssh:ro -v /globalhome/mol/regression_test:/globalhome/mol/regression_test -v /shared:/shared --net=host {docker_image}
+#                            Starts the container on the worker node, with pretty much the same parameters as the master container:
+#
+#                            --rm: don't linger resources when the container exits
+#                            -e LUSER=(uid): set the user to run as (the calling user)
+#                            -h {host}: set container hostname (for easier debugging) (doesnt work yet, using --net=host instead)
+#                            -v:   map the directories for input/output data, shared storage (parsets, vds files, etc)
+#
+#                            /bin/bash -c
+#
+#                            Required because the pipeline framework needs some bash functionality in the commands it starts.
+#cmdline = ssh -n -tt -x localhost srun -w {host} -N 1 -n 1 --jobid={slurm_job_id} docker run -t --rm -e LUSER={uid} -w g -v /home/mol/.ssh:/home/lofar/.ssh:ro -v /globalhome/mol/regression_test:/globalhome/mol/regression_test -v /shared:/shared --net=host {docker_image} /bin/bash -c
+cmdline = ssh -n -tt -x localhost srun -w {host} -N 1 -n 1 --jobid={slurm_job_id} docker run -t --rm -e LUSER={uid} -v %(runtime_directory)s:%(runtime_directory)s -v %(working_directory)s:%(working_directory)s --net=host {docker_image} /bin/bash -c "\"{command}\""

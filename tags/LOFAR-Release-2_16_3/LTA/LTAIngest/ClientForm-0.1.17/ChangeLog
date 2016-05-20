@@ -1,0 +1,578 @@
+This isn't really in proper GNU ChangeLog format, it just happens to
+look that way.
+
+2005-01-30 John J Lee <jjl@pobox.com>
+	* Fix failure to raise ParseError (!)
+	* Workaround for failure of sgmllib to unescape attributes (bug
+	  report from Titus Brown).
+	* Released 0.1.17.
+
+2005-01-17 John J Lee <jjl@pobox.com>
+	* Fixed case where FORM action contains a '?' or '#' (again).
+	* Allow user to supply own Request class (Tobias).
+	* Fix ISINDEX action URL (bug only showed up in Python 2.4).
+	* Fix image control in case where value is present.
+	* Hack choose_boundary not to fail on socket.gaierror.
+
+2004-05-15 John J Lee <jjl@pobox.com>
+	* Released 0.1.16 and 0.0.16.
+
+	* 0.1.x and 0.0.x:
+	* Fixed case where FORM action contains a '?' (bug report from
+	  Moof).
+
+	* 0.1.x only:
+	* Look for BASE element attribute 'href', not 'uri'! (patch from
+	  Jochen Knuth)
+	* Applied workaround for file upload for AOLServer (patch from
+	  Andrei Mitran).
+	* Added optional form_parser_class arguments to allow choice
+	  between htmllib and HTMLParser modules.
+	* Added a SelectControl._delete_items() method, useful for quick-
+	  hack JS simulation.  Not yet a stable interface, hence the
+	  initial underscore.
+
+	* 0.0.x only:
+	* SubmitControls with no initial value in HTML are now successful
+	  (default value is '', not None)
+
+2004-01-22 John J Lee <jjl@pobox.com>
+	* 0.1.x only:
+	* Cleaned up docs a bit, and removed references to toggle methods.
+
+2004-01-05 John J Lee <jjl@pobox.com>
+	* 0.1.x only:
+	* Take note of base element.  Thanks to Phillip J. Eby for bug
+	  report.
+	* All form attributes are now available in HTMLForm.attrs
+	  (previously, name, action, method and enctype were not present).
+	* Released 0.1.15.
+
+2004-01-01 John J Lee <jjl@pobox.com>
+	* 0.1.x only: Disovered ignore_errors was ignored by
+	  ParseResponse!  It seems nobody uses it from ParseResponse, and
+	  it's probably worthless anyway.  Also, I just now realise that
+	  FormParser.error() is actually overriding a base class method
+	  without my noticing it!  The arguments are still there, but
+	  they're now ignored.  Thanks to Per Cederqvist.
+
+2003-12-24 John J Lee <jjl@pobox.com>
+	* Modified setup.py so can easily register with PyPI.
+
+2003-12-06 John J Lee <jjl@pobox.com>
+	* Fixed bug where ClientForm.urlencode choked on Unicode.
+	* Released 0.1.14 and 0.0.15.
+
+2003-11-14 John J Lee <jjl@pobox.com>
+	* A few doc fixes in HTMLForm.__doc__.
+	* Minor code clean-up.
+
+2003-11-12 John J Lee <jjl@pobox.com>
+	* Fixed bug where empty OPTION caused KeyError.  Thanks to Doug
+	  Henderson.
+	* Released 0.1.13 and 0.0.14.
+
+2003-11-11 John J Lee <jjl@pobox.com>
+	* Fixed bugs where TEXTAREA or OPTION containing entity reference
+	  would result in truncated element contents.  Thanks to Michael
+	  Howitz again!
+	* Applied fixes to 0.0.x for ImageControl integer coordinates,
+	  TEXTAREA content .strip()ping and entity references in TEXTAREA
+	  and OPTION.
+	* Released 0.1.12 and 0.0.13.
+
+2003-11-07 John J Lee <jjl@pobox.com>
+	* TEXTAREA contents are no longer .strip()ped on form parsing.
+	* Released 0.1.11.
+
+2003-11-03 John J Lee <jjl@pobox.com>
+	* Fixed ImageControl.pairs(): return value contained integer
+	  coordinates instead of strings.  Thanks to Michael Howitz.
+
+2003-10-31 John J Lee <jjl@pobox.com>
+	* XHTML support for Pythons >= 2.2.  Thanks to Michael Howitz.
+	* Released 0.1.10.
+
+2003-10-02 John J Lee <jjl@pobox.com>
+	* Bugfix: selection of default control to click on is supposed to
+	  only happen if no control is explictly requested, but id wasn't
+	  included in that.  Now, it is.
+
+2003-09-28 John J Lee <jjl@pobox.com>
+	* Fixed HTMLForm.attrs.  Thanks to Scott Chapman.
+	* Released ClientForm 0.0.12 and 0.1.9 (first stable release of
+	  0.1.x).
+
+2003-09-21 John J Lee <jjl@pobox.com>
+	* Interface change (sorry): id is now supported.  This means
+	  Controls have an id attribute, and appropriate HTMLForm methods
+	  have an id argument.  This will only affect people using
+	  positional arguments after the 'kind' argument.
+	* Interface change: BUTTON/BUTTON now has type "buttonbutton" (was
+	  "button") to prevent clash with type of INPUT/BUTTON (was and is
+	  "button").  Both types of control are ignored anyway (ie.
+	  represented by IgnoreControl), so it's unlikely any code is
+	  affected.
+	* SubmitControl value now defaults to "", so it is successful even
+	  when no value is given in the HTML.
+	* Extraneous "\r\n\r\n" at start of multipart/form-data POST data
+	  removed.
+	* Multiple file upload now emits multipart/mixed, rather than
+	  multipart/multipart/mixed, as content-type!
+	* Content-disposition header now comes before content-type, in
+	  case that matters...
+	* Slight tweak to SelectControl.fixup, to fix case where multiple
+	  SELECT is empty.
+	* Released 0.1.8b.
+
+2003-07-12 John J Lee <jjl@pobox.com>
+	* Added indication to ListControl.__str__ of disabled items --
+	  they have parentheses around them: item 1, (item 2), item 3
+	  means "item 2" is disabled.
+	* Released 0.1.7b.
+
+2003-07-10 John J Lee <jjl@pobox.com>
+	* Removed assertion that self.value is None in
+	  IgnoreControl.__init__.  Now sets value to None instead.  Thanks
+	  to Martijn Faasen for bug report.  Same for FileControl.
+
+2003-07-23 John J Lee <jjl@pobox.com>
+	* 0.1.6a changes:
+	* After some thought about Law of Demeter, realised that there was
+	  no justification for deprecating most use of find_control, nor
+	  for all of the new methods on HTMLForm.  Use of find_control
+	  is now officially OK again.  set_/get_readonly,
+	  set_/get_disabled, set_/get_item_disabled and
+	  set_all_items disabled, have been removed from HTMLForm.
+	* Added HTMLForm.set_all_readonly method.  This one is actually
+	  useful!
+	* All methods on Controls that used to be separate _by_label
+	  methods are now by_label arguments, now I see that labels can be
+	  defined for all controls' items.  The exceptions are
+	  set_value_by_label and get_value_by_label, since there is no
+	  method to add an argument to in those cases.  The lack of
+	  implementation of by_label for CHECKBOX and RADIO is considered
+	  a bug, so NotImplementedError is raised.  LabelNotSupportedError
+	  has gone.
+	* Released 0.1.6a.
+
+2003-07-22 John J Lee <jjl@pobox.com>
+	* 0.1.6a changes:
+	* Added some tests for new HTMLForm methods.
+	* ListControl.readonly now exists and works.
+	* Corrected error message for predicate arg of
+	  HTMLForm.find_control.
+	* Fixed HTMLForm.get_readonly.
+	* Fixed ListControl.get_item_disabled.
+	* Fixed exception raised by ListControl: was TypeError, now
+	  LabelNotSupportedError.
+	* Fixed ListControl.get_value, .set_value and .possible_items
+	  exception messages.
+	* Enforced restriction on new HTMLForm methods that at least one
+	  find_control argument must be supplied.
+
+2003-07-14 John J Lee <jjl@pobox.com>
+	* 0.1.5a changes:
+	* Removed listcontrol arg from HTMLForm methods, added kind and
+	  predicate arguments to .find_control.  kind argument is
+	  available in most HTMLForm methods.
+	* set methods take selected argument set(selected, "itemname"),
+	  and the clear methods are gone.
+
+2003-07-13 John J Lee <jjl@pobox.com>
+	* 0.1.5a changes:
+	* FileControl now unsuccessful when disabled attribute is true.
+	* Moved most method definitions in Control into ScalarControl.
+	* ListControls now always take sequence values, never string-like
+	  values.
+	* listcontrol argument on appropriate HTMLForm methods, in
+	  addition to name, type and nr.  This allows you to ask for a
+	  ListControl without specifying the exact type.
+	* All controls now have the readonly attribute.
+	* Renamed get_value_as_label --> get_value_by_label.
+	* Renamed possible_values --> possible_items.
+	* Renamed possible_labels --> possible_item_labels.
+	* SelectControl.set_by_label, .clear_by_label, and
+	  .toggle_by_label have now gone, to be replaced by by_label
+	  arguments to .get, .set and .toggle.
+	* Added files now have their MIME content type guessed unless the
+	  content type is explicitly specified in content_type argument to
+	  add_file.  At the moment, it's always guessed to be
+	  application/octet-stream.
+
+2003-07-12 John J Lee <jjl@pobox.com>
+	* 0.1.5a changes:
+	* get_item_attrs now raises IndexError instead of returning None
+	  when the item is not found.
+	* Realised that exceptions raised are a mess (IndexError should
+	  never have been raised at all, for a start).  Rethought it all
+	  and thoroughly overhauled it.
+
+2003-07-08 John J Lee <jjl@pobox.com>
+	* 0.1.5a changes:
+	* Added toggle_single, set_single, clear_single methods to
+	  HTMLForm and ListControl.  This is useful when you have a
+	  single-item list control (usually a single checkbox that you
+	  want to check), and you want to select that item without having
+	  to know what the item's name is (it's usually something
+	  meaningless like "1" or "on").
+	* FileControl no longer derives from TextControl.
+	* Moved most documentation from Control objects into HTMLForm.
+	  The class docstring for HTMLForm now contains most of what you
+	  need to know.
+
+2003-07-07 John J Lee <jjl@pobox.com>
+	* 0.1.5a: Empty SelectControl can now be constructed.
+
+2003-07-06 John J Lee <jjl@pobox.com>
+	* 0.1.5a changes:
+	* Interface change: the HTMLForm.set, .clear and .toggle
+	  methods now take value as *first* argument, with the other
+	  arguments reflecting those of find_control (ie. name, type, nr).
+	* find_control and find_item now behave as documented with regard
+	  to need to supply all arguments (nr now defaults to None, not
+	  0).
+	* Renamed find_item --> get_item_attrs.
+	* Added ListControl.get_item_disabled and .set_item_disabled
+	  methods, and support for OPTGROUP (disabled OPTGROUPs make their
+	  OPTIONs disabled).  No longer need to mess with attrs dictionary
+	  to set disabled state of items.
+	* Renamed items --> pairs.
+	* Renamed click_items --> click_pairs.
+	* HTML attribute dictionaries now contain *all* original HTML
+	  attributes, including those that are exposed elsewhere in the
+	  ClientForm API (such as name, type, multiple, selected).
+	* HTMLForm.find_control now raises IndexError instead of returning
+	  None when no control is found.  set_disabled, set_readonly,
+	  click, click_request_data, click_pairs, set, clear, toggle,
+	  possible_values all now raise IndexError instead of ValueError
+	  when no control is found.
+	* HTMLForm.set_disabled, .set_readonly now take boolean arg as
+	  first argument, and take type and nr args.
+	* HTMLForm.set_readonly now raises AttributeError, not ValueError,
+	  when invoked for control with no readonly attribute.
+	* Fixed minor, latent 1.5.2-compatibility bug in MapBase.
+	* HTMLForm.set, .get, .toggle now raise AttributeError, not
+	  TypeError, on being invoked for non-list controls.
+	* Removed nr argument from all methods related to find_item_attrs.
+	  Not needed AFAICS!
+	* Lots of new delegating methods on HTMLForm.
+	* ListControl.multiple is now enforced to be readonly.
+	* Controls now take extra name argument (to enable creating empty
+	  ListControls).
+	* Some code cleanup.
+
+2003-07-04 John J Lee <jjl@pobox.com>
+	* 0.1.5a: Added HTMLForm.set_disabled and .set_readonly methods.
+
+2003-06-29 John J Lee <jjl@pobox.com>
+	* Noticed that I was wrong about browser behaviour with default
+	  selection for RADIO with no explictly selected items in HTML.
+	  In fact, browsers don't select any items in that case, in
+	  contradiction to HTML 4.01 (and RFC 1866, FWIW).  Default is now
+	  for RadioControl to follow this behaviour, and the various
+	  select_default arguments now make RADIO follow the HTML 4.01
+	  standard.
+	* RadioControls now no longer have to have exactly one item
+	  selected.
+	* 0.1.4a: set / clear / toggle methods on HTMLForm and ListControl
+	  now work with single-selection controls.
+	* Released 0.0.11 and 0.1.4a.
+
+2003-06-28 John J Lee <jjl@pobox.com>
+	* 0.1.4a:
+	* Removed all asserts from tests.  Now uses TestCase.assert_
+	  method.
+	* All raise statements now raise Exception objects, not classes,
+	  and use the raise FooError('msg') syntax.
+	* Simplified implementation of HTMLForm set / clear / toggle
+	  methods.
+	* Corrected exception message for ListControl set / clear / toggle
+	  methods: was giving item name instead of control name for
+	  single-selection lists.
+	* Moved ListControl._single_set_value method from ListControl into
+	  RadioControl.
+	* disabled attribute is now handled differently: if any item has
+	  the disabled HTML-attribute, the control's value can't be set,
+	  but ListControl.set, .clear and .toggle (or the methods on
+	  HTMLForm with the same names) can still be used.  Using those
+	  methods, individual items can't be set if they're disabled.
+	  ATM, to un-disable an item, you have to del the dictionary key:
+
+	  del form.find_control("cheeses").find_item("cheddar")["disabled"]
+
+	  which will have to change, I think.
+
+2003-06-25 John J Lee <jjl@pobox.com>
+	* Changed license to BSD, to make it easier to use other code.
+	  The only difference is the addition of a non-endorsement clause.
+	* Default value for single-selection SELECT controls was wrong,
+	  and at odds with my own comments!  Before, nothing was selected
+	  if select_default was False (the default).  Now, the first item
+	  is selected.  Thanks to Chris Curvey.
+	* CHECKBOX and multiple SELECT controls now allow
+	  control.value = None.
+	* Better isstringlike function, after Alex Martelli.
+	* RadioControl now has default value "on" -- same as for
+	  CheckboxControl.  Both IE5 and Mozilla Firebird 0.6 do this.
+	* Fixed toggle_by_label & co. exceptions: before, raised
+	  KeyError, now raises ValueError.
+	* Released 0.0.10 and 0.1.3a.
+
+2003-06-13 John J Lee <jjl@pobox.com>
+	* Parse errors may now be ignored, thanks to ignore_errors
+	  argument to ParseFile and ParseResponse.
+	* 0.1.3a: Added HTMLForm.set and HTMLForm.clear methods (and
+	  corresponding control methods).
+
+2003-06-12 John J Lee <jjl@pobox.com>
+	* HTMLForm.__getitem__ and .__setitem__ now raise IndexError when
+	  they should.
+	* 0.1.3a: Change all HTTP headers to use initial caps in first
+	  word only (Content-type, not Content-Type), for 2.3
+	  compatibility when checking private Request.headers dict in
+	  tests.
+
+2003-06-09 John J Lee <jjl@pobox.com>
+	* Released 0.0.9 and 0.1.2a.
+
+2003-06-07 John J Lee <jjl@pobox.com>
+	* Improved output of __str__ methods.  Every control type now has
+	  its own class.
+	* Added nr argument to click* methods.
+	* 0.1.2a: Fixed bug in _request_data: POST with
+	  "application/x-www-form-urlencoded" failed due to incorrect
+	  return value.
+
+2003-06-03 John J Lee <jjl@pobox.com>
+	* Released 0.0.8 and 0.1.1a.
+
+2003-05-28 John J Lee <jjl@pobox.com>
+	* Fixed HTMLForm.__str__, which was calling repr on its Controls
+	  rather than str, which was rather unhelpful.
+	* Added a bit in README.html explaining single-checkbox-with-
+	  missing-value-attribute case.
+
+2003-04-30 John J Lee <jjl@pobox.com>
+	* Released 0.1.0a.
+
+2003-04-05 John J Lee <jjl@pobox.com>
+	* In 0.1.0a: Added file upload capability for INPUT TYPE=FILE
+	  controls (for single files only).
+	* In 0.1.0a: Removed items argument to HTMLForm.click method, and
+	  added click_items and click_request_data methods.  Removed items
+	  and make_request methods from HTMLForm.  Made SubmitControl.click
+	  method private -- is now named _click, and is only called by
+	  HTMLForm.
+	* In 0.1.0a: IsindexControl is now clickable, and isindex_url has
+	  been removed, since it was essentially pointless.
+	* In 0.1.0a: Changed SelectControl so it has an attrs dict of HTML
+	  attributes.  SELECT and OPTION HTML attributes are now separate.
+
+2003-03-23 John J Lee <jjl@pobox.com>
+	* Released 0.0.7.
+
+2003-03-08 John J Lee <jjl@pobox.com>
+	* In 0.1.0a: FormParser no longer deletes type HTML attribute from
+	  the dictionary of HTML attributes it provides -- is now the
+	  control's responsibility.
+
+2003-03-05 John J Lee <jjl@pobox.com>
+	* Allow INPUT TYPE=FILE in form (file upload still not
+	  implemented -- this is just to allow parsing forms containing
+	  file upload controls).
+
+2003-02-14 John J Lee <jjl@pobox.com>
+	* Fixed empty TEXTAREA case.  Thanks to Khalid Zuberi for the bug
+	  report and fix.
+	* Released 0.0.6.
+
+2003-02-05 John J Lee <jjl@pobox.com>
+	* Released 0.0.5 (first stable release).
+
+2003-01-05 John J Lee <jjl@pobox.com>
+	* Parser now no longer reads entire file before starting to work
+	  on data.
+
+2002-12-13 John J Lee <jjl@pobox.com>
+	* Implemented ISINDEX submission, and updated documentation (see
+	  IsindexControl.__doc__).
+	* Changed type attributes of BUTTON TYPE=SUBMIT and
+	  BUTTON TYPE=RESET to "submitbutton" and "resetbutton"
+	  respectively.  Previously, they were "submit" and "reset"
+	  respectively, which made it impossible to tell whether they came
+	  from a BUTTON or an INPUT control.
+	* Improved README.html.
+
+2002-11-19 John J Lee <jjl@pobox.com>
+	* Released 0.0.4b.
+
+2002-11-17 John J Lee <jjl@pobox.com>
+	* Changed license to MIT (from Perl Artistic).  Thanks, Gisle.
+	* Removed README, created README.html and INSTALL.  README mostly
+	  just restated what was in the web page, so README.html is now
+	  just a copy of the web page.
+
+2002-11-16 John J Lee <jjl@pobox.com>
+	* Tested label methods of SelectControl.
+	* Removed undocumented munging of SELECT's value HTML attribute to
+	  the key "select_value" in the HTML attributes dict returned by
+	  SelectControl.items().  The purpose of this, in the original
+	  Perl, was presumably to avoid clobbering SELECT's value HTML
+	  attribute (since OPTION and SELECT HTML attributes are merged to
+	  generate this dictionary).  The only trouble is, SELECT *has* no
+	  value HTML attribute!  Either some buggy HTML contains SELECT
+	  controls with value attributes, or Gisle was not paying
+	  attention when he wrote this, or both!
+
+2002-11-14 John J Lee <jjl@pobox.com>
+	* Fixed select_default for single-selection SELECT controls.
+
+2002-11-13 John J Lee <jjl@pobox.com>
+	* Replaced __repr__ methods with __str__ methods.  Very unlikely
+	  to break anyone's code.  repr(obj) now gives something more
+	  useful, str(obj) still gives the same result.
+	* Fixed ParseResponse, which was ignoring the select_default
+	  argument.
+	* Cleaned up constructors of ScalarControl and ListControl.
+	  Control is now more clearly an abstract base class (not meant to
+	  be instantiated).
+	* ListControl is now an abstract base class, with subclasses
+	  RadioControl, CheckboxControl and SelectControl.
+	* Rather than using the values of the OPTION elements to set
+	  SelectControl values, SelectControl items can also be specified
+	  by the labels of the OPTION elements.  For example, if you have
+	  a SELECT control like so:
+
+	  <SELECT>
+	    <OPTION value="br">Brie</OPTION>
+	    <OPTION value="ched">Cheddar</OPTION>
+	    <OPTION value="grgnz" label="Gorgonzola">Special offer on
+	      Gorgonzola!</OPTION>
+	  </SELECT>
+
+	  instead of setting its value like this:
+
+	  control.value = ["br", "ched", "grgnz"]
+
+	  you can now optionally use the more readable (and, possibly,
+	  more maintainable):
+
+	  control.set_value_by_label(["Brie", "Cheddar", "Gorgonzola"])
+
+	  Note that the label HTML attribute defaults to the content of
+	  the OPTION element (as does the value HTML attribute).
+	* Improved documentation and comments.
+
+2002-11-04 John J Lee <jjl@pobox.com>
+	* Fixed TextControl default value to be empty string rather than
+	  None.  This has the effect that text controls are successful
+	  even when empty.
+	* Stopped Content-Type from being emitted twice.
+
+2002-10-25 John J Lee <jjl@pobox.com>
+	* Released 0.0.3b
+
+2002-10-24 John J Lee <jjl@pobox.com>
+	* Changed handling of SELECT/multiple ListControls: select_default
+	  argument to various functions and methods now indicates whether
+	  or not should follow RFC 1866 or Netscape / IE behaviour in
+	  setting default selection if no 'selected' HTML attribute was
+	  given.
+	* Changed type of SELECT/OPTION controls to "select" from
+	  "option".  This is more appropriate, since SELECT is the element
+	  that represents the control, whereas the OPTION element
+	  represents the list items inside the control.
+	* Removed readonly attribute from ListControl -- reading W3C
+	  HTML 4 specification carefully and testing with Netscape / IE
+	  reveals that this isn't intended to work with INPUT elements
+	  other than those of type TEXT and PASSWORD.
+	* Fixed Control.__setattr__ to make value of disabled controls
+	  read-only.
+	* Improved tests and documentation.
+
+2002-10-20 John J Lee <jjl@pobox.com>
+	* Some testing on a site having a fairly complicated sequence of
+	  forms.  No problems came to light.
+	* Made name and type attributes of Control readonly.
+	* Improved documentation.
+
+2002-10-15 John J Lee <jjl@pobox.com>
+	* Fixed make_request to pass urlencode(data) instead of data for
+	  POST.
+	* Thanks to Conrad Schneiker for help with HTTPS on Windows and a
+	  bug report.
+
+2002-10-11 John J Lee <jjl@pobox.com>
+	* Fixed silly Python 2.3 forwards-compatibility bug (True / False
+	  constants were defined, overwriting the new builtin versions in
+	  2.3).
+	* Fixed treatment of form method -- was incorrectly treated as
+	  case-sentitive.
+	* Fixed enctype default in FormParser.
+
+2002-10-07 John J Lee <jjl@pobox.com>
+	* Added TEXTAREA.
+	* Added HTMLForm.attrs attribute, which is a dictionary mapping
+	  HTML attributes to their values.
+	* Added more tests.
+	* Back-ported to Python 1.5.2.
+
+2002-10-06 John J Lee <jjl@pobox.com>
+	* Renamed 'input' to 'control' everywhere (HTML 4.0 terminology,
+	  and more accurate, because one Control may represent more than
+	  one INPUT or OPTION, in the case of ListControl).
+	* Changed interface of HTMLForm.find_control and
+	  HTMLForm.possible_values, so that nr argument begins indexing at
+	  0 rather than 1.
+	* Added name attribute to HTMLForm.
+	* Fixed case where HTMLForm.find_control is passed only nr
+	  argument.
+	* Fixed find_control to return None rather than raise an
+	  exception.
+	* Renamed HTMLForm.push_control to new_control.
+	* Replaced HTMLForm.controls method with attribute.
+	* Fixed ListControl.set_value method in single-selection case.
+	* Replaced all type, name, value and set_value methods with
+	  attributes and __getattr__ / __setattr__.
+	* Added multiple attribute, indicating whether or not ListControl
+	  can have more than one value selected at a time.
+	* Added ScalarControl base class, which has attrs attribute which
+	  is a dictionary mapping HTML attributes to their values.
+	* Added find_item method to ListControl, which allows access to
+	  HTML attributes of items in the sequence.
+	* Removed controls argument of HTMLForm.__init__.
+	* Altered handling of disabled and readonly -- now are attributes
+	  on Control instances, and may be set or cleared to change
+	  Control's behaviour.
+	* Added toggle methods to ListControl and Form.
+	* Fixed ParseFile (hence ParseResponse) to set default form action
+	  correctly when there is none given in HTML.
+	* Fixed many tests.
+	* Improved documentation.
+
+2002-09-29 John J Lee <jjl@pobox.com>
+	* Edited down large test file to save space.
+
+2002-09-22 John J Lee <jjl@pobox.com>
+	* Added HTMLForm.possible_values method.
+	* First use on internet -- seems to work.
+	* Announced on comp.lang.python.announce.
+	* Released 0.0.2a
+
+2002-09-20 John J Lee <jjl@pobox.com>
+	* Uploaded 0.0.1a
+
+2002-09-14 John J Lee <jjl@pobox.com>
+	* Ported form tests from my old classes.
+	* Added input.merge_input() so that ListInputs can be created easily
+	  without an HTMLForm.
+
+2002-08-23 John J Lee <jjl@pobox.com>
+	* General clean-up.
+	* Added tests for input classes and debugged: tests now pass.
+	* Things should more-or-less work now.
+
+2002-08-19 John J Lee <jjl@pobox.com>
+	* Finished port.
+	* Tests from LWP pass.

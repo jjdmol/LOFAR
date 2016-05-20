@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+# qls [<wildcard>]
+# list all queues on the local broker and optionally filter with the wildcard
+# uses grep for filtering
+#
+
+if [ "$1" == "-?" ] || [ "$1" == "-?" ] || [ "$1" == "-?" ]
+then
+   echo "Usage: $0 [hostname]"
+   echo "List all queues on local broker or on the broker at [hostname]."
+else
+  brokeraddress="127.0.0.1"
+  if [ "$1" != "" ]
+  then
+     echo " Broker at $1 :"
+     brokeraddress=$1
+  fi
+  qpid-stat -b $brokeraddress -q
+fi
+
