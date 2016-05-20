@@ -151,6 +151,9 @@ class RPC():
             Reply = FromBus("%s ; %s" %(ReplyAddress,str(options)), broker=self.broker)
         else:
             Reply = FromBus("%s/%s" % (self.BusName, ReplyAddress), broker=self.broker)
+            # supply fully specified reply address including '{node:{type:topic}}' specification so handlers like JMS can handle reply address
+            ReplyAddress = "%s/%s ;{node:{type:topic}}" % (self.BusName, ReplyAddress)
+
         with Reply:
             MyMsg = RequestMessage(content=Content, reply_to=ReplyAddress, has_args=HasArgs, has_kwargs=HasKwArgs)
             MyMsg.ttl = timeout
