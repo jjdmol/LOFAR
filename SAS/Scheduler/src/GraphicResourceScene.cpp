@@ -225,13 +225,15 @@ void GraphicResourceScene::updateStationTimeLines() {
         GraphicStationTaskLine *stationTimeLine = new GraphicStationTaskLine(this, it->second, StationLineYPos);
         addItem(stationTimeLine);
         // create station label
-        QGraphicsSimpleTextItem *stationName = new QGraphicsSimpleTextItem(it->first.c_str(), 0);
+        QGraphicsSimpleTextItem *stationName = new QGraphicsSimpleTextItem(it->first.c_str(), NULL);
+        this->addItem(stationName);
         stationName->setPos(labelXpos, StationLineYPos-2);
         stationName->setFont(QFont("Liberation Sans", 9, QFont::Bold));
         stationName->setZValue(10);
         const QPointF &sp(stationName->pos());
         QRectF r(sp.x()-2, sp.y()-2, 9*(it->first.length()-1)+4, 13);
-        QGraphicsRectItem * rect = new QGraphicsRectItem(r, 0);
+        QGraphicsRectItem * rect = new QGraphicsRectItem(r, NULL);
+        this->addItem(rect);
         rect->setZValue(9);
         rect->setPen(QPen(Qt::NoPen));
         rect->setBrush(QColor(255,255,255,160));

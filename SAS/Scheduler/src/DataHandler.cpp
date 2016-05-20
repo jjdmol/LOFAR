@@ -521,18 +521,20 @@ bool DataHandler::saveProgramPreferences(void) {
 
 bool DataHandler::saveSettings(const QString &filename) const
 {
-    QFile file(QDir::currentPath() + filename);
+    QFile file(filename);
     if (file.open(QIODevice::WriteOnly))
     {
 		QDataStream out(&file);
 		out << (unsigned)FILE_WRITE_VERSION;
 		out << Controller::theSchedulerSettings;
 		file.close();
-		debugInfo("ss","Wrote settings to file: ", filename.toStdString().c_str());
+        debugInfo("ss","Wrote settings to file: ", (filename.toStdString().c_str()));
 		return true;
 	}
-	else
-		return false;
+    else {
+        debugInfo("ss","Failed to write to file: ", (filename.toStdString().c_str()));
+        return false;
+    }
 }
 
 bool DataHandler::loadSettings(const QString &filename) {

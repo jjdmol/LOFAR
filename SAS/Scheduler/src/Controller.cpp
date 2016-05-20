@@ -1191,11 +1191,19 @@ bool Controller::updateProjects(void) {
 void Controller::saveSettings(void) {
 	QString filename = gui->fileDialog(tr("Save Settings"), "set", tr("Settings files (*.set)"),1);
 	if (!filename.isEmpty()) {
-		itsDataHandler->saveSettings(filename);
-		//set status string
-		std::string statStr = "Settings saved to file ";
-		statStr += filename.toStdString();
-		gui->setStatusText(statStr.c_str());
+        if (itsDataHandler->saveSettings(filename))
+        {
+            //set status string
+            std::string statStr = "Settings saved to file ";
+            statStr += filename.toStdString();
+            gui->setStatusText(statStr.c_str());
+        }
+        else {
+            //set status string
+            std::string statStr = "Failed to save settings to file ";
+            statStr += filename.toStdString();
+            gui->setStatusText(statStr.c_str());
+        }
 	}
 }
 
