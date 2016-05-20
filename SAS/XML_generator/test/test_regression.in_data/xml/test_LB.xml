@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-          <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
-          <version>2.10.3</version>
-          <template version="2.10.3" author="Alwin de Jong" changedBy="Alwin de Jong">
-          <description>XML Template generator version 2.10.3</description>
-          </template>
-          <name>test-lofar</name>
+  <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
+  <version>2.16.3</version>
+  <template version="2.16.3" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
+  <description>XML Template generator version 2.16.3</description>
+  </template>
+  <name>test-lofar</name>
+  <children>
+   <item index="0">
+    <lofar:folder topology_parent="false">
+    <name>LB test</name>
+    <description>Long-Baseline Observing setup test</description>
+    <children>
+   <item index="0">
+        <lofar:folder topology_parent="true">
+          <topology>0</topology>
+          <name>LB_Test2014_10_24</name>
+          <description>Long Baseline test 2014_10_24 (LongBaseline)</description>
           <children>
-   <item index="0">
-              <lofar:folder topology_parent="false">
-              <name>LB test</name>
-              <description>Long-Baseline Observing setup test</description>
-              <children>
-   <item index="0">
-              <lofar:folder topology_parent="true">
-                <topology>0</topology>
-                <name>LB_Test2014_10_24</name>
-                <description>Long Baseline test 2014_10_24 (LongBaseline)</description>
-                <children>
           <item index="0">
                 <lofar:observation>
                   <name>LBtest/3C295/1/CO</name>
@@ -95,17 +95,18 @@
                           <nrTabRings></nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.1.C.SAP000.uv.dps</name>
                     <topology>B0.1.C.SAP000.uv.dps</topology>
                     <status>no_data</status>
+                    
                     </lofar:uvDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -120,6 +121,9 @@
                 <predecessor_topology>B0.1.C</predecessor_topology>
                 <name>LBtest/3C295/1/CPC</name>
                 <description>LBtest/3C295/1/CPC (Cal Pipe Calibrator)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Calibrator Pipeline (export)</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -134,16 +138,16 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                  <bbsParameters>
-                    <baselines></baselines>
-                    <correlations></correlations>
-                    <beamModelEnable>true</beamModelEnable>
-                    <solveParms></solveParms>
-                    <solveUVRange></solveUVRange>
-                    <strategyBaselines></strategyBaselines>
-                    <strategyTimeRange></strategyTimeRange>
-                  </bbsParameters>
-                </pipelineAttributes>
+            <bbsParameters>
+              <baselines></baselines>
+              <correlations></correlations>
+              <beamModelEnable>true</beamModelEnable>
+              <solveParms></solveParms>
+              <solveUVRange></solveUVRange>
+              <strategyBaselines></strategyBaselines>
+              <strategyTimeRange></strategyTimeRange>
+            </bbsParameters>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.C.SAP000.uv.dps">
@@ -156,6 +160,7 @@
                       <name>B0.1.CPC.inst.dps</name>
                       <topology>B0.1.CPC.inst.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:instrumentModelDataProduct>
                   </item>
                   <item>
@@ -163,6 +168,7 @@
                       <name>B0.1.CPC.uv.dps</name>
                       <topology>B0.1.CPC.uv.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
@@ -246,17 +252,18 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.1.T.SAP000.uv.dps</name>
                     <topology>B0.1.T.SAP000.uv.dps</topology>
                     <status>no_data</status>
+                    
                     </lofar:uvDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -271,29 +278,32 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>LBtest/3C380/1.0/TP</name>
                     <description>LBtest/3C380/1.0/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
                       <duration>0</duration>
-                      <demixingParameters>
-                        <averagingFreqStep>16</averagingFreqStep>
-                        <averagingTimeStep>2</averagingTimeStep>
-                        <demixFreqStep>64</demixFreqStep>
-                        <demixTimeStep>10</demixTimeStep>
-                        <demixAlways></demixAlways>
-                        <demixIfNeeded></demixIfNeeded>
-                        <ignoreTarget></ignoreTarget>
-                      </demixingParameters>
-                      <bbsParameters>
-                        <baselines></baselines>
-                        <correlations></correlations>
-                        <beamModelEnable>true</beamModelEnable>
-                        <solveParms></solveParms>
-                        <solveUVRange></solveUVRange>
-                        <strategyBaselines></strategyBaselines>
-                        <strategyTimeRange></strategyTimeRange>
-                      </bbsParameters>
-                    </pipelineAttributes>
+                  <demixingParameters>
+                    <averagingFreqStep>16</averagingFreqStep>
+                    <averagingTimeStep>2</averagingTimeStep>
+                    <demixFreqStep>64</demixFreqStep>
+                    <demixTimeStep>10</demixTimeStep>
+                    <demixAlways></demixAlways>
+                    <demixIfNeeded></demixIfNeeded>
+                    <ignoreTarget></ignoreTarget>
+                  </demixingParameters>
+            <bbsParameters>
+              <baselines></baselines>
+              <correlations></correlations>
+              <beamModelEnable>true</beamModelEnable>
+              <solveParms></solveParms>
+              <solveUVRange></solveUVRange>
+              <strategyBaselines></strategyBaselines>
+              <strategyTimeRange></strategyTimeRange>
+            </bbsParameters>
+</pipelineAttributes>
                     <usedDataProducts>
                       <item>
                         <lofar:uvDataProduct topology="B0.1.T.SAP000.uv.dps">
@@ -312,6 +322,7 @@
                             <name>B0.1.PT0.uv.dps</name>
                             <topology>B0.1.PT0.uv.dps</topology>
                             <status>no_data</status>
+                            
                           </lofar:uvDataProduct>
                         </item> 
                     </resultDataProducts>               
@@ -323,6 +334,9 @@
                 <predecessor_topology>B0.1.PT0</predecessor_topology>
                 <name>LBtest/3C380/1.0/PP</name>
                 <description>LBtest/3C380/1.0/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -336,7 +350,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.PT0.uv.dps">
@@ -349,6 +363,7 @@
                       <name>B0.1.PTLB0.uv.dps</name>
                       <topology>B0.1.PTLB0.uv.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
@@ -360,6 +375,9 @@
                 <predecessor_topology>B0.1.PTLB0</predecessor_topology>
                 <name>LBtest/3C380/1.0/LBP</name>
                 <description>LBtest/3C380/1.0/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>0</duration>
@@ -378,6 +396,7 @@
                       <name>B0.1.LBP0.uv.dps</name>
                       <topology>B0.1.LBP0.uv.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
@@ -461,17 +480,18 @@
                           <nrTabRings></nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.2.C.SAP000.uv.dps</name>
                     <topology>B0.2.C.SAP000.uv.dps</topology>
                     <status>no_data</status>
+                    
                     </lofar:uvDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -486,6 +506,9 @@
                 <predecessor_topology>B0.2.C</predecessor_topology>
                 <name>LBtest/3C295/2/CPC</name>
                 <description>LBtest/3C295/2/CPC (Cal Pipe Calibrator)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Calibrator Pipeline (export)</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -500,16 +523,16 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                  <bbsParameters>
-                    <baselines></baselines>
-                    <correlations></correlations>
-                    <beamModelEnable>true</beamModelEnable>
-                    <solveParms></solveParms>
-                    <solveUVRange></solveUVRange>
-                    <strategyBaselines></strategyBaselines>
-                    <strategyTimeRange></strategyTimeRange>
-                  </bbsParameters>
-                </pipelineAttributes>
+            <bbsParameters>
+              <baselines></baselines>
+              <correlations></correlations>
+              <beamModelEnable>true</beamModelEnable>
+              <solveParms></solveParms>
+              <solveUVRange></solveUVRange>
+              <strategyBaselines></strategyBaselines>
+              <strategyTimeRange></strategyTimeRange>
+            </bbsParameters>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.2.C.SAP000.uv.dps">
@@ -522,6 +545,7 @@
                       <name>B0.2.CPC.inst.dps</name>
                       <topology>B0.2.CPC.inst.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:instrumentModelDataProduct>
                   </item>
                   <item>
@@ -529,6 +553,7 @@
                       <name>B0.2.CPC.uv.dps</name>
                       <topology>B0.2.CPC.uv.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
@@ -612,17 +637,18 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.2.T.SAP000.uv.dps</name>
                     <topology>B0.2.T.SAP000.uv.dps</topology>
                     <status>no_data</status>
+                    
                     </lofar:uvDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -637,29 +663,32 @@
                     <predecessor_topology>B0.2.T,B0.2.CPC</predecessor_topology>
                     <name>LBtest/3C380/2.0/TP</name>
                     <description>LBtest/3C380/2.0/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
                       <duration>0</duration>
-                      <demixingParameters>
-                        <averagingFreqStep>16</averagingFreqStep>
-                        <averagingTimeStep>2</averagingTimeStep>
-                        <demixFreqStep>64</demixFreqStep>
-                        <demixTimeStep>10</demixTimeStep>
-                        <demixAlways></demixAlways>
-                        <demixIfNeeded></demixIfNeeded>
-                        <ignoreTarget></ignoreTarget>
-                      </demixingParameters>
-                      <bbsParameters>
-                        <baselines></baselines>
-                        <correlations></correlations>
-                        <beamModelEnable>true</beamModelEnable>
-                        <solveParms></solveParms>
-                        <solveUVRange></solveUVRange>
-                        <strategyBaselines></strategyBaselines>
-                        <strategyTimeRange></strategyTimeRange>
-                      </bbsParameters>
-                    </pipelineAttributes>
+                  <demixingParameters>
+                    <averagingFreqStep>16</averagingFreqStep>
+                    <averagingTimeStep>2</averagingTimeStep>
+                    <demixFreqStep>64</demixFreqStep>
+                    <demixTimeStep>10</demixTimeStep>
+                    <demixAlways></demixAlways>
+                    <demixIfNeeded></demixIfNeeded>
+                    <ignoreTarget></ignoreTarget>
+                  </demixingParameters>
+            <bbsParameters>
+              <baselines></baselines>
+              <correlations></correlations>
+              <beamModelEnable>true</beamModelEnable>
+              <solveParms></solveParms>
+              <solveUVRange></solveUVRange>
+              <strategyBaselines></strategyBaselines>
+              <strategyTimeRange></strategyTimeRange>
+            </bbsParameters>
+</pipelineAttributes>
                     <usedDataProducts>
                       <item>
                         <lofar:uvDataProduct topology="B0.2.T.SAP000.uv.dps">
@@ -678,6 +707,7 @@
                             <name>B0.2.PT0.uv.dps</name>
                             <topology>B0.2.PT0.uv.dps</topology>
                             <status>no_data</status>
+                            
                           </lofar:uvDataProduct>
                         </item> 
                     </resultDataProducts>               
@@ -689,6 +719,9 @@
                 <predecessor_topology>B0.2.PT0</predecessor_topology>
                 <name>LBtest/3C380/2.0/PP</name>
                 <description>LBtest/3C380/2.0/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -702,7 +735,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.2.PT0.uv.dps">
@@ -715,6 +748,7 @@
                       <name>B0.2.PTLB0.uv.dps</name>
                       <topology>B0.2.PTLB0.uv.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
@@ -726,6 +760,9 @@
                 <predecessor_topology>B0.2.PTLB0</predecessor_topology>
                 <name>LBtest/3C380/2.0/LBP</name>
                 <description>LBtest/3C380/2.0/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>0</duration>
@@ -744,16 +781,17 @@
                       <name>B0.2.LBP0.uv.dps</name>
                       <topology>B0.2.LBP0.uv.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
               </lofar:pipeline>
             </item>
 </children>
-        </lofar:folder>
-        </item>
+  </lofar:folder>
+  </item>
 </children>
-    </lofar:folder>
-    </item>
+  </lofar:folder>
+  </item>
           </children>
   </lofar:project>

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
   <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
-  <version>2.15.0</version>
-  <template version="2.15.0" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
-  <description>XML Template generator version 2.15.0</description>
+  <version>2.16.3</version>
+  <template version="2.16.3" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
+  <description>XML Template generator version 2.16.3</description>
   </template>
   <name>LT5_006</name>
   <children>
@@ -121,6 +121,9 @@
                 <predecessor_topology>B0.1.C</predecessor_topology>
                 <name>3C48/1/CPC</name>
                 <description>3C48/1/CPC (Cal Pipe Calibrator)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Calibrator Pipeline (export)</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -2735,6 +2738,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal1/1.1/TP</name>
                     <description>Cal1/1.1/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -2788,6 +2794,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal2/1.2/TP</name>
                     <description>Cal2/1.2/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -2841,6 +2850,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal3/1.3/TP</name>
                     <description>Cal3/1.3/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -2894,6 +2906,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal4/1.4/TP</name>
                     <description>Cal4/1.4/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -2947,6 +2962,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal5/1.5/TP</name>
                     <description>Cal5/1.5/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3000,6 +3018,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal6/1.6/TP</name>
                     <description>Cal6/1.6/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3053,6 +3074,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal7/1.7/TP</name>
                     <description>Cal7/1.7/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3106,6 +3130,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal8/1.8/TP</name>
                     <description>Cal8/1.8/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3159,6 +3186,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal9/1.9/TP</name>
                     <description>Cal9/1.9/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3212,6 +3242,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal10/1.10/TP</name>
                     <description>Cal10/1.10/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3265,6 +3298,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal11/1.11/TP</name>
                     <description>Cal11/1.11/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3318,6 +3354,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal12/1.12/TP</name>
                     <description>Cal12/1.12/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3371,6 +3410,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal13/1.13/TP</name>
                     <description>Cal13/1.13/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3424,6 +3466,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal14/1.14/TP</name>
                     <description>Cal14/1.14/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3477,6 +3522,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal15/1.15/TP</name>
                     <description>Cal15/1.15/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3530,6 +3578,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal16/1.16/TP</name>
                     <description>Cal16/1.16/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3583,6 +3634,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal17/1.17/TP</name>
                     <description>Cal17/1.17/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3636,6 +3690,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal18/1.18/TP</name>
                     <description>Cal18/1.18/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3689,6 +3746,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal19/1.19/TP</name>
                     <description>Cal19/1.19/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3742,6 +3802,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal20/1.20/TP</name>
                     <description>Cal20/1.20/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3795,6 +3858,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal21/1.21/TP</name>
                     <description>Cal21/1.21/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3848,6 +3914,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal22/1.22/TP</name>
                     <description>Cal22/1.22/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3901,6 +3970,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal23/1.23/TP</name>
                     <description>Cal23/1.23/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -3954,6 +4026,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal24/1.24/TP</name>
                     <description>Cal24/1.24/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4007,6 +4082,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal25/1.25/TP</name>
                     <description>Cal25/1.25/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4060,6 +4138,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal26/1.26/TP</name>
                     <description>Cal26/1.26/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4113,6 +4194,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal27/1.27/TP</name>
                     <description>Cal27/1.27/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4166,6 +4250,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal28/1.28/TP</name>
                     <description>Cal28/1.28/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4219,6 +4306,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal29/1.29/TP</name>
                     <description>Cal29/1.29/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4272,6 +4362,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal30/1.30/TP</name>
                     <description>Cal30/1.30/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4325,6 +4418,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal31/1.31/TP</name>
                     <description>Cal31/1.31/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4378,6 +4474,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal32/1.32/TP</name>
                     <description>Cal32/1.32/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4431,6 +4530,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal33/1.33/TP</name>
                     <description>Cal33/1.33/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4484,6 +4586,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal34/1.34/TP</name>
                     <description>Cal34/1.34/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4537,6 +4642,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal35/1.35/TP</name>
                     <description>Cal35/1.35/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4590,6 +4698,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal36/1.36/TP</name>
                     <description>Cal36/1.36/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4643,6 +4754,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal37/1.37/TP</name>
                     <description>Cal37/1.37/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4696,6 +4810,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal38/1.38/TP</name>
                     <description>Cal38/1.38/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4749,6 +4866,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal39/1.39/TP</name>
                     <description>Cal39/1.39/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4802,6 +4922,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal40/1.40/TP</name>
                     <description>Cal40/1.40/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4855,6 +4978,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal41/1.41/TP</name>
                     <description>Cal41/1.41/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4908,6 +5034,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal42/1.42/TP</name>
                     <description>Cal42/1.42/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -4961,6 +5090,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal43/1.43/TP</name>
                     <description>Cal43/1.43/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5014,6 +5146,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal44/1.44/TP</name>
                     <description>Cal44/1.44/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5067,6 +5202,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal45/1.45/TP</name>
                     <description>Cal45/1.45/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5120,6 +5258,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal46/1.46/TP</name>
                     <description>Cal46/1.46/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5173,6 +5314,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal47/1.47/TP</name>
                     <description>Cal47/1.47/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5226,6 +5370,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal48/1.48/TP</name>
                     <description>Cal48/1.48/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5279,6 +5426,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal49/1.49/TP</name>
                     <description>Cal49/1.49/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5332,6 +5482,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal50/1.50/TP</name>
                     <description>Cal50/1.50/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5385,6 +5538,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal51/1.51/TP</name>
                     <description>Cal51/1.51/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5438,6 +5594,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal52/1.52/TP</name>
                     <description>Cal52/1.52/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5491,6 +5650,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal53/1.53/TP</name>
                     <description>Cal53/1.53/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5544,6 +5706,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal54/1.54/TP</name>
                     <description>Cal54/1.54/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5597,6 +5762,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal55/1.55/TP</name>
                     <description>Cal55/1.55/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5650,6 +5818,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal56/1.56/TP</name>
                     <description>Cal56/1.56/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5703,6 +5874,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal57/1.57/TP</name>
                     <description>Cal57/1.57/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5756,6 +5930,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal58/1.58/TP</name>
                     <description>Cal58/1.58/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5809,6 +5986,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal59/1.59/TP</name>
                     <description>Cal59/1.59/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5862,6 +6042,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>Cal60/1.60/TP</name>
                     <description>Cal60/1.60/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5915,6 +6098,9 @@
                 <predecessor_topology>B0.1.PT1</predecessor_topology>
                 <name>Cal1/1.1/PP</name>
                 <description>Cal1/1.1/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -5953,12 +6139,14 @@
                 <predecessor_topology>B0.1.PTLB1</predecessor_topology>
                 <name>Cal1/1.1/LBP</name>
                 <description>Cal1/1.1/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -5984,6 +6172,9 @@
                 <predecessor_topology>B0.1.PT2</predecessor_topology>
                 <name>Cal2/1.2/PP</name>
                 <description>Cal2/1.2/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -6022,12 +6213,14 @@
                 <predecessor_topology>B0.1.PTLB2</predecessor_topology>
                 <name>Cal2/1.2/LBP</name>
                 <description>Cal2/1.2/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -6053,6 +6246,9 @@
                 <predecessor_topology>B0.1.PT3</predecessor_topology>
                 <name>Cal3/1.3/PP</name>
                 <description>Cal3/1.3/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -6091,12 +6287,14 @@
                 <predecessor_topology>B0.1.PTLB3</predecessor_topology>
                 <name>Cal3/1.3/LBP</name>
                 <description>Cal3/1.3/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -6122,6 +6320,9 @@
                 <predecessor_topology>B0.1.PT4</predecessor_topology>
                 <name>Cal4/1.4/PP</name>
                 <description>Cal4/1.4/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -6160,12 +6361,14 @@
                 <predecessor_topology>B0.1.PTLB4</predecessor_topology>
                 <name>Cal4/1.4/LBP</name>
                 <description>Cal4/1.4/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -6191,6 +6394,9 @@
                 <predecessor_topology>B0.1.PT5</predecessor_topology>
                 <name>Cal5/1.5/PP</name>
                 <description>Cal5/1.5/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -6229,12 +6435,14 @@
                 <predecessor_topology>B0.1.PTLB5</predecessor_topology>
                 <name>Cal5/1.5/LBP</name>
                 <description>Cal5/1.5/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -6260,6 +6468,9 @@
                 <predecessor_topology>B0.1.PT6</predecessor_topology>
                 <name>Cal6/1.6/PP</name>
                 <description>Cal6/1.6/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -6298,12 +6509,14 @@
                 <predecessor_topology>B0.1.PTLB6</predecessor_topology>
                 <name>Cal6/1.6/LBP</name>
                 <description>Cal6/1.6/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -6329,6 +6542,9 @@
                 <predecessor_topology>B0.1.PT7</predecessor_topology>
                 <name>Cal7/1.7/PP</name>
                 <description>Cal7/1.7/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -6367,12 +6583,14 @@
                 <predecessor_topology>B0.1.PTLB7</predecessor_topology>
                 <name>Cal7/1.7/LBP</name>
                 <description>Cal7/1.7/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -6398,6 +6616,9 @@
                 <predecessor_topology>B0.1.PT8</predecessor_topology>
                 <name>Cal8/1.8/PP</name>
                 <description>Cal8/1.8/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -6436,12 +6657,14 @@
                 <predecessor_topology>B0.1.PTLB8</predecessor_topology>
                 <name>Cal8/1.8/LBP</name>
                 <description>Cal8/1.8/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -6467,6 +6690,9 @@
                 <predecessor_topology>B0.1.PT9</predecessor_topology>
                 <name>Cal9/1.9/PP</name>
                 <description>Cal9/1.9/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -6505,12 +6731,14 @@
                 <predecessor_topology>B0.1.PTLB9</predecessor_topology>
                 <name>Cal9/1.9/LBP</name>
                 <description>Cal9/1.9/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -6536,6 +6764,9 @@
                 <predecessor_topology>B0.1.PT10</predecessor_topology>
                 <name>Cal10/1.10/PP</name>
                 <description>Cal10/1.10/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -6574,12 +6805,14 @@
                 <predecessor_topology>B0.1.PTLB10</predecessor_topology>
                 <name>Cal10/1.10/LBP</name>
                 <description>Cal10/1.10/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -6605,6 +6838,9 @@
                 <predecessor_topology>B0.1.PT11</predecessor_topology>
                 <name>Cal11/1.11/PP</name>
                 <description>Cal11/1.11/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -6643,12 +6879,14 @@
                 <predecessor_topology>B0.1.PTLB11</predecessor_topology>
                 <name>Cal11/1.11/LBP</name>
                 <description>Cal11/1.11/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -6674,6 +6912,9 @@
                 <predecessor_topology>B0.1.PT12</predecessor_topology>
                 <name>Cal12/1.12/PP</name>
                 <description>Cal12/1.12/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -6712,12 +6953,14 @@
                 <predecessor_topology>B0.1.PTLB12</predecessor_topology>
                 <name>Cal12/1.12/LBP</name>
                 <description>Cal12/1.12/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -6743,6 +6986,9 @@
                 <predecessor_topology>B0.1.PT13</predecessor_topology>
                 <name>Cal13/1.13/PP</name>
                 <description>Cal13/1.13/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -6781,12 +7027,14 @@
                 <predecessor_topology>B0.1.PTLB13</predecessor_topology>
                 <name>Cal13/1.13/LBP</name>
                 <description>Cal13/1.13/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -6812,6 +7060,9 @@
                 <predecessor_topology>B0.1.PT14</predecessor_topology>
                 <name>Cal14/1.14/PP</name>
                 <description>Cal14/1.14/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -6850,12 +7101,14 @@
                 <predecessor_topology>B0.1.PTLB14</predecessor_topology>
                 <name>Cal14/1.14/LBP</name>
                 <description>Cal14/1.14/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -6881,6 +7134,9 @@
                 <predecessor_topology>B0.1.PT15</predecessor_topology>
                 <name>Cal15/1.15/PP</name>
                 <description>Cal15/1.15/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -6919,12 +7175,14 @@
                 <predecessor_topology>B0.1.PTLB15</predecessor_topology>
                 <name>Cal15/1.15/LBP</name>
                 <description>Cal15/1.15/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -6950,6 +7208,9 @@
                 <predecessor_topology>B0.1.PT16</predecessor_topology>
                 <name>Cal16/1.16/PP</name>
                 <description>Cal16/1.16/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -6988,12 +7249,14 @@
                 <predecessor_topology>B0.1.PTLB16</predecessor_topology>
                 <name>Cal16/1.16/LBP</name>
                 <description>Cal16/1.16/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -7019,6 +7282,9 @@
                 <predecessor_topology>B0.1.PT17</predecessor_topology>
                 <name>Cal17/1.17/PP</name>
                 <description>Cal17/1.17/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -7057,12 +7323,14 @@
                 <predecessor_topology>B0.1.PTLB17</predecessor_topology>
                 <name>Cal17/1.17/LBP</name>
                 <description>Cal17/1.17/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -7088,6 +7356,9 @@
                 <predecessor_topology>B0.1.PT18</predecessor_topology>
                 <name>Cal18/1.18/PP</name>
                 <description>Cal18/1.18/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -7126,12 +7397,14 @@
                 <predecessor_topology>B0.1.PTLB18</predecessor_topology>
                 <name>Cal18/1.18/LBP</name>
                 <description>Cal18/1.18/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -7157,6 +7430,9 @@
                 <predecessor_topology>B0.1.PT19</predecessor_topology>
                 <name>Cal19/1.19/PP</name>
                 <description>Cal19/1.19/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -7195,12 +7471,14 @@
                 <predecessor_topology>B0.1.PTLB19</predecessor_topology>
                 <name>Cal19/1.19/LBP</name>
                 <description>Cal19/1.19/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -7226,6 +7504,9 @@
                 <predecessor_topology>B0.1.PT20</predecessor_topology>
                 <name>Cal20/1.20/PP</name>
                 <description>Cal20/1.20/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -7264,12 +7545,14 @@
                 <predecessor_topology>B0.1.PTLB20</predecessor_topology>
                 <name>Cal20/1.20/LBP</name>
                 <description>Cal20/1.20/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -7295,6 +7578,9 @@
                 <predecessor_topology>B0.1.PT21</predecessor_topology>
                 <name>Cal21/1.21/PP</name>
                 <description>Cal21/1.21/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -7333,12 +7619,14 @@
                 <predecessor_topology>B0.1.PTLB21</predecessor_topology>
                 <name>Cal21/1.21/LBP</name>
                 <description>Cal21/1.21/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -7364,6 +7652,9 @@
                 <predecessor_topology>B0.1.PT22</predecessor_topology>
                 <name>Cal22/1.22/PP</name>
                 <description>Cal22/1.22/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -7402,12 +7693,14 @@
                 <predecessor_topology>B0.1.PTLB22</predecessor_topology>
                 <name>Cal22/1.22/LBP</name>
                 <description>Cal22/1.22/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -7433,6 +7726,9 @@
                 <predecessor_topology>B0.1.PT23</predecessor_topology>
                 <name>Cal23/1.23/PP</name>
                 <description>Cal23/1.23/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -7471,12 +7767,14 @@
                 <predecessor_topology>B0.1.PTLB23</predecessor_topology>
                 <name>Cal23/1.23/LBP</name>
                 <description>Cal23/1.23/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -7502,6 +7800,9 @@
                 <predecessor_topology>B0.1.PT24</predecessor_topology>
                 <name>Cal24/1.24/PP</name>
                 <description>Cal24/1.24/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -7540,12 +7841,14 @@
                 <predecessor_topology>B0.1.PTLB24</predecessor_topology>
                 <name>Cal24/1.24/LBP</name>
                 <description>Cal24/1.24/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -7571,6 +7874,9 @@
                 <predecessor_topology>B0.1.PT25</predecessor_topology>
                 <name>Cal25/1.25/PP</name>
                 <description>Cal25/1.25/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -7609,12 +7915,14 @@
                 <predecessor_topology>B0.1.PTLB25</predecessor_topology>
                 <name>Cal25/1.25/LBP</name>
                 <description>Cal25/1.25/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -7640,6 +7948,9 @@
                 <predecessor_topology>B0.1.PT26</predecessor_topology>
                 <name>Cal26/1.26/PP</name>
                 <description>Cal26/1.26/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -7678,12 +7989,14 @@
                 <predecessor_topology>B0.1.PTLB26</predecessor_topology>
                 <name>Cal26/1.26/LBP</name>
                 <description>Cal26/1.26/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -7709,6 +8022,9 @@
                 <predecessor_topology>B0.1.PT27</predecessor_topology>
                 <name>Cal27/1.27/PP</name>
                 <description>Cal27/1.27/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -7747,12 +8063,14 @@
                 <predecessor_topology>B0.1.PTLB27</predecessor_topology>
                 <name>Cal27/1.27/LBP</name>
                 <description>Cal27/1.27/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -7778,6 +8096,9 @@
                 <predecessor_topology>B0.1.PT28</predecessor_topology>
                 <name>Cal28/1.28/PP</name>
                 <description>Cal28/1.28/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -7816,12 +8137,14 @@
                 <predecessor_topology>B0.1.PTLB28</predecessor_topology>
                 <name>Cal28/1.28/LBP</name>
                 <description>Cal28/1.28/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -7847,6 +8170,9 @@
                 <predecessor_topology>B0.1.PT29</predecessor_topology>
                 <name>Cal29/1.29/PP</name>
                 <description>Cal29/1.29/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -7885,12 +8211,14 @@
                 <predecessor_topology>B0.1.PTLB29</predecessor_topology>
                 <name>Cal29/1.29/LBP</name>
                 <description>Cal29/1.29/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -7916,6 +8244,9 @@
                 <predecessor_topology>B0.1.PT30</predecessor_topology>
                 <name>Cal30/1.30/PP</name>
                 <description>Cal30/1.30/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -7954,12 +8285,14 @@
                 <predecessor_topology>B0.1.PTLB30</predecessor_topology>
                 <name>Cal30/1.30/LBP</name>
                 <description>Cal30/1.30/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -7985,6 +8318,9 @@
                 <predecessor_topology>B0.1.PT31</predecessor_topology>
                 <name>Cal31/1.31/PP</name>
                 <description>Cal31/1.31/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -8023,12 +8359,14 @@
                 <predecessor_topology>B0.1.PTLB31</predecessor_topology>
                 <name>Cal31/1.31/LBP</name>
                 <description>Cal31/1.31/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -8054,6 +8392,9 @@
                 <predecessor_topology>B0.1.PT32</predecessor_topology>
                 <name>Cal32/1.32/PP</name>
                 <description>Cal32/1.32/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -8092,12 +8433,14 @@
                 <predecessor_topology>B0.1.PTLB32</predecessor_topology>
                 <name>Cal32/1.32/LBP</name>
                 <description>Cal32/1.32/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -8123,6 +8466,9 @@
                 <predecessor_topology>B0.1.PT33</predecessor_topology>
                 <name>Cal33/1.33/PP</name>
                 <description>Cal33/1.33/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -8161,12 +8507,14 @@
                 <predecessor_topology>B0.1.PTLB33</predecessor_topology>
                 <name>Cal33/1.33/LBP</name>
                 <description>Cal33/1.33/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -8192,6 +8540,9 @@
                 <predecessor_topology>B0.1.PT34</predecessor_topology>
                 <name>Cal34/1.34/PP</name>
                 <description>Cal34/1.34/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -8230,12 +8581,14 @@
                 <predecessor_topology>B0.1.PTLB34</predecessor_topology>
                 <name>Cal34/1.34/LBP</name>
                 <description>Cal34/1.34/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -8261,6 +8614,9 @@
                 <predecessor_topology>B0.1.PT35</predecessor_topology>
                 <name>Cal35/1.35/PP</name>
                 <description>Cal35/1.35/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -8299,12 +8655,14 @@
                 <predecessor_topology>B0.1.PTLB35</predecessor_topology>
                 <name>Cal35/1.35/LBP</name>
                 <description>Cal35/1.35/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -8330,6 +8688,9 @@
                 <predecessor_topology>B0.1.PT36</predecessor_topology>
                 <name>Cal36/1.36/PP</name>
                 <description>Cal36/1.36/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -8368,12 +8729,14 @@
                 <predecessor_topology>B0.1.PTLB36</predecessor_topology>
                 <name>Cal36/1.36/LBP</name>
                 <description>Cal36/1.36/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -8399,6 +8762,9 @@
                 <predecessor_topology>B0.1.PT37</predecessor_topology>
                 <name>Cal37/1.37/PP</name>
                 <description>Cal37/1.37/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -8437,12 +8803,14 @@
                 <predecessor_topology>B0.1.PTLB37</predecessor_topology>
                 <name>Cal37/1.37/LBP</name>
                 <description>Cal37/1.37/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -8468,6 +8836,9 @@
                 <predecessor_topology>B0.1.PT38</predecessor_topology>
                 <name>Cal38/1.38/PP</name>
                 <description>Cal38/1.38/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -8506,12 +8877,14 @@
                 <predecessor_topology>B0.1.PTLB38</predecessor_topology>
                 <name>Cal38/1.38/LBP</name>
                 <description>Cal38/1.38/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -8537,6 +8910,9 @@
                 <predecessor_topology>B0.1.PT39</predecessor_topology>
                 <name>Cal39/1.39/PP</name>
                 <description>Cal39/1.39/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -8575,12 +8951,14 @@
                 <predecessor_topology>B0.1.PTLB39</predecessor_topology>
                 <name>Cal39/1.39/LBP</name>
                 <description>Cal39/1.39/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -8606,6 +8984,9 @@
                 <predecessor_topology>B0.1.PT40</predecessor_topology>
                 <name>Cal40/1.40/PP</name>
                 <description>Cal40/1.40/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -8644,12 +9025,14 @@
                 <predecessor_topology>B0.1.PTLB40</predecessor_topology>
                 <name>Cal40/1.40/LBP</name>
                 <description>Cal40/1.40/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -8675,6 +9058,9 @@
                 <predecessor_topology>B0.1.PT41</predecessor_topology>
                 <name>Cal41/1.41/PP</name>
                 <description>Cal41/1.41/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -8713,12 +9099,14 @@
                 <predecessor_topology>B0.1.PTLB41</predecessor_topology>
                 <name>Cal41/1.41/LBP</name>
                 <description>Cal41/1.41/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -8744,6 +9132,9 @@
                 <predecessor_topology>B0.1.PT42</predecessor_topology>
                 <name>Cal42/1.42/PP</name>
                 <description>Cal42/1.42/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -8782,12 +9173,14 @@
                 <predecessor_topology>B0.1.PTLB42</predecessor_topology>
                 <name>Cal42/1.42/LBP</name>
                 <description>Cal42/1.42/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -8813,6 +9206,9 @@
                 <predecessor_topology>B0.1.PT43</predecessor_topology>
                 <name>Cal43/1.43/PP</name>
                 <description>Cal43/1.43/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -8851,12 +9247,14 @@
                 <predecessor_topology>B0.1.PTLB43</predecessor_topology>
                 <name>Cal43/1.43/LBP</name>
                 <description>Cal43/1.43/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -8882,6 +9280,9 @@
                 <predecessor_topology>B0.1.PT44</predecessor_topology>
                 <name>Cal44/1.44/PP</name>
                 <description>Cal44/1.44/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -8920,12 +9321,14 @@
                 <predecessor_topology>B0.1.PTLB44</predecessor_topology>
                 <name>Cal44/1.44/LBP</name>
                 <description>Cal44/1.44/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -8951,6 +9354,9 @@
                 <predecessor_topology>B0.1.PT45</predecessor_topology>
                 <name>Cal45/1.45/PP</name>
                 <description>Cal45/1.45/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -8989,12 +9395,14 @@
                 <predecessor_topology>B0.1.PTLB45</predecessor_topology>
                 <name>Cal45/1.45/LBP</name>
                 <description>Cal45/1.45/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -9020,6 +9428,9 @@
                 <predecessor_topology>B0.1.PT46</predecessor_topology>
                 <name>Cal46/1.46/PP</name>
                 <description>Cal46/1.46/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -9058,12 +9469,14 @@
                 <predecessor_topology>B0.1.PTLB46</predecessor_topology>
                 <name>Cal46/1.46/LBP</name>
                 <description>Cal46/1.46/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -9089,6 +9502,9 @@
                 <predecessor_topology>B0.1.PT47</predecessor_topology>
                 <name>Cal47/1.47/PP</name>
                 <description>Cal47/1.47/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -9127,12 +9543,14 @@
                 <predecessor_topology>B0.1.PTLB47</predecessor_topology>
                 <name>Cal47/1.47/LBP</name>
                 <description>Cal47/1.47/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -9158,6 +9576,9 @@
                 <predecessor_topology>B0.1.PT48</predecessor_topology>
                 <name>Cal48/1.48/PP</name>
                 <description>Cal48/1.48/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -9196,12 +9617,14 @@
                 <predecessor_topology>B0.1.PTLB48</predecessor_topology>
                 <name>Cal48/1.48/LBP</name>
                 <description>Cal48/1.48/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -9227,6 +9650,9 @@
                 <predecessor_topology>B0.1.PT49</predecessor_topology>
                 <name>Cal49/1.49/PP</name>
                 <description>Cal49/1.49/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -9265,12 +9691,14 @@
                 <predecessor_topology>B0.1.PTLB49</predecessor_topology>
                 <name>Cal49/1.49/LBP</name>
                 <description>Cal49/1.49/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -9296,6 +9724,9 @@
                 <predecessor_topology>B0.1.PT50</predecessor_topology>
                 <name>Cal50/1.50/PP</name>
                 <description>Cal50/1.50/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -9334,12 +9765,14 @@
                 <predecessor_topology>B0.1.PTLB50</predecessor_topology>
                 <name>Cal50/1.50/LBP</name>
                 <description>Cal50/1.50/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -9365,6 +9798,9 @@
                 <predecessor_topology>B0.1.PT51</predecessor_topology>
                 <name>Cal51/1.51/PP</name>
                 <description>Cal51/1.51/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -9403,12 +9839,14 @@
                 <predecessor_topology>B0.1.PTLB51</predecessor_topology>
                 <name>Cal51/1.51/LBP</name>
                 <description>Cal51/1.51/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -9434,6 +9872,9 @@
                 <predecessor_topology>B0.1.PT52</predecessor_topology>
                 <name>Cal52/1.52/PP</name>
                 <description>Cal52/1.52/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -9472,12 +9913,14 @@
                 <predecessor_topology>B0.1.PTLB52</predecessor_topology>
                 <name>Cal52/1.52/LBP</name>
                 <description>Cal52/1.52/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -9503,6 +9946,9 @@
                 <predecessor_topology>B0.1.PT53</predecessor_topology>
                 <name>Cal53/1.53/PP</name>
                 <description>Cal53/1.53/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -9541,12 +9987,14 @@
                 <predecessor_topology>B0.1.PTLB53</predecessor_topology>
                 <name>Cal53/1.53/LBP</name>
                 <description>Cal53/1.53/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -9572,6 +10020,9 @@
                 <predecessor_topology>B0.1.PT54</predecessor_topology>
                 <name>Cal54/1.54/PP</name>
                 <description>Cal54/1.54/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -9610,12 +10061,14 @@
                 <predecessor_topology>B0.1.PTLB54</predecessor_topology>
                 <name>Cal54/1.54/LBP</name>
                 <description>Cal54/1.54/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -9641,6 +10094,9 @@
                 <predecessor_topology>B0.1.PT55</predecessor_topology>
                 <name>Cal55/1.55/PP</name>
                 <description>Cal55/1.55/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -9679,12 +10135,14 @@
                 <predecessor_topology>B0.1.PTLB55</predecessor_topology>
                 <name>Cal55/1.55/LBP</name>
                 <description>Cal55/1.55/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -9710,6 +10168,9 @@
                 <predecessor_topology>B0.1.PT56</predecessor_topology>
                 <name>Cal56/1.56/PP</name>
                 <description>Cal56/1.56/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -9748,12 +10209,14 @@
                 <predecessor_topology>B0.1.PTLB56</predecessor_topology>
                 <name>Cal56/1.56/LBP</name>
                 <description>Cal56/1.56/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -9779,6 +10242,9 @@
                 <predecessor_topology>B0.1.PT57</predecessor_topology>
                 <name>Cal57/1.57/PP</name>
                 <description>Cal57/1.57/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -9817,12 +10283,14 @@
                 <predecessor_topology>B0.1.PTLB57</predecessor_topology>
                 <name>Cal57/1.57/LBP</name>
                 <description>Cal57/1.57/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -9848,6 +10316,9 @@
                 <predecessor_topology>B0.1.PT58</predecessor_topology>
                 <name>Cal58/1.58/PP</name>
                 <description>Cal58/1.58/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -9886,12 +10357,14 @@
                 <predecessor_topology>B0.1.PTLB58</predecessor_topology>
                 <name>Cal58/1.58/LBP</name>
                 <description>Cal58/1.58/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -9917,6 +10390,9 @@
                 <predecessor_topology>B0.1.PT59</predecessor_topology>
                 <name>Cal59/1.59/PP</name>
                 <description>Cal59/1.59/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -9955,12 +10431,14 @@
                 <predecessor_topology>B0.1.PTLB59</predecessor_topology>
                 <name>Cal59/1.59/LBP</name>
                 <description>Cal59/1.59/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>
@@ -9986,6 +10464,9 @@
                 <predecessor_topology>B0.1.PT60</predecessor_topology>
                 <name>Cal60/1.60/PP</name>
                 <description>Cal60/1.60/PP (Phaseshift + adding CS stations)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing LB</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -10024,12 +10505,14 @@
                 <predecessor_topology>B0.1.PTLB60</predecessor_topology>
                 <name>Cal60/1.60/LBP</name>
                 <description>Cal60/1.60/LBP (Long-Baseline Concat)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Long-Baseline Pipeline</defaultTemplate>
                   <duration>1500</duration>
                   <subbandsPerSubbandGroup>8</subbandsPerSubbandGroup>
                   <subbandGroupsPerMS>1</subbandGroupsPerMS>
-                  
                 </pipelineAttributes>
                 <usedDataProducts>
                   <item>

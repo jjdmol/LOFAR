@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-          <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
-          <version>2.10.3</version>
-          <template version="2.10.3" author="Alwin de Jong" changedBy="Alwin de Jong">
-          <description>XML Template generator version 2.10.3</description>
-          </template>
-          <name>LC4_010</name>
+  <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
+  <version>2.16.3</version>
+  <template version="2.16.3" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
+  <description>XML Template generator version 2.16.3</description>
+  </template>
+  <name>LC4_010</name>
+  <children>
+   <item index="0">
+    <lofar:folder topology_parent="false">
+    <name>20150731_G46_run1_HBA</name>
+    <description>20150731_G46_run1_HBA</description>
+    <children>
+   <item index="0">
+        <lofar:folder topology_parent="true">
+          <topology>0</topology>
+          <name>3C380</name>
+          <description>3C380 (Preprocessing)</description>
           <children>
-   <item index="0">
-              <lofar:folder topology_parent="false">
-              <name>20150731_G46_run1_HBA</name>
-              <description>20150731_G46_run1_HBA</description>
-              <children>
-   <item index="0">
-              <lofar:folder topology_parent="true">
-                <topology>0</topology>
-                <name>3C380</name>
-                <description>3C380 (Preprocessing)</description>
-                <children>
           <item index="0">
                 <lofar:observation>
                   <name>3C380RR/1/TO</name>
@@ -95,17 +95,18 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.1.T.SAP000.uv.dps</name>
                     <topology>B0.1.T.SAP000.uv.dps</topology>
                     <status>no_data</status>
+                    
                     </lofar:uvDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -135,17 +136,18 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.1.T.SAP001.uv.dps</name>
                     <topology>B0.1.T.SAP001.uv.dps</topology>
                     <status>no_data</status>
+                    
                     </lofar:uvDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -160,6 +162,9 @@
                 <predecessor_topology>B0.1.T</predecessor_topology>
                 <name>3C380RR/1.0/TP</name>
                 <description>3C380RR/1.0/TP (Preprocessing)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -173,7 +178,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP000.uv.dps">
@@ -186,6 +191,7 @@
                       <name>B0.1.PT0.uv.dps</name>
                       <topology>B0.1.PT0.uv.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
@@ -197,6 +203,9 @@
                 <predecessor_topology>B0.1.T</predecessor_topology>
                 <name>3C380Con/1.1/TP</name>
                 <description>3C380Con/1.1/TP (Preprocessing)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -210,7 +219,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B0.1.T.SAP001.uv.dps">
@@ -223,20 +232,21 @@
                       <name>B0.1.PT1.uv.dps</name>
                       <topology>B0.1.PT1.uv.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
               </lofar:pipeline>
             </item>
 </children>
-        </lofar:folder>
-        </item>
+  </lofar:folder>
+  </item>
    <item index="0">
-              <lofar:folder topology_parent="true">
-                <topology>0</topology>
-                <name>20150731_G46_run1_HBA</name>
-                <description>20150731_G46_run1_HBA (Preprocessing)</description>
-                <children>
+        <lofar:folder topology_parent="true">
+          <topology>0</topology>
+          <name>20150731_G46_run1_HBA</name>
+          <description>20150731_G46_run1_HBA (Preprocessing)</description>
+          <children>
           <item index="0">
                 <lofar:observation>
                   <name>G46_hba_RRL/1/TO</name>
@@ -315,17 +325,18 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B1.1.T.SAP000.uv.dps</name>
                     <topology>B1.1.T.SAP000.uv.dps</topology>
                     <status>no_data</status>
+                    
                     </lofar:uvDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -355,17 +366,18 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B1.1.T.SAP001.uv.dps</name>
                     <topology>B1.1.T.SAP001.uv.dps</topology>
                     <status>no_data</status>
+                    
                     </lofar:uvDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -395,17 +407,18 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B1.1.T.SAP002.uv.dps</name>
                     <topology>B1.1.T.SAP002.uv.dps</topology>
                     <status>no_data</status>
+                    
                     </lofar:uvDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -420,6 +433,9 @@
                 <predecessor_topology>B1.1.T</predecessor_topology>
                 <name>G46_hba_RRL/1.0/TP</name>
                 <description>G46_hba_RRL/1.0/TP (Preprocessing)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -433,7 +449,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B1.1.T.SAP000.uv.dps">
@@ -446,6 +462,7 @@
                       <name>B1.1.PT0.uv.dps</name>
                       <topology>B1.1.PT0.uv.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
@@ -457,6 +474,9 @@
                 <predecessor_topology>B1.1.T</predecessor_topology>
                 <name>G46_hba_CNT/1.1/TP</name>
                 <description>G46_hba_CNT/1.1/TP (Preprocessing)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -470,7 +490,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B1.1.T.SAP001.uv.dps">
@@ -483,6 +503,7 @@
                       <name>B1.1.PT1.uv.dps</name>
                       <topology>B1.1.PT1.uv.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
@@ -494,6 +515,9 @@
                 <predecessor_topology>B1.1.T</predecessor_topology>
                 <name>phase_ref/1.2/TP</name>
                 <description>phase_ref/1.2/TP (Preprocessing)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -507,7 +531,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B1.1.T.SAP002.uv.dps">
@@ -520,20 +544,21 @@
                       <name>B1.1.PT2.uv.dps</name>
                       <topology>B1.1.PT2.uv.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
               </lofar:pipeline>
             </item>
 </children>
-        </lofar:folder>
-        </item>
+  </lofar:folder>
+  </item>
    <item index="0">
-              <lofar:folder topology_parent="true">
-                <topology>0</topology>
-                <name>3C380</name>
-                <description>3C380 (Preprocessing)</description>
-                <children>
+        <lofar:folder topology_parent="true">
+          <topology>0</topology>
+          <name>3C380</name>
+          <description>3C380 (Preprocessing)</description>
+          <children>
           <item index="0">
                 <lofar:observation>
                   <name>3C380RR/1/TO</name>
@@ -612,17 +637,18 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B2.1.T.SAP000.uv.dps</name>
                     <topology>B2.1.T.SAP000.uv.dps</topology>
                     <status>no_data</status>
+                    
                     </lofar:uvDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -652,17 +678,18 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B2.1.T.SAP001.uv.dps</name>
                     <topology>B2.1.T.SAP001.uv.dps</topology>
                     <status>no_data</status>
+                    
                     </lofar:uvDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -677,6 +704,9 @@
                 <predecessor_topology>B2.1.T</predecessor_topology>
                 <name>3C380RR/1.0/TP</name>
                 <description>3C380RR/1.0/TP (Preprocessing)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -690,7 +720,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B2.1.T.SAP000.uv.dps">
@@ -703,6 +733,7 @@
                       <name>B2.1.PT0.uv.dps</name>
                       <topology>B2.1.PT0.uv.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
@@ -714,6 +745,9 @@
                 <predecessor_topology>B2.1.T</predecessor_topology>
                 <name>3C380Con/1.1/TP</name>
                 <description>3C380Con/1.1/TP (Preprocessing)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -727,7 +761,7 @@
                     <demixIfNeeded></demixIfNeeded>
                     <ignoreTarget></ignoreTarget>
                   </demixingParameters>
-                </pipelineAttributes>
+</pipelineAttributes>
                 <usedDataProducts>
                   <item>
                     <lofar:uvDataProduct topology="B2.1.T.SAP001.uv.dps">
@@ -740,16 +774,17 @@
                       <name>B2.1.PT1.uv.dps</name>
                       <topology>B2.1.PT1.uv.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:uvDataProduct>
                   </item>
                 </resultDataProducts>
               </lofar:pipeline>
             </item>
 </children>
-        </lofar:folder>
-        </item>
+  </lofar:folder>
+  </item>
 </children>
-    </lofar:folder>
-    </item>
+  </lofar:folder>
+  </item>
           </children>
   </lofar:project>

@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-          <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
-          <version>2.6.0</version>
-          <template version="2.6.0" author="Alwin de Jong" changedBy="Alwin de Jong">
-          <description>XML Template generator version 2.6.0</description>
-          </template>
-          <name>test_lofar</name>
-          <children>
+  <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
+  <version>2.16.3</version>
+  <template version="2.16.3" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
+  <description>XML Template generator version 2.16.3</description>
+  </template>
+  <name>test_lofar</name>
+  <children>
    <item index="0">
-              <lofar:folder topology_parent="true">
-                <topology>0</topology>
-                <name>alwin1</name>
-                <description>example template (Pulsar)</description>
-                <children>
+        <lofar:folder topology_parent="true">
+          <topology>0</topology>
+          <name>alwin1</name>
+          <description>example template (Pulsar)</description>
+          <children>
           <item index="0">
                 <lofar:observation>
                   <name>Crab test/1/TO</name>
@@ -90,24 +90,26 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.1.T.SAP000.uv.dps</name>
                     <topology>B0.1.T.SAP000.uv.dps</topology>
                     <status>no_data</status>
+                    
                     </lofar:uvDataProduct>
                   </item>
-                  <item>
+                                  <item>
                     <lofar:bfDataProduct>
                     <name>B0.1.T.SAP000.is</name>
                     <topology>B0.1.T.SAP000.is</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -122,6 +124,9 @@
                 <predecessor_topology>B0.1.T</predecessor_topology>
                 <name>Crab test/1.0/PP</name>
                 <description>Crab test/1.0/PP (Pulsar Pipeline)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Pulsar Pipeline</defaultTemplate>
                   <duration>600</duration>
@@ -160,6 +165,7 @@
                       <name>B0.1.PT0.pu.dps</name>
                       <topology>B0.1.PT0.pu.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:pulsarDataProduct>
                   </item>
                 </resultDataProducts>
@@ -243,24 +249,26 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            
+                              
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:uvDataProduct>
                     <name>B0.2.T.SAP000.uv.dps</name>
                     <topology>B0.2.T.SAP000.uv.dps</topology>
                     <status>no_data</status>
+                    
                     </lofar:uvDataProduct>
                   </item>
-                  <item>
+                                  <item>
                     <lofar:bfDataProduct>
                     <name>B0.2.T.SAP000.is</name>
                     <topology>B0.2.T.SAP000.is</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -275,6 +283,9 @@
                 <predecessor_topology>B0.2.T</predecessor_topology>
                 <name>Crab test/2.0/PP</name>
                 <description>Crab test/2.0/PP (Pulsar Pipeline)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Pulsar Pipeline</defaultTemplate>
                   <duration>600</duration>
@@ -313,13 +324,14 @@
                       <name>B0.2.PT0.pu.dps</name>
                       <topology>B0.2.PT0.pu.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:pulsarDataProduct>
                   </item>
                 </resultDataProducts>
               </lofar:pipeline>
             </item>
 </children>
-        </lofar:folder>
-        </item>
+  </lofar:folder>
+  </item>
           </children>
   </lofar:project>
