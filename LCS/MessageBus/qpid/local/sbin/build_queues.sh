@@ -18,7 +18,7 @@ if [ "$host" == "CCU001" ]; then
   ccu="CCU001.control.lofar"
   mcu="MCU001.control.lofar" 
   sas="SAS001.control.lofar"
-  cobalt_root="cbm00" 
+  cobalt_root="cbt00" 
   cobalt_start=1
   cobalt_end=8
   mom="LCS023.control.lofar"
@@ -30,7 +30,7 @@ else
   ccu="CCU099.control.lofar"
   mcu="mcu099" # see /etc/hosts
   sas="sas099" # see /etc/hosts
-  cobalt_root="cbm00" 
+  cobalt_root="cbt00" 
   cobalt_start=9
   cobalt_end=9
   mom="LCS028.control.lofar"

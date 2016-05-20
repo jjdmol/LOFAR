@@ -303,25 +303,25 @@ E
 1
 LANG:1 0 
 
-80 "Angle1" 8 1 0 "s" 1
+100 "Angle1" 8 1 0 "s" 1
 LANG:1 6 Angle1
 E
 1
 LANG:1 0 
 
-115 "Angle2" 8 1 0 "s" 1
+100 "Angle2" 8 1 0 "s" 1
 LANG:1 6 Angle2
 E
 1
 LANG:1 0 
 
-115 "subbands" 60 1 0 "s" 1
+100 "subbands" 60 1 0 "s" 1
 LANG:1 8 subbands
 E
 1
 LANG:1 0 
 
-1280 
+672 
 18 18 "" 1 1
 LANG:1 2 #8
 "" 1 1
@@ -341,7 +341,7 @@ LANG:1 2 #1
 10 8
 1
 LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
-0 0 0 1 1 7
+0 0 0 2 1 7
 1 0
 2 4
 "PRIMITIVE_TEXT10"
@@ -556,7 +556,7 @@ LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 2 16
 "PRIMITIVE_TEXT16"
 ""
-1 -47081.52906519605 -3814 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -36807.87717661354 -3528 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 33 0 0 0 0 0
 E E E
@@ -933,7 +933,7 @@ LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 2 36
 "PRIMITIVE_TEXT25"
 ""
-1 -47081.52906519605 -3616 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -36807.87717661354 -3352 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 68 0 0 0 0 0
 E E E
@@ -968,7 +968,7 @@ LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 2 40
 "PRIMITIVE_TEXT27"
 ""
-1 -47081.52906519605 -3400 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -36807.87717661354 -3160 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 72 0 0 0 0 0
 E E E

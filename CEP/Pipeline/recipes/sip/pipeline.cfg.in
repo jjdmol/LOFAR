@@ -4,6 +4,7 @@ casaroot = @CASACORE_ROOT_DIR@
 pyraproot = @PYRAP_ROOT_DIR@
 hdf5root = $ENV{HDF5_ROOT}
 wcsroot = @WCSLIB_ROOT_DIR@
+aoflaggerroot=@AOFLAGGER_ROOT_DIR@
 pythonpath = @PYTHON_INSTALL_DIR@
 runtime_directory = %(lofarroot)s/var/run/pipeline
 recipe_directories = [%(pythonpath)s/lofarpipe/recipes]

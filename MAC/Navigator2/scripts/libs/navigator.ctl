@@ -46,27 +46,19 @@
 
 global bool       g_objectReady           = true;     // Can be used for timing by objects
 
-// store the current datapoint
 global string     g_currentDatapoint          = MainDBName+"LOFAR_PIC_Europe";
-
-// store the last chosen panel for each tab
 global string     g_lastHardwareDatapoint     = MainDBName+"LOFAR_PIC_Europe";
 global string     g_lastProcessesDatapoint    = MainDBName+"LOFAR_PermSW";
 global string     g_lastObservationsDatapoint = MainDBName+"LOFAR_ObsSW";
 global string     g_lastPipelinesDatapoint    = MainDBName+"LOFAR_ObsSW";
-
-// store the current active panel
 global string     g_activePanel               = "main.pnl";
 
-// store the last chosen antenna type
-global string     g_activeAntennaType         = "HBA"; 
 
 
 global dyn_string g_observationsList;  // holds active observations
 global dyn_string g_pipelinesList;     // holds active pipelines
 global dyn_string g_processesList;     // holds active software
 global mapping    g_observations;      //
-global dyn_string g_involved_stations; // holds stations that were involved in a distchange
 
 global dyn_string g_stationList;       // holds valid stations for choices in the viewBox
 // Station based globals

@@ -54,7 +54,6 @@ namespace LOFAR {
             "timeslotsperparmupdate", 500)),
         itsSigmaMMSE   (parset.getDouble (prefix + "MMSE.Sigma", 0)),
         itsUpdateWeights (parset.getBool (prefix + "updateweights", false)),
-        itsCount       (0),
         itsTimeStep    (0),
         itsNCorr       (0),
         itsTimeInterval (-1),
@@ -186,23 +185,6 @@ namespace LOFAR {
 
       initDataArrays();
       itsFlagCounter.init(getInfo());
-
-      // Check that channels are evenly spaced
-      if (info().nchan()>1) {
-        Vector<Double> upFreq = info().chanFreqs()(
-                                  Slicer(IPosition(1,1),
-                                         IPosition(1,info().nchan()-1)));
-        Vector<Double> lowFreq = info().chanFreqs()(
-                                  Slicer(IPosition(1,0),
-                                         IPosition(1,info().nchan()-1)));
-        Double freqstep0=upFreq(0)-lowFreq(0);
-        // Compare up to 1kHz accuracy
-        bool regularChannels=allNearAbs(upFreq-lowFreq, freqstep0, 1.e3) &&
-                             allNearAbs(info().chanWidths(),
-                                        info().chanWidths()(0), 1.e3);
-        ASSERTSTR(regularChannels, 
-                  "ApplyCal requires evenly spaced channels.");
-      }
     }
 
     void ApplyCal::show (std::ostream& os) const
@@ -248,8 +230,6 @@ namespace LOFAR {
       itsInput->fetchWeights (bufin, itsBuffer, itsTimer);
       float* weight = itsBuffer.getWeights().data();
 
-      bool* flag = itsBuffer.getFlags().data();
-
       size_t nchan = itsBuffer.getData().shape()[1];
 
 #pragma omp parallel for
@@ -258,23 +238,22 @@ namespace LOFAR {
           if (itsParms.size()>2) {
             applyFull( &data[bl * itsNCorr * nchan + chan * itsNCorr ],
                 &weight[bl * itsNCorr * nchan + chan * itsNCorr ],
-                &flag[  bl * itsNCorr * nchan + chan * itsNCorr ],
-                bl, chan, itsTimeStep);
+                info().getAnt1()[bl], info().getAnt2()[bl], chan, itsTimeStep);
           }
           else {
             applyDiag( &data[bl * itsNCorr * nchan + chan * itsNCorr ],
                 &weight[bl * itsNCorr * nchan + chan * itsNCorr ],
-                &flag[  bl * itsNCorr * nchan + chan * itsNCorr ],
-                bl, chan, itsTimeStep);
+                info().getAnt1()[bl], info().getAnt2()[bl], chan, itsTimeStep);
           }
         }
       }
 
+      MSReader::flagInfNaN(itsBuffer.getData(), itsBuffer.getFlags(),
+                           itsFlagCounter);
+
       itsTimer.stop();
       getNextStep()->process(itsBuffer);
-
-      itsCount++;
-      return true;
+      return false;
     }
 
     void ApplyCal::finish()
@@ -299,16 +278,14 @@ namespace LOFAR {
 
       uint numFreqs         (info().chanFreqs().size());
       double freqInterval  (info().chanWidths()[0]);
-      if (numFreqs>1) { // Handle data with evenly spaced gaps between channels
-        freqInterval = info().chanFreqs()[1]-info().chanFreqs()[0];
-      }
       double minFreq       (info().chanFreqs()[0]-0.5*freqInterval);
       double maxFreq (info().chanFreqs()[numFreqs-1]+0.5*freqInterval);
+
       itsLastTime = bufStartTime + itsTimeSlotsPerParmUpdate * itsTimeInterval;
       uint numTimes = itsTimeSlotsPerParmUpdate;
 
       double lastMSTime = info().startTime() + info().ntime() * itsTimeInterval;
-      if (itsLastTime > lastMSTime && !nearAbs(itsLastTime, lastMSTime, 1.e-3)) {
+      if (itsLastTime > lastMSTime) {
         itsLastTime = lastMSTime;
         numTimes = info().ntime() % itsTimeSlotsPerParmUpdate;
       }
@@ -496,33 +473,14 @@ namespace LOFAR {
       }
     }
 
-    void ApplyCal::applyDiag (Complex* vis, float* weight, bool* flag,
-                              uint bl, int chan, int time) {
+    void ApplyCal::applyDiag (Complex* vis, float* weight, int antA,
+        int antB, int chan, int time) {
       int timeFreqOffset=(time*info().nchan())+chan;
-
-      uint antA = info().getAnt1()[bl];
-      uint antB = info().getAnt2()[bl];
 
       DComplex diag0A = itsParms[0][antA][timeFreqOffset];
       DComplex diag1A = itsParms[1][antA][timeFreqOffset];
       DComplex diag0B = itsParms[0][antB][timeFreqOffset];
       DComplex diag1B = itsParms[1][antB][timeFreqOffset];
-
-      // If parameter is NaN or inf, do not apply anything and flag the data
-      if (! (isFinite(diag0A.real()) && isFinite(diag0A.imag()) &&
-             isFinite(diag0B.real()) && isFinite(diag0B.imag()) &&
-             isFinite(diag1A.real()) && isFinite(diag1A.imag()) &&
-             isFinite(diag1B.real()) && isFinite(diag1B.imag())) ) {
-        // Only update flagcounter for first correlation
-        if (!flag[0]) {
-          itsFlagCounter.incrChannel(chan);
-          itsFlagCounter.incrBaseline(bl);
-        }
-        for (uint corr=0; corr<itsNCorr; ++corr) {
-          flag[corr]=true;
-        }
-        return;
-      }
 
       vis[0] *= diag0A * conj(diag0B);
       vis[1] *= diag0A * conj(diag1B);
@@ -552,14 +510,11 @@ namespace LOFAR {
       v[3] = v0 * invDet;
     }
 
-    void ApplyCal::applyFull (Complex* vis, float* weight, bool* flag,
-                              uint bl, int chan, int time) {
+    void ApplyCal::applyFull (Complex* vis, float* weight, int antA,
+        int antB, int chan, int time) {
       int timeFreqOffset=(time*info().nchan())+chan;
       DComplex gainA[4];
       DComplex gainB[4];
-
-      uint antA = info().getAnt1()[bl];
-      uint antB = info().getAnt2()[bl];
 
       gainA[0] = itsParms[0][antA][timeFreqOffset];
       gainA[1] = itsParms[1][antA][timeFreqOffset];
@@ -575,27 +530,6 @@ namespace LOFAR {
       if (itsInvert && itsCorrectType=="fulljones") {
         invert(gainA,itsSigmaMMSE);
         invert(gainB,itsSigmaMMSE);
-      }
-
-      // If parameter is NaN or inf, do not apply anything and flag the data
-      bool anyinfnan = false;
-      for (uint corr=0; corr<itsNCorr; ++corr) {
-        if (! (isFinite(gainA[corr].real()) && isFinite(gainA[corr].imag()) &&
-               isFinite(gainB[corr].real()) && isFinite(gainB[corr].imag())) ) {
-          anyinfnan = true;
-          break;
-        }
-      }
-      if (anyinfnan) {
-        // Only update flag counter for first correlation
-        if (!flag[0]) {
-          itsFlagCounter.incrChannel(chan);
-          itsFlagCounter.incrBaseline(bl);
-        }
-        for (uint corr=0; corr<itsNCorr; ++corr) {
-          flag[corr]=true;
-        }
-        return;
       }
 
       // gainAxvis = gainA * vis
@@ -655,14 +589,6 @@ namespace LOFAR {
                  +cov[3]*(normGainA[3]*normGainB[3]);
         weight[3]=1./weight[3];
       }
-    }
-
-    void ApplyCal::showCounts (std::ostream& os) const
-    {
-      os << endl << "Flags set by ApplyCal " << itsName;
-      os << endl << "=======================" << endl;
-      itsFlagCounter.showBaseline (os, itsCount);
-      itsFlagCounter.showChannel  (os, itsCount);
     }
 
   } //# end namespace

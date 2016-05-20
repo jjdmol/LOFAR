@@ -36,7 +36,7 @@ PIPELINE = "Observation.ObservationControl.PythonControl."
 class ImagePipelineResourceEstimator(BaseResourceEstimator):
     """ ResourceEstimator for Imaging Pipelines
     """
-    def __init__(self):
+    def __init__(self, kwargs, input_files):
         logger.info("init ImagePipelineResourceEstimator")
         BaseResourceEstimator.__init__(self, name='imaging_pipeline')
         self.required_keys = ('Observation.startTime',

@@ -174,24 +174,11 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
         //build tree of resourceGroups
         //note that one resourceGroup can be a child of multiple parents
         if(resourceGroupMemberships.hasOwnProperty('groups')) {
-            var rootGroupIds = [];
-
             for(var groupId in resourceGroupMemberships.groups) {
                 if(resourceGroupMemberships.groups[groupId].parent_ids.length == 0) {
-                    rootGroupIds.push(groupId);
-                }
-            }
-
-            if(rootGroupIds.length == 1)
-            {
-                //don't show single rootnode
-                var rootChildGroupIds = resourceGroupMemberships.groups[rootGroupIds[0]].child_ids;
-                for(var i = 0; i < rootChildGroupIds.length; i++) {
-                    createGanttRowTree(rootChildGroupIds[i], null);
-                }
-            } else {
-                for(var i = 0; i < rootGroupIds.length; i++) {
-                    createGanttRowTree(rootGroupIds[i], null);
+                    //resourceGroup is a root item (no parents)
+                    //so start creating a ganttRow tree for this root and all its descendants
+                    createGanttRowTree(groupId, null);
                 }
             }
         }
@@ -370,29 +357,27 @@ ganttResourceControllerMod.controller('GanttResourceController', ['$scope', 'dat
                 }
 
                 var ganttRows = resourceGroup2GanttRows[groupId];
-                if(ganttRows) {
-                    for(var ganttRow of ganttRows) {
-                        for(var taskId in aggregatedClaims) {
-                            var aggClaimForTask = aggregatedClaims[taskId];
-                            var task = taskDict[taskId];
-                            if(task) {
-                                var claimTask = {
-                                    id: 'aggregatedClaimForTask_' + taskId + '_' + ganttRow.id,
-                                    name: task.name,
-                                    from: aggClaimForTask.starttime,
-                                    to: aggClaimForTask.endtime,
-                                    color: self.resourceClaimStatusColors[aggClaimForTask.status],
-                                    classes: 'claim-task-status-' + task.status,
-                                    raTask: task,
-                                    movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
-                                };
+                for(var ganttRow of ganttRows) {
+                    for(var taskId in aggregatedClaims) {
+                        var aggClaimForTask = aggregatedClaims[taskId];
+                        var task = taskDict[taskId];
+                        if(task) {
+                            var claimTask = {
+                                id: 'aggregatedClaimForTask_' + taskId + '_' + ganttRow.id,
+                                name: task.name,
+                                from: aggClaimForTask.starttime,
+                                to: aggClaimForTask.endtime,
+                                color: self.resourceClaimStatusColors[aggClaimForTask.status],
+                                classes: 'claim-task-status-' + task.status,
+                                raTask: task,
+                                movable: $.inArray(task.status_id, editableTaskStatusIds) > -1
+                            };
 
-                                if(task.id == dataService.selected_task_id) {
-                                    claimTask.classes += ' claim-selected-task';
-                                }
-
-                                ganttRow.tasks.push(claimTask);
+                            if(task.id == dataService.selected_task_id) {
+                                claimTask.classes += ' claim-selected-task';
                             }
+
+                            ganttRow.tasks.push(claimTask);
                         }
                     }
                 }

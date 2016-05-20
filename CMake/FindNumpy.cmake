@@ -1,6 +1,6 @@
 # - Try to find the Python Numpy header files and loadable modules.
 # This find module tries to determine the directory path to the Numpy header
-# files and the location of the loadable module `multiarray`.
+# files and the location of the loadable modules `multiarray` and `scalarmath`.
 #
 # This find module requires that Python is installed on the host system.
 #
@@ -9,6 +9,7 @@
 #  NUMPY_PATH               - root directory of Numpy
 #  NUMPY_INCLUDE_DIR        - directory with the Numpy header files (cached)
 #  NUMPY_MULTIARRAY_LIBRARY - full path to the `multiarray` module (cached)
+#  NUMPY_SCALARMATH_LIBRARY - full path to the `scalarmath` module (cached)
 #  NUMPY_INCLUDE_DIRS       - list of include directories
 #                             (identical to NUMPY_INCLUDE_DIR)
 #  NUMPY_LIBRARIES          - list of Numpy loadable modules
@@ -64,6 +65,12 @@ if(NOT NUMPY_FOUND)
         PATH_SUFFIXES core)
     endif(NOT NUMPY_MULTIARRAY_LIBRARY)
 
+    if(NOT NUMPY_SCALARMATH_LIBRARY)
+      find_library(NUMPY_SCALARMATH_LIBRARY scalarmath
+        HINTS ${NUMPY_PATH}
+        PATH_SUFFIXES core)
+    endif(NOT NUMPY_SCALARMATH_LIBRARY)
+
     # Reset the library prefix.
     set(CMAKE_FIND_LIBRARY_PREFIXES "${_cmake_find_library_prefixes}")
 
@@ -72,13 +79,13 @@ if(NOT NUMPY_FOUND)
   # Handle the QUIETLY and REQUIRED arguments and set NUMPY_FOUND    
   include(FindPackageHandleStandardArgs)
   find_package_handle_standard_args(Numpy DEFAULT_MSG
-    NUMPY_MULTIARRAY_LIBRARY NUMPY_INCLUDE_DIR)
+    NUMPY_MULTIARRAY_LIBRARY NUMPY_SCALARMATH_LIBRARY NUMPY_INCLUDE_DIR)
 
   # Set non-cached variables
   if(NUMPY_FOUND)
     set(NUMPY_INCLUDE_DIRS "${NUMPY_INCLUDE_DIR}")
     set(NUMPY_LIBRARIES 
-      "${NUMPY_MULTIARRAY_LIBRARY}" )
+      "${NUMPY_MULTIARRAY_LIBRARY}" "${NUMPY_SCALARMATH_LIBRARY}")
   endif(NUMPY_FOUND)
   
   # Find the f2py program

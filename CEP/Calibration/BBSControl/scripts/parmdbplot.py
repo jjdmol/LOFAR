@@ -709,7 +709,7 @@ class PlotWindow(QFrame):
             else:
                 # handle single y value (typically y=0)
                 if self.valminmax[i][0] == self.valminmax[i][1]:
-                    ax.set_ylim(self.valminmax[i][0]-1e-5, self.valminmax[i][0]+1e-5)
+                    ax.set_ylim(self.valminmax[i][0]-1, self.valminmax[i][0]+1)
                 elif self.zoom == 0 or (self.polar and i>0):
                     ax.set_ylim(self.valminmax[i][0], self.valminmax[i][1])
                 else:

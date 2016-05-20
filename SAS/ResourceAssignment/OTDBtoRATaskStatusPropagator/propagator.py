@@ -38,7 +38,7 @@ class OTDBtoRATaskStatusPropagator(OTDBBusListener):
         super(OTDBtoRATaskStatusPropagator, self).stop_listening(**kwargs)
 
     def _update_radb_task_status(self, otdb_id, task_status):
-        logger.info("updating radb-task with otdb_id %s to status %s" % (otdb_id, task_status))
+        logger.info("updating task with otdb_id %s to status %s" % (otdb_id, task_status))
         result = self.radb.updateTaskStatusForOtdbId(otdb_id=otdb_id, status=task_status)
 
         if not result or 'updated' not in result or not result['updated']:

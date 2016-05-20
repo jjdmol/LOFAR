@@ -80,18 +80,15 @@ namespace LOFAR {
 
     private:
       // Apply a diagonal Jones matrix to the 2x2 visibilities matrix: A.V.B^H
-      void applyDiag (casa::Complex* vis, float* weight, bool* flag,
-                      uint bl, int chan, int time);
+      void applyDiag (casa::Complex* vis, float* weight, int antA, int antB,
+          int chan, int time);
 
       // Apply a full Jones matrix to the 2x2 visibilities matrix: A.V.B^H
-      void applyFull (casa::Complex* vis, float* weight, bool* flag,
-                      uint bl, int chan, int time);
+      void applyFull (casa::Complex* vis, float* weight, int antA, int antB,
+          int chan, int time);
 
       // Read parameters from the associated parmdb and store them in itsParms
       void updateParms (const double bufStartTime);
-
-      // If needed, show the flag counts.
-      virtual void showCounts (std::ostream&) const;
 
       void initDataArrays();
 
@@ -107,17 +104,15 @@ namespace LOFAR {
       double           itsSigmaMMSE;
       bool             itsUpdateWeights;
 
-      uint             itsCount; // number of steps
-
       // Expressions to search for in itsParmDB
       vector<casa::String>   itsParmExprs;
 
       // parameters, numparms, antennas, time x frequency
       vector<vector<vector<casa::DComplex> > > itsParms;
-      uint            itsTimeStep; // time step within current chunk
+      uint            itsTimeStep;
       uint            itsNCorr;
       double          itsTimeInterval;
-      double          itsLastTime; // last time of current chunk
+      double          itsLastTime;
       FlagCounter     itsFlagCounter;
       bool            itsUseAP;      //# use ampl/phase or real/imag
       NSTimer         itsTimer;

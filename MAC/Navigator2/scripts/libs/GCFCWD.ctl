@@ -81,8 +81,7 @@ GCFCWD_Init() {
                                           CWD_DP+".name",
                                           CWD_DP+".online",
                                           CWD_DP+".lastUpTime",
-                                          CWD_DP+".lastDownTime",
-                                          CWD_DP+".involved");
+                                          CWD_DP+".lastDownTime");
       LOG_DEBUG("GCFCWD.ctl:GCFCWD_Init|Watch-dog started");
     } else {
       LOG_DEBUG("GCFCWD.ctl:GCFCWD_Init|Couldn't connect to "+CWD_DP+".systemID.  Watch-dog NOT started");
@@ -102,15 +101,13 @@ void GCFCWD_connectWD(string dp1, dyn_int systemID,
                       string dp2, dyn_string name,
                       string dp3, dyn_bool up,
                       string dp4, dyn_time upTime,
-                      string dp5, dyn_time downTime,
-                      string dp6, dyn_string involved) {
+                      string dp5, dyn_time downTime) {
   LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|watchdog triggered systemchange");
   LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|systemID: ",systemID);	
   LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|name: ",name);	
   LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|up: ",up);	
   LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|upTime: ",upTime);	
-  LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|downTime: ",downTime);
-  LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|involved: ",involved);
+  LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|downTime: ",downTime);	
        
   int  iPos;
   // check all current systems and update mapping
@@ -169,9 +166,7 @@ void GCFCWD_connectWD(string dp1, dyn_int systemID,
       // if not first call during init process, inform framewotk that something has changed 
       if (!isAnswer()) {
         navCtrl_handleNavigatorEvent("","DistChanged","GCFCWD.ctl");
-        g_involved_stations = involved;
-      } else 
-        g_involved_stations = makeDynString("");    
+      }
     }
   }
   if (g_initializing) {

@@ -101,10 +101,7 @@ class executable_args(LOFARnodeTCP):
                 for k, v in kwargs.items():
                     nodeparset.add(k, v)
                 nodeparset.writeFile(parsetname)
-                if argsformat == 'losoto':
-                    args.append(parsetname)
-                else: 
-                    args.insert(0,parsetname)
+                args.insert(0, parsetname)
 
             try:
             # ****************************************************************

@@ -59,10 +59,10 @@ main() {
 	// retrieve old settings
   
 	fillGlobalList(g_connections[ "SYSTEM"],
-                       g_connections[ "NAME" ],
+                       g_connections[ "NAME"],
                        g_connections[ "UP" ], 
-                       g_connections[ "DOWNTIME" ], 
-                       g_connections[ "UPTIME" ]);
+                       g_connections[ "DOWNTIME"], 
+                       g_connections[ "UPTIME"]);
 	dpConnect("distSystemChanged", TRUE, "_DistManager.State.SystemNums");
 
 	LOG_DEBUG("gcf_cwd.ctl:main|Watch-dog started");
@@ -76,14 +76,13 @@ main() {
 void distSystemChanged(string dp, dyn_int newDistSysList) {
 	LOG_DEBUG("gcf_cwd.ctl:distSystemChanged|distSystemChanged: ", dp, newDistSysList);	
        
-  dyn_string involved_systems= makeDynString();
   int  iPos;
 	// check all current systems and update mapping
  	for (int i = 1; i <= dynlen(newDistSysList); i++) {
- 		 iPos=dynContains ( g_connections[ "SYSTEM" ],newDistSysList[i]);        
+ 		iPos=dynContains ( g_connections[ "SYSTEM" ],newDistSysList[i]);        
+    bool new=false;
 
    	// if the system was not yet available just add
-    bool new = false;
     if (iPos < 1) {
       dynAppend( g_connections[ "SYSTEM" ],newDistSysList[i]);
       iPos=dynlen(g_connections[ "SYSTEM" ]);
@@ -91,29 +90,18 @@ void distSystemChanged(string dp, dyn_int newDistSysList) {
     }
     
     // now store the values
-    g_connections[ "NAME" ][iPos]     = getSystemName(newDistSysList[i]);
-    if (new && dynContains(involved_systems,g_connections[ "NAME" ][iPos]) < 1 ) {
-      // if new we need to know that this system is involved in a distchange 
-      dynAppend(involved_systems,g_connections[ "NAME" ][iPos]); 
-    }
-    if ( dynContains(involved_systems,g_connections[ "NAME" ][iPos]) < 1 && g_connections[ "UP" ] [iPos] == false && !new) {
-      // if this system was  Down before it is also involved
-      dynAppend(involved_systems,g_connections[ "NAME" ][iPos]); 
-    }
-    g_connections[ "UP" ][iPos]       = true;
-    g_connections[ "UPTIME" ][iPos]   = getCurrentTime();
+    g_connections[ "NAME" ][iPos]   = getSystemName(newDistSysList[i]);
+    g_connections[ "UP" ][iPos]     = true;
+    g_connections[ "UPTIME" ][iPos] = getCurrentTime();
  	}
         
-  // now we also have to check if there were systems available b4 that are not included in the triggerlist anymore
+    // now we also have to check if there were systems available b4 that are not included in the triggerlist anymore
   // because that indicates that a system did go offline
 
   for (int i = 1; i <= dynlen(g_connections[ "SYSTEM"]);i++) {
     if (dynContains(newDistSysList,g_connections[ "SYSTEM" ][i]) < 1) {
       g_connections[ "UP" ][i]     = false;
-      g_connections[ "DOWNTIME" ][i] = getCurrentTime();
-      if (!dynContains(involved_systems,g_connections[ "NAME" ]) < 1) {
-        dynAppend(involved_systems,g_connections[ "NAME" ][i]); 
-      }
+      g_connections[ "DOWNTIME" ][i] = getCurrentTime(); 
     }
   }
 
@@ -122,17 +110,15 @@ void distSystemChanged(string dp, dyn_int newDistSysList) {
                g_connections[ "NAME"],
                g_connections[ "UP" ], 
                g_connections[ "DOWNTIME"], 
-               g_connections[ "UPTIME"],
-               involved_systems);
+               g_connections[ "UPTIME"]);
 }
 
 void fillWatchDog(
   dyn_int systems, dyn_string names,dyn_bool up,
-  dyn_time downtime, dyn_time uptime, dyn_string involved 
+  dyn_time downtime, dyn_time uptime 
 )
 {
-  dpSet("__gcf_cwd.systemID",systems,"__gcf_cwd.name",names,"__gcf_cwd.online",up,
-        "__gcf_cwd.lastUpTime",uptime,"__gcf_cwd.lastDownTime",downtime,"__gcf_cwd.involved", involved);
+  dpSet("__gcf_cwd.systemID",systems,"__gcf_cwd.name",names,"__gcf_cwd.online",up,"__gcf_cwd.lastUpTime",uptime,"__gcf_cwd.lastDownTime",downtime);
 }
 
 void fillGlobalList(

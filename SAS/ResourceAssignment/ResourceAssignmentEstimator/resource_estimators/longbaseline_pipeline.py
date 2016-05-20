@@ -34,7 +34,7 @@ PIPELINE = "Observation.ObservationControl.PythonControl."
 class LongBaselinePipelineResourceEstimator(BaseResourceEstimator):
     """ ResourceEstimator for Long Baseline Pipelines
     """
-    def __init__(self):
+    def __init__(self, kwargs, input_files):
         logger.info("init LongBaselinePipelineResourceEstimator")
         BaseResourceEstimator.__init__(self, name='longbaseline_pipeline')
         self.required_keys = ('Observation.startTime',

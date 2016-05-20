@@ -251,7 +251,7 @@ LANG:1 0
 "$name""PermSW_MACScheduler"
 "$station""$station"
 3 13 "PANEL_REF13" -1
-"objects\\Processes\\SWControlerTempObs_small.pnl" 300 0 T 30 1 0 1 2 0
+"objects\\Processes\\SWControler_small.pnl" 300 0 T 30 1 0 1 2 0
 2
 "$name""ObservationControl"
 "$station""$station"

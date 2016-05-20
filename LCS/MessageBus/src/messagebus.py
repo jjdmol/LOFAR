@@ -97,7 +97,8 @@ class Session:
         return "%s%s; {%s}" % (self._queue_prefix(), queue, options)
 
     def _queue_prefix(self):
-        lofarenv = os.environ.get("LOFARENV", "")
+        # disable LOFARENV for 2.16 release
+        lofarenv = "PRODUCTION" # os.environ.get("LOFARENV", "")
         queueprefix = os.environ.get("QUEUE_PREFIX", "")
 
         if lofarenv == "PRODUCTION":

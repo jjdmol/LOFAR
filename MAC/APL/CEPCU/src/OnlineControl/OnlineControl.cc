@@ -564,7 +564,7 @@ uint32 OnlineControl::_startApplications()
 			LOG_DEBUG_STR("Controller for " << applName << " wil be running on " << accHost);
 			remoteCopy(paramFileName,accHost,LOFAR_SHARE_LOCATION);
 
-			string startCmd = formatString("ssh %s LOFARENV=$LOFARENV startBGL.sh %s %s %s %s %d 1", 
+			string startCmd = formatString("ssh %s startBGL.sh %s %s %s %s %d 1", 
 								accHost.c_str(),
 								procName.c_str(),
 								thePS->getString(applPrefix + procName + "._executable").c_str(),
@@ -611,7 +611,7 @@ void OnlineControl::_stopApplications()
 		string	accHost  = thePS->getString(applPrefix+"_hostname", "UNKNOWN_HOST");
 
 		// send stop to BGP
-		string stopCmd = formatString("ssh %s LOFARENV=$LOFARENV stopBGL.sh %s %d", 
+		string stopCmd = formatString("ssh %s stopBGL.sh %s %d", 
 							accHost.c_str(),
 							procName.c_str(),
 							obsID);
