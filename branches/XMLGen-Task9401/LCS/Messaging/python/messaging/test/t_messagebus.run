@@ -1,0 +1,14 @@
+#!/bin/bash -e
+
+# Cleanup on normal exit and on SIGHUP, SIGINT, SIGQUIT, and SIGTERM
+trap 'qpid-config del queue --force $queue' 0 1 2 3 15
+
+# Generate randome queue name
+queue=$(< /dev/urandom tr -dc [:alnum:] | head -c16)
+
+# Create the queue
+qpid-config add queue $queue
+
+# Run the unit test
+source python-coverage.sh
+python_coverage_test "Messaging/python" t_messagebus.py $queue
