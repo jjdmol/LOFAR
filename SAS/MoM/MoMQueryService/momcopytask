@@ -1,0 +1,11 @@
+#!/usr/bin/python
+# $Id: $
+
+'''
+performs an rpc call to the mom copy task service
+'''
+
+from lofar.mom.momqueryservice.momrpc import main
+
+if __name__ == '__main__':
+    main()
