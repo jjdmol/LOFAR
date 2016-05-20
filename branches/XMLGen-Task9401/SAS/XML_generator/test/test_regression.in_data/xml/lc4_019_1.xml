@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-          <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
-          <version>2.10.3</version>
-          <template version="2.10.3" author="Alwin de Jong" changedBy="Alwin de Jong">
-          <description>XML Template generator version 2.10.3</description>
-          </template>
-          <name>LC4_019</name>
+  <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
+  <version>2.16.3</version>
+  <template version="2.16.3" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
+  <description>XML Template generator version 2.16.3</description>
+  </template>
+  <name>LC4_019</name>
+  <children>
+   <item index="0">
+    <lofar:folder topology_parent="false">
+    <name>20150513</name>
+    <description>HBA Coherent Stokes</description>
+    <children>
+   <item index="0">
+        <lofar:folder topology_parent="true">
+          <topology>0</topology>
+          <name>B0031-07</name>
+          <description> (Pulsar)</description>
           <children>
-   <item index="0">
-              <lofar:folder topology_parent="false">
-              <name>20150513</name>
-              <description>HBA Coherent Stokes</description>
-              <children>
-   <item index="0">
-              <lofar:folder topology_parent="true">
-                <topology>0</topology>
-                <name>B0031-07</name>
-                <description> (Pulsar)</description>
-                <children>
           <item index="0">
                 <lofar:observation>
                   <name>PSR_B0031-07/1/TO</name>
@@ -95,21 +95,22 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>0.148997303802</angle1>
-                <angle2>-0.128538651273</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>0.148997303802</angle1>
+                  <angle2>-0.128538651273</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B0.1.T.SAP000.cs</name>
                     <topology>B0.1.T.SAP000.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -124,6 +125,9 @@
                 <predecessor_topology>B0.1.T</predecessor_topology>
                 <name>PSR_B0031-07/1.0/PP</name>
                 <description>PSR_B0031-07/1.0/PP (Pulsar Pipeline)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Pulsar Pipeline</defaultTemplate>
                   <duration>28800</duration>
@@ -162,16 +166,17 @@
                       <name>B0.1.PT0.pu.dps</name>
                       <topology>B0.1.PT0.pu.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:pulsarDataProduct>
                   </item>
                 </resultDataProducts>
               </lofar:pipeline>
             </item>
 </children>
-        </lofar:folder>
-        </item>
+  </lofar:folder>
+  </item>
 </children>
-    </lofar:folder>
-    </item>
+  </lofar:folder>
+  </item>
           </children>
   </lofar:project>

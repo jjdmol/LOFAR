@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
   <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
-  <version>2.15.0</version>
-  <template version="2.15.0" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
-  <description>XML Template generator version 2.15.0</description>
+  <version>2.16.3</version>
+  <template version="2.16.3" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
+  <description>XML Template generator version 2.16.3</description>
   </template>
   <name>LC4_022</name>
   <children>
@@ -121,6 +121,9 @@
                 <predecessor_topology>B0.1.C</predecessor_topology>
                 <name>3C196/1/CPC</name>
                 <description>3C196/1/CPC (Cal Pipe Calibrator)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Calibrator Pipeline (export)</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -275,6 +278,9 @@
                     <predecessor_topology>B0.1.T,B0.1.CPC</predecessor_topology>
                     <name>3C58/1.0/TP</name>
                     <description>3C58/1.0/TP (Target Pipeline)</description>
+                    <currentStatus>
+                      <mom2:openedStatus/>
+                    </currentStatus>
                     <pipelineAttributes>
                       <defaultTemplate>Calibration Pipeline Target</defaultTemplate>
                       <flaggingStrategy>HBAdefault</flaggingStrategy>
@@ -328,6 +334,9 @@
           <predecessor_topology>B0.1.PT0</predecessor_topology>
           <name>3C58/IM</name>
           <description>3C58/IM (Imaging pipeline beam 0)</description>
+          <currentStatus>
+            <mom2:openedStatus/>
+          </currentStatus>
           <imagingPipelineAttributes>
             <defaultTemplate>Imaging Pipeline HBA</defaultTemplate>
             <duration></duration>
@@ -360,6 +369,7 @@
                       <name>B0.PI0.dps</name>
                       <topology>B0.PI0.dps</topology>
                       <status>no_data</status>
+                      
                     </lofar:skyImageDataProduct>
                   </item>
                 </resultDataProducts>
@@ -478,6 +488,9 @@
                 <predecessor_topology>B1.1.T</predecessor_topology>
                 <name>3C196/1.0/TP</name>
                 <description>3C196/1.0/TP (Preprocessing)</description>
+                <currentStatus>
+                  <mom2:openedStatus/>
+                </currentStatus>
                 <pipelineAttributes>
                   <defaultTemplate>Preprocessing Pipeline</defaultTemplate>
                   <flaggingStrategy>HBAdefault</flaggingStrategy>

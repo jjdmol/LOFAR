@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-          <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
-          <version>2.6.0</version>
-          <template version="2.6.0" author="Alwin de Jong" changedBy="Alwin de Jong">
-          <description>XML Template generator version 2.6.0</description>
-          </template>
-          <name>LC2_040</name>
+  <lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar" xmlns:mom2="http://www.astron.nl/MoM2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://lofar.astron.nl:8080/mom3/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://lofar.astron.nl:8080/mom3/schemas/MoM2.xsd ">
+  <version>2.16.3</version>
+  <template version="2.16.3" author="Alwin de Jong,Adriaan Renting" changedBy="Adriaan Renting">
+  <description>XML Template generator version 2.16.3</description>
+  </template>
+  <name>LC2_040</name>
+  <children>
+   <item index="0">
+    <lofar:folder topology_parent="false">
+    <name>20141116-gr5</name>
+    <description>Group 5</description>
+    <children>
+   <item index="0">
+        <lofar:folder topology_parent="true">
+          <topology>0</topology>
+          <name>HBA_110-150</name>
+          <description>HBA 110-150 (none)</description>
           <children>
-   <item index="0">
-              <lofar:folder topology_parent="false">
-              <name>20141116-gr5</name>
-              <description>Group 5</description>
-              <children>
-   <item index="0">
-              <lofar:folder topology_parent="true">
-                <topology>0</topology>
-                <name>HBA_110-150</name>
-                <description>HBA 110-150 (none)</description>
-                <children>
           <item index="0">
                 <lofar:observation>
                   <name>Tile Beam/1/TO</name>
@@ -95,21 +95,22 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.14784701065</angle1>
-                <angle2>0.517562699824</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.14784701065</angle1>
+                  <angle2>0.517562699824</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B0.1.T.SAP000.cs</name>
                     <topology>B0.1.T.SAP000.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -139,26 +140,27 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.22451994283</angle1>
-                <angle2>0.467330039253</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.22451994283</angle1>
+                  <angle2>0.467330039253</angle2>
                 </tiedArrayBeam>
-                <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.21158218069</angle1>
-                <angle2>0.464659152203</angle2>
+                                <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.21158218069</angle1>
+                  <angle2>0.464659152203</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B0.1.T.SAP001.cs</name>
                     <topology>B0.1.T.SAP001.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -188,26 +190,27 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.07117407847</angle1>
-                <angle2>0.567795360396</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.07117407847</angle1>
+                  <angle2>0.567795360396</angle2>
                 </tiedArrayBeam>
-                <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.08860453627</angle1>
-                <angle2>0.572296128204</angle2>
+                                <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.08860453627</angle1>
+                  <angle2>0.572296128204</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B0.1.T.SAP002.cs</name>
                     <topology>B0.1.T.SAP002.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -237,21 +240,22 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.05579111296</angle1>
-                <angle2>0.316382635445</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.05579111296</angle1>
+                  <angle2>0.316382635445</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B0.1.T.SAP003.cs</name>
                     <topology>B0.1.T.SAP003.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -261,14 +265,14 @@
                 </lofar:observation>
                 </item>
 </children>
-        </lofar:folder>
-        </item>
+  </lofar:folder>
+  </item>
    <item index="0">
-              <lofar:folder topology_parent="true">
-                <topology>0</topology>
-                <name>HBA_150-190</name>
-                <description>HBA 150-190 (none)</description>
-                <children>
+        <lofar:folder topology_parent="true">
+          <topology>0</topology>
+          <name>HBA_150-190</name>
+          <description>HBA 150-190 (none)</description>
+          <children>
           <item index="0">
                 <lofar:observation>
                   <name>Tile Beam/1/TO</name>
@@ -347,21 +351,22 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.14784701065</angle1>
-                <angle2>0.517562699824</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.14784701065</angle1>
+                  <angle2>0.517562699824</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B1.1.T.SAP000.cs</name>
                     <topology>B1.1.T.SAP000.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -391,26 +396,27 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.22451994283</angle1>
-                <angle2>0.467330039253</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.22451994283</angle1>
+                  <angle2>0.467330039253</angle2>
                 </tiedArrayBeam>
-                <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.21158218069</angle1>
-                <angle2>0.464659152203</angle2>
+                                <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.21158218069</angle1>
+                  <angle2>0.464659152203</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B1.1.T.SAP001.cs</name>
                     <topology>B1.1.T.SAP001.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -440,26 +446,27 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.07117407847</angle1>
-                <angle2>0.567795360396</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.07117407847</angle1>
+                  <angle2>0.567795360396</angle2>
                 </tiedArrayBeam>
-                <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.08860453627</angle1>
-                <angle2>0.572296128204</angle2>
+                                <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.08860453627</angle1>
+                  <angle2>0.572296128204</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B1.1.T.SAP002.cs</name>
                     <topology>B1.1.T.SAP002.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -489,21 +496,22 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.05579111296</angle1>
-                <angle2>0.316382635445</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.05579111296</angle1>
+                  <angle2>0.316382635445</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B1.1.T.SAP003.cs</name>
                     <topology>B1.1.T.SAP003.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -513,14 +521,14 @@
                 </lofar:observation>
                 </item>
 </children>
-        </lofar:folder>
-        </item>
+  </lofar:folder>
+  </item>
    <item index="0">
-              <lofar:folder topology_parent="true">
-                <topology>0</topology>
-                <name>HBA_210-250 A</name>
-                <description>HBA 210-250 part A (none)</description>
-                <children>
+        <lofar:folder topology_parent="true">
+          <topology>0</topology>
+          <name>HBA_210-250 A</name>
+          <description>HBA 210-250 part A (none)</description>
+          <children>
           <item index="0">
                 <lofar:observation>
                   <name>Tile Beam/1/TO</name>
@@ -599,21 +607,22 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.14784701065</angle1>
-                <angle2>0.517562699824</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.14784701065</angle1>
+                  <angle2>0.517562699824</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B2.1.T.SAP000.cs</name>
                     <topology>B2.1.T.SAP000.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -643,26 +652,27 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.22451994283</angle1>
-                <angle2>0.467330039253</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.22451994283</angle1>
+                  <angle2>0.467330039253</angle2>
                 </tiedArrayBeam>
-                <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.21158218069</angle1>
-                <angle2>0.464659152203</angle2>
+                                <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.21158218069</angle1>
+                  <angle2>0.464659152203</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B2.1.T.SAP001.cs</name>
                     <topology>B2.1.T.SAP001.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -692,26 +702,27 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.07117407847</angle1>
-                <angle2>0.567795360396</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.07117407847</angle1>
+                  <angle2>0.567795360396</angle2>
                 </tiedArrayBeam>
-                <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.08860453627</angle1>
-                <angle2>0.572296128204</angle2>
+                                <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.08860453627</angle1>
+                  <angle2>0.572296128204</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B2.1.T.SAP002.cs</name>
                     <topology>B2.1.T.SAP002.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -741,21 +752,22 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.05579111296</angle1>
-                <angle2>0.316382635445</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.05579111296</angle1>
+                  <angle2>0.316382635445</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B2.1.T.SAP003.cs</name>
                     <topology>B2.1.T.SAP003.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -765,14 +777,14 @@
                 </lofar:observation>
                 </item>
 </children>
-        </lofar:folder>
-        </item>
+  </lofar:folder>
+  </item>
    <item index="0">
-              <lofar:folder topology_parent="true">
-                <topology>0</topology>
-                <name>LBA_10-50</name>
-                <description>Test LBA 10-50 (none)</description>
-                <children>
+        <lofar:folder topology_parent="true">
+          <topology>0</topology>
+          <name>LBA_10-50</name>
+          <description>Test LBA 10-50 (none)</description>
+          <children>
           <item index="0">
                 <lofar:observation>
                   <name>Tile Beam/1/TO</name>
@@ -851,21 +863,22 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.14784701065</angle1>
-                <angle2>0.517562699824</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.14784701065</angle1>
+                  <angle2>0.517562699824</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B3.1.T.SAP000.cs</name>
                     <topology>B3.1.T.SAP000.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -895,26 +908,27 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.22451994283</angle1>
-                <angle2>0.467330039253</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.22451994283</angle1>
+                  <angle2>0.467330039253</angle2>
                 </tiedArrayBeam>
-                <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.21158218069</angle1>
-                <angle2>0.464659152203</angle2>
+                                <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.21158218069</angle1>
+                  <angle2>0.464659152203</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B3.1.T.SAP001.cs</name>
                     <topology>B3.1.T.SAP001.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -944,26 +958,27 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.07117407847</angle1>
-                <angle2>0.567795360396</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.07117407847</angle1>
+                  <angle2>0.567795360396</angle2>
                 </tiedArrayBeam>
-                <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.08860453627</angle1>
-                <angle2>0.572296128204</angle2>
+                                <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.08860453627</angle1>
+                  <angle2>0.572296128204</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B3.1.T.SAP002.cs</name>
                     <topology>B3.1.T.SAP002.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -993,21 +1008,22 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.05579111296</angle1>
-                <angle2>0.316382635445</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.05579111296</angle1>
+                  <angle2>0.316382635445</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B3.1.T.SAP003.cs</name>
                     <topology>B3.1.T.SAP003.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -1017,14 +1033,14 @@
                 </lofar:observation>
                 </item>
 </children>
-        </lofar:folder>
-        </item>
+  </lofar:folder>
+  </item>
    <item index="0">
-              <lofar:folder topology_parent="true">
-                <topology>0</topology>
-                <name>LBA_50-90</name>
-                <description>Test LBA 50-90 (none)</description>
-                <children>
+        <lofar:folder topology_parent="true">
+          <topology>0</topology>
+          <name>LBA_50-90</name>
+          <description>Test LBA 50-90 (none)</description>
+          <children>
           <item index="0">
                 <lofar:observation>
                   <name>Tile Beam/1/TO</name>
@@ -1103,21 +1119,22 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.14784701065</angle1>
-                <angle2>0.517562699824</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.14784701065</angle1>
+                  <angle2>0.517562699824</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B4.1.T.SAP000.cs</name>
                     <topology>B4.1.T.SAP000.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -1147,26 +1164,27 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.22451994283</angle1>
-                <angle2>0.467330039253</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.22451994283</angle1>
+                  <angle2>0.467330039253</angle2>
                 </tiedArrayBeam>
-                <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.21158218069</angle1>
-                <angle2>0.464659152203</angle2>
+                                <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.21158218069</angle1>
+                  <angle2>0.464659152203</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B4.1.T.SAP001.cs</name>
                     <topology>B4.1.T.SAP001.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -1196,26 +1214,27 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.07117407847</angle1>
-                <angle2>0.567795360396</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.07117407847</angle1>
+                  <angle2>0.567795360396</angle2>
                 </tiedArrayBeam>
-                <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.08860453627</angle1>
-                <angle2>0.572296128204</angle2>
+                                <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.08860453627</angle1>
+                  <angle2>0.572296128204</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B4.1.T.SAP002.cs</name>
                     <topology>B4.1.T.SAP002.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -1245,21 +1264,22 @@
                           <nrTabRings>0</nrTabRings>
                           <tabRingSize></tabRingSize>
                             <tiedArrayBeamList>
-                            <tiedArrayBeam>
-                <coherent>true</coherent>
-                <angle1>2.05579111296</angle1>
-                <angle2>0.316382635445</angle2>
+                                              <tiedArrayBeam>
+                  <coherent>true</coherent>
+                  <angle1>2.05579111296</angle1>
+                  <angle2>0.316382635445</angle2>
                 </tiedArrayBeam>
                             </tiedArrayBeamList>
                           </tiedArrayBeams>
                           </specification>
                         </lofar:bfMeasurementAttributes>
                         <resultDataProducts>
-                        <item>
+                                          <item>
                     <lofar:bfDataProduct>
                     <name>B4.1.T.SAP003.cs</name>
                     <topology>B4.1.T.SAP003.cs</topology>
                     <status>no_data</status>
+                    
                     </lofar:bfDataProduct>
                   </item>
                         </resultDataProducts>   
@@ -1269,10 +1289,10 @@
                 </lofar:observation>
                 </item>
 </children>
-        </lofar:folder>
-        </item>
+  </lofar:folder>
+  </item>
 </children>
-    </lofar:folder>
-    </item>
+  </lofar:folder>
+  </item>
           </children>
   </lofar:project>
