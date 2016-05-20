@@ -252,21 +252,23 @@ gridControllerMod.directive('contextMenu', ['$document', function($document) {
             var task = dataService.taskDict[taskId];
             dataService.selected_task_id = taskId;
 
+            var docElement = angular.element($document);
+
             //search for already existing contextmenu element
             while($document.find('#grid-context-menu').length) {
                 //found, remove it, so we can create a fresh one
                 $document.find('#grid-context-menu')[0].remove();
 
                 //unbind document close event handlers
-                angular.element($document).unbind('click', closeContextMenu);
-                angular.element($document).unbind('contextmenu', closeContextMenu);
+                docElement.unbind('click', closeContextMenu);
+                docElement.unbind('contextmenu', closeContextMenu);
             }
 
             //create contextmenu element
             //with list of menu items,
             //each with it's own action
             var contextmenuElement = angular.element('<div id="grid-context-menu"></div>');
-            var ulElement = angular.element('<ul style="z-index:10000; position:absolute; top:initial; left:initial; display:block;" role="menu" class="dropdown-menu"></ul>');
+            var ulElement = angular.element('<ul class="dropdown-menu" role="menu" style="left:' + event.clientX + 'px; top:' + event.clientY + 'px; z-index: 100000; display:block;"></ul>');
             contextmenuElement.append(ulElement);
             var liElement = angular.element('<li><a href="#">Copy Task</a></li>');
             ulElement.append(liElement);
@@ -279,16 +281,17 @@ gridControllerMod.directive('contextMenu', ['$document', function($document) {
                 contextmenuElement.remove();
 
                 //unbind document close event handlers
-                angular.element($document).unbind('click', closeContextMenu);
-                angular.element($document).unbind('contextmenu', closeContextMenu);
+                docElement.unbind('click', closeContextMenu);
+                docElement.unbind('contextmenu', closeContextMenu);
             };
 
             //click anywhere to remove the contextmenu
-            angular.element($document).bind('click', closeContextMenu);
-            angular.element($document).bind('contextmenu', closeContextMenu);
+            docElement.bind('click', closeContextMenu);
+            docElement.bind('contextmenu', closeContextMenu);
 
-            //add contextmenu to clicked element
-            $element.append(contextmenuElement);
+            //add contextmenu to body
+            var body = $document.find('body');
+            body.append(contextmenuElement);
 
             //prevent bubbling event upwards
             return false;
