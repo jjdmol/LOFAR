@@ -50,7 +50,7 @@ from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAUL
 from lofar.mom.momqueryservice.momqueryrpc import MoMQueryRPC
 from lofar.mom.momqueryservice.config import DEFAULT_MOMQUERY_BUSNAME, DEFAULT_MOMQUERY_SERVICENAME
 from lofar.mom.momqueryservice.momrpc import MoMRPC
-from lofar.mom.momqueryservice.config import DEFAULT_MOM_BUSNAME, DEFAULT_MOM_SERVICENAME
+from lofar.mom.momqueryservice.config import DEFAULT_MOM_BUSNAME
 from lofar.sas.resourceassignment.resourceassignmenteditor.mom import updateTaskMomDetails
 from lofar.common import isProductionEnvironment, isTestEnvironment
 #from lofar.sas.resourceassignment.resourceassigner. import updateTaskMomDetails
@@ -360,7 +360,6 @@ def main():
     parser.add_option('--radb_notification_busname', dest='radb_notification_busname', type='string', default=DEFAULT_RADB_CHANGES_BUSNAME, help='Name of the notification bus exchange on the qpid broker on which the radb notifications are published, default: %default')
     parser.add_option('--radb_notification_subjects', dest='radb_notification_subjects', type='string', default=DEFAULT_RADB_CHANGES_SUBJECTS, help='Subject(s) to listen for on the radb notification bus exchange on the qpid broker, default: %default')
     parser.add_option('--mom_busname', dest='mom_busname', type='string', default=DEFAULT_MOM_BUSNAME, help='Name of the bus exchange on the qpid broker on which the momservice listens, default: %default')
-    parser.add_option('--mom_servicename', dest='mom_servicename', type='string', default=DEFAULT_MOM_SERVICENAME, help='Name of the momservice, default: %default')
     parser.add_option('--mom_broker', dest='mom_broker', type='string', default=None, help='Address of the qpid broker for the mom service, default: localhost')
     parser.add_option('--mom_query_busname', dest='mom_query_busname', type='string', default=DEFAULT_MOMQUERY_BUSNAME, help='Name of the bus exchange on the qpid broker on which the momqueryservice listens, default: %default')
     parser.add_option('--mom_query_servicename', dest='mom_query_servicename', type='string', default=DEFAULT_MOMQUERY_SERVICENAME, help='Name of the momqueryservice, default: %default')
@@ -373,7 +372,7 @@ def main():
     global rarpc
     rarpc = RARPC(busname=options.radb_busname, servicename=options.radb_servicename, broker=options.broker)
     global momrpc
-    momrpc = MoMRPC(busname=options.mom_busname, servicename=options.mom_servicename, broker=options.mom_broker)
+    momrpc = MoMRPC(busname=options.mom_busname, broker=options.mom_broker)
     global momqueryrpc
     momqueryrpc = MoMQueryRPC(busname=options.mom_query_busname, servicename=options.mom_query_servicename, timeout=2.5, broker=options.broker)
     global radbchangeshandler
