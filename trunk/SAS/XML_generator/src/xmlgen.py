@@ -1,8 +1,35 @@
 #! /usr/bin/env python
+# XML generator
+# xmlgen.py
+#
+# Copyright (C) 2016
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# Author         : Alwin de Jong, Adriaan Renting
+# e-mail         : softwaresupport@astron.nl
+# Revision       : $Revision: 34492 $
+# Last change by : $Author: renting $
+# Change date	   : $Date: 2016-05-18 11:47:57 +0200 (wo, 18 mei 2016) $
+# First creation : unknown
+# URL            : $URL: https://svn.astron.nl/ROD/trunk/LOFAR_Scheduler/DataHandler.cpp $
 
-# XML generator prototype
 
-VERSION = "2.16.1"
+VERSION = "2.16.3"
     
 import sys, getopt, time
 from xml.sax.saxutils import escape as XMLescape
