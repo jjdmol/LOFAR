@@ -14,7 +14,7 @@ set(_py_files
 
 python_install(${_py_files} DESTINATION lofar/mom/momqueryservice)
 
-lofar_add_bin_scripts(momqueryservice momquery)
+lofar_add_bin_scripts(momqueryservice momquery momcopytask)
 
 # supervisord config files
 install(FILES
