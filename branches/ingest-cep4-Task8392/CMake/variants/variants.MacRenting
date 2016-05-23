@@ -1,0 +1,31 @@
+## $Id: variants 33283 2016-01-15 14:05:11Z schaap $
+# Specific options
+option(USE_BACKTRACE     "No backtrace" OFF)
+option(USE_LOG4CPLUS     "log4cxx is used" OFF)
+option(USE_LOG4CXX     "log4cxx is used" OFF)
+option(USE_SHMEM         "No shmem"     OFF)
+option(USE_OPENMP          "No openmp"     OFF)
+
+# Where to find packages
+set(LOFAR_ROOT_DIR /Users/renting/sim/LOFAR/installed/gnu_opt)
+#set(ASKAPSOFT_ROOT_DIR /Users/renting/askaptree)
+set(CASACORE_ROOT_DIR /Users/renting)
+set(CASAREST_ROOT_DIR /Users/renting)
+set(AOFLAGGER_ROOT_DIR /Users/renting/external)
+set(PYRAP_ROOT_DIR /Users/renting)
+set(CFITSIO_ROOT_DIR /usr/local)
+set(FFTW3_ROOT_DIR /opt/local)
+set(ENV{HDF5_ROOT} /opt/local)
+#set(PQXX_ROOT_DIR /Library/PostgreSQL/8.3)
+#set(LOG4CXX_ROOT_DIR /Users/renting/askaptree/ASKAPsoft/3rdParty/log4cxx/log4cxx-0.10.0/install)
+#set(GSL_ROOT_DIR /Users/renting/askaptree/ASKAPsoft/3rdParty/gsl/gsl-1.10/install)
+#set(CMDLINEPARSER_ROOT_DIR /Users/renting/askaptree/ASKAPsoft/3rdParty/cmdlineparser/cmdlineparser-0.1.1/install)
+
+# Compilers are in non-standard place.
+set(GNU_Fortran /usr/bin/gfortran) # GNU Fortran compiler
+set(GNU_C /usr/bin/gcc)
+set(GNU_CXX /usr/bin/g++)
+
+set(CLANG_C /usr/bin/clang)
+set(CLANG_CXX /usr/bin/clang++)
+set(CLANG_Fortran /usr/bin/gfortran) # GNU Fortran compiler

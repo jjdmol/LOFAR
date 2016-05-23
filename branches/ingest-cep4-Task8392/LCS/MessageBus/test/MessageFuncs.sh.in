@@ -1,0 +1,220 @@
+#!/bin/echo Usage: source
+#
+# Usage: source MessageFuncs.sh
+#
+
+function _on_exit() {
+  # Calls $1 on exit, while preserving existing EXIT traps
+
+  # Get existing EXIT traps
+  TRAPLINE=`trap -p EXIT`
+  ONEXITS=`echo $TRAPLINE | perl -ne 'print "$1\n" if /trap -- .(.*). EXIT/;'`
+
+  # Expand traps
+  trap -- "$1;$ONEXITS" EXIT
+}
+
+function _generate_prefix() {
+  # Generate a unique prefix for this test
+  NOW=`date +"%FT%T.%N"`
+
+  echo test-$NOW.
+}
+
+# Generate an unique prefix for all queues in this test
+export QUEUE_PREFIX=`_generate_prefix`
+echo "MessageBus: QUEUE_PREFIX=$QUEUE_PREFIX" >&2
+
+if [ "$LOFARENV" == "PRODUCTION" ]; then
+  FULL_QUEUE_PREFIX="${QUEUE_PREFIX}"
+elif [ "$LOFARENV" == "TEST" ]; then
+  FULL_QUEUE_PREFIX="${QUEUE_PREFIX}test."
+else
+  FULL_QUEUE_PREFIX="${QUEUE_PREFIX}devel."
+fi
+
+function have_qpid() {
+  [ "@HAVE_QPID@" == "TRUE" ]
+}
+
+if have_qpid; then
+  # QPID_ROOT_DIR is set for LOFAR, which also contains the .profile needed to set the PYTHON_PATH.
+  QPID_ROOT_DIR="@QPID_ROOT_DIR@"
+
+  source $QPID_ROOT_DIR/.profile || echo "MessageBus: .profile not loaded, using default PATHs to find qpid stuff." >&2
+fi
+
+# A list of all queues we created
+CREATED_QUEUES=""
+
+function _get_host() {
+  #  input = host:queue -> output = host
+  #  input = queue      -> output = ''
+  HOSTQUEUE="$1"
+
+  echo "$HOSTQUEUE" | perl -ne 'print $1 if /(.*):/;'
+}
+function _get_queue() {
+  #  input = host:queue -> output = queue
+  #  input = queue      -> output = queue
+  HOSTQUEUE="$1"
+
+  echo "$HOSTQUEUE" | perl -ne 'print "$1$2" if /:(.*)|^([^:\n]*)$/;'
+}
+
+function _qpid_receive() {
+  HOSTQUEUE="$1"
+  OPTIONS="$2"
+  shift 2
+
+  QUEUE="`_get_queue "$HOSTQUEUE"`"
+  HOST="`_get_host "$HOSTQUEUE"`"
+
+  if [ "$HOST" == "" ]; then
+    HOST=127.0.0.1
+  fi
+
+  if have_qpid; then
+    @QPID_RECEIVE_EXECUTABLE@ \
+        -b "$HOST" \
+        -a "$FULL_QUEUE_PREFIX$QUEUE$OPTIONS" "$@"
+  fi
+}
+
+function _qpid_send() {
+  HOSTQUEUE="$1"
+  OPTIONS="$2"
+  shift 2
+
+  QUEUE="`_get_queue "$HOSTQUEUE"`"
+  HOST="`_get_host "$HOSTQUEUE"`"
+
+  if [ "$HOST" == "" ]; then
+    HOST=127.0.0.1
+  fi
+
+  if have_qpid; then
+    @QPID_SEND_EXECUTABLE@ \
+        -b "$HOST" \
+        -a "$FULL_QUEUE_PREFIX$QUEUE$OPTIONS" "$@"
+  fi
+}
+
+
+function create_queue() {
+  # Creates an empty queue
+  #
+  # Usage:
+  #   create_queue [host:]queue
+  HOSTQUEUE="$1"
+
+  echo "MessageBus: Creating queue $FULL_QUEUE_PREFIX$HOSTQUEUE" >&2
+
+  _qpid_receive "$HOSTQUEUE" "; { create: always }" --print-content no --ignore-reply-to
+
+  # Update the list of queues we created
+  CREATED_QUEUES="$CREATED_QUEUES $HOSTQUEUE"
+}
+
+function delete_queue() {
+  # Empties and deletes a queue
+  #
+  # Usage:
+  #   delete_queue [host:]queue
+  #
+  # Will not remove used queues
+  HOSTQUEUE="$1"
+
+  echo "MessageBus: Deleting queue $FULL_QUEUE_PREFIX$HOSTQUEUE" >&2
+
+  _qpid_receive "$HOSTQUEUE" "; { delete: always }" --print-content no --ignore-reply-to
+}
+
+function delete_all_queues() {
+  # Empties and deletes all queues created by create_queue
+  #
+  # Usage:
+  #   delete_all_queues
+
+  for QUEUE_NAME in $CREATED_QUEUES; do
+    delete_queue "$QUEUE_NAME"
+  done
+}
+
+# Automatically delete all unused queues (created by create_queue) on EXIT
+_on_exit delete_all_queues
+
+function recv_msg() {
+  # Retrieves one message from a queue
+  #
+  # Usage:
+  #   recv_msg [host:]queue > message
+  #
+  # Returns an empty message if none was available
+  HOSTQUEUE="$1"
+
+  _qpid_receive "$HOSTQUEUE" "" --ignore-reply-to -m 1
+}
+
+function wait_msg() {
+  # Waits for one message from a queue, with a timeout
+  #
+  # Usage:
+  #   wait_msg timeout [host:]queue > message
+  #
+  # Returns 0 if a message was received, 1 if not.
+  # The received message is emitted on stdout.
+  TIMEOUT="$1"
+  HOSTQUEUE="$2"
+
+  MSG=`_qpid_receive "$HOSTQUEUE" "" --ignore-reply-to -m 1 --timeout $TIMEOUT`
+
+  # Fix return code (qpid_receive will almost always return success)
+  if [ -z "$MSG" ]; then
+    return 1
+  fi
+
+  echo "$MSG"
+  return 0
+}
+
+function recv_all_msgs() {
+  # Retrieves all messages from a queue
+  #
+  # Usage:
+  #   recv_all_msgs [host:]queue > messages
+  #
+  # Returns an empty message if none was available
+  HOSTQUEUE="$1"
+
+  _qpid_receive "$HOSTQUEUE" "" --ignore-reply-to -m 0
+}
+
+function send_msg() {
+  # Send one message to a queue
+  #
+  # Usage:
+  #   send_msg [host:]queue message
+  HOSTQUEUE="$1"
+  MESSAGE="$2"
+
+  _qpid_send "$HOSTQUEUE" "" --content-string "$MESSAGE"
+}
+
+function compare_msg() {
+  # Compare two messages, ignoring uncontrollable fields (UUID, timestamp,
+  #   encoding="UTF-8" within <?xml ?> tag added by qpid).
+  # Both messages are expected to be in files (or filedescriptors).
+  #
+  # Usage:
+  #   compare_msg reference_message.txt generated_message.txt
+  REFERENCE="$1"
+  GENERATED="$2"
+
+  function compare_msg_filter() {
+    fgrep -v '<uuid>' | fgrep -v '<timestamp>' | fgrep -v '<?xml '
+  }
+
+  diff -w <(<"$REFERENCE" compare_msg_filter) <(<"$GENERATED" compare_msg_filter)
+}
+
