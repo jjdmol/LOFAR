@@ -342,7 +342,7 @@ OUTPUTPROC_CMDLINE="$OUTPUTPROC_VARS $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID"
 if $DOCKER; then
   TAG="`echo '${LOFAR_TAG}' | docker-template`"
 
-  OUTPUTPROC_CMDLINE="docker run --rm --privileged -e LUSER=`id -u $SSH_USER_NAME` --net=host -v $GLOBALFS_DIR:$GLOBALFS_DIR lofar-outputproc:$TAG bash -c \"$OUTPUTPROC_CMDLINE\""
+  OUTPUTPROC_CMDLINE="docker run --rm --privileged -u `id -u $SSH_USER_NAME` --net=host -v $GLOBALFS_DIR:$GLOBALFS_DIR lofar-outputproc:$TAG bash -c \"$OUTPUTPROC_CMDLINE\""
 fi
 
 echo "[outputProc] command line = $OUTPUTPROC_CMDLINE"

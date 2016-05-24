@@ -25,6 +25,21 @@ class SubProcessGroupTest(unittest.TestCase):
         """
 
 
+    def test_alternating_output(self):
+        process_group = SubProcessGroup(polling_interval=1)
+
+        # print a lot of numbers
+        cmd = '%s/output_stderr_stdout.sh' % (os.path.dirname(__file__) or ".",)
+        start_time = time.time()
+
+        # Start it multiple times
+        for idx in range(2):
+            process_group.run(cmd)
+
+        process_group.wait_for_finish()
+        end_time = time.time()
+        self.assertTrue((end_time - start_time) < 1)
+
     def test_limit_number_of_proc(self):
         process_group = SubProcessGroup(polling_interval=1)
 

@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+#
+# Copyright (C) 2016
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# $Id: JobsToSchedule.py 33364 2016-01-21 21:21:12Z mol $
+
+from lofar.mac.PipelineControl import PipelineControl
+from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_BUSNAME, DEFAULT_OTDB_SERVICE_BUSNAME
+
+if __name__ == "__main__":
+    import sys
+    from optparse import OptionParser
+
+    # Check the invocation arguments
+    parser = OptionParser("%prog [options]")
+    parser.add_option("-N", "--otdb_notification_bus", dest="otdb_notification_busname", type="string", default=DEFAULT_OTDB_NOTIFICATION_BUSNAME,
+                      help="Bus or queue on which OTDB notifications are received")
+    parser.add_option("-S", "--otdb_service_bus", dest="otdb_service_busname", type="string", default=DEFAULT_OTDB_SERVICE_BUSNAME,
+                      help="Bus or queue to send OTDB requests to")
+    (options, args) = parser.parse_args()
+
+    if not options.otdb_busname:
+        parser.print_help()
+        sys.exit(1)
+
+    with PipelineControl(otdb_busname=options.otdb_busname, setStatus_busname=options.setStatus_busname) as pipelineControl:
+        waitForInterrupt()
+

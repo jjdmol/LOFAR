@@ -217,6 +217,9 @@ def string_to_list(my_string):
 
 def spawn_process(cmd, logger, cwd = None, env = None, max_tries = 2, max_timeout = 30):
     """
+    DEPRECATED -- spawn_process leads to custom, and thus bad, output handling. Use
+                  support.subprocessgroup.SubProcessGroup instead.
+
     Tries to spawn a process.
 
     If it hits an OSError due to lack of memory or too many open files, it
@@ -225,6 +228,12 @@ def spawn_process(cmd, logger, cwd = None, env = None, max_tries = 2, max_timeou
     If successful, the process object is returned. Otherwise, we eventually
     propagate the exception.
     """
+
+    logger.error("support.utilities.spawn_process is DEPRECATED. Please use support.subprocessgroup.SubProcessGroup")
+
+    # Make sure the working directory exists.
+    create_directory(cwd);
+
     trycounter = 0
     while True:
         logger.debug(
