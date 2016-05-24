@@ -446,8 +446,8 @@ class selfcal_imager_pipeline(control):
         # MS per image. It must be stored on the same host as the final image.
         self.target_data = copy.deepcopy(self.output_data)
 
-        for item in self.target_data:
-            item.file = os.path.join(self.scratch_directory, 'concat.ms')
+        for idx, item in enumerate(self.target_data):
+            item.file = os.path.join(self.scratch_directory, 'ms_per_image_%d' % idx, 'concat.ms')
 
 
     @xml_node

@@ -62,6 +62,10 @@ class RPCException(Exception):
     "Exception occured in the RPC code itself, like time-out, invalid message received, etc."
     pass
 
+class RPCTimeoutException(RPCException):
+    "Exception occured when the RPC call times out."
+    pass
+
 class RPC():
     """
     This class provides an easy way to invoke a Remote Rrocedure Call to a
@@ -163,7 +167,7 @@ class RPC():
             status["state"] = "TIMEOUT"
             status["errmsg"] = "RPC Timed out"
             status["backtrace"] = ""
-            raise RPCException(status)
+            raise RPCTimeoutException(status)
 
         # Check for illegal message type
         if isinstance(answer, ReplyMessage) is False:
@@ -193,7 +197,7 @@ class RPC():
             excep_mod = __import__("exceptions")
             excep_class_ = getattr(excep_mod, answer.errmsg.split(':')[0], None)
             if (excep_class_ != None):
-                instance = excep_class_(answer.backtrace)
+                instance = excep_class_("%s%s" % (answer.errmsg.split(':',1)[1].strip(), answer.backtrace))
                 raise (instance)
             else:
                 raise RPCException(answer.errmsg)

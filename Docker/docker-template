@@ -18,9 +18,33 @@
 # ----- LOFAR_BRANCH_NAME = tags/LOFAR-Release-2_15_1 -----
 # ----- LOFAR_BRANCH_NAME = UNKNOWN -----
 
+function usage() {
+  echo "$0 [-v VERSIONDOCKER]"
+  echo ""
+  echo "  -v VERSIONDOCKER   Provides location of 'versiondocker' executable"
+  echo ""
+  exit 1
+}
+
+# Defaults
+VERSION_DOCKER="versiondocker"
+
+# Parse options
+while getopts "hv:" opt; do
+  case $opt in
+    h)  usage
+        ;;
+    v)  VERSION_DOCKER="$OPTARG"
+        ;;
+    \?) error "Invalid option: -$OPTARG"
+        ;;
+    :)  error "Option requires an argument: -$OPTARG"
+        ;;
+  esac
+done
+
 # Make sure we obtain info about the project source!
-#PATH=$PATH:.
-VERSION_INFO=`(versiondocker || ./versiondocker) 2>/dev/null` # in cmake, executable is in .
+VERSION_INFO=`$VERSION_DOCKER`
 
 # Extract branch name w.r.t. repository root, e.g. branches/LOFAR-Task1234
 export LOFAR_BRANCH_NAME=`echo "$VERSION_INFO" | perl -ne 'print "$1" if /branch += +(.+)/;'`
@@ -31,14 +55,14 @@ export LOFAR_BRANCH_NAME=`echo "$VERSION_INFO" | perl -ne 'print "$1" if /branch
 
 export LOFAR_BRANCH_URL="https://svn.astron.nl/LOFAR/${LOFAR_BRANCH_NAME}"
 
-# ----- LOFAR_TAG = 1234 -----
+# ----- LOFAR_TAG = LOFAR-Task1234 -----
 # ----- LOFAR_TAG = trunk -----
-# ----- LOFAR_TAG = 2_15_1 -----
+# ----- LOFAR_TAG = LOFAR-Release-2_15_1 -----
 
 case "${LOFAR_BRANCH_NAME}" in
   trunk)      export LOFAR_TAG=trunk ;;
-  tags/*)     export LOFAR_TAG=${LOFAR_BRANCH_NAME##tags/LOFAR-Release-} ;;
-  branches/*) export LOFAR_TAG=${LOFAR_BRANCH_NAME##branches/*Task} ;;
+  branches/*) export LOFAR_TAG=${LOFAR_BRANCH_NAME##branches/} ;;
+  tags/*)     export LOFAR_TAG=${LOFAR_BRANCH_NAME##tags/} ;;
   *)          export LOFAR_TAG=latest ;;
 esac
 

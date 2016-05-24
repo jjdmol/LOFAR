@@ -45,17 +45,19 @@ class long_baseline(LOFARnodeTCP):
              ndppp_executable, output_measurement_set,
             subbandgroups_per_ms, subbands_per_subbandgroup, ms_mapfile,
             asciistat_executable, statplot_executable, msselect_executable,
-            rficonsole_executable, add_beam_tables, final_output_path):
+            rficonsole_executable, add_beam_tables, globalfs, final_output_path):
         """
         Entry point for the node recipe
         """
         self.environment.update(environment)
+        self.globalfs = globalfs
 
         with log_time(self.logger):
             input_map = DataMap.load(ms_mapfile)
             #******************************************************************
             # I. Create the directories used in this recipe
             create_directory(processed_ms_dir)
+            create_directory(working_dir)
 
             # time slice dir_to_remove: assure empty directory: Stale data
             # is problematic for dppp
@@ -194,7 +196,7 @@ class long_baseline(LOFARnodeTCP):
               command = ["rsync", "-r", "{0}:{1}".format(
                               input_item.host, input_item.file),
                                  "{0}".format(processed_ms_dir)]
-              if input_item.host == "localhost":
+              if self.globalfs or input_item.host == "localhost":
                   command = ["cp", "-r", "{0}".format(input_item.file),
                                          "{0}".format(processed_ms_dir)]
 

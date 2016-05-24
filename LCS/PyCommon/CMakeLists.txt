@@ -9,6 +9,7 @@ set(_py_files
   __init__.py
   dbcredentials.py
   factory.py
+  methodtrigger.py
   util.py
   postgres.py
   datetimeutils.py)

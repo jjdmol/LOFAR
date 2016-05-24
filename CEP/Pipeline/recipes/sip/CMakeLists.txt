@@ -74,6 +74,8 @@ lofar_add_bin_scripts(
   bin/pulsar_pipeline.py
   bin/long_baseline_pipeline.py
   bin/selfcal_imager_pipeline.py
+  bin/pipelineAborted.sh
+  bin/runPipeline.sh
   bin/startPython.sh
   bin/startPythonVersion.sh
   bin/stopPython.sh
@@ -111,7 +113,9 @@ install(FILES
 
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg
+  ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg.CEP4
   ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg
+  ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg.CEP4
   DESTINATION share/pipeline)
 
 # PIPELINE_FEEDBACK_METHOD is used in pipeline.cfg.in to enable/disable qpid feedback
@@ -125,7 +129,34 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/pipeline.cfg.in
   ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg)
 
+# Convert configuration files through docker-template
+foreach(_file pipeline.cfg.CEP4)
+  # _src -> _dst
+  set(_src ${CMAKE_CURRENT_SOURCE_DIR}/${_file}.tmpl)
+  set(_dst ${CMAKE_CURRENT_BINARY_DIR}/${_file})
+
+  # add generating command, and (any) target to force the generation
+  # when "all" is build.
+  add_custom_command(
+    OUTPUT ${_dst}
+    COMMAND ${CMAKE_SOURCE_DIR}/Docker/docker-template -v ${CMAKE_BINARY_DIR}/Docker/versiondocker < ${_src} > ${_dst}
+    DEPENDS ${CMAKE_SOURCE_DIR}/Docker/docker-template ${_src} ${CMAKE_BINARY_DIR}/Docker/versiondocker
+  )
+  add_custom_target(${_file}_target ALL DEPENDS ${_dst})
+
+  # install resulting file
+  install(FILES
+    ${_dst}
+    DESTINATION share/pipeline
+    RENAME Dockerfile
+  )
+endforeach()
+
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/tasks.cfg.in
   ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg)
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/tasks.cfg.CEP4.in
+  ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg.CEP4)
 

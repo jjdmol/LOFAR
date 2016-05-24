@@ -42,7 +42,7 @@ foreach(_dir ${DOCKER_TEMPLATE_DIRS})
   # when "all" is build.
   add_custom_command(
     OUTPUT ${_dst}
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/docker-template < ${_src} > ${_dst}
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/docker-template -v ${CMAKE_CURRENT_BINARY_DIR}/versiondocker < ${_src} > ${_dst}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/docker-template ${_src} ${CMAKE_CURRENT_BINARY_DIR}/versiondocker
   )
   add_custom_target(${_dir}_Dockerfile_target ALL DEPENDS ${_dst})

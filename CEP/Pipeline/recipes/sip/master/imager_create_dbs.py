@@ -190,14 +190,17 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         source_list_map.iterator = slice_paths_map.iterator = \
                input_map.iterator = DataMap.SkipIterator
-        for (input_item, slice_item, source_list_item) in zip(
-                                  input_map, slice_paths_map,source_list_map):
+        for idx, (input_item, slice_item, source_list_item) in enumerate(zip(
+                                  input_map, slice_paths_map,source_list_map)):
             host_ms, concat_ms = input_item.host, input_item.file
             host_slice, slice_paths = slice_item.host, slice_item.file
 
             # Create the parameters depending on the input_map
             sourcedb_target_path = os.path.join(
                   concat_ms + self.inputs["sourcedb_suffix"])
+
+            # use unique working directories per job, to prevent interference between jobs on a global fs
+            working_dir = os.path.join(self.inputs['working_directory'], "imager_create_dbs_{0}".format(idx))
 
             # The actual call for the node script
             arguments = [concat_ms,
@@ -212,7 +215,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                          slice_paths,
                          self.inputs["parmdb_suffix"],
                          self.environment,
-                         self.inputs["working_directory"],
+                         working_dir,
                          self.inputs["makesourcedb_path"],
                          source_list_item.file,
                          self.inputs["major_cycle"]]

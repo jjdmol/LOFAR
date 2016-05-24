@@ -25,6 +25,7 @@ from lofarpipe.support.pipelinelogging import log_time
 from lofarpipe.support.utilities import patch_parset
 from lofarpipe.support.utilities import get_parset
 from lofarpipe.support.utilities import catch_segfaults
+from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.lofarexceptions import PipelineException
 import pyrap.tables as pt  # @UnresolvedImport
 from subprocess import CalledProcessError
@@ -65,6 +66,10 @@ class imager_awimager(LOFARnodeTCP):
         with log_time(self.logger):
             # Read the parameters as specified in the parset
             parset_object = get_parset(parset)
+
+            #******************************************************************
+            # 0. Create the directories used in this recipe
+            create_directory(working_directory)
 
             # *************************************************************
             # 1. Calculate awimager parameters that depend on measurement set

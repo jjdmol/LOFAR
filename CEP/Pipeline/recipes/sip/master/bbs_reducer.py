@@ -26,6 +26,11 @@ class bbs_reducer(BaseRecipe, RemoteCommandRecipeMixIn):
             '-p', '--parset',
             help="BBS configuration parset"
         ),
+        'nthreads': ingredient.IntField(
+            '--nthreads',
+            default=8,
+            help="Number of threads per process"
+        ),
         'executable': ingredient.ExecField(
             '--executable',
             help="The full path to the BBS-reducer executable"
@@ -115,7 +120,10 @@ class bbs_reducer(BaseRecipe, RemoteCommandRecipeMixIn):
                         self.inputs['executable'],
                         self.inputs['parset'],
                         self.environment
-                    ]
+                    ],
+                    resources={
+                        "cores": self.inputs['nthreads']
+                    }
                 )
             )
         self._schedule_jobs(self.jobs)
