@@ -1,3 +1,0 @@
-# Source:  https://svn.astron.nl/LOFAR/trunk/SubSystems/Online_Cobalt/postinstall/lofarsys/bash_profile
-
-source .bashrc
