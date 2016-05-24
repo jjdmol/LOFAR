@@ -51,7 +51,7 @@ RUN echo 'ALL ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
 #
 # setup install dir
 #
-RUN mkdir -p ${INSTALLDIR} && chown ${USER}.${USER} ${INSTALLDIR}
+RUN mkdir -p ${INSTALLDIR} && chown ${UID}.${UID} ${INSTALLDIR}
 
 USER ${USER}
 
