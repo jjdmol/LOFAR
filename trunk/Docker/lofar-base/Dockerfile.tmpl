@@ -43,10 +43,11 @@ RUN apt-get update && \
     apt-get install -y nano
 
 #
-# setup-account
+# open security holes (allow smooth user switching, allow sudo)
 #
 RUN echo 'ALL ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
-    sed -i 's/requiretty/!requiretty/g' /etc/sudoers
+    sed -i 's/requiretty/!requiretty/g' /etc/sudoers && \
+    chmod a+rw /etc/group /etc/passwd
 
 #
 # setup install dir
