@@ -6,8 +6,10 @@ if [ -z "${USER}" ]; then
 fi
 
 # Create home directory
-export HOME=/home/${USER}
-mkdir -p $HOME && cd $HOME
+if [ -z "${HOME}" ]; then
+  export HOME=/home/${USER}
+  mkdir -p $HOME && cd $HOME
+fi
 
 # Add user to system
 fgrep -q ":x:${UID}:" /etc/passwd || echo "${USER}:x:${UID}:${UID}::${HOME}:/bin/bash" >> /etc/passwd

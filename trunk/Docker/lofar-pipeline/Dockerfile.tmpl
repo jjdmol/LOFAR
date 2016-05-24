@@ -6,11 +6,11 @@ FROM lofar-base:${LOFAR_TAG}
 ENV AOFLAGGER_VERSION=2.7.1
 
 # Run-time dependencies
-RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y python-xmlrunner python-scipy liblog4cplus-1.0-4 libxml2 libboost-thread${BOOST_VERSION}.0 libboost-filesystem${BOOST_VERSION}.0 libboost-date-time${BOOST_VERSION}.0 libboost-signals${BOOST_VERSION}.0 libpng12-0 libsigc++-2.0-dev libxml++2.6-2 libgsl0ldbl openssh-client libboost-regex${BOOST_VERSION}.0 gettext-base rsync python-matplotlib && \
-    sudo apt-get -y install python-pip python-dev && \
-    sudo pip install pyfits pywcs python-monetdb && \
-    sudo apt-get -y purge python-pip python-dev && \
-    sudo apt-get -y autoremove
+RUN apt-get update && apt-get install -y python-xmlrunner python-scipy liblog4cplus-1.0-4 libxml2 libboost-thread${BOOST_VERSION}.0 libboost-filesystem${BOOST_VERSION}.0 libboost-date-time${BOOST_VERSION}.0 libboost-signals${BOOST_VERSION}.0 libpng12-0 libsigc++-2.0-dev libxml++2.6-2 libgsl0ldbl openssh-client libboost-regex${BOOST_VERSION}.0 gettext-base rsync python-matplotlib && \
+    apt-get -y install python-pip python-dev && \
+    pip install pyfits pywcs python-monetdb && \
+    apt-get -y purge python-pip python-dev && \
+    apt-get -y autoremove
 
 #
 # *******************
@@ -18,7 +18,7 @@ RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y py
 # *******************
 #
 
-RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y wget cmake g++ libxml++2.6-dev libpng12-dev libfftw3-dev libboost-filesystem${BOOST_VERSION}-dev libboost-date-time${BOOST_VERSION}-dev libboost-signals${BOOST_VERSION}-dev libboost-thread${BOOST_VERSION}-dev libcfitsio3-dev && \
+RUN apt-get update && apt-get install -y wget cmake g++ libxml++2.6-dev libpng12-dev libfftw3-dev libboost-filesystem${BOOST_VERSION}-dev libboost-date-time${BOOST_VERSION}-dev libboost-signals${BOOST_VERSION}-dev libboost-thread${BOOST_VERSION}-dev libcfitsio3-dev && \
     mkdir -p ${INSTALLDIR}/aoflagger/build && \
     bash -c "cd ${INSTALLDIR}/aoflagger && wget --retry-connrefused http://downloads.sourceforge.net/project/aoflagger/aoflagger-${AOFLAGGER_VERSION%%.?}.0/aoflagger-${AOFLAGGER_VERSION}.tar.bz2" && \
     cd ${INSTALLDIR}/aoflagger && tar xf aoflagger-${AOFLAGGER_VERSION}.tar.bz2 && \
@@ -28,8 +28,8 @@ RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y wg
     bash -c "strip ${INSTALLDIR}/aoflagger/{lib,bin}/* || true" && \
     bash -c "rm -rf ${INSTALLDIR}/aoflagger/{build,aoflagger-${AOFLAGGER_VERSION}}" && \
     bash -c "rm -rf ${INSTALLDIR}/aoflagger/aoflagger-${AOFLAGGER_VERSION}.tar.bz2" && \
-    sudo apt-get -y purge wget cmake g++ libxml++2.6-dev libpng12-dev libfftw3-dev libboost-filesystem${BOOST_VERSION}-dev libboost-date-time${BOOST_VERSION}-dev libboost-signals${BOOST_VERSION}-dev libboost-thread${BOOST_VERSION}-dev libcfitsio3-dev && \
-    sudo apt-get -y autoremove
+    apt-get -y purge wget cmake g++ libxml++2.6-dev libpng12-dev libfftw3-dev libboost-filesystem${BOOST_VERSION}-dev libboost-date-time${BOOST_VERSION}-dev libboost-signals${BOOST_VERSION}-dev libboost-thread${BOOST_VERSION}-dev libcfitsio3-dev && \
+    apt-get -y autoremove
 
 #
 # *******************
@@ -43,7 +43,7 @@ ENV LOFAR_BRANCH=${LOFAR_BRANCH_NAME} \
     LOFAR_BUILDVARIANT=gnu_optarch
 
 # Install
-RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y subversion cmake g++ gfortran bison flex liblog4cplus-dev libhdf5-dev libblitz0-dev libboost-dev libboost-python-dev python-dev libxml2-dev pkg-config libpng12-dev libfftw3-dev libunittest++-dev libxml++2.6-dev libgsl0-dev libboost-filesystem${BOOST_VERSION}-dev libboost-date-time${BOOST_VERSION}-dev libboost-thread${BOOST_VERSION}-dev libboost-regex${BOOST_VERSION} binutils-dev libcfitsio3-dev wcslib-dev && \
+RUN apt-get update && apt-get install -y subversion cmake g++ gfortran bison flex liblog4cplus-dev libhdf5-dev libblitz0-dev libboost-dev libboost-python-dev python-dev libxml2-dev pkg-config libpng12-dev libfftw3-dev libunittest++-dev libxml++2.6-dev libgsl0-dev libboost-filesystem${BOOST_VERSION}-dev libboost-date-time${BOOST_VERSION}-dev libboost-thread${BOOST_VERSION}-dev libboost-regex${BOOST_VERSION} binutils-dev libcfitsio3-dev wcslib-dev && \
     mkdir -p ${INSTALLDIR}/lofar/build/${LOFAR_BUILDVARIANT} && \
     cd ${INSTALLDIR}/lofar && \
     svn --non-interactive -q co -r ${LOFAR_REVISION} -N ${LOFAR_BRANCH_URL} src; \
@@ -56,6 +56,6 @@ RUN sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y su
     bash -c "ln -sfT /home/${USER}/lofar/var ${INSTALLDIR}/lofar/var" && \
     bash -c "strip ${INSTALLDIR}/lofar/{bin,sbin,lib64}/* || true" && \
     bash -c "rm -rf ${INSTALLDIR}/lofar/{build,src}" && \
-    sudo apt-get purge -y subversion cmake g++ gfortran bison flex liblog4cplus-dev libhdf5-dev libblitz0-dev libboost-dev libboost-python-dev python-dev libxml2-dev pkg-config libpng12-dev libfftw3-dev libunittest++-dev libxml++2.6-dev libgsl0-dev libboost-filesystem${BOOST_VERSION}-dev libboost-date-time${BOOST_VERSION}-dev libboost-thread${BOOST_VERSION}-dev binutils-dev wcslib-dev && \
-    sudo apt-get autoremove -y
+    apt-get purge -y subversion cmake g++ gfortran bison flex liblog4cplus-dev libhdf5-dev libblitz0-dev libboost-dev libboost-python-dev python-dev libxml2-dev pkg-config libpng12-dev libfftw3-dev libunittest++-dev libxml++2.6-dev libgsl0-dev libboost-filesystem${BOOST_VERSION}-dev libboost-date-time${BOOST_VERSION}-dev libboost-thread${BOOST_VERSION}-dev binutils-dev wcslib-dev && \
+    apt-get autoremove -y
 
