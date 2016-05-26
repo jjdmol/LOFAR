@@ -74,6 +74,11 @@ class IngestPipeline():
     self.ObsId         = int(job['ObservationId'])
     self.HostLocation  = job['Location'].split(':')[0]
     self.Location      = job['Location'].split(':')[1]
+    if 'cep4' in self.HostLocation.lower():
+        # lexar003/lexar004 have cep4 lustrefs /data dir mounted on /data,
+        # so we can read data with ltacp client from localhost
+        self.HostLocation = 'localhost'
+
     pos = self.Location.find(self.DataProduct)
     if pos > 0: ## trick to support tar files with different names
       self.LocationDir = self.Location[:pos]
@@ -169,15 +174,22 @@ class IngestPipeline():
     self.logger.debug('Starting file transfer')
     hostname = socket.getfqdn()
     javacmd = "java"
-    if "lexar" in hostname:
+    if "lexar001" in hostname or "lexar002" in hostname:
       javacmd = "/data/java7/jdk1.7.0_55/bin/java"
 
     ltacppath = "/globalhome/%s/ltacp" % ("ingesttest" if self.ltacpport == 8801 else "ingest")
 
-    if self.PrimaryUri:
-      cmd = ["ssh",  "-T", "ingest@" +self.HostLocation, "cd %s;%s -Xmx256m -cp %s/qpid-properties/lexar001.offline.lofar:%s/ltacp.jar nl.astron.ltacp.client.LtaCp %s %s %s %s" % (self.LocationDir, javacmd, ltacppath, ltacppath, hostname, self.ltacpport, self.PrimaryUri, self.Source)]
+    if self.HostLocation == 'localhost':
+      # copy data with ltacp client from HostLocation localhost, to ltacpserver at localhost
+      # so no need for ssh
+      cmd = ["cd %s;%s -Xmx256m -cp %s/qpid-properties/lexar001.offline.lofar:%s/ltacp.jar nl.astron.ltacp.client.LtaCp %s %s %s %s" % (self.LocationDir, javacmd, ltacppath, ltacppath, hostname, self.ltacpport, self.PrimaryUri, self.Source)]
     else:
-      cmd = ["ssh",  "-T", "ingest@" + self.HostLocation, "cd %s;%s -Xmx256m -cp %s/qpid-properties/lexar001.offline.lofar:%s/ltacp.jar nl.astron.ltacp.client.LtaCp %s %s %s/%s %s" % (self.LocationDir, javacmd, ltacppath, ltacppath, hostname, self.ltacpport, self.tempPrimary, self.FileName, self.Source)]
+      # copy data with ltacp from a remote host, so use ssh
+      if self.PrimaryUri:
+        cmd = ["ssh",  "-T", "ingest@" +self.HostLocation, "cd %s;%s -Xmx256m -cp %s/qpid-properties/lexar001.offline.lofar:%s/ltacp.jar nl.astron.ltacp.client.LtaCp %s %s %s %s" % (self.LocationDir, javacmd, ltacppath, ltacppath, hostname, self.ltacpport, self.PrimaryUri, self.Source)]
+      else:
+        cmd = ["ssh",  "-T", "ingest@" + self.HostLocation, "cd %s;%s -Xmx256m -cp %s/qpid-properties/lexar001.offline.lofar:%s/ltacp.jar nl.astron.ltacp.client.LtaCp %s %s %s/%s %s" % (self.LocationDir, javacmd, ltacppath, ltacppath, hostname, self.ltacpport, self.tempPrimary, self.FileName, self.Source)]
+
     ## SecondaryUri handling not implemented
     self.logger.debug(cmd)
     start = time.time()
@@ -643,7 +655,7 @@ if __name__ == '__main__':
         job = parser.parse(path)
         job['filename'] = path
         logger.info("Parsed jobfile %s: %s" % (path, str(job)))
-        jobPipeline = IngestPipeline(None, jobToRun, config.momClient, config.ltaClient, config.ipaddress, config.ltacpport, config.mailCommand, config.momRetry, config.ltaRetry, config.srmRetry, config.srmInit)
+        jobPipeline = IngestPipeline(None, job, config.momClient, config.ltaClient, config.ipaddress, config.ltacpport, config.mailCommand, config.momRetry, config.ltaRetry, config.srmRetry, config.srmInit)
         jobPipeline.run()
         exit(0)
 
