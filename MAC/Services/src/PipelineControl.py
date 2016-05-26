@@ -124,10 +124,10 @@ class Parset(dict):
   def processingCluster(self):
     return self[PARSET_PREFIX + "Observation.Cluster.ProcessingCluster.clusterName"] or "CEP2"
 
-  def dockerTag(self):
+  def dockerImage(self):
     # Return the version set in the parset, and fall back to our own version.
     return (self[PARSET_PREFIX + "Observation.ObservationControl.PythonControl.softwareVersion"] or
-            runCommand("docker-template", "${LOFAR_TAG}"))
+            runCommand("docker-template", "lofar-pipeline:${LOFAR_TAG}"))
 
   def slurmJobName(self):
     return str(self.otdbId())
@@ -345,12 +345,12 @@ class PipelineControl(OTDBBusListener):
         " -e LOFARENV={lofarenv}"
         " -v $HOME/.ssh:/home/lofar/.ssh:ro"
         " -e SLURM_JOB_ID=$SLURM_JOB_ID"
-        " lofar-pipeline:{tag}"
+        " {image}"
         " runPipeline.sh -o {obsid} -c /opt/lofar/share/pipeline/pipeline.cfg.{cluster} -B {status_bus}"
       .format(
         lofarenv = os.environ.get("LOFARENV", ""),
         obsid = otdbId,
-        tag = parset.dockerTag(),
+        image = parset.dockerImage(),
         cluster = parset.processingCluster(),
         status_bus = self.otdb_service_busname,
       ),
@@ -367,12 +367,12 @@ class PipelineControl(OTDBBusListener):
         " --net=host"
         " -u $UID"
         " -e LOFARENV={lofarenv}"
-        " lofar-pipeline:{tag}"
+        " {image}"
         " pipelineAborted.sh -o {obsid} -B {status_bus}"
       .format(
         lofarenv = os.environ.get("LOFARENV", ""),
         obsid = otdbId,
-        tag = parset.dockerTag(),
+        image = parset.dockerImage(),
         status_bus = self.otdb_service_busname,
       ),
 
