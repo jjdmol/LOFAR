@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-# Configrue user
+# Correct UID
+export UID=`id -u`
+
+# Configure user
 if [ -z "${USER}" ]; then
   export USER=${UID}
 fi
