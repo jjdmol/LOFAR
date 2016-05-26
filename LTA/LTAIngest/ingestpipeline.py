@@ -40,7 +40,7 @@ class PipelineError(Exception):
 
 #---------------------- IngestPipeline ------------------------------------------
 class IngestPipeline():
-  def __init__(self, logdir, job, momClient, ltaClient, ltacphost, ltacpport, mailCommand, momRetry, ltaRetry, srmRetry, srmInit):
+  def __init__(self, logdir, job, momClient, ltaClient, ltacphost, ltacpport, mailCommand, momRetry, ltaRetry, srmRetry, srmInit, user=getpass.getuser()):
     self.logdir          = logdir
     self.job             = job
     self.momClient       = momClient
@@ -48,6 +48,7 @@ class IngestPipeline():
     self.ltacphost       = ltacphost
     self.ltacpport       = ltacpport
     self.mailCommand     = mailCommand
+    self.user            = user
 
     self.Project       = job['Project']
     self.DataProduct   = job['DataProduct']
@@ -69,7 +70,7 @@ class IngestPipeline():
     if 'summary' in self.DataProduct:
       self.FileType    = pulp_type
     self.JobId         = job['JobId']
-    self.ArchiveId         = int(job['ArchiveId'])
+    self.ArchiveId     = int(job['ArchiveId'])
     self.ObsId         = int(job['ObservationId'])
     self.HostLocation  = job['Location'].split(':')[0]
     self.Location      = job['Location'].split(':')[1]
@@ -101,6 +102,7 @@ class IngestPipeline():
     self.ltaRetry        = ltaRetry
     self.srmRetry        = srmRetry
     self.status          = IngestStarted
+    self.finishedSuccessfully = True
 
     ## Set logger
     self.logger =logging.getLogger('Slave')
@@ -227,7 +229,8 @@ class IngestPipeline():
 
         cp = ltacp.LtaCp(host,
                          os.path.join(self.LocationDir, self.Source),
-                         self.PrimaryUri)
+                         self.PrimaryUri,
+                         self.user)
 
         self.MD5Checksum, self.Adler32Checksum, self.FileSize = cp.transfer()
 
@@ -381,11 +384,9 @@ class IngestPipeline():
       self.logger.debug('SIP received for %s from MoM with size %d (%s): %s' % (self.JobId, len(self.SIP), humanreadablesize(len(self.SIP)), self.SIP[0:256]))
     elif self.Type.lower() == "eor":
       try:
-        sip_host = job['SIPLocation'].split(':')[0]
-        for i in range(1, 43):
-            sip_host = sip_host.replace('node%d.intra.dawn.rug.nl' % (i+100,), '10.196.232.%d' % (i+10,))
-        sip_path = job['SIPLocation'].split(':')[1]
-        cmd = ['ssh', '-tt', '-n', '-x', '-q', '%s@%s' % (getpass.getuser(), sip_host), 'cat %s' % sip_path]
+        sip_host = self.job['SIPLocation'].split(':')[0]
+        sip_path = self.job['SIPLocation'].split(':')[1]
+        cmd = ['ssh', '-tt', '-n', '-x', '-q', '%s@%s' % (self.user, sip_host), 'cat %s' % sip_path]
         self.logger.debug("GetSIP for %s with mom2DPId %s - StorageTicket %s - FileName %s - Uri %s - cmd %s" % (self.JobId, self.ArchiveId, self.ticket, self.FileName, self.PrimaryUri, ' ' .join(cmd)))
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
@@ -441,6 +442,7 @@ class IngestPipeline():
 
         self.SIP = sip_dom.toxml("utf-8")
         self.SIP = self.SIP.replace('<stationType>Europe</stationType>','<stationType>International</stationType>')
+        self.SIP = self.SIP.replace('<source>EOR</source>','<source>EoR</source>') #EoR sips sometime contain EOR instead of EoR as source
 
       except:
         self.logger.exception('Getting SIP from EoR failed')
@@ -530,11 +532,10 @@ class IngestPipeline():
       start = time.time()
       self.RetryRun(self.GetStorageTicket, self.ltaRetry, 'Getting storage ticket')
 
-      self.RetryRun(self.TransferFileNew, self.srmRetry , 'Transfering file')
-      #if self.Type.lower() == "eor":
-        #self.RetryRun(self.TransferFileNew, self.srmRetry , 'Transfering file')
-      #else:
-        #self.RetryRun(self.TransferFile, self.srmRetry , 'Transfering file')
+      if self.Type.lower() == "eor":
+        self.RetryRun(self.TransferFileNew, self.srmRetry , 'Transfering file')
+      else:
+        self.RetryRun(self.TransferFile, self.srmRetry , 'Transfering file')
 
       self.RetryRun(self.SendChecksums, self.ltaRetry, 'Sending Checksums')
 #      self.RenameFile()
@@ -548,7 +549,8 @@ class IngestPipeline():
           self.logger.debug("Ingest Pipeline finished for %s in %d sec with average speed of %s for %s including all overhead" % (self.JobId, elapsed, humanreadablesize(avgSpeed, 'Bps'), humanreadablesize(float(self.FileSize), 'B')))
       except Exception:
         self.logger.debug("Ingest Pipeline finished for %s in %d sec" % (self.JobId, elapsed))
-      
+      self.finishedSuccessfully = True
+
     except PipelineError as pe:
       self.logger.debug('Encountered PipelineError for %s : %s' % (self.JobId, str(pe)))
       ## roll back transfer if necessary
@@ -605,30 +607,141 @@ class IngestPipeline():
 #----------------------------------------------------------------- selfstarter -
 if __name__ == '__main__':
     import sys
-    if len(sys.argv) != 2:
+    import threading
+    import os
+    import os.path
+    import job_parser
+    from optparse import OptionParser
+
+    # Check the invocation arguments
+    parser = OptionParser("%prog [options] <jobfile/dir_with_job_files>",
+                          description='Run the ingestpipeline on a single jobfile, or a directory containing many jobfiles.')
+    parser.add_option("-u", "--user", dest="user", type="string", default=getpass.getuser(), help="username for to login on <host>, [default: %default]")
+    parser.add_option("-p", "--parallel", dest="maxParallelJobs", type="int", default=4, help="number of parellel pipelines to run when processing a directory of jobfiles [default: %default]")
+    (options, args) = parser.parse_args()
+
+    if len(args) != 1:
+        parser.print_help()
+        sys.exit(1)
+
         print 'usage: ingestpipeline.py <path_to_jobfile.xml>'
+        print 'or'
+        print 'usage: ingestpipeline.py <path_to_dir_containing_set_of_jobfiles>'
 
     logging.basicConfig(format="%(asctime)-15s %(levelname)s %(message)s", level=logging.DEBUG)
     logger = logging.getLogger('Slave')
 
-    jobfile = sys.argv[1]
-    import job_parser
-    parser = job_parser.parser(logger)
-    job = parser.parse(jobfile)
-    job['filename'] = jobfile
-
-    logger.info(str(job))
-
-    if getpass.getuser() == 'ingest':
+    if options.user == 'ingest':
         import ingest_config as config
     else:
         import ingest_config_test as config
 
-    #create misc mock args
-    ltacphost = 'mock-ltacphost'
-    ltacpport = -1
-    mailCommand = ''
-    srmInit = ''
+    path = args[0]
 
-    standalone = IngestPipeline(None, job, config.momClient, config.ltaClient, config.ipaddress, config.ltacpport, config.mailCommand, config.momRetry, config.ltaRetry, config.srmRetry, config.srmInit)
-    standalone.run()
+    if os.path.isfile(path):
+        parser = job_parser.parser(logger)
+        job = parser.parse(path)
+        job['filename'] = path
+        logger.info("Parsed jobfile %s: %s" % (path, str(job)))
+        jobPipeline = IngestPipeline(None, jobToRun, config.momClient, config.ltaClient, config.ipaddress, config.ltacpport, config.mailCommand, config.momRetry, config.ltaRetry, config.srmRetry, config.srmInit)
+        jobPipeline.run()
+        exit(0)
+
+    if os.path.isdir(path):
+        dirEntries = [os.path.join(path, x) for x in os.listdir(path)]
+        jobfilepaths = [p for p in dirEntries if os.path.isfile(p)]
+
+        try:
+            if not os.path.exists(os.path.join(path, 'done')):
+                os.mkdir(os.path.join(path, 'done'))
+        except Exception as e:
+            logger.error(str(e))
+            exit(-1)
+
+        # scan all jobfilepaths
+        # put each job in hostJobQueues dict, in a list per host
+        # this gives us a job queue per host, so we can parallelize.
+        hostJobQueues = {}
+        for jobfilepath in jobfilepaths:
+            try:
+                parser = job_parser.parser(logger)
+                job = parser.parse(jobfilepath)
+                job['filename'] = jobfilepath
+                logger.info("Parsed jobfile %s: %s" % (jobfilepath, str(job)))
+
+                if 'host' in job:
+                    host = job['host']
+                    if not host in hostJobQueues:
+                        hostJobQueues[host] = []
+                    hostJobQueues[host].append(job)
+            except Exception as e:
+                logger.error("Could not parse %s: %s" % (jobfilepath, str(e)))
+
+        runningPipelinesPerHost = {}
+
+        while hostJobQueues:
+            busyHosts = set(runningPipelinesPerHost.keys())
+            freeHosts = set(hostJobQueues.keys()) - busyHosts
+
+            startedNewJobs = False
+
+            # start new pipeline for one job per free host
+            for host in freeHosts:
+                jobQueue = hostJobQueues[host]
+
+                if not jobQueue:
+                    logging.info('no more jobs for host: %s' % host)
+                    del hostJobQueues[host]
+                elif len(runningPipelinesPerHost) < options.maxParallelJobs:
+                    jobToRun = jobQueue.pop(0)
+
+                    logging.info('starting job %s on host %s' % (jobToRun['JobId'], host))
+                    jobPipeline = IngestPipeline(None, jobToRun, config.momClient, config.ltaClient, config.ipaddress, config.ltacpport, config.mailCommand, config.momRetry, config.ltaRetry, config.srmRetry, config.srmInit, options.user)
+
+                    def runPipeline(pl):
+                        try:
+                            pl.run()
+                        except Exception as e:
+                            logger.error(str(e))
+
+                    pipelineThread = threading.Thread(target=runPipeline, kwargs={'pl':jobPipeline})
+                    pipelineThread.daemon = True
+                    pipelineThread.start()
+
+                    runningPipelinesPerHost[host] = (jobPipeline, pipelineThread)
+                    logging.info('started job %s on host %s' % (jobToRun['JobId'], host))
+                    startedNewJobs = True
+
+            if startedNewJobs:
+                for h, q in hostJobQueues.items():
+                    logger.info("%s: %s jobs in queue" % (h, len(q)))
+
+            # check which jobs are done
+            busyHosts = set(runningPipelinesPerHost.keys())
+
+            for host in busyHosts:
+                try:
+                    jobPipeline, pipelineThread = runningPipelinesPerHost[host]
+
+                    if pipelineThread.isAlive():
+                        logging.info('job %s on host %s is running' % (jobPipeline.job['JobId'], host))
+                    else:
+                        logging.info('job %s on host %s is done' % (jobPipeline.job['JobId'], host))
+                        pipelineThread.join(10)
+                        del runningPipelinesPerHost[host]
+
+                        if jobPipeline.finishedSuccessfully:
+                            try:
+                                if os.path.isdir(path):
+                                    path, filename = os.split(jobPipeline.job['filename'])
+                                    os.rename(jobPipeline.job['filename'], os.path.join(path, 'done', filename))
+                            except Exception as e:
+                                logger.error(str(e))
+                        else:
+                            #retry, put back in jobqueue
+                            logging.info('job %s on host %s was put back in the queue' % (jobPipeline.job['JobId'], host))
+                            hostJobQueues[host].append(jobPipeline.job)
+                except Exception as e:
+                    logger.error(str(e))
+
+            time.sleep(30)
