@@ -23,7 +23,7 @@
     <script src="/static/js/angular-route/angular-route.min.js"></script>
     <script src="/static/js/angular-touch/angular-touch.js"></script>
     <script src="/static/js/angular-resource/angular-resource.min.js"></script>
-    <script src="/static/js/utils/ui-grid-edit-datepicker.js"></script>
+<!--    <script src="/static/js/utils/ui-grid-edit-datepicker.js"></script>-->
     <script src="/static/js/angular-ui-grid/ui-grid.js"></script>
     <script src="/static/js/angular-ui-tree/angular-ui-tree.js"></script>
     <script src="/static/js/angular-ui-layout/angular-ui-layout.min.js"></script>
@@ -42,68 +42,106 @@
     <script src="/static/app/controllers/ganttprojectcontroller.js"></script>
     <script src="/static/app/controllers/chartresourceusagecontroller.js"></script>
     </head>
-    <body>
+    <body style="overflow:hidden;">
     {% raw %}
-    <div ng-controller="DataController as dataCtrl">
-        <div >Time (local): <span>{{dataService.lofarTime | date:'yyyy-MM-dd HH:mm:ss' }}</span></div>
-        <div ui-layout class="top-stretch" ui-layout="{flow: 'column'}">
-            <header>
-                <uib-tabset margin-top='10px'>
-                    <uib-tab heading="Tasks" index='0' active='true'>
-                        <div ng-controller="GridController as gridCtrl">
-                            <div id="grid" ui-grid="gridOptions" ui-grid-edit ui-grid-selection ui-grid-cellnav ui-grid-resize-columns class="grid">
-                            </div>
-                        </div>
-                    </uib-tab>
-                    <uib-tab heading="Usages" index='1' active='false'>
-                        <div class="tab-pane active" ng-controller="ChartResourceUsageController as chartResourceUsageCtrl">
-                            <highchart id="chart_resource_usage" config="chartConfig" style="width: 95%; height: 40%; margin: 10px;" ></highchart>
-                        </div>
-                    </uib-tab>
-                </uib-tabset>
-            </header>
-            <header>
-                <uib-tabset margin-top='10px'>
-                    <uib-tab heading="Projects" index='0' active='true'>
-                        <div class="tab-pane active" ng-controller="GanttProjectController as ganttProjectCtrl">
-                            <div gantt data=ganttData
-                                api=options.api
-                                show-side='true'
-                                view-scale="options.viewScale"
-                                current-date="options.currentDate"
-                                current-date-value="options.currentDateValue"
-                                column-magnet="options.columnMagnet">
-                                <gantt-tree enabled="true"></gantt-tree>
-                                <gantt-movable enabled="true"
-                                    allow-moving="false"
-                                    allow-resizing="false"
-                                    allow-row-switching="false">
-                                </gantt-movable>
-                                <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
-                                <gantt-dependencies enabled="true"></gantt-dependencies>
-                            </div>
-                        </div>
-                    </uib-tab>
-                    <uib-tab heading="Resources" index='1' active='false'>
-                        <div class="tab-pane active" ng-controller="GanttResourceController as ganttResourceCtrl">
-                            <div gantt data=ganttData
-                                api=options.api
-                                show-side='true'
-                                view-scale="options.viewScale"
-                                current-date="options.currentDate"
-                                current-date-value="options.currentDateValue"
-                                column-magnet="options.columnMagnet">
-                                <gantt-tree enabled="true"></gantt-tree>
-                                <gantt-movable enabled="true"
-                                    allow-moving="false"
-                                    allow-resizing="false"
-                                    allow-row-switching="false"></gantt-movable>
-                                <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
-                            </div>
-                        </div>
-                    </uib-tab>
-                <uib-tabset>
-            <header>
+    <div ng-controller="DataController as dataCtrl" class="container-fluid">
+        <div class="row">
+            <div class="col-md-2">
+                <label>Time (UTC):</label>
+                <p>
+                    <strong style="font-size:16px">{{dataService.lofarTime | date }}</strong>
+                </p>
+            </div>
+            <div class="col-md-3">
+                <label>From:</label>
+                <p class="input-group">
+                    <input type="text" class="form-control" style="min-width:100px" uib-datepicker-popup="yyyy-MM-dd" ng-model="dataService.viewTimeSpan.from" is-open="viewFromDatePopupOpened" datepicker-options="dateOptions" ng-required="true" close-text="Close" close-on-date-selection="false"/>
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="openViewFromDatePopup()"><i class="glyphicon glyphicon-calendar"></i></button>
+                    </span>
+                    <uib-timepicker ng-model="dataService.viewTimeSpan.from" hour-step="1" minute-step="5" show-meridian="false" show-spinners="false"></uib-timepicker>
+                </p>
+            </div>
+            <div class="col-md-3">
+                <label>To:</label>
+                <p class="input-group">
+                    <input type="text" class="form-control" style="min-width:100px" uib-datepicker-popup="yyyy-MM-dd" ng-model="dataService.viewTimeSpan.to" is-open="viewToDatePopupOpened" datepicker-options="dateOptions" ng-required="true" close-text="Close" close-on-date-selection="false"/>
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="openViewToDatePopup()"><i class="glyphicon glyphicon-calendar"></i></button>
+                    </span>
+                    <uib-timepicker ng-model="dataService.viewTimeSpan.to" hour-step="1" minute-step="5" show-meridian="false" show-spinners="false"></uib-timepicker>
+                </p>
+            </div>
+            <div class="col-md-3">
+                <label>Jump:</label>
+                <p class="input-group">
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="jumpToSelectedTasks()" title="Jump to selected Task(s)">Task</button>
+                    </span>
+                    <span class="input-group-btn" style="width:10px;"></span>
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="jumpToNow()" title="Jump to Now">Now</button>
+                    </span>
+                    <select class="form-control" ng-model=jumpTimespanWidth ng-options="option.name for option in jumpTimespanWidths track by option.value" ng-change="onJumpTimespanWidthChanged(span)">
+                    </select>
+                </p>
+            </div>
+        </div>
+
+
+        <div class="top-stretch" ui-layout options="{flow: 'column'}">
+            <div ng-controller="GridController as gridCtrl" style="margin-right: 4px;" >
+                <div id="grid"
+                ui-grid="gridOptions"
+                ui-grid-edit ui-grid-selection ui-grid-cellNav ui-grid-resize-columns ui-grid-auto-resize
+                class="grid"></div>
+            </div>
+            <div ui-layout options="{flow: 'row'}">
+                <div ng-controller="GanttProjectController as ganttProjectCtrl" style="overflow:auto; margin-left:12px; margin-bottom:4px; ">
+                    <div gantt data=ganttData
+                        api=options.api
+                        show-side='true'
+                        view-scale="options.viewScale"
+                        from-date="options.fromDate"
+                        to-date="options.toDate"
+                        current-date="options.currentDate"
+                        current-date-value="options.currentDateValue"
+                        column-magnet="options.columnMagnet">
+                        <gantt-tree enabled="true"></gantt-tree>
+                        <gantt-movable enabled="true"
+                            allow-moving="true"
+                            allow-resizing="true"
+                            allow-row-switching="false">
+                        </gantt-movable>
+                        <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
+                        <gantt-dependencies enabled="true"></gantt-dependencies>
+                    </div>
+                </div>
+
+                <div ng-controller="ChartResourceUsageController as chartResourceUsageCtrl">
+                    <highchart id="chart_resource_usage" config="chartConfig" style="width: 96%; height: 100%; margin: 12px;" ></highchart>
+                </div>
+
+                <div ng-controller="GanttResourceController as ganttResourceCtrl" style="overflow:auto; margin-left:12px; margin-top:12px">
+                    <div gantt data=ganttData
+                        api=options.api
+                        show-side='true'
+                        view-scale="options.viewScale"
+                        from-date="options.fromDate"
+                        to-date="options.toDate"
+                        current-date="options.currentDate"
+                        current-date-value="options.currentDateValue"
+                        column-magnet="options.columnMagnet">
+                        <gantt-tree enabled="true"></gantt-tree>
+                        <gantt-movable enabled="true"
+                            allow-moving="true"
+                            allow-resizing="true"
+                            allow-row-switching="false"></gantt-movable>
+                        <gantt-tooltips enabled="true" date-format="'YYYY-MM-DD HH:mm'"></gantt-tooltips>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
     {% endraw %}

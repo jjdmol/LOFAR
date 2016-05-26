@@ -63,6 +63,11 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
             '-w', '--working-directory',
             help="Working directory used by the nodes: local data"
         ),
+        'nthreads': ingredient.IntField(
+            '--nthreads',
+            default=8,
+            help="Number of threads per process"
+        ),
         'target_mapfile': ingredient.StringField(
             '--target-mapfile',
             help="Contains the node and path to target files, defines"
@@ -166,6 +171,8 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
         paths_to_image_mapfiles = []
         n_subband_groups = len(output_map)
 
+        globalfs = self.config.has_option("remote", "globalfs") and self.config.getboolean("remote", "globalfs")
+
         output_map.iterator = final_output_map.iterator = DataMap.SkipIterator
         for idx_sb_group, (output_item, final_item) in enumerate(zip(output_map, 
                                                             final_output_map)):
@@ -190,9 +197,12 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
             paths_to_image_mapfiles.append(
                 tuple([output_item.host, inputs_for_image_mapfile_path, False]))
 
+            # use a unique working directory per job, to prevent interference between jobs on a global fs
+            working_dir = os.path.join(self.inputs['working_directory'], "long_baseline_{0}".format(idx_sb_group))
+
             arguments = [self.environment,
                          self.inputs['parset'],
-                         self.inputs['working_directory'],
+                         working_dir,
                          self.inputs['processed_ms_dir'],
                          self.inputs['ndppp_exec'],
                          output_item.file,
@@ -204,9 +214,13 @@ class long_baseline(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['msselect_executable'],
                          self.inputs['rficonsole_executable'],
                          self.inputs['add_beam_tables'],
+                         globalfs,
                          final_item.file]
 
-            jobs.append(ComputeJob(output_item.host, node_command, arguments))
+            jobs.append(ComputeJob(output_item.host, node_command, arguments,
+                    resources={
+                        "cores": self.inputs['nthreads']
+                    }))
 
         # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])

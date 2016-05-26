@@ -17,7 +17,7 @@ import time
 import xml.dom.minidom as xml
 
 from lofarpipe.support.pipelinelogging import log_process_output
-from lofarpipe.support.utilities import spawn_process
+from lofarpipe.support.subprocessgroup import SubProcessGroup
 from lofarpipe.support.lofarexceptions import PipelineQuit
 from lofarpipe.support.jobserver import job_server
 import lofarpipe.support.lofaringredient as ingredient
@@ -27,47 +27,13 @@ from lofarpipe.support.xmllogging import add_child
 # frame. When multiplexing lots of threads, that will cause memory issues.
 threading.stack_size(1048576)
 
-class ParamikoWrapper(object):
-    """
-    Sends an SSH command to a host using paramiko, then emulates a Popen-like
-    interface so that we can pass it back to pipeline recipes.
-    """
-    def __init__(self, paramiko_client, command):
-        self.returncode = None
-        self.client = paramiko_client
-        self.chan = paramiko_client.get_transport().open_session()
-        self.chan.get_pty()
-        self.chan.exec_command(command)
-        self.stdout = self.chan.makefile('rb', -1)
-        self.stderr = self.chan.makefile_stderr('rb', -1)
 
-    def communicate(self):
-        if not self.returncode:
-            self.returncode = self.chan.recv_exit_status()
-        stdout = "\n".join(line.strip() for line in self.stdout.readlines()) + "\n"
-        stderr = "\n".join(line.strip() for line in self.stdout.readlines()) + "\n"
-        return stdout, stderr
-
-    def poll(self):
-        if not self.returncode and self.chan.exit_status_ready():
-            self.returncode = self.chan.recv_exit_status()
-        return self.returncode
-
-    def wait(self):
-        if not self.returncode:
-            self.returncode = self.chan.recv_exit_status()
-        return self.returncode
-
-    def kill(self):
-        self.chan.close()
-
-def run_remote_command(config, logger, host, command, env, arguments = None):
+def run_remote_command(config, logger, host, command, env, arguments = None, resources = {}):
     """
     Run command on host, passing it arguments from the arguments list and
     exporting key/value pairs from env(a dictionary).
 
-    Returns an object with poll() and communicate() methods, similar to
-    subprocess.Popen.
+    Returns an array of command line arguments to start.
 
     This is a generic interface to potentially multiple ways of running
     commands (SSH, mpirun, etc). The appropriate method is chosen from the
@@ -80,13 +46,7 @@ def run_remote_command(config, logger, host, command, env, arguments = None):
 
     logger.info("********************** Remote method is %s" % method)
 
-    if method == "paramiko":
-        try:
-            key_filename = config.get('remote', 'key_filename')
-        except:
-            key_filename = None
-        return run_via_paramiko(logger, host, command, env, arguments, key_filename)
-    elif method == "mpirun":
+    if method == "mpirun":
         return run_via_mpirun(logger, host, command, env, arguments)
     elif method == "local":
         return run_via_local(logger, command, arguments)
@@ -97,7 +57,7 @@ def run_remote_command(config, logger, host, command, env, arguments = None):
     elif method == "slurm_srun_cep3":
         return run_via_slurm_srun_cep3(logger, command, arguments, host)
     elif method == "custom_cmdline":
-        return run_via_custom_cmdline(logger, host, command, env, arguments, config)
+        return run_via_custom_cmdline(logger, host, command, env, arguments, config, resources)
     else:
         return run_via_ssh(logger, host, command, env, arguments)
 
@@ -105,16 +65,14 @@ def run_via_slurm_srun_cep3(logger, command, arguments, host):
     logger.debug("Dispatching command to %s with srun" % host)
     for arg in arguments:
         command = command + " " + str(arg)
-    commandstring = ["srun","-N 1","-n 1","-w",host, "/bin/sh", "-c", "hostname && " + command]
+    commandarray = ["srun","-N 1","-n 1","-w",host, "/bin/sh", "-c", "hostname && " + command]
     #commandstring = ["srun","-N 1","--cpu_bind=map_cpu:none","-w",host, "/bin/sh", "-c", "hostname && " + command]
     # we have a bug that crashes jobs when too many get startet at the same time
     # temporary NOT 100% reliable workaround
     #from random import randint
     #time.sleep(randint(0,10))
     ##########################
-    process = spawn_process(commandstring, logger)
-    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
-    return process
+    return commandarray
 
 def run_via_mpirun(logger, host, command, environment, arguments):
     """
@@ -125,47 +83,35 @@ def run_via_mpirun(logger, host, command, environment, arguments):
     """
     logger.debug("Dispatching command to %s with mpirun" % host)
     mpi_cmd = ["/usr/bin/mpirun", "-host", host]
-    for key in environment.keys():
-        mpi_cmd.extend(["-x", key])
+    for key,value in environment.iteritems():
+        mpi_cmd.extend(["-x", "%s=%s" % (key,value)])
     mpi_cmd.append("--")
     mpi_cmd.extend(command.split())  # command is split into (python, script)
     mpi_cmd.extend(str(arg) for arg in arguments)
-    env = os.environ
-    env.update(environment)
-    process = spawn_process(mpi_cmd, logger, env = env)
-    # mpirun should be killed with a SIGTERM to enable it to shut down the
-    # remote command.
-    process.kill = lambda : os.kill(process.pid, signal.SIGTERM)
-    return process
+    return mpi_cmd
 
 # let the mpi demon manage free resources to start jobs
 def run_via_mpiexec(logger, command, arguments, host):
     for arg in arguments:
         command = command + " " + str(arg)
-    commandstring = ["mpiexec", "-x", "-np=1", "/bin/sh", "-c", "hostname && " + command]
-    process = spawn_process(commandstring, logger)
-    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
-    return process
+    commandarray = ["mpiexec", "-x", "-np=1", "/bin/sh", "-c", "hostname && " + command]
+    return commandarray
 
 # start mpi run on cep
 # TODO: rsync fails on missing ssh key??
 def run_via_mpiexec_cep(logger, command, arguments, host):
     for arg in arguments:
         command = command + " " + str(arg)
-    commandstring = ["mpiexec", "-x", "PYTHONPATH", "-x", "LD_LIBRARY_PATH", "-x", "PATH", "-H", host, "/bin/sh", "-c", "hostname ; " + command]
-    process = spawn_process(commandstring, logger)
-    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
-    return process
+    commandarray = ["mpiexec", "-x", "PYTHONPATH", "-x", "LD_LIBRARY_PATH", "-x", "PATH", "-H", host, "/bin/sh", "-c", "hostname ; " + command]
+    return commandarray
 
 
 def run_via_local(logger, command, arguments):
-    commandstring = ["/bin/sh", "-c"]
+    commandarray = ["/bin/sh", "-c"]
     for arg in arguments:
         command = command + " " + str(arg)
-    commandstring.append(command)
-    process = spawn_process(commandstring, logger)
-    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
-    return process
+    commandarray.append(command)
+    return commandarray
 
 def run_via_ssh(logger, host, command, environment, arguments):
     """
@@ -181,11 +127,9 @@ def run_via_ssh(logger, host, command, environment, arguments):
     commandstring.append(command)
     commandstring.extend(re.escape(str(arg)) for arg in arguments)
     ssh_cmd.append('"' + " ".join(commandstring) + '"')
-    process = spawn_process(ssh_cmd, logger)
-    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
-    return process
+    return ssh_cmd
 
-def run_via_custom_cmdline(logger, host, command, environment, arguments, config):
+def run_via_custom_cmdline(logger, host, command, environment, arguments, config, resources):
     """
     Dispatch a remote command via a customisable command line
 
@@ -196,57 +140,55 @@ def run_via_custom_cmdline(logger, host, command, environment, arguments, config
     with the following strings replaced:
 
       {host}         := host to execute command on
-      {command}      := bash command line to be executed
+      {env}          := "A=B C=D" string, the environment to set
+      {docker_env}   := "-e A=B -e C=D" string, the environment to set
+      {command}      := command to be executed
       {uid}          := uid of the calling user
 
-      {image}        := docker.image configuration option
       {slurm_job_id} := the SLURM job id to allocate resources in
+      {job_name}     := name of this executable or script
+
+      {nr_cores}     := number of cores to allocate for this job
 
     """
-    commandArray = ["%s=%s" % (key, value) for key, value in environment.items()]
-    commandArray.append(command)
-    commandArray.extend(re.escape(str(arg)) for arg in arguments)
+
+    # construct {env}
+    envPairs = ["%s=%s" % (key, value) for key, value in environment.items()]
+    envStr        = " ".join(envPairs)
+
+    # construct {docker-env}
+    dockerEnvPairs = ["-e %s=%s" % (key, value) for key, value in environment.items()]
+    dockerEnvStr   = " ".join(dockerEnvPairs)
+
+    # construct {command}
+    commandArray = [command] + [re.escape(str(arg)) for arg in arguments]
     commandStr = " ".join(commandArray)
 
-    try:
-        image = config.get('docker', 'image')
-    except:
-        image = "lofar"
+    # Determine job name
+    def jobname(commandstr):
+      args = [os.path.basename(x) for x in commandstr.split()]
 
-    # Construct the full command line, except for {command}, as that itself
-    # can contain spaces which we don't want to split on.
+      if len(args) == 1:
+        return args[0]
+
+      return args[1] if args[0] == "python" else args[0]
+
+    # Construct the full command line
     full_command_line = config.get('remote', 'cmdline').format(
       uid          = os.geteuid(),
       slurm_job_id = os.environ.get("SLURM_JOB_ID"),
-      docker_image = image,
       host         = host,
-      command      = "{command}"
-    ).split(' ')
 
-    # Fill in {command} somewhere
-    full_command_line = [x.format(command = commandStr) for x in full_command_line]
+      env          = envStr,
+      docker_env   = dockerEnvStr,
+
+      command      = commandStr,
+      job_name     = jobname(command),
+      nr_cores     = resources.get("cores", 1),
+    ).split()
 
     logger.debug("Dispatching command to %s with custom_cmdline: %s" % (host, full_command_line))
-
-    process = spawn_process(full_command_line, logger)
-    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
-    return process
-
-def run_via_paramiko(logger, host, command, environment, arguments, key_filename):
-    """
-    Dispatch a remote command via paramiko.
-
-    We return an instance of ParamikoWrapper.
-    """
-    logger.debug("Dispatching command to %s with paramiko" % host)
-    import paramiko
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(host, key_filename = key_filename)
-    commandstring = ["%s=%s" % (key, value) for key, value in environment.items()]
-    commandstring.append(command)
-    commandstring.extend(re.escape(str(arg)) for arg in arguments)
-    return ParamikoWrapper(client, " ".join(commandstring))
+    return full_command_line
 
 class ProcessLimiter(defaultdict):
     """
@@ -284,10 +226,11 @@ class ComputeJob(object):
     :param command: Full path to command to be run on target host
     :param arguments: List of arguments which will be passed to command
     """
-    def __init__(self, host, command, arguments = []):
+    def __init__(self, host, command, arguments = [], resources = {}):
         self.host = host
         self.command = command
         self.arguments = arguments
+        self.resources = resources
         self.results = {}
         self.results['returncode'] = 123456  # Default to obscure code to allow
         # test of failing ssh connections 
@@ -313,7 +256,7 @@ class ComputeJob(object):
                 self.results['returncode'] = 1
                 error.set()
                 return 1
-            process = run_remote_command(
+            cmdarray = run_remote_command(
                 config,
                 logger,
                 self.host,
@@ -323,22 +266,18 @@ class ComputeJob(object):
                     "PYTHONPATH": os.environ.get('PYTHONPATH'),
                     "LD_LIBRARY_PATH": os.environ.get('LD_LIBRARY_PATH'),
                     "LOFARROOT" : os.environ.get('LOFARROOT'),
+                    "LOFARENV" : os.environ.get('LOFARENV',''),
                     "QUEUE_PREFIX" : os.environ.get('QUEUE_PREFIX','')
                 },
-                arguments = [id, jobhost, jobport]
+                arguments = [id, jobhost, jobport],
+                resources = self.resources
             )
-            # Wait for process to finish. In the meantime, if the killswitch
-            # is set (by an exception in the main thread), forcibly kill our
-            # job off.
-            while process.poll() == None:
-                if killswitch.isSet():
-                    process.kill()
-                else:
-                    time.sleep(1)
-            sout, serr = process.communicate()
 
-            serr = serr.replace("Connection to %s closed.\r\n" % self.host, "")
-            log_process_output("Remote command", sout, serr, logger)
+            # Run and wait for process to finish.
+            pg = SubProcessGroup(logger=logger, killSwitch=killswitch)
+            pg.run(cmdarray)
+            job_successful = (pg.wait_for_finish() is None)
+
         except Exception, e:
             logger.exception("Failed to run remote process %s (%s)" % (self.command, str(e)))
             self.results['returncode'] = 1
@@ -347,10 +286,10 @@ class ComputeJob(object):
         finally:
             limiter[self.host].release()
 
-        if process.returncode != 0:
+        if not job_successful:
             logger.error(
-                "Remote process %s %s failed on %s (status: %d)" % \
-                (self.command, self.arguments, self.host, process.returncode)
+                "Remote process %s %s failed on %s" % \
+                (self.command, self.arguments, self.host)
             )
             error.set()
 
@@ -358,13 +297,13 @@ class ComputeJob(object):
         # add the duration of
         time_info_end = time.time()
         self.results["job_duration"] = str(time_info_end - time_info_start)
-        self.results['returncode'] = process.returncode
+        self.results['returncode'] = 0 if job_successful else 1
 
         logger.debug(
             "compute.dispatch results job {0}: {1}: {2}, {3}: {4} ".format(
               self.id, "job_duration", self.results["job_duration"],
                      "returncode", self.results["returncode"] ))
-        return process.returncode
+        return self.results["returncode"]
 
 
 def threadwatcher(threadpool, logger, killswitch):

@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(Pipeline-Recipes 0.1)
+lofar_package(Pipeline-Recipes 0.1 DEPENDS Docker)
 
 # The pipeline.cfg needs to know whether QPID is installed
 include(LofarFindPackage)

@@ -1,0 +1,31 @@
+[ndppp]
+nproc = 0
+
+[setupparmdb]
+nproc = 0
+
+[setupsourcedb]
+nproc = 0
+
+[vdsmaker]
+nproc = 0
+
+[rficonsole]
+nproc = 0
+
+[long_baseline]
+nproc = 0
+rficonsole_executable = /opt/aoflagger/bin/aoflagger
+
+[dppp]
+max_per_node = 0 
+
+[awimager]
+max_per_node = 0 
+
+[rficonsole]
+executable = /opt/aoflagger/bin/aoflagger
+max_per_node = 0 
+
+[imager_prepare]
+rficonsole_executable = /opt/aoflagger/bin/aoflagger

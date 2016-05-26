@@ -38,15 +38,11 @@ class OTDBtoRATaskStatusPropagator(OTDBBusListener):
         super(OTDBtoRATaskStatusPropagator, self).stop_listening(**kwargs)
 
     def _update_radb_task_status(self, otdb_id, task_status):
-        task = self.radb.getTask(otdb_id=otdb_id)
+        logger.info("updating radb-task with otdb_id %s to status %s" % (otdb_id, task_status))
+        result = self.radb.updateTaskStatusForOtdbId(otdb_id=otdb_id, status=task_status)
 
-        if not task:
-            logger.warning("Task with otdb_id %s in not present in the RADB" % otdb_id)
-            return
-
-        task_id = task['id']
-        logger.info("updating task %s with otdb_id %s to status %s" % (task_id, otdb_id, task_status))
-        self.radb.updateTask(task_id=task_id, status=task_status)
+        if not result or 'updated' not in result or not result['updated']:
+            logger.warning("could not update task with otdb_id %s to status %s" % (otdb_id, task_status))
 
     def onObservationPrepared(self, treeId, modificationTime):
         self._update_radb_task_status(treeId, 'prepared')

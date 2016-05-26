@@ -35,6 +35,11 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             default='',
             optional=True
         ),
+        'nthreads': ingredient.IntField(
+            '--nthreads',
+            default=8,
+            help="Number of threads per process"
+        ),
         'nodescript': ingredient.StringField(
             '--nodescript',
             help="Name of the node script to execute",
@@ -369,7 +374,10 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                         self.inputs['parsetasfile'],
                         args_format,
                         self.environment
-                    ]
+                    ],
+                    resources={
+                        "cores": self.inputs['nthreads']
+                    }
                 )
             )
         max_per_node = self.inputs['max_per_node']

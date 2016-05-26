@@ -29,7 +29,7 @@ from lofar.messaging import FromBus, ToBus, EventMessage # RPC,
 from lofar.parameterset import PyParameterValue
 from lofar.sas.otdb.OTDBBusListener import OTDBBusListener
 from lofar.common.util import waitForInterrupt
-from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import OTDBRPC
+from lofar.sas.otdb.otdbrpc import OTDBRPC
 from lofar.sas.otdb.config import DEFAULT_OTDB_NOTIFICATION_BUSNAME, DEFAULT_OTDB_NOTIFICATION_SUBJECT
 from lofar.sas.resourceassignment.rataskspecified.config import DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_BUSNAME
 from lofar.sas.resourceassignment.rataskspecified.config import DEFAULT_RA_TASK_SPECIFIED_NOTIFICATION_SUBJECT
@@ -267,9 +267,15 @@ class RATaskSpecified(OTDBBusListener):
                 result["predecessors"].append(predecessor_result)
         return result
 
+    def onObservationApproved(self, main_id, modificationTime):
+        self.createAndSendSpecifiedTask(main_id, 'approved')
+
     def onObservationPrescheduled(self, main_id, modificationTime):
+        self.createAndSendSpecifiedTask(main_id, 'prescheduled')
+
+    def createAndSendSpecifiedTask(self, main_id, status):
         # Construct root node of tree
-        resultTree = self.get_specification_with_predecessors(main_id, "otdb", "prescheduled", {})
+        resultTree = self.get_specification_with_predecessors(main_id, "otdb", status, {})
         logger.info("Sending result: %s" % resultTree)
 
         # Put result on bus

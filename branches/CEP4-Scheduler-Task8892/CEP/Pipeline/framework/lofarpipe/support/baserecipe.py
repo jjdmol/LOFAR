@@ -45,7 +45,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         # Environment variables we like to pass on to the node script.
         self.environment = dict(
             (k, v) for (k, v) in os.environ.iteritems()
-                if k.endswith('PATH') or k.endswith('ROOT') or k == 'QUEUE_PREFIX'
+                if k.endswith('PATH') or k.endswith('ROOT') or k in ['QUEUE_PREFIX', 'LOFARENV']
         )
 
     @property

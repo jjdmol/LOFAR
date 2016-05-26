@@ -16,6 +16,7 @@ from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.pipelinelogging import log_process_output
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.utilities import catch_segfaults
+from lofarpipe.support.utilities import create_directory
 
 import monetdb.sql as db
 import lofar.gsm.gsmutils as gsm
@@ -64,6 +65,10 @@ class imager_create_dbs(LOFARnodeTCP):
 
         self.logger.info("Starting imager_create_dbs Node")
         self.environment.update(environment)
+
+        #******************************************************************
+        # 0. Create the directories used in this recipe
+        create_directory(working_directory)
 
         #*******************************************************************
         # 1. get a sourcelist: from gsm or from file

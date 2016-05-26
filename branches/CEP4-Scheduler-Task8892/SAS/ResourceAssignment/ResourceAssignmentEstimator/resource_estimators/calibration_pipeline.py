@@ -23,50 +23,82 @@
 import logging
 from math import ceil
 from base_resource_estimator import BaseResourceEstimator
-from lofar.parameterset import parameterset
 
 logger = logging.getLogger(__name__)
 
-class CalibrationPipelineResourceEstimator(BaseResourceEstimator):
-    """ CalibrationPipelineResourceEstimator
+DATAPRODUCTS = "Observation.DataProducts."
+PIPELINE = "Observation.ObservationControl.PythonControl."
 
+#Observation.DataProducts.Output_Correlated.storageClusterName=
+
+class CalibrationPipelineResourceEstimator(BaseResourceEstimator):
+    """ ResourceEstimator for Calibration Pipelines
     """
-    def __init__(self, kwargs, input_files):
+    def __init__(self):
+        logger.info("init CalibrationPipelineResourceEstimator")
         BaseResourceEstimator.__init__(self, name='calibration_pipeline')
-        self.required_keys = ('correlated.enabled', 'correlated.demixing_settings.freq_step',
-                          'correlated.demixing_settings.time_step', 'instrument_model.enabled')
+        self.required_keys = ('Observation.startTime',
+                              'Observation.stopTime',
+                              DATAPRODUCTS + 'Input_Correlated.enabled',
+                              DATAPRODUCTS + 'Output_InstrumentModel.enabled',
+                              DATAPRODUCTS + 'Output_Correlated.enabled',
+                              PIPELINE + 'DPPP.demixer.freqstep',
+                              PIPELINE + 'DPPP.demixer.timestep')
 
     def _calculate(self, parset, input_files):
-        """ Estimate for calibration pipeline
+        """ Estimate for CalibrationPipeline. Also gets used for AveragingPipeline
         calculates: datasize (number of files, file size), bandwidth
+        input_files should look something like:
+        'input_files': 
+        {'uv': {'nr_of_uv_files': 481, 'uv_file_size': 1482951104}, ...}
+        
+        reply is something along the lines of:
+        {'bandwidth': {'total_size': 19021319494},
+        'storage': {'total_size': 713299481024,
+        'output_files': 
+          {'uv': {'nr_of_uv_files': 481, 'uv_file_size': 1482951104},
+          'im': {'nr_of_im_files': 481, 'im_file_size': 148295}
+        }}
         """
         logger.debug("start estimate '{}'".format(self.name))
-        parset = parameterset(parset).makeSubset('dp.output')
-        output_files = {}
-        duration = int(kwargs.get('observation.duration', 1))
-        if 'dp_correlated_uv' in input_files:
-            if parset['correlated']['enabled'] == 'true':
-                logger.debug("calculate correlated data size")
-                freq_step = int(parset['correlated']['demixing_settings']['freq_step'])
-                time_step = int(parset['correlated']['demixing_settings']['time_step'])
-                reduction_factor = freq_step * time_step
-                input_file_size = int(input_files['dp_correlated_uv']['file_size'])
-                output_file_size = 0.0
-                if reduction_factor > 0:
-                    new_size = input_file_size / reduction_factor
-                    output_file_size = new_size + new_size / 64.0 * (1.0 + reduction_factor) + new_size / 2.0
-                output_files['dp_correlated_uv'] = {'nr_files': int(input_files['dp_correlated_uv']['nr_files']), 'file_size': int(output_file_size)}
-                logger.debug("dp_correlated_uv: {} files {} bytes each".format(int(input_files['dp_correlated_uv']['nr_files']), int(output_file_size)))
+        logger.info('parset: %s ' % parset)
+        result = {'errors': []}
+        duration = self._getDuration(parset.getString('Observation.startTime'), parset.getString('Observation.stopTime'))
+        freq_step = parset.getInt(PIPELINE + 'DPPP.demixer.freqstep', 1) #TODO, should these have defaults?
+        time_step = parset.getInt(PIPELINE + 'DPPP.demixer.timestep', 1)
+        reduction_factor = freq_step * time_step
 
-            if parset['instrument_model']['enabled'] == 'true':
-                logger.debug("calculate instrument-model data size")
-                output_files['dp_instrument_model'] = {'nr_files': int(input_files['dp_correlated_uv']['nr_files']), 'file_size': 1000}
-                logger.debug("dp_instrument_model: {} files {} bytes each".format(int(input_files['dp_correlated_uv']['nr_files']), 1000))
+        if not parset.getBool(DATAPRODUCTS + 'Output_Correlated.enabled'):
+            logger.warning('Output_Correlated is not enabled')
+            result['errors'].append('Output_Correlated is not enabled')
+        if not 'uv' in input_files:
+            logger.warning('Missing UV Dataproducts in input_files')
+            result['errors'].append('Missing UV Dataproducts in input_files')
+        if reduction_factor < 1:
+            logger.warning('freqstep * timestep is not valid')
+            result['errors'].append('freqstep * timestep is not positive')
+        if result['errors']:
+            return result
 
-            # count total data size
-            total_data_size = 0
-            for values in output_files.itervalues():
-                total_data_size += values['nr_files'] * values['file_size']
-            total_bandwidth = ceil((self.total_data_size * 8) / duration)  # bits/second
-        return {"total_data_size":total_data_size, "total_bandwidth":total_bandwidth, "output_files":output_files}
+        logger.debug("calculate correlated data size")
+        result['output_files'] = {}
+        input_file_size = input_files['uv']['uv_file_size']
+        output_file_size = 0.0
+        new_size = input_file_size / float(reduction_factor)
+        output_file_size = new_size + new_size / 64.0 * (1.0 + reduction_factor) + new_size / 2.0
+        result['output_files']['uv'] = {'nr_of_uv_files': input_files['uv']['nr_of_uv_files'], 'uv_file_size': int(output_file_size)}
+        logger.debug("correlated_uv: {} files {} bytes each".format(result['output_files']['uv']['nr_of_uv_files'], result['output_files']['uv']['uv_file_size']))
+
+        if parset.getBool(DATAPRODUCTS + 'Output_InstrumentModel.enabled'):
+            logger.debug("calculate instrument-model data size")
+            result['output_files']['im'] = {'nr_of_im_files': input_files['uv']['nr_of_uv_files'], 'im_file_size': 1000} # 1 kB was hardcoded in the Scheduler
+            logger.debug("correlated_uv: {} files {} bytes each".format(result['output_files']['im']['nr_of_im_files'], result['output_files']['im']['im_file_size']))
+
+        # count total data size
+        total_data_size = result['output_files']['uv']['nr_of_uv_files'] * result['output_files']['uv']['uv_file_size'] + \
+                          result['output_files']['im']['nr_of_im_files'] * result['output_files']['im']['im_file_size']  # bytes
+        total_bandwidth = int(ceil((total_data_size * 8) / duration))  # bits/second
+        result['storage'] = {'total_size': total_data_size}
+        result['bandwidth'] = {'total_size': total_bandwidth}
+        return result
 

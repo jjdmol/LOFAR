@@ -7,3 +7,4 @@ file(COPY
   DESTINATION ${CMAKE_BINARY_DIR}/bin)
 
 lofar_add_test(t_dbcredentials)
+lofar_add_test(t_methodtrigger)
