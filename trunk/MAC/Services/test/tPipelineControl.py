@@ -121,8 +121,8 @@ class TestPipelineControl(unittest.TestCase):
     self.addCleanup(patcher.stop)
 
     # Catch functions to prevent running executables
-    patcher = patch('lofar.mac.PipelineControl.Parset.dockerTag')
-    patcher.start().return_value = "trunk"
+    patcher = patch('lofar.mac.PipelineControl.Parset.dockerImage')
+    patcher.start().return_value = "lofar-pipeline:trunk"
     self.addCleanup(patcher.stop)
 
     # ================================
