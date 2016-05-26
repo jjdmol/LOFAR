@@ -1,0 +1,85 @@
+#!/bin/bash 
+#
+# Template engine for LOFAR
+#
+#   Reads stdin, replaces variables, writes stdout.
+#
+#   Variables replaced:
+#       ${LOFAR_BRANCH_NAME}  = Name of this branch, relative to root
+#       ${LOFAR_BRANCH_URL}   = Full subversion URL for this branch
+#       ${LOFAR_TAG}          = Tag for a Docker image
+#       ${LOFAR_REVISION}     = SVN revision number of this checkout (or HEAD if trunk)
+#       ${NOW}          = now in UTC (format: 2016-01-01 10:11:12)
+#       ${BUILD_UID}    = uid of building user (=caller)
+#
+
+# ----- LOFAR_BRANCH_NAME = branches/LOFAR-Task1234 -----
+# ----- LOFAR_BRANCH_NAME = trunk -----
+# ----- LOFAR_BRANCH_NAME = tags/LOFAR-Release-2_15_1 -----
+# ----- LOFAR_BRANCH_NAME = UNKNOWN -----
+
+function usage() {
+  echo "$0 [-v VERSIONDOCKER]"
+  echo ""
+  echo "  -v VERSIONDOCKER   Provides location of 'versiondocker' executable"
+  echo ""
+  exit 1
+}
+
+# Defaults
+VERSION_DOCKER="versiondocker"
+
+# Parse options
+while getopts "hv:" opt; do
+  case $opt in
+    h)  usage
+        ;;
+    v)  VERSION_DOCKER="$OPTARG"
+        ;;
+    \?) error "Invalid option: -$OPTARG"
+        ;;
+    :)  error "Option requires an argument: -$OPTARG"
+        ;;
+  esac
+done
+
+# Make sure we obtain info about the project source!
+VERSION_INFO=`$VERSION_DOCKER`
+
+# Extract branch name w.r.t. repository root, e.g. branches/LOFAR-Task1234
+export LOFAR_BRANCH_NAME=`echo "$VERSION_INFO" | perl -ne 'print "$1" if /branch += +(.+)/;'`
+
+# ----- LOFAR_BRANCH_URL = https://svn.astron.nl/LOFAR/branches/LOFAR-Task1234 -----
+# ----- LOFAR_BRANCH_URL = https://svn.astron.nl/LOFAR/trunk -----
+# ----- LOFAR_BRANCH_URL = https://svn.astron.nl/LOFAR/tags/LOFAR-Release-2_15_1 -----
+
+export LOFAR_BRANCH_URL="https://svn.astron.nl/LOFAR/${LOFAR_BRANCH_NAME}"
+
+# ----- LOFAR_TAG = LOFAR-Task1234 -----
+# ----- LOFAR_TAG = trunk -----
+# ----- LOFAR_TAG = LOFAR-Release-2_15_1 -----
+
+case "${LOFAR_BRANCH_NAME}" in
+  trunk)      export LOFAR_TAG=trunk ;;
+  branches/*) export LOFAR_TAG=${LOFAR_BRANCH_NAME##branches/} ;;
+  tags/*)     export LOFAR_TAG=${LOFAR_BRANCH_NAME##tags/} ;;
+  *)          export LOFAR_TAG=latest ;;
+esac
+
+# ----- LOFAR_REVISION = 12345 -----
+
+export LOFAR_REVISION=`echo "$VERSION_INFO" | perl -ne 'print "$1" if /overall revision += +([0-9]+)/;'`
+
+# ----- NOW = 2016-01-01 10:11:12 -----
+
+export NOW="`date -u +'%F %T'`"
+
+# ----- BUILD_UID = 1001 ----
+
+export BUILD_UID=`id -u`
+
+# ----- Process input -----
+
+# Insert our knowledge when processing stdin -> stdout
+envsubst '$LOFAR_BRANCH_NAME $LOFAR_BRANCH_URL $LOFAR_TAG $LOFAR_REVISION $NOW $BUILD_UID'
+

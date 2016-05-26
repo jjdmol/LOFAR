@@ -1,0 +1,37 @@
+#
+# base
+#
+FROM lofar-base:${LOFAR_TAG}
+
+#
+# *******************
+#   LOFAR
+# *******************
+#
+
+# Run-time dependencies
+RUN apt-get update && apt-get install -y liblog4cplus-1.0-4 libxml2 libboost-thread${BOOST_VERSION}.0 libboost-filesystem${BOOST_VERSION}.0 libboost-date-time${BOOST_VERSION}.0 libpng12-0 libsigc++-2.0-dev libxml++2.6-2 libboost-regex${BOOST_VERSION}.0
+
+# Tell image build information
+ENV LOFAR_BRANCH=${LOFAR_BRANCH_NAME} \
+    LOFAR_REVISION=${LOFAR_REVISION} \
+    LOFAR_BUILDVARIANT=gnu_optarch
+
+# Install
+RUN apt-get update && apt-get install -y subversion cmake g++ gfortran bison flex autogen liblog4cplus-dev libhdf5-dev libblitz0-dev libboost-dev libboost-python${BOOST_VERSION}-dev libxml2-dev pkg-config libpng12-dev libfftw3-dev libunittest++-dev libxml++2.6-dev libboost-filesystem${BOOST_VERSION}-dev libboost-date-time${BOOST_VERSION}-dev libboost-thread${BOOST_VERSION}-dev libboost-regex${BOOST_VERSION} binutils-dev && \
+    mkdir -p ${INSTALLDIR}/lofar/build/${LOFAR_BUILDVARIANT} libcfitsio3-dev wcslib-dev && \
+    cd ${INSTALLDIR}/lofar && \
+    svn --non-interactive -q co -r ${LOFAR_REVISION} -N ${LOFAR_BRANCH_URL} src; \
+    svn --non-interactive -q up src/CMake && \
+    cd ${INSTALLDIR}/lofar/build/${LOFAR_BUILDVARIANT} && cmake -DBUILD_PACKAGES=Online_OutputProc -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}/lofar/ -DCASACORE_ROOT_DIR=${INSTALLDIR}/casacore/ -DLOG4CPLUS_ROOT_DIR=${INSTALLDIR}/log4cplus/ -DQPID_ROOT_DIR=/opt/qpid/ -DDAL_ROOT_DIR=${INSTALLDIR}/DAL -DUSE_OPENMP=True ${INSTALLDIR}/lofar/src/ && \
+    cd ${INSTALLDIR}/lofar/build/${LOFAR_BUILDVARIANT} && sed -i '29,31d' include/ApplCommon/PosixTime.h && \
+    cd ${INSTALLDIR}/lofar/build/${LOFAR_BUILDVARIANT} && make -j ${J} && \
+    cd ${INSTALLDIR}/lofar/build/${LOFAR_BUILDVARIANT} && make install && \
+    bash -c "mkdir -p /home/${USER}/lofar/var/{log,run}" && \
+    bash -c "ln -sfT /home/${USER}/lofar/var ${INSTALLDIR}/lofar/var" && \
+    bash -c "strip ${INSTALLDIR}/lofar/{bin,sbin,lib64}/* || true" && \
+    bash -c "rm -rf ${INSTALLDIR}/lofar/{build,src}" && \
+    setcap cap_sys_nice,cap_ipc_lock=ep ${INSTALLDIR}/lofar/bin/outputProc && \
+    apt-get purge -y subversion cmake g++ gfortran bison flex autogen liblog4cplus-dev libhdf5-dev libblitz0-dev libboost-dev libboost-python${BOOST_VERSION}-dev libxml2-dev pkg-config libpng12-dev libfftw3-dev libunittest++-dev libxml++2.6-dev libboost-filesystem${BOOST_VERSION}-dev libboost-date-time${BOOST_VERSION}-dev libboost-thread${BOOST_VERSION}-dev binutils-dev libcfitsio3-dev wcslib-dev && \
+    apt-get autoremove -y
+

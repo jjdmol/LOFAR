@@ -1,0 +1,7 @@
+include test/rspctl*
+include run-tests.sh
+recursive-include doc/ *
+recursive-include test/ *
+recursive-include testdata/ *
+recursive-include coverage/ *
+global-exclude *~ *.pyc
