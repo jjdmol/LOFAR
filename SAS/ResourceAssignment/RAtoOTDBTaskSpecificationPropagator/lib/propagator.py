@@ -36,13 +36,12 @@ from lofar.sas.resourceassignment.resourceassignmentservice.rpc import RARPC as 
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_BUSNAME as RADB_BUSNAME
 from lofar.sas.resourceassignment.resourceassignmentservice.config import DEFAULT_SERVICENAME as RADB_SERVICENAME
 
-from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.otdbrpc import OTDBRPC
+from lofar.sas.otdb.otdbrpc import OTDBRPC
 from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICE_BUSNAME, DEFAULT_OTDB_SERVICENAME
 from lofar.sas.resourceassignment.ratootdbtaskspecificationpropagator.translator import RAtoOTDBTranslator
 
-from lofar.mom.momqueryservice.momqueryrpc import MoMRPC
-from lofar.mom.momqueryservice.config import DEFAULT_BUSNAME as DEFAULT_MOM_BUSNAME
-from lofar.mom.momqueryservice.config import DEFAULT_SERVICENAME as DEFAULT_MOM_SERVICENAME
+from lofar.mom.momqueryservice.momqueryrpc import MoMQueryRPC
+from lofar.mom.momqueryservice.config import DEFAULT_MOMQUERY_BUSNAME, DEFAULT_MOMQUERY_SERVICENAME
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +53,8 @@ class RAtoOTDBPropagator():
                  radb_broker=None,
                  otdb_busname=DEFAULT_OTDB_SERVICE_BUSNAME,
                  otdb_servicename=DEFAULT_OTDB_SERVICENAME,
-                 mom_busname=DEFAULT_MOM_BUSNAME,
-                 mom_servicename=DEFAULT_MOM_SERVICENAME,
+                 mom_busname=DEFAULT_MOMQUERY_BUSNAME,
+                 mom_servicename=DEFAULT_MOMQUERY_SERVICENAME,
                  otdb_broker=None,
                  mom_broker=None,
                  broker=None):
@@ -76,7 +75,7 @@ class RAtoOTDBPropagator():
 
         self.radbrpc = RADBRPC(busname=radb_busname, servicename=radb_servicename, broker=radb_broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
         self.otdbrpc = OTDBRPC(busname=otdb_busname, servicename=otdb_servicename, broker=otdb_broker) ## , ForwardExceptions=True hardcoded in RPCWrapper right now
-        self.momrpc = MoMRPC(busname=mom_busname, servicename=mom_servicename, broker=mom_broker)
+        self.momrpc = MoMQueryRPC(busname=mom_busname, servicename=mom_servicename, broker=mom_broker)
         self.translator = RAtoOTDBTranslator()
 
     def __enter__(self):
@@ -118,6 +117,15 @@ class RAtoOTDBPropagator():
                 return
             ra_info = self.getRAinfo(ra_id)
 
+            logger.info('RA info for ra_id=%s otdb_id=%s: %s' % (ra_id, otdb_id, ra_info))
+
+            # check if this is a CEP4 task, or an old CEP2 task
+            # at this moment the most simple check is to see if RA claimed (CEP4) storage
+            # TODO: do proper check on cluster/storage/etc
+            if not ra_info['storage']:
+                logger.info("No (CEP4) storage claimed for ra_id=%s otdb_id=%s, skipping otdb specification update." % (ra_id, otdb_id))
+                return
+
             #get mom project name
             try:
                 project = self.momrpc.getProjectDetails(mom_id)
@@ -139,7 +147,7 @@ class RAtoOTDBPropagator():
         info = {}
         info["storage"] = {}
         task = self.radbrpc.getTask(ra_id)
-        claims = self.radbrpc.getResourceClaims(task_id=ra_id, extended=True, include_properties=True)
+        claims = self.radbrpc.getResourceClaims(task_ids=ra_id, extended=True, include_properties=True)
         for claim in claims:
             logger.debug("Processing claim: %s" % claim)
             if claim['resource_type_name'] == 'storage':
@@ -148,12 +156,13 @@ class RAtoOTDBPropagator():
         info["endtime"] = task["endtime"]
         info["status"] = task["status"]
         return info
-    
+
     def setOTDBinfo(self, otdb_id, otdb_info, otdb_status):
-        logger.info('Setting specticication and status (%s) for otdb_id %s' % (otdb_status, otdb_id))
         try:
+            logger.info('Setting specticication for otdb_id %s: %s' % (otdb_id, otdb_info))
             self.otdbrpc.taskSetSpecification(otdb_id, otdb_info)
             self.otdbrpc.taskPrepareForScheduling(otdb_id, otdb_info["LOFAR.ObsSW.Observation.startTime"], otdb_info["LOFAR.ObsSW.Observation.stopTime"])
+            logger.info('Setting status (%s) for otdb_id %s' % (otdb_status, otdb_id))
             self.otdbrpc.taskSetStatus(otdb_id, otdb_status)
         except Exception as e:
             logger.error(e)

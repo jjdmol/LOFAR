@@ -13,6 +13,8 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
     });
 
     var self = this;
+    self.seriesVisibilityCache = {};
+
     $scope.dataService = dataService;
 
     $scope.chartSeries = [];
@@ -59,12 +61,14 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
     function updateChartLofarTime() {
         var lofarTime = $scope.dataService.lofarTime;
 
-        $scope.chartConfig.xAxis.plotLines = [{
-            width: 3,
-            color: '#222222',
-            zIndex: 100,
-            value: lofarTime.getTime()
-        }];
+        if(lofarTime.getSeconds() % 5 == 0) {
+            $scope.chartConfig.xAxis.plotLines = [{
+                width: 3,
+                color: '#222222',
+                zIndex: 100,
+                value: lofarTime.getTime()
+            }];
+        }
     };
 
     $scope.$watch('dataService.lofarTime', updateChartLofarTime);
@@ -94,7 +98,10 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
 
         //set title, axis etc
         $scope.chartConfig.title.text = resource.name;
-        $scope.chartConfig.yAxis.title.text = resource.units;
+        $scope.chartConfig.yAxis.title.text = resource.unit;
+
+        $scope.chartConfig.xAxis.min = $scope.dataService.viewTimeSpan.from.getTime();
+        $scope.chartConfig.xAxis.max = $scope.dataService.viewTimeSpan.to.getTime();
 
         var status_usages = resourceUsagesDict[selected_resource_id].usages;
 
@@ -161,7 +168,9 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
                 if(seriesIdx > -1) {
                     $scope.chartSeries.splice(seriesIdx, 1);
                 }
-                series = {name: status, type: 'area', step: true, lineWidth:0, marker:{enabled:false}, animation:false };
+                var series = {name: status, type: 'area', step: true, lineWidth:0, marker:{enabled:false}, animation:false };
+                series.events = { legendItemClick: function() { self.seriesVisibilityCache[this.name] = !this.visible; }};
+                series.visible = self.seriesVisibilityCache.hasOwnProperty(series.name) ? self.seriesVisibilityCache[series.name] : true;
                 $scope.chartSeries.push(series);
 
                 series.data = usage_data;
@@ -182,37 +191,48 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
 
             var misc_used_capacity = resourceUsagesDict[selected_resource_id].misc_used_capacity;
             if(misc_used_capacity > 0) {
-                misc_used_cap_series = {name: 'misc used capacity', type: 'area', color: '#aaaaff', lineWidth:1, marker:{enabled:false}, dashStyle:'Dash', animation:false };
-                $scope.chartSeries.push(misc_used_cap_series);
-                misc_used_cap_series.data = timestamps.map(function(t) { return [t.getTime(), misc_used_capacity]; });
+                series = $scope.chartSeries.find(function(series) {return series.name == 'misc used capacity'});
+                if(!series) {
+                    series = {name: 'misc used capacity', type: 'area', color: '#aaaaff', lineWidth:1, marker:{enabled:false}, dashStyle:'Dash', animation:false };
+                    series.events = { legendItemClick: function() { self.seriesVisibilityCache[this.name] = !this.visible; }};
+                    $scope.chartSeries.push(series);
+                }
+                series.visible = self.seriesVisibilityCache.hasOwnProperty(series.name) ? self.seriesVisibilityCache[series.name] : true;
+                series.data = timestamps.map(function(t) { return [t.getTime(), misc_used_capacity]; });
                 expectedSeriesNames.push('misc used capacity');
             }
 
             //plot horizontal line for resource total capacity
-            var tot_cap_series = $scope.chartSeries.find(function(series) {return series.name == 'total capacity'});
-            if(!tot_cap_series) {
-                tot_cap_series = {name: 'total capacity', type: 'line', color: '#ff0000', lineWidth:3, marker:{enabled:false}};
-                $scope.chartSeries.push(tot_cap_series);
+            series = $scope.chartSeries.find(function(series) {return series.name == 'total capacity'});
+            if(!series) {
+                series = {name: 'total capacity', type: 'line', color: '#ff0000', lineWidth:3, marker:{enabled:false}};
+                series.events = { legendItemClick: function() { self.seriesVisibilityCache[this.name] = !this.visible; }};
+                $scope.chartSeries.push(series);
             }
-            tot_cap_series.data = [[timestamps[0].getTime(), resource.total_capacity],
-                                    [timestamps[timestamps.length-1].getTime(), resource.total_capacity]]
+            series.visible = self.seriesVisibilityCache.hasOwnProperty(series.name) ? self.seriesVisibilityCache[series.name] : false;
+            series.data = [[timestamps[0].getTime(), resource.total_capacity],
+                           [timestamps[timestamps.length-1].getTime(), resource.total_capacity]]
             expectedSeriesNames.push('total capacity');
 
             //plot horizontal line for resource used capacity
-            var used_cap_series = $scope.chartSeries.find(function(series) {return series.name == 'used capacity'});
-            if(!used_cap_series) {
-                used_cap_series = {name: 'used capacity', type: 'line', color: '#ff9966', lineWidth:3, marker:{enabled:false}, dashStyle:'Dash'};
-                $scope.chartSeries.push(used_cap_series);
+            series = $scope.chartSeries.find(function(series) {return series.name == 'used capacity'});
+            if(!series) {
+                series = {name: 'used capacity', type: 'line', color: '#ff9966', lineWidth:3, marker:{enabled:false}, dashStyle:'Dash'};
+                series.events = { legendItemClick: function() { self.seriesVisibilityCache[this.name] = !this.visible; }};
+                $scope.chartSeries.push(series);
             }
-            used_cap_series.data = [[timestamps[0].getTime(), resource.used_capacity],
-                                    [timestamps[timestamps.length-1].getTime(), resource.used_capacity]]
+            series.visible = self.seriesVisibilityCache.hasOwnProperty(series.name) ? self.seriesVisibilityCache[series.name] : true;
+            series.data = [[timestamps[0].getTime(), resource.used_capacity],
+                           [timestamps[timestamps.length-1].getTime(), resource.used_capacity]]
             expectedSeriesNames.push('used capacity');
         }
 
 
         for(var i = $scope.chartSeries.length-1; i >= 0; i--) {
             if(!expectedSeriesNames.find(function(s) { return s == $scope.chartSeries[i].name;})) {
+                self.seriesVisibilityCache[$scope.chartSeries.name] = $scope.chartSeries.visible;
                 $scope.chartSeries.splice(i, 1);
+                i = $scope.chartSeries.length-1;
             }
         }
     };
@@ -220,6 +240,6 @@ chartResourceUsageControllerMod.controller('ChartResourceUsageController', ['$sc
     $scope.$watch('dataService.selected_resource_id', updateChartData);
     $scope.$watch('dataService.resources', updateChartData, true);
     $scope.$watch('dataService.resourceUsagesDict', updateChartData, true);
-//     $scope.$watch('dataService.lofarTime', function() {$scope.options.currentDateValue= $scope.dataService.lofarTime;});
+    $scope.$watch('dataService.viewTimeSpan', updateChartData, true);
 }
 ]);

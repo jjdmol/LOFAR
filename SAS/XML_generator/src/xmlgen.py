@@ -1,8 +1,35 @@
 #! /usr/bin/env python
+# XML generator
+# xmlgen.py
+#
+# Copyright (C) 2016
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# Author         : Alwin de Jong, Adriaan Renting
+# e-mail         : softwaresupport@astron.nl
+# Revision       : $Revision: 34492 $
+# Last change by : $Author: renting $
+# Change date	   : $Date: 2016-05-18 11:47:57 +0200 (wo, 18 mei 2016) $
+# First creation : unknown
+# URL            : $URL: https://svn.astron.nl/ROD/trunk/LOFAR_Scheduler/DataHandler.cpp $
 
-# XML generator prototype
 
-VERSION = "2.15.0"
+VERSION = "2.16.3"
     
 import sys, getopt, time
 from xml.sax.saxutils import escape as XMLescape
@@ -259,7 +286,7 @@ def processingCluster(cluster, number_of_tasks=244):
 
   CEP4 = r"""  <processingCluster>
                     <name>CEP4</name>
-                    <partition>/data</partition>
+                    <partition>/data/projects/</partition>
                     <numberOfTasks>%i</numberOfTasks>
                     <minRAMPerTask unit="byte">1000000000</minRAMPerTask>
                     <minScratchPerTask unit="byte">100000000</minScratchPerTask>    
@@ -281,7 +308,7 @@ def dataProductCluster(cluster):
                     </storageCluster>"""
   CEP4 = r"""<storageCluster>
                       <name>CEP4</name>
-                      <partition>/data</partition>
+                      <partition>/data/projects/</partition>
                     </storageCluster>"""
 
   if cluster == "CEP4":
@@ -1060,16 +1087,25 @@ def readImagingBBS(value):
     imagingBBS[2] = toBool(imagingBBS[2])
   return imagingBBS
 
+def checkDemixMultiples(avg_freq_step, avg_time_step, demix_freq_step, demix_time_step, name):
+  try:
+    if avg_freq_step and demix_freq_step:
+      if int(demix_freq_step) % int(avg_freq_step) <> 0:
+        raise GenException("demixFreqStep (%s) should be integer multiple of averagingFreqStep (%s) for %s" % (demix_freq_step, avg_freq_step, name))
+    if avg_time_step and demix_time_step:
+      if int(demix_time_step) % int(avg_time_step) <> 0:
+        raise GenException("demixTimeStep (%s) should be integer multiple of averagingTimeStep (%s) for %s" % (demix_time_step, avg_time_step, name))
+  except:
+    raise GenException("I can't read the Demix values for %s" % name)
+
 def readGlobalDemix(value):
   globalDemix = ['','','','','','','']
   if value:
     valList = value.split(';')
     for i in range(0,len(valList)):
       globalDemix[i] = valList[i]
-    if (globalDemix[0] != '') and (globalDemix[2] != ''):
-      if int(globalDemix[2]) % int(globalDemix[0]) <> 0: #TODO try ?
-        raise GenException("demixFreqStep (" + globalDemix[2] + ") should be integer multiple of averagingFreqStep (" + globalDemix[0] + ") for globalDemix")
-      globalDemix[6] = toBool(globalDemix[6]) # convert ignoreTarget to bool
+    checkDemixMultiples(globalDemix[0], globalDemix[1], globalDemix[2], globalDemix[3], "globalDemix")
+    globalDemix[6] = toBool(globalDemix[6]) # convert ignoreTarget to bool
   return globalDemix
 
 def readGlobalPulsar(value):
@@ -1199,7 +1235,7 @@ def readCalibratorBeam(startLine, lines, globalSubbands, globalTABrings, globalB
       calibratorDemix = []
       for pipeline in pipelines:
         if pipeline.startswith("BBS"):
-          calibratorBBS.append(BBSDefault)
+          calibratorBBS.append(BBSDefault[:]) # [:] is needed to make a deep copy
           calBBS = readExtraParms("BBS", [pipeline])
           if len(calBBS) > 0:
             for i in range(0,len(calBBS)):
@@ -1211,14 +1247,12 @@ def readCalibratorBeam(startLine, lines, globalSubbands, globalTABrings, globalB
               calibratorBBS[-1][i] = globalBBS[i]
       
         if pipeline.startswith("Demix"):
-          calibratorDemix.append(DemixDefault)
+          calibratorDemix.append(DemixDefault[:]) # [:] is needed to make a deep copy
           calDemix = readExtraParms("Demix", [pipeline])
           if len(calDemix) > 0:
             for i in range(0,len(calDemix)):
               calibratorDemix[-1][i] = calDemix[i]
-            if (calibratorDemix[-1][0] != '') and (calibratorDemix[-1][2] != ''):
-              if int(calibratorDemix[-1][2]) % int(calibratorDemix[-1][0]) <> 0:
-                raise GenException("demixFreqStep (" + calibratorDemix[-1][2] + ") should be integer multiple of averagingFreqStep (" + calibratorDemix[-1][0] + ") for calibrator beam pipeline")
+            checkDemixMultiples(calibratorDemix[-1][0], calibratorDemix[-1][1], calibratorDemix[-1][2], calibratorDemix[-1][3], "calibratorDemix")
             calibratorDemix[-1][6] = toBool(calibratorDemix[-1][6])
           elif globalDemix != []:
               printInfo('Using global demix settings for Calibrator beam pipeline')
@@ -1325,26 +1359,25 @@ def readTargetBeams(startLine, lines, globalSubbands, globalBBS, globalDemix, gl
       if targetBeams[nr_beams][7]: # pipeline created?
         for pipeline in pipelines:
           if pipeline.startswith("BBS"):
-            targetBBS[nr_beams].append(BBSDefault)
+            targetBBS[nr_beams].append(BBSDefault[:]) # [:] is needed to make a deep copy
             tarBBS = readExtraParms("BBS", [pipeline])
             for i in range(0, len(tarBBS)):
               targetBBS[nr_beams][-1][i] = tarBBS[i]
             targetBBS[nr_beams][-1][3] = toBool(targetBBS[nr_beams][-1][3])
           
           if pipeline.startswith("Demix"):
-            targetDemix[nr_beams].append(DemixDefault)
+            targetDemix[nr_beams].append(DemixDefault[:]) # [:] is needed to make a deep copy
             tarDemix = readExtraParms("Demix", [pipeline])
             if len(tarDemix) >= 4:
               for i in range(0,len(tarDemix)):
                 targetDemix[nr_beams][-1][i] = tarDemix[i]
-              if int(targetDemix[nr_beams][-1][2]) % int(targetDemix[nr_beams][-1][0]) <> 0:
-                raise GenException("demixFreqStep (" + targetDemix[nr_beams][-1][2] + ") should be integer multiple of averagingFreqStep (" + targetDemix[nr_beams][-1][0] + "), target beam pipeline:" + str(nr_beams))
+              checkDemixMultiples(targetDemix[nr_beams][-1][0], targetDemix[nr_beams][-1][1], targetDemix[nr_beams][-1][2], targetDemix[nr_beams][-1][3], "targetDemix[%i]" % nr_beams)
               targetDemix[nr_beams][-1][6] = toBool(targetDemix[nr_beams][-1][6]) # convert ignoreTarget to bool
             elif len(tarDemix) > 0:
               raise GenException("Demixing parameters should at least have the first four averaging/demixing steps (block %s, targetBeam %s)" % (blockNr, nr_beams))
       
           if pipeline.startswith("Pulsar"):
-            targetPulsar[nr_beams].append(PulsarDefault)
+            targetPulsar[nr_beams].append(PulsarDefault[:]) # [:] is needed to make a deep copy
             tarPulsar = readExtraParms("Pulsar", [pipeline])
             if len(tarPulsar) > 0:
               for i in range(0,len(tarPulsar)):

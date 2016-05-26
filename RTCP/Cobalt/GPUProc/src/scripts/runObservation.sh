@@ -335,14 +335,14 @@ echo "[outputProc] pid file = $PID_LIST_FILE"
 touch $PID_LIST_FILE
 
 # Construct full command line for outputProc
-OUTPUTPROC_VARS="QUEUE_PREFIX=$QUEUE_PREFIX" # Variables to forward to outputProc
+OUTPUTPROC_VARS="export QUEUE_PREFIX=$QUEUE_PREFIX LOFARENV=$LOFARENV;" # Variables to forward to outputProc
 OUTPUTPROC_CMDLINE="$OUTPUTPROC_VARS $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID"
 
 # Wrap command line with Docker if required
 if $DOCKER; then
   TAG="`echo '${LOFAR_TAG}' | docker-template`"
 
-  OUTPUTPROC_CMDLINE="docker run --rm --privileged -e LUSER=`id -u $SSH_USER_NAME` --net=host -v $GLOBALFS_DIR:$GLOBALFS_DIR lofar-outputproc:$TAG bash -c \"$OUTPUTPROC_CMDLINE\""
+  OUTPUTPROC_CMDLINE="docker run --rm --privileged -u `id -u $SSH_USER_NAME` --net=host -v $GLOBALFS_DIR:$GLOBALFS_DIR lofar-outputproc:$TAG bash -c \"$OUTPUTPROC_CMDLINE\""
 fi
 
 echo "[outputProc] command line = $OUTPUTPROC_CMDLINE"
@@ -420,6 +420,7 @@ if $DUMMY_RUN; then
 else
   mpirun.sh -x LOFARROOT="$LOFARROOT" \
             -x QUEUE_PREFIX="$QUEUE_PREFIX" \
+            -x LOFARENV="$LOFARENV" \
             -H "$HOSTS" \
             $MPIRUN_PARAMS \
             $CHECK_TOOL \

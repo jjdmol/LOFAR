@@ -8,13 +8,13 @@ from RATaskSpecified import *
 from RABusListener import RATaskSpecifiedBusListener
 from lofar.parameterset import PyParameterSet
 from lofar.messaging import EventMessage, Service
+from lofar.common.methodtrigger import MethodTrigger
 from lofar.sas.otdb.config import DEFAULT_OTDB_SERVICENAME
 
 import unittest
 from glob import glob
 import uuid
 import datetime
-from threading import Condition, Lock
 
 import logging
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -74,6 +74,7 @@ class TestService(unittest.TestCase):
     self.busname = "%s-%s" % (sys.argv[0], str(uuid.uuid4())[:8])
     self.bus = ToBus(self.busname, { "create": "always", "delete": "always", "node": { "type": "topic" } })
     self.bus.open()
+    self.addCleanup(self.bus.close)
 
     # Define the services we use
     self.status_service = "%s/%s.TaskGetSpecification" % (self.busname,DEFAULT_OTDB_SERVICENAME)
@@ -103,44 +104,20 @@ class TestService(unittest.TestCase):
         PARSET_PREFIX + "Observation.Scheduler.predecessors": predecessors,
       }
 
-    self.parset_service = Service(DEFAULT_OTDB_SERVICENAME+".TaskGetSpecification", TaskSpecificationService, busname=self.busname)
-    self.parset_service.start_listening()
+    parset_service = Service(DEFAULT_OTDB_SERVICENAME+".TaskSpecification", TaskSpecificationService, busname=self.busname)
+    parset_service.start_listening()
+    self.addCleanup(parset_service.stop_listening)
 
     # ================================
     # Setup listener to catch result
     # of our service
     # ================================
 
-    class Listener(RATaskSpecifiedBusListener):
-      def __init__(self, **kwargs):
-        super(Listener, self).__init__(**kwargs)
+    listener = RATaskSpecifiedBusListener(busname=self.busname)
+    listener.start_listening()
+    self.addCleanup(listener.stop_listening)
 
-        self.messageReceived = False
-        self.lock = Lock()
-        self.cond = Condition(self.lock)
-
-      def onTaskSpecified(self, sasId, modificationTime, resourceIndicators):
-        self.messageReceived = True
-
-        self.sasID = sasId
-        self.resourceIndicators = resourceIndicators
-
-        # Release waiting parent
-        with self.lock:
-          self.cond.notify()
-
-      def waitForMessage(self):
-        with self.lock:
-          self.cond.wait(5.0)
-        return self.messageReceived
-
-    self.listener = Listener(busname=self.busname)
-    self.listener.start_listening()
-
-  def tearDown(self):
-    self.listener.stop_listening()
-    self.parset_service.stop_listening()
-    self.bus.close()
+    self.trigger = MethodTrigger(listener, "onTaskSpecified")
 
   def testNoPredecessors(self):
     """
@@ -161,13 +138,14 @@ class TestService(unittest.TestCase):
         tb.send(msg)
 
       # Wait for message to arrive
-      self.assertTrue(self.listener.waitForMessage())
+      self.assertTrue(self.trigger.wait())
 
       # Verify message
-      self.assertEqual(self.listener.sasID, 3)
-      self.assertNotIn("1", self.listener.resourceIndicators);
-      self.assertNotIn("2", self.listener.resourceIndicators);
-      self.assertIn("3", self.listener.resourceIndicators);
+      self.assertEqual(self.trigger.args[0], 3)
+      resourceIndicators = self.trigger.args[2]
+      self.assertNotIn("1", resourceIndicators)
+      self.assertNotIn("2", resourceIndicators)
+      self.assertIn("3", resourceIndicators);
 
       # Make sure we only requested one parset
       self.assertEqual(self.requested_parsets, 1)
@@ -192,13 +170,14 @@ class TestService(unittest.TestCase):
         tb.send(msg)
 
       # Wait for message to arrive
-      self.assertTrue(self.listener.waitForMessage())
+      self.assertTrue(self.trigger.wait())
 
       # Verify message
-      self.assertEqual(self.listener.sasID, 1)
-      self.assertIn("1", self.listener.resourceIndicators);
-      self.assertIn("2", self.listener.resourceIndicators);
-      self.assertIn("3", self.listener.resourceIndicators);
+      self.assertEqual(self.trigger.args[0], 1)
+      resourceIndicators = self.trigger.args[2]
+      self.assertIn("1", resourceIndicators);
+      self.assertIn("2", resourceIndicators);
+      self.assertIn("3", resourceIndicators);
 
       # Make sure we only requested exactly three parsets
       self.assertEqual(self.requested_parsets, 3)

@@ -5,6 +5,7 @@
 #                                                      swinbank@transientskp.org
 # ------------------------------------------------------------------------------
 import sys
+import os
 import copy
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
@@ -37,6 +38,11 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         'parset': ingredient.FileField(
             '-p', '--parset',
             help = "The full path to a awimager configuration parset."
+        ),
+        'nthreads': ingredient.IntField(
+            '--nthreads',
+            default=8,
+            help="Number of threads per process"
         ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
@@ -120,7 +126,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         sourcedb_map.iterator = input_map.iterator = output_map.iterator = \
             DataMap.SkipIterator
 
-        for measurement_item, source_item in zip(input_map, sourcedb_map):
+        for idx, (measurement_item, source_item) in enumerate(zip(input_map, sourcedb_map)):
             if measurement_item.skip or source_item.skip:
                 jobs.append(None)
                 continue
@@ -129,12 +135,16 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             host , measurement_path = measurement_item.host, measurement_item.file
             host2 , sourcedb_path = source_item.host, source_item.file
 
+            # use unique working directories per job, to prevent interference between jobs on a global fs
+            working_dir = os.path.join(self.inputs['working_directory'], "imager_awimager_{0}".format(idx))
+
             # construct and save the output name
             arguments = [self.inputs['executable'],
                          self.environment,
                          self.inputs['parset'],
-                         self.inputs['working_directory'],
-                         self.inputs['output_image'],
+                         working_dir,
+                         # put in unique dir, as node script wants to put private .par files next to it
+                         "%s_%s/image" % (self.inputs['output_image'], idx), 
                          measurement_path,
                          sourcedb_path,
                          self.inputs['mask_patch_size'],
@@ -143,7 +153,10 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['fov'],
                          ]
 
-            jobs.append(ComputeJob(host, node_command, arguments))
+            jobs.append(ComputeJob(host, node_command, arguments,
+                    resources={
+                        "cores": self.inputs['nthreads']
+                    }))
         self._schedule_jobs(jobs)
 
         # *********************************************************************

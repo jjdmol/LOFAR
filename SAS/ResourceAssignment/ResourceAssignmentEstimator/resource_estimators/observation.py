@@ -53,6 +53,16 @@ class ObservationResourceEstimator(BaseResourceEstimator):
     def _calculate(self, parset, input_files={}):
         """ Calculate the combined resources needed by the different observation types that
         can be in a single observation.
+        reply is something along the lines of:
+        {'bandwidth': {'total_size': 19021319494},
+        'storage': {'total_size': 713299481024,
+        'output_files': 
+          {'uv': {'nr_of_uv_files': 481, 'uv_file_size': 1482951104},
+          'saps': [{'sap_nr': 0, 'properties': {'nr_of_uv_files': 319}},
+                   {'sap_nr': 1, 'properties': {'nr_of_uv_files': 81}}, 
+                   {'sap_nr': 2, 'properties': {'nr_of_uv_files': 81}}
+        ]}}}
+        The base_resource_estimator adds an {'observation': } around this.
         """
         logger.info("start estimate '{}'".format(self.name))
         logger.info('parset: %s ' % parset)
@@ -88,7 +98,8 @@ class ObservationResourceEstimator(BaseResourceEstimator):
         return result
 
     def correlated(self, parset, duration):
-        """ Estimate number of files, file size and bandwidth needed for correlated data"""
+        """ Estimate number of files, file size and bandwidth needed for correlated data
+        """
         logger.info("calculating correlated datasize")
         size_of_header   = 512 #TODO More magic numbers (probably from Alwin). ScS needs to check these. They look ok though.
         size_of_overhead = 600000

@@ -1,0 +1,2 @@
+#!/bin/bash
+export PYTHONPATH=${PYTHONPATH}:${INSTALLDIR}/python-casacore/lib/python2.7/site-packages

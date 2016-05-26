@@ -6,12 +6,15 @@ lofar_find_package(Python 2.6 REQUIRED)
 include(PythonInstall)
 
 lofar_add_bin_scripts(
+  getParset.py
+  setStatus.py
   TreeService.py
   TreeStatusEvents.py
 )
 
 set(_py_files
   config.py
+  otdbrpc.py
   OTDBBusListener.py
 )
 

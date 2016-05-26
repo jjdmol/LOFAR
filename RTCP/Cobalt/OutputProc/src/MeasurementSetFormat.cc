@@ -119,6 +119,9 @@ namespace LOFAR
 
     MeasurementSetFormat::~MeasurementSetFormat()
     {
+      ScopedLock scopedLock(sharedMutex);
+
+      itsMS = 0;
     }
 
 
@@ -132,6 +135,9 @@ namespace LOFAR
       /// Next make a metafile which describes the raw datafile we're
       /// going to write
       createMSMetaFile(MSname, subband);
+
+      // Release itsMS, we don't need it anymore
+      itsMS = 0;
     }
 
 

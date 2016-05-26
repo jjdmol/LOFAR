@@ -2,11 +2,15 @@
 
 CFLAGS=-O3
 
-all: md5a32 a32
+all: md5a32 a32 md5a32bc
 
 md5a32: md5a32.o adler32.o
 
 md5a32.o: md5.h
+
+md5a32bc: md5a32bc.o adler32.o
+
+md5a32bc.o: md5.h
 
 adler32: adler32.c adler32.h
 	gcc -c adler32.c -o adler32.o
@@ -14,5 +18,5 @@ adler32: adler32.c adler32.h
 a32: a32.o adler32.o
 
 clean:
-	rm -f adler32.o md5a32.o a32.o md5a32 a32
+	rm -f adler32.o md5a32.o md5a32bc.o a32.o md5a32 md5a32bc a32
 
