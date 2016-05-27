@@ -21,7 +21,7 @@ ltaClient    = None
 host      = socket.gethostname()
 ## Using netifaces module or something similar would be nicer, but it doesn't want to install in a custom dir
 ## So we use this hack
-if 'lexar' in host:
+if 'lexar001' in host or 'lexar002' in host:
   host = host + '.offline.lofar'
 if 'gridftp01.target.rug.nl' in host:
   host = 'lotar2.staging.lofar'
@@ -120,9 +120,11 @@ momURLlogout = 'https://lcs029.control.lofar:8443/useradministration/user/logout
 momRetry     = 3
 
 srmRetry     = 2
-if 'lexar' in host:
+if 'lexar001' in host or 'lexar002' in host:
   srmInit      = '/globalhome/ingest/service/bin/init.sh'
-if 'lotar' in host:
+elif 'lexar003' in host or 'lexar004' in host:
+  srmInit      = '/globalhome/ingest/.grid/.ingest_profile'
+elif 'lotar' in host:
   srmInit      = '/home/lofarlocal/ltacp/bin/init.sh'
 
 try:
