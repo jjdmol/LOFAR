@@ -535,7 +535,18 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		}
 		else if (timerEvent.id == itsForcedQuitTimer) {
 			LOG_WARN("QUITING BEFORE ALL CHILDREN DIED.");
-			itsQuitReason = CT_RESULT_EMERGENCY_TIMEOUT;
+
+            bool	centralControllerRunning = 
+              (itsChildControl->countChilds(0, itsProcessType == "Observation" ? CNTLRTYPE_ONLINECTRL : CNTLRTYPE_OFFLINECTRL));
+
+            if (centralControllerRunning) {
+                LOG_FATAL("Central controller did not die.");
+                itsQuitReason = CT_RESULT_EMERGENCY_TIMEOUT;
+            } else {
+                // JDM #9487: For stations, a loss of connection is NOT fatal
+                itsQuitReason = CT_RESULT_NO_ERROR;
+            }
+
 			TRAN(ObservationControl::finishing_state);
 		}
 		// some other timer?
