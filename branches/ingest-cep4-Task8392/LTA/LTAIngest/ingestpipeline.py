@@ -182,7 +182,8 @@ class IngestPipeline():
     if self.HostLocation == 'localhost':
       # copy data with ltacp client from HostLocation localhost, to ltacpserver at localhost
       # so no need for ssh
-      cmd = ["cd %s;%s -Xmx256m -cp %s/qpid-properties/lexar001.offline.lofar:%s/ltacp.jar nl.astron.ltacp.client.LtaCp %s %s %s %s" % (self.LocationDir, javacmd, ltacppath, ltacppath, hostname, self.ltacpport, self.PrimaryUri, self.Source)]
+      hostname = 'localhost'
+      cmd = ["cd %s && %s -Xmx256m -cp %s/qpid-properties/lexar001.offline.lofar:%s/ltacp.jar nl.astron.ltacp.client.LtaCp %s %s %s %s" % (self.LocationDir, javacmd, ltacppath, ltacppath, hostname, self.ltacpport, self.PrimaryUri, self.Source)]
     else:
       # copy data with ltacp from a remote host, so use ssh
       if self.PrimaryUri:
@@ -193,7 +194,7 @@ class IngestPipeline():
     ## SecondaryUri handling not implemented
     self.logger.debug(cmd)
     start = time.time()
-    p       = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p       = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     logs    = p.communicate()
     elapsed = time.time() - start
     self.logger.debug("File transfer for %s took %d sec" % (self.JobId, elapsed))
@@ -532,7 +533,7 @@ class IngestPipeline():
         break  
       retry += 1
       if retry < times:
-        wait_time = random.randint(30, 60) * retry
+        wait_time = 1 #random.randint(30, 60) * retry
         self.logger.debug('waiting %d seconds before trying %s again' % (wait_time, self.JobId))
         time.sleep(wait_time)
     if error:
