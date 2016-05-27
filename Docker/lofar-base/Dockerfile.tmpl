@@ -148,7 +148,8 @@ RUN apt-get update && apt-get install -y git cmake g++ swig python-dev libhdf5-d
 #
 # entry
 #
-COPY ["bashrc", "bashrc.d", "${INSTALLDIR}/"]
+COPY ["bashrc",    "${INSTALLDIR}/"]
+COPY ["bashrc.d",  "${INSTALLDIR}/bashrc.d/"]
 COPY ["chuser.sh", "/usr/local/bin"]
 ENTRYPOINT ["/usr/local/bin/chuser.sh"]
 
