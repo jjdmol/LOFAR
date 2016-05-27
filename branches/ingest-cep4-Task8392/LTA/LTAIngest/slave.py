@@ -135,8 +135,10 @@ class executer(Process):
     if (self.job['Status'] == JobProduced) or (self.job['Status'] == JobError):
         self.talker.put(self.job)
     self.manager.slave_done(self.job, self.result, pipeline.FileType)
-    with self.jobs.get_lock():
-      self.jobs.value -= 1
+    #python 'with' does not work for some reason, so just use acquire/release
+    self.jobs.get_lock().acquire()
+    self.jobs.value -= 1
+    self.jobs.get_lock().release()
     self.logger.debug("Slave Pipeline executer finished for %s in %d sec" % (self.job['ExportID'], time.time() - start))
 
 ## ---------------- LTA Slave --------------------------------------------
@@ -198,8 +200,10 @@ class ltaSlave():
         except QueueEmpty:
           job = None
         if job:
-          with self.jobs.get_lock():
-            self.jobs.value += 1
+          #python 'with' does not work for some reason, so just use acquire/release
+          self.jobs.get_lock().acquire()
+          self.jobs.value += 1
+          self.jobs.get_lock().release()
           runner = executer(self.logger, self.logdir, job, talker, self.jobs, self.momClient, self.ltaClient, self.host, self.ltacpport, self.mailSlCommand, self.manager, self.pipelineRetry, self.momRetry, self.ltaRetry, self.srmRetry, self.srmInit)
           runner.start()
       else:

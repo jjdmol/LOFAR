@@ -174,6 +174,7 @@ class jobHandler(Process):
     class manager(SyncManager): pass
     manager.register('number')
     manager.register('get')
+    manager.register('slave_names')
     self.manager = manager(address=(self.masterAddress, self.masterPort), authkey=self.masterAuth)
     self.manager.connect()
     nr_of_slaves = int(str(self.manager.number()))
@@ -182,7 +183,7 @@ class jobHandler(Process):
       nr_of_slaves = int(str(self.manager.number()))
     time.sleep(10) #Let's wait a few seconds for any more slaves. Currently all slaves need to connect in 10 seconds.
     nr_of_slaves = int(str(self.manager.number()))
-    self.logger.info('Slaves found: %d' % nr_of_slaves)
+    self.logger.info('Slaves found: %d %s' % (nr_of_slaves, self.manager.slave_names()))
     os.system('echo "The LTA Ingest has been restarted."|mailx -s "LTA Ingest restarted" ' + self.mailCommand)
     
     ## ======= Main loop ======
@@ -204,7 +205,7 @@ class jobHandler(Process):
           self.update_job_msg.put((job, job['Status'], JobProducing, None))
           job['Status'] = JobProducing
           self.active[job['ExportID']] = job
-          self.manager.get(None, job['destination']).put(job) ## sends it to the slave with the shortest queue of the possible destinations
+          self.manager.get(job.get('slave_hosts')).put(job) ## sends it to the slave with the shortest queue of the possible slave_hosts
           self.logger.debug("Job's started: %s (%i)" % (job['ExportID'], len(self.active)))
           first = True
         except Empty: pass
@@ -260,6 +261,11 @@ class queueHandler(Process):
     if job['Status'] == JobScheduled:
       self.update_job(job, None, JobScheduled, None)
       job['destination'] = self.job_groups[job['job_group']].get_destination()
+
+      sourcehost = job['Location'].split(':')[0]
+      if 'cep4' in sourcehost.lower():
+          job['slave_hosts'] = ['lexar003.lexar.control.lofar', 'lexar004.lexar.control.lofar']
+
       self.scheduled.put(job)
 #      self.talker.put(job) ## Tell MoM we've done something
     else:
@@ -353,27 +359,30 @@ class ltaMaster():
       raise Exception('No MoM to listen to!')
 
   def add_slave(self, slave):
+    self.logger.info('Slave \'%s\' added to master' % (slave, ))
     self.slaves[slave] = Queue()
     return self.slaves[slave]
 
   def slave_size(self):
     return len(self.slaves)
 
-  ##Gives you the shortest slave queue unless you ask for a specific one.
-  def get_slave(self, source, destination):
-    if source: ## this code was developed for use on lse nodes/staging area, not really used.
-      return self.slaves[source]
-    else:
-      result = None
-      length = sys.maxint
-      for k in self.slaves.keys():
-        if destination in k:# subselection of slaves based on destination, bit of a hack right now: choice between: lexar,lotar
-          size = self.slaves[k].qsize()
-          if length > size:
-            result = self.slaves[k]
-            length = size
-            self.logger.debug('found slave %s' % k)
-      return result
+  def slave_names(self):
+    return self.slaves.keys()
+
+  ##Gives you the shortest slave queue out of the requested slave_hosts
+  def get_slave(self, slave_hosts):
+    if slave_hosts == None:
+      slave_hosts = self.slaves.keys()
+
+    result = None
+    length = sys.maxint
+    for k in self.slaves.keys():
+      size = self.slaves[k].qsize()
+      if length > size:
+        result = self.slaves[k]
+        length = size
+        self.logger.debug('found slave %s' % k)
+    return result
 
   def remove_slave(self, slave):
     q = self.slaves.pop(slave, None)
@@ -391,6 +400,7 @@ class ltaMaster():
     class manager(SyncManager): pass
     manager.register('add_slave', self.add_slave)
     manager.register('number', self.slave_size)
+    manager.register('slave_names', self.slave_names)
     manager.register('get', self.get_slave)
     manager.register('remove_slave', self.remove_slave)
     manager.register('slave_done', self.slave_done)
